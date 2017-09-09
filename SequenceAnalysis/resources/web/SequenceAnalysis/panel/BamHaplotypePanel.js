@@ -66,7 +66,7 @@ Ext4.define('SequenceAnalysis.panel.BamHaplotypePanel', {
                 width: 400,
                 height: 100,
                 helpPopup: 'Enter one region per line, in the format: chr01:100-200',
-                value: 'chr05:11079167-11079376',
+                value: null,
                 validator: function(val){
                     if (val === null || val === ''){
                         return true;

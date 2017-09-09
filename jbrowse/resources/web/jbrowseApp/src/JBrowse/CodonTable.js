@@ -4,9 +4,7 @@ define( "JBrowse/CodonTable", ['dojo/_base/declare'],
 return declare(null, {
 
 defaultStarts: [
-    'ATG',
-    'CTG',
-    'GTG'
+    'ATG'
 ],
 defaultStops: [
     'TAA',

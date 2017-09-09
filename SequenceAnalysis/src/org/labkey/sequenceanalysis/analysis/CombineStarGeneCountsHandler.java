@@ -46,6 +46,10 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
     private static final String UNSTRANDED = "Unstranded";
     private static final String INFER = "Infer";
 
+    private static final String ReadsetId = "ReadsetId";
+    private static final String ReadsetName = "ReadsetName";
+    private static final String OutputFileId = "OutputFileId";
+
     public CombineStarGeneCountsHandler()
     {
         super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Combine STAR Gene Counts", "This will combine the gene count tables from many samples produced by STAR into a single table.", new LinkedHashSet<>(Arrays.asList("LDK/field/SimpleCombo.js")), Arrays.asList(
@@ -59,7 +63,10 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
                         put("width", 400);
                         put("allowBlank", false);
                     }}, null),
-                ToolParameterDescriptor.create("idInHeader", "Use RowId As Header", "If checked, this will use the output file RowId as the header, instead of name.  This ensures uniqueness.  As separate table will be written, containing this value and other sample fields.", "checkbox", null, false),
+                ToolParameterDescriptor.create("idInHeader", "Header Value", "Choose which value to use as the header/sample identifier", "ldk-simplecombo", new JSONObject(){{
+                    put("storeValues", ReadsetId + ";" + ReadsetName + ";" + OutputFileId);
+                    put("value", ReadsetId);
+                }}, ReadsetId),
                 ToolParameterDescriptor.create("skipGenesWithoutData", "Skip Genes Without Data", "If checked, the output table will omit any genes with zero read counts across all samples.", "checkbox", null, false),
                 ToolParameterDescriptor.create(STRANDED, "Stranded", "Choose whether to treat these data as stranded, unstranded, or to have the script infer the strandedness", "ldk-simplecombo", new JSONObject(){{
                     put("storeValues", STRANDED + ";" + UNSTRANDED + ";"+ INFER);
@@ -147,25 +154,37 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
         @Override
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
-            final boolean idInHeader = ctx.getParams().optBoolean("idInHeader", false);
+            final String idInHeader = ctx.getParams().optString("idInHeader", OutputFileId);
 
             prepareFiles(ctx, inputFiles, getName(), new HeaderProvider()
             {
                 @Override
                 public String getHeader(JobContext ctx, SequenceOutputFile so)
                 {
-                    if (idInHeader)
-                    {
-                        return so.getRowid().toString();
-                    }
-                    else if (so.getReadset() != null && ctx.getSequenceSupport().getCachedReadset(so.getReadset()) != null)
+                    if (idInHeader.equals(ReadsetName))
                     {
                         Readset rs = ctx.getSequenceSupport().getCachedReadset(so.getReadset());
+                        if (rs == null)
+                        {
+                            throw new IllegalArgumentException("Readset not found for: " + so.getRowid());
+                        }
+
                         return rs.getName();
+
+                    }
+                    else if (idInHeader.equals(ReadsetId))
+                    {
+                        Readset rs = ctx.getSequenceSupport().getCachedReadset(so.getReadset());
+                        if (rs == null)
+                        {
+                            throw new IllegalArgumentException("Readset not found for: " + so.getRowid());
+                        }
+
+                        return rs.getReadsetId().toString();
                     }
                     else
                     {
-                        return so.getName();
+                        return so.getRowid().toString();
                     }
                 }
             }, "Gene Count Table");
@@ -224,7 +243,7 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
 
         //first build a map of all geneIDs and other attributes
         job.getLogger().info("reading GTF/GFF file");
-        Map<String, Map<String, String>> geneMap = new HashMap<>();
+        Map<String, Map<String, String>> geneMap = new HashMap<>(5000);
         int noGeneId = 0;
         try (BufferedReader gtfReader = Readers.getReader(gtfFile))
         {
@@ -337,13 +356,13 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
                     Map<String, Long> unstrandedMap = unstrandedCounts.get(so.getRowid());
                     if (unstrandedMap == null)
                     {
-                        unstrandedMap = new HashMap<>(distinctGenes.size());
+                        unstrandedMap = new HashMap<>(Math.max(distinctGenes.size() + 500, 5000));
                     }
 
                     Map<String, Long> strandedMap = strandedCounts.get(so.getRowid());
                     if (strandedMap == null)
                     {
-                        strandedMap = new HashMap<>(distinctGenes.size());
+                        strandedMap = new HashMap<>(Math.max(distinctGenes.size() + 500, 5000));
                     }
 
                     strandedMap.put(geneId, strandMax);
@@ -369,12 +388,12 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
         job.getLogger().info("Attempting to infer strandedness");
         if (avgStrandRatio > threshold)
         {
-            job.getLogger().info("These data appear to be stranded because more than " + (100 * threshold) + "% of the reads are either on one strand or the other (" + avgStrandRatio + ").  Counts from the strand with the most reads will be used.");
+            job.getLogger().info("These data appear to be stranded because more than " + (100 * threshold) + "% of the reads are either on one strand or the other (ratio: " + avgStrandRatio + ").  Counts from the strand with the most reads will be used.");
             inferredStrandedness = STRANDED;
         }
         else
         {
-            job.getLogger().info("These data appear to be unstranded because similar numbers of reads are found on strand one and strand two (" + threshold + ").  The total unstranded counts will be used.");
+            job.getLogger().info("These data appear to be unstranded because similar numbers of reads are found on strand one and strand two (ratio: " + avgStrandRatio + ").  The total unstranded counts will be used.");
             inferredStrandedness = UNSTRANDED;
         }
 
@@ -417,7 +436,7 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
             //header
             List<String> header = new ArrayList<>();
             header.add("GeneId");
-            header.add("TranscriptId");
+            header.add("GeneName");
             header.add("GeneDescription");
             header.add("SamplesWithReads");
 
@@ -431,13 +450,13 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
             Set<String> genesWithoutData = new TreeSet<>();
             for (String geneId : distinctGenes)
             {
-                List<String> row = new ArrayList<>();
+                List<String> row = new ArrayList<>(inputFiles.size() + 3);
                 if (geneMap.containsKey(geneId) || OTHER_IDS.contains(geneId))
                 {
                     if (geneMap.containsKey(geneId))
                     {
-                        row.add(geneMap.get(geneId).containsKey("gene_name") ? geneId + "|" + geneMap.get(geneId).get("gene_name") : geneId);
-                        row.add(geneMap.get(geneId).get("transcript_id"));
+                        row.add(geneId);
+                        row.add(geneMap.get(geneId).get("gene_name"));
                         row.add(geneMap.get(geneId).get("gene_description"));
                     }
                     else
@@ -508,6 +527,7 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
         SequenceOutputFile so = new SequenceOutputFile();
         so.setCategory(outputCategory);
         so.setFile(outputFile);
+        so.setDescription("Total datasets: " + inputFiles.size());
         so.setName(params.getString("name"));
         ctx.addSequenceOutput(so);
 

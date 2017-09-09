@@ -22,6 +22,7 @@ import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.pipeline.PicardMetricsUtil;
 import org.labkey.sequenceanalysis.run.util.AlignmentSummaryMetricsWrapper;
 import org.labkey.sequenceanalysis.run.util.CollectInsertSizeMetricsWrapper;
+import org.labkey.sequenceanalysis.run.util.CollectWgsMetricsWithNonZeroCoverageWrapper;
 import org.labkey.sequenceanalysis.run.util.CollectWgsMetricsWrapper;
 
 import java.io.File;
@@ -43,13 +44,16 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
         super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Picard Metrics", "This will run the select Picard tools metrics on the input BAMs, storing these values in the database.", null, Arrays.asList(
                 ToolParameterDescriptor.create("collectSummary", "Run Alignment Summary Metrics", "If checked, Picard CollectAlignmentSummaryMetrics will be run", "checkbox", new JSONObject(){{
                     put("checked", true);
-                }}, 500),
+                }}, false),
                 ToolParameterDescriptor.create("collectInsertSize", "Run Insert Size Metrics", "If checked, Picard CollectInsertSizeMetrics will be run", "checkbox", new JSONObject(){{
                     put("checked", true);
-                }}, 500),
+                }}, false),
                 ToolParameterDescriptor.create("collectWgs", "Run WGS Metrics", "If checked, Picard CollectWgsMetrics will be run", "checkbox", new JSONObject(){{
                     put("checked", true);
-                }}, 500)
+                }}, false),
+                ToolParameterDescriptor.create("collectWgsNonZero", "Run WGS Metrics Over Non-Zero Coverage", "If checked, Picard CollectWgsMetricsWithNonZeroCoverage will be run", "checkbox", new JSONObject(){{
+                    put("checked", false);
+                }}, false)
         ));
     }
 
@@ -150,6 +154,13 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                         metricsFiles.add(mf3);
                     }
 
+                    File mf4 = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".wgsNonZero.metrics");
+                    if (mf4.exists())
+                    {
+                        action.addOutput(mf4, "WGS Metrics Over Non-Zero Coverage", false);
+                        metricsFiles.add(mf4);
+                    }
+
                     TableInfo ti = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
                     for (File f : metricsFiles)
                     {
@@ -188,6 +199,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
             boolean collectSummary = params.containsKey("collectSummary") && params.optBoolean("collectSummary", false);
             boolean collectInsertSize = params.containsKey("collectInsertSize") && params.optBoolean("collectInsertSize", false);
             boolean collectWgs = params.containsKey("collectWgs") && params.optBoolean("collectWgs", false);
+            boolean collectWgsNonZero = params.containsKey("collectWgsNonZero") && params.optBoolean("collectWgsNonZero", false);
 
             int i = 1;
             for (SequenceOutputFile o : inputFiles)
@@ -216,6 +228,15 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                     job.setStatus(PipelineJob.TaskStatus.running, "CALCULATING WGS METRICS");
                     File wgsMetricsFile = new File(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".wgs.metrics");
                     CollectWgsMetricsWrapper wgsWrapper = new CollectWgsMetricsWrapper(job.getLogger());
+                    wgsWrapper.executeCommand(o.getFile(), wgsMetricsFile, ctx.getSequenceSupport().getCachedGenome(o.getLibrary_id()).getWorkingFastaFile());
+                }
+
+                if (collectWgsNonZero)
+                {
+                    job.getLogger().info("calculating wgs metrics over non zero positions");
+                    job.setStatus(PipelineJob.TaskStatus.running, "CALCULATING WGS METRICS");
+                    File wgsMetricsFile = new File(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".wgsNonZero.metrics");
+                    CollectWgsMetricsWithNonZeroCoverageWrapper wgsWrapper = new CollectWgsMetricsWithNonZeroCoverageWrapper(job.getLogger());
                     wgsWrapper.executeCommand(o.getFile(), wgsMetricsFile, ctx.getSequenceSupport().getCachedGenome(o.getLibrary_id()).getWorkingFastaFile());
                 }
 

@@ -44,6 +44,11 @@ Ext4.define('SequenceAnalysis.window.CreateReferenceLibraryWindow', {
                     itemId: 'name',
                     allowBlank: false
                 },{
+                    xtype: 'textfield',
+                    fieldLabel: 'Assembly Id',
+                    itemId: 'assemblyId',
+                    allowBlank: true
+                },{
                     xtype: 'textarea',
                     fieldLabel: 'Description',
                     itemId: 'description'
@@ -51,6 +56,11 @@ Ext4.define('SequenceAnalysis.window.CreateReferenceLibraryWindow', {
                     xtype: 'checkbox',
                     fieldLabel: 'Skip Aligner Index Creation',
                     itemId: 'skipCacheIndexes'
+                },{
+                    xtype: 'checkbox',
+                    fieldLabel: 'Skip Create Triggers',
+                    helpPopup: 'When a new genome is created, it fires events that can trigger other modules to perform work.  For example, the BLAST module will automatically create a new database.  If checked, this event will not be fired.  The primary purpose for this would be if you expect this genome to change after the initial import.  Generally speaking, it is best if this is left alone.',
+                    itemId: 'skipTriggers'
                 },{
                     xtype: 'checkbox',
                     itemId: 'customIntervals',
@@ -183,13 +193,17 @@ Ext4.define('SequenceAnalysis.window.CreateReferenceLibraryWindow', {
             return;
         }
 
+        var assemblyId = this.down('#assemblyId').getValue();
         var description = this.down('#description').getValue();
         var skipCacheIndexes = this.down('#skipCacheIndexes').getValue();
+        var skipTriggers = this.down('#skipTriggers').getValue();
         var jsonData = {
             name: name,
+            assemblyId: assemblyId,
             description: description,
             sequenceIds: this.rowIds,
-            skipCacheIndexes: skipCacheIndexes
+            skipCacheIndexes: skipCacheIndexes,
+            skipTriggers: skipTriggers
         };
 
         if (this.down('#customIntervals').getValue()){

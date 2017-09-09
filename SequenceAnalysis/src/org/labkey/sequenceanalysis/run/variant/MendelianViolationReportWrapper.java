@@ -40,6 +40,8 @@ public class MendelianViolationReportWrapper extends AbstractGatkWrapper
         args.add(inputVCF.getPath());
         args.add("-ped");
         args.add(ped.getPath());
+        args.add("-pedValidationType");
+        args.add("SILENT");
         args.add("-o");
         args.add(outputTxt.getPath());
         if (options != null)

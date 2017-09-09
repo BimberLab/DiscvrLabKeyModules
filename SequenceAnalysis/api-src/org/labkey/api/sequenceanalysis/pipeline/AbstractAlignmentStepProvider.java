@@ -33,6 +33,7 @@ abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentSt
     public static String ALIGNMENT_MODE_PARAM = "alignmentMode";
     public static String SUPPORT_MERGED_UNALIGNED = "supportsMergeUnaligned";
     public static String COLLECT_WGS_METRICS = "collectWgsMetrics";
+    public static String COLLECT_WGS_METRICS_NON_ZERO = "collectWgsMetricsNonZero";
     public static String DISCARD_BAM = "discardBam";
 
     public static enum ALIGNMENT_MODE
@@ -90,6 +91,10 @@ abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentSt
 
         parameters.add(ToolParameterDescriptor.create(COLLECT_WGS_METRICS, "Collect WGS Metrics", "If checked, the pipeline will run Picard tool CollectWgsMetrics, which gathers various metrics including coverage depth.", "checkbox", new JSONObject(){{
             put("checked", true);
+        }}, true));
+
+        parameters.add(ToolParameterDescriptor.create(COLLECT_WGS_METRICS_NON_ZERO, "Collect WGS Metrics Over Non-Zero Coverage", "If checked, the pipeline will run Picard tool CollectWgsMetrics, which gathers various metrics including coverage depth over positions of non-zero coverage.", "checkbox", new JSONObject(){{
+            put("checked", false);
         }}, true));
 
         parameters.add(ToolParameterDescriptor.create(DISCARD_BAM, "Discard BAM", "If checked, the pipeline will discard the alignment (BAM file) at the end of this pipeline.  This is primarily used if your pipeline calculates some data from this BAM and you do not need to keep the BAM itself for disk space reasons.", "checkbox", new JSONObject(){{

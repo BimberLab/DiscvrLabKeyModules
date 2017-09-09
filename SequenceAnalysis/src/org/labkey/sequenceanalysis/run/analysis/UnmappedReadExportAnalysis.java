@@ -75,7 +75,7 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
     {
         AnalysisOutputImpl output = new AnalysisOutputImpl();
 
-        boolean fastaExport= getProvider().getParameterByName("fastaExport").extractValue(getPipelineCtx().getJob(), this.getProvider(), Boolean.class, false);
+        boolean fastaExport= getProvider().getParameterByName("fastaExport").extractValue(getPipelineCtx().getJob(), this.getProvider(), getStepIdx(), Boolean.class, false);
         String extension = fastaExport ? "fasta" : "fastq";
 
         if (fastaExport)

@@ -53,7 +53,7 @@ public class SplitNCigarReadsStep extends AbstractCommandPipelineStep<SplitNCiga
         BamProcessingOutputImpl output = new BamProcessingOutputImpl();
         getWrapper().setOutputDir(outputDirectory);
 
-        boolean doReassignMappingQual = getProvider().getParameterByName("doReassignMappingQual").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, true);
+        boolean doReassignMappingQual = getProvider().getParameterByName("doReassignMappingQual").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true);
 
         File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".splitncigar.bam");
         output.addIntermediateFile(outputBam);

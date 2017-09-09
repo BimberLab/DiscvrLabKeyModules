@@ -73,6 +73,11 @@ public class NtSnpByPosAggregator extends AbstractAlignmentAggregator
             return;
         }
 
+        if (!super.inspectMapQual(record))
+        {
+            return;
+        }
+
         //NOTE: depth is handled by superclass
         if (!_coverageTrackedExternally)
         {
@@ -216,6 +221,7 @@ public class NtSnpByPosAggregator extends AbstractAlignmentAggregator
     public String getSynopsis()
     {
         return "NT SNP By Pos Aggregator:\n" +
+                "\tMinMapQual: " + getMinMapQual() + "\n" +
                 "\tMinSnpQual: " + getMinSnpQual() + "\n" +
                 "\tMinAvgSnpQual: " + getMinAvgSnpQual() + "\n" +
                 "\tMinDipQual: " + getMinDipQual() + "\n" +

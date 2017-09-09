@@ -38,10 +38,10 @@ public class ImportFastaSequencesPipelineJob extends PipelineJob
     private boolean _splitWhitespace;
     private boolean _createLibrary;
     private boolean _deleteInputs = false;
-    private Map<String, String> _libraryParams;
+    private Map<String, Object> _libraryParams;
     private File _outDir;
 
-    public ImportFastaSequencesPipelineJob(Container c, User user, ActionURL url, PipeRoot pipeRoot, List<File> fastas, Map<String, String> params, boolean splitWhitespace, boolean createLibrary, Map<String, String> libraryParams) throws IOException
+    public ImportFastaSequencesPipelineJob(Container c, User user, ActionURL url, PipeRoot pipeRoot, List<File> fastas, Map<String, String> params, boolean splitWhitespace, boolean createLibrary, Map<String, Object> libraryParams) throws IOException
     {
         super(Provider.NAME, new ViewBackgroundInfo(c, user, url), pipeRoot);
         _fastas = fastas;
@@ -115,12 +115,12 @@ public class ImportFastaSequencesPipelineJob extends PipelineJob
         _createLibrary = createLibrary;
     }
 
-    public Map<String, String> getLibraryParams()
+    public Map<String, Object> getLibraryParams()
     {
         return _libraryParams;
     }
 
-    public void setLibraryParams(Map<String, String> libraryParams)
+    public void setLibraryParams(Map<String, Object> libraryParams)
     {
         _libraryParams = libraryParams;
     }

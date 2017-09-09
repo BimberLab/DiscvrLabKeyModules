@@ -66,6 +66,8 @@ public interface Readset extends Serializable
 
     public String getComments();
 
+    public String getStatus();
+
     public Integer getRunId();
 
     public boolean hasPairedData();

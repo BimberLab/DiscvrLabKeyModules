@@ -1,6 +1,6 @@
 require({cache:{
 'JBrowse/Plugin':function(){
-define("JBrowse/Plugin", [
+define([
            'dojo/_base/declare',
            'JBrowse/Component'
        ],
@@ -22,7 +22,7 @@ return declare( Component,
 });
 },
 'JBrowse/View/FeatureGlyph/ProcessedTranscript':function(){
-define("JBrowse/View/FeatureGlyph/ProcessedTranscript", [
+define([
            'dojo/_base/declare',
            'dojo/_base/array',
 
@@ -54,13 +54,18 @@ _defaultConfig: function() {
 
             subParts: 'CDS, UTR, five_prime_UTR, three_prime_UTR',
 
-            impliedUTRs: false
+            impliedUTRs: false,
+
+            inferCdsParts: false
         });
 },
 
 _getSubparts: function( f ) {
     var c = f.children();
     if( ! c ) return [];
+
+    if( c && this.config.inferCdsParts )
+        c = this._makeCDSs( f, c );
 
     if( c && this.config.impliedUTRs )
         c = this._makeUTRs( f, c );
@@ -71,6 +76,97 @@ _getSubparts: function( f ) {
             filtered.push( c[i] );
 
     return filtered;
+},
+
+_makeCDSs: function( parent, subparts ) {
+    // infer CDS parts from exon coordinates
+
+    var codeStart =  Infinity,
+          codeEnd = -Infinity;
+
+    var i;
+
+    // gather exons, find coding start and end
+    var type, codeIndices = [], exons = [];
+    for( i = 0; i < subparts.length; i++ ) {
+        type = subparts[i].get('type');
+        if( /^cds/i.test( type ) ) {
+            // if any CDSs parts are present already,
+            // bail and return all subparts as-is
+            if( /:CDS:/i.test( subparts[i].get('name') ) )
+                return subparts;
+
+            codeIndices.push(i);
+            if( codeStart > subparts[i].get('start') )
+                codeStart = subparts[i].get('start');
+            if( codeEnd < subparts[i].get('end') )
+                codeEnd = subparts[i].get('end');
+        }
+        else {
+            if( /exon/i.test( type ) ) {
+                exons.push( subparts[i] );
+            }
+        }
+    }
+
+    // splice out unspliced cds parts
+    codeIndices.sort( function(a,b) { return b - a; } );
+    for ( i = codeIndices.length - 1; i >= 0; i-- )
+        subparts.splice(codeIndices[i], 1);
+
+    // bail if we don't have exons and cds
+    if( !( exons.length && codeStart < Infinity && codeEnd > -Infinity ) )
+        return subparts;
+
+    // make sure the exons are sorted by coord
+    exons.sort( function(a,b) { return a.get('start') - b.get('start'); } );
+
+    // iterate thru exons again, and calculate cds parts
+    var strand = parent.get('strand');
+    var codePartStart =  Infinity,
+          codePartEnd = -Infinity;
+    for ( i = 0; i < exons.length; i++ ) {
+        var start = exons[i].get('start');
+        var end = exons[i].get('end');
+
+        // CDS containing exon
+        if( codeStart >= start && codeEnd <= end ) {
+            codePartStart = codeStart;
+            codePartEnd = codeEnd;
+        }
+        // 5' terminal CDS part
+        else if( codeStart >= start && codeStart < end ) {
+            codePartStart = codeStart;
+            codePartEnd = end;
+        }
+        // 3' terminal CDS part
+        else if( codeEnd > start && codeEnd <= end ) {
+            codePartStart = start;
+            codePartEnd = codeEnd;
+        }
+        // internal CDS part
+        else if( start < codeEnd && end > codeStart ) {
+            codePartStart = start;
+            codePartEnd = end;
+        }
+
+        // "splice in" the calculated cds part into subparts
+        // at beginning of _makeCDSs() method, bail if cds subparts are encountered
+        subparts.splice(i, 0, ( new SimpleFeature(
+                    {   parent: parent,
+                        data: {
+                            start: codePartStart,
+                            end: codePartEnd,
+                            strand: strand,
+                            type: 'CDS',
+                            name: parent.get('uniqueID') + ":CDS:" + i
+                        }})));
+    }
+
+    // make sure the subparts are sorted by coord
+    subparts.sort( function(a,b) { return a.get('start') - b.get('start'); } );
+
+    return subparts;
 },
 
 _makeUTRs: function( parent, subparts ) {
@@ -181,7 +277,7 @@ _getFeatureHeight: function( viewInfo, feature ) {
 
 },
 'dojox/color/Palette':function(){
-define("dojox/color/Palette", ["dojo/_base/lang", "dojo/_base/array", "./_base"],
+define(["dojo/_base/lang", "dojo/_base/array", "./_base"],
 	function(lang, arr, dxc){
 
 	/***************************************************************
@@ -644,7 +740,7 @@ var __splitComplementaryArgs = {
 
 },
 'dojox/color/_base':function(){
-define("dojox/color/_base", ["../main", "dojo/_base/lang", "dojo/_base/Color", "dojo/colors"],
+define(["../main", "dojo/_base/lang", "dojo/_base/Color", "dojo/colors"],
 	function(dojox, lang, Color, colors){
 
 var cx = lang.getObject("color", true, dojox);
@@ -843,7 +939,7 @@ return cx;
 
 },
 'dojo/colors':function(){
-define("dojo/colors", ["./_base/kernel", "./_base/lang", "./_base/Color", "./_base/array"], function(dojo, lang, Color, ArrayUtil){
+define(["./_base/kernel", "./_base/lang", "./_base/Color", "./_base/array"], function(dojo, lang, Color, ArrayUtil){
 	// module:
 	//		dojo/colors
 
@@ -1078,7 +1174,7 @@ define("dojo/colors", ["./_base/kernel", "./_base/lang", "./_base/Color", "./_ba
 
 },
 'JBrowse/View/FeatureGlyph/Segments':function(){
-define("JBrowse/View/FeatureGlyph/Segments", [
+define([
            'dojo/_base/declare',
            'dojo/_base/lang',
            'dojo/_base/array',
@@ -1205,7 +1301,7 @@ _makeSubpartsFilter: function( f ) {
 
 },
 'JBrowse/View/FeatureGlyph/Box':function(){
-define("JBrowse/View/FeatureGlyph/Box", [
+define([
            'dojo/_base/declare',
            'dojo/_base/array',
            'dojo/_base/lang',
@@ -1547,7 +1643,7 @@ return declare([ FeatureGlyph, FeatureLabelMixin], {
  * uses.
  */
 
-define("JBrowse/Util/FastPromise", [
+define([
        ],
        function(
        ) {
@@ -1575,7 +1671,7 @@ return fastpromise;
 });
 },
 'JBrowse/View/FeatureGlyph':function(){
-define("JBrowse/View/FeatureGlyph", [
+define([
            'dojo/_base/declare',
            'dojo/_base/array',
            'dojo/aspect',
@@ -1767,7 +1863,7 @@ return declare( Component, {
 
 },
 'JBrowse/View/FeatureGlyph/_FeatureLabelMixin':function(){
-define( "JBrowse/View/FeatureGlyph/_FeatureLabelMixin", [
+define( [
             'dojo/_base/declare',
             'dojo/_base/lang',
             'JBrowse/View/_FeatureDescriptionMixin'
@@ -1790,6 +1886,7 @@ return declare( FeatureDescriptionMixin,  {
         var text = this.getFeatureLabel( feature );
         if( ! text )
             return null;
+        text = ''+text;
         var font = this.getStyle( feature, 'textFont' );
         var l = fRect ? this.makeBottomOrTopLabel( text, font, fRect ) : this.makePopupLabel( text, font );
         l.fill = this.getStyle( feature, 'textColor' );
@@ -1805,6 +1902,7 @@ return declare( FeatureDescriptionMixin,  {
         var text = this.getFeatureDescription( feature );
         if( ! text )
             return null;
+        text = ''+text;
         var font = this.getStyle( feature, 'text2Font' );
         var l = fRect ? this.makeBottomOrTopLabel( text, font, fRect ) : this.makePopupLabel( text, font );
         l.fill = this.getStyle( feature, 'text2Color' );
@@ -2061,7 +2159,7 @@ return declare( JBrowsePlugin,
         var type = feature.get('type');
         
         // is UTR
-        if (typeof(type) != "undefined" && type.indexOf('UTR') > -1) {
+        if (typeof(type) !== "undefined" && type.indexOf('UTR') > -1) {
             context.fillStyle = "#fdfdfd";//this.colorShift(bgcolor,4.5);
         }
         else {
@@ -2069,15 +2167,15 @@ return declare( JBrowsePlugin,
 
             // Create gradient
 
-            var grd = context.createLinearGradient(left, top, left, top+height);
+//            var grd = context.createLinearGradient(left, top, left, top+height);
 
-            // Add colors
-            grd.addColorStop(0.000, bgcolor);
-            grd.addColorStop(0.500,this.colorShift(bgcolor,2.5));
-            grd.addColorStop(0.999, bgcolor);
+//            // Add colors
+//            grd.addColorStop(0.000, bgcolor);
+//            grd.addColorStop(0.500,this.colorShift(bgcolor,2.5));
+//            grd.addColorStop(0.999, bgcolor);
 
-            // Fill with gradient
-            context.fillStyle = grd;
+//            // Fill with linear 
+            context.fillStyle = bgcolor;
            
         }
 
@@ -2093,7 +2191,7 @@ return declare( JBrowsePlugin,
 
         // foreground border
         var borderColor, lineWidth;
-        if (typeof(type) != "undefined" && type.indexOf('UTR') > -1) {
+        if (typeof(type) !== "undefined" && type.indexOf('UTR') > -1) {
             lineWidth = 1;
             borderColor = "#b0b0b0";
             if( width > 3 ) {

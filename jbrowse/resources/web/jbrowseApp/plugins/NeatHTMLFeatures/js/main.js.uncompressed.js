@@ -1,6 +1,6 @@
 require({cache:{
 'JBrowse/Plugin':function(){
-define("JBrowse/Plugin", [
+define([
            'dojo/_base/declare',
            'JBrowse/Component'
        ],
@@ -55,9 +55,13 @@ return declare( JBrowsePlugin,
         var thisB = this;
         var browser = this.browser;
 
+        this.neat = 1;
         this.gradient = 1;
-        if(typeof args.gradientFeatures != 'undefined' && args.gradientFeatures == 0) {
+        if(typeof args.linearGradient != 'undefined' && args.linearGradient == 0) {
             this.gradient = 0;
+        }
+        if(typeof args.neatFeatures != 'undefined' && args.neatFeatures == 0) {
+            this.neat = 0;
         }
 
         // trap the redraw event for handling resize
@@ -73,17 +77,20 @@ return declare( JBrowsePlugin,
             // reroute renderTrack function
             browser.view.oldRenderTrack = browser.view.renderTrack;
 
-            // this is the replacement renderTrack function
+            // this is the replacement renderTrack function (trackConfig contains the config for the given track being rendered)
             browser.view.renderTrack = function (trackConfig) {
                 //console.log("view.renderTrack() intercepted!");
 
                 // call the original renderTrack function
                 var trackDiv = browser.view.oldRenderTrack(trackConfig);
                 
-                // we add neat-track class as a flag to indicate this is a track to be "painted"
-                if(typeof trackConfig.gradientFeatures != 'undefined' && trackConfig.gradientFeatures != 0) {
+                // this checks if per-track neatFeatures=1 is defined, then we "paint" introns on only the selected tracks
+                if(typeof trackConfig.neatFeatures !== 'undefined' && trackConfig.neatFeatures === 1) {
                     dojo.addClass(trackDiv,"neat-track");
                 }
+                //if(typeof trackConfig.linearGradient !== 'undefined' && trackConfig.linearGradient === 1) {
+                //    dojo.addClass(trackDiv,"neat-linear-shading");
+                //}
                 return trackDiv;
             };
 
@@ -97,19 +104,23 @@ return declare( JBrowsePlugin,
         var thisB = this;
 
         var divQuery = "div.feature";       // by default, paint all feature divs
-        if (this.gradient==0)
-            divQuery = "div.neat-track div.feature";    // paint only selected tracks 
 
-            query(divQuery).forEach(function(featureNode, index, arr){
+        // apply introns to all feature tracks
+        query(divQuery).forEach(function(featureNode, index, arr){
 
-                //console.dir(featureNode);
+            // scan and insert introns, where applicable
+            thisB.insertIntrons(featureNode);
+        });
+        
+        // if plugin-config neatFeatures is disabled, then we only apply neat featuress to selected tracks.
+        if (this.neat==0) {
+            divQuery = "div.neat-track div.feature";    // paint only selected tracks
+        }
 
-                // scan and insert introns, where applicable
-                thisB.insertIntrons(featureNode);
-                
-                //Process Gradent Features
-                thisB.paintGradientFeatures(featureNode);
-            });
+        query(divQuery).forEach(function(featureNode, index, arr){
+            //Process Gradent Features
+            thisB.paintNeatFeatures(featureNode);
+        });
 
         //});
     },
@@ -130,11 +141,30 @@ return declare( JBrowsePlugin,
                 if (attr.indexOf("splice-site") === -1)
                     subNodes.push(subNodesX[i]);
             }
-            
-            if (subNodes.length) {
-            
+            if(subNodes.length<2){
+                // apply introns to all feature tracks
+                var subFeatureIntron = query('div.feature-render',featureNode);
+                // added to handle apollo annotation classes:  https://github.com/GMOD/Apollo/issues/1417
+                if(subFeatureIntron && subFeatureIntron.length==1 && subFeatureIntron[0].className.indexOf("annot-apollo")<0 && subFeatureIntron[0].className.indexOf("annot-render")<0){
+                    var left = featureNode.style.left;
+                    var width = featureNode.style.width;
+                    var height = '100%';
+                    var str = "";
+                    str += "<svg class='jb-intron' viewBox='0 0 100 100' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' ";
+                    str += "style='position:absolute;z-index: 15;";  // this must be here and not in CSS file
+                    str += "left: " + left + ";width: " + width + ";height: " + height + "'>";
+                    str += "<polyline points='0,50 100,50' style='fill:none;stroke:black;stroke-width:5' shape-rendering='optimizeQuality' />";
+                    str += "</svg>";
+
+                    // note: dojo.create("svg") does not render due to namespace issue between DOM and SVG
+                    domConstruct.place(str, featureNode);
+                    ++intronCount;
+                }
+            }
+            else
+            if (subNodes.length>=2) {
                 // identify directionality
-                var classAttr = dojo.attr(featureNode, "class")
+                var classAttr = dojo.attr(featureNode, "class");
                 var direction = 1;
                 if (classAttr.indexOf("minus") > -1) {
                     direction = -1;
@@ -148,15 +178,8 @@ return declare( JBrowsePlugin,
                 }
                 // sort the subfeatures
                 if (subNodes.length >= 2) {
-                    subNodes.sort(function(a, b){ return a.left - b.left; });    
+                    subNodes.sort(function(a, b){ return a.left - b.left; });
                 }
-
-                /* debug display subfeature list
-                console.dir(subNodes);
-                for(var i=0; i < subNodes.length;i++) {
-                    console.log(i + " subfeature left,width: "+subNodes[i].left+", "+subNodes[i].width);
-                }
-                */
 
                 // insert introns between subfeature gaps
                 for(var i=0; i< subNodes.length-1;++i) {
@@ -182,7 +205,7 @@ return declare( JBrowsePlugin,
                         str += "<svg class='jb-intron' viewBox='0 0 100 100' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' ";
                         str += "style='position:absolute;z-index: 15;";  // this must be here and not in CSS file
                         str += "left: "+left+"px;width: "+width+"px;height: "+height+"'>";
-                        str += "<polyline points='0,50 "+ dir +" 100,50' style='fill:none;stroke:black;stroke-width:5' shape-rendering='optimizeQuality' />";
+                        str += "<polyline class='neat-intron' points='0,50 "+ dir +" 100,50' shape-rendering='optimizeQuality' />";
                         str += "</svg>";
 
                         // note: dojo.create("svg") does not render due to namespace issue between DOM and SVG
@@ -201,9 +224,9 @@ return declare( JBrowsePlugin,
         }
     },
     /*
-     * Paint gradient features and subfeatures
+     * Paint neat features and subfeatures
      */
-    paintGradientFeatures: function(featureNode) {
+    paintNeatFeatures: function(featureNode) {
     
         // get the subfeature nodes (only immediate children)
         var subNodesX = query('> .subfeature',featureNode);
@@ -252,12 +275,15 @@ return declare( JBrowsePlugin,
             
                 var classAttr = dojo.attr(featureNode,'class');
                 var color = dojo.getStyle(featureNode,'background-color');
-                //console.log("F "+classAttr+" "+color);
 
                 // update the element with new styling
-                dojo.setStyle(featureNode, {
-                    'background': 'linear-gradient(to bottom,  '+color+' 0%,#e5e5e5 50%,'+color+' 100%)'
-                });
+                //if(dojo.hasClass(featureNode,'neat-linear-shading')){
+                if(this.gradient==1){
+                    dojo.setStyle(featureNode, {
+                        'background': 'linear-gradient(to bottom,  ' + color + ' 0%,#e5e5e5 50%,' + color + ' 100%)'
+                    });
+                }
+                //}
                 // mark that we have processed the node
                 dojo.addClass(featureNode, "neat-feature");
             }
@@ -265,7 +291,7 @@ return declare( JBrowsePlugin,
 
     },
     /*
-     * apply gradient background to feature node
+     * apply neat modifications to feature sub-nodes
      */
     paintSubNode: function(subNode) {
         //console.log("paintSubNode");
@@ -292,12 +318,14 @@ return declare( JBrowsePlugin,
             // restyle other subfeatures
             else {
             //if(classAttr.indexOf('CDS') > -1 || classAttr.indexOf('exon') > -1) {
-                dojo.setStyle(subNode, {
-                    //'height': '100%',
-                    'top': '0px',
-                    //'border-width': '0px',
-                    'background': 'linear-gradient(to bottom,  '+color+' 0%,#e5e5e5 50%,'+color+' 100%)'
-                });
+                if(this.gradient==1) {
+                    dojo.setStyle(subNode, {
+                        //'height': '100%',
+                        'top': '0px',
+                        //'border-width': '0px',
+                        'background': 'linear-gradient(to bottom,  ' + color + ' 0%,#e5e5e5 50%,' + color + ' 100%)'
+                    });
+                }
             }
             // mark that we have processed the node
             dojo.addClass(subNode, "neat-subfeature");

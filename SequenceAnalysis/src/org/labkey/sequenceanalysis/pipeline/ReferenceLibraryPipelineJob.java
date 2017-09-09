@@ -40,22 +40,26 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
 {
     public static final String FOLDER_NAME = "referenceLibrary";
 
+    private String _assemblyId;
     private String _description;
     private Integer _libraryId = null;
     private ReferenceGenomeImpl _referenceGenome = null;
     private boolean _isNew;
     private boolean _skipCacheIndexes = false;
+    private boolean _skipTriggers = false;
     private String _libraryName;
     private List<String> _unplacedContigPrefixes;
 
-    public ReferenceLibraryPipelineJob(Container c, User user, PipeRoot pipeRoot, String libraryName, String description, @Nullable List<ReferenceLibraryMember> libraryMembers, @Nullable Integer libraryId, boolean skipCacheIndexes, @Nullable List<String> unplacedContigPrefixes) throws IOException
+    public ReferenceLibraryPipelineJob(Container c, User user, PipeRoot pipeRoot, String libraryName, String assemblyId, String description, @Nullable List<ReferenceLibraryMember> libraryMembers, @Nullable Integer libraryId, boolean skipCacheIndexes, boolean skipTriggers, @Nullable List<String> unplacedContigPrefixes) throws IOException
     {
         super(ReferenceLibraryPipelineProvider.NAME, c, user, "referenceLibrary_" + FileUtil.getTimestamp(), pipeRoot, new JSONObject(), new TaskId(ReferenceLibraryPipelineJob.class), FOLDER_NAME);
+        _assemblyId = assemblyId;
         _description = description;
         _libraryId = libraryId;
         _libraryName = libraryName;
         _isNew = libraryId == null;
         _skipCacheIndexes = skipCacheIndexes;
+        _skipTriggers = skipTriggers;
         _unplacedContigPrefixes = unplacedContigPrefixes;
 
         saveLibraryMembersToFile(libraryMembers);
@@ -102,7 +106,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
     }
 
     //for recreating an existing library
-    public static ReferenceLibraryPipelineJob recreate(Container c, User user, PipeRoot pipeRoot, Integer libraryId, boolean skipCacheIndexes)throws IOException
+    public static ReferenceLibraryPipelineJob recreate(Container c, User user, PipeRoot pipeRoot, Integer libraryId, boolean skipCacheIndexes, boolean skipTriggers) throws IOException
     {
         TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
         Map rowMap = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("rowid"), libraryId), null).getMap();
@@ -111,7 +115,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
             throw new IllegalArgumentException("Library not found: " + libraryId);
         }
 
-        return new ReferenceLibraryPipelineJob(c, user, pipeRoot, (String)rowMap.get("name"), (String)rowMap.get("description"), null, libraryId, skipCacheIndexes, null);
+        return new ReferenceLibraryPipelineJob(c, user, pipeRoot, (String)rowMap.get("name"), (String)rowMap.get("assemblyId"), (String)rowMap.get("description"), null, libraryId, skipCacheIndexes, skipTriggers, null);
     }
 
     @Override
@@ -128,6 +132,16 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
     public String getLibraryDescription()
     {
         return _description;
+    }
+
+    public String getAssemblyId()
+    {
+        return _assemblyId;
+    }
+
+    public boolean isSkipTriggers()
+    {
+        return _skipTriggers;
     }
 
     public List<String> getUnplacedContigPrefixes()

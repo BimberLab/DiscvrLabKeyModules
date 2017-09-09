@@ -64,7 +64,7 @@ public class VariantFiltrationStep extends AbstractCommandPipelineStep<VariantFi
         params.addAll(getClientCommandArgs());
 
         //filters
-        String filterText = getProvider().getParameterByName("filters").extractValue(getPipelineCtx().getJob(), getProvider(), String.class, null);
+        String filterText = getProvider().getParameterByName("filters").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null);
         if (filterText != null)
         {
             JSONArray filterArr = new JSONArray(filterText);
@@ -90,7 +90,7 @@ public class VariantFiltrationStep extends AbstractCommandPipelineStep<VariantFi
         //snp cluster, handled by getClientCommandArgs()
 
         //masking
-        String maskText = getProvider().getParameterByName("mask").extractValue(getPipelineCtx().getJob(), getProvider(), String.class, null);
+        String maskText = getProvider().getParameterByName("mask").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null);
         if (maskText != null)
         {
             JSONObject mask = new JSONObject(maskText);

@@ -328,6 +328,21 @@ public class SequencePipelineSettings
         return ("true".equals(_params.get("inputfile.runFastqc")));
     }
 
+    public boolean doFlagLowReads()
+    {
+        return ("true".equals(_params.get("inputfile.flagLowReads")));
+    }
+
+    public Long getLowReadThreshold()
+    {
+        return _params.get("inputfile.lowReadThreshold") == null ? 0L : Long.parseLong(_params.get("inputfile.lowReadThreshold"));
+    }
+
+    public String getLowReadStatusLabel()
+    {
+            return _params.get("inputfile.lowReadStatusLabel");
+    }
+
     public Map<String, String> getParams()
     {
         return Collections.unmodifiableMap(_params);

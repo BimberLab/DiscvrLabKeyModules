@@ -26,6 +26,7 @@ abstract public class AbstractPipelineStep implements PipelineStep
 {
     private PipelineContext _ctx;
     private PipelineStepProvider _provider;
+    private int _stepIdx = 0;
 
     public AbstractPipelineStep(PipelineStepProvider provider, PipelineContext ctx)
     {
@@ -45,6 +46,18 @@ abstract public class AbstractPipelineStep implements PipelineStep
 
     protected <ParamType> ParamType extractParamValue(String paramName, Class<ParamType> clazz) throws PipelineJobException
     {
-        return getProvider().getParameterByName(paramName).extractValue(getPipelineCtx().getJob(), getProvider(), clazz);
+        return getProvider().getParameterByName(paramName).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), clazz, null);
+    }
+
+    @Override
+    public int getStepIdx()
+    {
+        return _stepIdx;
+    }
+
+    @Override
+    public void setStepIdx(int stepIdx)
+    {
+        _stepIdx = stepIdx;
     }
 }

@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.labkey.GeneticsCore.analysis.CombineMethylationRatesHandler;
 import org.labkey.GeneticsCore.analysis.MethylationRateComparisonHandler;
 import org.labkey.GeneticsCore.button.ChangeReadsetStatusButton;
+import org.labkey.GeneticsCore.button.ChangeReadsetStatusForAnalysesButton;
 import org.labkey.GeneticsCore.button.HaplotypeReviewButton;
 import org.labkey.GeneticsCore.button.PublishSBTResultsButton;
 import org.labkey.GeneticsCore.button.SBTReviewButton;
@@ -28,9 +29,10 @@ import org.labkey.GeneticsCore.pipeline.BisSnpGenotyperAnalysis;
 import org.labkey.GeneticsCore.pipeline.BisSnpIndelRealignerStep;
 import org.labkey.GeneticsCore.pipeline.BismarkWrapper;
 import org.labkey.GeneticsCore.pipeline.BlastPipelineJobResourceAllocator;
+import org.labkey.GeneticsCore.pipeline.ClusterMaintenanceTask;
 import org.labkey.GeneticsCore.pipeline.ExacloudResourceSettings;
 import org.labkey.GeneticsCore.pipeline.SequenceJobResourceAllocator;
-import org.labkey.api.htcondorconnector.HTCondorService;
+import org.labkey.api.cluster.ClusterService;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.ldk.LDKService;
@@ -39,6 +41,7 @@ import org.labkey.api.ldk.table.SimpleButtonConfigFactory;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.template.ClientDependency;
 
 public class GeneticsCoreModule extends ExtendedSimpleModule
@@ -83,17 +86,20 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
 
         LDKService.get().registerQueryButton(new SBTReviewButton(), "sequenceanalysis", "sequence_analyses");
         LDKService.get().registerQueryButton(new HaplotypeReviewButton(), "sequenceanalysis", "sequence_analyses");
-        LDKService.get().registerQueryButton(new ChangeReadsetStatusButton(), "sequenceanalysis", "sequence_analyses");
+        LDKService.get().registerQueryButton(new ChangeReadsetStatusForAnalysesButton(), "sequenceanalysis", "sequence_analyses");
+        LDKService.get().registerQueryButton(new ChangeReadsetStatusButton(), "sequenceanalysis", "sequence_readsets");
         LDKService.get().registerQueryButton(new PublishSBTResultsButton(), "sequenceanalysis", "alignment_summary_by_lineage");
         //LDKService.get().registerQueryButton(new PublishSBTHaplotypesButton(), "sequenceanalysis", "haplotypeMatches");
         LaboratoryService.get().registerTableCustomizer(this, GeneticsTableCustomizer.class, "sequenceanalysis", "sequence_analyses");
         LaboratoryService.get().registerTableCustomizer(this, GeneticsTableCustomizer.class, "sequenceanalysis", "alignment_summary_by_lineage");
         LaboratoryService.get().registerTableCustomizer(this, GeneticsTableCustomizer.class, "sequenceanalysis", "alignment_summary_grouped");
 
-        HTCondorService.get().registerResourceAllocator(new BlastPipelineJobResourceAllocator.Factory());
-        HTCondorService.get().registerResourceAllocator(new SequenceJobResourceAllocator.Factory());
+        ClusterService.get().registerResourceAllocator(new BlastPipelineJobResourceAllocator.Factory());
+        ClusterService.get().registerResourceAllocator(new SequenceJobResourceAllocator.Factory());
 
         SequencePipelineService.get().registerResourceSettings(new ExacloudResourceSettings());
+
+        SystemMaintenance.addTask(new ClusterMaintenanceTask());
 
         //register resources
         new PipelineStartup();

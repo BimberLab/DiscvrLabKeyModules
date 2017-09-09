@@ -1,6 +1,6 @@
 require({cache:{
 'JBrowse/Plugin':function(){
-define("JBrowse/Plugin", [
+define([
            'dojo/_base/declare',
            'JBrowse/Component'
        ],
@@ -64,6 +64,8 @@ return declare( JBrowsePlugin,
 
         var baseUrl = this._defaultConfig().baseUrl;
         var thisB = this;
+        var queryParams = dojo.queryToObject( window.location.search.slice(1) );
+
 
         // create the hide/show button after genome view initialization
         this.browser.afterMilestone( 'initView', function() {
@@ -80,6 +82,11 @@ return declare( JBrowsePlugin,
                     dojo.stopEvent(event);
                 })
             }, dojo.create('button',{},navBox));   //thisB.browser.navBox));
+ 
+            if(queryParams.tracklabels == 0 || thisB.browser.config.show_tracklabels == 0) {
+                query('.track-label').style('visibility', 'hidden')
+                dojo.attr(dom.byId("hidetitles-btn"),"hidden-titles","");       // if shown, hide
+            }
         });
 
         /* show or hide track labels
@@ -123,13 +130,21 @@ return declare( JBrowsePlugin,
             dojo.attr(dom.byId("hidetitles-btn"),"disabled","");
             setTimeout(function(){
                 dojo.removeAttr(dom.byId("hidetitles-btn"),"disabled");
-            },1000);
+            }, 200);
 
+            if(direction==-1) {
+                setTimeout(function() {
+                    query('.track-label').style('visibility', 'hidden')
+                }, 200);
+            } else {
+                query('.track-label').style('visibility', 'visible')
+            }
             // slide em
             query(".track-label").forEach(function(node, index, arr){
                 var w = domGeom.getMarginBox(node).w;
                 coreFx.slideTo({
                   node: node,
+                  duration: 200,
                   top: domGeom.getMarginBox(node).t.toString(),
                   left: (domGeom.getMarginBox(node).l + (w*direction) ).toString(),
                   unit: "px"

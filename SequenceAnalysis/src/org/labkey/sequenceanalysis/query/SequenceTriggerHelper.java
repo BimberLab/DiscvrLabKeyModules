@@ -1,6 +1,13 @@
 package org.labkey.sequenceanalysis.query;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.biojava3.core.sequence.DNASequence;
+import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
+import org.biojava3.core.sequence.compound.AmbiguityRNACompoundSet;
+import org.biojava3.core.sequence.compound.NucleotideCompound;
+import org.biojava3.core.sequence.template.Sequence;
+import org.biojava3.core.sequence.transcription.TranscriptionEngine;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
@@ -14,7 +21,9 @@ import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,6 +35,8 @@ public class SequenceTriggerHelper
     private User _user = null;
     private static final Logger _log = Logger.getLogger(SequenceTriggerHelper.class);
     private TableInfo _refNts = null;
+
+    private static final TranscriptionEngine _engine = new TranscriptionEngine.Builder().dnaCompounds(AmbiguityDNACompoundSet.getDNACompoundSet()).rnaCompounds(AmbiguityRNACompoundSet.getRNACompoundSet()).initMet(false).trimStop(false).build();
 
     private Map<Integer, String> _sequenceMap = new HashMap<>();
 
@@ -79,5 +90,44 @@ public class SequenceTriggerHelper
             model.createFileForSequence(getUser(), sequence, null);
 
         }
+    }
+
+    public String extractAASequence(int refNtId, List<List<Number>> exons, boolean isComplement)
+    {
+        RefNtSequenceModel model = RefNtSequenceModel.getForRowId(refNtId);
+        if (model == null)
+        {
+            return null;
+        }
+
+        StringWriter writer = new StringWriter();
+        for (List<Number> exon : exons)
+        {
+            if (exon.size() != 2)
+            {
+                throw new IllegalArgumentException("Improper exon: " + StringUtils.join(exon, "-"));
+            }
+
+            //exons supplied as 1-based coordinates
+            try
+            {
+                model.writeSequence(writer, -1, exon.get(0).intValue(), exon.get(1).intValue());
+            }
+            catch (IOException e)
+            {
+                _log.error(e);
+                return null;
+            }
+        }
+
+        if (writer.getBuffer().length() > 0)
+        {
+            DNASequence dna = new DNASequence(writer.getBuffer().toString(), AmbiguityDNACompoundSet.getDNACompoundSet());
+            Sequence<NucleotideCompound> toTranslate = isComplement ? dna.getReverseComplement() : dna;
+
+            return _engine.getRnaAminoAcidTranslator().createSequence(_engine.getDnaRnaTranslator().createSequence(toTranslate)).getSequenceAsString();
+        }
+
+        return null;
     }
 }

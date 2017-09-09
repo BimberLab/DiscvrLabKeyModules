@@ -60,7 +60,7 @@ public class SNPEffStep extends AbstractCommandPipelineStep<SnpEffWrapper> imple
         getPipelineCtx().getLogger().debug("checking for index");
 
         File snpEffBaseDir = AlignerIndexUtil.getWebserverIndexDir(genome, NAME);
-        Integer geneFileId = getProvider().getParameterByName("gene_file").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class);
+        Integer geneFileId = getProvider().getParameterByName("gene_file").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
         File geneFile = getPipelineCtx().getSequenceSupport().getCachedData(geneFileId);
         if (geneFile == null || !geneFile.exists())
         {

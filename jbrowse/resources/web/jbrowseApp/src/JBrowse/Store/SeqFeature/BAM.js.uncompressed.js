@@ -9,9 +9,10 @@ require({cache:{
 define([
            'dojo/_base/declare',
            'dojo/_base/array',
-           'dojo/Deferred'
+           'dojo/Deferred',
+           'JBrowse/Errors'
        ],
-       function( declare, array, Deferred ) {
+       function( declare, array, Deferred, Errors ) {
 
 return declare( null, {
 
@@ -24,6 +25,9 @@ return declare( null, {
         var deferred = new Deferred();
 
         refseq = refseq || this.refSeq;
+        var timeout = this.storeTimeout || 3000;
+
+        var startTime = new Date();
 
         var statsFromInterval = function( length, callback ) {
             var thisB = this;
@@ -43,21 +47,29 @@ return declare( null, {
                                                  });
                               },
                               function( error ) {
-                                      console.error( error );
                                       callback.call( thisB, length,  null, error );
                               });
         };
 
         var maybeRecordStats = function( interval, stats, error ) {
             if( error ) {
-                deferred.reject( error );
+                if( error.isInstanceOf(Errors.DataOverflow) ) {
+                     console.log( 'Store statistics found chunkSizeLimit error, using empty: '+(this.source||this.name) );
+                     deferred.resolve( { featureDensity: 0, error: 'global stats estimation found chunkSizeError' } );
+                }
+                else {
+                    deferred.reject( error );
+                }
             } else {
-                var refLen = refseq.end - refseq.start;
+                 var refLen = refseq.end - refseq.start;
                  if( stats._statsSampleFeatures >= 300 || interval * 2 > refLen || error ) {
                      console.log( 'Store statistics: '+(this.source||this.name), stats );
                      deferred.resolve( stats );
-                 } else {
+                 } else if( ((new Date()) - startTime) < timeout ) {
                      statsFromInterval.call( this, interval * 2, maybeRecordStats );
+                 } else {
+                     console.log( 'Store statistics timed out: '+(this.source||this.name) );
+                     deferred.resolve( { featureDensity: 0, error: 'global stats estimation timed out' } );
                  }
             }
         };
@@ -68,6 +80,7 @@ return declare( null, {
 
 });
 });
+
 },
 'JBrowse/Store/SeqFeature/BAM/File':function(){
 define( [
@@ -610,6 +623,10 @@ var Utils = {
         return (ba[offset + 1] << 8) | (ba[offset]);
     },
 
+    readByte: function(ba, offset) {
+        return (ba[offset]);
+    },
+
     readFloat: function(ba, offset) {
         var temp = new Uint8Array( 4 );
         for( var i = 0; i<4; i++ ) {
@@ -705,6 +722,7 @@ var Utils = {
 return Utils;
 
 });
+
 },
 'JBrowse/Store/SeqFeature/BAM/LazyFeature':function(){
 define( ['dojo/_base/array',
@@ -720,6 +738,7 @@ var CIGAR_DECODER  = ['M', 'I', 'D', 'N', 'S', 'H', 'P', '=', 'X', '?', '?', '?'
 var readInt   = BAMUtil.readInt;
 var readShort = BAMUtil.readShort;
 var readFloat = BAMUtil.readFloat;
+var readByte  = BAMUtil.readByte;
 
 var Feature = Util.fastDeclare(
 {
@@ -1038,6 +1057,47 @@ var Feature = Util.fastDeclare(
                     }
                 }
                 break;
+            case 'b':
+                value = '';
+                var cc = byteArray[p++];
+                var Btype = String.fromCharCode(cc);
+                if( Btype == 'i'|| Btype == 'I' ) {
+                    var limit = readInt( byteArray, p )
+                    p += 4;
+                    for( var k = 0; k < limit; k++ ) {
+                        value += readInt( byteArray, p );
+                        if(k+1<limit) value += ',';
+                        p += 4;
+                    }
+                }
+                if( Btype == 's'|| Btype == 'S' ) {
+                    var limit = readInt( byteArray, p )
+                    p += 4;
+                    for( var k = 0; k < limit; k++ ) {
+                        value += readShort( byteArray, p );
+                        if(k+1<limit) value += ',';
+                        p += 2;
+                    }
+                }
+                if( Btype == 'c'|| Btype == 'C' ) {
+                    var limit = readInt( byteArray, p )
+                    p += 4;
+                    for( var k = 0; k < limit; k++ ) {
+                        value += readByte( byteArray, p );
+                        if(k+1<limit) value += ',';
+                        p += 1;
+                    }
+                }
+                if( Btype == 'f' ) {
+                    var limit = readInt( byteArray, p )
+                    p += 4;
+                    for( var k = 0; k < limit; k++ ) {
+                        value += readFloat( byteArray, p );
+                        if(k+1<limit) value += ',';
+                        p += 4;
+                    }
+                }
+                break;
             default:
                 console.warn( "Unknown BAM tag type '"+type
                               +"', tags may be incomplete"
@@ -1232,6 +1292,8 @@ var BAMStore = declare( [ SeqFeatureStore, DeferredStatsMixin, DeferredFeaturesM
                                  }),
             failure: lang.hitch( this, '_failAllDeferred' )
         });
+
+        this.storeTimeout = args.storeTimeout || 3000;
     },
 
     /**

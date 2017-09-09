@@ -1,6 +1,6 @@
 require({cache:{
 'JBrowse/Store/TabixIndexedFile':function(){
-define("JBrowse/Store/TabixIndexedFile", [
+define([
            'dojo/_base/declare',
            'dojo/_base/array',
            'JBrowse/Util',
@@ -230,7 +230,7 @@ return declare( null, {
 /**
  * File blob in Heng Li's `bgzip` format.
  */
-define( "JBrowse/Model/BGZip/BGZBlob", [
+define( [
             'dojo/_base/declare',
             'jszlib/inflate',
             'jszlib/arrayCopy'
@@ -367,7 +367,7 @@ return BGZBlob;
 });
 },
 'JBrowse/Model/TabixIndex':function(){
-define("JBrowse/Model/TabixIndex", [
+define([
            'dojo/_base/declare',
            'dojo/_base/array',
            'dojo/_base/Deferred',
@@ -657,7 +657,7 @@ return declare( null, {
 
 },
 'jDataView/jdataview':function(){
-define("jDataView/jdataview", [], function() {
+define([], function() {
 var scope = {};
 
 //
@@ -1184,7 +1184,7 @@ return scope.jDataView;
 /**
  * a virtual offset into a bgzipped file
  */
-define("JBrowse/Model/BGZip/VirtualOffset", [
+define([
          'JBrowse/Util'
        ],
        function( Util ) {
@@ -1241,12 +1241,13 @@ return VirtualOffset;
  * esimate the statistics of the whole data set.
  */
 
-define("JBrowse/Store/SeqFeature/GlobalStatsEstimationMixin", [
+define([
            'dojo/_base/declare',
            'dojo/_base/array',
-           'dojo/Deferred'
+           'dojo/Deferred',
+           'JBrowse/Errors'
        ],
-       function( declare, array, Deferred ) {
+       function( declare, array, Deferred, Errors ) {
 
 return declare( null, {
 
@@ -1259,6 +1260,9 @@ return declare( null, {
         var deferred = new Deferred();
 
         refseq = refseq || this.refSeq;
+        var timeout = this.storeTimeout || 3000;
+
+        var startTime = new Date();
 
         var statsFromInterval = function( length, callback ) {
             var thisB = this;
@@ -1278,21 +1282,29 @@ return declare( null, {
                                                  });
                               },
                               function( error ) {
-                                      console.error( error );
                                       callback.call( thisB, length,  null, error );
                               });
         };
 
         var maybeRecordStats = function( interval, stats, error ) {
             if( error ) {
-                deferred.reject( error );
+                if( error.isInstanceOf(Errors.DataOverflow) ) {
+                     console.log( 'Store statistics found chunkSizeLimit error, using empty: '+(this.source||this.name) );
+                     deferred.resolve( { featureDensity: 0, error: 'global stats estimation found chunkSizeError' } );
+                }
+                else {
+                    deferred.reject( error );
+                }
             } else {
-                var refLen = refseq.end - refseq.start;
+                 var refLen = refseq.end - refseq.start;
                  if( stats._statsSampleFeatures >= 300 || interval * 2 > refLen || error ) {
                      console.log( 'Store statistics: '+(this.source||this.name), stats );
                      deferred.resolve( stats );
-                 } else {
+                 } else if( ((new Date()) - startTime) < timeout ) {
                      statsFromInterval.call( this, interval * 2, maybeRecordStats );
+                 } else {
+                     console.log( 'Store statistics timed out: '+(this.source||this.name) );
+                     deferred.resolve( { featureDensity: 0, error: 'global stats estimation timed out' } );
                  }
             }
         };
@@ -1303,6 +1315,7 @@ return declare( null, {
 
 });
 });
+
 },
 'JBrowse/Store/SeqFeature/VCFTabix/Parser':function(){
 define([
@@ -1947,6 +1960,8 @@ return declare( [ SeqFeatureStore, DeferredStatsMixin, DeferredFeaturesMixin, Gl
                    },
                    lang.hitch( thisB, '_failAllDeferred' )
                  );
+
+        this.storeTimeout = args.storeTimeout || 3000;
     },
 
     /** fetch and parse the VCF header lines */

@@ -36,6 +36,7 @@ import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -151,17 +152,17 @@ public class SequenceTaskHelper implements PipelineContext
 
     public <StepType extends PipelineStep> PipelineStepProvider<StepType> getSingleStep(Class<StepType> stepType) throws PipelineJobException
     {
-        List<PipelineStepProvider<StepType>> providers = SequencePipelineService.get().getSteps(getJob(), stepType);
-        if (providers.isEmpty())
+        List<PipelineStepCtx<StepType>> steps = SequencePipelineService.get().getSteps(getJob(), stepType);
+        if (steps.isEmpty())
         {
             throw new PipelineJobException("No steps found for type: " + stepType.getName());
         }
-        else if (providers.size() > 1)
+        else if (steps.size() > 1)
         {
             throw new PipelineJobException("More than 1 step was supplied of type: " + stepType.getName());
         }
 
-        return providers.get(0);
+        return steps.get(0).getProvider();
     }
 
     public SequencePipelineSettings getSettings()
@@ -309,7 +310,11 @@ public class SequenceTaskHelper implements PipelineContext
                 {
                     if (pd instanceof ToolParameterDescriptor.CachableParam)
                     {
-                        ((ToolParameterDescriptor.CachableParam)pd).doCache(getJob(), pd.extractValue(getJob(), fact), getSequenceSupport());
+                        ToolParameterDescriptor.CachableParam p = ((ToolParameterDescriptor.CachableParam) pd);
+                        for (Object o : pd.extractAllValues(getJob(), fact))
+                        {
+                            p.doCache(getJob(), o, getSequenceSupport());
+                        }
                     }
                 }
             }

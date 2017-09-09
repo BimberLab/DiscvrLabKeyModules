@@ -11,11 +11,13 @@ import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SamSorter;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.run.util.AlignmentSummaryMetricsWrapper;
@@ -139,9 +141,9 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                 }
 
                 ReferenceGenome referenceGenome = getPipelineJob().getSequenceSupport().getCachedGenome(o.getInt("library_id"));
-                List<PipelineStepProvider<BamProcessingStep>> providers = SequencePipelineService.get().getSteps(getJob(), BamProcessingStep.class);
+                List<PipelineStepCtx<BamProcessingStep>> steps = SequencePipelineService.get().getSteps(getJob(), BamProcessingStep.class);
                 File bam = originalFile;
-                if (providers.isEmpty())
+                if (steps.isEmpty())
                 {
                     getJob().getLogger().info("No BAM postprocessing is necessary");
                 }
@@ -153,15 +155,16 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                     if (!workDir.exists())
                         workDir.mkdirs();
 
-                    for (PipelineStepProvider<BamProcessingStep> provider : providers)
+                    for (PipelineStepCtx<BamProcessingStep> stepCtx : steps)
                     {
-                        getJob().getLogger().info("performing step: " + provider.getLabel());
-                        RecordedAction action = new RecordedAction(provider.getLabel());
+                        getJob().getLogger().info("performing step: " + stepCtx.getProvider().getLabel());
+                        RecordedAction action = new RecordedAction(stepCtx.getProvider().getLabel());
                         action.setStartTime(new Date());
                         _taskHelper.getFileManager().addInput(action, "Input BAM", bam);
 
-                        BamProcessingStep step = provider.create(_taskHelper);
-                        getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING: " + provider.getLabel().toUpperCase());
+                        BamProcessingStep step = stepCtx.getProvider().create(_taskHelper);
+                        step.setStepIdx(stepCtx.getStepIdx());
+                        getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING: " + stepCtx.getProvider().getLabel().toUpperCase());
                         BamProcessingStep.Output output = step.processBam(rs, bam, referenceGenome, workDir);
                         _taskHelper.getFileManager().addStepOutputs(action, output);
 
@@ -176,34 +179,50 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                     }
                 }
 
-                //first copy the end product to the final location
-                getJob().setStatus(PipelineJob.TaskStatus.running, "MOVING BAM");
-                File finalDestination = new File(getTaskHelper().getJob().getAnalysisDirectory(), originalFile.getName());
+                //handle inputs
                 RecordedAction moveAction = new RecordedAction(ACTION_NAME);
                 getTaskHelper().getFileManager().addInput(moveAction, "Input BAM", bam);
                 actions.add(moveAction);
 
-                if (!bam.getPath().equals(finalDestination.getPath()))
+                File finalDestination = new File(getTaskHelper().getJob().getAnalysisDirectory(), originalFile.getName());
+                if (TaskFileManager.InputFileTreatment.leaveInPlace == getTaskHelper().getFileManager().getInputFileTreatment())
                 {
-                    //note: if BAM is unaltered, copy rather than move to preserve original
-                    if (bam.equals(originalFile) && "none".equals(getTaskHelper().getFileManager().getInputfileTreatment()))
+                    if (bam.equals(originalFile))
                     {
-                        FileUtils.copyFile(bam, finalDestination);
+                        getJob().getLogger().debug("will leave original BAM in place: " + originalFile.getPath());
+                        finalDestination = bam;
                     }
                     else
                     {
-                        getJob().getLogger().debug("moving original BAM: " + originalFile.getPath());
-                        FileUtils.moveFile(originalFile, finalDestination);
-                        File idxOrig = new File(originalFile.getPath() + ".bai");
-                        if (idxOrig.exists())
-                        {
-                            getJob().getLogger().debug("moving BAM index: " + idxOrig.getPath());
-                            FileUtils.moveFile(idxOrig, new File(finalDestination.getPath() + ".bai"));
-                        }
+                        getJob().getLogger().debug("the BAM was altered during import.  therefore even though leave-in-place was selected, the official copy will reside in the pipeline folder, with the original remaining in place: " + finalDestination.getPath());
                     }
                 }
-                getTaskHelper().getFileManager().addOutput(moveAction, SequenceAlignmentTask.FINAL_BAM_ROLE, finalDestination);
+                else
+                {
+                    getJob().setStatus(PipelineJob.TaskStatus.running, "MOVING BAM");
+                    if (!bam.getPath().equals(finalDestination.getPath()))
+                    {
+                        //note: if BAM is unaltered, copy rather than move to preserve original
+                        if (bam.equals(originalFile) && TaskFileManager.InputFileTreatment.none == getTaskHelper().getFileManager().getInputFileTreatment())
+                        {
+                            FileUtils.copyFile(bam, finalDestination);
+                        }
+                        else
+                        {
+                            getJob().getLogger().debug("moving original BAM: " + originalFile.getPath());
+                            FileUtils.moveFile(originalFile, finalDestination);
+                            File idxOrig = new File(originalFile.getPath() + ".bai");
+                            if (idxOrig.exists())
+                            {
+                                getJob().getLogger().debug("moving BAM index: " + idxOrig.getPath());
+                                FileUtils.moveFile(idxOrig, new File(finalDestination.getPath() + ".bai"));
+                            }
+                        }
+                    }
+                    getTaskHelper().getFileManager().addOutput(moveAction, SequenceAlignmentTask.FINAL_BAM_ROLE, finalDestination);
+                }
 
+                //TODO: we might not want this if LeaveInPlace was selected as the input handling
                 //ensure coordinate sorted:
                 if (SAMFileHeader.SortOrder.coordinate != SequencePipelineService.get().getBamSortOrder(finalDestination))
                 {
@@ -260,8 +279,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
 
                 //delete original, if required
                 getJob().setStatus(PipelineJob.TaskStatus.running, "PERFORMING CLEANUP");
-                String handling = getTaskHelper().getFileManager().getInputfileTreatment();
-                if ("delete".equals(handling))
+                if (TaskFileManager.InputFileTreatment.delete == getTaskHelper().getFileManager().getInputFileTreatment())
                 {
                     getJob().getLogger().info("deleting original BAM: " + originalFile.getPath());
                     originalFile.delete();

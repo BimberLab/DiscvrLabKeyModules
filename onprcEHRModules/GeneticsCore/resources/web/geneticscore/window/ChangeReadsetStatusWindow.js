@@ -2,7 +2,7 @@ Ext4.define('GeneticsCore.window.ChangeReadsetStatusWindow', {
     extend: 'Ext.window.Window',
 
     statics: {
-        buttonHandler: function (dataRegionName) {
+        buttonHandlerForAnalyses: function (dataRegionName) {
             var dr = LABKEY.DataRegions[dataRegionName];
             LDK.Assert.assertNotEmpty('Unable to find dataregion in ChangeReadsetStatusWindow', dr);
 
@@ -13,6 +13,30 @@ Ext4.define('GeneticsCore.window.ChangeReadsetStatusWindow', {
             }
 
             Ext4.create('GeneticsCore.window.ChangeReadsetStatusWindow', {
+                targetQuery: 'sequence_analyses',
+                targetColumns: 'readset/rowid,readset/container',
+                readsetField: 'readset/rowid',
+                containerField: 'readset/container',
+                dataRegionName: dataRegionName,
+                checked: checked
+            }).show();
+        },
+
+        buttonHandlerForReadsets: function (dataRegionName) {
+            var dr = LABKEY.DataRegions[dataRegionName];
+            LDK.Assert.assertNotEmpty('Unable to find dataregion in ChangeReadsetStatusWindow', dr);
+
+            var checked = dr.getChecked();
+            if (!checked.length) {
+                Ext4.Msg.alert('Error', 'No rows selected');
+                return;
+            }
+
+            Ext4.create('GeneticsCore.window.ChangeReadsetStatusWindow', {
+                targetQuery: 'sequence_readsets',
+                targetColumns: 'rowid,container',
+                readsetField: 'rowid',
+                containerField: 'container',
                 dataRegionName: dataRegionName,
                 checked: checked
             }).show();
@@ -30,7 +54,7 @@ Ext4.define('GeneticsCore.window.ChangeReadsetStatusWindow', {
                 border: false
             },
             items: [{
-                html: 'This will update the status for the readsets associated with the ' + this.checked.length + ' analyses selected.',
+                html: 'This will update the status for the readsets associated with the ' + this.checked.length + ' selected rows.',
                 style: 'padding-bottom: 10px;'
             },{
                 xtype: 'labkey-combo',
@@ -65,7 +89,7 @@ Ext4.define('GeneticsCore.window.ChangeReadsetStatusWindow', {
     },
 
     onSubmit: function(){
-        var analysisIds = this.checked;
+        var rowIds = this.checked;
         var status = this.down('#statusField').getValue();
         //NOTE: allow a blank value
         //if (!status){
@@ -77,9 +101,9 @@ Ext4.define('GeneticsCore.window.ChangeReadsetStatusWindow', {
         LABKEY.Query.selectRows({
             method: 'POST',
             schemaName: 'sequenceanalysis',
-            queryName: 'sequence_analyses',
-            columns: 'readset/rowid,readset/container',
-            filterArray: [LABKEY.Filter.create('rowid', analysisIds.join(';'), LABKEY.Filter.Types.IN)],
+            queryName: this.targetQuery,
+            columns: this.targetColumns,
+            filterArray: [LABKEY.Filter.create('rowid', rowIds.join(';'), LABKEY.Filter.Types.IN)],
             scope: this,
             failure: LDK.Utils.getErrorCallback(),
             success: function(results){
@@ -91,8 +115,8 @@ Ext4.define('GeneticsCore.window.ChangeReadsetStatusWindow', {
 
                 var readsetIds = [];
                 Ext4.Array.forEach(results.rows, function(row){
-                    if (row['readset/rowid']) {
-                        readsetIds.push(row['readset/rowid'] + '<>' + row['readset/container']);
+                    if (row[this.readsetField]) {
+                        readsetIds.push(row[this.readsetField] + '<>' + row[this.containerField]);
                     }
                 }, this);
 
@@ -124,14 +148,14 @@ Ext4.define('GeneticsCore.window.ChangeReadsetStatusWindow', {
                             }
 
                             Ext4.Msg.alert('Success', 'Readsets updated', function () {
-                                window.location.reload();
-                            });
+                                LABKEY.DataRegions[this.dataRegionName].refresh();
+                            }, this);
                         }
                     });
                 }
                 else {
                     Ext4.Msg.hide();
-                    Ext4.Msg.alert('Error', 'No matching readsets found for the selected analyses');
+                    Ext4.Msg.alert('Error', 'No matching readsets found for the selected rows');
                 }
             }
         });

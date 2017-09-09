@@ -48,6 +48,11 @@ public class AASnpByReadAggregator extends AASnpByCodonAggregator
             return;
         }
 
+        if (!super.inspectMapQual(record))
+        {
+            return;
+        }
+
         assert ref != null;
 
         if (!_refSequenceMap.containsKey(ref.getName()));

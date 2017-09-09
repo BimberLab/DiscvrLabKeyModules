@@ -11,6 +11,7 @@ import org.labkey.api.data.SqlSelector;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
@@ -84,6 +85,10 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
             {{
                 put("minValue", 0);
             }}, 17),
+            ToolParameterDescriptor.create("minMapQual", "Minimum Mapping Qual", "If provided, any alignment with a mapping quality lower than this value will be discarded", "ldk-integerfield", new JSONObject()
+            {{
+                put("minValue", 0);
+            }}, 0),
             ToolParameterDescriptor.create("onlyImportValidPairs", "Only Import Valid Pairs", "If selected, only alignments consisting of valid forward/reverse pairs will be imported.  Do not check this unless you are using paired-end sequence.", "checkbox", new JSONObject()
             {{
                 put("checked", true);
@@ -120,11 +125,11 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
 
         if (includeExport)
         {
-            ret.add(ToolParameterDescriptor.create(EXPORT_UNMAPPED, "Export Unmapped Threshold", "If provided, unmapped reads will be exported as FASTQ if at least this fraction of all reads do not have passing hits.", "ldk-numberfield", new JSONObject()
+            ret.add(ToolParameterDescriptor.create(EXPORT_UNMAPPED, "Export Unmapped Threshold", "If provided, reads that aligned to a reference, but were discarded/filtered will be exported if at least this fraction of all reads do not have passing hits.", "ldk-numberfield", new JSONObject()
             {{
                 put("minValue", 0);
                 put("maxValue", 1);
-            }}, 0.4));
+            }}, 0.10));
         }
 
         ret.add(ToolParameterDescriptor.create(MIN_EXPORT_LENGTH, "Min Length For Export", "If provided, only unmapped reads longer than this value will be exported.", "ldk-numberfield", new JSONObject()
@@ -228,7 +233,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
             List<ToolParameterDescriptor> params = getProvider().getParameters();
             for (ToolParameterDescriptor td : params)
             {
-                toolParams.put(td.getName(), td.extractValue(getPipelineCtx().getJob(), getProvider()));
+                toolParams.put(td.getName(), td.extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()));
             }
 
             //first calculate avg qualities at each position
@@ -244,7 +249,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
 
             List<AlignmentAggregator> aggregators = new ArrayList<>();
             SequenceBasedTypingAlignmentAggregator agg = new SequenceBasedTypingAlignmentAggregator(getPipelineCtx().getLogger(), referenceGenome.getWorkingFastaFile(), avgBaseQualityAggregator, toolParams);
-            if (getProvider().getParameterByName("writeLog").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
+            if (getProvider().getParameterByName("writeLog").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false))
             {
                 File workDir = new File(getPipelineCtx().getSourceDirectory(), FileUtil.getBaseName(inputBam));
                 if (!workDir.exists())
@@ -261,7 +266,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
                 getPipelineCtx().getLogger().debug("using lineage map: " + lineageMapFile.getName());
                 agg.setLineageMapFile(lineageMapFile);
 
-                Double minPctForLineageFiltering = getProvider().getParameterByName("minPctForLineageFiltering").extractValue(getPipelineCtx().getJob(), getProvider(), Double.class);
+                Double minPctForLineageFiltering = getProvider().getParameterByName("minPctForLineageFiltering").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class);
                 if (minPctForLineageFiltering != null)
                 {
                     agg.setMinPctForLineageFiltering(minPctForLineageFiltering);
@@ -284,22 +289,28 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
             agg.writeTable(getSBTSummaryFile(outputDir, inputBam));
 
             //optionally output FASTQ of unmapped reads
-            Double exportThreshold = getProvider().getParameterByName(EXPORT_UNMAPPED).extractValue(getPipelineCtx().getJob(), getProvider(), Double.class);
+            Double exportThreshold = getProvider().getParameterByName(EXPORT_UNMAPPED).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class);
             if (exportThreshold != null)
             {
-                double pctUnmapped = agg.getPctUnmapped();
+                double pctUnmapped = agg.getPctMappedWithoutHits();
                 getPipelineCtx().getLogger().debug("fraction reads unmapped: " + pctUnmapped);
                 if (pctUnmapped >= exportThreshold)
                 {
-                    getPipelineCtx().getLogger().debug("exporting unmapped reads");
+                    getPipelineCtx().getLogger().info("exporting unmapped reads");
                     String prefix = "";
                     if (rs != null && rs.getSubjectId() != null)
                     {
                         prefix = rs.getSubjectId() + "|" + rs.getRowId() + "|";
                     }
 
-                    int minExportLength = getProvider().getParameterByName(MIN_EXPORT_LENGTH).extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class, 0);
-                    Pair<File, File> unmapped = agg.outputUnmappedReads(inputBam, outputDir, FileUtil.getBaseName(inputBam) + ".unmapped", prefix, minExportLength);
+                    List<Pair<File, File>> readData = new ArrayList<>();
+                    for (ReadData d : rs.getReadData())
+                    {
+                        readData.add(Pair.of(d.getFile1(), d.getFile2()));
+                    }
+
+                    int minExportLength = getProvider().getParameterByName(MIN_EXPORT_LENGTH).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 0);
+                    Pair<File, File> unmapped = agg.outputUnmappedReads(inputBam, readData, outputDir, FileUtil.getBaseName(inputBam) + ".unmapped", prefix, minExportLength);
                     if (unmapped != null)
                     {
                         if (unmapped.first != null)
@@ -338,7 +349,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
         }
     }
 
-    private File getSBTSummaryFile(File outputDir, File bam)
+    protected File getSBTSummaryFile(File outputDir, File bam)
     {
         return new File(outputDir, FileUtil.getBaseName(bam) + ".sbt_hits.txt");
     }

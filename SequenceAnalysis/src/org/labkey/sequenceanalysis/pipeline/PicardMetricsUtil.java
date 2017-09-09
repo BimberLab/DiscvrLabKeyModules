@@ -10,6 +10,7 @@ import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.pipeline.PipelineJobException;
 import picard.analysis.AlignmentSummaryMetrics;
 import picard.analysis.CollectWgsMetrics;
+import picard.analysis.CollectWgsMetricsWithNonZeroCoverage;
 import picard.analysis.InsertSizeMetrics;
 import picard.sam.DuplicationMetrics;
 
@@ -60,6 +61,11 @@ public class PicardMetricsUtil
                 log.info("Importing Picard WgsMetrics for: " + f.getName());
                 return processWgsMetrics(metricsFile, log);
             }
+            else if (metrics.get(0).getClass() == CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverage.class)
+            {
+                log.info("Importing Picard Non-Zero Coverage WgsMetrics for: " + f.getName());
+                return processWgsNonZeroMetrics(metricsFile, log);
+            }
             else
             {
                 throw new PipelineJobException("Unknown metric file type: " + metrics.get(0).getClass().getName());
@@ -72,6 +78,16 @@ public class PicardMetricsUtil
     }
 
     private static List<Map<String, Object>> processWgsMetrics(MetricsFile mf, Logger log) throws PipelineJobException
+    {
+        return processWgsMetricsBase(mf, log, "WGS Metrics");
+    }
+
+    private static List<Map<String, Object>> processWgsNonZeroMetrics(MetricsFile mf, Logger log) throws PipelineJobException
+    {
+        return processWgsMetricsBase(mf, log, "WGS Metrics, Non-Zero Coverage");
+    }
+
+    private static List<Map<String, Object>> processWgsMetricsBase(MetricsFile mf, Logger log, String category) throws PipelineJobException
     {
         List<Map<String, Object>> ret = new ArrayList<>();
         List<CollectWgsMetrics.WgsMetrics> metrics = mf.getMetrics();
@@ -114,7 +130,7 @@ public class PicardMetricsUtil
                 }
 
                 Map<String, Object> r = new HashMap<>();
-                r.put("category", "WGS Metrics");
+                r.put("category", category);
                 r.put("metricname", metricName);
                 r.put("metricvalue", val);
 

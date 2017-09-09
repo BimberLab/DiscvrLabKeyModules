@@ -43,6 +43,7 @@ import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.IndexOutputImpl;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
@@ -61,6 +62,7 @@ import org.labkey.sequenceanalysis.run.util.AddOrReplaceReadGroupsWrapper;
 import org.labkey.sequenceanalysis.run.util.AlignmentSummaryMetricsWrapper;
 import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 import org.labkey.sequenceanalysis.run.util.CollectInsertSizeMetricsWrapper;
+import org.labkey.sequenceanalysis.run.util.CollectWgsMetricsWithNonZeroCoverageWrapper;
 import org.labkey.sequenceanalysis.run.util.CollectWgsMetricsWrapper;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 import org.labkey.sequenceanalysis.run.util.FlagStatRunner;
@@ -470,8 +472,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         }
 
         //iterate over pipeline step
-        List<PipelineStepProvider<PreprocessingStep>> providers = SequencePipelineService.get().getSteps(getJob(), PreprocessingStep.class);
-        if (providers.isEmpty())
+        List<PipelineStepCtx<PreprocessingStep>> steps = SequencePipelineService.get().getSteps(getJob(), PreprocessingStep.class);
+        if (steps.isEmpty())
         {
             getJob().getLogger().info("No preprocessing is necessary");
             return Pair.of(inputFile1, inputFile2);
@@ -479,29 +481,29 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         else
         {
             //combine providers as needed
-            List<PipelineStepProvider<PreprocessingStep>> combinedProviders = new ArrayList<>();
-            combinedProviders.add(providers.remove(0));
-            while (!providers.isEmpty())
+            List<PipelineStepCtx<PreprocessingStep>> combinedSteps = new ArrayList<>();
+            combinedSteps.add(steps.remove(0));
+            while (!steps.isEmpty())
             {
-                PipelineStepProvider<PreprocessingStep> previous = combinedProviders.get(combinedProviders.size() - 1);
-                PipelineStepProvider combinedStep = previous.combineSteps(providers.get(0));
-                if (combinedStep != null)
+                PipelineStepCtx<PreprocessingStep> previous = combinedSteps.get(combinedSteps.size() - 1);
+                PipelineStepProvider<PreprocessingStep> combinedStepProvider = previous.getProvider().combineSteps(steps.get(0).getProvider());
+                if (combinedStepProvider != null && previous.getStepIdx() == 0 && steps.get(0).getStepIdx() == 0)
                 {
                     //add this combined step to replace the previous
-                    getJob().getLogger().debug("combining step: " + previous.getLabel() + " with " + providers.get(0).getLabel());
-                    combinedProviders.remove(combinedProviders.size() - 1);
-                    combinedProviders.add(combinedStep);
+                    getJob().getLogger().debug("combining step: " + previous.getProvider().getLabel() + " with " + steps.get(0).getProvider().getLabel());
+                    combinedSteps.remove(combinedSteps.size() - 1);
+                    combinedSteps.add(new PipelineStepCtxImpl<>(combinedStepProvider, 0));
                 }
                 else
                 {
                     //otherwise append to the new list and remove from this list
-                    combinedProviders.add(providers.get(0));
+                    combinedSteps.add(steps.get(0));
                 }
 
-                providers.remove(0);
+                steps.remove(0);
             }
 
-            providers = combinedProviders;
+            steps = combinedSteps;
 
             String originalbaseName = SequenceTaskHelper.getMinimalBaseName(inputFile1.getName());
             String originalbaseName2 = null;
@@ -523,11 +525,11 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             }
 
             Pair<File, File> pair = Pair.of(inputFile1, inputFile2);
-            for (PipelineStepProvider<PreprocessingStep> provider : providers)
+            for (PipelineStepCtx<PreprocessingStep> stepCtx : steps)
             {
-                getJob().getLogger().info("***Preprocessing: " + provider.getLabel());
+                getJob().getLogger().info("***Preprocessing: " + stepCtx.getProvider().getLabel());
 
-                RecordedAction action = new RecordedAction(provider.getLabel());
+                RecordedAction action = new RecordedAction(stepCtx.getProvider().getLabel());
                 Date start = new Date();
                 action.setStartTime(start);
                 getHelper().getFileManager().addInput(action, "Input FASTQ", pair.first);
@@ -536,8 +538,9 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     getHelper().getFileManager().addInput(action, "Input FASTQ", pair.second);
                 }
 
-                PreprocessingStep step = provider.create(getHelper());
-                getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING: " + provider.getLabel().toUpperCase() + statusSuffix);
+                PreprocessingStep step = stepCtx.getProvider().create(getHelper());
+                step.setStepIdx(stepCtx.getStepIdx());
+                getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING: " + step.getProvider().getLabel().toUpperCase() + statusSuffix);
                 PreprocessingStep.Output output = step.processInputFile(pair.first, pair.second, outputDir);
                 getJob().getLogger().debug("\tstep complete");
                 if (output == null)
@@ -567,7 +570,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
                 Date end = new Date();
                 action.setEndTime(end);
-                getJob().getLogger().info(provider.getLabel() + " Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+                getJob().getLogger().info(stepCtx.getProvider().getLabel() + " Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
                 actions.add(action);
             }
 
@@ -646,8 +649,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         else
         {
             List<RecordedAction> postProcessActions = new ArrayList<>();
-            List<PipelineStepProvider<BamProcessingStep>> providers = SequencePipelineService.get().getSteps(getJob(), BamProcessingStep.class);
-            if (providers.isEmpty())
+            List<PipelineStepCtx<BamProcessingStep>> steps = SequencePipelineService.get().getSteps(getJob(), BamProcessingStep.class);
+            if (steps.isEmpty())
             {
                 getJob().getLogger().info("No BAM postprocessing is necessary");
             }
@@ -662,18 +665,19 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     getHelper().getFileManager().addIntermediateFile(idx);
                 }
 
-                for (PipelineStepProvider<BamProcessingStep> provider : providers)
+                for (PipelineStepCtx<BamProcessingStep> stepCtx : steps)
                 {
-                    getJob().getLogger().info("performing step: " + provider.getLabel());
-                    getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING: " + provider.getLabel().toUpperCase());
+                    getJob().getLogger().info("performing step: " + stepCtx.getProvider().getLabel());
+                    getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING: " + stepCtx.getProvider().getLabel().toUpperCase());
                     getJob().getLogger().debug("BAM index exists: " + (new File(bam.getPath() + ".bai")).exists());
 
-                    RecordedAction action = new RecordedAction(provider.getLabel());
+                    RecordedAction action = new RecordedAction(stepCtx.getProvider().getLabel());
                     Date start = new Date();
                     action.setStartTime(start);
                     getHelper().getFileManager().addInput(action, "Input BAM", bam);
 
-                    BamProcessingStep step = provider.create(getHelper());
+                    BamProcessingStep step = stepCtx.getProvider().create(getHelper());
+                    step.setStepIdx(stepCtx.getStepIdx());
                     BamProcessingStep.Output output = step.processBam(rs, bam, referenceGenome, bam.getParentFile());
                     getHelper().getFileManager().addStepOutputs(action, output);
 
@@ -694,7 +698,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
                     Date end = new Date();
                     action.setEndTime(end);
-                    getJob().getLogger().info(provider.getLabel() + " Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+                    getJob().getLogger().info(stepCtx.getProvider().getLabel() + " Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
                     postProcessActions.add(action);
                 }
             }
@@ -875,7 +879,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
                 //wgs metrics
                 ToolParameterDescriptor wgsParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.COLLECT_WGS_METRICS);
-                boolean doCollectWgsMetrics = wgsParam == null ? false : wgsParam.extractValue(getJob(), alignmentStep.getProvider(), Boolean.class, false);
+                boolean doCollectWgsMetrics = wgsParam == null ? false : wgsParam.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
 
                 if (doCollectWgsMetrics)
                 {
@@ -885,6 +889,22 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     CollectWgsMetricsWrapper wgsWrapper = new CollectWgsMetricsWrapper(getJob().getLogger());
                     wgsWrapper.executeCommand(renamedBam, wgsMetricsFile, referenceGenome.getWorkingFastaFile());
                     getHelper().getFileManager().addOutput(metricsAction, "WGS Metrics File", wgsMetricsFile);
+                    getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(wgsMetricsFile, renamedBam, rs.getRowId())));
+                    getHelper().getFileManager().addCommandsToAction(wgsWrapper.getCommandsExecuted(), metricsAction);
+                }
+
+                //non-zero wgs metrics
+                ToolParameterDescriptor wgsParamNonZero = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.COLLECT_WGS_METRICS_NON_ZERO);
+                boolean doCollectWgsMetricsNonZero = wgsParamNonZero == null ? false : wgsParamNonZero.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
+
+                if (doCollectWgsMetricsNonZero)
+                {
+                    getJob().getLogger().info("calculating wgs metrics over non-zero coverage");
+                    getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING WGS METRICS OVER NON-ZERO COVERAGE");
+                    File wgsMetricsFile = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".wgsNonZero.metrics");
+                    CollectWgsMetricsWithNonZeroCoverageWrapper wgsWrapper = new CollectWgsMetricsWithNonZeroCoverageWrapper(getJob().getLogger());
+                    wgsWrapper.executeCommand(renamedBam, wgsMetricsFile, referenceGenome.getWorkingFastaFile());
+                    getHelper().getFileManager().addOutput(metricsAction, "WGS Non-Zero Coverage Metrics File", wgsMetricsFile);
                     getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(wgsMetricsFile, renamedBam, rs.getRowId())));
                     getHelper().getFileManager().addCommandsToAction(wgsWrapper.getCommandsExecuted(), metricsAction);
                 }
@@ -926,8 +946,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         }
         else
         {
-            List<PipelineStepProvider<AnalysisStep>> analysisProviders = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
-            if (analysisProviders.isEmpty())
+            List<PipelineStepCtx<AnalysisStep>> analysisSteps = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
+            if (analysisSteps.isEmpty())
             {
                 getJob().getLogger().debug("no analyses were selected");
             }
@@ -935,18 +955,19 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             {
                 List<RecordedAction> analysisActions = new ArrayList<>();
                 getJob().setStatus(PipelineJob.TaskStatus.running, "PERFORMING ANALYSES ON ALIGNMENT");
-                for (PipelineStepProvider<AnalysisStep> provider : analysisProviders)
+                for (PipelineStepCtx<AnalysisStep> stepCtx : analysisSteps)
                 {
-                    getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING: " + provider.getLabel().toUpperCase());
+                    getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING: " + stepCtx.getProvider().getLabel().toUpperCase());
 
-                    getHelper().getJob().getLogger().info("Running analysis " + provider.getLabel() + " for readset: " + rs.getReadsetId());
+                    getHelper().getJob().getLogger().info("Running analysis " + stepCtx.getProvider().getLabel() + " for readset: " + rs.getReadsetId());
                     getHelper().getJob().getLogger().info("\tUsing alignment: " + renamedBam.getPath());
 
-                    RecordedAction action = new RecordedAction(provider.getLabel());
+                    RecordedAction action = new RecordedAction(stepCtx.getProvider().getLabel());
                     getHelper().getFileManager().addInput(action, "Input BAM File", renamedBam);
                     getHelper().getFileManager().addInput(action, "Reference DB FASTA", referenceGenome.getWorkingFastaFile());
 
-                    AnalysisStep step = provider.create(getHelper());
+                    AnalysisStep step = stepCtx.getProvider().create(getHelper());
+                    step.setStepIdx(stepCtx.getStepIdx());
                     AnalysisStep.Output o = step.performAnalysisPerSampleRemote(rs, renamedBam, referenceGenome, renamedBam.getParentFile());
                     if (o != null)
                     {
@@ -962,8 +983,13 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
     private File doAlignment(ReferenceGenome referenceGenome, Readset rs, Map<ReadData, Pair<File, File>> files, List<RecordedAction> alignActions) throws PipelineJobException, IOException
     {
+        if (files.isEmpty())
+        {
+            throw new PipelineJobException("readset has no files associated with it: " + rs.getName());
+        }
+
         AlignmentStep alignmentStep = getHelper().getSingleStep(AlignmentStep.class).create(getHelper());
-        String alignmentMode = StringUtils.trimToNull(alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.ALIGNMENT_MODE_PARAM).extractValue(getPipelineJob(), alignmentStep.getProvider()));
+        String alignmentMode = StringUtils.trimToNull(alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.ALIGNMENT_MODE_PARAM).extractValue(getPipelineJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx()));
         getJob().getLogger().debug("alignment mode: " + alignmentMode);
         AbstractAlignmentStepProvider.ALIGNMENT_MODE mode = alignmentMode == null ? AbstractAlignmentStepProvider.ALIGNMENT_MODE.ALIGN_THEN_MERGE : AbstractAlignmentStepProvider.ALIGNMENT_MODE.valueOf(alignmentMode);
         if (mode == AbstractAlignmentStepProvider.ALIGNMENT_MODE.MERGE_THEN_ALIGN)
@@ -1170,7 +1196,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             SequenceUtil.logFastqBamDifferences(getJob().getLogger(), alignmentOutput.getBAM());
 
             ToolParameterDescriptor mergeParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.SUPPORT_MERGED_UNALIGNED);
-            boolean doMergeUnaligned = mergeParam == null ? false : mergeParam.extractValue(getJob(), alignmentStep.getProvider(), Boolean.class, false);
+            boolean doMergeUnaligned = mergeParam == null ? false : mergeParam.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
             if (doMergeUnaligned)
             {
                 getJob().setStatus(PipelineJob.TaskStatus.running, "MERGING UNALIGNED READS INTO BAM" + msgSuffix);

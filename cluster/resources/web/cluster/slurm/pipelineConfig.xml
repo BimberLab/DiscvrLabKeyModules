@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+    <!--NOTE: if you plan to use ActiveMQ for status updates, you will need to configure this in labkey.xml-->
+
+    <bean id="pipelineJobService" class="org.labkey.pipeline.api.PipelineServiceImpl">
+        <!--You will list all remote execution engines.  You will most likely only have one engine to register, but this example contains multiples to show different configurations-->
+        <property name="remoteExecutionEngines">
+            <list>
+                <bean id="slurmEngine" class="org.labkey.cluster.pipeline.SlurmExecutionEngine">
+                    <constructor-arg type="org.labkey.cluster.pipeline.SlurmExecutionEngineConfig" ref="slurmProperties"/>
+                </bean>
+                <bean id="condorSSHEngine" class="org.labkey.cluster.pipeline.SlurmExecutionEngine">
+                    <constructor-arg type="org.labkey.cluster.pipeline.SlurmExecutionEngineConfig" ref="slurmSSHProperties"/>
+                </bean>
+            </list>
+        </property>
+    </bean>
+
+    <!--This is a fairly simple configuration, assuming your LK server is configured for remote condor submission-->
+    <bean id="slurmProperties" class="org.labkey.cluster.pipeline.SlurmExecutionEngineConfig">
+        <property name="location" value="slurm" />
+        <property name="submitCommand" value="/usr/bin/sbatch ${submitScript}"/>
+        <property name="statusCommand" value="/usr/bin/squeue --all"/>
+        <property name="historyCommand" value="/usr/bin/sacct --allusers --jobs=${clusterId}"/>
+        <property name="removeCommand" value="/usr/bin/scancel ${clusterId}"/>
+
+        <!--the following are optional.  their default values are shown-->
+
+        <!--This is the directory where the LabKey is installed, relative to the cluster-->
+        <!--<property name="labKeyDir" value="/usr/local/labkey/" />-->
+        <!--The path to the executable on the cluster.  Normally this would be the desired java; however, see example below for docker.-->
+        <!--<property name="remoteExecutable" value="java" />-->
+        <!--This is placed in the submit script.  It is the value in GBs-->
+        <!--<property name="requestMemory" value="48" />-->
+        <!--This is placed in the submit script-->
+        <!--<property name="requestCpus" value="24" />-->
+        <!--This is the cluster path there a working directory will be created.-->
+        <!--<property name="workingDir" value="/pipeline" />-->
+        <!--Value for JAVA_HOME.  If empty or omitted, nothing will be set.-->
+        <!--<property name="javaHome" value="" />-->
+        <!--Additional arguments passed to the remote java process.  Typically would be memory, etc: -Xmx4g-->
+        <!--<property name="javaOpts">-->
+            <!--<list>-->
+                <!--<value>-Xmx4g</value>-->
+            <!--</list>-->
+        <!--</property>-->
+        <!--Additional lines passed verbatim into the condor submit script-->
+        <!--<property name="extraSubmitScriptLines">-->
+        <!--<list>-->
+        <!--<value>requirements = myRequirement</value>-->
+        <!--</list>-->
+        <!--</property>-->
+        <!--Environment variables to include the in submit script.  These are joined together with spaces, but otherwise passed as-is, so please refer to condor docs on use of space and quotes-->
+        <!--<property name="environmentVars">-->
+        <!--<list>-->
+        <!--<value>variableName=value</value>-->
+        <!--</list>-->
+        <!--</property>-->
+
+        <!--It is common to need path mapping between the local and remote servers-->
+        <!--<property name="pathMapper">-->
+            <!--<bean class="org.labkey.api.pipeline.file.PathMapperImpl">-->
+                <!--<property name="localIgnoreCase" value="true"/>-->
+                <!--<property name="remoteIgnoreCase" value="false"/>-->
+                <!--<property name="pathMap">-->
+                    <!--<map>-->
+                        <!--<entry key="file:/c:/labkey/fileRoot" value="file:/labKeyFileRoot"/>-->
+                    <!--</map>-->
+                <!--</property>-->
+            <!--</bean>-->
+        <!--</property>-->
+    </bean>
+
+    <!--A variation on the config above.  This uses SSH for remote submission-->
+    <!--If using SSH, this must be configured not to require prompts, such as passwords.  SSH keys can be configured between the servers-->
+    <bean id="slurmSSHProperties" class="org.labkey.cluster.pipeline.SlurmExecutionEngineConfig">
+        <property name="location" value="cluster" />
+        <property name="submitCommand" value="ssh ${clusterUser}@condorServer.edu -c 'sbatch ${submitScript}'"/>
+        <property name="statusCommand" value="ssh ${clusterUser}@condorServer.edu -c 'squeue --all'"/>
+        <property name="historyCommand" value="ssh ${clusterUser}@condorServer.edu -c 'sacct --allusers --jobs=${clusterId}'"/>
+        <property name="removeCommand" value="ssh ${clusterUser}@condorServer.edu -c 'scancel ${clusterId}'"/>
+
+        <!--See the slurmProperties bean for examples of supported config options-->
+    </bean>
+</beans>

@@ -106,6 +106,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
     private Set<String> _unaligned = new HashSet<>();
     private Set<String> _unmappedWithMappedMate = new HashSet<>();
     private Set<String> _mappedWithoutHits = new HashSet<>();
+    private Set<String> _mappedWithoutHitsExcludingPassed = new HashSet<>();
     private int _totalAlignmentsInspected = 0;
     private int _maxSNPs = 0;
     private int _skippedReferencesByPct = 0;
@@ -168,6 +169,11 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
     @Override
     public void inspectAlignment(SAMRecord record, ReferenceSequence ref, Map<Integer, List<NTSnp>> snps, CigarPositionIterable cpi) throws PipelineJobException
     {
+        if (!super.inspectMapQual(record))
+        {
+            return;
+        }
+
         _uniqueReads.add(record.getReadName());
         if (record.isSecondaryOrSupplementary())
         {
@@ -964,6 +970,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
         getLogger().info("\tSecondary or supplementary alignments inspected: " + _secondarySupplementary);
         getLogger().info("\tTotal reads inspected: " + _uniqueReads.size());
 
+        getLogger().info("\tAlignments discarded due to low mapping quality: " + _lowMappingQual);
         getLogger().info("\tAlignments discarded due to short length: " + _shortAlignments);
         getLogger().info("\tAlignments retained (lacking high quality SNPs): " + _acceptedAlignments.size());
         getLogger().info("\tAlignments discarded (due to presence of high quality SNPs): " + (_totalAlignmentsInspected - _acceptedAlignments.size()));
@@ -998,9 +1005,10 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
         getLogger().info("\tReads with no alignments: " + _unaligned.size());
         getLogger().info("\tReads unmapped with a mate mapped: " + _unmappedWithMappedMate.size());
         getLogger().info("\tMapped reads without passing hits: " + _mappedWithoutHits.size());
-        Set<String> mappedWithoutHit = new HashSet<>(_mappedWithoutHits);
-        mappedWithoutHit.removeAll(acceptedReads);
-        getLogger().info("\tMapped reads without passing hits (excluding passed): " + mappedWithoutHit.size());
+        _mappedWithoutHitsExcludingPassed = new HashSet<>(_mappedWithoutHits);
+        _mappedWithoutHitsExcludingPassed.removeAll(acceptedReads);
+
+        getLogger().info("\tMapped reads without passing hits (excluding passed): " + _mappedWithoutHitsExcludingPassed.size() + " (" + getPctMappedWithoutHits() + "%)");
 
         getLogger().info("\tSingleton or First Mate Reads with at least 1 alignment that passed thresholds: " + _alignmentsByReadM1.keySet().size());
         getLogger().info("\tSecond Mate Reads with at least 1 alignment that passed thresholds: " + _alignmentsByReadM2.keySet().size());
@@ -1152,13 +1160,25 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
                 }
 
                 Iterator<Interval> it = il.iterator();
+                int min = -1;
+                int max = -1;
                 while (it.hasNext())
                 {
                     Interval i = it.next();
-                    ReferenceSequence seq = idx.getSubsequenceAt(i.getContig(), i.getStart(), i.getEnd());
-                    writer.write(">" + headerPrefix + i.getContig() + ":" + i.getStart() + "-" + i.getEnd() + "|TotalReads:" + _acceptedReferences.get(refName) + "\n");
-                    writer.write(seq.getBaseString() + "\n");
+                    if (min == -1 || i.getStart() < min)
+                    {
+                        min = i.getStart();
+                    }
+
+                    if (max < i.getEnd())
+                    {
+                        max = i.getEnd();
+                    }
                 }
+
+                ReferenceSequence seq = idx.getSubsequenceAt(refName, min, max);
+                writer.write(">" + headerPrefix + refName + "|" + min + "-" + max + "|TotalReads:" + _acceptedReferences.get(refName) + "\n");
+                writer.write(seq.getBaseString() + "\n");
             }
         }
         catch (IOException e)
@@ -1169,9 +1189,9 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
         return referencesCovered;
     }
 
-    public Pair<File, File> outputUnmappedReads(File bam, File outDir, String basename, String headerPrefix, int minLength) throws PipelineJobException
+    public Pair<File, File> outputUnmappedReads(File bam, List<Pair<File, File>> readData, File outDir, String basename, String headerPrefix, int minLength) throws PipelineJobException
     {
-        if (!_mappedWithoutHits.isEmpty())
+        if (!_mappedWithoutHitsExcludingPassed.isEmpty())
         {
             File unmappedReadsF = new File(outDir, basename + ".unmapped-R1.fastq");
             File unmappedReadsR = new File(outDir, basename + ".unmapped-R2.fastq");
@@ -1180,83 +1200,60 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
             FastqWriterFactory fact = new FastqWriterFactory();
             fact.setUseAsyncIo(true);
             int discardedForLength = 0;
+
             try (FastqWriter w1 = fact.newWriter(unmappedReadsF);FastqWriter w2 = fact.newWriter(unmappedReadsR);FastqWriter wS = fact.newWriter(unmappedReadsSingleton))
             {
-                Set<String> encounteredValidPair = new HashSet<>();
-                Set<String> lacksValidPair = new HashSet<>();
-                SamReaderFactory fact1 = SamReaderFactory.makeDefault();
-                fact1.validationStringency(ValidationStringency.SILENT);
-                try (SamReader reader = fact1.open(bam);SamReader mateReader = fact1.open(bam))
+                int idx = 0;
+                long startTime = new Date().getTime();
+
+                for (Pair<File, File> fqs : readData)
                 {
-                    try (SAMRecordIterator it = reader.iterator())
+                    getLogger().info("processing file: " + fqs.first.getPath());
+                    int totalExported= 0;
+                    try (FastqReader reader1 = new FastqReader(fqs.first);FastqReader reader2 = fqs.second == null ? null : new FastqReader(fqs.second))
                     {
-                        int idx = 0;
-                        long startTime = new Date().getTime();
-                        while (it.hasNext())
+                        while (reader1.hasNext())
                         {
-                            SAMRecord r = it.next();
+                            FastqRecord r1 = reader1.next();
+                            FastqRecord r2 = reader2 == null ? null : reader2.next();
                             idx++;
+
                             if (idx % 5000 == 0)
                             {
                                 long newTime = new Date().getTime();
-                                getLogger().info("processed " + idx + " alignments in " + ((newTime - startTime) / 1000) + " seconds");
+                                getLogger().info("processed " + idx + " reads in " + ((newTime - startTime) / 1000) + " seconds");
                                 startTime = newTime;
                             }
+
                             //note: should we account for forward/reverse?
-                            if (_mappedWithoutHits.contains(r.getReadName()))
+                            String[] tokens = r1.getReadHeader().split(" ");
+                            if (_mappedWithoutHitsExcludingPassed.contains(tokens[0]))
                             {
-                                if (r.isSecondaryOrSupplementary())
+                                totalExported++;
+                                if (r2 == null)
                                 {
-                                    continue;
+                                    if (r1.getReadString().length() > minLength)
+                                    {
+                                        wS.write(new FastqRecord(r1));
+                                    }
+                                    else
+                                    {
+                                        discardedForLength++;
+                                    }
                                 }
-
-                                if (r.getReadPairedFlag() && r.getFirstOfPairFlag())
+                                else
                                 {
-                                    if (encounteredValidPair.contains(r.getReadName()))
-                                    {
-                                        continue;
-                                    }
-
-                                    try
-                                    {
-                                        SAMRecord mate = mateReader.queryMate(r);
-                                        if (mate != null)
-                                        {
-                                            encounteredValidPair.add(r.getReadName());
-                                            w1.write(new FastqRecord(r.getReadName(), r.getReadString(), null, r.getBaseQualityString()));
-                                            w2.write(new FastqRecord(mate.getReadName(), mate.getReadString(), null, mate.getBaseQualityString()));
-                                        }
-                                        else
-                                        {
-                                            //getLogger().warn("unable to find mate for read: " + r.getReadName() + ", " + r.getContig() + ", skipping");
-                                            lacksValidPair.add(r.getReadName());
-
-                                            if (r.getReadLength() > minLength)
-                                            {
-                                                wS.write(new FastqRecord(r.getReadName() + (r.getFirstOfPairFlag() ? "/1" : "/2"), r.getReadString(), null, r.getBaseQualityString()));
-                                            }
-                                            else
-                                            {
-                                                discardedForLength++;
-                                            }
-                                        }
-                                    }
-                                    catch (SAMFormatException e)
-                                    {
-                                        getLogger().warn(e.getMessage(), e);
-                                    }
+                                    w1.write(r1);
+                                    w2.write(r2);
                                 }
                             }
                         }
                     }
-                }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
+
+                    getLogger().debug("total reads exported: " + totalExported);
                 }
 
-                getLogger().debug("distinct reads skipped b/c of no paired read: " + lacksValidPair.size());
-                getLogger().debug("alignments discarded due to length: " + discardedForLength);
+                getLogger().debug("reads discarded due to length: " + discardedForLength);
             }
 
             //join reads
@@ -1385,13 +1382,15 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
         return "Sequence Based Typing Aggregator:\n" +
         "\tMaxSnpsTolerated: " + _maxSNPs + "\n" +
         "\tOnlyImportValidPairs: " + _onlyImportValidPairs + "\n" +
+        "\tMinMapQual: " + getMinMapQual() + "\n" +
         "\tMinSnpQual: " + getMinSnpQual() + "\n" +
         "\tMinAvgSnpQual: " + getMinAvgSnpQual() + "\n" +
         "\tMinDipQual: " + getMinDipQual() + "\n" +
         "\tMinAvgDipQual: " + getMinAvgDipQual() + "\n" +
         "\tMinCountForRef: " + _minCountForRef + "\n" +
         "\tMinPctForRef: " + _minPctForRef + "\n" +
-        "\tMinPctWithinGroup: " + _minPctWithinGroup + "\n"
+        "\tMinPctWithinGroup: " + _minPctWithinGroup + "\n" +
+        "\tMappedWithoutHits: " + getPctMappedWithoutHits() + "\n"
         ;
     }
 
@@ -1400,9 +1399,9 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
         return _uniqueReads;
     }
 
-    public double getPctUnmapped()
+    public double getPctMappedWithoutHits()
     {
-        return (double)_unaligned.size() / (double)_uniqueReads.size();
+        return (double)_mappedWithoutHitsExcludingPassed.size() / (double)_uniqueReads.size();
     }
 
     public void setDoTrackIntervals(boolean doTrackIntervals)

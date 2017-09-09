@@ -99,16 +99,18 @@ public class ImportFastaSequencesTask extends PipelineJob.Task<ImportFastaSequen
             if (getPipelineJob().isCreateLibrary())
             {
                 getJob().getLogger().info("Creating reference library");
-                if (getPipelineJob().getLibraryParams() == null || StringUtils.trimToNull(getPipelineJob().getLibraryParams().get("name")) == null)
+                if (getPipelineJob().getLibraryParams() == null || StringUtils.trimToNull((String)getPipelineJob().getLibraryParams().get("name")) == null)
                 {
                     throw new PipelineJobException("No name provided for reference genome");
                 }
 
-                String libraryName = getPipelineJob().getLibraryParams().get("name");
-                String libraryDescription = getPipelineJob().getLibraryParams().get("description");
+                String libraryName = (String)getPipelineJob().getLibraryParams().get("name");
+                String libraryDescription = (String)getPipelineJob().getLibraryParams().get("description");
+                String assemblyId = (String)getPipelineJob().getLibraryParams().get("assemblyId");
+                boolean skipCacheIndexes = (boolean)getPipelineJob().getLibraryParams().get("skipCacheIndexes");
+                boolean skipTriggers = (boolean)getPipelineJob().getLibraryParams().get("skipTriggers");
 
-                //TODO: pass actual value for skipCacheIndexes
-                SequenceAnalysisManager.get().createReferenceLibrary(sequenceIds, getJob().getContainer(), getJob().getUser(), libraryName, libraryDescription, false, null);
+                SequenceAnalysisManager.get().createReferenceLibrary(sequenceIds, getJob().getContainer(), getJob().getUser(), libraryName, assemblyId, libraryDescription, skipCacheIndexes, skipTriggers, null);
             }
 
         }

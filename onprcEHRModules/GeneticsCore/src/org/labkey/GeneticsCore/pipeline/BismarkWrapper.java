@@ -424,15 +424,15 @@ public class BismarkWrapper extends AbstractCommandWrapper
                         Pair.of(new File(outputDir, "NonCpG_CTOB_" + outputBasename + ".txt.gz"), -1)
                 );
 
-                if (getProvider().getParameterByName("mbias_only") != null && getProvider().getParameterByName("mbias_only").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
+                if (getProvider().getParameterByName("mbias_only") != null && getProvider().getParameterByName("mbias_only").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false))
                 {
                     getPipelineCtx().getJob().getLogger().info("mbias only was selected, no report will be created");
                 }
-                else if (getProvider().getParameterByName("siteReport") != null && getProvider().getParameterByName("siteReport").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
+                else if (getProvider().getParameterByName("siteReport") != null && getProvider().getParameterByName("siteReport").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false))
                 {
                     getPipelineCtx().getLogger().info("creating per-site summary report");
 
-                    Integer minCoverageDepth = getProvider().getParameterByName("minCoverageDepth").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class);
+                    Integer minCoverageDepth = getProvider().getParameterByName("minCoverageDepth").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
                     File siteReport = new File(outputDir, basename + ".CpG_Site_Summary.methylation.txt");
                     File outputGff = new File(outputDir, basename + ".CpG_Site_Summary.gff");
 

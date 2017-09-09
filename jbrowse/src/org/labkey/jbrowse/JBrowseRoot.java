@@ -1489,7 +1489,8 @@ public class JBrowseRoot
         o.put("storeClass", "JBrowse/Store/SeqFeature/VCFTabix");
         o.put("label", featureName);
         o.put("doIndex", false);
-        o.put("type", "JBrowse/View/Track/HTMLVariants");
+        //o.put("type", "JBrowse/View/Track/CanvasVariants");
+        o.put("type", "AnnotatedVariants/View/Track/VCFVariants");
         o.put("key", featureLabel);
         o.put("hideNotFilterPass", true);
 

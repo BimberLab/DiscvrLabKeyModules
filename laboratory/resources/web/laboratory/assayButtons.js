@@ -6,119 +6,101 @@
 
 Ext4.namespace('Laboratory.Assay');
 
-
-Laboratory.Assay.parseAssayName = function(schemaName, queryName){
-    //different parsing for old/new style assay names
-    var match = queryName.match(new RegExp('^(.*)'+' (Runs|Data|Batches)', 'i'));
-    var providerName = '';
-    var protocolName = '';
-    if (match){
-        protocolName = match[1];
-    }
-    else {
-        match = schemaName.split(/\./g);
-        providerName = match[1];
-        protocolName = match[2];
-    }
-
-
+Laboratory.Assay = new function(){
     return {
-        schemaName: schemaName,
-        queryName: queryName,
-        protocolName: protocolName,
-        providerName: providerName
-    }
-}
-
-Laboratory.Assay.onAssayLoad = function(dataRegion){
-    var assay = Laboratory.Assay.parseAssayName(dataRegion.schemaName, dataRegion.queryName);
-    if(!assay.protocolName){
-        alert('Improper Assay Name');
-        return;
-    }
-
-    var assayId = LABKEY.ActionURL.getParameter('assayId') || LABKEY.ActionURL.getParameter('rowId');
-
-    if(assayId){
-        LABKEY.Assay.getById({
-            id: assayId,
-            scope: this,
-            success: function(assay){
-                Laboratory.Assay = assay[0];
+        parseAssayName: function(schemaName, queryName){
+            //different parsing for old/new style assay names
+            var match = queryName.match(new RegExp('^(.*)'+' (Runs|Data|Batches)', 'i'));
+            var providerName = '';
+            var protocolName = '';
+            if (match){
+                protocolName = match[1];
             }
-        });
-    }
-}
+            else {
+                match = schemaName.split(/\./g);
+                providerName = match[1];
+                protocolName = match[2];
+            }
 
-Laboratory.Assay.viewBatchesBtn = function(dataRegion, sourceDomain){
-    var assay = Laboratory.Assay.parseAssayName(dataRegion.schemaName, dataRegion.queryName);
-    if(!assay.protocolName){
-        alert('Improper Assay Name');
-        return;
-    }
+            return {
+                schemaName: schemaName,
+                queryName: queryName,
+                protocolName: protocolName,
+                providerName: providerName
+            }
+        },
 
-    var params = {
-        schemaName: assay.schemaName,
-        'query.queryName': 'Batches'
-    };
+        viewBatchesBtn: function(dataRegion, sourceDomain){
+            var assay = Laboratory.Assay.parseAssayName(dataRegion.schemaName, dataRegion.queryName);
+            if(!assay.protocolName){
+                alert('Improper Assay Name');
+                return;
+            }
 
-    window.location = LABKEY.ActionURL.buildURL("query", "executeQuery", null, params);
+            var params = {
+                schemaName: assay.schemaName,
+                'query.queryName': 'Batches'
+            };
 
-}
+            window.location = LABKEY.ActionURL.buildURL("query", "executeQuery", null, params);
 
-Laboratory.Assay.viewRunsBtn = function(dataRegion, sourceDomain){
-    var assay = Laboratory.Assay.parseAssayName(dataRegion.schemaName, dataRegion.queryName);
-    if(!assay.protocolName){
-        alert('Improper Assay Name');
-        return;
-    }
+        },
 
-    var params = {
-        schemaName: assay.schemaName,
-        'query.queryName': 'Runs'
-    };
+        viewRunsBtn: function(dataRegion, sourceDomain){
+            var assay = Laboratory.Assay.parseAssayName(dataRegion.schemaName, dataRegion.queryName);
+            if(!assay.protocolName){
+                alert('Improper Assay Name');
+                return;
+            }
 
-    var checked = dataRegion.getChecked();
-    if(sourceDomain=='Batch' && checked.length)
-        params['query.Batch/RowId~in'] = checked.join(';');
+            var params = {
+                schemaName: assay.schemaName,
+                'query.queryName': 'Runs'
+            };
 
-    window.location = LABKEY.ActionURL.buildURL("query", "executeQuery", null, params);
+            var checked = dataRegion.getChecked();
+            if(sourceDomain=='Batch' && checked.length)
+                params['query.Batch/RowId~in'] = checked.join(';');
 
-}
+            window.location = LABKEY.ActionURL.buildURL("query", "executeQuery", null, params);
 
-Laboratory.Assay.viewResultsBtn = function(dataRegion, sourceDomain){
-    var assay = Laboratory.Assay.parseAssayName(dataRegion.schemaName, dataRegion.queryName);
-    if(!assay.protocolName){
-        alert('Improper Assay Name');
-        return;
-    }
+        },
 
-    var params = {
-        schemaName: assay.schemaName,
-        'query.queryName': 'Data'
-    };
+        viewResultsBtn: function(dataRegion, sourceDomain){
+            var assay = Laboratory.Assay.parseAssayName(dataRegion.schemaName, dataRegion.queryName);
+            if(!assay.protocolName){
+                alert('Improper Assay Name');
+                return;
+            }
 
-    var checked = dataRegion.getChecked();
-    if(sourceDomain=='Runs' && checked.length)
-        params['query.Run/RowId~in'] = checked.join(';');
+            var params = {
+                schemaName: assay.schemaName,
+                'query.queryName': 'Data'
+            };
 
-    window.location = LABKEY.ActionURL.buildURL("query", "executeQuery", null, params);
+            var checked = dataRegion.getChecked();
+            if(sourceDomain=='Runs' && checked.length)
+                params['query.Run/RowId~in'] = checked.join(';');
 
-}
+            window.location = LABKEY.ActionURL.buildURL("query", "executeQuery", null, params);
 
-Laboratory.Assay.manageAssayBtn = function(dataRegion, sourceDomain){
-    var assay = Laboratory.Assay.parseAssayName(dataRegion.schemaName, dataRegion.queryName);
-    if(!assay.protocolName){
-        alert('Improper Assay Name');
-        return;
-    }
+        },
 
-    LABKEY.Assay.getByName({
-        name: assay.protocolName,
-        scope: this,
-        success: function(assay){
-            var assay = assay[0];
-            window.location = LABKEY.ActionURL.buildURL("assay", "designer", null, {rowId: assay.id, providerName: assay.name});
+        manageAssayBtn: function(dataRegion, sourceDomain){
+            var assay = Laboratory.Assay.parseAssayName(dataRegion.schemaName, dataRegion.queryName);
+            if(!assay.protocolName){
+                alert('Improper Assay Name');
+                return;
+            }
+
+            LABKEY.Assay.getByName({
+                name: assay.protocolName,
+                scope: this,
+                success: function(assay){
+                    var assay = assay[0];
+                    window.location = LABKEY.ActionURL.buildURL("assay", "designer", null, {rowId: assay.id, providerName: assay.name});
+                }
+            });
         }
-    });
+    }
 }

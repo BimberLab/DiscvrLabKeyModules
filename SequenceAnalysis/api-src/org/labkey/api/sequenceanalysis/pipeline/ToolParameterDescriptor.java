@@ -25,6 +25,8 @@ import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -132,16 +134,42 @@ public class ToolParameterDescriptor
         return ret;
     }
 
-    private String getJsonParamName(PipelineStepProvider provider)
+    private String getJsonParamName(PipelineStepProvider provider, int stepIdx)
     {
         PipelineStep.StepType type = PipelineStep.StepType.getStepType(provider.getStepClass());
 
-        return type.name() + "." + provider.getName() + "." + getName();
+        return type.name() + "." + provider.getName() + "." + getName() + (stepIdx == 0 ? "" : "." + stepIdx);
     }
 
-    public String extractValue(PipelineJob job, PipelineStepProvider provider) throws PipelineJobException
+    public String extractValue(PipelineJob job, PipelineStepProvider provider, int stepIdx) throws PipelineJobException
     {
-        return extractValue(job, provider, String.class);
+        return extractValue(job, provider, stepIdx, String.class);
+    }
+
+    public List<Object> extractAllValues(PipelineJob job, PipelineStepProvider provider)
+    {
+        List<Object> ret = new ArrayList<>();
+        String prefix = getJsonParamName(provider, 0);
+
+        Map jobParams;
+        if (job instanceof HasJobParams)
+        {
+            jobParams = ((HasJobParams)job).getParameterJson();
+        }
+        else
+        {
+            jobParams = job.getParameters();
+        }
+
+        for (Object key : jobParams.keySet())
+        {
+            if (key.toString().startsWith(prefix))
+            {
+                ret.add(jobParams.get(key));
+            }
+        }
+
+        return ret;
     }
 
     /**
@@ -149,19 +177,19 @@ public class ToolParameterDescriptor
      * to perform last minute transforms, such as converted a boolean (which is better in the UI as a checkbox)
      * to 1 or 0
      */
-    public String extractValueForCommandLine(PipelineJob job, PipelineStepProvider provider) throws PipelineJobException
+    public String extractValueForCommandLine(PipelineJob job, PipelineStepProvider provider, int stepIdx) throws PipelineJobException
     {
-        return extractValue(job, provider);
+        return extractValue(job, provider, stepIdx);
     }
 
-    public <ParamType> ParamType extractValue(PipelineJob job, PipelineStepProvider provider, Class<ParamType> clazz)
+    public <ParamType> ParamType extractValue(PipelineJob job, PipelineStepProvider provider, int stepIdx, Class<ParamType> clazz)
     {
-        return this.extractValue(job, provider, clazz, null);
+        return this.extractValue(job, provider, stepIdx, clazz, null);
     }
 
-    public <ParamType> ParamType extractValue(PipelineJob job, PipelineStepProvider provider, Class<ParamType> clazz, @Nullable ParamType defaultValue)
+    public <ParamType> ParamType extractValue(PipelineJob job, PipelineStepProvider provider, int stepIdx, Class<ParamType> clazz, @Nullable ParamType defaultValue)
     {
-        String key = getJsonParamName(provider);
+        String key = getJsonParamName(provider, stepIdx);
         Map jobParams;
         if (job instanceof HasJobParams)
         {

@@ -108,8 +108,9 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                     type: 'array',
                     fields: ['display', 'value'],
                     data: [
-                        ['Delete originals', 'delete'],
-                        ['Leave originals alone', 'none']
+                        ['Copy, delete originals', 'delete'],
+                        ['Copy, leave originals alone', 'none'],
+                        ['Leave in place', 'leaveInPlace']
                     ]
                 }
             },{

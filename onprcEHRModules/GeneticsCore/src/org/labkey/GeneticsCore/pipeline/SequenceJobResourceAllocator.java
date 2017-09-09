@@ -2,9 +2,10 @@ package org.labkey.GeneticsCore.pipeline;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.labkey.api.cluster.ClusterResourceAllocator;
 import org.labkey.api.data.ConvertHelper;
-import org.labkey.api.htcondorconnector.HTCondorJobResourceAllocator;
 import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.pipeline.RemoteExecutionEngine;
 import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.pipeline.HasJobParams;
@@ -15,7 +16,7 @@ import org.labkey.api.util.FileUtil;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -24,12 +25,12 @@ import java.util.Map;
  * Created by bbimber
  *
  */
-public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocator
+public class SequenceJobResourceAllocator implements ClusterResourceAllocator
 {
-    public static class Factory implements HTCondorJobResourceAllocator.Factory
+    public static class Factory implements ClusterResourceAllocator.Factory
     {
         @Override
-        public HTCondorJobResourceAllocator getAllocator()
+        public ClusterResourceAllocator getAllocator()
         {
             return new SequenceJobResourceAllocator();
         }
@@ -51,6 +52,11 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
     private boolean isSequenceAlignmentTask(PipelineJob job)
     {
         return (job.getActiveTaskId() != null && job.getActiveTaskId().getNamespaceClass().getName().endsWith("SequenceAlignmentTask"));
+    }
+
+    private boolean isCacheAlignerIndexesTask(PipelineJob job)
+    {
+        return (job.getActiveTaskId() != null && job.getActiveTaskId().getNamespaceClass().getName().endsWith("CacheAlignerIndexesTask"));
     }
 
     private boolean isSequenceSequenceOutputHandlerTask(PipelineJob job)
@@ -130,6 +136,12 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
         {
             job.getLogger().debug("setting memory to 24");
             return 24;
+        }
+
+        if (isCacheAlignerIndexesTask(job))
+        {
+            job.getLogger().debug("setting memory to 48");
+            return 48;
         }
 
         Long totalFileSize = getFileSize(job);
@@ -225,7 +237,7 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
     }
 
     @Override
-    public List<String> getExtraSubmitScriptLines(PipelineJob job)
+    public void addExtraSubmitScriptLines(PipelineJob job, RemoteExecutionEngine engine, List<String> lines)
     {
         if (job instanceof HasJobParams)
         {
@@ -236,7 +248,8 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
                 if (weekLongJob)
                 {
                     job.getLogger().debug("adding WEEK_LONG_JOB as supplied by job");
-                    return Arrays.asList("concurrency_limits = WEEK_LONG_JOBS");
+                    possiblyAddWeekLongLines(engine, lines);
+                    return;
                 }
             }
         }
@@ -244,16 +257,48 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
         Long totalFileSize = getFileSize(job);
         if (UNABLE_TO_DETERMINE.equals(totalFileSize))
         {
-            return getHighIoFlag(job);
+            possiblyAddHighIoFlag(job, engine, lines);
+            return;
         }
 
+        //NOTE: no longer auotmatically add this.  only support when the user specifically requests it
         //25gb alignment
-        if (isSequenceAlignmentTask(job) && totalFileSize > 25e9 && jobProvidedCpusOrRam(job))
-        {
-            return Arrays.asList("concurrency_limits = WEEK_LONG_JOBS");
-        }
+        //if (isSequenceAlignmentTask(job) && totalFileSize > 25e9 && jobProvidedCpusOrRam(job))
+        //{
+        //    return getWeekLongLines(engine);
+        //}
 
-        return getHighIoFlag(job);
+        possiblyAddHighIoFlag(job, engine, lines);
+    }
+
+    private void possiblyAddWeekLongLines(RemoteExecutionEngine engine, List<String> lines)
+    {
+        if (engine.getType().equals("HTCondorEngine"))
+        {
+            lines.add("concurrency_limits = WEEK_LONG_JOBS");
+        }
+        else if (engine.getType().equals("SlurmEngine"))
+        {
+            //exacloud: 36 hours
+            //long_jobs: 10 days (max 60 jobs currently)
+            //very_long_jobs: 30 days (suspends when node is busy)
+
+            //Note: consider supporting --time, which allows request of a shorter duration job
+
+            //first remove existing
+            Iterator<String> it = lines.iterator();
+            while (it.hasNext())
+            {
+                String line = it.next();
+                if (line.contains("#SBATCH --partition="))
+                {
+                    it.remove();
+                }
+            }
+
+            //then add
+            lines.add("#SBATCH --partition=long_jobs");
+        }
     }
 
     private boolean jobProvidedCpusOrRam(PipelineJob job)
@@ -274,7 +319,7 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
         return false;
     }
 
-    private List<String> getHighIoFlag(PipelineJob job)
+    private void possiblyAddHighIoFlag(PipelineJob job, RemoteExecutionEngine engine, List<String> lines)
     {
         if (job instanceof HasJobParams)
         {
@@ -285,12 +330,18 @@ public class SequenceJobResourceAllocator implements HTCondorJobResourceAllocato
                 if (highio)
                 {
                     job.getLogger().debug("adding highio as supplied by job");
-                    return Arrays.asList("concurrency_limits = highio");
+                    if (engine.getType().equals("HTCondorEngine"))
+                    {
+                        lines.add("concurrency_limits = highio");
+                        return;
+                    }
+                    else
+                    {
+                        job.getLogger().debug("HighIO was selected, but it is not support on this cluster type: " + engine.getType());
+                    }
                 }
             }
         }
-
-        return null;
     }
 
     private Long getFileSize(PipelineJob job)

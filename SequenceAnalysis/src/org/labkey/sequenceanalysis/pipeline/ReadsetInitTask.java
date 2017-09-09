@@ -28,6 +28,7 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -195,7 +196,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
                     rs.setReadData(rd);
                 }
 
-                handleInputs(getPipelineJob(), getHelper().getFileManager().getInputfileTreatment(), actions, _finalOutputFiles, _unalteredInputs);
+                handleInputs(getPipelineJob(), getHelper().getFileManager().getInputFileTreatment(), actions, _finalOutputFiles, _unalteredInputs);
             }
             else
             {
@@ -276,20 +277,28 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
         }
         else
         {
-            output = new File(getHelper().getJob().getAnalysisDirectory(), f.getName());
-            if (!output.exists())
+            if (getHelper().getFileManager().getInputFileTreatment() == TaskFileManager.InputFileTreatment.leaveInPlace)
             {
-                if (getHelper().getFileManager().getInputfileTreatment().equals("delete") || getHelper().getFileManager().getInputfileTreatment().equals("compress"))
+                getJob().getLogger().debug("input files will be left in place");
+                output = f;
+            }
+            else
+            {
+                output = new File(getHelper().getJob().getAnalysisDirectory(), f.getName());
+                if (!output.exists())
                 {
-                    getJob().getLogger().info("moving unaltered input to final location");
-                    getJob().getLogger().debug(output.getPath());
-                    FileUtils.moveFile(f, output);
-                }
-                else
-                {
-                    getJob().getLogger().info("copying unaltered input to final location");
-                    getJob().getLogger().debug(output.getPath());
-                    FileUtils.copyFile(f, output);
+                    if (getHelper().getFileManager().getInputFileTreatment() == TaskFileManager.InputFileTreatment.delete || getHelper().getFileManager().getInputFileTreatment() == TaskFileManager.InputFileTreatment.compress)
+                    {
+                        getJob().getLogger().info("moving unaltered input to final location");
+                        getJob().getLogger().debug(output.getPath());
+                        FileUtils.moveFile(f, output);
+                    }
+                    else
+                    {
+                        getJob().getLogger().info("copying unaltered input to final location");
+                        getJob().getLogger().debug(output.getPath());
+                        FileUtils.copyFile(f, output);
+                    }
                 }
             }
         }
@@ -337,7 +346,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
         return new File(helper.getJob().getAnalysisDirectory(), "extraBarcodes.txt");
     }
 
-    public static Set<File> handleInputs(SequenceJob job, String inputFileTreatment, Collection<RecordedAction> actions, Set<File> outputFiles, @Nullable Set<File> unalteredInputs) throws PipelineJobException
+    public static Set<File> handleInputs(SequenceJob job, TaskFileManager.InputFileTreatment inputFileTreatment, Collection<RecordedAction> actions, Set<File> outputFiles, @Nullable Set<File> unalteredInputs) throws PipelineJobException
     {
         Set<File> inputs = new HashSet<>();
         inputs.addAll(job.getInputFiles());
@@ -353,7 +362,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
             throw new PipelineJobException(e);
         }
 
-        if ("delete".equals(inputFileTreatment))
+        if (TaskFileManager.InputFileTreatment.delete == inputFileTreatment)
         {
             job.getLogger().info("deleting input files");
             for (File input : inputs)
@@ -379,7 +388,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
                 }
             }
         }
-        else if ("compress".equals(inputFileTreatment))
+        else if (TaskFileManager.InputFileTreatment.compress == inputFileTreatment)
         {
             job.getLogger().info("compressing input files");
             FileType gz = new FileType(".gz");

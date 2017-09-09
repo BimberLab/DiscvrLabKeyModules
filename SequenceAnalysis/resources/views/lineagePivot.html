@@ -57,6 +57,7 @@ Ext4.onReady(function(){
 
                     Ext4.Msg.wait('Loading...');
                     LABKEY.Query.selectDistinctRows({
+                        method: 'POST',
                         containerPath: Laboratory.Utils.getQueryContainerPath(),
                         schemaName: 'sequenceanalysis',
                         queryName: 'alignment_summary_by_lineage',
@@ -214,10 +215,10 @@ Ext4.onReady(function(){
                         ' FROM sequenceanalysis.haplotype_sequences hs WHERE hs.haplotype IN (SELECT distinct hs2.haplotype FROM sequenceanalysis.haplotype_sequences hs2 WHERE hs2.type = \'Lineage\' AND hs2.name IN (' + lineageSql + ') AND (hs2.haplotype.type IN (\'' + appendHaplotypes.join('\',\'') + '\')) ' + ')'
                 : '') +
                 ') t ' +
-                'GROUP BY t.analysis_id, t.readset, t.lineages ' +
+                ' GROUP BY t.analysis_id, t.readset, t.lineages ' +
                 (minPct ? ' HAVING sum(t.percent_from_locus) > ' + minPct : '') +
-                'PIVOT percent_from_locus BY lineages in (SELECT DISTINCT r.lineage FROM sequenceanalysis.ref_nt_sequences r ' +
-                'WHERE r.lineage is not null ' +
+                ' PIVOT percent_from_locus BY lineages in (SELECT DISTINCT r.lineage FROM sequenceanalysis.ref_nt_sequences r ' +
+                ' WHERE r.lineage is not null ' +
                     (species ? 'AND (r.species IN (\'' + species.join('\',\'') + '\')) ' : '') +
                     (locus ? 'AND (r.locus IN (\'' + locus.join('\',\'') + '\')) ' : '') +
                     (category ? 'AND (r.category IN (\'' + category.join('\',\'') + '\')) ' : '') +

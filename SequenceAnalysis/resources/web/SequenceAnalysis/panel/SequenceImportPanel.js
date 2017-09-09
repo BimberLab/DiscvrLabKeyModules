@@ -244,9 +244,10 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     type: 'array',
                     fields: ['display', 'value'],
                     data: [
-                        ['Delete originals', 'delete'],
-                        ['Move and compress', 'compress'],
-                        ['Do nothing', 'none']
+                        ['Copy, delete originals', 'delete'],
+                        ['Move originals and compress', 'compress'],
+                        ['Copy, leave originals in place', 'none'],
+                        ['Leave in place', 'leaveInPlace']
                     ]
                 }
             },{
@@ -262,6 +263,45 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 xtype:'checkbox',
                 itemId: 'runFastqc',
                 checked: true
+            },{
+                xtype: 'checkbox',
+                name: 'inputfile.flagLowReads',
+                inputValue: true,
+                fieldLabel: 'Flag Readsets With Low Reads',
+                helpPopup: 'If checked, readsets with fewer than the provided number of reads will be automatically flagged with the specified status.',
+                scope: this,
+                handler: function(btn, val){
+                    btn.up('form').down('#lowReadThresholdOptions').setVisible(btn.checked);
+                }
+            },{
+                xtype: 'fieldset',
+                style: 'padding:5px;',
+                hidden: true,
+                hideMode: 'offsets',
+                width: 'auto',
+                itemId: 'lowReadThresholdOptions',
+                fieldDefaults: {
+                    width: 350
+                },
+                items: [{
+                    xtype: 'ldk-numberfield',
+                    fieldLabel: 'Read Threshold',
+                    helpPopup: 'Readsets with fewer than this many reads will be flagged',
+                    minValue: 0,
+                    name: 'inputfile.lowReadThreshold',
+                    value: 1000
+                },{
+                    xtype: 'ldk-simplelabkeycombo',
+                    fieldLabel: 'Status',
+                    schemaName: 'sequenceanalysis',
+                    queryName: 'readset_status',
+                    sortField: 'status',
+                    valueField: 'status',
+                    value: 'Failed',
+                    displayField: 'status',
+                    plugins: ['ldk-usereditablecombo'],
+                    name: 'inputfile.lowReadStatusLabel'
+                }]
             }]
         },this.getReadDataSection(), this.getReadsetSection(), {
             xtype: 'panel',
@@ -366,7 +406,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
     },
 
     //<sample name>_<barcode sequence>_L<lane (0-padded to 3 digits)>_R<read number>_<set number (0-padded to 3 digits>.fastq.gz
-    ILLUMINA_REGEX: /^(.+)_(.+)_L(.+)_(R){0,1}([0-9])_(.+)(\.f(ast){0,1}q)(\.gz)?$/i,
+    ILLUMINA_REGEX: /^(.+)_L(.+)_(R){0,1}([0-9])(_[0-9]+){0,1}(\.f(ast){0,1}q)(\.gz)?$/i,
 
     //Example from NextSeq: RNA160915BB_34A_22436_Gag120_Clone-10_S10_R1_001.fastq.gz
     //This should also allow simple pairs, like: file1_1.fq.gz and file1_2.fq.gz
@@ -392,19 +432,19 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 }
                 else if (this.ILLUMINA_REGEX.test(rec.get('fileName'))){
                     var match = this.ILLUMINA_REGEX.exec(rec.get('fileName'));
-                    var sample = match[1] + '-' + match[2];
-                    var platformUnit = match[1] + '-' + match[2] + '_L' + match[3];
-                    var lane = match[6];
-                    var setId = match[1] + '-' + match[2] + '_L' + match[3] + '_' + lane;
-                    var direction = match[5];
-                    this.processIlluminaMatch(sample, platformUnit, lane, setId, direction, rec, map);
+                    var sample = match[1];
+                    var platformUnit = match[1] + '_L' + match[2];
+                    var setNo = match[5];
+                    var setId = platformUnit + '_' + setNo;
+                    var direction = match[4];
+                    this.processIlluminaMatch(sample, platformUnit, setNo, setId, direction, rec, map);
                 }
                 else if (this.ILLUMINA_REGEX_NO_LANE.test(rec.get('fileName'))){
                    var match = this.ILLUMINA_REGEX_NO_LANE.exec(rec.get('fileName'));
-                   var laneInfo = match[4] ? match[4].replace(/^_/, '') : null;
-                   var sample = match[1] + (laneInfo ? '-' + laneInfo : '');
+                   var setNo = match[4] ? match[4].replace(/^_/, '') : null;
+                   var sample = match[1];
                    var platformUnit = match[1];
-                   var setId = match[1] + (laneInfo ? '-' + laneInfo : '');
+                   var setId = match[1] + (setNo ? '-' + setNo : '');
                    var direction = match[3];
                    this.processIlluminaMatch(sample, platformUnit, null, setId, direction, rec, map);
                 }
@@ -2119,5 +2159,40 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         }
 
         this.readsetStore.validateAll();
+    }
+});
+
+//see bug:
+//https://www.sencha.com/forum/showthread.php?265078-Broken-contracts-of-getAt-indexOf-methods-of-the-Ext.grid.feature.Grouping
+Ext4.define('App.overrides.view.Table', {
+    override: 'Ext.view.Table',
+
+    getRecord: function (node) {
+        node = this.getNode(node);
+        if (node) {
+            //var recordIndex = node.getAttribute('data-recordIndex');
+            //if (recordIndex) {
+            //    recordIndex = parseInt(recordIndex, 10);
+            //    if (recordIndex > -1) {
+            //        // The index is the index in the original Store, not in a GroupStore
+            //        // The Grouping Feature increments the index to skip over unrendered records in collapsed groups
+            //        return this.store.data.getAt(recordIndex);
+            //    }
+            //}
+            return this.dataSource.data.get(node.getAttribute('data-recordId'));
+        }
+    },
+
+
+    indexInStore: function (node) {
+        node = this.getNode(node, true);
+        if (!node && node !== 0) {
+            return -1;
+        }
+        //var recordIndex = node.getAttribute('data-recordIndex');
+        //if (recordIndex) {
+        //    return parseInt(recordIndex, 10);
+        //}
+        return this.dataSource.indexOf(this.getRecord(node));
     }
 });

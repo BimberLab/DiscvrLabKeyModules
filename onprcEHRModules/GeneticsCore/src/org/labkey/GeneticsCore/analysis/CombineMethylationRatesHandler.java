@@ -120,7 +120,7 @@ public class CombineMethylationRatesHandler extends AbstractParameterizedOutputH
                     throw new PipelineJobException("Invalid interval: " + i);
                 }
 
-                intervals.add(Pair.of(new Interval(tokens[0], Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2])), ""));
+                intervals.add(Pair.of(new Interval(tokens[0], Integer.parseInt(StringUtils.trimToNull(tokens[1])), Integer.parseInt(StringUtils.trimToNull(tokens[2]))), ""));
             }
 
             intervals.sort(Comparator.comparing(o -> o.first));

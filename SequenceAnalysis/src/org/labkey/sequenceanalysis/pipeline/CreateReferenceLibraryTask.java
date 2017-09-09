@@ -154,8 +154,9 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             //first create the partial library record
             if (getPipelineJob().isCreateNew())
             {
-                Map<String, Object> libraryRow = new CaseInsensitiveHashMap();
+                Map<String, Object> libraryRow = new CaseInsensitiveHashMap<>();
                 libraryRow.put("name", getPipelineJob().getLibraryName());
+                libraryRow.put("assemblyId", getPipelineJob().getAssemblyId());
                 libraryRow.put("description", getPipelineJob().getLibraryDescription());
 
                 BatchValidationException errors = new BatchValidationException();
@@ -354,32 +355,39 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             Set<GenomeTrigger> triggers = SequenceAnalysisServiceImpl.get().getGenomeTriggers();
             if (!triggers.isEmpty())
             {
-                JobRunner jr = JobRunner.getDefault();
-                for (final GenomeTrigger t : triggers)
+                if (getPipelineJob().isSkipTriggers())
                 {
-                    if (t.isAvailable(getJob().getContainer()))
-                    {
-                        getJob().getLogger().info("running genome trigger: " + t.getName());
-                        final int libraryId = rowId;
-                        jr.execute(new Job()
-                        {
-                            @Override
-                            public void run()
-                            {
-                                if (getPipelineJob().isCreateNew())
-                                {
-                                    t.onCreate(getJob().getContainer(), getJob().getUser(), getJob().getLogger(), libraryId);
-                                }
-                                else
-                                {
-                                    t.onRecreate(getJob().getContainer(), getJob().getUser(), getJob().getLogger(), libraryId);
-                                }
-                            }
-                        });
-                    }
+                    getPipelineJob().getLogger().debug("skipping triggers");
                 }
+                else
+                {
+                    JobRunner jr = JobRunner.getDefault();
+                    for (final GenomeTrigger t : triggers)
+                    {
+                        if (t.isAvailable(getJob().getContainer()))
+                        {
+                            getJob().getLogger().info("running genome trigger: " + t.getName());
+                            final int libraryId = rowId;
+                            jr.execute(new Job()
+                            {
+                                @Override
+                                public void run()
+                                {
+                                    if (getPipelineJob().isCreateNew())
+                                    {
+                                        t.onCreate(getJob().getContainer(), getJob().getUser(), getJob().getLogger(), libraryId);
+                                    }
+                                    else
+                                    {
+                                        t.onRecreate(getJob().getContainer(), getJob().getUser(), getJob().getLogger(), libraryId);
+                                    }
+                                }
+                            });
+                        }
+                    }
 
-                jr.waitForCompletion();
+                    jr.waitForCompletion();
+                }
             }
         }
         catch (Exception e)

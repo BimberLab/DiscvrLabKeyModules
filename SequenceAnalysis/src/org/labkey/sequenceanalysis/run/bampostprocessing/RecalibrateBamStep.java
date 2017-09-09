@@ -62,9 +62,9 @@ public class RecalibrateBamStep extends AbstractCommandPipelineStep<BaseRecalibr
         output.addIntermediateFile(outputBam);
 
         File knownSitesFile = null;
-        if (!StringUtils.isEmpty(getProvider().getParameterByName("known_sites_file").extractValue(getPipelineCtx().getJob(), getProvider())))
+        if (!StringUtils.isEmpty(getProvider().getParameterByName("known_sites_file").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx())))
         {
-            knownSitesFile = getPipelineCtx().getSequenceSupport().getCachedData(getProvider().getParameterByName("known_sites_file").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class));
+            knownSitesFile = getPipelineCtx().getSequenceSupport().getCachedData(getProvider().getParameterByName("known_sites_file").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class));
             if (!knownSitesFile.exists())
             {
                 throw new PipelineJobException("Attempting to use a file that does not exist: " + knownSitesFile.getPath());

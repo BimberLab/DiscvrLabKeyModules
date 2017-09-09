@@ -1,0 +1,41 @@
+The Cluster module is designed to allow submission of LabKey pipeline jobs to various clusters, including HTCondor and Slurm.  Once configured this should be seamless; however,
+the configuration itself requires some understanding of your cluster's configuration, the LabKey Server pipeline, and the types of jobs you expect to run.
+<p/>
+Most configuration is provided through pipelineConfig.xml files (described more below) on the webserver and the cluster, which supply the information to allow the LK Server to submit or execute condor jobs.
+
+<h3>Webserver Settings:</h3>
+<p/>
+Please refer to example pipelineConfig.xml files for either: <a href="<%=contextPath%>/cluster/htcondor/pipelineConfig.xml">HTCondor</a>, or <a href="<%=contextPath%>/cluster/slurm/pipelineConfig.xml">Slurm</a> for the webserver.  This is an example only, designed to illustrate multiple configuration patterns.  You will need to place a file like this in the /config directory of your server.   Unless otherwise configured, this is {labkey_dir}/configs.
+<p/>
+Submitting jobs essentially means the ability to call the appropriate command line tools for the scheduler (such as condor_submit, condor_q, condor_status, condor_history, and condor_rm for HTCondor).  The pipelineConfig.xml file includes examples of two common patterns:
+<p/>
+<ul>
+<li>Depending on how your LabKey Server is set up, you could configure that machine for remote job submission, such that if you execute 'condor_submit' on the webserver, the jobs will be sent to your cluster.  Please refer to the HTCondor/Slurm docs for how to configure the remote submit.  This is simplest from the LabKey side; however, requires an understanding of your cluster.</li>
+<li>Alternately, you can configure the webserver to SSH to the cluster and execute the appropriate commands.  This will be a headless process, so you must make sure the command you provide does not require a password or other prompts.  One option for this is to setup SSH keys between the two servers.</li>
+</ul>
+<p/>
+When actually executing your job on the cluster, LabKey can run one of two ways:
+<p/>
+<ul>
+    <li>We can simply run the remote LabKey java process.  This process will execute the remote task (which often actually involves running an external tool).  With this route, it will be important to make sure the tools and environment required for your jobs are set up on the cluster.</li>
+    <li>Using docker is highly recommended.  When going this route, LK will use docker to execute this remote process within a docker container.  This container can be configured to have whatever tools and environment are required for your jobs.  For DISCVR-Seq or similar jobs, <a href="https://hub.docker.com/r/bbimber/discvr-seq/">a docker image is already available</a>, which could be extended if you require additional tools.</li>
+</ul>
+The pipelineConfig.xml file contains an example of standard submission and docker-based submission.
+<p/>
+For all of these scenarios to work, the LabKey file root must be mounted and visible to the cluster, and the user executing the remote jobs must have R/W access to it.
+The pipelineConfig.xml contains example of a path mapper, which allows the server to convert between local and remote path names.
+
+<h3>Remote Server Settings:</h3>
+<p/>
+Please refer to this <a href="<%=contextPath%>/cluster/pipelineConfig_cluster.xml">example pipelineConfig.xml</a> suitable for the cluster nodes.  This is an example only.  You will need to place this in the /config directory of the LabKey installation on the cluster.
+<p/>
+The settings on the remote server are simpler.  You will primarily need to configure the location of the tools directory (i.e. where any external tools are installed), and can provide other module-specific settings.  This example incldues settings supported by DISCVR-Seq.
+<p/>
+Finally, the remote server can make use of an ActiveMQ server to update job status while the job is executing.  This is optional; however, can be useful information.  To use this, you will need to install the ActiveMQ server,
+configure your LabKey server to use this (LabKey's core docs will describe this).  See the notes in the example pipelineConfig.xml for more information.
+<p/>
+<h3>Testing:</h3>
+To test your configuration, there is a helper that will submit a dummy job to any cluster engines configured on this site.  This should be run after your server has been configured to use the cluster and restarted.  <a href="<%=contextPath%>/cluster<%=containerPath%>/runTestPipeline.view">Click here to run this.</a>
+<pre>
+
+</pre>

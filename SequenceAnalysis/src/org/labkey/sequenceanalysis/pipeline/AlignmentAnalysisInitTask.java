@@ -6,6 +6,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileType;
@@ -77,16 +78,17 @@ public class AlignmentAnalysisInitTask extends WorkDirectoryTask<AlignmentAnalys
 
         getTaskHelper().cacheExpDatasForParams();
 
-        List<PipelineStepProvider<AnalysisStep>> providers = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
-        if (providers.isEmpty())
+        List<PipelineStepCtx<AnalysisStep>> steps = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
+        if (steps.isEmpty())
         {
             throw new PipelineJobException("No analysis selected, nothing to do");
         }
 
         getJob().getLogger().info("Preparing for analysis");
-        for (PipelineStepProvider<AnalysisStep> provider : providers)
+        for (PipelineStepCtx<AnalysisStep> stepCtx : steps)
         {
-            AnalysisStep step = provider.create(getTaskHelper());
+            AnalysisStep step = stepCtx.getProvider().create(getTaskHelper());
+            step.setStepIdx(stepCtx.getStepIdx());
             step.init(getTaskHelper().getSequenceSupport());
         }
 

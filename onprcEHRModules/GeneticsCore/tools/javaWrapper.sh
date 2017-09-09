@@ -43,14 +43,14 @@ echo $TEMP_DIR
 
 function finish {
     echo "cleaning up temp dir"
+    rm -Rf $TEMP_DIR
+
     if [ -e $LABKEY_HOME ];then
         rm -Rf $LABKEY_HOME
     fi
-
-    rm -Rf $TEMP_DIR
 }
 
-trap finish EXIT
+trap finish EXIT SIGHUP SIGINT SIGTERM SIGKILL SIGQUIT SIGSTP
 
 mkdir -p $TEMP_DIR
 lfs setstripe -c 1 $TEMP_DIR

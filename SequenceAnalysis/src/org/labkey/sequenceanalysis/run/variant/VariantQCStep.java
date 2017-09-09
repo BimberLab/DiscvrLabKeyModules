@@ -59,6 +59,9 @@ public class VariantQCStep extends AbstractPipelineStep implements VariantProces
         {
             options.add("-ped");
             options.add(pedFile.getPath());
+
+            options.add("-pedValidationType");
+            options.add("SILENT");
         }
 
         File outputHtml = new File(outputDirectory, SequencePipelineService.get().getUnzippedBaseName(inputVCF.getName()) + ".variantQC.html");

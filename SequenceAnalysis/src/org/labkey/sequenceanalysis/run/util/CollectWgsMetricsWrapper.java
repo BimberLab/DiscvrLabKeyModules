@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
+import org.labkey.api.util.FileUtil;
 
 import java.io.File;
 import java.util.LinkedList;
@@ -23,7 +24,7 @@ public class CollectWgsMetricsWrapper extends PicardWrapper
 
     public File executeCommand(File inputFile, File outputFile, File refFasta) throws PipelineJobException
     {
-        getLogger().info("Running CollectWgsMetrics: " + inputFile.getPath());
+        getLogger().info("Running " + getToolName() + ": " + inputFile.getPath());
         File idx = new File(inputFile.getPath() + ".bai");
         if (!idx.exists())
         {
@@ -45,6 +46,12 @@ public class CollectWgsMetricsWrapper extends PicardWrapper
         params.add("REFERENCE_SEQUENCE=" + refFasta.getPath());
         params.add("INCLUDE_BQ_HISTOGRAM=true");
         execute(params);
+
+        if ("CollectWgsMetricsWithNonZeroCoverage".equals(getToolName()))
+        {
+            File pdf = new File(outputFile.getParentFile(), FileUtil.getBaseName(outputFile.getName()) + ".wgsMetrics.pdf");
+            params.add("CHART=" + pdf.getPath());
+        }
 
         if (!outputFile.exists())
         {

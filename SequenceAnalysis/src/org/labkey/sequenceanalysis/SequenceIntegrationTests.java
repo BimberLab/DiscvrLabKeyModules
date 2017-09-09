@@ -761,6 +761,43 @@ public class SequenceIntegrationTests
             Assert.assertEquals("Incorrect read number", 3260L, FastqUtils.getSequenceCount(fq));
         }
 
+        @Test
+        public void leaveInPlaceTest() throws Exception
+        {
+            String prefix = "BasicTest_";
+            ensureFilesPresent(prefix);
+
+            String jobName = prefix + System.currentTimeMillis();
+            String[] fileNames = new String[]{PAIRED_FILENAME1};
+            JSONObject config = substituteParams(new File(_sampleData, READSET_JOB), jobName);
+            FileGroup g = new FileGroup();
+            g.name = "Group1";
+            g.filePairs = new ArrayList<>();
+            g.filePairs.add(new FileGroup.FilePair());
+            g.filePairs.get(0).file1 = new File(prefix + PAIRED_FILENAME1);
+
+            appendSamplesForImport(config, Arrays.asList(g));
+            config.put("inputfile.inputTreatment", "leaveInPlace");
+
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport);
+            waitForJobs(jobs);
+
+            Set<File> expectedOutputs = new HashSet<>();
+            File basedir = getBaseDir(jobs.iterator().next());
+            Assert.assertFalse("Unexpected file found", new File(basedir, prefix + PAIRED_FILENAME1).exists());
+            File fq = new File(_pipelineRoot, prefix + PAIRED_FILENAME1);
+            Assert.assertTrue("File not found", fq.exists());
+            expectedOutputs.add(new File(basedir, "sequenceImport.json"));
+            expectedOutputs.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, jobName + ".log"));
+            verifyFileOutputs(basedir, expectedOutputs);
+            verifyFileInputs(basedir, fileNames, config, prefix);
+
+            validateReadsets(jobs, config);
+
+            Assert.assertEquals("Incorrect read number", 211L, FastqUtils.getSequenceCount(fq));
+        }
+
         private void runMergePipelineJob(String jobName, boolean deleteIntermediates, String prefix) throws Exception
         {
             String[] fileNames = new String[]{PAIRED_FILENAME_L1a, PAIRED_FILENAME2_L1a, PAIRED_FILENAME_L1b, PAIRED_FILENAME2_L1b, PAIRED_FILENAME_L2, PAIRED_FILENAME2_L2, PAIRED_FILENAME1, PAIRED_FILENAME2, UNPAIRED_FILENAME};
@@ -1579,7 +1616,7 @@ public class SequenceIntegrationTests
                 throw new PipelineJobException("Unable to find SIVMac239 NT sequence");
             }
 
-            ReferenceLibraryPipelineJob libraryJob = SequenceAnalysisManager.get().createReferenceLibrary(Arrays.asList(mac239Id), _project, _context.getUser(), libraryName, null, true, null);
+            ReferenceLibraryPipelineJob libraryJob = SequenceAnalysisManager.get().createReferenceLibrary(Arrays.asList(mac239Id), _project, _context.getUser(), libraryName, null, null, true, false, null);
             waitForJobs(Collections.singleton(libraryJob));
 
             return new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("rowid"), libraryFilter, null).getObject(Integer.class);

@@ -192,7 +192,7 @@ public class DNAReferenceLibraryStep extends AbstractPipelineStep implements Ref
         List<ToolParameterDescriptor> descriptors = getProvider().getParameters();
         for (ToolParameterDescriptor desc : descriptors)
         {
-            String val = desc.extractValue(getPipelineCtx().getJob(), getProvider());
+            String val = desc.extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx());
             if ("All".equalsIgnoreCase(val))
             {
                 continue;

@@ -62,12 +62,12 @@ public class MendelianViolationReportStep extends AbstractPipelineStep implement
             options.add(maxThreads.toString());
         }
 
-        if (getProvider().getParameterByName("excludeFiltered").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
+        if (getProvider().getParameterByName("excludeFiltered").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false))
         {
             options.add("--excludeFiltered");
         }
 
-        Integer violationReportThreshold = getProvider().getParameterByName("violationReportThreshold").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class, 0);
+        Integer violationReportThreshold = getProvider().getParameterByName("violationReportThreshold").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 0);
         if (violationReportThreshold > 0)
         {
             options.add("--violationReportThreshold");

@@ -30,6 +30,10 @@ public interface PipelineStep
 
     public PipelineStepProvider getProvider();
 
+    public int getStepIdx();
+
+    public void setStepIdx(int stepIdx);
+
     public enum StepType
     {
         fastqProcessing(PreprocessingStep.class),

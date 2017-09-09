@@ -75,7 +75,7 @@ define("dojox/grid/_Builder", [
 					inCell.id = this.grid.id + "Hdr" + inCell.index;
 				}
 				// column headers are not editable, mark as aria-readonly=true
-				html = ['<th tabIndex="-1" aria-readonly="true" role="columnheader"', sortInfo, 'id="', inCell.id, '"'];
+				html = ['<th tabIndex="-1" aria-readonly="true" role="columnheader"', sortInfo, ' id="', inCell.id, '"'];
 			}else{
 				// cells inherit grid aria-readonly property; default value for aria-readonly is false(grid is editable)
 				// if grid is editable (had any editable cells), mark non editable cells as aria-readonly=true
@@ -226,6 +226,12 @@ define("dojox/grid/_Builder", [
 			if (e.cellNode)
 				this.grid.onMouseDown(e);
 			this.grid.onMouseDownRow(e);
+		},
+
+		_getTextDirStyle: function(textDir, inCell, inRowIndex){
+			// summary:
+			//		 Get BiDi text dir, just a placeholder, defined in dojox/grid/bidi/_BidiMixin
+			return "";
 		}
 	});
 
@@ -256,7 +262,7 @@ define("dojox/grid/_Builder", [
 		generateHtml: function(inDataIndex, inRowIndex){
 			var
 				html = this.getTableArray(),
-				v = this.view,
+				v = this.view, dir,
 				cells = v.structure.cells,
 				item = this.grid.getItem(inRowIndex);
 
@@ -274,6 +280,10 @@ define("dojox/grid/_Builder", [
 					m[1] = cc.join(' ');
 					// styles
 					m[3] = cs.join(';');
+					dir = cell.textDir || this.grid.textDir;
+					if(dir){
+					    m[3] += this._getTextDirStyle(dir, cell, inRowIndex);
+					}
 					// in-place concat
 					html.push.apply(html, m);
 				}
@@ -312,7 +322,7 @@ define("dojox/grid/_Builder", [
 		},
 
 		generateHtml: function(inGetValue, inValue){
-			var html = this.getTableArray(), cells = this.view.structure.cells;
+			var dir, html = this.getTableArray(), cells = this.view.structure.cells;
 			
 			util.fire(this.view, "onBeforeRow", [-1, cells]);
 			for(var j=0, row; (row=cells[j]); j++){
@@ -346,6 +356,10 @@ define("dojox/grid/_Builder", [
 					markup[5] = (inValue != undefined ? inValue : inGetValue(cell));
 					// styles
 					markup[3] = cell.customStyles.join(';');
+					dir = cell.textDir || this.grid.textDir;
+					if(dir){
+					    markup[3] += this._getTextDirStyle(dir, cell, inValue);
+					}
 					// classes
 					markup[1] = cell.customClasses.join(' '); //(cell.customClasses ? ' ' + cell.customClasses : '');
 					html.push(markup.join(''));

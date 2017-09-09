@@ -51,6 +51,7 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
     private Map<String, int[][]> _totalQual = new HashMap<>();
     private Map<String, int[][]> _hcCoverage = new HashMap<>();
     private Map<String, int[][]> _hcQual = new HashMap<>();
+    private Map<String, ReferenceSequence> _refSequences = new HashMap<>();
 
     private Map<String, int[][][]> _totalCoverageByBase = new HashMap<>();
     private Map<String, int[][][]> _totalQualByBase = new HashMap<>();
@@ -97,6 +98,11 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
             return;
         }
 
+        if (!super.inspectMapQual(record))
+        {
+            return;
+        }
+
         assert cpi != null;
 
         initHashes(ref);
@@ -138,6 +144,7 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
         int capacity = ref.length() + 1;
         final int INITIAL_SIZE = 4;
         final int BASE_INITIAL_SIZE = 6;
+        _refSequences.put(ref.getName(), ref);
         _totalCoverage.put(ref.getName(), new int[capacity][INITIAL_SIZE]);
         _totalQual.put(ref.getName(), new int[capacity][INITIAL_SIZE]);
         _hcCoverage.put(ref.getName(), new int[capacity][INITIAL_SIZE]);
@@ -379,6 +386,8 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
 
                         int total = 0;
                         int n_total = 0;
+                        char wtBase = index == 0 ? (char)_refSequences.get(refName).getBases()[position] : 'x';
+
                         for (char base : _baseMap.keySet())
                         {
                             String fieldSuffix = _baseMap.get(base);
@@ -393,6 +402,11 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
                             double totalQual = (double)getValueForPositionAndBase(refName, position, index, base, _totalQualByBase);
                             double avgQual = baseTotal == 0 ? 0 : totalQual / baseTotal.doubleValue();
                             row.put("avgqual_" + fieldSuffix, avgQual);
+
+                            if (index == 0 && base == wtBase)
+                            {
+                                row.put("wt", baseTotal);
+                            }
                         }
 
                         if (savedHCDepth > 0)
@@ -445,6 +459,7 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
     public String getSynopsis()
     {
         return "NT Coverage Aggregator:\n" +
+                "\tMinMapQual: " + getMinMapQual() + "\n" +
                 "\tMinSnpQual: " + getMinSnpQual() + "\n" +
                 "\tMinAvgSnpQual: " + getMinAvgSnpQual() + "\n" +
                 "\tMinDipQual: " + getMinDipQual() + "\n" +

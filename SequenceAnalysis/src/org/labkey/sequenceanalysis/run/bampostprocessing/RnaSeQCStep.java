@@ -64,9 +64,9 @@ public class RnaSeQCStep extends AbstractCommandPipelineStep<RnaSeQCWrapper> imp
         extraParams.addAll(getClientCommandArgs());
 
         File gtf;
-        if (!StringUtils.isEmpty(getProvider().getParameterByName("gtf").extractValue(getPipelineCtx().getJob(), getProvider())))
+        if (!StringUtils.isEmpty(getProvider().getParameterByName("gtf").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx())))
         {
-            gtf = getPipelineCtx().getSequenceSupport().getCachedData(getProvider().getParameterByName("gtf").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class));
+            gtf = getPipelineCtx().getSequenceSupport().getCachedData(getProvider().getParameterByName("gtf").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class));
             if (!gtf.exists())
             {
                 throw new PipelineJobException("Unable to find GTF file: " + gtf.getPath());

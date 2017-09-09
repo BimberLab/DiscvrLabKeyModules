@@ -17,6 +17,6 @@ public class ChangeReadsetStatusButton extends SimpleButtonConfigFactory
 {
     public ChangeReadsetStatusButton()
     {
-        super(ModuleLoader.getInstance().getModule(GeneticsCoreModule.class), "Change Readset Status", "GeneticsCore.window.ChangeReadsetStatusWindow.buttonHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromPath("geneticscore/window/ChangeReadsetStatusWindow.js"))));
+        super(ModuleLoader.getInstance().getModule(GeneticsCoreModule.class), "Change Readset Status", "GeneticsCore.window.ChangeReadsetStatusWindow.buttonHandlerForReadsets(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromPath("geneticscore/window/ChangeReadsetStatusWindow.js"))));
     }
 }

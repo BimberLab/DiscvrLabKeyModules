@@ -31,19 +31,23 @@ Ext4.define('SequenceAnalysis.panel.IntervalPanel', {
                     value: 'none',
                     items: [{
                         boxLabel: 'None',
+                        formId: this.getId(),
                         inputValue: 'none',
                         name: 'source',
                         checked: true
                     },{
                         boxLabel: 'Manual Entry',
+                        formId: this.getId(),
                         inputValue: 'manual',
                         name: 'source'
                     },{
                         boxLabel: 'From Genome',
+                        formId: this.getId(),
                         inputValue: 'fromGenome',
                         name: 'source'
                     },{
                         boxLabel: 'By File Id',
+                        formId: this.getId(),
                         inputValue: 'byFileId',
                         name: 'source'
                     }],

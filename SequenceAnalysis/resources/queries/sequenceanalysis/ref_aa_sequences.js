@@ -5,52 +5,76 @@
  */
 
 var console = require("console");
+var LABKEY = require("labkey");
 var Ext = require("Ext").Ext;
 
 console.log("** evaluating: " + this['javax.script.filename']);
 
+var triggerHelper = new org.labkey.sequenceanalysis.query.SequenceTriggerHelper(LABKEY.Security.currentUser.id, LABKEY.Security.currentContainer.id);
 
 function beforeUpsert(row, errors) {
-    if(row.sequence){
+    //TODO: translate name -> rowId if string used:
+
+    if (row.sequence){
         //remove whitespace
         row.sequence = row.sequence.replace(/\s/g, '');
         row.sequence = row.sequence.toUpperCase();
 
         //maybe enforce ATGCN?  allow IUPAC?
-        if(!row.sequence.match(/^[*ARNDCQEGHILKMFPSTWYVX:]+$/)){
+        if (!row.sequence.match(/^[*ARNDCQEGHILKMFPSTWYVX:]+$/)){
             addError(errors, 'sequence', 'Sequence can only contain valid amino acid characters: ARNDCQEGHILKMFPSTWYV*');
         }
     }
 
-    if(row.name){
+    if (row.name){
         //trim name
         row.name = row.name.replace(/^\s+|\s+$/g, '')
 
         //enforce no pipe character in name
-        if(row.name.match(/\|/)){
+        if (row.name.match(/\|/)){
             addError(errors, 'name', 'Sequence name cannot contain the pipe ("|") character');
         }
 
         //enforce no slashes in name
-        if(row.name.match(/[\\]/)){
+        if (row.name.match(/[\\]/)){
             addError(errors, 'name', 'Sequence name cannot contain backslashes');
         }
     }
 
-    if(row.exons && row.sequence){
-        var length = 0;
-        var exonArray = row.exons.split(';');
-        Ext.each(exonArray, function(exon){
-            exon = exon.split('-');
-            length += (Number(exon[1]) - Number(exon[0]) + 1);
-        }, this);
-        length = length / 3;
-        if(length != row.sequence.length){
-            addError(errors, 'sequence', 'The length of the sequence (' + row.sequence.length + ') does not match the exon boundaries (' + length + ')');
+    var exonArray = [];
+    var lengthFromExons = 0;
+    if (row.exons) {
+        exonArray = row.exons.split(';');
+        for (var i = 0;i<exonArray.length; i++) {
+            var exon = exonArray[i].split('-');
+            if (exon.length != 2 || isNaN(exon[0]) || isNaN(exon[1])){
+                addError(errors, 'exons', 'Improper exons: ' + row.exons);
+                return;
+            }
+
+            exonArray[i] = [parseInt(exon[0]), parseInt(exon[1])];
+            lengthFromExons += (exonArray[i][1] - exonArray[i][0] + 1);
         }
+        lengthFromExons = lengthFromExons / 3;
     }
 
-    if(row.exons && row.exons.length){
+    //infer from coordinates:
+    if (row.ref_nt_id && exonArray.length){
+        row.isComplement = !!row.isComplement;
+        var sequence = triggerHelper.extractAASequence(row.ref_nt_id, exonArray, row.isComplement);
+        if (sequence && lengthFromExons != sequence.length){
+            addError(errors, 'sequence', 'The length of the sequence (' + sequence.length + ') does not match the exon boundaries (' + lengthFromExons + ')');
+            return;
+        }
+
+        row.sequence = sequence;
+    }
+
+    if (row.exons && row.sequence && lengthFromExons != row.sequence.length){
+        addError(errors, 'sequence', 'The length of the sequence (' + row.sequence.length + ') does not match the exon boundaries (' + lengthFromExons + ')');
+    }
+
+    if (row.exons && row.exons.length){
         var exonArray = row.exons.split(';');
         var coordinates = exonArray[0].split('-');
         if(coordinates.length == 2)

@@ -162,7 +162,7 @@ public class NcbiGenomeImportTask extends PipelineJob.Task<NcbiGenomeImportTask.
             }
             else
             {
-                SequenceAnalysisManager.get().createReferenceLibrary(sequenceIds, getJob().getContainer(), getJob().getUser(), getPipelineJob().getGenomeName(), "Created automatically from an NCBI download", false, null);
+                SequenceAnalysisManager.get().createReferenceLibrary(sequenceIds, getJob().getContainer(), getJob().getUser(), getPipelineJob().getGenomeName(), null, "Created automatically from an NCBI download", false, false, null);
             }
         }
         catch (Exception e)

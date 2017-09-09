@@ -1,6 +1,6 @@
 require({cache:{
 'JBrowse/Plugin':function(){
-define("JBrowse/Plugin", [
+define([
            'dojo/_base/declare',
            'JBrowse/Component'
        ],

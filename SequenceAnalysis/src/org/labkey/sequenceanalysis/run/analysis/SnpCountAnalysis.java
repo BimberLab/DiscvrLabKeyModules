@@ -82,7 +82,7 @@ public class SnpCountAnalysis extends AbstractPipelineStep implements AnalysisSt
     {
         AnalysisOutputImpl output = new AnalysisOutputImpl();
         
-        String intervalList = StringUtils.trimToNull(getProvider().getParameterByName("intervals").extractValue(getPipelineCtx().getJob(), getProvider()));
+        String intervalList = StringUtils.trimToNull(getProvider().getParameterByName("intervals").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()));
         if (intervalList == null)
         {
             throw new PipelineJobException("Must provide a list of intervals to query");

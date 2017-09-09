@@ -6,7 +6,7 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
-import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceLibraryStep;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileType;
@@ -102,12 +102,12 @@ public class AlignmentInitTask extends WorkDirectoryTask<AlignmentInitTask.Facto
         if (SequenceTaskHelper.isAlignmentUsed(getJob()))
         {
             RecordedAction action = new RecordedAction(ACTIONNAME);
-            List<PipelineStepProvider<ReferenceLibraryStep>> providers = SequencePipelineService.get().getSteps(getJob(), ReferenceLibraryStep.class);
-            if (providers.isEmpty())
+            List<PipelineStepCtx<ReferenceLibraryStep>> steps = SequencePipelineService.get().getSteps(getJob(), ReferenceLibraryStep.class);
+            if (steps.isEmpty())
             {
                 throw new PipelineJobException("No reference library type was supplied");
             }
-            else if (providers.size() > 1)
+            else if (steps.size() > 1)
             {
                 throw new PipelineJobException("More than 1 reference library type was supplied");
             }
@@ -116,7 +116,7 @@ public class AlignmentInitTask extends WorkDirectoryTask<AlignmentInitTask.Facto
                 getHelper().getFileManager().addInput(action, "Job Parameters", getHelper().getJob().getParametersFile());
                 getJob().getLogger().info("Creating Reference Library FASTA");
 
-                ReferenceLibraryStep step = providers.get(0).create(getHelper());
+                ReferenceLibraryStep step = steps.get(0).getProvider().create(getHelper());
 
                 //ensure the FASTA exists
                 File sharedDirectory = new File(getHelper().getJob().getAnalysisDirectory(), SequenceTaskHelper.SHARED_SUBFOLDER_NAME);
@@ -137,14 +137,14 @@ public class AlignmentInitTask extends WorkDirectoryTask<AlignmentInitTask.Facto
                 getHelper().getFileManager().addStepOutputs(action, output);
                 getHelper().getFileManager().cleanup(Collections.singleton(action));
 
-                List<PipelineStepProvider<AnalysisStep>> analysisProviders = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
-                if (!analysisProviders.isEmpty())
+                List<PipelineStepCtx<AnalysisStep>> analysisSteps = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
+                if (!analysisSteps.isEmpty())
                 {
                     getJob().getLogger().info("Preparing for analysis");
-                    for (PipelineStepProvider<AnalysisStep> provider : analysisProviders)
+                    for (PipelineStepCtx<AnalysisStep> stepCtx : analysisSteps)
                     {
                         SequenceTaskHelper taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
-                        AnalysisStep aStep = provider.create(taskHelper);
+                        AnalysisStep aStep = stepCtx.getProvider().create(taskHelper);
                         aStep.init(taskHelper.getSequenceSupport());
                     }
                 }

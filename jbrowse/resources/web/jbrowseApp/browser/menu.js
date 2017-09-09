@@ -1,5 +1,5 @@
-var app = require('app');
-var BrowserWindow = require('browser-window');
+var app = require('electron').app;
+var BrowserWindow = require('electron').BrowserWindow;
 
 var menu = module.exports = [];
 var isDarwin = process.platform === 'darwin';
@@ -27,7 +27,7 @@ menu.push(
                 label: '&Reload',
                 accelerator: 'CmdOrCtrl+R',
                 click: function () {
-                    BrowserWindow.getFocusedWindow().reloadIgnoringCache();
+                    BrowserWindow.getFocusedWindow().webContents.reloadIgnoringCache();
                 }
             },
             {

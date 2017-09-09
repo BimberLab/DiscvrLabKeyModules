@@ -1,6 +1,6 @@
 require({cache:{
 'dojox/grid/EnhancedGrid':function(){
-define("dojox/grid/EnhancedGrid", [
+define([
 	"dojo/_base/kernel",
 	"../main",
 	"dojo/_base/declare",
@@ -267,7 +267,7 @@ return EnhancedGrid;
 
 },
 'dojox/grid/DataGrid':function(){
-define("dojox/grid/DataGrid", [
+define([
 	"../main",
 	"dojo/_base/array",
 	"dojo/_base/lang",
@@ -276,7 +276,9 @@ define("dojox/grid/DataGrid", [
 	"dojo/_base/declare",
 	"./_Grid",
 	"./DataSelection",
-	"dojo/_base/html"
+	"dojo/_base/html",
+	"dojo/has",
+	"dojo/has!dojo-bidi?./bidi/_BidiMixin"
 ], function(dojox, array, lang, json, has, declare, _Grid, DataSelection, html){
 
 /*=====
@@ -931,9 +933,7 @@ return DataGrid;
 
 },
 'dojox/grid/_Grid':function(){
-require({cache:{
-'url:dojox/grid/resources/_Grid.html':"<div hidefocus=\"hidefocus\" role=\"grid\" dojoAttachEvent=\"onmouseout:_mouseOut\">\n\t<div class=\"dojoxGridMasterHeader\" dojoAttachPoint=\"viewsHeaderNode\" role=\"presentation\"></div>\n\t<div class=\"dojoxGridMasterView\" dojoAttachPoint=\"viewsNode\" role=\"presentation\"></div>\n\t<div class=\"dojoxGridMasterMessages\" style=\"display: none;\" dojoAttachPoint=\"messagesNode\"></div>\n\t<span dojoAttachPoint=\"lastFocusNode\" tabindex=\"0\"></span>\n</div>\n"}});
-define("dojox/grid/_Grid", [
+define([
 	"dojo/_base/kernel",
 	"../main",
 	"dojo/_base/declare",
@@ -2332,7 +2332,7 @@ define("dojox/grid/_Grid", [
 
 },
 'dojox/grid/_Events':function(){
-define("dojox/grid/_Events", [
+define([
 	"dojo/keys",
 	"dojo/dom-class",
 	"dojo/_base/declare",
@@ -2346,11 +2346,11 @@ return declare("dojox.grid._Events", null, {
 	// description:
 	//		Default synthetic events dispatched for _Grid. dojo.connect to events to
 	//		retain default implementation or override them for custom handling.
-	
+
 	// cellOverClass: String
 	//		css class to apply to grid cells over which the cursor is placed.
 	cellOverClass: "dojoxGridCellOver",
-	
+
 	onKeyEvent: function(e){
 		// summary:
 		//		top level handler for Key Events
@@ -2383,7 +2383,7 @@ return declare("dojox.grid._Events", null, {
 		this.focus.styleRow(inRow);
 		this.edit.styleRow(inRow);
 	},
-	
+
 	onKeyDown: function(e){
 		// summary:
 		//		Grid key event handler. By default enter begins editing and applies edits, escape cancels an edit,
@@ -2429,7 +2429,9 @@ return declare("dojox.grid._Events", null, {
 						break;
 					}else {
 						this.selection.clickSelect(this.focus.rowIndex, dojo.isCopyKey(e), e.shiftKey);
-					}
+						// Set focus back on the cell they were on for keyboard accessibility
+						this.focus._focusifyCellNode(true);
+						this.focus.setFocusCell(this.focus.cell, this.focus.rowIndex);					}
 					event.stop(e);
 				}
 				break;
@@ -2490,7 +2492,7 @@ return declare("dojox.grid._Events", null, {
 				break;
 		}
 	},
-	
+
 	onMouseOver: function(e){
 		// summary:
 		//		Event fired when mouse is over the grid.
@@ -2498,7 +2500,7 @@ return declare("dojox.grid._Events", null, {
 		//		Decorated event object contains reference to grid, cell, and rowIndex
 		e.rowIndex == -1 ? this.onHeaderCellMouseOver(e) : this.onCellMouseOver(e);
 	},
-	
+
 	onMouseOut: function(e){
 		// summary:
 		//		Event fired when mouse moves out of the grid.
@@ -2506,7 +2508,7 @@ return declare("dojox.grid._Events", null, {
 		//		Decorated event object that contains reference to grid, cell, and rowIndex
 		e.rowIndex == -1 ? this.onHeaderCellMouseOut(e) : this.onCellMouseOut(e);
 	},
-	
+
 	onMouseDown: function(e){
 		// summary:
 		//		Event fired when mouse is down inside grid.
@@ -2514,7 +2516,7 @@ return declare("dojox.grid._Events", null, {
 		//		Decorated event object that contains reference to grid, cell, and rowIndex
 		e.rowIndex == -1 ? this.onHeaderCellMouseDown(e) : this.onCellMouseDown(e);
 	},
-	
+
 	onMouseOverRow: function(e){
 		// summary:
 		//		Event fired when mouse is over any row (data or header).
@@ -2537,7 +2539,7 @@ return declare("dojox.grid._Events", null, {
 			this.onRowMouseOut(e);
 		}
 	},
-	
+
 	onMouseDownRow: function(e){
 		// summary:
 		//		Event fired when mouse is down inside grid row
@@ -2557,7 +2559,7 @@ return declare("dojox.grid._Events", null, {
 			domClass.add(e.cellNode, this.cellOverClass);
 		}
 	},
-	
+
 	onCellMouseOut: function(e){
 		// summary:
 		//		Event fired when mouse moves out of a cell.
@@ -2567,7 +2569,7 @@ return declare("dojox.grid._Events", null, {
 			domClass.remove(e.cellNode, this.cellOverClass);
 		}
 	},
-	
+
 	onCellMouseDown: function(e){
 		// summary:
 		//		Event fired when mouse is down in a header cell.
@@ -2658,7 +2660,7 @@ return declare("dojox.grid._Events", null, {
 		// e: Event
 		//		Decorated event object contains reference to grid, cell, and rowIndex
 	},
-	
+
 	onRowMouseDown: function(e){
 		// summary:
 		//		Event fired when mouse is down in a row.
@@ -2708,7 +2710,7 @@ return declare("dojox.grid._Events", null, {
 			domClass.remove(e.cellNode, this.cellOverClass);
 		}
 	},
-	
+
 	onHeaderCellMouseDown: function(e) {
 		// summary:
 		//		Event fired when mouse is down in a header cell.
@@ -2840,9 +2842,10 @@ return declare("dojox.grid._Events", null, {
 	}
 });
 });
+
 },
 'dojox/grid/_Scroller':function(){
-define("dojox/grid/_Scroller", [
+define([
 	"dijit/registry",
 	"dojo/_base/declare",
 	"dojo/_base/lang",
@@ -3350,7 +3353,7 @@ define("dojox/grid/_Scroller", [
 
 },
 'dojox/grid/util':function(){
-define("dojox/grid/util", [
+define([
 	"../main",
 	"dojo/_base/lang",
 	"dojo/dom"
@@ -3432,7 +3435,7 @@ dgu = {
 });
 },
 'dojox/grid/_Layout':function(){
-define("dojox/grid/_Layout", [
+define([
 	"dojo/_base/kernel",
 	"../main",
 	"dojo/_base/declare",
@@ -3709,12 +3712,12 @@ return declare("dojox.grid._Layout", null, {
 });
 },
 'dojox/grid/cells':function(){
-define("dojox/grid/cells", ["../main", "./cells/_base"], function(dojox){
+define(["../main", "./cells/_base"], function(dojox){
 	return dojox.grid.cells;
 });
 },
 'dojox/grid/cells/_base':function(){
-define("dojox/grid/cells/_base", [
+define([
 	"dojo/_base/kernel",
 	"dojo/_base/declare",
 	"dojo/_base/lang",
@@ -3821,7 +3824,7 @@ define("dojox/grid/cells/_base", [
 			var f, i=this.grid.edit.info, d=this.get ? this.get(inRowIndex, inItem) : (this.value || this.defaultValue);
 			d = (d && d.replace && this.grid.escapeHTMLInData) ? d.replace(/&/g, '&amp;').replace(/</g, '&lt;') : d;
 			if(this.editable && (this.alwaysEditing || (i.rowIndex==inRowIndex && i.cell==this))){
-				return this.formatEditing(d, inRowIndex);
+				return this.formatEditing(i.value ? i.value : d, inRowIndex);
 			}else{
 				return this._defaultFormat(d, [d, inRowIndex, this]);
 			}
@@ -4034,7 +4037,7 @@ define("dojox/grid/cells/_base", [
 		getStrAttr("cellClasses", cellDef);
 	};
 
-	var Cell = declare("dojox.grid.cells.Cell", BaseCell, {
+	var Cell = BaseCell.Cell = declare("dojox.grid.cells.Cell", BaseCell, {
 		// summary:
 		//		grid cell that provides a standard text input box upon editing
 		constructor: function(){
@@ -4076,7 +4079,7 @@ define("dojox/grid/cells/_base", [
 		}
 	};
 
-	var RowIndex = declare("dojox.grid.cells.RowIndex", Cell, {
+	var RowIndex = BaseCell.RowIndex = declare("dojox.grid.cells.RowIndex", Cell, {
 		name: 'Row',
 
 		postscript: function(){
@@ -4090,7 +4093,7 @@ define("dojox/grid/cells/_base", [
 		Cell.markupFactory(node, cellDef);
 	};
 
-	var Select = declare("dojox.grid.cells.Select", Cell, {
+	var Select = BaseCell.Select = declare("dojox.grid.cells.Select", Cell, {
 		// summary:
 		//		grid cell that provides a standard select for editing
 
@@ -4158,7 +4161,7 @@ define("dojox/grid/cells/_base", [
 		}
 	};
 
-	var AlwaysEdit = declare("dojox.grid.cells.AlwaysEdit", Cell, {
+	var AlwaysEdit = BaseCell.AlwaysEdit = declare("dojox.grid.cells.AlwaysEdit", Cell, {
 		// summary:
 		//		grid cell that is always in an editable state, regardless of grid editing state
 		alwaysEditing: true,
@@ -4175,7 +4178,7 @@ define("dojox/grid/cells/_base", [
 		Cell.markupFactory(node, cell);
 	};
 
-	var Bool = declare("dojox.grid.cells.Bool", AlwaysEdit, {
+	var Bool = BaseCell.Bool = declare("dojox.grid.cells.Bool", AlwaysEdit, {
 		// summary:
 		//		grid cell that provides a standard checkbox that is always on for editing
 		_valueProp: "checked",
@@ -4197,7 +4200,7 @@ define("dojox/grid/cells/_base", [
 });
 },
 'dojox/grid/_RowSelector':function(){
-define("dojox/grid/_RowSelector", [
+define([
 	"dojo/_base/declare",
 	"./_View"
 ], function(declare, _View){
@@ -4257,9 +4260,7 @@ return declare('dojox.grid._RowSelector', _View, {
 });
 },
 'dojox/grid/_View':function(){
-require({cache:{
-'url:dojox/grid/resources/View.html':"<div class=\"dojoxGridView\" role=\"presentation\">\n\t<div class=\"dojoxGridHeader\" dojoAttachPoint=\"headerNode\" role=\"presentation\">\n\t\t<div dojoAttachPoint=\"headerNodeContainer\" style=\"width:9000em\" role=\"presentation\">\n\t\t\t<div dojoAttachPoint=\"headerContentNode\" role=\"row\"></div>\n\t\t</div>\n\t</div>\n\t<input type=\"checkbox\" class=\"dojoxGridHiddenFocus\" dojoAttachPoint=\"hiddenFocusNode\" role=\"presentation\" />\n\t<input type=\"checkbox\" class=\"dojoxGridHiddenFocus\" role=\"presentation\" />\n\t<div class=\"dojoxGridScrollbox\" dojoAttachPoint=\"scrollboxNode\" role=\"presentation\">\n\t\t<div class=\"dojoxGridContent\" dojoAttachPoint=\"contentNode\" hidefocus=\"hidefocus\" role=\"presentation\"></div>\n\t</div>\n</div>\n"}});
-define("dojox/grid/_View", [
+define([
 	"dojo",
 	"dijit/registry",
 	"../main",
@@ -5118,9 +5119,8 @@ define("dojox/grid/_View", [
 
 });
 },
-'url:dojox/grid/resources/View.html':"<div class=\"dojoxGridView\" role=\"presentation\">\n\t<div class=\"dojoxGridHeader\" dojoAttachPoint=\"headerNode\" role=\"presentation\">\n\t\t<div dojoAttachPoint=\"headerNodeContainer\" style=\"width:9000em\" role=\"presentation\">\n\t\t\t<div dojoAttachPoint=\"headerContentNode\" role=\"row\"></div>\n\t\t</div>\n\t</div>\n\t<input type=\"checkbox\" class=\"dojoxGridHiddenFocus\" dojoAttachPoint=\"hiddenFocusNode\" role=\"presentation\" />\n\t<input type=\"checkbox\" class=\"dojoxGridHiddenFocus\" role=\"presentation\" />\n\t<div class=\"dojoxGridScrollbox\" dojoAttachPoint=\"scrollboxNode\" role=\"presentation\">\n\t\t<div class=\"dojoxGridContent\" dojoAttachPoint=\"contentNode\" hidefocus=\"hidefocus\" role=\"presentation\"></div>\n\t</div>\n</div>\n",
 'dojox/html/metrics':function(){
-define("dojox/html/metrics", ["dojo/_base/kernel","dojo/_base/lang", "dojo/_base/sniff", "dojo/ready", "dojo/_base/unload",
+define(["dojo/_base/kernel","dojo/_base/lang", "dojo/_base/sniff", "dojo/ready", "dojo/_base/unload",
 		"dojo/_base/window", "dojo/dom-geometry"],
   function(kernel,lang,has,ready,UnloadUtil,Window,DOMGeom){
 	var dhm = lang.getObject("dojox.html.metrics",true);
@@ -5310,7 +5310,7 @@ define("dojox/html/metrics", ["dojo/_base/kernel","dojo/_base/lang", "dojo/_base
 });
 },
 'dojox/grid/_Builder':function(){
-define("dojox/grid/_Builder", [
+define([
 	"../main",
 	"dojo/_base/array",
 	"dojo/_base/lang",
@@ -5387,7 +5387,7 @@ define("dojox/grid/_Builder", [
 					inCell.id = this.grid.id + "Hdr" + inCell.index;
 				}
 				// column headers are not editable, mark as aria-readonly=true
-				html = ['<th tabIndex="-1" aria-readonly="true" role="columnheader"', sortInfo, 'id="', inCell.id, '"'];
+				html = ['<th tabIndex="-1" aria-readonly="true" role="columnheader"', sortInfo, ' id="', inCell.id, '"'];
 			}else{
 				// cells inherit grid aria-readonly property; default value for aria-readonly is false(grid is editable)
 				// if grid is editable (had any editable cells), mark non editable cells as aria-readonly=true
@@ -5538,6 +5538,12 @@ define("dojox/grid/_Builder", [
 			if (e.cellNode)
 				this.grid.onMouseDown(e);
 			this.grid.onMouseDownRow(e);
+		},
+
+		_getTextDirStyle: function(textDir, inCell, inRowIndex){
+			// summary:
+			//		 Get BiDi text dir, just a placeholder, defined in dojox/grid/bidi/_BidiMixin
+			return "";
 		}
 	});
 
@@ -5568,7 +5574,7 @@ define("dojox/grid/_Builder", [
 		generateHtml: function(inDataIndex, inRowIndex){
 			var
 				html = this.getTableArray(),
-				v = this.view,
+				v = this.view, dir,
 				cells = v.structure.cells,
 				item = this.grid.getItem(inRowIndex);
 
@@ -5586,6 +5592,10 @@ define("dojox/grid/_Builder", [
 					m[1] = cc.join(' ');
 					// styles
 					m[3] = cs.join(';');
+					dir = cell.textDir || this.grid.textDir;
+					if(dir){
+					    m[3] += this._getTextDirStyle(dir, cell, inRowIndex);
+					}
 					// in-place concat
 					html.push.apply(html, m);
 				}
@@ -5624,7 +5634,7 @@ define("dojox/grid/_Builder", [
 		},
 
 		generateHtml: function(inGetValue, inValue){
-			var html = this.getTableArray(), cells = this.view.structure.cells;
+			var dir, html = this.getTableArray(), cells = this.view.structure.cells;
 			
 			util.fire(this.view, "onBeforeRow", [-1, cells]);
 			for(var j=0, row; (row=cells[j]); j++){
@@ -5658,6 +5668,10 @@ define("dojox/grid/_Builder", [
 					markup[5] = (inValue != undefined ? inValue : inGetValue(cell));
 					// styles
 					markup[3] = cell.customStyles.join(';');
+					dir = cell.textDir || this.grid.textDir;
+					if(dir){
+					    markup[3] += this._getTextDirStyle(dir, cell, inValue);
+					}
 					// classes
 					markup[1] = cell.customClasses.join(' '); //(cell.customClasses ? ' ' + cell.customClasses : '');
 					html.push(markup.join(''));
@@ -6061,7 +6075,7 @@ define("dojox/grid/_Builder", [
 
 },
 'dojox/grid/_ViewManager':function(){
-define("dojox/grid/_ViewManager", [
+define([
 	"dojo/_base/declare",
 	"dojo/_base/sniff",
 	"dojo/dom-class"
@@ -6257,7 +6271,7 @@ return declare('dojox.grid._ViewManager', null, {
 				}else{
 					hs.right = l + 'px';
 				}
-				if(!has('webkit')){
+				if(!has('webkit') && hs.width != 'auto'){
 					hs.width = parseInt(hs.width, 10) - v.getScrollbarWidth() + 'px';					
 				}
 			}else{
@@ -6372,7 +6386,7 @@ return declare('dojox.grid._ViewManager', null, {
 });
 },
 'dojox/grid/_RowManager':function(){
-define("dojox/grid/_RowManager", [
+define([
 	"dojo/_base/declare",
 	"dojo/_base/lang",
 	"dojo/dom-class"
@@ -6437,7 +6451,7 @@ define("dojox/grid/_RowManager", [
 });
 },
 'dojox/grid/_FocusManager':function(){
-define("dojox/grid/_FocusManager", [
+define([
 	"dojo/_base/array",
 	"dojo/_base/lang",
 	"dojo/_base/declare",
@@ -7080,7 +7094,7 @@ return declare("dojox.grid._FocusManager", null, {
 });
 },
 'dojox/grid/_EditManager':function(){
-define("dojox/grid/_EditManager", [
+define([
 	"dojo/_base/lang",
 	"dojo/_base/array",
 	"dojo/_base/declare",
@@ -7096,11 +7110,9 @@ return declare("dojox.grid._EditManager", null, {
 		// inGrid: dojox.Grid
 		//		The dojox.Grid this editor should be attached to
 		this.grid = inGrid;
-		if(has('ie')){
-			this.connections = [connect.connect(document.body, "onfocus", lang.hitch(this, "_boomerangFocus"))];
-		}else{
-			this.connections = [connect.connect(this.grid, 'onBlur', this, 'apply')];
-		}
+		this.connections = !has('ie') ? [] : [connect.connect(document.body, "onfocus", lang.hitch(this, "_boomerangFocus"))];
+		this.connections.push(connect.connect(this.grid, 'onBlur', this, 'apply'));
+		this.connections.push(connect.connect(this.grid, 'prerender', this, '_onPreRender'));
 	},
 	
 	info: {},
@@ -7335,12 +7347,19 @@ return declare("dojox.grid._EditManager", null, {
 		}		
 		w.focused = true;
 		return w.isValid(true);
+	},
+	
+	_onPreRender: function(){
+		if(this.isEditing()){
+			//cache the current editing value before render
+			this.info.value = this.info.cell.getValue();
+		}
 	}
 });
 });
 },
 'dojox/grid/Selection':function(){
-define("dojox/grid/Selection", [
+define([
 	"dojo/_base/declare",
 	"dojo/_base/array",
 	"dojo/_base/lang",
@@ -7610,9 +7629,8 @@ return declare("dojox.grid.Selection", null, {
 });
 });
 },
-'url:dojox/grid/resources/_Grid.html':"<div hidefocus=\"hidefocus\" role=\"grid\" dojoAttachEvent=\"onmouseout:_mouseOut\">\n\t<div class=\"dojoxGridMasterHeader\" dojoAttachPoint=\"viewsHeaderNode\" role=\"presentation\"></div>\n\t<div class=\"dojoxGridMasterView\" dojoAttachPoint=\"viewsNode\" role=\"presentation\"></div>\n\t<div class=\"dojoxGridMasterMessages\" style=\"display: none;\" dojoAttachPoint=\"messagesNode\"></div>\n\t<span dojoAttachPoint=\"lastFocusNode\" tabindex=\"0\"></span>\n</div>\n",
 'dojox/grid/DataSelection':function(){
-define("dojox/grid/DataSelection", [
+define([
 	"dojo/_base/declare",
 	"./_SelectionPreserver",
 	"./Selection"
@@ -7695,7 +7713,7 @@ return declare("dojox.grid.DataSelection", Selection, {
 });
 },
 'dojox/grid/_SelectionPreserver':function(){
-define("dojox/grid/_SelectionPreserver", [
+define([
 	"dojo/_base/declare",
 	"dojo/_base/connect",
 	"dojo/_base/lang",
@@ -7763,7 +7781,7 @@ return declare("dojox.grid._SelectionPreserver", null, {
 });
 },
 'dojox/grid/enhanced/_PluginManager':function(){
-define("dojox/grid/enhanced/_PluginManager", [
+define([
 	"dojo/_base/kernel",
 	"dojo/_base/lang",
 	"dojo/_base/declare",
@@ -8041,7 +8059,7 @@ return _PluginManager;
 
 },
 'dojox/grid/enhanced/_Events':function(){
-define("dojox/grid/enhanced/_Events", [
+define([
 	"dojo/_base/kernel",
 	"dojo/_base/declare",
 	"dojo/keys",
@@ -8258,7 +8276,7 @@ return declare("dojox.grid.enhanced._Events", null, {
 });
 },
 'dojox/grid/enhanced/_FocusManager':function(){
-define("dojox/grid/enhanced/_FocusManager", [
+define([
 	"dojo/_base/kernel",
 	"dojo/_base/lang",
 	"dojo/_base/declare",
@@ -9047,7 +9065,7 @@ return declare("dojox.grid.enhanced._FocusManager", _FocusManager, {
 });
 },
 'dojox/grid/enhanced/plugins/_SelectionPreserver':function(){
-define("dojox/grid/enhanced/plugins/_SelectionPreserver", [
+define([
 	"dojo/_base/declare",
 	"dojo/_base/lang",
 	"dojo/_base/connect",
@@ -9159,7 +9177,7 @@ return declare("dojox.grid.enhanced.plugins._SelectionPreserver", _SelectionPres
 
 },
 'dojox/grid/enhanced/plugins/IndirectSelection':function(){
-define("dojox/grid/enhanced/plugins/IndirectSelection", [
+define([
 	"dojo/_base/declare",
 	"dojo/_base/array",
 	"dojo/_base/event",
@@ -9785,7 +9803,7 @@ return IndirectSelection;
 
 },
 'dojox/grid/enhanced/_Plugin':function(){
-define("dojox/grid/enhanced/_Plugin", [
+define([
 	"dojo/_base/kernel",
 	"dojo/_base/lang",
 	"dojo/_base/declare",
@@ -9962,7 +9980,7 @@ return declare("dojox.grid.enhanced._Plugin", null, {
 
 },
 'dojox/grid/cells/dijit':function(){
-define("dojox/grid/cells/dijit", [
+define([
 	"dojo/_base/kernel",
 	"../../main",
 	"dojo/_base/declare",
@@ -9996,8 +10014,10 @@ define("dojox/grid/cells/dijit", [
 		
 // TODO: shouldn't it be the test file's job to require these modules,
 // if it is using them?  Most of these modules aren't referenced by this file.
-	
-	var _Widget = declare("dojox.grid.cells._Widget", BaseCell, {
+
+	var exports = {};
+
+	var _Widget = exports._Widget = declare("dojox.grid.cells._Widget", BaseCell, {
 		widgetClass: TextBox,
 		constructor: function(inCell){
 			this.widget = null;
@@ -10107,7 +10127,7 @@ define("dojox/grid/cells/dijit", [
 		}
 	};
 
-	var ComboBox = declare("dojox.grid.cells.ComboBox", _Widget, {
+	var ComboBox = exports.ComboBox = declare("dojox.grid.cells.ComboBox", _Widget, {
 		widgetClass: ComboBox,
 		getWidgetProps: function(inDatum){
 			var items=[];
@@ -10138,7 +10158,7 @@ define("dojox/grid/cells/dijit", [
 		}
 	};
 
-	var DateTextBox = declare("dojox.grid.cells.DateTextBox", _Widget, {
+	var DateTextBox = exports.DateTextBox = declare("dojox.grid.cells.DateTextBox", _Widget, {
 		widgetClass: DateTextBox,
 		setValue: function(inRowIndex, inValue){
 			if(this.widget){
@@ -10157,7 +10177,7 @@ define("dojox/grid/cells/dijit", [
 		_Widget.markupFactory(node, cell);
 	};
 
-	var CheckBox = declare("dojox.grid.cells.CheckBox", _Widget, {
+	var CheckBox = exports.CheckBox = declare("dojox.grid.cells.CheckBox", _Widget, {
 		widgetClass: CheckBox,
 		getValue: function(){
 			return this.widget.checked;
@@ -10177,7 +10197,7 @@ define("dojox/grid/cells/dijit", [
 		_Widget.markupFactory(node, cell);
 	};
 
-	var Editor = declare("dojox.grid.cells.Editor", _Widget, {
+	var Editor = exports.Editor = declare("dojox.grid.cells.Editor", _Widget, {
 		widgetClass: Editor,
 		getWidgetProps: function(inDatum){
 			return lang.mixin({}, this.widgetProps||{}, {
@@ -10219,13 +10239,13 @@ define("dojox/grid/cells/dijit", [
 		}
 	};
 
-	return dojox.grid.cells.dijit;
+	return exports;
 
 });
 
 },
 'dojo/data/ItemFileReadStore':function(){
-define("dojo/data/ItemFileReadStore", ["../_base/kernel", "../_base/lang", "../_base/declare", "../_base/array", "../_base/xhr",
+define(["../_base/kernel", "../_base/lang", "../_base/declare", "../_base/array", "../_base/xhr",
 	"../Evented", "./util/filter", "./util/simpleFetch", "../date/stamp"
 ], function(kernel, lang, declare, array, xhr, Evented, filterUtil, simpleFetch, dateStamp){
 
@@ -11179,7 +11199,7 @@ return ItemFileReadStore;
 
 },
 'dijit/form/DateTextBox':function(){
-define("dijit/form/DateTextBox", [
+define([
 	"dojo/_base/declare", // declare
 	"../Calendar",
 	"./_DateTimeTextBox"
@@ -11200,6 +11220,10 @@ define("dijit/form/DateTextBox", [
 		popupClass: Calendar,
 		_selector: "date",
 
+		// Prevent scrollbar on Calendar dropdown.  On iPad it often gets a scrollbar unnecessarily because Viewport
+		// thinks the keyboard is showing.  Even if the keyboard is showing, it disappears when the calendar gets focus.
+		maxHeight: Infinity,
+
 		// value: Date
 		//		The value of this widget as a JavaScript Date object, with only year/month/day specified.
 		//		If specified in markup, use the format specified in `stamp.fromISOString`.
@@ -11210,32 +11234,30 @@ define("dijit/form/DateTextBox", [
 
 },
 'dijit/Calendar':function(){
-define("dijit/Calendar", [
+define([
 	"dojo/_base/array", // array.map
 	"dojo/date",
 	"dojo/date/locale",
 	"dojo/_base/declare", // declare
 	"dojo/dom-attr", // domAttr.get
 	"dojo/dom-class", // domClass.add domClass.contains domClass.remove domClass.toggle
-	"dojo/_base/event", // event.stop
 	"dojo/_base/kernel", // kernel.deprecated
 	"dojo/keys", // keys
 	"dojo/_base/lang", // lang.hitch
+	"dojo/on",
 	"dojo/sniff", // has("ie")
 	"./CalendarLite",
 	"./_Widget",
 	"./_CssStateMixin",
 	"./_TemplatedMixin",
 	"./form/DropDownButton"
-], function(array, date, local, declare, domAttr, domClass, event, kernel, keys, lang, has,
-			CalendarLite, _Widget, _CssStateMixin, _TemplatedMixin, DropDownButton){
+], function(array, date, local, declare, domAttr, domClass, kernel, keys, lang, on, has, CalendarLite, _Widget, _CssStateMixin, _TemplatedMixin, DropDownButton){
 
 	// module:
 	//		dijit/Calendar
 
-	var Calendar = declare("dijit.Calendar",
-		[CalendarLite, _Widget, _CssStateMixin], // _Widget for deprecated methods like setAttribute()
-		{
+	// _Widget for deprecated methods like setAttribute()
+	var Calendar = declare("dijit.Calendar", [CalendarLite, _Widget, _CssStateMixin], {
 		// summary:
 		//		A simple GUI for choosing a date in the context of a monthly calendar.
 		//
@@ -11281,11 +11303,13 @@ define("dijit/Calendar", [
 			this.inherited(arguments);
 
 			// Events specific to Calendar, not used in CalendarLite
-			this.connect(this.domNode, "onkeydown", "_onKeyDown");
-			this.connect(this.dateRowsNode, "onmouseover", "_onDayMouseOver");
-			this.connect(this.dateRowsNode, "onmouseout", "_onDayMouseOut");
-			this.connect(this.dateRowsNode, "onmousedown", "_onDayMouseDown");
-			this.connect(this.dateRowsNode, "onmouseup", "_onDayMouseUp");
+			this.own(
+				on(this.domNode, "keydown", lang.hitch(this, "_onKeyDown")),
+				on(this.dateRowsNode, "mouseover", lang.hitch(this, "_onDayMouseOver")),
+				on(this.dateRowsNode, "mouseout", lang.hitch(this, "_onDayMouseOut")),
+				on(this.dateRowsNode, "mousedown", lang.hitch(this, "_onDayMouseDown")),
+				on(this.dateRowsNode, "mouseup", lang.hitch(this, "_onDayMouseUp"))
+			);
 		},
 
 		_onMonthSelect: function(/*Number*/ newMonth){
@@ -11296,7 +11320,7 @@ define("dijit/Calendar", [
 
 			// move to selected month, bounding by the number of days in the month
 			// (ex: jan 31 --> feb 28, not feb 31)
-			var date  = new this.dateClassObj(this.currentFocus);
+			var date = new this.dateClassObj(this.currentFocus);
 			date.setDate(1);
 			date.setMonth(newMonth);
 			var daysInMonth = this.dateModule.getDaysInMonth(date);
@@ -11315,8 +11339,8 @@ define("dijit/Calendar", [
 			// set node to the <td>.
 			var node =
 				domClass.contains(evt.target, "dijitCalendarDateLabel") ?
-				evt.target.parentNode :
-				evt.target;
+					evt.target.parentNode :
+					evt.target;
 
 			if(node && (
 				(node.dijitDateValue && !domClass.contains(node, "dijitCalendarDisabledDate"))
@@ -11333,10 +11357,14 @@ define("dijit/Calendar", [
 			// tags:
 			//		protected
 
-			if(!this._currentNode){ return; }
+			if(!this._currentNode){
+				return;
+			}
 
 			// if mouse out occurs moving from <td> to <span> inside <td>, ignore it
-			if(evt.relatedTarget && evt.relatedTarget.parentNode == this._currentNode){ return; }
+			if(evt.relatedTarget && evt.relatedTarget.parentNode == this._currentNode){
+				return;
+			}
 			var cls = "dijitCalendarHoveredDate";
 			if(domClass.contains(this._currentNode, "dijitCalendarActiveDate")){
 				cls += " dijitCalendarActiveDate";
@@ -11364,7 +11392,7 @@ define("dijit/Calendar", [
 			// summary:
 			//		Provides keyboard navigation of calendar.
 			// description:
-			//		Called from _onKeyDown() to handle keypress on a stand alone Calendar,
+			//		Called from _onKeyDown() to handle keydown on a stand alone Calendar,
 			//		and also from `dijit/form/_DateTimeTextBox` to pass a keydown event
 			//		from the `dijit/form/DateTextBox` to be handled in this widget
 			// returns:
@@ -11378,20 +11406,22 @@ define("dijit/Calendar", [
 			switch(evt.keyCode){
 				case keys.RIGHT_ARROW:
 					increment = 1;
-					//fallthrough...
+				//fallthrough...
 				case keys.LEFT_ARROW:
 					interval = "day";
-					if(!this.isLeftToRight()){ increment *= -1; }
+					if(!this.isLeftToRight()){
+						increment *= -1;
+					}
 					break;
 				case keys.DOWN_ARROW:
 					increment = 1;
-					//fallthrough...
+				//fallthrough...
 				case keys.UP_ARROW:
 					interval = "week";
 					break;
 				case keys.PAGE_DOWN:
 					increment = 1;
-					//fallthrough...
+				//fallthrough...
 				case keys.PAGE_UP:
 					interval = evt.ctrlKey || evt.altKey ? "year" : "month";
 					break;
@@ -11400,14 +11430,10 @@ define("dijit/Calendar", [
 					newValue = this.dateModule.add(newValue, "month", 1);
 					// subtract a day from the result when we're done
 					interval = "day";
-					//fallthrough...
+				//fallthrough...
 				case keys.HOME:
 					newValue = new this.dateClassObj(newValue);
 					newValue.setDate(1);
-					break;
-				case keys.ENTER:
-				case keys.SPACE:
-					this.set("value", this.currentFocus);
 					break;
 				default:
 					return true;
@@ -11424,9 +11450,10 @@ define("dijit/Calendar", [
 
 		_onKeyDown: function(/*Event*/ evt){
 			// summary:
-			//		For handling keypress events on a stand alone calendar
+			//		For handling keydown events on a stand alone calendar
 			if(!this.handleKey(evt)){
-				event.stop(evt);
+				evt.stopPropagation();
+				evt.preventDefault();
 			}
 		},
 
@@ -11453,9 +11480,9 @@ define("dijit/Calendar", [
 			// tags:
 			//		extension
 
-/*=====
-			return ""; // String
-=====*/
+			/*=====
+			 return ""; // String
+			 =====*/
 		}
 	});
 
@@ -11464,7 +11491,8 @@ define("dijit/Calendar", [
 		//		DropDownButton for the current month.    Displays name of current month
 		//		and a list of month names in the drop down
 
-		onMonthSelect: function(){ },
+		onMonthSelect: function(){
+		},
 
 		postCreate: function(){
 			this.inherited(arguments);
@@ -11484,7 +11512,7 @@ define("dijit/Calendar", [
 			// the center <TH> overlaps the right <TH> (due to a browser bug).
 			this.containerNode.innerHTML =
 				(has("ie") == 6 ? "" : "<div class='dijitSpacer'>" + this.dropDown.domNode.innerHTML + "</div>") +
-				"<div class='dijitCalendarMonthLabel dijitCalendarCurrentMonthLabel'>" +  monthNames[month.getMonth()] + "</div>";
+					"<div class='dijitCalendarMonthLabel dijitCalendarCurrentMonthLabel'>" + monthNames[month.getMonth()] + "</div>";
 		}
 	});
 
@@ -11501,9 +11529,9 @@ define("dijit/Calendar", [
 			"data-dojo-attach-event='onclick:_onClick,onmouseover:_onMenuHover,onmouseout:_onMenuHover'></div>",
 
 		_setMonthsAttr: function(/*String[]*/ months){
-			this.domNode.innerHTML = array.map(months, function(month, idx){
-					return month ? "<div class='dijitCalendarMonthLabel' month='" + idx +"'>" + month + "</div>" : "";
-				}).join("");
+			this.domNode.innerHTML = array.map(months,function(month, idx){
+				return month ? "<div class='dijitCalendarMonthLabel' month='" + idx + "'>" + month + "</div>" : "";
+			}).join("");
 		},
 
 		_onClick: function(/*Event*/ evt){
@@ -11525,7 +11553,7 @@ define("dijit/Calendar", [
 
 },
 'dojo/date':function(){
-define("dojo/date", ["./has", "./_base/lang"], function(has, lang){
+define(["./has", "./_base/lang"], function(has, lang){
 // module:
 //		dojo/date
 
@@ -11874,7 +11902,7 @@ return date;
 
 },
 'dojo/date/locale':function(){
-define("dojo/date/locale", [
+define([
 	"../_base/lang",
 	"../_base/array",
 	"../date",
@@ -12431,7 +12459,7 @@ function _buildDateTimeRE(tokens, bundle, options, pattern){
 			case 'E':
 			case 'e':
 			case 'c':
-				s = '\\S+';
+				s = '.+?'; // match anything including spaces until the first pattern delimiter is found such as a comma or space
 				break;
 			case 'h': //hour (1-12)
 				s = '1[0-2]|'+p2+'[1-9]';
@@ -12478,6 +12506,7 @@ function _buildDateTimeRE(tokens, bundle, options, pattern){
 }
 
 var _customFormats = [];
+var _cachedGregorianBundles = {};
 exports.addCustomFormats = function(/*String*/ packageName, /*String*/ bundleName){
 	// summary:
 	//		Add a reference to a bundle containing localized custom formats to be
@@ -12491,15 +12520,19 @@ exports.addCustomFormats = function(/*String*/ packageName, /*String*/ bundleNam
 	//		The resources must be loaded by dojo.requireLocalization() prior to use
 
 	_customFormats.push({pkg:packageName,name:bundleName});
+	_cachedGregorianBundles = {};
 };
 
 exports._getGregorianBundle = function(/*String*/ locale){
+	if(_cachedGregorianBundles[locale]){
+		return _cachedGregorianBundles[locale];
+	}
 	var gregorian = {};
 	array.forEach(_customFormats, function(desc){
 		var bundle = i18n.getLocalization(desc.pkg, desc.name, locale);
 		gregorian = lang.mixin(gregorian, bundle);
 	}, this);
-	return gregorian; /*Object*/
+	return _cachedGregorianBundles[locale] = gregorian; /*Object*/
 };
 
 exports.addCustomFormats(module.id.replace(/\/date\/locale$/, ".cldr"),"gregorian");
@@ -12571,7 +12604,7 @@ return exports;
 
 },
 'dojo/cldr/supplemental':function(){
-define("dojo/cldr/supplemental", ["../_base/lang", "../i18n"], function(lang, i18n){
+define(["../_base/lang", "../i18n"], function(lang, i18n){
 
 // module:
 //		dojo/cldr/supplemental
@@ -12701,9 +12734,7 @@ return supplemental;
 
 },
 'dijit/CalendarLite':function(){
-require({cache:{
-'url:dijit/templates/Calendar.html':"<table cellspacing=\"0\" cellpadding=\"0\" class=\"dijitCalendarContainer\" role=\"grid\" aria-labelledby=\"${id}_mddb ${id}_year\" data-dojo-attach-point=\"gridNode\">\n\t<thead>\n\t\t<tr class=\"dijitReset dijitCalendarMonthContainer\" valign=\"top\">\n\t\t\t<th class='dijitReset dijitCalendarArrow' data-dojo-attach-point=\"decrementMonth\" scope=\"col\">\n\t\t\t\t<img src=\"${_blankGif}\" alt=\"\" class=\"dijitCalendarIncrementControl dijitCalendarDecrease\" role=\"presentation\"/>\n\t\t\t\t<span data-dojo-attach-point=\"decreaseArrowNode\" class=\"dijitA11ySideArrow\">-</span>\n\t\t\t</th>\n\t\t\t<th class='dijitReset' colspan=\"5\" scope=\"col\">\n\t\t\t\t<div data-dojo-attach-point=\"monthNode\">\n\t\t\t\t</div>\n\t\t\t</th>\n\t\t\t<th class='dijitReset dijitCalendarArrow' scope=\"col\" data-dojo-attach-point=\"incrementMonth\">\n\t\t\t\t<img src=\"${_blankGif}\" alt=\"\" class=\"dijitCalendarIncrementControl dijitCalendarIncrease\" role=\"presentation\"/>\n\t\t\t\t<span data-dojo-attach-point=\"increaseArrowNode\" class=\"dijitA11ySideArrow\">+</span>\n\t\t\t</th>\n\t\t</tr>\n\t\t<tr role=\"row\">\n\t\t\t${!dayCellsHtml}\n\t\t</tr>\n\t</thead>\n\t<tbody data-dojo-attach-point=\"dateRowsNode\" data-dojo-attach-event=\"onclick: _onDayClick\" class=\"dijitReset dijitCalendarBodyContainer\">\n\t\t\t${!dateRowsHtml}\n\t</tbody>\n\t<tfoot class=\"dijitReset dijitCalendarYearContainer\">\n\t\t<tr>\n\t\t\t<td class='dijitReset' valign=\"top\" colspan=\"7\" role=\"presentation\">\n\t\t\t\t<div class=\"dijitCalendarYearLabel\">\n\t\t\t\t\t<span data-dojo-attach-point=\"previousYearLabelNode\" class=\"dijitInline dijitCalendarPreviousYear\" role=\"button\"></span>\n\t\t\t\t\t<span data-dojo-attach-point=\"currentYearLabelNode\" class=\"dijitInline dijitCalendarSelectedYear\" role=\"button\" id=\"${id}_year\"></span>\n\t\t\t\t\t<span data-dojo-attach-point=\"nextYearLabelNode\" class=\"dijitInline dijitCalendarNextYear\" role=\"button\"></span>\n\t\t\t\t</div>\n\t\t\t</td>\n\t\t</tr>\n\t</tfoot>\n</table>\n"}});
-define("dijit/CalendarLite", [
+define([
 	"dojo/_base/array", // array.forEach array.map
 	"dojo/_base/declare", // declare
 	"dojo/cldr/supplemental", // cldrSupplemental.getFirstDayOfWeek
@@ -12712,16 +12743,16 @@ define("dijit/CalendarLite", [
 	"dojo/date/stamp", // stamp.fromISOString
 	"dojo/dom", // dom.setSelectable
 	"dojo/dom-class", // domClass.contains
-	"dojo/_base/event", // event.stop
 	"dojo/_base/lang", // lang.getObject, lang.hitch
+	"dojo/on",
 	"dojo/sniff", // has("ie") has("webkit")
 	"dojo/string", // string.substitute
 	"./_WidgetBase",
 	"./_TemplatedMixin",
 	"dojo/text!./templates/Calendar.html",
-	"./hccss"	// not used directly, but sets CSS class on <body>
-], function(array, declare, cldrSupplemental, date, locale, stamp, dom, domClass, event, lang, has, string,
-			_WidgetBase, _TemplatedMixin, template){
+	"./a11yclick",	// not used directly, but template has ondijitclick in it
+	"./hccss"    // not used directly, but sets CSS class on <body>
+], function(array, declare, cldrSupplemental, date, locale, stamp, dom, domClass, lang, on, has, string, _WidgetBase, _TemplatedMixin, template){
 
 
 	// module:
@@ -12787,7 +12818,7 @@ define("dijit/CalendarLite", [
 		// Put the summary to the node with role=grid
 		_setSummaryAttr: "gridNode",
 
-		baseClass:"dijitCalendar",
+		baseClass: "dijitCalendar",
 
 		_isValidDate: function(/*Date*/ value){
 			// summary:
@@ -12804,13 +12835,14 @@ define("dijit/CalendarLite", [
 			//		Support get('value')
 
 			// this.value is set to 1AM, but return midnight, local time for back-compat
-			if(this.value && !isNaN(this.value)){
-				var value = new this.dateClassObj(this.value);
+			var storedVal = this._get("value");
+			if(storedVal && !isNaN(storedVal)){
+				var value = new this.dateClassObj(storedVal);
 				value.setHours(0, 0, 0, 0);
 
 				// If daylight savings pushes midnight to the previous date, fix the Date
 				// object to point at 1am so it will represent the correct day. See #9366
-				if(value.getDate() < this.value.getDate()){
+				if(value.getDate() < storedVal.getDate()){
 					value = this.dateModule.add(value, "hour", 1);
 				}
 				return value;
@@ -12833,7 +12865,7 @@ define("dijit/CalendarLite", [
 				value = stamp.fromISOString(value);
 			}
 			value = this._patchDate(value);
-			
+
 			if(this._isValidDate(value) && !this.isDisabledDate(value, this.lang)){
 				this._set("value", value);
 
@@ -12892,12 +12924,14 @@ define("dijit/CalendarLite", [
 				daysInPreviousMonth = this.dateModule.getDaysInMonth(this.dateModule.add(month, "month", -1)),
 				today = new this.dateClassObj(),
 				dayOffset = cldrSupplemental.getFirstDayOfWeek(this.lang);
-			if(dayOffset > firstDay){ dayOffset -= 7; }
+			if(dayOffset > firstDay){
+				dayOffset -= 7;
+			}
 
 			// If they didn't provide a summary, change the default summary to match with the new month
 			if(!this.summary){
-					var monthNames = this.dateLocaleModule.getNames('months', 'wide', 'standAlone', this.lang, month)
-					this.gridNode.setAttribute("summary", monthNames[month.getMonth()]);
+				var monthNames = this.dateLocaleModule.getNames('months', 'wide', 'standAlone', this.lang, month)
+				this.gridNode.setAttribute("summary", monthNames[month.getMonth()]);
 			}
 
 			// Mapping from date (as specified by number returned from Date.valueOf()) to corresponding <td>
@@ -12956,7 +12990,7 @@ define("dijit/CalendarLite", [
 				this._setText(this.dateLabels[idx], date.getDateLocalized ? date.getDateLocalized(this.lang) : date.getDate());
 			}, this);
 		},
-		
+
 		_populateControls: function(){
 			// summary:
 			//		Fill in localized month, and prev/current/next years
@@ -12965,16 +12999,16 @@ define("dijit/CalendarLite", [
 
 			var month = new this.dateClassObj(this.currentFocus);
 			month.setDate(1);
-			
+
 			// set name of this month
 			this.monthWidget.set("month", month);
-			
+
 			var y = month.getFullYear() - 1;
 			var d = new this.dateClassObj();
 			array.forEach(["previous", "current", "next"], function(name){
 				d.setFullYear(y++);
-				this._setText(this[name+"YearLabelNode"],
-					this.dateLocaleModule.format(d, {selector:'year', locale:this.lang}));
+				this._setText(this[name + "YearLabelNode"],
+					this.dateLocaleModule.format(d, {selector: 'year', locale: this.lang}));
 			}, this);
 		},
 
@@ -12996,7 +13030,7 @@ define("dijit/CalendarLite", [
 
 			this.dateModule = params.datePackage ? lang.getObject(params.datePackage, false) : date;
 			this.dateClassObj = this.dateModule.Date || Date;
-			this.dateLocaleModule = params.datePackage ? lang.getObject(params.datePackage+".locale", false) : locale;
+			this.dateLocaleModule = params.datePackage ? lang.getObject(params.datePackage + ".locale", false) : locale;
 		},
 
 		_createMonthWidget: function(){
@@ -13015,13 +13049,13 @@ define("dijit/CalendarLite", [
 			var d = this.dowTemplateString,
 				dayNames = this.dateLocaleModule.getNames('days', this.dayWidth, 'standAlone', this.lang),
 				dayOffset = cldrSupplemental.getFirstDayOfWeek(this.lang);
-			this.dayCellsHtml = string.substitute([d,d,d,d,d,d,d].join(""), {d: ""}, function(){
+			this.dayCellsHtml = string.substitute([d, d, d, d, d, d, d].join(""), {d: ""}, function(){
 				return dayNames[dayOffset++ % 7];
 			});
 
 			// Markup for dates of the month (referenced from template), but without numbers filled in
 			var r = string.substitute(this.weekTemplateString, {d: this.dateTemplateString});
-			this.dateRowsHtml = [r,r,r,r,r,r].join("");
+			this.dateRowsHtml = [r, r, r, r, r, r].join("");
 
 			// Instantiate from template.
 			// dateCells and dateLabels arrays filled when _Templated parses my template.
@@ -13050,17 +13084,19 @@ define("dijit/CalendarLite", [
 			//		protected
 
 			var connect = lang.hitch(this, function(nodeProp, part, amount){
-				this.connect(this[nodeProp], "onclick", function(){
+				return on(this[nodeProp], "click", lang.hitch(this, function(){
 					this._setCurrentFocusAttr(this.dateModule.add(this.currentFocus, part, amount));
-				});
+				}));
 			});
-			
-			connect("incrementMonth", "month", 1);
-			connect("decrementMonth", "month", -1);
-			connect("nextYearLabelNode", "year", 1);
-			connect("previousYearLabelNode", "year", -1);
+
+			this.own(
+				connect("incrementMonth", "month", 1),
+				connect("decrementMonth", "month", -1),
+				connect("nextYearLabelNode", "year", 1),
+				connect("previousYearLabelNode", "year", -1)
+			);
 		},
-		
+
 		_setCurrentFocusAttr: function(/*Date*/ date, /*Boolean*/ forceFocus){
 			// summary:
 			//		If the calendar currently has focus, then focuses specified date,
@@ -13084,7 +13120,7 @@ define("dijit/CalendarLite", [
 				this._populateControls();
 				this._markSelectedDates([this.value]);
 			}
-			
+
 			// set tabIndex=0 on new cell, and focus it (but only if Calendar itself is focused)
 			var newCell = this._getNodeByDate(date);
 			newCell.setAttribute("tabIndex", this.tabIndex);
@@ -13094,7 +13130,7 @@ define("dijit/CalendarLite", [
 
 			// set tabIndex=-1 on old focusable cell
 			if(oldCell && oldCell != newCell){
-				if(has("webkit")){	// see #11064 about webkit bug
+				if(has("webkit")){    // see #11064 about webkit bug
 					oldCell.setAttribute("tabIndex", "-1");
 				}else{
 					oldCell.removeAttribute("tabIndex");
@@ -13113,14 +13149,17 @@ define("dijit/CalendarLite", [
 			//		Handler for day clicks, selects the date if appropriate
 			// tags:
 			//		protected
-			event.stop(evt);
-			for(var node = evt.target; node && !node.dijitDateValue; node = node.parentNode);
+			evt.stopPropagation();
+			evt.preventDefault();
+			for(var node = evt.target; node && !node.dijitDateValue; node = node.parentNode){
+				;
+			}
 			if(node && !domClass.contains(node, "dijitCalendarDisabledDate")){
 				this.set('value', node.dijitDateValue);
 			}
 		},
 
-		_getNodeByDate : function(/*Date*/ value){
+		_getNodeByDate: function(/*Date*/ value){
 			// summary:
 			//		Returns the cell corresponding to the date, or null if the date is not within the currently
 			//		displayed month.
@@ -13144,7 +13183,9 @@ define("dijit/CalendarLite", [
 			array.forEach(this._selectedCells || [], lang.partial(mark, false));
 
 			// Mark newly selected cells.  Ignore dates outside the currently displayed month.
-			this._selectedCells = array.filter(array.map(dates, this._getNodeByDate, this), function(n){ return n;});
+			this._selectedCells = array.filter(array.map(dates, this._getNodeByDate, this), function(n){
+				return n;
+			});
 			array.forEach(this._selectedCells, lang.partial(mark, true));
 		},
 
@@ -13160,9 +13201,9 @@ define("dijit/CalendarLite", [
 			// locale: String?
 			// tags:
 			//		extension
-/*=====
-			return false; // Boolean
-=====*/
+			/*=====
+			 return false; // Boolean
+			 =====*/
 		},
 
 		getClassForDate: function(/*===== dateObject, locale =====*/){
@@ -13174,9 +13215,9 @@ define("dijit/CalendarLite", [
 			// tags:
 			//		extension
 
-/*=====
-			return ""; // String
-=====*/
+			/*=====
+			 return ""; // String
+			 =====*/
 		}
 	});
 
@@ -13196,16 +13237,18 @@ define("dijit/CalendarLite", [
 			//		Set the current month to display as a label
 			var monthNames = this.dateLocaleModule.getNames('months', 'wide', 'standAlone', this.lang, month),
 				spacer =
-					(has("ie") == 6 ? "" :	"<div class='dijitSpacer'>" +
-						array.map(monthNames, function(s){ return "<div>" + s + "</div>"; }).join("") + "</div>");
+					(has("ie") == 6 ? "" : "<div class='dijitSpacer'>" +
+						array.map(monthNames,function(s){
+							return "<div>" + s + "</div>";
+						}).join("") + "</div>");
 
 			// Set name of current month and also fill in spacer element with all the month names
 			// (invisible) so that the maximum width will affect layout.   But not on IE6 because then
 			// the center <TH> overlaps the right <TH> (due to a browser bug).
 			this.domNode.innerHTML =
 				spacer +
-				"<div class='dijitCalendarMonthLabel dijitCalendarCurrentMonthLabel'>" +
-				monthNames[month.getMonth()] + "</div>";
+					"<div class='dijitCalendarMonthLabel dijitCalendarCurrentMonthLabel'>" +
+					monthNames[month.getMonth()] + "</div>";
 		}
 	});
 
@@ -13213,11 +13256,8 @@ define("dijit/CalendarLite", [
 });
 
 },
-'url:dijit/templates/Calendar.html':"<table cellspacing=\"0\" cellpadding=\"0\" class=\"dijitCalendarContainer\" role=\"grid\" aria-labelledby=\"${id}_mddb ${id}_year\" data-dojo-attach-point=\"gridNode\">\n\t<thead>\n\t\t<tr class=\"dijitReset dijitCalendarMonthContainer\" valign=\"top\">\n\t\t\t<th class='dijitReset dijitCalendarArrow' data-dojo-attach-point=\"decrementMonth\" scope=\"col\">\n\t\t\t\t<img src=\"${_blankGif}\" alt=\"\" class=\"dijitCalendarIncrementControl dijitCalendarDecrease\" role=\"presentation\"/>\n\t\t\t\t<span data-dojo-attach-point=\"decreaseArrowNode\" class=\"dijitA11ySideArrow\">-</span>\n\t\t\t</th>\n\t\t\t<th class='dijitReset' colspan=\"5\" scope=\"col\">\n\t\t\t\t<div data-dojo-attach-point=\"monthNode\">\n\t\t\t\t</div>\n\t\t\t</th>\n\t\t\t<th class='dijitReset dijitCalendarArrow' scope=\"col\" data-dojo-attach-point=\"incrementMonth\">\n\t\t\t\t<img src=\"${_blankGif}\" alt=\"\" class=\"dijitCalendarIncrementControl dijitCalendarIncrease\" role=\"presentation\"/>\n\t\t\t\t<span data-dojo-attach-point=\"increaseArrowNode\" class=\"dijitA11ySideArrow\">+</span>\n\t\t\t</th>\n\t\t</tr>\n\t\t<tr role=\"row\">\n\t\t\t${!dayCellsHtml}\n\t\t</tr>\n\t</thead>\n\t<tbody data-dojo-attach-point=\"dateRowsNode\" data-dojo-attach-event=\"onclick: _onDayClick\" class=\"dijitReset dijitCalendarBodyContainer\">\n\t\t\t${!dateRowsHtml}\n\t</tbody>\n\t<tfoot class=\"dijitReset dijitCalendarYearContainer\">\n\t\t<tr>\n\t\t\t<td class='dijitReset' valign=\"top\" colspan=\"7\" role=\"presentation\">\n\t\t\t\t<div class=\"dijitCalendarYearLabel\">\n\t\t\t\t\t<span data-dojo-attach-point=\"previousYearLabelNode\" class=\"dijitInline dijitCalendarPreviousYear\" role=\"button\"></span>\n\t\t\t\t\t<span data-dojo-attach-point=\"currentYearLabelNode\" class=\"dijitInline dijitCalendarSelectedYear\" role=\"button\" id=\"${id}_year\"></span>\n\t\t\t\t\t<span data-dojo-attach-point=\"nextYearLabelNode\" class=\"dijitInline dijitCalendarNextYear\" role=\"button\"></span>\n\t\t\t\t</div>\n\t\t\t</td>\n\t\t</tr>\n\t</tfoot>\n</table>\n",
 'dijit/form/_DateTimeTextBox':function(){
-require({cache:{
-'url:dijit/form/templates/DropDownBox.html':"<div class=\"dijit dijitReset dijitInline dijitLeft\"\n\tid=\"widget_${id}\"\n\trole=\"combobox\"\n\taria-haspopup=\"true\"\n\tdata-dojo-attach-point=\"_popupStateNode\"\n\t><div class='dijitReset dijitRight dijitButtonNode dijitArrowButton dijitDownArrowButton dijitArrowButtonContainer'\n\t\tdata-dojo-attach-point=\"_buttonNode\" role=\"presentation\"\n\t\t><input class=\"dijitReset dijitInputField dijitArrowButtonInner\" value=\"&#9660; \" type=\"text\" tabIndex=\"-1\" readonly=\"readonly\" role=\"button presentation\" aria-hidden=\"true\"\n\t\t\t${_buttonInputDisabled}\n\t/></div\n\t><div class='dijitReset dijitValidationContainer'\n\t\t><input class=\"dijitReset dijitInputField dijitValidationIcon dijitValidationInner\" value=\"&#935; \" type=\"text\" tabIndex=\"-1\" readonly=\"readonly\" role=\"presentation\"\n\t/></div\n\t><div class=\"dijitReset dijitInputField dijitInputContainer\"\n\t\t><input class='dijitReset dijitInputInner' ${!nameAttrSetting} type=\"text\" autocomplete=\"off\"\n\t\t\tdata-dojo-attach-point=\"textbox,focusNode\" role=\"textbox\"\n\t/></div\n></div>\n"}});
-define("dijit/form/_DateTimeTextBox", [
+define([
 	"dojo/date", // date date.compare
 	"dojo/date/locale", // locale.regexp
 	"dojo/date/stamp", // stamp.fromISOString stamp.toISOString
@@ -13282,7 +13322,7 @@ define("dijit/form/_DateTimeTextBox", [
 		},
 
 		// flag to _HasDropDown to make drop down Calendar width == <input> width
-		forceWidth: true,
+		autoWidth: true,
 
 		format: function(/*Date*/ value, /*locale.__FormatOptions*/ constraints){
 			// summary:
@@ -13343,6 +13383,7 @@ define("dijit/form/_DateTimeTextBox", [
 			// srcNodeRef: DOMNode|String?
 			//		If a srcNodeRef (DOM node) is specified, replace srcNodeRef with my generated DOM tree
 
+			params = params || {};
 			this.dateModule = params.datePackage ? lang.getObject(params.datePackage, false) : date;
 			this.dateClassObj = this.dateModule.Date || Date;
 			this.dateLocaleModule = params.datePackage ? lang.getObject(params.datePackage+".locale", false) : locale;
@@ -13407,7 +13448,8 @@ define("dijit/form/_DateTimeTextBox", [
 
 		_set: function(attr, value){
 			// Avoid spurious watch() notifications when value is changed to new Date object w/the same value
-			if(attr == "value" && this.value instanceof Date && this.compare(value, this.value) == 0){
+			var oldValue = this._get("value");
+			if(attr == "value" && oldValue instanceof Date && this.compare(value, oldValue) == 0){
 				return;
 			}
 			this.inherited(arguments);
@@ -13418,7 +13460,7 @@ define("dijit/form/_DateTimeTextBox", [
 				// convert null setting into today's date, since there needs to be *some* default at all times.
 				 val = new this.dateClassObj();
 			}
-			this.dropDownDefaultValue = val;
+			this._set("dropDownDefaultValue", val);
 		},
 
 		openDropDown: function(/*Function*/ callback){
@@ -13438,10 +13480,11 @@ define("dijit/form/_DateTimeTextBox", [
 				dir: textBox.dir,
 				lang: textBox.lang,
 				value: value,
+				textDir: textBox.textDir,
 				currentFocus: !this._isInvalidDate(value) ? value : this.dropDownDefaultValue,
 				constraints: textBox.constraints,
 				filterString: textBox.filterString, // for TimeTextBox, to filter times shown
-				datePackage: textBox.params.datePackage,
+				datePackage: textBox.datePackage,
 				isDisabledDate: function(/*Date*/ date){
 					// summary:
 					//		disables dates outside of the min/max of the _DateTimeTextBox
@@ -13478,7 +13521,7 @@ define("dijit/form/_DateTimeTextBox", [
 
 },
 'dijit/form/TimeTextBox':function(){
-define("dijit/form/TimeTextBox", [
+define([
 	"dojo/_base/declare", // declare
 	"dojo/keys", // keys.DOWN_ARROW keys.ENTER keys.ESCAPE keys.TAB keys.UP_ARROW
 	"dojo/_base/lang", // lang.hitch
@@ -13522,47 +13565,31 @@ define("dijit/form/TimeTextBox", [
 		value: new Date(""),		// value.toString()="NaN"
 		//FIXME: in markup, you have no control over daylight savings
 
-		_onKey: function(evt){
-			if(this.disabled || this.readOnly){ return; }
+		// Add scrollbars if necessary so that dropdown doesn't cover the <input>
+		maxHeight: -1,
+
+		_onInput: function(){
 			this.inherited(arguments);
 
-			// If the user has backspaced or typed some numbers, then filter the result list
-			// by what they typed.  Maybe there's a better way to detect this, like _handleOnChange()?
-			switch(evt.keyCode){
-				case keys.ENTER:
-				case keys.TAB:
-				case keys.ESCAPE:
-				case keys.DOWN_ARROW:
-				case keys.UP_ARROW:
-					// these keys have special meaning
-					break;
-				default:
-					// defer() because the keystroke hasn't yet appeared in the <input>,
-					// so the get('displayedValue') call below won't give the result we want.
-					this.defer(function(){
-						// set this.filterString to the filter to apply to the drop down list;
-						// it will be used in openDropDown()
-						var val = this.get('displayedValue');
-						this.filterString = (val && !this.parse(val, this.constraints)) ? val.toLowerCase() : "";
+			// set this.filterString to the filter to apply to the drop down list;
+			// it will be used in openDropDown()
+			var val = this.get('displayedValue');
+			this.filterString = (val && !this.parse(val, this.constraints)) ? val.toLowerCase() : "";
 
-						// close the drop down and reopen it, in order to filter the items shown in the list
-						// and also since the drop down may need to be repositioned if the number of list items has changed
-						// and it's being displayed above the <input>
-						if(this._opened){
-							this.closeDropDown();
-						}
-						this.openDropDown();
-					});
+			// close the drop down and reopen it, in order to filter the items shown in the list
+			// and also since the drop down may need to be repositioned if the number of list items has changed
+			// and it's being displayed above the <input>
+			if(this._opened){
+				this.closeDropDown();
 			}
+			this.openDropDown();
 		}
 	});
 });
 
 },
 'dijit/_TimePicker':function(){
-require({cache:{
-'url:dijit/templates/TimePicker.html':"<div id=\"widget_${id}\" class=\"dijitMenu\"\n    ><div data-dojo-attach-point=\"upArrow\" class=\"dijitButtonNode dijitUpArrowButton\" data-dojo-attach-event=\"onmouseenter:_buttonMouse,onmouseleave:_buttonMouse\"\n\t\t><div class=\"dijitReset dijitInline dijitArrowButtonInner\" role=\"presentation\">&#160;</div\n\t\t><div class=\"dijitArrowButtonChar\">&#9650;</div></div\n    ><div data-dojo-attach-point=\"timeMenu,focusNode\" data-dojo-attach-event=\"onclick:_onOptionSelected,onmouseover,onmouseout\"></div\n    ><div data-dojo-attach-point=\"downArrow\" class=\"dijitButtonNode dijitDownArrowButton\" data-dojo-attach-event=\"onmouseenter:_buttonMouse,onmouseleave:_buttonMouse\"\n\t\t><div class=\"dijitReset dijitInline dijitArrowButtonInner\" role=\"presentation\">&#160;</div\n\t\t><div class=\"dijitArrowButtonChar\">&#9660;</div></div\n></div>\n"}});
-define("dijit/_TimePicker", [
+define([
 	"dojo/_base/array", // array.forEach
 	"dojo/date", // date.compare
 	"dojo/date/locale", // locale.format
@@ -13570,32 +13597,26 @@ define("dijit/_TimePicker", [
 	"dojo/_base/declare", // declare
 	"dojo/dom-class", // domClass.add domClass.contains domClass.toggle
 	"dojo/dom-construct", // domConstruct.create
-	"dojo/_base/event", // event.stop
 	"dojo/_base/kernel", // deprecated
 	"dojo/keys", // keys
 	"dojo/_base/lang", // lang.mixin
 	"dojo/sniff", // has(...)
 	"dojo/query", // query
 	"dojo/mouse", // mouse.wheel
-	"./typematic",
-	"./_Widget",
-	"./_TemplatedMixin",
-	"./form/_FormValueWidget",
-	"dojo/text!./templates/TimePicker.html"
-], function(array, ddate, locale, stamp, declare, domClass, domConstruct, event, kernel, keys, lang, has, query, mouse,
-			typematic, _Widget, _TemplatedMixin, _FormValueWidget, template){
+	"dojo/on",
+	"./_WidgetBase",
+	"./form/_ListMouseMixin"
+], function(array, ddate, locale, stamp, declare, domClass, domConstruct, kernel, keys, lang, has, query, mouse, on,
+			_WidgetBase, _ListMouseMixin){
 
 	// module:
 	//		dijit/_TimePicker
 
 
-	var TimePicker = declare("dijit._TimePicker", [_Widget, _TemplatedMixin], {
+	var TimePicker = declare("dijit._TimePicker", [_WidgetBase, _ListMouseMixin], {
 		// summary:
-		//		A graphical time picker.
-		//		This widget is used internally by other widgets and is not available
-		//		as a standalone widget due to lack of accessibility support.
-
-		templateString: template,
+		//		A time picker dropdown, used by dijit/form/TimeTextBox.
+		//		This widget is not available as a standalone widget due to lack of accessibility support.
 
 		// baseClass: [protected] String
 		//		The root className to use for the various states of this widget
@@ -13616,12 +13637,6 @@ define("dijit/_TimePicker", [
 		//		Example: `T01:00:00` creates text in every 1 hour increment
 		visibleIncrement: "T01:00:00",
 
-		// visibleRange: String
-		//		ISO-8601 string representing the range of this TimePicker.
-		//		The TimePicker will only display times in this range.
-		//		Example: `T05:00:00` displays 5 hours of options
-		visibleRange: "T05:00:00",
-
 		// value: String
 		//		Date to display.
 		//		Defaults to current time and date.
@@ -13638,32 +13653,38 @@ define("dijit/_TimePicker", [
 		//		Example: `2007-06-01T09:00:00`
 		value: new Date(),
 
-		_visibleIncrement:2,
-		_clickableIncrement:1,
-		_totalIncrements:10,
+		_visibleIncrement: 2,
+		_clickableIncrement: 1,
+		_totalIncrements: 10,
 
 		// constraints: TimePicker.__Constraints
 		//		Specifies valid range of times (start time, end time)
-		constraints:{},
+		constraints: {},
 
-/*=====
-		serialize: function(val, options){
-			// summary:
-			//		User overridable function used to convert the attr('value') result to a String
-			// val: Date
-			//		The current value
-			// options: Object?
-			// tags:
-			//		protected
-		},
-=====*/
+		/*=====
+		 serialize: function(val, options){
+			 // summary:
+			 //		User overridable function used to convert the attr('value') result to a String
+			 // val: Date
+			 //		The current value
+			 // options: Object?
+			 // tags:
+			 //		protected
+		 },
+		 =====*/
 		serialize: stamp.toISOString,
 
-/*=====
-		// filterString: string
-		//		The string to filter by
-		filterString: "",
-=====*/
+		/*=====
+		 // filterString: string
+		 //		The string to filter by
+		 filterString: "",
+		 =====*/
+
+		buildRendering: function(){
+			this.inherited(arguments);
+			this.containerNode = this.domNode;	// expected by _ListBase
+			this.timeMenu = this.domNode;	// for back-compat
+		},
 
 		setValue: function(/*Date*/ value){
 			// summary:
@@ -13703,7 +13724,7 @@ define("dijit/_TimePicker", [
 			return false; // Boolean
 		},
 
-		_getFilteredNodes: function(/*number*/ start, /*number*/ maxNum, /*Boolean*/ before, /*DOMnode*/ lastNode){
+		_getFilteredNodes: function(/*number*/ start, /*number*/ maxNum, /*Boolean*/ before, /*DOMNode*/ lastNode){
 			// summary:
 			//		Returns an array of nodes with the filter applied.  At most maxNum nodes
 			//		will be returned - but fewer may be returned as well.  If the
@@ -13711,27 +13732,15 @@ define("dijit/_TimePicker", [
 			//		before the given index
 			// tags:
 			//		private
-			var
-				nodes = [],
-				lastValue = lastNode ? lastNode.date : this._refDate,
-				n,
-				i = start,
-				max = this._maxIncrement + Math.abs(i),
-				chk = before ? -1 : 1,
-				dec = before ? 1 : 0,
-				inc = 1 - dec;
-			do{
-				i -= dec;
-				n = this._createOption(i);
+
+			var nodes = [];
+
+			for(var i = 0 ; i < this._maxIncrement; i++){
+				var n = this._createOption(i);
 				if(n){
-					if((before && n.date > lastValue) || (!before && n.date < lastValue)){
-						break; // don't wrap
-					}
-					nodes[before ? "unshift" : "push"](n);
-					lastValue = n.date;
+					nodes.push(n);
 				}
-				i += inc;
-			}while(nodes.length < maxNum && (i*chk) < max);
+			}
 			return nodes;
 		},
 
@@ -13741,29 +13750,26 @@ define("dijit/_TimePicker", [
 			// tags:
 			//		private
 			var fromIso = stamp.fromISOString;
-			this.timeMenu.innerHTML = "";
-			this._clickableIncrementDate=fromIso(this.clickableIncrement);
-			this._visibleIncrementDate=fromIso(this.visibleIncrement);
-			this._visibleRangeDate=fromIso(this.visibleRange);
-			// get the value of the increments and the range in seconds (since 00:00:00) to find out how many divs to create
+			this.domNode.innerHTML = "";
+			this._clickableIncrementDate = fromIso(this.clickableIncrement);
+			this._visibleIncrementDate = fromIso(this.visibleIncrement);
+			// get the value of the increments to find out how many divs to create
 			var
 				sinceMidnight = function(/*Date*/ date){
 					return date.getHours() * 60 * 60 + date.getMinutes() * 60 + date.getSeconds();
 				},
 				clickableIncrementSeconds = sinceMidnight(this._clickableIncrementDate),
 				visibleIncrementSeconds = sinceMidnight(this._visibleIncrementDate),
-				visibleRangeSeconds = sinceMidnight(this._visibleRangeDate),
 				// round reference date to previous visible increment
 				time = (this.value || this.currentFocus).getTime();
 
-			this._refDate = new Date(time - time % (clickableIncrementSeconds*1000));
-			this._refDate.setFullYear(1970,0,1); // match parse defaults
+			this._refDate = fromIso("T00:00:00");
+			this._refDate.setFullYear(1970, 0, 1); // match parse defaults
 
 			// assume clickable increment is the smallest unit
 			this._clickableIncrement = 1;
 			// divide the visible range by the clickable increment to get the number of divs to create
 			// example: 10:00:00/00:15:00 -> display 40 divs
-			this._totalIncrements = visibleRangeSeconds / clickableIncrementSeconds;
 			// divide the visible increments by the clickable increments to get how often to display the time inline
 			// example: 01:00:00/00:15:00 -> display the time every 4 divs
 			this._visibleIncrement = visibleIncrementSeconds / clickableIncrementSeconds;
@@ -13771,20 +13777,13 @@ define("dijit/_TimePicker", [
 			// absolute max number of increments.
 			this._maxIncrement = (60 * 60 * 24) / clickableIncrementSeconds;
 
-			var
-				// Find the nodes we should display based on our filter.
-				// Limit to 10 nodes displayed as a half-hearted attempt to stop drop down from overlapping <input>.
-				count = Math.min(this._totalIncrements, 10),
-				after = this._getFilteredNodes(0, (count >> 1) + 1, false),
-				moreAfter = [],
-				estBeforeLength = count - after.length,
-				before = this._getFilteredNodes(0, estBeforeLength, true, after[0]);
-			if(before.length < estBeforeLength && after.length > 0){
-				moreAfter = this._getFilteredNodes(after[after.length-1].idx + 1, estBeforeLength - before.length, false, after[after.length-1]);
-			}
-			array.forEach(before.concat(after, moreAfter), function(n){ this.timeMenu.appendChild(n); }, this);
+			var nodes  = this._getFilteredNodes();
+			array.forEach(nodes, function(n){
+				this.domNode.appendChild(n);
+			}, this);
+
 			// never show empty due to a bad filter
-			if(!before.length && !after.length && !moreAfter.length && this.filterString){
+			if(!nodes.length && this.filterString){
 				this.filterString = '';
 				this._showText();
 			}
@@ -13809,8 +13808,8 @@ define("dijit/_TimePicker", [
 		},
 
 		_setConstraintsAttr: function(/* Object */ constraints){
-			// brings in visibleRange, increments, etc.
-			for (var key in { clickableIncrement: 1, visibleIncrement: 1, visibleRange: 1 }) {
+			// brings in increments, etc.
+			for (var key in { clickableIncrement: 1, visibleIncrement: 1 }) {
 				if (key in constraints) {
 					this[key] = constraints[key];
 				}
@@ -13822,42 +13821,18 @@ define("dijit/_TimePicker", [
 			}
 		},
 
-		postCreate: function(){
-			// assign typematic mouse listeners to the arrow buttons
-			this.connect(this.timeMenu, mouse.wheel, "_mouseWheeled");
-			this.own(
-				typematic.addMouseListener(this.upArrow, this, "_onArrowUp", 33, 250),
-				typematic.addMouseListener(this.downArrow, this, "_onArrowDown", 33, 250)
-			);
-
-			this.inherited(arguments);
-		},
-
-		_buttonMouse: function(/*Event*/ e){
-			// summary:
-			//		Handler for hover (and unhover) on up/down arrows
-			// tags:
-			//		private
-
-			// in non-IE browser the "mouseenter" event will become "mouseover",
-			// but in IE it's still "mouseenter"
-			domClass.toggle(e.currentTarget, e.currentTarget == this.upArrow ? "dijitUpArrowHover" : "dijitDownArrowHover",
-				e.type == "mouseenter" || e.type == "mouseover");
-		},
-
 		_createOption: function(/*Number*/ index){
 			// summary:
-			//		Creates a clickable time option
+			//		Creates a clickable time option, or returns null if the specified index doesn't match the filter
 			// tags:
 			//		private
 			var date = new Date(this._refDate);
 			var incrementDate = this._clickableIncrementDate;
-			date.setTime(date.getTime()
-				+ incrementDate.getHours() * index * 3600000
-				+ incrementDate.getMinutes() * index * 60000
-				+ incrementDate.getSeconds() * index * 1000);
+			date.setHours(date.getHours() + incrementDate.getHours() * index,
+				date.getMinutes() + incrementDate.getMinutes() * index,
+				date.getSeconds() + incrementDate.getSeconds() * index);
 			if(this.constraints.selector == "time"){
-				date.setFullYear(1970,0,1); // make sure each time is for the same date
+				date.setFullYear(1970, 0, 1); // make sure each time is for the same date
 			}
 			var dateString = locale.format(date, this.constraints);
 			if(this.filterString && dateString.toLowerCase().indexOf(this.filterString) !== 0){
@@ -13866,31 +13841,32 @@ define("dijit/_TimePicker", [
 			}
 
 			var div = this.ownerDocument.createElement("div");
-			div.className = this.baseClass+"Item";
+			div.className = this.baseClass + "Item";
 			div.date = date;
 			div.idx = index;
-			domConstruct.create('div',{
+			domConstruct.create('div', {
 				"class": this.baseClass + "ItemInner",
 				innerHTML: dateString
 			}, div);
 
-			if(index%this._visibleIncrement<1 && index%this._visibleIncrement>-1){
-				domClass.add(div, this.baseClass+"Marker");
-			}else if(!(index%this._clickableIncrement)){
-				domClass.add(div, this.baseClass+"Tick");
+			if(index % this._visibleIncrement < 1 && index % this._visibleIncrement > -1){
+				domClass.add(div, this.baseClass + "Marker");
+			}else if(!(index % this._clickableIncrement)){
+				domClass.add(div, this.baseClass + "Tick");
 			}
 
 			if(this.isDisabledDate(date)){
 				// set disabled
-				domClass.add(div, this.baseClass+"ItemDisabled");
+				domClass.add(div, this.baseClass + "ItemDisabled");
 			}
 			if(this.value && !ddate.compare(this.value, date, this.constraints.selector)){
 				div.selected = true;
-				domClass.add(div, this.baseClass+"ItemSelected");
-				if(domClass.contains(div, this.baseClass+"Marker")){
-					domClass.add(div, this.baseClass+"MarkerSelected");
+				domClass.add(div, this.baseClass + "ItemSelected");
+				this._selectedDiv = div;
+				if(domClass.contains(div, this.baseClass + "Marker")){
+					domClass.add(div, this.baseClass + "MarkerSelected");
 				}else{
-					domClass.add(div, this.baseClass+"TickSelected");
+					domClass.add(div, this.baseClass + "TickSelected");
 				}
 
 				// Initially highlight the current value.   User can change highlight by up/down arrow keys
@@ -13900,13 +13876,22 @@ define("dijit/_TimePicker", [
 			return div;
 		},
 
+		onOpen: function(){
+			this.inherited(arguments);
+
+			// Since _ListBase::_setSelectedAttr() calls scrollIntoView(), shouldn't call it until list is visible.
+			this.set("selected", this._selectedDiv);
+		},
+
 		_onOptionSelected: function(/*Object*/ tgt){
 			// summary:
 			//		Called when user clicks an option in the drop down list
 			// tags:
 			//		private
 			var tdate = tgt.target.date || tgt.target.parentNode.date;
-			if(!tdate || this.isDisabledDate(tdate)){ return; }
+			if(!tdate || this.isDisabledDate(tdate)){
+				return;
+			}
 			this._highlighted_option = null;
 			this.set('value', tdate);
 			this.onChange(tdate);
@@ -13924,7 +13909,9 @@ define("dijit/_TimePicker", [
 			//		Turns on/off highlight effect on a node based on mouse out/over event
 			// tags:
 			//		private
-			if(!node){return;}
+			if(!node){
+				return;
+			}
 			if(highlight){
 				if(this._highlighted_option){
 					this._highlightOption(this._highlighted_option, false);
@@ -13935,89 +13922,11 @@ define("dijit/_TimePicker", [
 			}else{
 				this._highlighted_option = null;
 			}
-			domClass.toggle(node, this.baseClass+"ItemHover", highlight);
-			if(domClass.contains(node, this.baseClass+"Marker")){
-				domClass.toggle(node, this.baseClass+"MarkerHover", highlight);
+			domClass.toggle(node, this.baseClass + "ItemHover", highlight);
+			if(domClass.contains(node, this.baseClass + "Marker")){
+				domClass.toggle(node, this.baseClass + "MarkerHover", highlight);
 			}else{
-				domClass.toggle(node, this.baseClass+"TickHover", highlight);
-			}
-		},
-
-		onmouseover: function(/*Event*/ e){
-			// summary:
-			//		Handler for onmouseover event
-			// tags:
-			//		private
-			this._keyboardSelected = null;
-			var tgr = (e.target.parentNode === this.timeMenu) ? e.target : e.target.parentNode;
-			// if we aren't targeting an item, then we return
-			if(!domClass.contains(tgr, this.baseClass+"Item")){return;}
-			this._highlightOption(tgr, true);
-		},
-
-		onmouseout: function(/*Event*/ e){
-			// summary:
-			//		Handler for onmouseout event
-			// tags:
-			//		private
-			this._keyboardSelected = null;
-			var tgr = (e.target.parentNode === this.timeMenu) ? e.target : e.target.parentNode;
-			this._highlightOption(tgr, false);
-		},
-
-		_mouseWheeled: function(/*Event*/ e){
-			// summary:
-			//		Handle the mouse wheel events
-			// tags:
-			//		private
-			this._keyboardSelected = null;
-			event.stop(e);
-			// we're not _measuring_ the scroll amount, just direction
-			this[(e.wheelDelta>0 ? "_onArrowUp" : "_onArrowDown")](); // yes, we're making a new dom node every time you mousewheel, or click
-		},
-
-		_onArrowUp: function(count){
-			// summary:
-			//		Handler for up arrow key.
-			// description:
-			//		Removes the bottom time and add one to the top
-			// tags:
-			//		private
-			if(count === -1){
-				domClass.remove(this.upArrow, "dijitUpArrowActive");
-				return;
-			}else if(count === 0){
-				domClass.add(this.upArrow, "dijitUpArrowActive");
-
-			} // typematic end
-			if(!this.timeMenu.childNodes.length){ return; }
-			var index = this.timeMenu.childNodes[0].idx;
-			var divs = this._getFilteredNodes(index, 1, true, this.timeMenu.childNodes[0]);
-			if(divs.length){
-				this.timeMenu.removeChild(this.timeMenu.childNodes[this.timeMenu.childNodes.length - 1]);
-				this.timeMenu.insertBefore(divs[0], this.timeMenu.childNodes[0]);
-			}
-		},
-
-		_onArrowDown: function(count){
-			// summary:
-			//		Handler for up arrow key.
-			// description:
-			//		Remove the top time and add one to the bottom
-			// tags:
-			//		private
-			if(count === -1){
-				domClass.remove(this.downArrow, "dijitDownArrowActive");
-				return;
-			}else if(count === 0){
-				domClass.add(this.downArrow, "dijitDownArrowActive");
-			} // typematic end
-			if(!this.timeMenu.childNodes.length){ return; }
-			var index = this.timeMenu.childNodes[this.timeMenu.childNodes.length - 1].idx + 1;
-			var divs = this._getFilteredNodes(index, 1, false, this.timeMenu.childNodes[this.timeMenu.childNodes.length - 1]);
-			if(divs.length){
-				this.timeMenu.removeChild(this.timeMenu.childNodes[0]);
-				this.timeMenu.appendChild(divs[0]);
+				domClass.toggle(node, this.baseClass + "TickHover", highlight);
 			}
 		},
 
@@ -14027,30 +13936,15 @@ define("dijit/_TimePicker", [
 			//		from the `dijit/form/TimeTextBox` to be handled in this widget
 			// tags:
 			//		protected
-			if(e.keyCode == keys.DOWN_ARROW || e.keyCode == keys.UP_ARROW){
-				event.stop(e);
-				// Figure out which option to highlight now and then highlight it
-				if(this._highlighted_option && !this._highlighted_option.parentNode){
-					this._highlighted_option = null;
-				}
-				var timeMenu = this.timeMenu,
-					tgt = this._highlighted_option || query("." + this.baseClass + "ItemSelected", timeMenu)[0];
-				if(!tgt){
-					tgt = timeMenu.childNodes[0];
-				}else if(timeMenu.childNodes.length){
-					if(e.keyCode == keys.DOWN_ARROW && !tgt.nextSibling){
-						this._onArrowDown();
-					}else if(e.keyCode == keys.UP_ARROW && !tgt.previousSibling){
-						this._onArrowUp();
-					}
-					if(e.keyCode == keys.DOWN_ARROW){
-						tgt = tgt.nextSibling;
-					}else{
-						tgt = tgt.previousSibling;
-					}
-				}
-				this._highlightOption(tgt, true);
-				this._keyboardSelected = tgt;
+			if(e.keyCode == keys.DOWN_ARROW){
+				this.selectNextNode();
+				e.stopPropagation();
+				e.preventDefault();
+				return false;
+			}else if(e.keyCode == keys.UP_ARROW){
+				this.selectPreviousNode();
+				e.stopPropagation();
+				e.preventDefault();
 				return false;
 			}else if(e.keyCode == keys.ENTER || e.keyCode === keys.TAB){
 				// mouse hover followed by TAB is NO selection
@@ -14068,6 +13962,27 @@ define("dijit/_TimePicker", [
 				return e.keyCode === keys.TAB;
 			}
 			return undefined;
+		},
+
+		// Implement abstract methods for _ListBase
+		onHover: function(/*DomNode*/ node){
+			this._highlightOption(node, true);
+		},
+
+		onUnhover: function(/*DomNode*/ node){
+			this._highlightOption(node, false);
+		},
+
+		onSelect: function(/*DomNode*/ node){
+			this._highlightOption(node, true);
+		},
+
+		onDeselect: function(/*DomNode*/ node){
+			this._highlightOption(node, false);
+		},
+
+		onClick: function(/*DomNode*/ node){
+			this._onOptionSelected({target: node});
 		}
 	});
 
@@ -14075,15 +13990,7 @@ define("dijit/_TimePicker", [
 	 TimePicker.__Constraints = declare(locale.__FormatOptions, {
 		 // clickableIncrement: String
 		 //		See `dijit/_TimePicker.clickableIncrement`
-		 clickableIncrement: "T00:15:00",
-
-		 // visibleIncrement: String
-		 //		See `dijit/_TimePicker.visibleIncrement`
-		 visibleIncrement: "T01:00:00",
-
-		 // visibleRange: String
-		 //		See `dijit/_TimePicker.visibleRange`
-		 visibleRange: "T05:00:00"
+		 clickableIncrement: "T00:15:00"
 	 });
 	 =====*/
 
@@ -14091,9 +13998,8 @@ define("dijit/_TimePicker", [
 });
 
 },
-'url:dijit/templates/TimePicker.html':"<div id=\"widget_${id}\" class=\"dijitMenu\"\n    ><div data-dojo-attach-point=\"upArrow\" class=\"dijitButtonNode dijitUpArrowButton\" data-dojo-attach-event=\"onmouseenter:_buttonMouse,onmouseleave:_buttonMouse\"\n\t\t><div class=\"dijitReset dijitInline dijitArrowButtonInner\" role=\"presentation\">&#160;</div\n\t\t><div class=\"dijitArrowButtonChar\">&#9650;</div></div\n    ><div data-dojo-attach-point=\"timeMenu,focusNode\" data-dojo-attach-event=\"onclick:_onOptionSelected,onmouseover,onmouseout\"></div\n    ><div data-dojo-attach-point=\"downArrow\" class=\"dijitButtonNode dijitDownArrowButton\" data-dojo-attach-event=\"onmouseenter:_buttonMouse,onmouseleave:_buttonMouse\"\n\t\t><div class=\"dijitReset dijitInline dijitArrowButtonInner\" role=\"presentation\">&#160;</div\n\t\t><div class=\"dijitArrowButtonChar\">&#9660;</div></div\n></div>\n",
 'dijit/form/CurrencyTextBox':function(){
-define("dijit/form/CurrencyTextBox", [
+define([
 	"dojo/currency", // currency._mixInDefaults currency.format currency.parse currency.regexp
 	"dojo/_base/declare", // declare
 	"dojo/_base/lang", // lang.hitch
@@ -14145,18 +14051,12 @@ define("dijit/form/CurrencyTextBox", [
 
 		baseClass: "dijitTextBox dijitCurrencyTextBox",
 
-		// Override pattern ValidationTextBox.pattern.... we use a reg-ex generating function rather
-		// than a straight regexp to deal with locale (plus formatting options too?)
-		pattern: function(constraints){
-			// if focused, accept either currency data or NumberTextBox format
-			return '(' + (this.focused ? this.inherited(arguments, [ lang.mixin({}, constraints, this.editOptions) ]) + '|' : '')
-				+ currency.regexp(constraints) + ')';
-		},
-
 		// Override NumberTextBox._formatter to deal with currencies, ex: converts "123.45" to "$123.45"
 		_formatter: currency.format,
 
 		_parser: currency.parse,
+
+		_regExpGenerator: currency.regexp,
 
 		parse: function(/*String*/ value, /*Object*/ constraints){
 			// summary:
@@ -14165,7 +14065,7 @@ define("dijit/form/CurrencyTextBox", [
 			//		protected extension
 			var v = this.inherited(arguments);
 			if(isNaN(v) && /\d+/.test(value)){ // currency parse failed, but it could be because they are using NumberTextBox format so try its parse
-				v = lang.hitch(lang.mixin({}, this, { _parser: NumberTextBox.prototype._parser }), "inherited")(arguments);
+				v = lang.hitch(lang.delegate(this, { _parser: NumberTextBox.prototype._parser }), "inherited")(arguments);
 			}
 			return v;
 		},
@@ -14181,7 +14081,7 @@ define("dijit/form/CurrencyTextBox", [
 
 },
 'dojo/currency':function(){
-define("dojo/currency", [
+define([
 	"./_base/array",
 	"./_base/lang",
 	/*===== "./_base/declare", =====*/
@@ -14314,7 +14214,7 @@ return currency;
 
 },
 'dojo/cldr/monetary':function(){
-define("dojo/cldr/monetary", ["../_base/kernel", "../_base/lang"], function(dojo, lang){
+define(["../_base/kernel", "../_base/lang"], function(dojo, lang){
 
 // module:
 //		dojo/cldr/monetary
@@ -14338,12 +14238,12 @@ monetary.getData = function(/*String*/ code){
 		COP:0,CRC:0,DJF:0,ESP:0,GNF:0,GYD:0,HUF:0,IDR:0,IQD:0,
 		IRR:3,ISK:0,ITL:0,JOD:3,JPY:0,KMF:0,KPW:0,KRW:0,KWD:3,
 		LAK:0,LBP:0,LUF:0,LYD:3,MGA:0,MGF:0,MMK:0,MNT:0,MRO:0,
-		MUR:0,OMR:3,PKR:0,PYG:0,RSD:0,RWF:0,SLL:0,SOS:0,STD:0,
+		MUR:0,OMR:3,PKR:2,PYG:0,RSD:0,RWF:0,SLL:0,SOS:0,STD:0,
 		SYP:0,TMM:0,TND:3,TRL:0,TZS:0,UGX:0,UZS:0,VND:0,VUV:0,
 		XAF:0,XOF:0,XPF:0,YER:0,ZMK:0,ZWD:0
 	};
 
-	var roundingData = {CHF:5};
+	var roundingData = {};
 
 	var places = placesData[code], round = roundingData[code];
 	if(typeof places == "undefined"){ places = 2; }
@@ -14357,13 +14257,10 @@ return monetary;
 
 },
 'dijit/form/HorizontalSlider':function(){
-require({cache:{
-'url:dijit/form/templates/HorizontalSlider.html':"<table class=\"dijit dijitReset dijitSlider dijitSliderH\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" rules=\"none\" data-dojo-attach-event=\"onkeypress:_onKeyPress,onkeyup:_onKeyUp\"\n\trole=\"presentation\"\n\t><tr class=\"dijitReset\"\n\t\t><td class=\"dijitReset\" colspan=\"2\"></td\n\t\t><td data-dojo-attach-point=\"topDecoration\" class=\"dijitReset dijitSliderDecoration dijitSliderDecorationT dijitSliderDecorationH\"></td\n\t\t><td class=\"dijitReset\" colspan=\"2\"></td\n\t></tr\n\t><tr class=\"dijitReset\"\n\t\t><td class=\"dijitReset dijitSliderButtonContainer dijitSliderButtonContainerH\"\n\t\t\t><div class=\"dijitSliderDecrementIconH\" style=\"display:none\" data-dojo-attach-point=\"decrementButton\"><span class=\"dijitSliderButtonInner\">-</span></div\n\t\t></td\n\t\t><td class=\"dijitReset\"\n\t\t\t><div class=\"dijitSliderBar dijitSliderBumper dijitSliderBumperH dijitSliderLeftBumper\" data-dojo-attach-event=\"press:_onClkDecBumper\"></div\n\t\t></td\n\t\t><td class=\"dijitReset\"\n\t\t\t><input data-dojo-attach-point=\"valueNode\" type=\"hidden\" ${!nameAttrSetting}\n\t\t\t/><div class=\"dijitReset dijitSliderBarContainerH\" role=\"presentation\" data-dojo-attach-point=\"sliderBarContainer\"\n\t\t\t\t><div role=\"presentation\" data-dojo-attach-point=\"progressBar\" class=\"dijitSliderBar dijitSliderBarH dijitSliderProgressBar dijitSliderProgressBarH\" data-dojo-attach-event=\"press:_onBarClick\"\n\t\t\t\t\t><div class=\"dijitSliderMoveable dijitSliderMoveableH\"\n\t\t\t\t\t\t><div data-dojo-attach-point=\"sliderHandle,focusNode\" class=\"dijitSliderImageHandle dijitSliderImageHandleH\" data-dojo-attach-event=\"press:_onHandleClick\" role=\"slider\"></div\n\t\t\t\t\t></div\n\t\t\t\t></div\n\t\t\t\t><div role=\"presentation\" data-dojo-attach-point=\"remainingBar\" class=\"dijitSliderBar dijitSliderBarH dijitSliderRemainingBar dijitSliderRemainingBarH\" data-dojo-attach-event=\"press:_onBarClick\"></div\n\t\t\t></div\n\t\t></td\n\t\t><td class=\"dijitReset\"\n\t\t\t><div class=\"dijitSliderBar dijitSliderBumper dijitSliderBumperH dijitSliderRightBumper\" data-dojo-attach-event=\"press:_onClkIncBumper\"></div\n\t\t></td\n\t\t><td class=\"dijitReset dijitSliderButtonContainer dijitSliderButtonContainerH\"\n\t\t\t><div class=\"dijitSliderIncrementIconH\" style=\"display:none\" data-dojo-attach-point=\"incrementButton\"><span class=\"dijitSliderButtonInner\">+</span></div\n\t\t></td\n\t></tr\n\t><tr class=\"dijitReset\"\n\t\t><td class=\"dijitReset\" colspan=\"2\"></td\n\t\t><td data-dojo-attach-point=\"containerNode,bottomDecoration\" class=\"dijitReset dijitSliderDecoration dijitSliderDecorationB dijitSliderDecorationH\"></td\n\t\t><td class=\"dijitReset\" colspan=\"2\"></td\n\t></tr\n></table>\n"}});
-define("dijit/form/HorizontalSlider", [
+define([
 	"dojo/_base/array", // array.forEach
 	"dojo/_base/declare", // declare
 	"dojo/dnd/move",
-	"dojo/_base/event", // event.stop
 	"dojo/_base/fx", // fx.animateProperty
 	"dojo/dom-geometry", // domGeometry.position
 	"dojo/dom-style", // domStyle.getComputedStyle
@@ -14374,360 +14271,399 @@ define("dijit/form/HorizontalSlider", [
 	"dojo/dnd/Mover", // Mover Mover.prototype.destroy.apply
 	"dojo/query", // query
 	"dojo/mouse", // mouse.wheel
-	"../registry", // registry.findWidgets
-	"../focus",		// focus.focus()
+	"dojo/on",
+	"../_base/manager", // defaultDuration
+	"../focus", // focus.focus()
 	"../typematic",
 	"./Button",
 	"./_FormValueWidget",
 	"../_Container",
 	"dojo/text!./templates/HorizontalSlider.html"
-], function(array, declare, move, event, fx, domGeometry, domStyle, keys, lang, has, Moveable, Mover, query, mouse,
-			registry, focus, typematic, Button, _FormValueWidget, _Container, template){
+], function(array, declare, move, fx, domGeometry, domStyle, keys, lang, has, Moveable, Mover, query, mouse, on,
+			manager, focus, typematic, Button, _FormValueWidget, _Container, template){
 
-// module:
-//		dijit/form/HorizontalSlider
+	// module:
+	//		dijit/form/HorizontalSlider
 
-
-var _SliderMover = declare("dijit.form._SliderMover", Mover, {
-	onMouseMove: function(e){
-		var widget = this.widget;
-		var abspos = widget._abspos;
-		if(!abspos){
-			abspos = widget._abspos = domGeometry.position(widget.sliderBarContainer, true);
-			widget._setPixelValue_ = lang.hitch(widget, "_setPixelValue");
-			widget._isReversed_ = widget._isReversed();
-		}
-		var pixelValue = e[widget._mousePixelCoord] - abspos[widget._startingPixelCoord];
-		widget._setPixelValue_(widget._isReversed_ ? (abspos[widget._pixelCount]-pixelValue) : pixelValue, abspos[widget._pixelCount], false);
-	},
-
-	destroy: function(e){
-		Mover.prototype.destroy.apply(this, arguments);
-		var widget = this.widget;
-		widget._abspos = null;
-		widget._setValueAttr(widget.value, true);
-	}
-});
-
-var HorizontalSlider = declare("dijit.form.HorizontalSlider", [_FormValueWidget, _Container], {
-	// summary:
-	//		A form widget that allows one to select a value with a horizontally draggable handle
-
-	templateString: template,
-
-	// Overrides FormValueWidget.value to indicate numeric value
-	value: 0,
-
-	// showButtons: [const] Boolean
-	//		Show increment/decrement buttons at the ends of the slider?
-	showButtons: true,
-
-	// minimum: [const] Integer
-	//		The minimum value the slider can be set to.
-	minimum: 0,
-
-	// maximum: [const] Integer
-	//		The maximum value the slider can be set to.
-	maximum: 100,
-
-	// discreteValues: Integer
-	//		If specified, indicates that the slider handle has only 'discreteValues' possible positions,
-	//		and that after dragging the handle, it will snap to the nearest possible position.
-	//		Thus, the slider has only 'discreteValues' possible values.
-	//
-	//		For example, if minimum=10, maxiumum=30, and discreteValues=3, then the slider handle has
-	//		three possible positions, representing values 10, 20, or 30.
-	//
-	//		If discreteValues is not specified or if it's value is higher than the number of pixels
-	//		in the slider bar, then the slider handle can be moved freely, and the slider's value will be
-	//		computed/reported based on pixel position (in this case it will likely be fractional,
-	//		such as 123.456789).
-	discreteValues: Infinity,
-
-	// pageIncrement: Integer
-	//		If discreteValues is also specified, this indicates the amount of clicks (ie, snap positions)
-	//		that the slider handle is moved via pageup/pagedown keys.
-	//		If discreteValues is not specified, it indicates the number of pixels.
-	pageIncrement: 2,
-
-	// clickSelect: Boolean
-	//		If clicking the slider bar changes the value or not
-	clickSelect: true,
-
-	// slideDuration: Number
-	//		The time in ms to take to animate the slider handle from 0% to 100%,
-	//		when clicking the slider bar to make the handle move.
-	slideDuration: registry.defaultDuration,
-
-	// Map widget attributes to DOMNode attributes.
-	_setIdAttr: "",		// Override _FormWidget which sends id to focusNode
-
-	baseClass: "dijitSlider",
-
-	// Apply CSS classes to up/down arrows and handle per mouse state
-	cssStateNodes: {
-		incrementButton: "dijitSliderIncrementButton",
-		decrementButton: "dijitSliderDecrementButton",
-		focusNode: "dijitSliderThumb"
-	},
-
-	_mousePixelCoord: "pageX",
-	_pixelCount: "w",
-	_startingPixelCoord: "x",
-	_handleOffsetCoord: "left",
-	_progressPixelSize: "width",
-
-	_onKeyUp: function(/*Event*/ e){
-		if(this.disabled || this.readOnly || e.altKey || e.ctrlKey || e.metaKey){ return; }
-		this._setValueAttr(this.value, true);
-	},
-
-	_onKeyPress: function(/*Event*/ e){
-		if(this.disabled || this.readOnly || e.altKey || e.ctrlKey || e.metaKey){ return; }
-		switch(e.charOrCode){
-			case keys.HOME:
-				this._setValueAttr(this.minimum, false);
-				break;
-			case keys.END:
-				this._setValueAttr(this.maximum, false);
-				break;
-			// this._descending === false: if ascending vertical (min on top)
-			// (this._descending || this.isLeftToRight()): if left-to-right horizontal or descending vertical
-			case ((this._descending || this.isLeftToRight()) ? keys.RIGHT_ARROW : keys.LEFT_ARROW):
-			case (this._descending === false ? keys.DOWN_ARROW : keys.UP_ARROW):
-			case (this._descending === false ? keys.PAGE_DOWN : keys.PAGE_UP):
-				this.increment(e);
-				break;
-			case ((this._descending || this.isLeftToRight()) ? keys.LEFT_ARROW : keys.RIGHT_ARROW):
-			case (this._descending === false ? keys.UP_ARROW : keys.DOWN_ARROW):
-			case (this._descending === false ? keys.PAGE_UP : keys.PAGE_DOWN):
-				this.decrement(e);
-				break;
-			default:
-				return;
-		}
-		event.stop(e);
-	},
-
-	_onHandleClick: function(e){
-		if(this.disabled || this.readOnly){ return; }
-		if(!has("ie")){
-			// make sure you get focus when dragging the handle
-			// (but don't do on IE because it causes a flicker on mouse up (due to blur then focus)
-			focus.focus(this.sliderHandle);
-		}
-		event.stop(e);
-	},
-
-	_isReversed: function(){
-		// summary:
-		//		Returns true if direction is from right to left
-		// tags:
-		//		protected extension
-		return !this.isLeftToRight();
-	},
-
-	_onBarClick: function(e){
-		if(this.disabled || this.readOnly || !this.clickSelect){ return; }
-		focus.focus(this.sliderHandle);
-		event.stop(e);
-		var abspos = domGeometry.position(this.sliderBarContainer, true);
-		var pixelValue = e[this._mousePixelCoord] - abspos[this._startingPixelCoord];
-		this._setPixelValue(this._isReversed() ? (abspos[this._pixelCount] - pixelValue) : pixelValue, abspos[this._pixelCount], true);
-		this._movable.onMouseDown(e);
-	},
-
-	_setPixelValue: function(/*Number*/ pixelValue, /*Number*/ maxPixels, /*Boolean?*/ priorityChange){
-		if(this.disabled || this.readOnly){ return; }
-		var count = this.discreteValues;
-		if(count <= 1 || count == Infinity){ count = maxPixels; }
-		count--;
-		var pixelsPerValue = maxPixels / count;
-		var wholeIncrements = Math.round(pixelValue / pixelsPerValue);
-		this._setValueAttr(Math.max(Math.min((this.maximum-this.minimum)*wholeIncrements/count + this.minimum, this.maximum), this.minimum), priorityChange);
-	},
-
-	_setValueAttr: function(/*Number*/ value, /*Boolean?*/ priorityChange){
-		// summary:
-		//		Hook so set('value', value) works.
-		this._set("value", value);
-		this.valueNode.value = value;
-		this.focusNode.setAttribute("aria-valuenow", value);
-		this.inherited(arguments);
-		var percent = (value - this.minimum) / (this.maximum - this.minimum);
-		var progressBar = (this._descending === false) ? this.remainingBar : this.progressBar;
-		var remainingBar = (this._descending === false) ? this.progressBar : this.remainingBar;
-		if(this._inProgressAnim && this._inProgressAnim.status != "stopped"){
-			this._inProgressAnim.stop(true);
-		}
-		if(priorityChange && this.slideDuration > 0 && progressBar.style[this._progressPixelSize]){
-			// animate the slider
-			var _this = this;
-			var props = {};
-			var start = parseFloat(progressBar.style[this._progressPixelSize]);
-			var duration = this.slideDuration * (percent-start/100);
-			if(duration == 0){ return; }
-			if(duration < 0){ duration = 0 - duration; }
-			props[this._progressPixelSize] = { start: start, end: percent*100, units:"%" };
-			this._inProgressAnim = fx.animateProperty({ node: progressBar, duration: duration,
-				onAnimate: function(v){
-					remainingBar.style[_this._progressPixelSize] = (100 - parseFloat(v[_this._progressPixelSize])) + "%";
-				},
-				onEnd: function(){
-					delete _this._inProgressAnim;
-				},
-				properties: props
-			});
-			this._inProgressAnim.play();
-		}else{
-			progressBar.style[this._progressPixelSize] = (percent*100) + "%";
-			remainingBar.style[this._progressPixelSize] = ((1-percent)*100) + "%";
-		}
-	},
-
-	_bumpValue: function(signedChange, /*Boolean?*/ priorityChange){
-		if(this.disabled || this.readOnly){ return; }
-		var s = domStyle.getComputedStyle(this.sliderBarContainer);
-		var c = domGeometry.getContentBox(this.sliderBarContainer, s);
-		var count = this.discreteValues;
-		if(count <= 1 || count == Infinity){ count = c[this._pixelCount]; }
-		count--;
-		var value = (this.value - this.minimum) * count / (this.maximum - this.minimum) + signedChange;
-		if(value < 0){ value = 0; }
-		if(value > count){ value = count; }
-		value = value * (this.maximum - this.minimum) / count + this.minimum;
-		this._setValueAttr(value, priorityChange);
-	},
-
-	_onClkBumper: function(val){
-		if(this.disabled || this.readOnly || !this.clickSelect){ return; }
-		this._setValueAttr(val, true);
-	},
-
-	_onClkIncBumper: function(){
-		this._onClkBumper(this._descending === false ? this.minimum : this.maximum);
-	},
-
-	_onClkDecBumper: function(){
-		this._onClkBumper(this._descending === false ? this.maximum : this.minimum);
-	},
-
-	decrement: function(/*Event*/ e){
-		// summary:
-		//		Decrement slider
-		// tags:
-		//		private
-		this._bumpValue(e.charOrCode == keys.PAGE_DOWN ? -this.pageIncrement : -1);
-	},
-
-	increment: function(/*Event*/ e){
-		// summary:
-		//		Increment slider
-		// tags:
-		//		private
-		this._bumpValue(e.charOrCode == keys.PAGE_UP ? this.pageIncrement : 1);
-	},
-
-	_mouseWheeled: function(/*Event*/ evt){
-		// summary:
-		//		Event handler for mousewheel where supported
-		event.stop(evt);
-		this._bumpValue(evt.wheelDelta < 0 ? -1 : 1, true); // negative scroll acts like a decrement
-	},
-
-	startup: function(){
-		if(this._started){ return; }
-
-		array.forEach(this.getChildren(), function(child){
-			if(this[child.container] != this.containerNode){
-				this[child.container].appendChild(child.domNode);
+	var _SliderMover = declare("dijit.form._SliderMover", Mover, {
+		onMouseMove: function(e){
+			var widget = this.widget;
+			var abspos = widget._abspos;
+			if(!abspos){
+				abspos = widget._abspos = domGeometry.position(widget.sliderBarContainer, true);
+				widget._setPixelValue_ = lang.hitch(widget, "_setPixelValue");
+				widget._isReversed_ = widget._isReversed();
 			}
-		}, this);
+			var pixelValue = e[widget._mousePixelCoord] - abspos[widget._startingPixelCoord];
+			widget._setPixelValue_(widget._isReversed_ ? (abspos[widget._pixelCount] - pixelValue) : pixelValue, abspos[widget._pixelCount], false);
+		},
 
-		this.inherited(arguments);
-	},
+		destroy: function(e){
+			Mover.prototype.destroy.apply(this, arguments);
+			var widget = this.widget;
+			widget._abspos = null;
+			widget._setValueAttr(widget.value, true);
+		}
+	});
 
-	_typematicCallback: function(/*Number*/ count, /*Object*/ button, /*Event*/ e){
-		if(count == -1){
+	var HorizontalSlider = declare("dijit.form.HorizontalSlider", [_FormValueWidget, _Container], {
+		// summary:
+		//		A form widget that allows one to select a value with a horizontally draggable handle
+
+		templateString: template,
+
+		// Overrides FormValueWidget.value to indicate numeric value
+		value: 0,
+
+		// showButtons: [const] Boolean
+		//		Show increment/decrement buttons at the ends of the slider?
+		showButtons: true,
+
+		// minimum: [const] Integer
+		//		The minimum value the slider can be set to.
+		minimum: 0,
+
+		// maximum: [const] Integer
+		//		The maximum value the slider can be set to.
+		maximum: 100,
+
+		// discreteValues: Integer
+		//		If specified, indicates that the slider handle has only 'discreteValues' possible positions,
+		//		and that after dragging the handle, it will snap to the nearest possible position.
+		//		Thus, the slider has only 'discreteValues' possible values.
+		//
+		//		For example, if minimum=10, maxiumum=30, and discreteValues=3, then the slider handle has
+		//		three possible positions, representing values 10, 20, or 30.
+		//
+		//		If discreteValues is not specified or if it's value is higher than the number of pixels
+		//		in the slider bar, then the slider handle can be moved freely, and the slider's value will be
+		//		computed/reported based on pixel position (in this case it will likely be fractional,
+		//		such as 123.456789).
+		discreteValues: Infinity,
+
+		// pageIncrement: Integer
+		//		If discreteValues is also specified, this indicates the amount of clicks (ie, snap positions)
+		//		that the slider handle is moved via pageup/pagedown keys.
+		//		If discreteValues is not specified, it indicates the number of pixels.
+		pageIncrement: 2,
+
+		// clickSelect: Boolean
+		//		If clicking the slider bar changes the value or not
+		clickSelect: true,
+
+		// slideDuration: Number
+		//		The time in ms to take to animate the slider handle from 0% to 100%,
+		//		when clicking the slider bar to make the handle move.
+		slideDuration: manager.defaultDuration,
+
+		// Map widget attributes to DOMNode attributes.
+		_setIdAttr: "", // Override _FormWidget which sends id to focusNode
+		_setNameAttr: "valueNode", // Override default behavior to send to focusNode
+
+		baseClass: "dijitSlider",
+
+		// Apply CSS classes to up/down arrows and handle per mouse state
+		cssStateNodes: {
+			incrementButton: "dijitSliderIncrementButton",
+			decrementButton: "dijitSliderDecrementButton",
+			focusNode: "dijitSliderThumb"
+		},
+
+		_mousePixelCoord: "pageX",
+		_pixelCount: "w",
+		_startingPixelCoord: "x",
+		_handleOffsetCoord: "left",
+		_progressPixelSize: "width",
+
+		_onKeyUp: function(/*Event*/ e){
+			if(this.disabled || this.readOnly || e.altKey || e.ctrlKey || e.metaKey){
+				return;
+			}
 			this._setValueAttr(this.value, true);
-		}else{
-			this[(button == (this._descending? this.incrementButton : this.decrementButton)) ? "decrement" : "increment"](e);
-		}
-	},
+		},
 
-	buildRendering: function(){
-		this.inherited(arguments);
-		if(this.showButtons){
-			this.incrementButton.style.display="";
-			this.decrementButton.style.display="";
-		}
+		_onKeyDown: function(/*Event*/ e){
+			if(this.disabled || this.readOnly || e.altKey || e.ctrlKey || e.metaKey){
+				return;
+			}
+			switch(e.keyCode){
+				case keys.HOME:
+					this._setValueAttr(this.minimum, false);
+					break;
+				case keys.END:
+					this._setValueAttr(this.maximum, false);
+					break;
+				// this._descending === false: if ascending vertical (min on top)
+				// (this._descending || this.isLeftToRight()): if left-to-right horizontal or descending vertical
+				case ((this._descending || this.isLeftToRight()) ? keys.RIGHT_ARROW : keys.LEFT_ARROW):
+				case (this._descending === false ? keys.DOWN_ARROW : keys.UP_ARROW):
+				case (this._descending === false ? keys.PAGE_DOWN : keys.PAGE_UP):
+					this.increment(e);
+					break;
+				case ((this._descending || this.isLeftToRight()) ? keys.LEFT_ARROW : keys.RIGHT_ARROW):
+				case (this._descending === false ? keys.UP_ARROW : keys.DOWN_ARROW):
+				case (this._descending === false ? keys.PAGE_UP : keys.PAGE_DOWN):
+					this.decrement(e);
+					break;
+				default:
+					return;
+			}
+			e.stopPropagation();
+			e.preventDefault();
+		},
 
-		// find any associated label element and add to slider focusnode.
-		var label = query('label[for="'+this.id+'"]');
-		if(label.length){
-			if(!label[0].id){ label[0].id = this.id + "_label"; }
-			this.focusNode.setAttribute("aria-labelledby", label[0].id);
-		}
+		_onHandleClick: function(e){
+			if(this.disabled || this.readOnly){
+				return;
+			}
+			if(!has("ie")){
+				// make sure you get focus when dragging the handle
+				// (but don't do on IE because it causes a flicker on mouse up (due to blur then focus)
+				focus.focus(this.sliderHandle);
+			}
+			e.stopPropagation();
+			e.preventDefault();
+		},
 
-		this.focusNode.setAttribute("aria-valuemin", this.minimum);
-		this.focusNode.setAttribute("aria-valuemax", this.maximum);
-	},
+		_isReversed: function(){
+			// summary:
+			//		Returns true if direction is from right to left
+			// tags:
+			//		protected extension
+			return !this.isLeftToRight();
+		},
 
-	postCreate: function(){
-		this.inherited(arguments);
+		_onBarClick: function(e){
+			if(this.disabled || this.readOnly || !this.clickSelect){
+				return;
+			}
+			focus.focus(this.sliderHandle);
+			e.stopPropagation();
+			e.preventDefault();
+			var abspos = domGeometry.position(this.sliderBarContainer, true);
+			var pixelValue = e[this._mousePixelCoord] - abspos[this._startingPixelCoord];
+			this._setPixelValue(this._isReversed() ? (abspos[this._pixelCount] - pixelValue) : pixelValue, abspos[this._pixelCount], true);
+			this._movable.onMouseDown(e);
+		},
 
-		if(this.showButtons){
+		_setPixelValue: function(/*Number*/ pixelValue, /*Number*/ maxPixels, /*Boolean?*/ priorityChange){
+			if(this.disabled || this.readOnly){
+				return;
+			}
+			var count = this.discreteValues;
+			if(count <= 1 || count == Infinity){
+				count = maxPixels;
+			}
+			count--;
+			var pixelsPerValue = maxPixels / count;
+			var wholeIncrements = Math.round(pixelValue / pixelsPerValue);
+			this._setValueAttr(Math.max(Math.min((this.maximum - this.minimum) * wholeIncrements / count + this.minimum, this.maximum), this.minimum), priorityChange);
+		},
+
+		_setValueAttr: function(/*Number*/ value, /*Boolean?*/ priorityChange){
+			// summary:
+			//		Hook so set('value', value) works.
+			this._set("value", value);
+			this.valueNode.value = value;
+			this.focusNode.setAttribute("aria-valuenow", value);
+			this.inherited(arguments);
+			var percent = (value - this.minimum) / (this.maximum - this.minimum);
+			var progressBar = (this._descending === false) ? this.remainingBar : this.progressBar;
+			var remainingBar = (this._descending === false) ? this.progressBar : this.remainingBar;
+			if(this._inProgressAnim && this._inProgressAnim.status != "stopped"){
+				this._inProgressAnim.stop(true);
+			}
+			if(priorityChange && this.slideDuration > 0 && progressBar.style[this._progressPixelSize]){
+				// animate the slider
+				var _this = this;
+				var props = {};
+				var start = parseFloat(progressBar.style[this._progressPixelSize]);
+				var duration = this.slideDuration * (percent - start / 100);
+				if(duration == 0){
+					return;
+				}
+				if(duration < 0){
+					duration = 0 - duration;
+				}
+				props[this._progressPixelSize] = { start: start, end: percent * 100, units: "%" };
+				this._inProgressAnim = fx.animateProperty({ node: progressBar, duration: duration,
+					onAnimate: function(v){
+						remainingBar.style[_this._progressPixelSize] = (100 - parseFloat(v[_this._progressPixelSize])) + "%";
+					},
+					onEnd: function(){
+						delete _this._inProgressAnim;
+					},
+					properties: props
+				});
+				this._inProgressAnim.play();
+			}else{
+				progressBar.style[this._progressPixelSize] = (percent * 100) + "%";
+				remainingBar.style[this._progressPixelSize] = ((1 - percent) * 100) + "%";
+			}
+		},
+
+		_bumpValue: function(signedChange, /*Boolean?*/ priorityChange){
+			if(this.disabled || this.readOnly){
+				return;
+			}
+			var s = domStyle.getComputedStyle(this.sliderBarContainer);
+			var c = domGeometry.getContentBox(this.sliderBarContainer, s);
+			var count = this.discreteValues;
+			if(count <= 1 || count == Infinity){
+				count = c[this._pixelCount];
+			}
+			count--;
+			var value = (this.value - this.minimum) * count / (this.maximum - this.minimum) + signedChange;
+			if(value < 0){
+				value = 0;
+			}
+			if(value > count){
+				value = count;
+			}
+			value = value * (this.maximum - this.minimum) / count + this.minimum;
+			this._setValueAttr(value, priorityChange);
+		},
+
+		_onClkBumper: function(val){
+			if(this.disabled || this.readOnly || !this.clickSelect){
+				return;
+			}
+			this._setValueAttr(val, true);
+		},
+
+		_onClkIncBumper: function(){
+			this._onClkBumper(this._descending === false ? this.minimum : this.maximum);
+		},
+
+		_onClkDecBumper: function(){
+			this._onClkBumper(this._descending === false ? this.maximum : this.minimum);
+		},
+
+		decrement: function(/*Event*/ e){
+			// summary:
+			//		Decrement slider
+			// tags:
+			//		private
+			this._bumpValue(e.keyCode == keys.PAGE_DOWN ? -this.pageIncrement : -1);
+		},
+
+		increment: function(/*Event*/ e){
+			// summary:
+			//		Increment slider
+			// tags:
+			//		private
+			this._bumpValue(e.keyCode == keys.PAGE_UP ? this.pageIncrement : 1);
+		},
+
+		_mouseWheeled: function(/*Event*/ evt){
+			// summary:
+			//		Event handler for mousewheel where supported
+
+			if(!this.focused){
+				// If use is scrolling over page and we happen to get the mouse wheel event, just ignore it.
+				return;
+			}
+
+			evt.stopPropagation();
+			evt.preventDefault();
+			this._bumpValue(evt.wheelDelta < 0 ? -1 : 1, true); // negative scroll acts like a decrement
+		},
+
+		startup: function(){
+			if(this._started){
+				return;
+			}
+
+			array.forEach(this.getChildren(), function(child){
+				if(this[child.container] != this.containerNode){
+					this[child.container].appendChild(child.domNode);
+				}
+			}, this);
+
+			this.inherited(arguments);
+		},
+
+		_typematicCallback: function(/*Number*/ count, /*Object*/ button, /*Event*/ e){
+			if(count == -1){
+				this._setValueAttr(this.value, true);
+			}else{
+				this[(button == (this._descending ? this.incrementButton : this.decrementButton)) ? "decrement" : "increment"](e);
+			}
+		},
+
+		buildRendering: function(){
+			this.inherited(arguments);
+			if(this.showButtons){
+				this.incrementButton.style.display = "";
+				this.decrementButton.style.display = "";
+			}
+
+			// find any associated label element and add to slider focusnode.
+			var label = query('label[for="' + this.id + '"]');
+			if(label.length){
+				if(!label[0].id){
+					label[0].id = this.id + "_label";
+				}
+				this.focusNode.setAttribute("aria-labelledby", label[0].id);
+			}
+
+			this.focusNode.setAttribute("aria-valuemin", this.minimum);
+			this.focusNode.setAttribute("aria-valuemax", this.maximum);
+		},
+
+		postCreate: function(){
+			this.inherited(arguments);
+
+			if(this.showButtons){
+				this.own(
+					typematic.addMouseListener(this.decrementButton, this, "_typematicCallback", 25, 500),
+					typematic.addMouseListener(this.incrementButton, this, "_typematicCallback", 25, 500)
+				);
+			}
 			this.own(
-				typematic.addMouseListener(this.decrementButton, this, "_typematicCallback", 25, 500),
-				typematic.addMouseListener(this.incrementButton, this, "_typematicCallback", 25, 500)
+				on(this.domNode, mouse.wheel, lang.hitch(this, "_mouseWheeled"))
 			);
+
+			// define a custom constructor for a SliderMover that points back to me
+			var mover = declare(_SliderMover, {
+				widget: this
+			});
+			this._movable = new Moveable(this.sliderHandle, {mover: mover});
+
+			this._layoutHackIE7();
+		},
+
+		destroy: function(){
+			this._movable.destroy();
+			if(this._inProgressAnim && this._inProgressAnim.status != "stopped"){
+				this._inProgressAnim.stop(true);
+			}
+			this.inherited(arguments);
 		}
-		this.connect(this.domNode, mouse.wheel, "_mouseWheeled");
+	});
 
-		// define a custom constructor for a SliderMover that points back to me
-		var mover = declare(_SliderMover, {
-			widget: this
-		});
-		this._movable = new Moveable(this.sliderHandle, {mover: mover});
+	HorizontalSlider._Mover = _SliderMover;	// for monkey patching
 
-		this._layoutHackIE7();
-	},
-
-	destroy: function(){
-		this._movable.destroy();
-		if(this._inProgressAnim && this._inProgressAnim.status != "stopped"){
-			this._inProgressAnim.stop(true);
-		}
-		this.inherited(arguments);
-	}
-});
-
-HorizontalSlider._Mover = _SliderMover;	// for monkey patching
-
-return HorizontalSlider;
+	return HorizontalSlider;
 });
 
 },
-'url:dijit/form/templates/HorizontalSlider.html':"<table class=\"dijit dijitReset dijitSlider dijitSliderH\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" rules=\"none\" data-dojo-attach-event=\"onkeypress:_onKeyPress,onkeyup:_onKeyUp\"\n\trole=\"presentation\"\n\t><tr class=\"dijitReset\"\n\t\t><td class=\"dijitReset\" colspan=\"2\"></td\n\t\t><td data-dojo-attach-point=\"topDecoration\" class=\"dijitReset dijitSliderDecoration dijitSliderDecorationT dijitSliderDecorationH\"></td\n\t\t><td class=\"dijitReset\" colspan=\"2\"></td\n\t></tr\n\t><tr class=\"dijitReset\"\n\t\t><td class=\"dijitReset dijitSliderButtonContainer dijitSliderButtonContainerH\"\n\t\t\t><div class=\"dijitSliderDecrementIconH\" style=\"display:none\" data-dojo-attach-point=\"decrementButton\"><span class=\"dijitSliderButtonInner\">-</span></div\n\t\t></td\n\t\t><td class=\"dijitReset\"\n\t\t\t><div class=\"dijitSliderBar dijitSliderBumper dijitSliderBumperH dijitSliderLeftBumper\" data-dojo-attach-event=\"press:_onClkDecBumper\"></div\n\t\t></td\n\t\t><td class=\"dijitReset\"\n\t\t\t><input data-dojo-attach-point=\"valueNode\" type=\"hidden\" ${!nameAttrSetting}\n\t\t\t/><div class=\"dijitReset dijitSliderBarContainerH\" role=\"presentation\" data-dojo-attach-point=\"sliderBarContainer\"\n\t\t\t\t><div role=\"presentation\" data-dojo-attach-point=\"progressBar\" class=\"dijitSliderBar dijitSliderBarH dijitSliderProgressBar dijitSliderProgressBarH\" data-dojo-attach-event=\"press:_onBarClick\"\n\t\t\t\t\t><div class=\"dijitSliderMoveable dijitSliderMoveableH\"\n\t\t\t\t\t\t><div data-dojo-attach-point=\"sliderHandle,focusNode\" class=\"dijitSliderImageHandle dijitSliderImageHandleH\" data-dojo-attach-event=\"press:_onHandleClick\" role=\"slider\"></div\n\t\t\t\t\t></div\n\t\t\t\t></div\n\t\t\t\t><div role=\"presentation\" data-dojo-attach-point=\"remainingBar\" class=\"dijitSliderBar dijitSliderBarH dijitSliderRemainingBar dijitSliderRemainingBarH\" data-dojo-attach-event=\"press:_onBarClick\"></div\n\t\t\t></div\n\t\t></td\n\t\t><td class=\"dijitReset\"\n\t\t\t><div class=\"dijitSliderBar dijitSliderBumper dijitSliderBumperH dijitSliderRightBumper\" data-dojo-attach-event=\"press:_onClkIncBumper\"></div\n\t\t></td\n\t\t><td class=\"dijitReset dijitSliderButtonContainer dijitSliderButtonContainerH\"\n\t\t\t><div class=\"dijitSliderIncrementIconH\" style=\"display:none\" data-dojo-attach-point=\"incrementButton\"><span class=\"dijitSliderButtonInner\">+</span></div\n\t\t></td\n\t></tr\n\t><tr class=\"dijitReset\"\n\t\t><td class=\"dijitReset\" colspan=\"2\"></td\n\t\t><td data-dojo-attach-point=\"containerNode,bottomDecoration\" class=\"dijitReset dijitSliderDecoration dijitSliderDecorationB dijitSliderDecorationH\"></td\n\t\t><td class=\"dijitReset\" colspan=\"2\"></td\n\t></tr\n></table>\n",
 'dijit/Editor':function(){
-define("dijit/Editor", [
+define([
 	"require",
 	"dojo/_base/array", // array.forEach
 	"dojo/_base/declare", // declare
-	"dojo/_base/Deferred", // Deferred
+	"dojo/Deferred", // Deferred
 	"dojo/i18n", // i18n.getLocalization
 	"dojo/dom-attr", // domAttr.set
 	"dojo/dom-class", // domClass.add
 	"dojo/dom-geometry",
 	"dojo/dom-style", // domStyle.set, get
-	"dojo/_base/event", // event.stop
 	"dojo/keys", // keys.F1 keys.F15 keys.TAB
 	"dojo/_base/lang", // lang.getObject lang.hitch
 	"dojo/sniff", // has("ie") has("mac") has("webkit")
 	"dojo/string", // string.substitute
 	"dojo/topic", // topic.publish()
-	"dojo/_base/window", // win.withGlobal
-	"./_base/focus",	// dijit.getBookmark()
 	"./_Container",
 	"./Toolbar",
 	"./ToolbarSeparator",
@@ -14738,11 +14674,11 @@ define("dijit/Editor", [
 	"./_editor/html",
 	"./_editor/range",
 	"./_editor/RichText",
-	"./main",	// dijit._scopeName
+	"./main", // dijit._scopeName
 	"dojo/i18n!./_editor/nls/commands"
 ], function(require, array, declare, Deferred, i18n, domAttr, domClass, domGeometry, domStyle,
-			event, keys, lang, has, string, topic, win,
-			focusBase, _Container, Toolbar, ToolbarSeparator, _LayoutWidget, ToggleButton,
+			keys, lang, has, string, topic,
+			_Container, Toolbar, ToolbarSeparator, _LayoutWidget, ToggleButton,
 			_Plugin, EnterKeyHandling, html, rangeapi, RichText, dijit){
 
 	// module:
@@ -14782,12 +14718,12 @@ define("dijit/Editor", [
 			//		The editor replaces the specified DOMNode.
 
 			if(!lang.isArray(this.plugins)){
-				this.plugins=["undo","redo","|","cut","copy","paste","|","bold","italic","underline","strikethrough","|",
-				"insertOrderedList","insertUnorderedList","indent","outdent","|","justifyLeft","justifyRight","justifyCenter","justifyFull",
-				EnterKeyHandling /*, "createLink"*/];
+				this.plugins = ["undo", "redo", "|", "cut", "copy", "paste", "|", "bold", "italic", "underline", "strikethrough", "|",
+					"insertOrderedList", "insertUnorderedList", "indent", "outdent", "|", "justifyLeft", "justifyRight", "justifyCenter", "justifyFull",
+					EnterKeyHandling /*, "createLink"*/];
 			}
 
-			this._plugins=[];
+			this._plugins = [];
 			this._editInterval = this.editActionInterval * 1000;
 
 			//IE will always lose focus when other element gets focus, while for FF and safari,
@@ -14800,7 +14736,7 @@ define("dijit/Editor", [
 			//see whether user clicks out of a focus editor, if so, save selection (focus will
 			//only lost after onmousedown event is fired, so we can obtain correct caret pos.)
 			//2) when user tabs away from the editor, which is handled in onKeyDown below.
-			if(has("ie") || has("trident")){
+			if(has("ie") || has("trident") || has("edge")){
 				this.events.push("onBeforeDeactivate");
 				this.events.push("onBeforeActivate");
 			}
@@ -14819,17 +14755,29 @@ define("dijit/Editor", [
 		},
 
 		postCreate: function(){
-			//for custom undo/redo, if enabled.
-			this._steps=this._steps.slice(0);
-			this._undoedSteps=this._undoedSteps.slice(0);
-
-			if(lang.isArray(this.extraPlugins)){
-				this.plugins=this.plugins.concat(this.extraPlugins);
-			}
-
 			this.inherited(arguments);
 
+			//for custom undo/redo, if enabled.
+			this._steps = this._steps.slice(0);
+			this._undoedSteps = this._undoedSteps.slice(0);
+
+			if(lang.isArray(this.extraPlugins)){
+				this.plugins = this.plugins.concat(this.extraPlugins);
+			}
+
 			this.commands = i18n.getLocalization("dijit._editor", "commands", this.lang);
+
+			if(has("webkit")){
+				// Disable selecting the entire editor by inadvertent double-clicks.
+				// on buttons, title bar, etc.  Otherwise clicking too fast on
+				// a button such as undo/redo selects the entire editor.
+				domStyle.set(this.domNode, "KhtmlUserSelect", "none");
+			}
+		},
+
+		startup: function(){
+
+			this.inherited(arguments);
 
 			if(!this.toolbar){
 				// if we haven't been assigned a toolbar, create one
@@ -14851,22 +14799,17 @@ define("dijit/Editor", [
 			domClass.add(this.iframe, "dijitEditorIFrame");
 			domAttr.set(this.iframe, "allowTransparency", true);
 
-			if(has("webkit")){
-				// Disable selecting the entire editor by inadvertent double-clicks.
-				// on buttons, title bar, etc.  Otherwise clicking too fast on
-				// a button such as undo/redo selects the entire editor.
-				domStyle.set(this.domNode, "KhtmlUserSelect", "none");
-			}
 			this.toolbar.startup();
 			this.onNormalizedDisplayChanged(); //update toolbar button status
 		},
+
 		destroy: function(){
 			array.forEach(this._plugins, function(p){
 				if(p && p.destroy){
 					p.destroy();
 				}
 			});
-			this._plugins=[];
+			this._plugins = [];
 			this.toolbar.destroyRecursive();
 			delete this.toolbar;
 			this.inherited(arguments);
@@ -14887,9 +14830,9 @@ define("dijit/Editor", [
 			//		Used when creating an instance from
 			//		something already in this.plugins. Ensures that the new
 			//		instance is assigned to this.plugins at that index.
-			var args=lang.isString(plugin)?{name:plugin}:lang.isFunction(plugin)?{ctor:plugin}:plugin;
+			var args = lang.isString(plugin) ? {name: plugin} : lang.isFunction(plugin) ? {ctor: plugin} : plugin;
 			if(!args.setEditor){
-				var o={"args":args,"plugin":null,"editor":this};
+				var o = {"args": args, "plugin": null, "editor": this};
 				if(args.name){
 					// search registry for a plugin factory matching args.name, if it's not there then
 					// fallback to 1.0 API:
@@ -14915,7 +14858,7 @@ define("dijit/Editor", [
 				if(!o.plugin){
 					throw new Error(this.id + ": cannot find plugin [" + args.name + "]");
 				}
-				plugin=o.plugin;
+				plugin = o.plugin;
 			}
 			if(arguments.length > 1){
 				this._plugins[index] = plugin;
@@ -14939,11 +14882,11 @@ define("dijit/Editor", [
 				_LayoutWidget.prototype.resize.apply(this, arguments);
 			}
 			/*
-			else{
-				// do nothing, the editor is already laid out correctly.   The user has probably specified
-				// the height parameter, which was used to set a size on the iframe
-			}
-			*/
+			 else{
+			 // do nothing, the editor is already laid out correctly.   The user has probably specified
+			 // the height parameter, which was used to set a size on the iframe
+			 }
+			 */
 		},
 		layout: function(){
 			// summary:
@@ -14957,11 +14900,11 @@ define("dijit/Editor", [
 			// calc off the added margins and padding too. See tracker: #10662
 			var areaHeight = (this._contentBox.h -
 				(this.getHeaderHeight() + this.getFooterHeight() +
-				 domGeometry.getPadBorderExtents(this.iframe.parentNode).h +
-				 domGeometry.getMarginExtents(this.iframe.parentNode).h));
+					domGeometry.getPadBorderExtents(this.iframe.parentNode).h +
+					domGeometry.getMarginExtents(this.iframe.parentNode).h));
 			this.editingArea.style.height = areaHeight + "px";
 			if(this.iframe){
-				this.iframe.style.height="100%";
+				this.iframe.style.height = "100%";
 			}
 			this._layoutMode = true;
 		},
@@ -15057,10 +15000,10 @@ define("dijit/Editor", [
 			// tags:
 			//		private
 			if(!this._inEditing){
-				this._inEditing=true;
+				this._inEditing = true;
 				this._beginEditing(cmd);
 			}
-			if(this.editActionInterval>0){
+			if(this.editActionInterval > 0){
 				if(this._editTimer){
 					this._editTimer.remove();
 				}
@@ -15069,8 +15012,8 @@ define("dijit/Editor", [
 		},
 
 		// TODO: declaring these in the prototype is meaningless, just create in the constructor/postCreate
-		_steps:[],
-		_undoedSteps:[],
+		_steps: [],
+		_undoedSteps: [],
 
 		execCommand: function(cmd){
 			// summary:
@@ -15127,18 +15070,15 @@ define("dijit/Editor", [
 				// Try to exec the superclass exec-command and see if it works.
 				r = this.document.execCommand(cmd, false, null);
 				if(has("webkit") && !r){ //see #4598: webkit does not guarantee clipboard support from js
-					throw { code: 1011 }; // throw an object like Mozilla's error
+					throw {}; // throw to show the warning
 				}
 			}catch(e){
-				//TODO: when else might we get an exception?  Do we need the Mozilla test below?
-				if(e.code == 1011 /* Mozilla: service denied */ ||
-					(e.code == 9 && has("opera") /* Opera not supported */)){
-					// Warn user of platform limitation.  Cannot programmatically access clipboard. See ticket #4136
-					var sub = string.substitute,
-						accel = {cut:'X', copy:'C', paste:'V'};
-					alert(sub(this.commands.systemShortcut,
-						[this.commands[cmd], sub(this.commands[has("mac") ? 'appleKey' : 'ctrlKey'], [accel[cmd]])]));
-				}
+				//Ticket #18467 removed the checks to specific codes
+				// Warn user of platform limitation.  Cannot programmatically access clipboard. See ticket #4136
+				var sub = string.substitute,
+					accel = {cut: 'X', copy: 'C', paste: 'V'};
+				alert(sub(this.commands.systemShortcut,
+					[this.commands[cmd], sub(this.commands[has("mac") ? 'appleKey' : 'ctrlKey'], [accel[cmd]])]));
 				r = false;
 			}
 			return r;
@@ -15166,14 +15106,14 @@ define("dijit/Editor", [
 			var col = b.isCollapsed;
 			var r, sNode, eNode, sel;
 			if(mark){
-				if(has("ie") < 9){
+				if(has("ie") < 9 || (has("ie") === 9 && has("quirks"))){
 					if(lang.isArray(mark)){
-						//IE CONTROL, have to use the native bookmark.
+						// IE CONTROL, have to use the native bookmark.
 						bookmark = [];
-						array.forEach(mark,function(n){
-							bookmark.push(rangeapi.getNode(n,this.editNode));
-						},this);
-						win.withGlobal(this.window,'moveToBookmark',focusBase,[{mark: bookmark, isCollapsed: col}]);
+						array.forEach(mark, function(n){
+							bookmark.push(rangeapi.getNode(n, this.editNode));
+						}, this);
+						this.selection.moveToBookmark({mark: bookmark, isCollapsed: col});
 					}else{
 						if(mark.startContainer && mark.endContainer){
 							// Use the pseudo WC3 range API.  This works better for positions
@@ -15182,15 +15122,15 @@ define("dijit/Editor", [
 							if(sel && sel.removeAllRanges){
 								sel.removeAllRanges();
 								r = rangeapi.create(this.window);
-								sNode = rangeapi.getNode(mark.startContainer,this.editNode);
-								eNode = rangeapi.getNode(mark.endContainer,this.editNode);
+								sNode = rangeapi.getNode(mark.startContainer, this.editNode);
+								eNode = rangeapi.getNode(mark.endContainer, this.editNode);
 								if(sNode && eNode){
 									// Okay, we believe we found the position, so add it into the selection
 									// There are cases where it may not be found, particularly in undo/redo, when
 									// IE changes the underlying DOM on us (wraps text in a <p> tag or similar.
 									// So, in those cases, don't bother restoring selection.
-									r.setStart(sNode,mark.startOffset);
-									r.setEnd(eNode,mark.endOffset);
+									r.setStart(sNode, mark.startOffset);
+									r.setEnd(eNode, mark.endOffset);
 									sel.addRange(r);
 								}
 							}
@@ -15201,14 +15141,14 @@ define("dijit/Editor", [
 					if(sel && sel.removeAllRanges){
 						sel.removeAllRanges();
 						r = rangeapi.create(this.window);
-						sNode = rangeapi.getNode(mark.startContainer,this.editNode);
-						eNode = rangeapi.getNode(mark.endContainer,this.editNode);
+						sNode = rangeapi.getNode(mark.startContainer, this.editNode);
+						eNode = rangeapi.getNode(mark.endContainer, this.editNode);
 						if(sNode && eNode){
 							// Okay, we believe we found the position, so add it into the selection
 							// There are cases where it may not be found, particularly in undo/redo, when
 							// formatting as been done and so on, so don't restore selection then.
-							r.setStart(sNode,mark.startOffset);
-							r.setEnd(eNode,mark.endOffset);
+							r.setStart(sNode, mark.startOffset);
+							r.setEnd(eNode, mark.endOffset);
 							sel.addRange(r);
 						}
 					}
@@ -15221,8 +15161,10 @@ define("dijit/Editor", [
 			// tags:
 			//		private
 			this.setValue(to.text);
-			var b=to.bookmark;
-			if(!b){ return; }
+			var b = to.bookmark;
+			if(!b){
+				return;
+			}
 			this._moveToBookmark(b);
 		},
 		undo: function(){
@@ -15234,10 +15176,10 @@ define("dijit/Editor", [
 			if(!this._undoRedoActive){
 				this._undoRedoActive = true;
 				this.endEditing(true);
-				var s=this._steps.pop();
-				if(s && this._steps.length>0){
+				var s = this._steps.pop();
+				if(s && this._steps.length > 0){
 					this.focus();
-					this._changeToStep(s,this._steps[this._steps.length-1]);
+					this._changeToStep(s, this._steps[this._steps.length - 1]);
 					this._undoedSteps.push(s);
 					this.onDisplayChanged();
 					delete this._undoRedoActive;
@@ -15256,10 +15198,10 @@ define("dijit/Editor", [
 			if(!this._undoRedoActive){
 				this._undoRedoActive = true;
 				this.endEditing(true);
-				var s=this._undoedSteps.pop();
-				if(s && this._steps.length>0){
+				var s = this._undoedSteps.pop();
+				if(s && this._steps.length > 0){
 					this.focus();
-					this._changeToStep(this._steps[this._steps.length-1],s);
+					this._changeToStep(this._steps[this._steps.length - 1], s);
 					this._steps.push(s);
 					this.onDisplayChanged();
 					ret = true;
@@ -15279,7 +15221,7 @@ define("dijit/Editor", [
 			}
 			if(this._inEditing){
 				this._endEditing(ignore_caret);
-				this._inEditing=false;
+				this._inEditing = false;
 			}
 		},
 
@@ -15288,11 +15230,11 @@ define("dijit/Editor", [
 			//		Get the currently selected text
 			// tags:
 			//		protected
-			var b=win.withGlobal(this.window,focusBase.getBookmark);
-			var tmp=[];
+			var b = this.selection.getBookmark();
+			var tmp = [];
 			if(b && b.mark){
 				var mark = b.mark;
-				if(has("ie") < 9){
+				if(has("ie") < 9 || (has("ie") === 9 && has("quirks"))){
 					// Try to use the pseudo range API on IE for better accuracy.
 					var sel = rangeapi.getSelection(this.window);
 					if(!lang.isArray(mark)){
@@ -15304,24 +15246,24 @@ define("dijit/Editor", [
 							if(range){
 								b.mark = range.cloneRange();
 							}else{
-								b.mark = win.withGlobal(this.window,focusBase.getBookmark);
+								b.mark = this.selection.getBookmark();
 							}
 						}
 					}else{
 						// Control ranges (img, table, etc), handle differently.
-						array.forEach(b.mark,function(n){
-							tmp.push(rangeapi.getIndex(n,this.editNode).o);
-						},this);
+						array.forEach(b.mark, function(n){
+							tmp.push(rangeapi.getIndex(n, this.editNode).o);
+						}, this);
 						b.mark = tmp;
 					}
 				}
 				try{
 					if(b.mark && b.mark.startContainer){
-						tmp=rangeapi.getIndex(b.mark.startContainer,this.editNode).o;
-						b.mark={startContainer:tmp,
-							startOffset:b.mark.startOffset,
-							endContainer:b.mark.endContainer===b.mark.startContainer?tmp:rangeapi.getIndex(b.mark.endContainer,this.editNode).o,
-							endOffset:b.mark.endOffset};
+						tmp = rangeapi.getIndex(b.mark.startContainer, this.editNode).o;
+						b.mark = {startContainer: tmp,
+							startOffset: b.mark.startOffset,
+							endContainer: b.mark.endContainer === b.mark.startContainer ? tmp : rangeapi.getIndex(b.mark.endContainer, this.editNode).o,
+							endOffset: b.mark.endOffset};
 					}
 				}catch(e){
 					b.mark = null;
@@ -15340,7 +15282,7 @@ define("dijit/Editor", [
 				// to make sure selection restores right for the 'initial' state.
 				// and undo is called.  So not using this.value, as it was 'processed'
 				// and the line-up for selections may have been altered.
-				this._steps.push({'text':html.getChildrenHtml(this.editNode),'bookmark':this._getBookmark()});
+				this._steps.push({'text': html.getChildrenHtml(this.editNode), 'bookmark': this._getBookmark()});
 			}
 		},
 		_endEditing: function(){
@@ -15349,11 +15291,11 @@ define("dijit/Editor", [
 			//		Deals with saving undo; see editActionInterval parameter.
 			// tags:
 			//		private
-			
+
 			// Avoid filtering to make sure selections restore.
 			var v = html.getChildrenHtml(this.editNode);
 
-			this._undoedSteps=[];//clear undoed steps
+			this._undoedSteps = [];//clear undoed steps
 			this._steps.push({text: v, bookmark: this._getBookmark()});
 		},
 		onKeyDown: function(e){
@@ -15372,13 +15314,15 @@ define("dijit/Editor", [
 				return;
 			}
 			var k = e.keyCode;
-			if(e.ctrlKey && !e.altKey){//undo and redo only if the special right Alt + z/y are not pressed #5892
-				if(k == 90 || k == 122){ //z
-					event.stop(e);
+			if(e.ctrlKey && !e.shiftKey && !e.altKey){//undo and redo only if the special right Alt + z/y are not pressed #5892
+				if(k == 90 || k == 122){ //z, but also F11 key
+					e.stopPropagation();
+					e.preventDefault();
 					this.undo();
 					return;
 				}else if(k == 89 || k == 121){ //y
-					event.stop(e);
+					e.stopPropagation();
+					e.preventDefault();
 					this.redo();
 					return;
 				}
@@ -15386,50 +15330,50 @@ define("dijit/Editor", [
 			this.inherited(arguments);
 
 			switch(k){
-					case keys.ENTER:
-					case keys.BACKSPACE:
-					case keys.DELETE:
+				case keys.ENTER:
+				case keys.BACKSPACE:
+				case keys.DELETE:
+					this.beginEditing();
+					break;
+				case 88: //x
+				case 86: //v
+					if(e.ctrlKey && !e.altKey && !e.metaKey){
+						this.endEditing();//end current typing step if any
+						if(e.keyCode == 88){
+							this.beginEditing('cut');
+						}else{
+							this.beginEditing('paste');
+						}
+						//use timeout to trigger after the paste is complete
+						this.defer("endEditing", 1);
+						break;
+					}
+				//pass through
+				default:
+					if(!e.ctrlKey && !e.altKey && !e.metaKey && (e.keyCode < keys.F1 || e.keyCode > keys.F15)){
 						this.beginEditing();
 						break;
-					case 88: //x
-					case 86: //v
-						if(e.ctrlKey && !e.altKey && !e.metaKey){
-							this.endEditing();//end current typing step if any
-							if(e.keyCode == 88){
-								this.beginEditing('cut');
-							}else{
-								this.beginEditing('paste');
-							}
-							//use timeout to trigger after the paste is complete
-							this.defer("endEditing", 1);
-							break;
-						}
-						//pass through
-					default:
-						if(!e.ctrlKey && !e.altKey && !e.metaKey && (e.keyCode<keys.F1 || e.keyCode>keys.F15)){
-							this.beginEditing();
-							break;
-						}
-						//pass through
-					case keys.ALT:
-						this.endEditing();
-						break;
-					case keys.UP_ARROW:
-					case keys.DOWN_ARROW:
-					case keys.LEFT_ARROW:
-					case keys.RIGHT_ARROW:
-					case keys.HOME:
-					case keys.END:
-					case keys.PAGE_UP:
-					case keys.PAGE_DOWN:
-						this.endEditing(true);
-						break;
-					//maybe ctrl+backspace/delete, so don't endEditing when ctrl is pressed
-					case keys.CTRL:
-					case keys.SHIFT:
-					case keys.TAB:
-						break;
-				}
+					}
+				//pass through
+				case keys.ALT:
+					this.endEditing();
+					break;
+				case keys.UP_ARROW:
+				case keys.DOWN_ARROW:
+				case keys.LEFT_ARROW:
+				case keys.RIGHT_ARROW:
+				case keys.HOME:
+				case keys.END:
+				case keys.PAGE_UP:
+				case keys.PAGE_DOWN:
+					this.endEditing(true);
+					break;
+				//maybe ctrl+backspace/delete, so don't endEditing when ctrl is pressed
+				case keys.CTRL:
+				case keys.SHIFT:
+				case keys.TAB:
+					break;
+			}
 		},
 		_onBlur: function(){
 			// summary:
@@ -15447,8 +15391,9 @@ define("dijit/Editor", [
 			// tags:
 			//		private
 			try{
-				this._savedSelection=this._getBookmark();
-			}catch(e){ /* Squelch any errors that occur if selection save occurs due to being hidden simultaneously. */}
+				this._savedSelection = this._getBookmark();
+			}catch(e){ /* Squelch any errors that occur if selection save occurs due to being hidden simultaneously. */
+			}
 		},
 		_restoreSelection: function(){
 			// summary:
@@ -15462,7 +15407,7 @@ define("dijit/Editor", [
 				// only restore the selection if the current range is collapsed
 				// if not collapsed, then it means the editor does not lose
 				// selection and there is no need to restore it
-				if(win.withGlobal(this.window,'isCollapsed',focusBase)){
+				if(this.selection.isCollapsed()){
 					this._moveToBookmark(this._savedSelection);
 				}
 				delete this._savedSelection;
@@ -15526,7 +15471,8 @@ define("dijit/Editor", [
 				if(this.document && this.document.body){
 					domStyle.set(this.document.body, "color", domStyle.get(this.iframe, "color"));
 				}
-			}catch(e){ /* Squelch any errors caused by focus change if hidden during a state change */}
+			}catch(e){ /* Squelch any errors caused by focus change if hidden during a state change */
+			}
 		}
 	});
 
@@ -15534,9 +15480,11 @@ define("dijit/Editor", [
 	function simplePluginFactory(args){
 		return new _Plugin({ command: args.name });
 	}
+
 	function togglePluginFactory(args){
 		return new _Plugin({ buttonClass: ToggleButton, command: args.name });
 	}
+
 	lang.mixin(_Plugin.registry, {
 		"undo": simplePluginFactory,
 		"redo": simplePluginFactory,
@@ -15578,16 +15526,5303 @@ define("dijit/Editor", [
 });
 
 },
+'dijit/ToolbarSeparator':function(){
+define([
+	"dojo/_base/declare", // declare
+	"dojo/dom", // dom.setSelectable
+	"./_Widget",
+	"./_TemplatedMixin"
+], function(declare, dom, _Widget, _TemplatedMixin){
+
+	// module:
+	//		dijit/ToolbarSeparator
+
+
+	return declare("dijit.ToolbarSeparator", [_Widget, _TemplatedMixin], {
+		// summary:
+		//		A spacer between two `dijit.Toolbar` items
+
+		templateString: '<div class="dijitToolbarSeparator dijitInline" role="presentation"></div>',
+
+		buildRendering: function(){
+			this.inherited(arguments);
+			dom.setSelectable(this.domNode, false);
+		},
+
+		isFocusable: function(){
+			// summary:
+			//		This widget isn't focusable, so pass along that fact.
+			// tags:
+			//		protected
+			return false;
+		}
+	});
+});
+
+},
+'dijit/_editor/_Plugin':function(){
+define([
+	"dojo/_base/connect", // connect.connect
+	"dojo/_base/declare", // declare
+	"dojo/_base/lang", // lang.mixin, lang.hitch
+	"../Destroyable",
+	"../form/Button"
+], function(connect, declare, lang, Destroyable, Button){
+
+	// module:
+	//		dijit/_editor/_Plugin
+
+	var _Plugin = declare("dijit._editor._Plugin", Destroyable, {
+		// summary:
+		//		Base class for a "plugin" to the editor, which is usually
+		//		a single button on the Toolbar and some associated code
+
+		constructor: function(args){
+			// summary:
+			//		Create the plugin.
+			// args: Object?
+			//		Initial settings for any of the attributes.
+
+			this.params = args || {};
+			lang.mixin(this, this.params);
+			this._attrPairNames = {};
+		},
+
+		// editor: [const] dijit.Editor
+		//		Points to the parent editor
+		editor: null,
+
+		// iconClassPrefix: [const] String
+		//		The CSS class name for the button node is formed from `iconClassPrefix` and `command`
+		iconClassPrefix: "dijitEditorIcon",
+
+		// button: dijit/_WidgetBase?
+		//		Pointer to `dijit/form/Button` or other widget (ex: `dijit/form/FilteringSelect`)
+		//		that is added to the toolbar to control this plugin.
+		//		If not specified, will be created on initialization according to `buttonClass`
+		button: null,
+
+		// command: String
+		//		String like "insertUnorderedList", "outdent", "justifyCenter", etc. that represents an editor command.
+		//		Passed to editor.execCommand() if `useDefaultCommand` is true.
+		command: "",
+
+		// useDefaultCommand: Boolean
+		//		If true, this plugin executes by calling Editor.execCommand() with the argument specified in `command`.
+		useDefaultCommand: true,
+
+		// buttonClass: Widget Class
+		//		Class of widget (ex: dijit.form.Button or dijit/form/FilteringSelect)
+		//		that is added to the toolbar to control this plugin.
+		//		This is used to instantiate the button, unless `button` itself is specified directly.
+		buttonClass: Button,
+
+		// disabled: Boolean
+		//		Flag to indicate if this plugin has been disabled and should do nothing
+		//		helps control button state, among other things.  Set via the setter api.
+		disabled: false,
+
+		getLabel: function(/*String*/key){
+			// summary:
+			//		Returns the label to use for the button
+			// tags:
+			//		private
+			return this.editor.commands[key];		// String
+		},
+
+		_initButton: function(){
+			// summary:
+			//		Initialize the button or other widget that will control this plugin.
+			//		This code only works for plugins controlling built-in commands in the editor.
+			// tags:
+			//		protected extension
+			if(this.command.length){
+				var label = this.getLabel(this.command),
+					editor = this.editor,
+					className = this.iconClassPrefix + " " + this.iconClassPrefix + this.command.charAt(0).toUpperCase() + this.command.substr(1);
+				if(!this.button){
+					var props = lang.mixin({
+						label: label,
+						ownerDocument: editor.ownerDocument,
+						dir: editor.dir,
+						lang: editor.lang,
+						showLabel: false,
+						iconClass: className,
+						dropDown: this.dropDown,
+						tabIndex: "-1"
+					}, this.params || {});
+					this.button = new this.buttonClass(props);
+				}
+			}
+			if(this.get("disabled") && this.button){
+				this.button.set("disabled", this.get("disabled"));
+			}
+		},
+
+		destroy: function(){
+			if(this.dropDown){
+				this.dropDown.destroyRecursive();
+			}
+
+			this.inherited(arguments);
+		},
+
+		connect: function(o, f, tf){
+			// summary:
+			//		Deprecated.  Use this.own() with dojo/on or dojo/aspect.instead.
+			//
+			//		Make a connect.connect() that is automatically disconnected when this plugin is destroyed.
+			//		Similar to `dijit/_Widget.connect()`.
+			// tags:
+			//		protected deprecated
+
+			this.own(connect.connect(o, f, this, tf));
+		},
+
+		updateState: function(){
+			// summary:
+			//		Change state of the plugin to respond to events in the editor.
+			// description:
+			//		This is called on meaningful events in the editor, such as change of selection
+			//		or caret position (but not simple typing of alphanumeric keys).   It gives the
+			//		plugin a chance to update the CSS of its button.
+			//
+			//		For example, the "bold" plugin will highlight/unhighlight the bold button depending on whether the
+			//		characters next to the caret are bold or not.
+			//
+			//		Only makes sense when `useDefaultCommand` is true, as it calls Editor.queryCommandEnabled(`command`).
+			var e = this.editor,
+				c = this.command,
+				checked, enabled;
+			if(!e || !e.isLoaded || !c.length){
+				return;
+			}
+			var disabled = this.get("disabled");
+			if(this.button){
+				try{
+					enabled = !disabled && e.queryCommandEnabled(c);
+					if(this.enabled !== enabled){
+						this.enabled = enabled;
+						this.button.set('disabled', !enabled);
+					}
+					if(enabled){
+						if(typeof this.button.checked == 'boolean'){
+							checked = e.queryCommandState(c);
+							if(this.checked !== checked){
+								this.checked = checked;
+								this.button.set('checked', e.queryCommandState(c));
+							}
+						}
+					}
+				}catch(e){
+					console.log(e); // FIXME: we shouldn't have debug statements in our code.  Log as an error?
+				}
+			}
+		},
+
+		setEditor: function(/*dijit/Editor*/ editor){
+			// summary:
+			//		Tell the plugin which Editor it is associated with.
+
+			// TODO: refactor code to just pass editor to constructor.
+
+			// FIXME: detach from previous editor!!
+			this.editor = editor;
+
+			// FIXME: prevent creating this if we don't need to (i.e., editor can't handle our command)
+			this._initButton();
+
+			// Processing for buttons that execute by calling editor.execCommand()
+			if(this.button && this.useDefaultCommand){
+				if(this.editor.queryCommandAvailable(this.command)){
+					this.own(this.button.on("click",
+						lang.hitch(this.editor, "execCommand", this.command, this.commandArg)
+					));
+				}else{
+					// hide button because editor doesn't support command (due to browser limitations)
+					this.button.domNode.style.display = "none";
+				}
+			}
+
+			this.own(this.editor.on("NormalizedDisplayChanged", lang.hitch(this, "updateState")));
+		},
+
+		setToolbar: function(/*dijit/Toolbar*/ toolbar){
+			// summary:
+			//		Tell the plugin to add it's controller widget (often a button)
+			//		to the toolbar.  Does nothing if there is no controller widget.
+
+			// TODO: refactor code to just pass toolbar to constructor.
+
+			if(this.button){
+				toolbar.addChild(this.button);
+			}
+			// console.debug("adding", this.button, "to:", toolbar);
+		},
+
+		set: function(/* attribute */ name, /* anything */ value){
+			// summary:
+			//		Set a property on a plugin
+			// name:
+			//		The property to set.
+			// value:
+			//		The value to set in the property.
+			// description:
+			//		Sets named properties on a plugin which may potentially be handled by a
+			//		setter in the plugin.
+			//		For example, if the plugin has a properties "foo"
+			//		and "bar" and a method named "_setFooAttr", calling:
+			//	|	plugin.set("foo", "Howdy!");
+			//		would be equivalent to writing:
+			//	|	plugin._setFooAttr("Howdy!");
+			//		and:
+			//	|	plugin.set("bar", 3);
+			//		would be equivalent to writing:
+			//	|	plugin.bar = 3;
+			//
+			//		set() may also be called with a hash of name/value pairs, ex:
+			//	|	plugin.set({
+			//	|		foo: "Howdy",
+			//	|		bar: 3
+			//	|	})
+			//		This is equivalent to calling set(foo, "Howdy") and set(bar, 3)
+			if(typeof name === "object"){
+				for(var x in name){
+					this.set(x, name[x]);
+				}
+				return this;
+			}
+			var names = this._getAttrNames(name);
+			if(this[names.s]){
+				// use the explicit setter
+				var result = this[names.s].apply(this, Array.prototype.slice.call(arguments, 1));
+			}else{
+				this._set(name, value);
+			}
+			return result || this;
+		},
+
+		get: function(name){
+			// summary:
+			//		Get a property from a plugin.
+			// name:
+			//		The property to get.
+			// description:
+			//		Get a named property from a plugin. The property may
+			//		potentially be retrieved via a getter method. If no getter is defined, this
+			//		just retrieves the object's property.
+			//		For example, if the plugin has a properties "foo"
+			//		and "bar" and a method named "_getFooAttr", calling:
+			//	|	plugin.get("foo");
+			//		would be equivalent to writing:
+			//	|	plugin._getFooAttr();
+			//		and:
+			//	|	plugin.get("bar");
+			//		would be equivalent to writing:
+			//	|	plugin.bar;
+			var names = this._getAttrNames(name);
+			return this[names.g] ? this[names.g]() : this[name];
+		},
+
+		_setDisabledAttr: function(disabled){
+			// summary:
+			//		Function to set the plugin state and call updateState to make sure the
+			//		button is updated appropriately.
+			this._set("disabled", disabled);
+			this.updateState();
+		},
+
+		_getAttrNames: function(name){
+			// summary:
+			//		Helper function for get() and set().
+			//		Caches attribute name values so we don't do the string ops every time.
+			// tags:
+			//		private
+
+			var apn = this._attrPairNames;
+			if(apn[name]){
+				return apn[name];
+			}
+			var uc = name.charAt(0).toUpperCase() + name.substr(1);
+			return (apn[name] = {
+				s: "_set" + uc + "Attr",
+				g: "_get" + uc + "Attr"
+			});
+		},
+
+		_set: function(/*String*/ name, /*anything*/ value){
+			// summary:
+			//		Helper function to set new value for specified attribute
+			this[name] = value;
+		}
+	});
+
+	// Hash mapping plugin name to factory, used for registering plugins
+	_Plugin.registry = {};
+
+	return _Plugin;
+});
+
+},
+'dijit/_editor/plugins/EnterKeyHandling':function(){
+define([
+	"dojo/_base/declare", // declare
+	"dojo/dom-construct", // domConstruct.destroy domConstruct.place
+	"dojo/keys", // keys.ENTER
+	"dojo/_base/lang",
+	"dojo/on",
+	"dojo/sniff", // has("ie") has("mozilla") has("webkit")
+	"dojo/_base/window", // win.withGlobal
+	"dojo/window", // winUtils.scrollIntoView
+	"../_Plugin",
+	"../RichText",
+	"../range",
+	"../../_base/focus"
+], function(declare, domConstruct, keys, lang, on, has, win, winUtils, _Plugin, RichText, rangeapi, baseFocus){
+
+	// module:
+	//		dijit/_editor/plugins/EnterKeyHandling
+
+	return declare("dijit._editor.plugins.EnterKeyHandling", _Plugin, {
+		// summary:
+		//		This plugin tries to make all browsers behave consistently with regard to
+		//		how ENTER behaves in the editor window.  It traps the ENTER key and alters
+		//		the way DOM is constructed in certain cases to try to commonize the generated
+		//		DOM and behaviors across browsers.
+		//
+		// description:
+		//		This plugin has three modes:
+		//
+		//		- blockNodeForEnter=BR
+		//		- blockNodeForEnter=DIV
+		//		- blockNodeForEnter=P
+		//
+		//		In blockNodeForEnter=P, the ENTER key starts a new
+		//		paragraph, and shift-ENTER starts a new line in the current paragraph.
+		//		For example, the input:
+		//
+		//	|	first paragraph <shift-ENTER>
+		//	|	second line of first paragraph <ENTER>
+		//	|	second paragraph
+		//
+		//		will generate:
+		//
+		//	|	<p>
+		//	|		first paragraph
+		//	|		<br/>
+		//	|		second line of first paragraph
+		//	|	</p>
+		//	|	<p>
+		//	|		second paragraph
+		//	|	</p>
+		//
+		//		In BR and DIV mode, the ENTER key conceptually goes to a new line in the
+		//		current paragraph, and users conceptually create a new paragraph by pressing ENTER twice.
+		//		For example, if the user enters text into an editor like this:
+		//
+		//	|		one <ENTER>
+		//	|		two <ENTER>
+		//	|		three <ENTER>
+		//	|		<ENTER>
+		//	|		four <ENTER>
+		//	|		five <ENTER>
+		//	|		six <ENTER>
+		//
+		//		It will appear on the screen as two 'paragraphs' of three lines each.  Markupwise, this generates:
+		//
+		//		BR:
+		//	|		one<br/>
+		//	|		two<br/>
+		//	|		three<br/>
+		//	|		<br/>
+		//	|		four<br/>
+		//	|		five<br/>
+		//	|		six<br/>
+		//
+		//		DIV:
+		//	|		<div>one</div>
+		//	|		<div>two</div>
+		//	|		<div>three</div>
+		//	|		<div>&nbsp;</div>
+		//	|		<div>four</div>
+		//	|		<div>five</div>
+		//	|		<div>six</div>
+
+		// blockNodeForEnter: String
+		//		This property decides the behavior of Enter key. It can be either P,
+		//		DIV, BR, or empty (which means disable this feature). Anything else
+		//		will trigger errors.  The default is 'BR'
+		//
+		//		See class description for more details.
+		blockNodeForEnter: 'BR',
+
+		constructor: function(args){
+			if(args){
+				if("blockNodeForEnter" in args){
+					args.blockNodeForEnter = args.blockNodeForEnter.toUpperCase();
+				}
+				lang.mixin(this, args);
+			}
+		},
+
+		setEditor: function(editor){
+			// Overrides _Plugin.setEditor().
+			if(this.editor === editor){
+				return;
+			}
+			this.editor = editor;
+			if(this.blockNodeForEnter == 'BR'){
+				// While Moz has a mode tht mostly works, it's still a little different,
+				// So, try to just have a common mode and be consistent.  Which means
+				// we need to enable customUndo, if not already enabled.
+				this.editor.customUndo = true;
+				editor.onLoadDeferred.then(lang.hitch(this, function(d){
+					this.own(on(editor.document, "keydown", lang.hitch(this, function(e){
+						if(e.keyCode == keys.ENTER){
+							// Just do it manually.  The handleEnterKey has a shift mode that
+							// Always acts like <br>, so just use it.
+							var ne = lang.mixin({}, e);
+							ne.shiftKey = true;
+							if(!this.handleEnterKey(ne)){
+								e.stopPropagation();
+								e.preventDefault();
+							}
+						}
+					})));
+					if(has("ie") >= 9 && has("ie") <= 10){
+						this.own(on(editor.document, "paste", lang.hitch(this, function(e){
+							setTimeout(lang.hitch(this, function(){
+								// Use the old range/selection code to kick IE 9 into updating
+								// its range by moving it back, then forward, one 'character'.
+								var r = this.editor.document.selection.createRange();
+								r.move('character', -1);
+								r.select();
+								r.move('character', 1);
+								r.select();
+							}), 0);
+						})));
+					}
+					return d;
+				}));
+			}else if(this.blockNodeForEnter){
+				// add enter key handler
+				var h = lang.hitch(this, "handleEnterKey");
+				editor.addKeyHandler(13, 0, 0, h); //enter
+				editor.addKeyHandler(13, 0, 1, h); //shift+enter
+				this.own(this.editor.on('KeyPressed', lang.hitch(this, 'onKeyPressed')));
+			}
+		},
+		onKeyPressed: function(){
+			// summary:
+			//		Handler for after the user has pressed a key, and the display has been updated.
+			//		Connected to RichText's onKeyPressed() method.
+			// tags:
+			//		private
+			if(this._checkListLater){
+				if(win.withGlobal(this.editor.window, 'isCollapsed', baseFocus)){	// TODO: stop using withGlobal(), and baseFocus
+					var liparent = this.editor.selection.getAncestorElement('LI');
+					if(!liparent){
+						// circulate the undo detection code by calling RichText::execCommand directly
+						RichText.prototype.execCommand.call(this.editor, 'formatblock', this.blockNodeForEnter);
+						// set the innerHTML of the new block node
+						var block = this.editor.selection.getAncestorElement(this.blockNodeForEnter);
+						if(block){
+							block.innerHTML = this.bogusHtmlContent;
+							if(has("ie") <= 9){
+								// move to the start by moving backwards one char
+								var r = this.editor.document.selection.createRange();
+								r.move('character', -1);
+								r.select();
+							}
+						}else{
+							console.error('onKeyPressed: Cannot find the new block node'); // FIXME
+						}
+					}else{
+						if(has("mozilla")){
+							if(liparent.parentNode.parentNode.nodeName == 'LI'){
+								liparent = liparent.parentNode.parentNode;
+							}
+						}
+						var fc = liparent.firstChild;
+						if(fc && fc.nodeType == 1 && (fc.nodeName == 'UL' || fc.nodeName == 'OL')){
+							liparent.insertBefore(fc.ownerDocument.createTextNode('\xA0'), fc);
+							var newrange = rangeapi.create(this.editor.window);
+							newrange.setStart(liparent.firstChild, 0);
+							var selection = rangeapi.getSelection(this.editor.window, true);
+							selection.removeAllRanges();
+							selection.addRange(newrange);
+						}
+					}
+				}
+				this._checkListLater = false;
+			}
+			if(this._pressedEnterInBlock){
+				// the new created is the original current P, so we have previousSibling below
+				if(this._pressedEnterInBlock.previousSibling){
+					this.removeTrailingBr(this._pressedEnterInBlock.previousSibling);
+				}
+				delete this._pressedEnterInBlock;
+			}
+		},
+
+		// bogusHtmlContent: [private] String
+		//		HTML to stick into a new empty block
+		bogusHtmlContent: '&#160;', // &nbsp;
+
+		// blockNodes: [private] Regex
+		//		Regex for testing if a given tag is a block level (display:block) tag
+		blockNodes: /^(?:P|H1|H2|H3|H4|H5|H6|LI)$/,
+
+		handleEnterKey: function(e){
+			// summary:
+			//		Handler for enter key events when blockNodeForEnter is DIV or P.
+			// description:
+			//		Manually handle enter key event to make the behavior consistent across
+			//		all supported browsers. See class description for details.
+			// tags:
+			//		private
+
+			var selection, range, newrange, startNode, endNode, brNode, doc = this.editor.document, br, rs, txt;
+			if(e.shiftKey){        // shift+enter always generates <br>
+				var parent = this.editor.selection.getParentElement();
+				var header = rangeapi.getAncestor(parent, this.blockNodes);
+				if(header){
+					if(header.tagName == 'LI'){
+						return true; // let browser handle
+					}
+					selection = rangeapi.getSelection(this.editor.window);
+					range = selection.getRangeAt(0);
+					if(!range.collapsed){
+						range.deleteContents();
+						selection = rangeapi.getSelection(this.editor.window);
+						range = selection.getRangeAt(0);
+					}
+					if(rangeapi.atBeginningOfContainer(header, range.startContainer, range.startOffset)){
+						br = doc.createElement('br');
+						newrange = rangeapi.create(this.editor.window);
+						header.insertBefore(br, header.firstChild);
+						newrange.setStartAfter(br);
+						selection.removeAllRanges();
+						selection.addRange(newrange);
+					}else if(rangeapi.atEndOfContainer(header, range.startContainer, range.startOffset)){
+						newrange = rangeapi.create(this.editor.window);
+						br = doc.createElement('br');
+						header.appendChild(br);
+						header.appendChild(doc.createTextNode('\xA0'));
+						newrange.setStart(header.lastChild, 0);
+						selection.removeAllRanges();
+						selection.addRange(newrange);
+					}else{
+						rs = range.startContainer;
+						if(rs && rs.nodeType == 3){
+							// Text node, we have to split it.
+							txt = rs.nodeValue;
+							startNode = doc.createTextNode(txt.substring(0, range.startOffset));
+							endNode = doc.createTextNode(txt.substring(range.startOffset));
+							brNode = doc.createElement("br");
+
+							if(endNode.nodeValue == "" && has("webkit")){
+								endNode = doc.createTextNode('\xA0')
+							}
+							domConstruct.place(startNode, rs, "after");
+							domConstruct.place(brNode, startNode, "after");
+							domConstruct.place(endNode, brNode, "after");
+							domConstruct.destroy(rs);
+							newrange = rangeapi.create(this.editor.window);
+							newrange.setStart(endNode, 0);
+							selection.removeAllRanges();
+							selection.addRange(newrange);
+							return false;
+						}
+						return true; // let browser handle
+					}
+				}else{
+					selection = rangeapi.getSelection(this.editor.window);
+					if(selection.rangeCount){
+						range = selection.getRangeAt(0);
+						if(range && range.startContainer){
+							if(!range.collapsed){
+								range.deleteContents();
+								selection = rangeapi.getSelection(this.editor.window);
+								range = selection.getRangeAt(0);
+							}
+							rs = range.startContainer;
+							if(rs && rs.nodeType == 3){
+								// Text node, we have to split it.
+
+								var offset = range.startOffset;
+								if(rs.length < offset){
+									//We are not splitting the right node, try to locate the correct one
+									ret = this._adjustNodeAndOffset(rs, offset);
+									rs = ret.node;
+									offset = ret.offset;
+								}
+								txt = rs.nodeValue;
+
+								startNode = doc.createTextNode(txt.substring(0, offset));
+								endNode = doc.createTextNode(txt.substring(offset));
+								brNode = doc.createElement("br");
+
+								if(!endNode.length){
+									// Create dummy text with a &nbsp to go after the BR, to prevent IE crash.
+									// See https://bugs.dojotoolkit.org/ticket/12008 for details.
+									endNode = doc.createTextNode('\xA0');
+								}
+
+								if(startNode.length){
+									domConstruct.place(startNode, rs, "after");
+								}else{
+									startNode = rs;
+								}
+								domConstruct.place(brNode, startNode, "after");
+								domConstruct.place(endNode, brNode, "after");
+								domConstruct.destroy(rs);
+								newrange = rangeapi.create(this.editor.window);
+								newrange.setStart(endNode, 0);
+								newrange.setEnd(endNode, endNode.length);
+								selection.removeAllRanges();
+								selection.addRange(newrange);
+								this.editor.selection.collapse(true);
+							}else{
+								var targetNode;
+								if(range.startOffset >= 0){
+									targetNode = rs.childNodes[range.startOffset];
+								}
+								var brNode = doc.createElement("br");
+								var endNode = doc.createTextNode('\xA0');
+								if(!targetNode){
+									rs.appendChild(brNode);
+									rs.appendChild(endNode);
+								}else{
+									domConstruct.place(brNode, targetNode, "before");
+									domConstruct.place(endNode, brNode, "after");
+								}
+								newrange = rangeapi.create(this.editor.window);
+								newrange.setStart(endNode, 0);
+								newrange.setEnd(endNode, endNode.length);
+								selection.removeAllRanges();
+								selection.addRange(newrange);
+								this.editor.selection.collapse(true);
+							}
+							// \xA0 dummy text node remains, but is stripped before get("value")
+							// by RichText._stripTrailingEmptyNodes().  Still, could we just use a plain
+							// space (" ") instead?
+						}
+					}else{
+						// don't change this: do not call this.execCommand, as that may have other logic in subclass
+						RichText.prototype.execCommand.call(this.editor, 'inserthtml', '<br>');
+					}
+				}
+				return false;
+			}
+			var _letBrowserHandle = true;
+
+			// first remove selection
+			selection = rangeapi.getSelection(this.editor.window);
+			range = selection.getRangeAt(0);
+			if(!range.collapsed){
+				range.deleteContents();
+				selection = rangeapi.getSelection(this.editor.window);
+				range = selection.getRangeAt(0);
+			}
+
+			var block = rangeapi.getBlockAncestor(range.endContainer, null, this.editor.editNode);
+			var blockNode = block.blockNode;
+
+			// if this is under a LI or the parent of the blockNode is LI, just let browser to handle it
+			if((this._checkListLater = (blockNode && (blockNode.nodeName == 'LI' || blockNode.parentNode.nodeName == 'LI')))){
+				if(has("mozilla")){
+					// press enter in middle of P may leave a trailing <br/>, let's remove it later
+					this._pressedEnterInBlock = blockNode;
+				}
+				// if this li only contains spaces, set the content to empty so the browser will outdent this item
+				if(/^(\s|&nbsp;|&#160;|\xA0|<span\b[^>]*\bclass=['"]Apple-style-span['"][^>]*>(\s|&nbsp;|&#160;|\xA0)<\/span>)?(<br>)?$/.test(blockNode.innerHTML)){
+					// empty LI node
+					blockNode.innerHTML = '';
+					if(has("webkit")){ // WebKit tosses the range when innerHTML is reset
+						newrange = rangeapi.create(this.editor.window);
+						newrange.setStart(blockNode, 0);
+						selection.removeAllRanges();
+						selection.addRange(newrange);
+					}
+					this._checkListLater = false; // nothing to check since the browser handles outdent
+				}
+				return true;
+			}
+
+			// text node directly under body, let's wrap them in a node
+			if(!block.blockNode || block.blockNode === this.editor.editNode){
+				try{
+					RichText.prototype.execCommand.call(this.editor, 'formatblock', this.blockNodeForEnter);
+				}catch(e2){ /*squelch FF3 exception bug when editor content is a single BR*/
+				}
+				// get the newly created block node
+				// FIXME
+				block = {blockNode: this.editor.selection.getAncestorElement(this.blockNodeForEnter),
+					blockContainer: this.editor.editNode};
+				if(block.blockNode){
+					if(block.blockNode != this.editor.editNode &&
+						(!(block.blockNode.textContent || block.blockNode.innerHTML).replace(/^\s+|\s+$/g, "").length)){
+						this.removeTrailingBr(block.blockNode);
+						return false;
+					}
+				}else{    // we shouldn't be here if formatblock worked
+					block.blockNode = this.editor.editNode;
+				}
+				selection = rangeapi.getSelection(this.editor.window);
+				range = selection.getRangeAt(0);
+			}
+
+			var newblock = doc.createElement(this.blockNodeForEnter);
+			newblock.innerHTML = this.bogusHtmlContent;
+			this.removeTrailingBr(block.blockNode);
+			var endOffset = range.endOffset;
+			var node = range.endContainer;
+			if(node.length < endOffset){
+				//We are not checking the right node, try to locate the correct one
+				var ret = this._adjustNodeAndOffset(node, endOffset);
+				node = ret.node;
+				endOffset = ret.offset;
+			}
+			if(rangeapi.atEndOfContainer(block.blockNode, node, endOffset)){
+				if(block.blockNode === block.blockContainer){
+					block.blockNode.appendChild(newblock);
+				}else{
+					domConstruct.place(newblock, block.blockNode, "after");
+				}
+				_letBrowserHandle = false;
+				// lets move caret to the newly created block
+				newrange = rangeapi.create(this.editor.window);
+				newrange.setStart(newblock, 0);
+				selection.removeAllRanges();
+				selection.addRange(newrange);
+				if(this.editor.height){
+					winUtils.scrollIntoView(newblock);
+				}
+			}else if(rangeapi.atBeginningOfContainer(block.blockNode,
+				range.startContainer, range.startOffset)){
+				domConstruct.place(newblock, block.blockNode, block.blockNode === block.blockContainer ? "first" : "before");
+				if(newblock.nextSibling && this.editor.height){
+					// position input caret - mostly WebKit needs this
+					newrange = rangeapi.create(this.editor.window);
+					newrange.setStart(newblock.nextSibling, 0);
+					selection.removeAllRanges();
+					selection.addRange(newrange);
+					// browser does not scroll the caret position into view, do it manually
+					winUtils.scrollIntoView(newblock.nextSibling);
+				}
+				_letBrowserHandle = false;
+			}else{ //press enter in the middle of P/DIV/Whatever/
+				if(block.blockNode === block.blockContainer){
+					block.blockNode.appendChild(newblock);
+				}else{
+					domConstruct.place(newblock, block.blockNode, "after");
+				}
+				_letBrowserHandle = false;
+
+				// Clone any block level styles.
+				if(block.blockNode.style){
+					if(newblock.style){
+						if(block.blockNode.style.cssText){
+							newblock.style.cssText = block.blockNode.style.cssText;
+						}
+					}
+				}
+
+				// Okay, we probably have to split.
+				rs = range.startContainer;
+				var firstNodeMoved;
+				if(rs && rs.nodeType == 3){
+					// Text node, we have to split it.
+					var nodeToMove, tNode;
+					endOffset = range.endOffset;
+					if(rs.length < endOffset){
+						//We are not splitting the right node, try to locate the correct one
+						ret = this._adjustNodeAndOffset(rs, endOffset);
+						rs = ret.node;
+						endOffset = ret.offset;
+					}
+
+					txt = rs.nodeValue;
+					startNode = doc.createTextNode(txt.substring(0, endOffset));
+					endNode = doc.createTextNode(txt.substring(endOffset, txt.length));
+
+					// Place the split, then remove original nodes.
+					domConstruct.place(startNode, rs, "before");
+					domConstruct.place(endNode, rs, "after");
+					domConstruct.destroy(rs);
+
+					// Okay, we split the text.  Now we need to see if we're
+					// parented to the block element we're splitting and if
+					// not, we have to split all the way up.  Ugh.
+					var parentC = startNode.parentNode;
+					while(parentC !== block.blockNode){
+						var tg = parentC.tagName;
+						var newTg = doc.createElement(tg);
+						// Clone over any 'style' data.
+						if(parentC.style){
+							if(newTg.style){
+								if(parentC.style.cssText){
+									newTg.style.cssText = parentC.style.cssText;
+								}
+							}
+						}
+						// If font also need to clone over any font data.
+						if(parentC.tagName === "FONT"){
+							if(parentC.color){
+								newTg.color = parentC.color;
+							}
+							if(parentC.face){
+								newTg.face = parentC.face;
+							}
+							if(parentC.size){  // this check was necessary on IE
+								newTg.size = parentC.size;
+							}
+						}
+
+						nodeToMove = endNode;
+						while(nodeToMove){
+							tNode = nodeToMove.nextSibling;
+							newTg.appendChild(nodeToMove);
+							nodeToMove = tNode;
+						}
+						domConstruct.place(newTg, parentC, "after");
+						startNode = parentC;
+						endNode = newTg;
+						parentC = parentC.parentNode;
+					}
+
+					// Lastly, move the split out tags to the new block.
+					// as they should now be split properly.
+					nodeToMove = endNode;
+					if(nodeToMove.nodeType == 1 || (nodeToMove.nodeType == 3 && nodeToMove.nodeValue)){
+						// Non-blank text and non-text nodes need to clear out that blank space
+						// before moving the contents.
+						newblock.innerHTML = "";
+					}
+					firstNodeMoved = nodeToMove;
+					while(nodeToMove){
+						tNode = nodeToMove.nextSibling;
+						newblock.appendChild(nodeToMove);
+						nodeToMove = tNode;
+					}
+				}
+
+				//lets move caret to the newly created block
+				newrange = rangeapi.create(this.editor.window);
+				var nodeForCursor;
+				var innerMostFirstNodeMoved = firstNodeMoved;
+				if(this.blockNodeForEnter !== 'BR'){
+					while(innerMostFirstNodeMoved){
+						nodeForCursor = innerMostFirstNodeMoved;
+						tNode = innerMostFirstNodeMoved.firstChild;
+						innerMostFirstNodeMoved = tNode;
+					}
+					if(nodeForCursor && nodeForCursor.parentNode){
+						newblock = nodeForCursor.parentNode;
+						newrange.setStart(newblock, 0);
+						selection.removeAllRanges();
+						selection.addRange(newrange);
+						if(this.editor.height){
+							winUtils.scrollIntoView(newblock);
+						}
+						if(has("mozilla")){
+							// press enter in middle of P may leave a trailing <br/>, let's remove it later
+							this._pressedEnterInBlock = block.blockNode;
+						}
+					}else{
+						_letBrowserHandle = true;
+					}
+				}else{
+					newrange.setStart(newblock, 0);
+					selection.removeAllRanges();
+					selection.addRange(newrange);
+					if(this.editor.height){
+						winUtils.scrollIntoView(newblock);
+					}
+					if(has("mozilla")){
+						// press enter in middle of P may leave a trailing <br/>, let's remove it later
+						this._pressedEnterInBlock = block.blockNode;
+					}
+				}
+			}
+			return _letBrowserHandle;
+		},
+
+		_adjustNodeAndOffset: function(/*DomNode*/node, /*Int*/offset){
+			// summary:
+			//		In the case there are multiple text nodes in a row the offset may not be within the node.  If the offset is larger than the node length, it will attempt to find
+			//		the next text sibling until it locates the text node in which the offset refers to
+			// node:
+			//		The node to check.
+			// offset:
+			//		The position to find within the text node
+			// tags:
+			//		private.
+			while(node.length < offset && node.nextSibling && node.nextSibling.nodeType == 3){
+				//Adjust the offset and node in the case of multiple text nodes in a row
+				offset = offset - node.length;
+				node = node.nextSibling;
+			}
+			return {"node": node, "offset": offset};
+		},
+
+		removeTrailingBr: function(container){
+			// summary:
+			//		If last child of container is a `<br>`, then remove it.
+			// tags:
+			//		private
+			var para = /P|DIV|LI/i.test(container.tagName) ?
+				container : this.editor.selection.getParentOfType(container, ['P', 'DIV', 'LI']);
+
+			if(!para){
+				return;
+			}
+			if(para.lastChild){
+				if((para.childNodes.length > 1 && para.lastChild.nodeType == 3 && /^[\s\xAD]*$/.test(para.lastChild.nodeValue)) ||
+					para.lastChild.tagName == 'BR'){
+
+					domConstruct.destroy(para.lastChild);
+				}
+			}
+			if(!para.childNodes.length){
+				para.innerHTML = this.bogusHtmlContent;
+			}
+		}
+	});
+
+});
+
+},
+'dijit/_editor/RichText':function(){
+define([
+	"dojo/_base/array", // array.forEach array.indexOf array.some
+	"dojo/_base/config", // config
+	"dojo/_base/declare", // declare
+	"dojo/_base/Deferred", // Deferred
+	"dojo/dom", // dom.byId
+	"dojo/dom-attr", // domAttr.set or get
+	"dojo/dom-class", // domClass.add domClass.remove
+	"dojo/dom-construct", // domConstruct.create domConstruct.destroy domConstruct.place
+	"dojo/dom-geometry", // domGeometry.position
+	"dojo/dom-style", // domStyle.getComputedStyle domStyle.set
+	"dojo/_base/kernel", // kernel.deprecated
+	"dojo/keys", // keys.BACKSPACE keys.TAB
+	"dojo/_base/lang", // lang.clone lang.hitch lang.isArray lang.isFunction lang.isString lang.trim
+	"dojo/on", // on()
+	"dojo/query", // query
+	"dojo/domReady",
+	"dojo/sniff", // has("ie") has("mozilla") has("opera") has("safari") has("webkit")
+	"dojo/topic", // topic.publish() (publish)
+	"dojo/_base/unload", // unload
+	"dojo/_base/url", // url
+	"dojo/window", // winUtils.get()
+	"../_Widget",
+	"../_CssStateMixin",
+	"../selection",
+	"./range",
+	"./html",
+	"../focus",
+	"../main"    // dijit._scopeName
+], function(array, config, declare, Deferred, dom, domAttr, domClass, domConstruct, domGeometry, domStyle,
+			kernel, keys, lang, on, query, domReady, has, topic, unload, _Url, winUtils,
+			_Widget, _CssStateMixin, selectionapi, rangeapi, htmlapi, focus, dijit){
+
+	// module:
+	//		dijit/_editor/RichText
+
+	// If you want to allow for rich text saving with back/forward actions, you must add a text area to your page with
+	// the id==dijit._scopeName + "._editor.RichText.value" (typically "dijit/_editor/RichText.value). For example,
+	// something like this will work:
+	//
+	//	<textarea id="dijit._editor.RichText.value" style="display:none;position:absolute;top:-100px;left:-100px;height:3px;width:3px;overflow:hidden;"></textarea>
+
+	var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
+		// summary:
+		//		dijit/_editor/RichText is the core of dijit.Editor, which provides basic
+		//		WYSIWYG editing features.
+		//
+		// description:
+		//		dijit/_editor/RichText is the core of dijit.Editor, which provides basic
+		//		WYSIWYG editing features. It also encapsulates the differences
+		//		of different js engines for various browsers.  Do not use this widget
+		//		with an HTML &lt;TEXTAREA&gt; tag, since the browser unescapes XML escape characters,
+		//		like &lt;.  This can have unexpected behavior and lead to security issues
+		//		such as scripting attacks.
+		//
+		// tags:
+		//		private
+
+		constructor: function(params /*===== , srcNodeRef =====*/){
+			// summary:
+			//		Create the widget.
+			// params: Object|null
+			//		Initial settings for any of the widget attributes, except readonly attributes.
+			// srcNodeRef: DOMNode
+			//		The widget replaces the specified DOMNode.
+
+			// contentPreFilters: Function(String)[]
+			//		Pre content filter function register array.
+			//		these filters will be executed before the actual
+			//		editing area gets the html content.
+			this.contentPreFilters = [];
+
+			// contentPostFilters: Function(String)[]
+			//		post content filter function register array.
+			//		These will be used on the resulting html
+			//		from contentDomPostFilters. The resulting
+			//		content is the final html (returned by getValue()).
+			this.contentPostFilters = [];
+
+			// contentDomPreFilters: Function(DomNode)[]
+			//		Pre content dom filter function register array.
+			//		These filters are applied after the result from
+			//		contentPreFilters are set to the editing area.
+			this.contentDomPreFilters = [];
+
+			// contentDomPostFilters: Function(DomNode)[]
+			//		Post content dom filter function register array.
+			//		These filters are executed on the editing area dom.
+			//		The result from these will be passed to contentPostFilters.
+			this.contentDomPostFilters = [];
+
+			// editingAreaStyleSheets: dojo._URL[]
+			//		array to store all the stylesheets applied to the editing area
+			this.editingAreaStyleSheets = [];
+
+			// Make a copy of this.events before we start writing into it, otherwise we
+			// will modify the prototype which leads to bad things on pages w/multiple editors
+			this.events = [].concat(this.events);
+
+			this._keyHandlers = {};
+
+			if(params && lang.isString(params.value)){
+				this.value = params.value;
+			}
+
+			this.onLoadDeferred = new Deferred();
+		},
+
+		baseClass: "dijitEditor",
+
+		// inheritWidth: Boolean
+		//		whether to inherit the parent's width or simply use 100%
+		inheritWidth: false,
+
+		// focusOnLoad: [deprecated] Boolean
+		//		Focus into this widget when the page is loaded
+		focusOnLoad: false,
+
+		// name: String?
+		//		Specifies the name of a (hidden) `<textarea>` node on the page that's used to save
+		//		the editor content on page leave.   Used to restore editor contents after navigating
+		//		to a new page and then hitting the back button.
+		name: "",
+
+		// styleSheets: [const] String
+		//		semicolon (";") separated list of css files for the editing area
+		styleSheets: "",
+
+		// height: String
+		//		Set height to fix the editor at a specific height, with scrolling.
+		//		By default, this is 300px.  If you want to have the editor always
+		//		resizes to accommodate the content, use AlwaysShowToolbar plugin
+		//		and set height="".  If this editor is used within a layout widget,
+		//		set height="100%".
+		height: "300px",
+
+		// minHeight: String
+		//		The minimum height that the editor should have.
+		minHeight: "1em",
+
+		// isClosed: [private] Boolean
+		isClosed: true,
+
+		// isLoaded: [private] Boolean
+		isLoaded: false,
+
+		// _SEPARATOR: [private] String
+		//		Used to concat contents from multiple editors into a single string,
+		//		so they can be saved into a single `<textarea>` node.  See "name" attribute.
+		_SEPARATOR: "@@**%%__RICHTEXTBOUNDRY__%%**@@",
+
+		// _NAME_CONTENT_SEP: [private] String
+		//		USed to separate name from content.  Just a colon isn't safe.
+		_NAME_CONTENT_SEP: "@@**%%:%%**@@",
+
+		// onLoadDeferred: [readonly] dojo/promise/Promise
+		//		Deferred which is fired when the editor finishes loading.
+		//		Call myEditor.onLoadDeferred.then(callback) it to be informed
+		//		when the rich-text area initialization is finalized.
+		onLoadDeferred: null,
+
+		// isTabIndent: Boolean
+		//		Make tab key and shift-tab indent and outdent rather than navigating.
+		//		Caution: sing this makes web pages inaccessible to users unable to use a mouse.
+		isTabIndent: false,
+
+		// disableSpellCheck: [const] Boolean
+		//		When true, disables the browser's native spell checking, if supported.
+		//		Works only in Firefox.
+		disableSpellCheck: false,
+
+		postCreate: function(){
+			if("textarea" === this.domNode.tagName.toLowerCase()){
+				console.warn("RichText should not be used with the TEXTAREA tag.  See dijit._editor.RichText docs.");
+			}
+
+			// Push in the builtin filters now, making them the first executed, but not over-riding anything
+			// users passed in.  See: #6062
+			this.contentPreFilters = [
+				lang.trim,	// avoid IE10 problem hitting ENTER on last line when there's a trailing \n.
+				lang.hitch(this, "_preFixUrlAttributes")
+			].concat(this.contentPreFilters);
+			if(has("mozilla")){
+				this.contentPreFilters = [this._normalizeFontStyle].concat(this.contentPreFilters);
+				this.contentPostFilters = [this._removeMozBogus].concat(this.contentPostFilters);
+			}
+			if(has("webkit")){
+				// Try to clean up WebKit bogus artifacts.  The inserted classes
+				// made by WebKit sometimes messes things up.
+				this.contentPreFilters = [this._removeWebkitBogus].concat(this.contentPreFilters);
+				this.contentPostFilters = [this._removeWebkitBogus].concat(this.contentPostFilters);
+			}
+			if(has("ie") || has("trident")){
+				// IE generates <strong> and <em> but we want to normalize to <b> and <i>
+				// Still happens in IE11, but doesn't happen with Edge.
+				this.contentPostFilters = [this._normalizeFontStyle].concat(this.contentPostFilters);
+				this.contentDomPostFilters = [lang.hitch(this, "_stripBreakerNodes")].concat(this.contentDomPostFilters);
+			}
+			this.contentDomPostFilters = [lang.hitch(this, "_stripTrailingEmptyNodes")].concat(this.contentDomPostFilters);
+			this.inherited(arguments);
+
+			topic.publish(dijit._scopeName + "._editor.RichText::init", this);
+		},
+
+		startup: function(){
+			this.inherited(arguments);
+
+			// Don't call open() until startup() because we need to be attached to the DOM, and also if we are the
+			// child of a StackContainer, let StackContainer._setupChild() do DOM manipulations before iframe is
+			// created, to avoid duplicate onload call.
+			this.open();
+			this.setupDefaultShortcuts();
+		},
+
+		setupDefaultShortcuts: function(){
+			// summary:
+			//		Add some default key handlers
+			// description:
+			//		Overwrite this to setup your own handlers. The default
+			//		implementation does not use Editor commands, but directly
+			//		executes the builtin commands within the underlying browser
+			//		support.
+			// tags:
+			//		protected
+			var exec = lang.hitch(this, function(cmd, arg){
+				return function(){
+					return !this.execCommand(cmd, arg);
+				};
+			});
+
+			var ctrlKeyHandlers = {
+				b: exec("bold"),
+				i: exec("italic"),
+				u: exec("underline"),
+				a: exec("selectall"),
+				s: function(){
+					this.save(true);
+				},
+				m: function(){
+					this.isTabIndent = !this.isTabIndent;
+				},
+
+				"1": exec("formatblock", "h1"),
+				"2": exec("formatblock", "h2"),
+				"3": exec("formatblock", "h3"),
+				"4": exec("formatblock", "h4"),
+
+				"\\": exec("insertunorderedlist")
+			};
+
+			if(!has("ie")){
+				ctrlKeyHandlers.Z = exec("redo"); //FIXME: undo?
+			}
+
+			var key;
+			for(key in ctrlKeyHandlers){
+				this.addKeyHandler(key, true, false, ctrlKeyHandlers[key]);
+			}
+		},
+
+		// events: [private] String[]
+		//		 events which should be connected to the underlying editing area
+		events: ["onKeyDown", "onKeyUp"], // onClick handled specially
+
+		// captureEvents: [deprecated] String[]
+		//		 Events which should be connected to the underlying editing
+		//		 area, events in this array will be addListener with
+		//		 capture=true.
+		// TODO: looking at the code I don't see any distinction between events and captureEvents,
+		// so get rid of this for 2.0 if not sooner
+		captureEvents: [],
+
+		_editorCommandsLocalized: false,
+		_localizeEditorCommands: function(){
+			// summary:
+			//		When IE is running in a non-English locale, the API actually changes,
+			//		so that we have to say (for example) danraku instead of p (for paragraph).
+			//		Handle that here.
+			// tags:
+			//		private
+			if(RichText._editorCommandsLocalized){
+				// Use the already generate cache of mappings.
+				this._local2NativeFormatNames = RichText._local2NativeFormatNames;
+				this._native2LocalFormatNames = RichText._native2LocalFormatNames;
+				return;
+			}
+			RichText._editorCommandsLocalized = true;
+			RichText._local2NativeFormatNames = {};
+			RichText._native2LocalFormatNames = {};
+			this._local2NativeFormatNames = RichText._local2NativeFormatNames;
+			this._native2LocalFormatNames = RichText._native2LocalFormatNames;
+			//in IE, names for blockformat is locale dependent, so we cache the values here
+
+			//put p after div, so if IE returns Normal, we show it as paragraph
+			//We can distinguish p and div if IE returns Normal, however, in order to detect that,
+			//we have to call this.document.selection.createRange().parentElement() or such, which
+			//could slow things down. Leave it as it is for now
+			var formats = ['div', 'p', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ol', 'ul', 'address'];
+			var localhtml = "", format, i = 0;
+			while((format = formats[i++])){
+				//append a <br> after each element to separate the elements more reliably
+				if(format.charAt(1) !== 'l'){
+					localhtml += "<" + format + "><span>content</span></" + format + "><br/>";
+				}else{
+					localhtml += "<" + format + "><li>content</li></" + format + "><br/>";
+				}
+			}
+			// queryCommandValue returns empty if we hide editNode, so move it out of screen temporary
+			// Also, IE9 does weird stuff unless we do it inside the editor iframe.
+			var style = { position: "absolute", top: "0px", zIndex: 10, opacity: 0.01 };
+			var div = domConstruct.create('div', {style: style, innerHTML: localhtml});
+			this.ownerDocumentBody.appendChild(div);
+
+			// IE9 has a timing issue with doing this right after setting
+			// the inner HTML, so put a delay in.
+			var inject = lang.hitch(this, function(){
+				var node = div.firstChild;
+				while(node){
+					try{
+						this.selection.selectElement(node.firstChild);
+						var nativename = node.tagName.toLowerCase();
+						this._local2NativeFormatNames[nativename] = document.queryCommandValue("formatblock");
+						this._native2LocalFormatNames[this._local2NativeFormatNames[nativename]] = nativename;
+						node = node.nextSibling.nextSibling;
+						//console.log("Mapped: ", nativename, " to: ", this._local2NativeFormatNames[nativename]);
+					}catch(e){ /*Sqelch the occasional IE9 error */
+					}
+				}
+				domConstruct.destroy(div);
+			});
+			this.defer(inject);
+		},
+
+		open: function(/*DomNode?*/ element){
+			// summary:
+			//		Transforms the node referenced in this.domNode into a rich text editing
+			//		node.
+			// description:
+			//		Sets up the editing area asynchronously. This will result in
+			//		the creation and replacement with an iframe.
+			// tags:
+			//		private
+
+			if(!this.onLoadDeferred || this.onLoadDeferred.fired >= 0){
+				this.onLoadDeferred = new Deferred();
+			}
+
+			if(!this.isClosed){
+				this.close();
+			}
+			topic.publish(dijit._scopeName + "._editor.RichText::open", this);
+
+			if(arguments.length === 1 && element.nodeName){ // else unchanged
+				this.domNode = element;
+			}
+
+			var dn = this.domNode;
+
+			// "html" will hold the innerHTML of the srcNodeRef and will be used to
+			// initialize the editor.
+			var html;
+
+			if(lang.isString(this.value)){
+				// Allow setting the editor content programmatically instead of
+				// relying on the initial content being contained within the target
+				// domNode.
+				html = this.value;
+				dn.innerHTML = "";
+			}else if(dn.nodeName && dn.nodeName.toLowerCase() == "textarea"){
+				// if we were created from a textarea, then we need to create a
+				// new editing harness node.
+				var ta = (this.textarea = dn);
+				this.name = ta.name;
+				html = ta.value;
+				dn = this.domNode = this.ownerDocument.createElement("div");
+				dn.setAttribute('widgetId', this.id);
+				ta.removeAttribute('widgetId');
+				dn.cssText = ta.cssText;
+				dn.className += " " + ta.className;
+				domConstruct.place(dn, ta, "before");
+				var tmpFunc = lang.hitch(this, function(){
+					//some browsers refuse to submit display=none textarea, so
+					//move the textarea off screen instead
+					domStyle.set(ta, {
+						display: "block",
+						position: "absolute",
+						top: "-1000px"
+					});
+
+					if(has("ie")){ //nasty IE bug: abnormal formatting if overflow is not hidden
+						var s = ta.style;
+						this.__overflow = s.overflow;
+						s.overflow = "hidden";
+					}
+				});
+				if(has("ie")){
+					this.defer(tmpFunc, 10);
+				}else{
+					tmpFunc();
+				}
+
+				if(ta.form){
+					var resetValue = ta.value;
+					this.reset = function(){
+						var current = this.getValue();
+						if(current !== resetValue){
+							this.replaceValue(resetValue);
+						}
+					};
+					on(ta.form, "submit", lang.hitch(this, function(){
+						// Copy value to the <textarea> so it gets submitted along with form.
+						// FIXME: should we be calling close() here instead?
+						domAttr.set(ta, 'disabled', this.disabled); // don't submit the value if disabled
+						ta.value = this.getValue();
+					}));
+				}
+			}else{
+				html = htmlapi.getChildrenHtml(dn);
+				dn.innerHTML = "";
+			}
+
+			this.value = html;
+
+			// If we're a list item we have to put in a blank line to force the
+			// bullet to nicely align at the top of text
+			if(dn.nodeName && dn.nodeName === "LI"){
+				dn.innerHTML = " <br>";
+			}
+
+			// Construct the editor div structure.
+			this.header = dn.ownerDocument.createElement("div");
+			dn.appendChild(this.header);
+			this.editingArea = dn.ownerDocument.createElement("div");
+			dn.appendChild(this.editingArea);
+			this.footer = dn.ownerDocument.createElement("div");
+			dn.appendChild(this.footer);
+
+			if(!this.name){
+				this.name = this.id + "_AUTOGEN";
+			}
+
+			// User has pressed back/forward button so we lost the text in the editor, but it's saved
+			// in a hidden <textarea> (which contains the data for all the editors on this page),
+			// so get editor value from there
+			if(this.name !== "" && (!config["useXDomain"] || config["allowXdRichTextSave"])){
+				var saveTextarea = dom.byId(dijit._scopeName + "._editor.RichText.value");
+				if(saveTextarea && saveTextarea.value !== ""){
+					var datas = saveTextarea.value.split(this._SEPARATOR), i = 0, dat;
+					while((dat = datas[i++])){
+						var data = dat.split(this._NAME_CONTENT_SEP);
+						if(data[0] === this.name){
+							html = data[1];
+							datas = datas.splice(i, 1);
+							saveTextarea.value = datas.join(this._SEPARATOR);
+							break;
+						}
+					}
+				}
+
+				if(!RichText._globalSaveHandler){
+					RichText._globalSaveHandler = {};
+					unload.addOnUnload(function(){
+						var id;
+						for(id in RichText._globalSaveHandler){
+							var f = RichText._globalSaveHandler[id];
+							if(lang.isFunction(f)){
+								f();
+							}
+						}
+					});
+				}
+				RichText._globalSaveHandler[this.id] = lang.hitch(this, "_saveContent");
+			}
+
+			this.isClosed = false;
+
+			var ifr = (this.editorObject = this.iframe = this.ownerDocument.createElement('iframe'));
+			ifr.id = this.id + "_iframe";
+			ifr.style.border = "none";
+			ifr.style.width = "100%";
+			if(this._layoutMode){
+				// iframe should be 100% height, thus getting it's height from surrounding
+				// <div> (which has the correct height set by Editor)
+				ifr.style.height = "100%";
+			}else{
+				if(has("ie") >= 7){
+					if(this.height){
+						ifr.style.height = this.height;
+					}
+					if(this.minHeight){
+						ifr.style.minHeight = this.minHeight;
+					}
+				}else{
+					ifr.style.height = this.height ? this.height : this.minHeight;
+				}
+			}
+			ifr.frameBorder = 0;
+			ifr._loadFunc = lang.hitch(this, function(w){
+				this.window = w;
+				this.document = w.document;
+
+				// instantiate class to access selected text in editor's iframe
+				this.selection = new selectionapi.SelectionManager(w);
+
+				if(has("ie")){
+					this._localizeEditorCommands();
+				}
+
+				// Do final setup and set initial contents of editor
+				this.onLoad(html);
+			});
+
+			// Attach iframe to document, and set the initial (blank) content.
+			var src = this._getIframeDocTxt().replace(/\\/g, "\\\\").replace(/'/g, "\\'"),
+				s;
+
+			// IE10 and earlier will throw an "Access is denied" error when attempting to access the parent frame if
+			// document.domain has been set, unless the child frame also has the same document.domain set. In some
+			// cases, we can only set document.domain while the document is being constructed using open/write/close;
+			// attempting to set it later results in a different "This method can't be used in this context" error.
+			// However, in at least IE9-10, sometimes the parent.window check will succeed and the access failure will
+			// only happen later when trying to access frameElement, so there is an additional check and fix there
+			// as well. See #17529
+			if (has("ie") < 11) {
+				s = 'javascript:document.open();try{parent.window;}catch(e){document.domain="' + document.domain + '";}' +
+					'document.write(\'' + src + '\');document.close()';
+			}
+			else {
+				s = "javascript: '" + src + "'";
+			}
+
+			if(has("ie") == 9){
+				// On IE9, attach to document before setting the content, to avoid problem w/iframe running in
+				// wrong security context, see #16633.
+				this.editingArea.appendChild(ifr);
+				ifr.src = s;
+			}else{
+				// For other browsers, set src first, especially for IE6/7 where attaching first gives a warning on
+				// https:// about "this page contains secure and insecure items, do you want to view both?"
+				ifr.setAttribute('src', s);
+				this.editingArea.appendChild(ifr);
+			}
+
+			// TODO: this is a guess at the default line-height, kinda works
+			if(dn.nodeName === "LI"){
+				dn.lastChild.style.marginTop = "-1.2em";
+			}
+
+			domClass.add(this.domNode, this.baseClass);
+		},
+
+		//static cache variables shared among all instance of this class
+		_local2NativeFormatNames: {},
+		_native2LocalFormatNames: {},
+
+		_getIframeDocTxt: function(){
+			// summary:
+			//		Generates the boilerplate text of the document inside the iframe (ie, `<html><head>...</head><body/></html>`).
+			//		Editor content (if not blank) should be added afterwards.
+			// tags:
+			//		private
+			var _cs = domStyle.getComputedStyle(this.domNode);
+
+			// The contents inside of <body>.  The real contents are set later via a call to setValue().
+			// In auto-expand mode, need a wrapper div for AlwaysShowToolbar plugin to correctly
+			// expand/contract the editor as the content changes.
+			var html = "<div id='dijitEditorBody' role='main'></div>";
+
+			var font = [ _cs.fontWeight, _cs.fontSize, _cs.fontFamily ].join(" ");
+
+			// line height is tricky - applying a units value will mess things up.
+			// if we can't get a non-units value, bail out.
+			var lineHeight = _cs.lineHeight;
+			if(lineHeight.indexOf("px") >= 0){
+				lineHeight = parseFloat(lineHeight) / parseFloat(_cs.fontSize);
+				// console.debug(lineHeight);
+			}else if(lineHeight.indexOf("em") >= 0){
+				lineHeight = parseFloat(lineHeight);
+			}else{
+				// If we can't get a non-units value, just default
+				// it to the CSS spec default of 'normal'.  Seems to
+				// work better, esp on IE, than '1.0'
+				lineHeight = "normal";
+			}
+			var userStyle = "";
+			var self = this;
+			this.style.replace(/(^|;)\s*(line-|font-?)[^;]+/ig, function(match){
+				match = match.replace(/^;/ig, "") + ';';
+				var s = match.split(":")[0];
+				if(s){
+					s = lang.trim(s);
+					s = s.toLowerCase();
+					var i;
+					var sC = "";
+					for(i = 0; i < s.length; i++){
+						var c = s.charAt(i);
+						switch(c){
+							case "-":
+								i++;
+								c = s.charAt(i).toUpperCase();
+							default:
+								sC += c;
+						}
+					}
+					domStyle.set(self.domNode, sC, "");
+				}
+				userStyle += match + ';';
+			});
+
+
+			// need to find any associated label element, aria-label, or aria-labelledby and update iframe document title
+			var label = query('label[for="' + this.id + '"]');
+			var title = "";
+			if(label.length){
+				title = label[0].innerHTML;
+			}else if(this["aria-label"]){
+				title = this["aria-label"];
+			}else if(this["aria-labelledby"]){
+				title = dom.byId(this["aria-labelledby"]).innerHTML;
+			}
+
+			// Now that we have the title, also set it as the title attribute on the iframe
+			this.iframe.setAttribute("title", title);
+
+			return [
+				"<!DOCTYPE html>",
+				this.isLeftToRight() ? "<html lang='" + this.lang + "'>\n<head>\n" : "<html dir='rtl' lang='" + this.lang + "'>\n<head>\n",
+				title ? "<title>" + title + "</title>" : "",
+				"<meta http-equiv='Content-Type' content='text/html'>\n",
+				"<style>\n",
+				"\tbody,html {\n",
+				"\t\tbackground:transparent;\n",
+				"\t\tpadding: 1px 0 0 0;\n",
+				"\t\tmargin: -1px 0 0 0;\n", // remove extraneous vertical scrollbar on safari and firefox
+				"\t}\n",
+				"\tbody,html,#dijitEditorBody { outline: none; }",
+
+				// Set <body> to expand to full size of editor, so clicking anywhere will work.
+				// Except in auto-expand mode, in which case the editor expands to the size of <body>.
+				// Also determine how scrollers should be applied.  In autoexpand mode (height = "") no scrollers on y at all.
+				// But in fixed height mode we want both x/y scrollers.
+				// Scrollers go on <body> since it's been set to height: 100%.
+				"html { height: 100%; width: 100%; overflow: hidden; }\n",	// scroll bar is on #dijitEditorBody, shouldn't be on <html>
+				this.height ? "\tbody,#dijitEditorBody { height: 100%; width: 100%; overflow: auto; }\n" :
+					"\tbody,#dijitEditorBody { min-height: " + this.minHeight + "; width: 100%; overflow-x: auto; overflow-y: hidden; }\n",
+
+				// TODO: left positioning will cause contents to disappear out of view
+				//	   if it gets too wide for the visible area
+				"\tbody{\n",
+				"\t\ttop:0px;\n",
+				"\t\tleft:0px;\n",
+				"\t\tright:0px;\n",
+				"\t\tfont:", font, ";\n",
+				((this.height || has("opera")) ? "" : "\t\tposition: fixed;\n"),
+				"\t\tline-height:", lineHeight, ";\n",
+				"\t}\n",
+				"\tp{ margin: 1em 0; }\n",
+
+				"\tli > ul:-moz-first-node, li > ol:-moz-first-node{ padding-top: 1.2em; }\n",
+				// Can't set min-height in IE>=9, it puts layout on li, which puts move/resize handles.
+				// Also can't set it on Edge, as it leads to strange behavior where hitting the return key
+				// doesn't start a new list item.
+				(has("ie") || has("trident") || has("edge") ? "" : "\tli{ min-height:1.2em; }\n"),
+				"</style>\n",
+				this._applyEditingAreaStyleSheets(), "\n",
+				"</head>\n<body ",
+
+				// Onload handler fills in real editor content.
+				// On IE9, sometimes onload is called twice, and the first time frameElement is null (test_FullScreen.html)
+				// On IE9-10, it is also possible that accessing window.parent in the initial creation of the
+				// iframe DOM will succeed, but trying to access window.frameElement will fail, in which case we
+				// *can* set the domain without a "This method can't be used in this context" error. See #17529
+				"onload='try{frameElement && frameElement._loadFunc(window,document)}catch(e){document.domain=\"" + document.domain + "\";frameElement._loadFunc(window,document)}' ",
+				"style='" + userStyle + "'>", html, "</body>\n</html>"
+			].join(""); // String
+		},
+
+		_applyEditingAreaStyleSheets: function(){
+			// summary:
+			//		apply the specified css files in styleSheets
+			// tags:
+			//		private
+			var files = [];
+			if(this.styleSheets){
+				files = this.styleSheets.split(';');
+				this.styleSheets = '';
+			}
+
+			//empty this.editingAreaStyleSheets here, as it will be filled in addStyleSheet
+			files = files.concat(this.editingAreaStyleSheets);
+			this.editingAreaStyleSheets = [];
+
+			var text = '', i = 0, url, ownerWindow = winUtils.get(this.ownerDocument);
+			while((url = files[i++])){
+				var abstring = (new _Url(ownerWindow.location, url)).toString();
+				this.editingAreaStyleSheets.push(abstring);
+				text += '<link rel="stylesheet" type="text/css" href="' + abstring + '"/>';
+			}
+			return text;
+		},
+
+		addStyleSheet: function(/*dojo/_base/url*/ uri){
+			// summary:
+			//		add an external stylesheet for the editing area
+			// uri:
+			//		Url of the external css file
+			var url = uri.toString(), ownerWindow = winUtils.get(this.ownerDocument);
+
+			//if uri is relative, then convert it to absolute so that it can be resolved correctly in iframe
+			if(url.charAt(0) === '.' || (url.charAt(0) !== '/' && !uri.host)){
+				url = (new _Url(ownerWindow.location, url)).toString();
+			}
+
+			if(array.indexOf(this.editingAreaStyleSheets, url) > -1){
+//			console.debug("dijit/_editor/RichText.addStyleSheet(): Style sheet "+url+" is already applied");
+				return;
+			}
+
+			this.editingAreaStyleSheets.push(url);
+			this.onLoadDeferred.then(lang.hitch(this, function(){
+				if(this.document.createStyleSheet){ //IE
+					this.document.createStyleSheet(url);
+				}else{ //other browser
+					var head = this.document.getElementsByTagName("head")[0];
+					var stylesheet = this.document.createElement("link");
+					stylesheet.rel = "stylesheet";
+					stylesheet.type = "text/css";
+					stylesheet.href = url;
+					head.appendChild(stylesheet);
+				}
+			}));
+		},
+
+		removeStyleSheet: function(/*dojo/_base/url*/ uri){
+			// summary:
+			//		remove an external stylesheet for the editing area
+			var url = uri.toString(), ownerWindow = winUtils.get(this.ownerDocument);
+			//if uri is relative, then convert it to absolute so that it can be resolved correctly in iframe
+			if(url.charAt(0) === '.' || (url.charAt(0) !== '/' && !uri.host)){
+				url = (new _Url(ownerWindow.location, url)).toString();
+			}
+			var index = array.indexOf(this.editingAreaStyleSheets, url);
+			if(index === -1){
+//			console.debug("dijit/_editor/RichText.removeStyleSheet(): Style sheet "+url+" has not been applied");
+				return;
+			}
+			delete this.editingAreaStyleSheets[index];
+			query('link[href="' + url + '"]', this.window.document).orphan();
+		},
+
+		// disabled: Boolean
+		//		The editor is disabled; the text cannot be changed.
+		disabled: false,
+
+		_mozSettingProps: {'styleWithCSS': false},
+		_setDisabledAttr: function(/*Boolean*/ value){
+			value = !!value;
+			this._set("disabled", value);
+			if(!this.isLoaded){
+				return;
+			} // this method requires init to be complete
+			var preventIEfocus = has("ie") && (this.isLoaded || !this.focusOnLoad);
+			if(preventIEfocus){
+				this.editNode.unselectable = "on";
+			}
+			this.editNode.contentEditable = !value;
+			this.editNode.tabIndex = value ? "-1" : this.tabIndex;
+			if(preventIEfocus){
+				this.defer(function(){
+					if(this.editNode){        // guard in case widget destroyed before timeout
+						this.editNode.unselectable = "off";
+					}
+				});
+			}
+			if(has("mozilla") && !value && this._mozSettingProps){
+				var ps = this._mozSettingProps;
+				var n;
+				for(n in ps){
+					if(ps.hasOwnProperty(n)){
+						try{
+							this.document.execCommand(n, false, ps[n]);
+						}catch(e2){
+						}
+					}
+				}
+			}
+			this._disabledOK = true;
+		},
+
+		/* Event handlers
+		 *****************/
+
+		onLoad: function(/*String*/ html){
+			// summary:
+			//		Handler after the iframe finishes loading.
+			// html: String
+			//		Editor contents should be set to this value
+			// tags:
+			//		protected
+
+			// TODO: rename this to _onLoad, make empty public onLoad() method, deprecate/make protected onLoadDeferred handler?
+
+			if(!this.window.__registeredWindow){
+				this.window.__registeredWindow = true;
+				this._iframeRegHandle = focus.registerIframe(this.iframe);
+			}
+
+			// there's a wrapper div around the content, see _getIframeDocTxt().
+			this.editNode = this.document.body.firstChild;
+			var _this = this;
+
+			// Helper code so IE and FF skip over focusing on the <iframe> and just focus on the inner <div>.
+			// See #4996 IE wants to focus the BODY tag.
+			this.beforeIframeNode = domConstruct.place("<div tabIndex=-1></div>", this.iframe, "before");
+			this.afterIframeNode = domConstruct.place("<div tabIndex=-1></div>", this.iframe, "after");
+			this.iframe.onfocus = this.document.onfocus = function(){
+				_this.editNode.focus();
+			};
+
+			this.focusNode = this.editNode; // for InlineEditBox
+
+
+			var events = this.events.concat(this.captureEvents);
+			var ap = this.iframe ? this.document : this.editNode;
+			this.own(
+				array.map(events, function(item){
+					var type = item.toLowerCase().replace(/^on/, "");
+					on(ap, type, lang.hitch(this, item));
+				}, this)
+			);
+
+			this.own(
+				// mouseup in the margin does not generate an onclick event
+				on(ap, "mouseup", lang.hitch(this, "onClick"))
+			);
+
+			if(has("ie")){ // IE contentEditable
+				this.own(on(this.document, "mousedown", lang.hitch(this, "_onIEMouseDown"))); // #4996 fix focus
+
+				// give the node Layout on IE
+				// TODO: this may no longer be needed, since we've reverted IE to using an iframe,
+				// not contentEditable.   Removing it would also probably remove the need for creating
+				// the extra <div> in _getIframeDocTxt()
+				this.editNode.style.zoom = 1.0;
+			}else{
+				this.own(on(this.document, "mousedown", lang.hitch(this, function(){
+					// Clear the moveToStart focus, as mouse
+					// down will set cursor point.  Required to properly
+					// work with selection/position driven plugins and clicks in
+					// the window. refs: #10678
+					delete this._cursorToStart;
+				})));
+			}
+
+			if(has("webkit")){
+				//WebKit sometimes doesn't fire right on selections, so the toolbar
+				//doesn't update right.  Therefore, help it out a bit with an additional
+				//listener.  A mouse up will typically indicate a display change, so fire this
+				//and get the toolbar to adapt.  Reference: #9532
+				this._webkitListener = this.own(on(this.document, "mouseup", lang.hitch(this, "onDisplayChanged")))[0];
+				this.own(on(this.document, "mousedown", lang.hitch(this, function(e){
+					var t = e.target;
+					if(t && (t === this.document.body || t === this.document)){
+						// Since WebKit uses the inner DIV, we need to check and set position.
+						// See: #12024 as to why the change was made.
+						this.defer("placeCursorAtEnd");
+					}
+				})));
+			}
+
+			if(has("ie")){
+				// Try to make sure 'hidden' elements aren't visible in edit mode (like browsers other than IE
+				// do).  See #9103
+				try{
+					this.document.execCommand('RespectVisibilityInDesign', true, null);
+				}catch(e){/* squelch */
+				}
+			}
+
+			this.isLoaded = true;
+
+			this.set('disabled', this.disabled); // initialize content to editable (or not)
+
+			// Note that setValue() call will only work after isLoaded is set to true (above)
+
+			// Set up a function to allow delaying the setValue until a callback is fired
+			// This ensures extensions like dijit.Editor have a way to hold the value set
+			// until plugins load (and do things like register filters).
+			var setContent = lang.hitch(this, function(){
+				this.setValue(html);
+				if(this.onLoadDeferred){
+					this.onLoadDeferred.resolve(true);
+				}
+				this.onDisplayChanged();
+				if(this.focusOnLoad){
+					// after the document loads, then set focus after updateInterval expires so that
+					// onNormalizedDisplayChanged has run to avoid input caret issues
+					domReady(lang.hitch(this, "defer", "focus", this.updateInterval));
+				}
+				// Save off the initial content now
+				this.value = this.getValue(true);
+			});
+			if(this.setValueDeferred){
+				this.setValueDeferred.then(setContent);
+			}else{
+				setContent();
+			}
+		},
+
+		onKeyDown: function(/* Event */ e){
+			// summary:
+			//		Handler for keydown event
+			// tags:
+			//		protected
+
+			// Modifier keys should not cause the onKeyPressed event because they do not cause any change to the
+			// display
+			if(e.keyCode === keys.SHIFT ||
+			   e.keyCode === keys.ALT ||
+			   e.keyCode === keys.META ||
+			   e.keyCode === keys.CTRL){
+				return true;
+			}
+
+			if(e.keyCode === keys.TAB && this.isTabIndent){
+				//prevent tab from moving focus out of editor
+				e.stopPropagation();
+				e.preventDefault();
+
+				// FIXME: this is a poor-man's indent/outdent. It would be
+				// better if it added 4 "&nbsp;" chars in an undoable way.
+				// Unfortunately pasteHTML does not prove to be undoable
+				if(this.queryCommandEnabled((e.shiftKey ? "outdent" : "indent"))){
+					this.execCommand((e.shiftKey ? "outdent" : "indent"));
+				}
+			}
+
+			// Make tab and shift-tab skip over the <iframe>, going from the nested <div> to the toolbar
+			// or next element after the editor
+			if(e.keyCode == keys.TAB && !this.isTabIndent && !e.ctrlKey && !e.altKey){
+				if(e.shiftKey){
+					// focus the <iframe> so the browser will shift-tab away from it instead
+					this.beforeIframeNode.focus();
+				}else{
+					// focus node after the <iframe> so the browser will tab away from it instead
+					this.afterIframeNode.focus();
+				}
+
+				// Prevent onKeyPressed from firing in order to avoid triggering a display change event when the
+				// editor is tabbed away; this fixes toolbar controls being inappropriately disabled in IE9+
+				return true;
+			}
+
+			if(has("ie") < 9 && e.keyCode === keys.BACKSPACE && this.document.selection.type === "Control"){
+				// IE has a bug where if a non-text object is selected in the editor,
+				// hitting backspace would act as if the browser's back button was
+				// clicked instead of deleting the object. see #1069
+				e.stopPropagation();
+				e.preventDefault();
+				this.execCommand("delete");
+			}
+
+			if(has("ff")){
+				if(e.keyCode === keys.PAGE_UP || e.keyCode === keys.PAGE_DOWN){
+					if(this.editNode.clientHeight >= this.editNode.scrollHeight){
+						// Stop the event to prevent firefox from trapping the cursor when there is no scroll bar.
+						e.preventDefault();
+					}
+				}
+			}
+
+			var handlers = this._keyHandlers[e.keyCode],
+				args = arguments;
+
+			if(handlers && !e.altKey){
+				array.some(handlers, function(h){
+					// treat meta- same as ctrl-, for benefit of mac users
+					if(!(h.shift ^ e.shiftKey) && !(h.ctrl ^ (e.ctrlKey || e.metaKey))){
+						if(!h.handler.apply(this, args)){
+							e.preventDefault();
+						}
+						return true;
+					}
+				}, this);
+			}
+
+			// function call after the character has been inserted
+			this.defer("onKeyPressed", 1);
+
+			return true;
+		},
+
+		onKeyUp: function(/*===== e =====*/){
+			// summary:
+			//		Handler for onkeyup event
+			// tags:
+			//		callback
+		},
+
+		setDisabled: function(/*Boolean*/ disabled){
+			// summary:
+			//		Deprecated, use set('disabled', ...) instead.
+			// tags:
+			//		deprecated
+			kernel.deprecated('dijit.Editor::setDisabled is deprecated', 'use dijit.Editor::attr("disabled",boolean) instead', 2.0);
+			this.set('disabled', disabled);
+		},
+		_setValueAttr: function(/*String*/ value){
+			// summary:
+			//		Registers that attr("value", foo) should call setValue(foo)
+			this.setValue(value);
+		},
+		_setDisableSpellCheckAttr: function(/*Boolean*/ disabled){
+			if(this.document){
+				domAttr.set(this.document.body, "spellcheck", !disabled);
+			}else{
+				// try again after the editor is finished loading
+				this.onLoadDeferred.then(lang.hitch(this, function(){
+					domAttr.set(this.document.body, "spellcheck", !disabled);
+				}));
+			}
+			this._set("disableSpellCheck", disabled);
+		},
+
+		addKeyHandler: function(/*String|Number*/ key, /*Boolean*/ ctrl, /*Boolean*/ shift, /*Function*/ handler){
+			// summary:
+			//		Add a handler for a keyboard shortcut
+			// tags:
+			//		protected
+
+			if(typeof key == "string"){
+				// Something like Ctrl-B.  Since using keydown event, we need to convert string to a number.
+				key = key.toUpperCase().charCodeAt(0);
+			}
+
+			if(!lang.isArray(this._keyHandlers[key])){
+				this._keyHandlers[key] = [];
+			}
+
+			this._keyHandlers[key].push({
+				shift: shift || false,
+				ctrl: ctrl || false,
+				handler: handler
+			});
+		},
+
+		onKeyPressed: function(){
+			// summary:
+			//		Handler for after the user has pressed a key, and the display has been updated.
+			//		(Runs on a timer so that it runs after the display is updated)
+			// tags:
+			//		private
+			this.onDisplayChanged(/*e*/); // can't pass in e
+		},
+
+		onClick: function(/*Event*/ e){
+			// summary:
+			//		Handler for when the user clicks.
+			// tags:
+			//		private
+
+			// console.info('onClick',this._tryDesignModeOn);
+			this.onDisplayChanged(e);
+		},
+
+		_onIEMouseDown: function(){
+			// summary:
+			//		IE only to prevent 2 clicks to focus
+			// tags:
+			//		protected
+
+			if(!this.focused && !this.disabled){
+				this.focus();
+			}
+		},
+
+		_onBlur: function(e){
+			// summary:
+			//		Called from focus manager when focus has moved away from this editor
+			// tags:
+			//		protected
+
+			// Workaround IE problem when you blur the browser windows while an editor is focused: IE hangs
+			// when you focus editor #1, blur the browser window, and then click editor #0.  See #16939.
+			// Note: Edge doesn't seem to have this problem.
+			if(has("ie") || has("trident")){
+				this.defer(function(){
+					if(!focus.curNode){
+						this.ownerDocumentBody.focus();
+					}
+				});
+			}
+
+			this.inherited(arguments);
+
+			var newValue = this.getValue(true);
+			if(newValue !== this.value){
+				this.onChange(newValue);
+			}
+			this._set("value", newValue);
+		},
+
+		_onFocus: function(/*Event*/ e){
+			// summary:
+			//		Called from focus manager when focus has moved into this editor
+			// tags:
+			//		protected
+
+			// console.info('_onFocus')
+			if(!this.disabled){
+				if(!this._disabledOK){
+					this.set('disabled', false);
+				}
+				this.inherited(arguments);
+			}
+		},
+
+		// TODO: remove in 2.0
+		blur: function(){
+			// summary:
+			//		Remove focus from this instance.
+			// tags:
+			//		deprecated
+			if(!has("ie") && this.window.document.documentElement && this.window.document.documentElement.focus){
+				this.window.document.documentElement.focus();
+			}else if(this.ownerDocumentBody.focus){
+				this.ownerDocumentBody.focus();
+			}
+		},
+
+		focus: function(){
+			// summary:
+			//		Move focus to this editor
+			if(!this.isLoaded){
+				this.focusOnLoad = true;
+				return;
+			}
+			if(this._cursorToStart){
+				delete this._cursorToStart;
+				if(this.editNode.childNodes){
+					this.placeCursorAtStart(); // this calls focus() so return
+					return;
+				}
+			}
+			if(has("ie") < 9){
+				//this.editNode.focus(); -> causes IE to scroll always (strict and quirks mode) to the top the Iframe
+				// if we fire the event manually and let the browser handle the focusing, the latest
+				// cursor position is focused like in FF
+				this.iframe.fireEvent('onfocus', document.createEventObject()); // createEventObject/fireEvent only in IE < 11
+			}else{
+				// Firefox and chrome
+				this.editNode.focus();
+			}
+		},
+
+		// _lastUpdate: 0,
+		updateInterval: 200,
+		_updateTimer: null,
+		onDisplayChanged: function(/*Event*/ /*===== e =====*/){
+			// summary:
+			//		This event will be fired every time the display context
+			//		changes and the result needs to be reflected in the UI.
+			// description:
+			//		If you don't want to have update too often,
+			//		onNormalizedDisplayChanged should be used instead
+			// tags:
+			//		private
+
+			// var _t=new Date();
+			if(this._updateTimer){
+				this._updateTimer.remove();
+			}
+			this._updateTimer = this.defer("onNormalizedDisplayChanged", this.updateInterval);
+
+			// Technically this should trigger a call to watch("value", ...) registered handlers,
+			// but getValue() is too slow to call on every keystroke so we don't.
+		},
+		onNormalizedDisplayChanged: function(){
+			// summary:
+			//		This event is fired every updateInterval ms or more
+			// description:
+			//		If something needs to happen immediately after a
+			//		user change, please use onDisplayChanged instead.
+			// tags:
+			//		private
+			delete this._updateTimer;
+		},
+		onChange: function(/*===== newContent =====*/){
+			// summary:
+			//		This is fired if and only if the editor loses focus and
+			//		the content is changed.
+		},
+		_normalizeCommand: function(/*String*/ cmd, /*Anything?*/argument){
+			// summary:
+			//		Used as the advice function to map our
+			//		normalized set of commands to those supported by the target
+			//		browser.
+			// tags:
+			//		private
+
+			var command = cmd.toLowerCase();
+			if(command === "formatblock"){
+				if(has("safari") && argument === undefined){
+					command = "heading";
+				}
+			}else if(command === "hilitecolor" && !has("mozilla")){
+				command = "backcolor";
+			}
+
+			return command;
+		},
+
+		_qcaCache: {},
+		queryCommandAvailable: function(/*String*/ command){
+			// summary:
+			//		Tests whether a command is supported by the host. Clients
+			//		SHOULD check whether a command is supported before attempting
+			//		to use it, behaviour for unsupported commands is undefined.
+			// command:
+			//		The command to test for
+			// tags:
+			//		private
+
+			// memoizing version. See _queryCommandAvailable for computing version
+			var ca = this._qcaCache[command];
+			if(ca !== undefined){
+				return ca;
+			}
+			return (this._qcaCache[command] = this._queryCommandAvailable(command));
+		},
+
+		_queryCommandAvailable: function(/*String*/ command){
+			// summary:
+			//		See queryCommandAvailable().
+			// tags:
+			//		private
+
+			switch(command.toLowerCase()){
+				case "bold":
+				case "italic":
+				case "underline":
+				case "subscript":
+				case "superscript":
+				case "fontname":
+				case "fontsize":
+				case "forecolor":
+				case "hilitecolor":
+				case "justifycenter":
+				case "justifyfull":
+				case "justifyleft":
+				case "justifyright":
+				case "delete":
+				case "selectall":
+				case "toggledir":
+
+				case "createlink":
+				case "unlink":
+				case "removeformat":
+				case "inserthorizontalrule":
+				case "insertimage":
+				case "insertorderedlist":
+				case "insertunorderedlist":
+				case "indent":
+				case "outdent":
+				case "formatblock":
+				case "inserthtml":
+				case "undo":
+				case "redo":
+				case "strikethrough":
+				case "tabindent":
+
+				case "cut":
+				case "copy":
+				case "paste":
+					return true;
+
+				// Note: This code path is apparently never called.  Not sure if it should return true or false
+				// for Edge.
+				case "blockdirltr":
+				case "blockdirrtl":
+				case "dirltr":
+				case "dirrtl":
+				case "inlinedirltr":
+				case "inlinedirrtl":
+					return has("ie") || has("trident") || has("edge");
+
+				// Note: This code path is apparently never called, not even by the dojox/editor table plugins.
+				// There's also an _inserttableEnabledImpl() method that's also never called.
+				// Previously this code returned truthy for IE and mozilla, but false for chrome/safari, so
+				// leaving it that way just in case.
+				case "inserttable":
+				case "insertcell":
+				case "insertcol":
+				case "insertrow":
+				case "deletecells":
+				case "deletecols":
+				case "deleterows":
+				case "mergecells":
+				case "splitcell":
+					return !has("webkit");
+
+				default:
+					return false;
+			}
+		},
+
+		execCommand: function(/*String*/ command, argument){
+			// summary:
+			//		Executes a command in the Rich Text area
+			// command:
+			//		The command to execute
+			// argument:
+			//		An optional argument to the command
+			// tags:
+			//		protected
+			var returnValue;
+
+			//focus() is required for IE to work
+			//In addition, focus() makes sure after the execution of
+			//the command, the editor receives the focus as expected
+			if(this.focused){
+				// put focus back in the iframe, unless focus has somehow been shifted out of the editor completely
+				this.focus();
+			}
+
+			command = this._normalizeCommand(command, argument);
+
+			if(argument !== undefined){
+				if(command === "heading"){
+					throw new Error("unimplemented");
+				}else if(command === "formatblock" && (has("ie") || has("trident"))){
+					// See http://stackoverflow.com/questions/10741831/execcommand-formatblock-headings-in-ie.
+					// Not necessary on Edge though.
+					argument = '<' + argument + '>';
+				}
+			}
+
+			//Check to see if we have any over-rides for commands, they will be functions on this
+			//widget of the form _commandImpl.  If we don't, fall through to the basic native
+			//exec command of the browser.
+			var implFunc = "_" + command + "Impl";
+			if(this[implFunc]){
+				returnValue = this[implFunc](argument);
+			}else{
+				argument = arguments.length > 1 ? argument : null;
+				if(argument || command !== "createlink"){
+					returnValue = this.document.execCommand(command, false, argument);
+				}
+			}
+
+			this.onDisplayChanged();
+			return returnValue;
+		},
+
+		queryCommandEnabled: function(/*String*/ command){
+			// summary:
+			//		Check whether a command is enabled or not.
+			// command:
+			//		The command to execute
+			// tags:
+			//		protected
+			if(this.disabled || !this._disabledOK){
+				return false;
+			}
+
+			command = this._normalizeCommand(command);
+
+			//Check to see if we have any over-rides for commands, they will be functions on this
+			//widget of the form _commandEnabledImpl.  If we don't, fall through to the basic native
+			//command of the browser.
+			var implFunc = "_" + command + "EnabledImpl";
+
+			if(this[implFunc]){
+				return  this[implFunc](command);
+			}else{
+				return this._browserQueryCommandEnabled(command);
+			}
+		},
+
+		queryCommandState: function(command){
+			// summary:
+			//		Check the state of a given command and returns true or false.
+			// tags:
+			//		protected
+
+			if(this.disabled || !this._disabledOK){
+				return false;
+			}
+			command = this._normalizeCommand(command);
+			try{
+				return this.document.queryCommandState(command);
+			}catch(e){
+				//Squelch, occurs if editor is hidden on FF 3 (and maybe others.)
+				return false;
+			}
+		},
+
+		queryCommandValue: function(command){
+			// summary:
+			//		Check the value of a given command. This matters most for
+			//		custom selections and complex values like font value setting.
+			// tags:
+			//		protected
+
+			if(this.disabled || !this._disabledOK){
+				return false;
+			}
+			var r;
+			command = this._normalizeCommand(command);
+			if(has("ie") && command === "formatblock"){
+				// This is to deal with IE bug when running in non-English.  See _localizeEditorCommands().
+				// Apparently not needed on IE11 or Edge.
+				r = this._native2LocalFormatNames[this.document.queryCommandValue(command)];
+			}else if(has("mozilla") && command === "hilitecolor"){
+				var oldValue;
+				try{
+					oldValue = this.document.queryCommandValue("styleWithCSS");
+				}catch(e){
+					oldValue = false;
+				}
+				this.document.execCommand("styleWithCSS", false, true);
+				r = this.document.queryCommandValue(command);
+				this.document.execCommand("styleWithCSS", false, oldValue);
+			}else{
+				r = this.document.queryCommandValue(command);
+			}
+			return r;
+		},
+
+		// Misc.
+
+		_sCall: function(name, args){
+			// summary:
+			//		Deprecated, remove for 2.0.   New code should access this.selection directly.
+			//		Run the named method of dijit/selection over the
+			//		current editor instance's window, with the passed args.
+			// tags:
+			//		private deprecated
+
+			return this.selection[name].apply(this.selection, args);
+		},
+
+		// FIXME: this is a TON of code duplication. Why?
+
+		placeCursorAtStart: function(){
+			// summary:
+			//		Place the cursor at the start of the editing area.
+			// tags:
+			//		private
+
+			this.focus();
+
+			//see comments in placeCursorAtEnd
+			var isvalid = false;
+			if(has("mozilla")){
+				// TODO:  Is this branch even necessary?
+				var first = this.editNode.firstChild;
+				while(first){
+					if(first.nodeType === 3){
+						if(first.nodeValue.replace(/^\s+|\s+$/g, "").length > 0){
+							isvalid = true;
+							this.selection.selectElement(first);
+							break;
+						}
+					}else if(first.nodeType === 1){
+						isvalid = true;
+						var tg = first.tagName ? first.tagName.toLowerCase() : "";
+						// Collapse before childless tags.
+						if(/br|input|img|base|meta|area|basefont|hr|link/.test(tg)){
+							this.selection.selectElement(first);
+						}else{
+							// Collapse inside tags with children.
+							this.selection.selectElementChildren(first);
+						}
+						break;
+					}
+					first = first.nextSibling;
+				}
+			}else{
+				isvalid = true;
+				this.selection.selectElementChildren(this.editNode);
+			}
+			if(isvalid){
+				this.selection.collapse(true);
+			}
+		},
+
+		placeCursorAtEnd: function(){
+			// summary:
+			//		Place the cursor at the end of the editing area.
+			// tags:
+			//		private
+
+			this.focus();
+
+			//In mozilla, if last child is not a text node, we have to use
+			// selectElementChildren on this.editNode.lastChild otherwise the
+			// cursor would be placed at the end of the closing tag of
+			//this.editNode.lastChild
+			var isvalid = false;
+			if(has("mozilla")){
+				var last = this.editNode.lastChild;
+				while(last){
+					if(last.nodeType === 3){
+						if(last.nodeValue.replace(/^\s+|\s+$/g, "").length > 0){
+							isvalid = true;
+							this.selection.selectElement(last);
+							break;
+						}
+					}else if(last.nodeType === 1){
+						isvalid = true;
+						this.selection.selectElement(last.lastChild || last);
+						break;
+					}
+					last = last.previousSibling;
+				}
+			}else{
+				isvalid = true;
+				this.selection.selectElementChildren(this.editNode);
+			}
+			if(isvalid){
+				this.selection.collapse(false);
+			}
+		},
+
+		getValue: function(/*Boolean?*/ nonDestructive){
+			// summary:
+			//		Return the current content of the editing area (post filters
+			//		are applied).  Users should call get('value') instead.
+			// nonDestructive:
+			//		defaults to false. Should the post-filtering be run over a copy
+			//		of the live DOM? Most users should pass "true" here unless they
+			//		*really* know that none of the installed filters are going to
+			//		mess up the editing session.
+			// tags:
+			//		private
+			if(this.textarea){
+				if(this.isClosed || !this.isLoaded){
+					return this.textarea.value;
+				}
+			}
+
+			return this.isLoaded ? this._postFilterContent(null, nonDestructive) : this.value;
+		},
+		_getValueAttr: function(){
+			// summary:
+			//		Hook to make attr("value") work
+			return this.getValue(true);
+		},
+
+		setValue: function(/*String*/ html){
+			// summary:
+			//		This function sets the content. No undo history is preserved.
+			//		Users should use set('value', ...) instead.
+			// tags:
+			//		deprecated
+
+			// TODO: remove this and getValue() for 2.0, and move code to _setValueAttr()
+
+			if(!this.isLoaded){
+				// try again after the editor is finished loading
+				this.onLoadDeferred.then(lang.hitch(this, function(){
+					this.setValue(html);
+				}));
+				return;
+			}
+			this._cursorToStart = true;
+			if(this.textarea && (this.isClosed || !this.isLoaded)){
+				this.textarea.value = html;
+			}else{
+				html = this._preFilterContent(html);
+				var node = this.isClosed ? this.domNode : this.editNode;
+
+				node.innerHTML = html;
+				this._preDomFilterContent(node);
+			}
+
+			this.onDisplayChanged();
+			this._set("value", this.getValue(true));
+		},
+
+		replaceValue: function(/*String*/ html){
+			// summary:
+			//		This function set the content while trying to maintain the undo stack
+			//		(now only works fine with Moz, this is identical to setValue in all
+			//		other browsers)
+			// tags:
+			//		protected
+
+			if(this.isClosed){
+				this.setValue(html);
+			}else if(this.window && this.window.getSelection && !has("mozilla")){ // Safari
+				// look ma! it's a totally f'd browser!
+				this.setValue(html);
+			}else if(this.window && this.window.getSelection){ // Moz
+				html = this._preFilterContent(html);
+				this.execCommand("selectall");
+				this.execCommand("inserthtml", html);
+				this._preDomFilterContent(this.editNode);
+			}else if(this.document && this.document.selection){//IE
+				//In IE, when the first element is not a text node, say
+				//an <a> tag, when replacing the content of the editing
+				//area, the <a> tag will be around all the content
+				//so for now, use setValue for IE too
+				this.setValue(html);
+			}
+
+			this._set("value", this.getValue(true));
+		},
+
+		_preFilterContent: function(/*String*/ html){
+			// summary:
+			//		Filter the input before setting the content of the editing
+			//		area. DOM pre-filtering may happen after this
+			//		string-based filtering takes place but as of 1.2, this is not
+			//		guaranteed for operations such as the inserthtml command.
+			// tags:
+			//		private
+
+			var ec = html;
+			array.forEach(this.contentPreFilters, function(ef){
+				if(ef){
+					ec = ef(ec);
+				}
+			});
+			return ec;
+		},
+		_preDomFilterContent: function(/*DomNode*/ dom){
+			// summary:
+			//		filter the input's live DOM. All filter operations should be
+			//		considered to be "live" and operating on the DOM that the user
+			//		will be interacting with in their editing session.
+			// tags:
+			//		private
+			dom = dom || this.editNode;
+			array.forEach(this.contentDomPreFilters, function(ef){
+				if(ef && lang.isFunction(ef)){
+					ef(dom);
+				}
+			}, this);
+		},
+
+		_postFilterContent: function(/*DomNode|DomNode[]|String?*/ dom, /*Boolean?*/ nonDestructive){
+			// summary:
+			//		filter the output after getting the content of the editing area
+			//
+			// description:
+			//		post-filtering allows plug-ins and users to specify any number
+			//		of transforms over the editor's content, enabling many common
+			//		use-cases such as transforming absolute to relative URLs (and
+			//		vice-versa), ensuring conformance with a particular DTD, etc.
+			//		The filters are registered in the contentDomPostFilters and
+			//		contentPostFilters arrays. Each item in the
+			//		contentDomPostFilters array is a function which takes a DOM
+			//		Node or array of nodes as its only argument and returns the
+			//		same. It is then passed down the chain for further filtering.
+			//		The contentPostFilters array behaves the same way, except each
+			//		member operates on strings. Together, the DOM and string-based
+			//		filtering allow the full range of post-processing that should
+			//		be necessaray to enable even the most agressive of post-editing
+			//		conversions to take place.
+			//
+			//		If nonDestructive is set to "true", the nodes are cloned before
+			//		filtering proceeds to avoid potentially destructive transforms
+			//		to the content which may still needed to be edited further.
+			//		Once DOM filtering has taken place, the serialized version of
+			//		the DOM which is passed is run through each of the
+			//		contentPostFilters functions.
+			//
+			// dom:
+			//		a node, set of nodes, which to filter using each of the current
+			//		members of the contentDomPostFilters and contentPostFilters arrays.
+			//
+			// nonDestructive:
+			//		defaults to "false". If true, ensures that filtering happens on
+			//		a clone of the passed-in content and not the actual node
+			//		itself.
+			//
+			// tags:
+			//		private
+
+			var ec;
+			if(!lang.isString(dom)){
+				dom = dom || this.editNode;
+				if(this.contentDomPostFilters.length){
+					if(nonDestructive){
+						dom = lang.clone(dom);
+					}
+					array.forEach(this.contentDomPostFilters, function(ef){
+						dom = ef(dom);
+					});
+				}
+				ec = htmlapi.getChildrenHtml(dom);
+			}else{
+				ec = dom;
+			}
+
+			if(!lang.trim(ec.replace(/^\xA0\xA0*/, '').replace(/\xA0\xA0*$/, '')).length){
+				ec = "";
+			}
+
+			array.forEach(this.contentPostFilters, function(ef){
+				ec = ef(ec);
+			});
+
+			return ec;
+		},
+
+		_saveContent: function(){
+			// summary:
+			//		Saves the content in an onunload event if the editor has not been closed
+			// tags:
+			//		private
+
+			var saveTextarea = dom.byId(dijit._scopeName + "._editor.RichText.value");
+			if(saveTextarea){
+				if(saveTextarea.value){
+					saveTextarea.value += this._SEPARATOR;
+				}
+				saveTextarea.value += this.name + this._NAME_CONTENT_SEP + this.getValue(true);
+			}
+		},
+
+
+		escapeXml: function(/*String*/ str, /*Boolean*/ noSingleQuotes){
+			// summary:
+			//		Adds escape sequences for special characters in XML.
+			//		Optionally skips escapes for single quotes
+			// tags:
+			//		private
+
+			str = str.replace(/&/gm, "&amp;").replace(/</gm, "&lt;").replace(/>/gm, "&gt;").replace(/"/gm, "&quot;");
+			if(!noSingleQuotes){
+				str = str.replace(/'/gm, "&#39;");
+			}
+			return str; // string
+		},
+
+		getNodeHtml: function(/* DomNode */ node){
+			// summary:
+			//		Deprecated.   Use dijit/_editor/html::_getNodeHtml() instead.
+			// tags:
+			//		deprecated
+			kernel.deprecated('dijit.Editor::getNodeHtml is deprecated', 'use dijit/_editor/html::getNodeHtml instead', 2);
+			return htmlapi.getNodeHtml(node); // String
+		},
+
+		getNodeChildrenHtml: function(/* DomNode */ dom){
+			// summary:
+			//		Deprecated.   Use dijit/_editor/html::getChildrenHtml() instead.
+			// tags:
+			//		deprecated
+			kernel.deprecated('dijit.Editor::getNodeChildrenHtml is deprecated', 'use dijit/_editor/html::getChildrenHtml instead', 2);
+			return htmlapi.getChildrenHtml(dom);
+		},
+
+		close: function(/*Boolean?*/ save){
+			// summary:
+			//		Kills the editor and optionally writes back the modified contents to the
+			//		element from which it originated.
+			// save:
+			//		Whether or not to save the changes. If false, the changes are discarded.
+			// tags:
+			//		private
+
+			if(this.isClosed){
+				return;
+			}
+
+			if(!arguments.length){
+				save = true;
+			}
+			if(save){
+				this._set("value", this.getValue(true));
+			}
+
+			// line height is squashed for iframes
+			// FIXME: why was this here? if(this.iframe){ this.domNode.style.lineHeight = null; }
+
+			if(this.interval){
+				clearInterval(this.interval);
+			}
+
+			if(this._webkitListener){
+				// Cleanup of WebKit fix: #9532
+				this._webkitListener.remove();
+				delete this._webkitListener;
+			}
+
+			// Guard against memory leaks on IE (see #9268)
+			if(has("ie")){
+				this.iframe.onfocus = null;
+			}
+			this.iframe._loadFunc = null;
+
+			if(this._iframeRegHandle){
+				this._iframeRegHandle.remove();
+				delete this._iframeRegHandle;
+			}
+
+			if(this.textarea){
+				var s = this.textarea.style;
+				s.position = "";
+				s.left = s.top = "";
+				if(has("ie")){
+					s.overflow = this.__overflow;
+					this.__overflow = null;
+				}
+				this.textarea.value = this.value;
+				domConstruct.destroy(this.domNode);
+				this.domNode = this.textarea;
+			}else{
+				// Note that this destroys the iframe
+				this.domNode.innerHTML = this.value;
+			}
+			delete this.iframe;
+
+			domClass.remove(this.domNode, this.baseClass);
+			this.isClosed = true;
+			this.isLoaded = false;
+
+			delete this.editNode;
+			delete this.focusNode;
+
+			if(this.window && this.window._frameElement){
+				this.window._frameElement = null;
+			}
+
+			this.window = null;
+			this.document = null;
+			this.editingArea = null;
+			this.editorObject = null;
+		},
+
+		destroy: function(){
+			if(!this.isClosed){
+				this.close(false);
+			}
+			if(this._updateTimer){
+				this._updateTimer.remove();
+			}
+			this.inherited(arguments);
+			if(RichText._globalSaveHandler){
+				delete RichText._globalSaveHandler[this.id];
+			}
+		},
+
+		_removeMozBogus: function(/* String */ html){
+			// summary:
+			//		Post filter to remove unwanted HTML attributes generated by mozilla
+			// tags:
+			//		private
+			return html.replace(/\stype="_moz"/gi, '').replace(/\s_moz_dirty=""/gi, '').replace(/_moz_resizing="(true|false)"/gi, ''); // String
+		},
+		_removeWebkitBogus: function(/* String */ html){
+			// summary:
+			//		Post filter to remove unwanted HTML attributes generated by webkit
+			// tags:
+			//		private
+			html = html.replace(/\sclass="webkit-block-placeholder"/gi, '');
+			html = html.replace(/\sclass="apple-style-span"/gi, '');
+			// For some reason copy/paste sometime adds extra meta tags for charset on
+			// webkit (chrome) on mac.They need to be removed.  See: #12007"
+			html = html.replace(/<meta charset=\"utf-8\" \/>/gi, '');
+			return html; // String
+		},
+		_normalizeFontStyle: function(/* String */ html){
+			// summary:
+			//		Convert 'strong' and 'em' to 'b' and 'i'.
+			// description:
+			//		Moz can not handle strong/em tags correctly, so to help
+			//		mozilla and also to normalize output, convert them to 'b' and 'i'.
+			//
+			//		Note the IE generates 'strong' and 'em' rather than 'b' and 'i'
+			// tags:
+			//		private
+			return html.replace(/<(\/)?strong([ \>])/gi, '<$1b$2')
+				.replace(/<(\/)?em([ \>])/gi, '<$1i$2'); // String
+		},
+
+		_preFixUrlAttributes: function(/* String */ html){
+			// summary:
+			//		Pre-filter to do fixing to href attributes on `<a>` and `<img>` tags
+			// tags:
+			//		private
+			return html.replace(/(?:(<a(?=\s).*?\shref=)("|')(.*?)\2)|(?:(<a\s.*?href=)([^"'][^ >]+))/gi,
+				'$1$4$2$3$5$2 _djrealurl=$2$3$5$2')
+				.replace(/(?:(<img(?=\s).*?\ssrc=)("|')(.*?)\2)|(?:(<img\s.*?src=)([^"'][^ >]+))/gi,
+				'$1$4$2$3$5$2 _djrealurl=$2$3$5$2'); // String
+		},
+
+		/*****************************************************************************
+		 The following functions implement HTML manipulation commands for various
+		 browser/contentEditable implementations.  The goal of them is to enforce
+		 standard behaviors of them.
+		 ******************************************************************************/
+
+		/*** queryCommandEnabled implementations ***/
+
+		_browserQueryCommandEnabled: function(command){
+			// summary:
+			//		Implementation to call to the native queryCommandEnabled of the browser.
+			// command:
+			//		The command to check.
+			// tags:
+			//		protected
+			if(!command){
+				return false;
+			}
+			var elem = has("ie") < 9 ? this.document.selection.createRange() : this.document;
+			try{
+				return elem.queryCommandEnabled(command);
+			}catch(e){
+				return false;
+			}
+		},
+
+		_createlinkEnabledImpl: function(/*===== argument =====*/){
+			// summary:
+			//		This function implements the test for if the create link
+			//		command should be enabled or not.
+			// argument:
+			//		arguments to the exec command, if any.
+			// tags:
+			//		protected
+			var enabled = true;
+			if(has("opera")){
+				var sel = this.window.getSelection();
+				if(sel.isCollapsed){
+					enabled = true;
+				}else{
+					enabled = this.document.queryCommandEnabled("createlink");
+				}
+			}else{
+				enabled = this._browserQueryCommandEnabled("createlink");
+			}
+			return enabled;
+		},
+
+		_unlinkEnabledImpl: function(/*===== argument =====*/){
+			// summary:
+			//		This function implements the test for if the unlink
+			//		command should be enabled or not.
+			// argument:
+			//		arguments to the exec command, if any.
+			// tags:
+			//		protected
+			var enabled = true;
+			if(has("mozilla") || has("webkit")){
+				enabled = this.selection.hasAncestorElement("a");
+			}else{
+				enabled = this._browserQueryCommandEnabled("unlink");
+			}
+			return enabled;
+		},
+
+		_inserttableEnabledImpl: function(/*===== argument =====*/){
+			// summary:
+			//		This function implements the test for if the inserttable
+			//		command should be enabled or not.
+			// argument:
+			//		arguments to the exec command, if any.
+			// tags:
+			//		protected
+			var enabled = true;
+			if(has("mozilla") || has("webkit")){
+				enabled = true;
+			}else{
+				enabled = this._browserQueryCommandEnabled("inserttable");
+			}
+			return enabled;
+		},
+
+		_cutEnabledImpl: function(/*===== argument =====*/){
+			// summary:
+			//		This function implements the test for if the cut
+			//		command should be enabled or not.
+			// argument:
+			//		arguments to the exec command, if any.
+			// tags:
+			//		protected
+			var enabled = true;
+			if(has("webkit")){
+				// WebKit deems clipboard activity as a security threat and natively would return false
+				var sel = this.window.getSelection();
+				if(sel){
+					sel = sel.toString();
+				}
+				enabled = !!sel;
+			}else{
+				enabled = this._browserQueryCommandEnabled("cut");
+			}
+			return enabled;
+		},
+
+		_copyEnabledImpl: function(/*===== argument =====*/){
+			// summary:
+			//		This function implements the test for if the copy
+			//		command should be enabled or not.
+			// argument:
+			//		arguments to the exec command, if any.
+			// tags:
+			//		protected
+			var enabled = true;
+			if(has("webkit")){
+				// WebKit deems clipboard activity as a security threat and natively would return false
+				var sel = this.window.getSelection();
+				if(sel){
+					sel = sel.toString();
+				}
+				enabled = !!sel;
+			}else{
+				enabled = this._browserQueryCommandEnabled("copy");
+			}
+			return enabled;
+		},
+
+		_pasteEnabledImpl: function(/*===== argument =====*/){
+			// summary:c
+			//		This function implements the test for if the paste
+			//		command should be enabled or not.
+			// argument:
+			//		arguments to the exec command, if any.
+			// tags:
+			//		protected
+			var enabled = true;
+			if(has("webkit")){
+				return true;
+			}else{
+				enabled = this._browserQueryCommandEnabled("paste");
+			}
+			return enabled;
+		},
+
+		/*** execCommand implementations ***/
+
+		_inserthorizontalruleImpl: function(argument){
+			// summary:
+			//		This function implements the insertion of HTML 'HR' tags.
+			//		into a point on the page.  IE doesn't to it right, so
+			//		we have to use an alternate form
+			// argument:
+			//		arguments to the exec command, if any.
+			// tags:
+			//		protected
+			if(has("ie")){
+				return this._inserthtmlImpl("<hr>");
+			}
+			return this.document.execCommand("inserthorizontalrule", false, argument);
+		},
+
+		_unlinkImpl: function(argument){
+			// summary:
+			//		This function implements the unlink of an 'a' tag.
+			// argument:
+			//		arguments to the exec command, if any.
+			// tags:
+			//		protected
+			if((this.queryCommandEnabled("unlink")) && (has("mozilla") || has("webkit"))){
+				var a = this.selection.getAncestorElement("a");
+				this.selection.selectElement(a);
+				return this.document.execCommand("unlink", false, null);
+			}
+			return this.document.execCommand("unlink", false, argument);
+		},
+
+		_hilitecolorImpl: function(argument){
+			// summary:
+			//		This function implements the hilitecolor command
+			// argument:
+			//		arguments to the exec command, if any.
+			// tags:
+			//		protected
+			var returnValue;
+			var isApplied = this._handleTextColorOrProperties("hilitecolor", argument);
+			if(!isApplied){
+				if(has("mozilla")){
+					// mozilla doesn't support hilitecolor properly when useCSS is
+					// set to false (bugzilla #279330)
+					this.document.execCommand("styleWithCSS", false, true);
+					console.log("Executing color command.");
+					returnValue = this.document.execCommand("hilitecolor", false, argument);
+					this.document.execCommand("styleWithCSS", false, false);
+				}else{
+					returnValue = this.document.execCommand("hilitecolor", false, argument);
+				}
+			}
+			return returnValue;
+		},
+
+		_backcolorImpl: function(argument){
+			// summary:
+			//		This function implements the backcolor command
+			// argument:
+			//		arguments to the exec command, if any.
+			// tags:
+			//		protected
+			if(has("ie")){
+				// Tested under IE 6 XP2, no problem here, comment out
+				// IE weirdly collapses ranges when we exec these commands, so prevent it
+				//	var tr = this.document.selection.createRange();
+				argument = argument ? argument : null;
+			}
+			var isApplied = this._handleTextColorOrProperties("backcolor", argument);
+			if(!isApplied){
+				isApplied = this.document.execCommand("backcolor", false, argument);
+			}
+			return isApplied;
+		},
+
+		_forecolorImpl: function(argument){
+			// summary:
+			//		This function implements the forecolor command
+			// argument:
+			//		arguments to the exec command, if any.
+			// tags:
+			//		protected
+			if(has("ie")){
+				// Tested under IE 6 XP2, no problem here, comment out
+				// IE weirdly collapses ranges when we exec these commands, so prevent it
+				//	var tr = this.document.selection.createRange();
+				argument = argument ? argument : null;
+			}
+			var isApplied = false;
+			isApplied = this._handleTextColorOrProperties("forecolor", argument);
+			if(!isApplied){
+				isApplied = this.document.execCommand("forecolor", false, argument);
+			}
+			return isApplied;
+		},
+
+		_inserthtmlImpl: function(argument){
+			// summary:
+			//		This function implements the insertion of HTML content into
+			//		a point on the page.
+			// argument:
+			//		The content to insert, if any.
+			// tags:
+			//		protected
+			argument = this._preFilterContent(argument);
+			var rv = true;
+			if(has("ie") < 9){
+				var insertRange = this.document.selection.createRange();
+				if(this.document.selection.type.toUpperCase() === 'CONTROL'){
+					var n = insertRange.item(0);
+					while(insertRange.length){
+						insertRange.remove(insertRange.item(0));
+					}
+					n.outerHTML = argument;
+				}else{
+					insertRange.pasteHTML(argument);
+				}
+				insertRange.select();
+			}else if(has("trident") < 8){
+				var insertRange;
+				var selection = rangeapi.getSelection(this.window);
+				if(selection && selection.rangeCount && selection.getRangeAt){
+					insertRange = selection.getRangeAt(0);
+					insertRange.deleteContents();
+
+					var div = domConstruct.create('div');
+					div.innerHTML = argument;
+					var node, lastNode;
+					var n = this.document.createDocumentFragment();
+					while((node = div.firstChild)){
+						lastNode = n.appendChild(node);
+					}
+					insertRange.insertNode(n);
+					if(lastNode) {
+						insertRange = insertRange.cloneRange();
+						insertRange.setStartAfter(lastNode);
+						insertRange.collapse(false);
+						selection.removeAllRanges();
+						selection.addRange(insertRange);
+					}
+				}
+			}else if(has("mozilla") && !argument.length){
+				//mozilla can not inserthtml an empty html to delete current selection
+				//so we delete the selection instead in this case
+				this.selection.remove(); // FIXME
+			}else{
+				rv = this.document.execCommand("inserthtml", false, argument);
+			}
+			return rv;
+		},
+
+		_boldImpl: function(argument){
+			// summary:
+			//		This function implements an over-ride of the bold command.
+			// argument:
+			//		Not used, operates by selection.
+			// tags:
+			//		protected
+			var applied = false;
+			if(has("ie") || has("trident")){
+				this._adaptIESelection();
+				applied = this._adaptIEFormatAreaAndExec("bold");
+			}
+			if(!applied){
+				applied = this.document.execCommand("bold", false, argument);
+			}
+			return applied;
+		},
+
+		_italicImpl: function(argument){
+			// summary:
+			//		This function implements an over-ride of the italic command.
+			// argument:
+			//		Not used, operates by selection.
+			// tags:
+			//		protected
+			var applied = false;
+			if(has("ie") || has("trident")){
+				this._adaptIESelection();
+				applied = this._adaptIEFormatAreaAndExec("italic");
+			}
+			if(!applied){
+				applied = this.document.execCommand("italic", false, argument);
+			}
+			return applied;
+		},
+
+		_underlineImpl: function(argument){
+			// summary:
+			//		This function implements an over-ride of the underline command.
+			// argument:
+			//		Not used, operates by selection.
+			// tags:
+			//		protected
+			var applied = false;
+			if(has("ie") || has("trident")){
+				this._adaptIESelection();
+				applied = this._adaptIEFormatAreaAndExec("underline");
+			}
+			if(!applied){
+				applied = this.document.execCommand("underline", false, argument);
+			}
+			return applied;
+		},
+
+		_strikethroughImpl: function(argument){
+			// summary:
+			//		This function implements an over-ride of the strikethrough command.
+			// argument:
+			//		Not used, operates by selection.
+			// tags:
+			//		protected
+			var applied = false;
+			if(has("ie") || has("trident")){
+				this._adaptIESelection();
+				applied = this._adaptIEFormatAreaAndExec("strikethrough");
+			}
+			if(!applied){
+				applied = this.document.execCommand("strikethrough", false, argument);
+			}
+			return applied;
+		},
+
+		_superscriptImpl: function(argument){
+			// summary:
+			//		This function implements an over-ride of the superscript command.
+			// argument:
+			//		Not used, operates by selection.
+			// tags:
+			//		protected
+			var applied = false;
+			if(has("ie") || has("trident")){
+				this._adaptIESelection();
+				applied = this._adaptIEFormatAreaAndExec("superscript");
+			}
+			if(!applied){
+				applied = this.document.execCommand("superscript", false, argument);
+			}
+			return applied;
+		},
+
+		_subscriptImpl: function(argument){
+			// summary:
+			//		This function implements an over-ride of the superscript command.
+			// argument:
+			//		Not used, operates by selection.
+			// tags:
+			//		protected
+			var applied = false;
+			if(has("ie") || has("trident")){
+				this._adaptIESelection();
+				applied = this._adaptIEFormatAreaAndExec("subscript");
+
+			}
+			if(!applied){
+				applied = this.document.execCommand("subscript", false, argument);
+			}
+			return applied;
+		},
+
+		_fontnameImpl: function(argument){
+			// summary:
+			//		This function implements the fontname command
+			// argument:
+			//		arguments to the exec command, if any.
+			// tags:
+			//		protected
+			var isApplied;
+			if(has("ie") || has("trident")){
+				isApplied = this._handleTextColorOrProperties("fontname", argument);
+			}
+			if(!isApplied){
+				isApplied = this.document.execCommand("fontname", false, argument);
+			}
+			return isApplied;
+		},
+
+		_fontsizeImpl: function(argument){
+			// summary:
+			//		This function implements the fontsize command
+			// argument:
+			//		arguments to the exec command, if any.
+			// tags:
+			//		protected
+			var isApplied;
+			if(has("ie") || has("trident")){
+				isApplied = this._handleTextColorOrProperties("fontsize", argument);
+			}
+			if(!isApplied){
+				isApplied = this.document.execCommand("fontsize", false, argument);
+			}
+			return isApplied;
+		},
+
+		_insertorderedlistImpl: function(argument){
+			// summary:
+			//		This function implements the insertorderedlist command
+			// argument:
+			//		arguments to the exec command, if any.
+			// tags:
+			//		protected
+			var applied = false;
+			if(has("ie") || has("trident") || has("edge")){
+				applied = this._adaptIEList("insertorderedlist", argument);
+			}
+			if(!applied){
+				applied = this.document.execCommand("insertorderedlist", false, argument);
+			}
+			return applied;
+		},
+
+		_insertunorderedlistImpl: function(argument){
+			// summary:
+			//		This function implements the insertunorderedlist command
+			// argument:
+			//		arguments to the exec command, if any.
+			// tags:
+			//		protected
+			var applied = false;
+			if(has("ie") || has("trident") || has("edge")){
+				applied = this._adaptIEList("insertunorderedlist", argument);
+			}
+			if(!applied){
+				applied = this.document.execCommand("insertunorderedlist", false, argument);
+			}
+			return applied;
+		},
+
+		getHeaderHeight: function(){
+			// summary:
+			//		A function for obtaining the height of the header node
+			return this._getNodeChildrenHeight(this.header); // Number
+		},
+
+		getFooterHeight: function(){
+			// summary:
+			//		A function for obtaining the height of the footer node
+			return this._getNodeChildrenHeight(this.footer); // Number
+		},
+
+		_getNodeChildrenHeight: function(node){
+			// summary:
+			//		An internal function for computing the cumulative height of all child nodes of 'node'
+			// node:
+			//		The node to process the children of;
+			var h = 0;
+			if(node && node.childNodes){
+				// IE didn't compute it right when position was obtained on the node directly is some cases,
+				// so we have to walk over all the children manually.
+				var i;
+				for(i = 0; i < node.childNodes.length; i++){
+					var size = domGeometry.position(node.childNodes[i]);
+					h += size.h;
+				}
+			}
+			return h; // Number
+		},
+
+		_isNodeEmpty: function(node, startOffset){
+			// summary:
+			//		Function to test if a node is devoid of real content.
+			// node:
+			//		The node to check.
+			// tags:
+			//		private.
+			if(node.nodeType === 1/*element*/){
+				if(node.childNodes.length > 0){
+					return this._isNodeEmpty(node.childNodes[0], startOffset);	// huh?   why test just first child?
+				}
+				return true;
+			}else if(node.nodeType === 3/*text*/){
+				return (node.nodeValue.substring(startOffset) === "");
+			}
+			return false;
+		},
+
+		_removeStartingRangeFromRange: function(node, range){
+			// summary:
+			//		Function to adjust selection range by removing the current
+			//		start node.
+			// node:
+			//		The node to remove from the starting range.
+			// range:
+			//		The range to adapt.
+			// tags:
+			//		private
+			if(node.nextSibling){
+				range.setStart(node.nextSibling, 0);
+			}else{
+				var parent = node.parentNode;
+				while(parent && parent.nextSibling == null){
+					//move up the tree until we find a parent that has another node, that node will be the next node
+					parent = parent.parentNode;
+				}
+				if(parent){
+					range.setStart(parent.nextSibling, 0);
+				}
+			}
+			return range;
+		},
+
+		_adaptIESelection: function(){
+			// summary:
+			//		Function to adapt the IE range by removing leading 'newlines'
+			//		Needed to fix issue with bold/italics/underline not working if
+			//		range included leading 'newlines'.
+			//		In IE, if a user starts a selection at the very end of a line,
+			//		then the native browser commands will fail to execute correctly.
+			//		To work around the issue,  we can remove all empty nodes from
+			//		the start of the range selection.
+			//
+			//		Note: not needed on Edge because Windows 10 won't let the user make
+			//		a selection containing leading or trailing newlines.
+			var selection = rangeapi.getSelection(this.window);
+			if(selection && selection.rangeCount && !selection.isCollapsed){
+				var range = selection.getRangeAt(0);
+				var firstNode = range.startContainer;
+				var startOffset = range.startOffset;
+
+				while(firstNode.nodeType === 3/*text*/ && startOffset >= firstNode.length && firstNode.nextSibling){
+					//traverse the text nodes until we get to the one that is actually highlighted
+					startOffset = startOffset - firstNode.length;
+					firstNode = firstNode.nextSibling;
+				}
+
+				//Remove the starting ranges until the range does not start with an empty node.
+				var lastNode = null;
+				while(this._isNodeEmpty(firstNode, startOffset) && firstNode !== lastNode){
+					lastNode = firstNode; //this will break the loop in case we can't find the next sibling
+					range = this._removeStartingRangeFromRange(firstNode, range); //move the start container to the next node in the range
+					firstNode = range.startContainer;
+					startOffset = 0; //start at the beginning of the new starting range
+				}
+				selection.removeAllRanges();// this will work as long as users cannot select multiple ranges. I have not been able to do that in the editor.
+				selection.addRange(range);
+			}
+		},
+
+		_adaptIEFormatAreaAndExec: function(command){
+			// summary:
+			//		Function to handle IE's quirkiness regarding how it handles
+			//		format commands on a word.  This involves a lit of node splitting
+			//		and format cloning.
+			// command:
+			//		The format command, needed to check if the desired
+			//		command is true or not.
+			var selection = rangeapi.getSelection(this.window);
+			var doc = this.document;
+			var rs, ret, range, txt, startNode, endNode, breaker, sNode;
+			if(command && selection && selection.isCollapsed){
+				var isApplied = this.queryCommandValue(command);
+				if(isApplied){
+
+					// We have to split backwards until we hit the format
+					var nNames = this._tagNamesForCommand(command);
+					range = selection.getRangeAt(0);
+					var fs = range.startContainer;
+					if(fs.nodeType === 3){
+						var offset = range.endOffset;
+						if(fs.length < offset){
+							//We are not looking from the right node, try to locate the correct one
+							ret = this._adjustNodeAndOffset(rs, offset);
+							fs = ret.node;
+							offset = ret.offset;
+						}
+					}
+					var topNode;
+					while(fs && fs !== this.editNode){
+						// We have to walk back and see if this is still a format or not.
+						// Hm, how do I do this?
+						var tName = fs.tagName ? fs.tagName.toLowerCase() : "";
+						if(array.indexOf(nNames, tName) > -1){
+							topNode = fs;
+							break;
+						}
+						fs = fs.parentNode;
+					}
+
+					// Okay, we have a stopping place, time to split things apart.
+					if(topNode){
+						// Okay, we know how far we have to split backwards, so we have to split now.
+						rs = range.startContainer;
+						var newblock = doc.createElement(topNode.tagName);
+						domConstruct.place(newblock, topNode, "after");
+						if(rs && rs.nodeType === 3){
+							// Text node, we have to split it.
+							var nodeToMove, tNode;
+							var endOffset = range.endOffset;
+							if(rs.length < endOffset){
+								//We are not splitting the right node, try to locate the correct one
+								ret = this._adjustNodeAndOffset(rs, endOffset);
+								rs = ret.node;
+								endOffset = ret.offset;
+							}
+
+							txt = rs.nodeValue;
+							startNode = doc.createTextNode(txt.substring(0, endOffset));
+							var endText = txt.substring(endOffset, txt.length);
+							if(endText){
+								endNode = doc.createTextNode(endText);
+							}
+							// Place the split, then remove original nodes.
+							domConstruct.place(startNode, rs, "before");
+							if(endNode){
+								breaker = doc.createElement("span");
+								breaker.className = "ieFormatBreakerSpan";
+								domConstruct.place(breaker, rs, "after");
+								domConstruct.place(endNode, breaker, "after");
+								endNode = breaker;
+							}
+							domConstruct.destroy(rs);
+
+							// Okay, we split the text.  Now we need to see if we're
+							// parented to the block element we're splitting and if
+							// not, we have to split all the way up.  Ugh.
+							var parentC = startNode.parentNode;
+							var tagList = [];
+							var tagData;
+							while(parentC !== topNode){
+								var tg = parentC.tagName;
+								tagData = {tagName: tg};
+								tagList.push(tagData);
+
+								var newTg = doc.createElement(tg);
+								// Clone over any 'style' data.
+								if(parentC.style){
+									if(newTg.style){
+										if(parentC.style.cssText){
+											newTg.style.cssText = parentC.style.cssText;
+											tagData.cssText = parentC.style.cssText;
+										}
+									}
+								}
+								// If font also need to clone over any font data.
+								if(parentC.tagName === "FONT"){
+									if(parentC.color){
+										newTg.color = parentC.color;
+										tagData.color = parentC.color;
+									}
+									if(parentC.face){
+										newTg.face = parentC.face;
+										tagData.face = parentC.face;
+									}
+									if(parentC.size){  // this check was necessary on IE
+										newTg.size = parentC.size;
+										tagData.size = parentC.size;
+									}
+								}
+								if(parentC.className){
+									newTg.className = parentC.className;
+									tagData.className = parentC.className;
+								}
+
+								// Now move end node and every sibling
+								// after it over into the new tag.
+								if(endNode){
+									nodeToMove = endNode;
+									while(nodeToMove){
+										tNode = nodeToMove.nextSibling;
+										newTg.appendChild(nodeToMove);
+										nodeToMove = tNode;
+									}
+								}
+								if(newTg.tagName == parentC.tagName){
+									breaker = doc.createElement("span");
+									breaker.className = "ieFormatBreakerSpan";
+									domConstruct.place(breaker, parentC, "after");
+									domConstruct.place(newTg, breaker, "after");
+								}else{
+									domConstruct.place(newTg, parentC, "after");
+								}
+								startNode = parentC;
+								endNode = newTg;
+								parentC = parentC.parentNode;
+							}
+
+							// Lastly, move the split out all the split tags
+							// to the new block as they should now be split properly.
+							if(endNode){
+								nodeToMove = endNode;
+								if(nodeToMove.nodeType === 1 || (nodeToMove.nodeType === 3 && nodeToMove.nodeValue)){
+									// Non-blank text and non-text nodes need to clear out that blank space
+									// before moving the contents.
+									newblock.innerHTML = "";
+								}
+								while(nodeToMove){
+									tNode = nodeToMove.nextSibling;
+									newblock.appendChild(nodeToMove);
+									nodeToMove = tNode;
+								}
+							}
+
+							// We had intermediate tags, we have to now recreate them inbetween the split
+							// and restore what styles, classnames, etc, we can.
+							var newrange;
+							if(tagList.length){
+								tagData = tagList.pop();
+								var newContTag = doc.createElement(tagData.tagName);
+								if(tagData.cssText && newContTag.style){
+									newContTag.style.cssText = tagData.cssText;
+								}
+								if(tagData.className){
+									newContTag.className = tagData.className;
+								}
+								if(tagData.tagName === "FONT"){
+									if(tagData.color){
+										newContTag.color = tagData.color;
+									}
+									if(tagData.face){
+										newContTag.face = tagData.face;
+									}
+									if(tagData.size){
+										newContTag.size = tagData.size;
+									}
+								}
+								domConstruct.place(newContTag, newblock, "before");
+								while(tagList.length){
+									tagData = tagList.pop();
+									var newTgNode = doc.createElement(tagData.tagName);
+									if(tagData.cssText && newTgNode.style){
+										newTgNode.style.cssText = tagData.cssText;
+									}
+									if(tagData.className){
+										newTgNode.className = tagData.className;
+									}
+									if(tagData.tagName === "FONT"){
+										if(tagData.color){
+											newTgNode.color = tagData.color;
+										}
+										if(tagData.face){
+											newTgNode.face = tagData.face;
+										}
+										if(tagData.size){
+											newTgNode.size = tagData.size;
+										}
+									}
+									newContTag.appendChild(newTgNode);
+									newContTag = newTgNode;
+								}
+
+								// Okay, everything is theoretically split apart and removed from the content
+								// so insert the dummy text to select, select it, then
+								// clear to position cursor.
+								sNode = doc.createTextNode(".");
+								breaker.appendChild(sNode);
+								newContTag.appendChild(sNode);
+								newrange = rangeapi.create(this.window);
+								newrange.setStart(sNode, 0);
+								newrange.setEnd(sNode, sNode.length);
+								selection.removeAllRanges();
+								selection.addRange(newrange);
+								this.selection.collapse(false);
+								sNode.parentNode.innerHTML = "";
+							}else{
+								// No extra tags, so we have to insert a breaker point and rely
+								// on filters to remove it later.
+								breaker = doc.createElement("span");
+								breaker.className = "ieFormatBreakerSpan";
+								sNode = doc.createTextNode(".");
+								breaker.appendChild(sNode);
+								domConstruct.place(breaker, newblock, "before");
+								newrange = rangeapi.create(this.window);
+								newrange.setStart(sNode, 0);
+								newrange.setEnd(sNode, sNode.length);
+								selection.removeAllRanges();
+								selection.addRange(newrange);
+								this.selection.collapse(false);
+								sNode.parentNode.innerHTML = "";
+							}
+							if(!newblock.firstChild){
+								// Empty, we don't need it.  Split was at end or similar
+								// So, remove it.
+								domConstruct.destroy(newblock);
+							}
+							return true;
+						}
+					}
+					return false;
+				}else{
+					range = selection.getRangeAt(0);
+					rs = range.startContainer;
+					if(rs && rs.nodeType === 3){
+						// Text node, we have to split it.
+						var offset = range.startOffset;
+						if(rs.length < offset){
+							//We are not splitting the right node, try to locate the correct one
+							ret = this._adjustNodeAndOffset(rs, offset);
+							rs = ret.node;
+							offset = ret.offset;
+						}
+						txt = rs.nodeValue;
+						startNode = doc.createTextNode(txt.substring(0, offset));
+						var endText = txt.substring(offset);
+						if(endText !== ""){
+							endNode = doc.createTextNode(txt.substring(offset));
+						}
+						// Create a space, we'll select and bold it, so
+						// the whole word doesn't get bolded
+						breaker = doc.createElement("span");
+						sNode = doc.createTextNode(".");
+						breaker.appendChild(sNode);
+						if(startNode.length){
+							domConstruct.place(startNode, rs, "after");
+						}else{
+							startNode = rs;
+						}
+						domConstruct.place(breaker, startNode, "after");
+						if(endNode){
+							domConstruct.place(endNode, breaker, "after");
+						}
+						domConstruct.destroy(rs);
+						var newrange = rangeapi.create(this.window);
+						newrange.setStart(sNode, 0);
+						newrange.setEnd(sNode, sNode.length);
+						selection.removeAllRanges();
+						selection.addRange(newrange);
+						doc.execCommand(command);
+						domConstruct.place(breaker.firstChild, breaker, "before");
+						domConstruct.destroy(breaker);
+						newrange.setStart(sNode, 0);
+						newrange.setEnd(sNode, sNode.length);
+						selection.removeAllRanges();
+						selection.addRange(newrange);
+						this.selection.collapse(false);
+						sNode.parentNode.innerHTML = "";
+						return true;
+					}
+				}
+			}else{
+				return false;
+			}
+		},
+
+		_adaptIEList: function(command /*===== , argument =====*/){
+			// summary:
+			//		This function handles normalizing the IE list behavior as
+			//		much as possible.
+			// command:
+			//		The list command to execute.
+			// argument:
+			//		Any additional argument.
+			// tags:
+			//		private
+			var selection = rangeapi.getSelection(this.window);
+			if(selection.isCollapsed){
+				// In the case of no selection, let's commonize the behavior and
+				// make sure that it indents if needed.
+				if(selection.rangeCount && !this.queryCommandValue(command)){
+					var range = selection.getRangeAt(0);
+					var sc = range.startContainer;
+					if(sc && sc.nodeType == 3){
+						// text node.  Lets see if there is a node before it that isn't
+						// some sort of breaker.
+						if(!range.startOffset){
+							// We're at the beginning of a text area.  It may have been br split
+							// Who knows?  In any event, we must create the list manually
+							// or IE may shove too much into the list element.  It seems to
+							// grab content before the text node too if it's br split.
+							// Why can't IE work like everyone else?
+							// This problem also happens on Edge.
+
+							// Create a space, we'll select and bold it, so
+							// the whole word doesn't get bolded
+							var lType = "ul";
+							if(command === "insertorderedlist"){
+								lType = "ol";
+							}
+							var list = this.document.createElement(lType);
+							var li = domConstruct.create("li", null, list);
+							domConstruct.place(list, sc, "before");
+							// Move in the text node as part of the li.
+							li.appendChild(sc);
+							// We need a br after it or the enter key handler
+							// sometimes throws errors.
+							domConstruct.create("br", null, list, "after");
+							// Okay, now lets move our cursor to the beginning.
+							var newrange = rangeapi.create(this.window);
+							newrange.setStart(sc, 0);
+							newrange.setEnd(sc, sc.length);
+							selection.removeAllRanges();
+							selection.addRange(newrange);
+							this.selection.collapse(true);
+							return true;
+						}
+					}
+				}
+			}
+			return false;
+		},
+
+		_handleTextColorOrProperties: function(command, argument){
+			// summary:
+			//		This function handles appplying text color as best it is
+			//		able to do so when the selection is collapsed, making the
+			//		behavior cross-browser consistent. It also handles the name
+			//		and size for IE.
+			// command:
+			//		The command.
+			// argument:
+			//		Any additional arguments.
+			// tags:
+			//		private
+			var selection = rangeapi.getSelection(this.window);
+			var doc = this.document;
+			var rs, ret, range, txt, startNode, endNode, breaker, sNode;
+			argument = argument || null;
+			if(command && selection && selection.isCollapsed){
+				if(selection.rangeCount){
+					range = selection.getRangeAt(0);
+					rs = range.startContainer;
+					if(rs && rs.nodeType === 3){
+						// Text node, we have to split it.
+						var offset = range.startOffset;
+						if(rs.length < offset){
+							//We are not splitting the right node, try to locate the correct one
+							ret = this._adjustNodeAndOffset(rs, offset);
+							rs = ret.node;
+							offset = ret.offset;
+						}
+						txt = rs.nodeValue;
+						startNode = doc.createTextNode(txt.substring(0, offset));
+						var endText = txt.substring(offset);
+						if(endText !== ""){
+							endNode = doc.createTextNode(txt.substring(offset));
+						}
+						// Create a space, we'll select and bold it, so
+						// the whole word doesn't get bolded
+						breaker = doc.createElement("span");
+						sNode = doc.createTextNode(".");
+						breaker.appendChild(sNode);
+						// Create a junk node to avoid it trying to style the breaker.
+						// This will get destroyed later.
+						var extraSpan = doc.createElement("span");
+						breaker.appendChild(extraSpan);
+						if(startNode.length){
+							domConstruct.place(startNode, rs, "after");
+						}else{
+							startNode = rs;
+						}
+						domConstruct.place(breaker, startNode, "after");
+						if(endNode){
+							domConstruct.place(endNode, breaker, "after");
+						}
+						domConstruct.destroy(rs);
+						var newrange = rangeapi.create(this.window);
+						newrange.setStart(sNode, 0);
+						newrange.setEnd(sNode, sNode.length);
+						selection.removeAllRanges();
+						selection.addRange(newrange);
+						if(has("webkit")){
+							// WebKit is frustrating with positioning the cursor.
+							// It stinks to have a selected space, but there really
+							// isn't much choice here.
+							var style = "color";
+							if(command === "hilitecolor" || command === "backcolor"){
+								style = "backgroundColor";
+							}
+							domStyle.set(breaker, style, argument);
+							this.selection.remove();
+							domConstruct.destroy(extraSpan);
+							breaker.innerHTML = "&#160;";	// &nbsp;
+							this.selection.selectElement(breaker);
+							this.focus();
+						}else{
+							this.execCommand(command, argument);
+							domConstruct.place(breaker.firstChild, breaker, "before");
+							domConstruct.destroy(breaker);
+							newrange.setStart(sNode, 0);
+							newrange.setEnd(sNode, sNode.length);
+							selection.removeAllRanges();
+							selection.addRange(newrange);
+							this.selection.collapse(false);
+							sNode.parentNode.removeChild(sNode);
+						}
+						return true;
+					}
+				}
+			}
+			return false;
+		},
+
+		_adjustNodeAndOffset: function(/*DomNode*/node, /*Int*/offset){
+			// summary:
+			//		In the case there are multiple text nodes in a row the offset may not be within the node.
+			//		If the offset is larger than the node length, it will attempt to find
+			//		the next text sibling until it locates the text node in which the offset refers to
+			// node:
+			//		The node to check.
+			// offset:
+			//		The position to find within the text node
+			// tags:
+			//		private.
+			while(node.length < offset && node.nextSibling && node.nextSibling.nodeType === 3){
+				//Adjust the offset and node in the case of multiple text nodes in a row
+				offset = offset - node.length;
+				node = node.nextSibling;
+			}
+			return {"node": node, "offset": offset};
+		},
+
+		_tagNamesForCommand: function(command){
+			// summary:
+			//		Function to return the tab names that are associated
+			//		with a particular style.
+			// command: String
+			//		The command to return tags for.
+			// tags:
+			//		private
+			if(command === "bold"){
+				return ["b", "strong"];
+			}else if(command === "italic"){
+				return ["i", "em"];
+			}else if(command === "strikethrough"){
+				return ["s", "strike"];
+			}else if(command === "superscript"){
+				return ["sup"];
+			}else if(command === "subscript"){
+				return ["sub"];
+			}else if(command === "underline"){
+				return ["u"];
+			}
+			return [];
+		},
+
+		_stripBreakerNodes: function(/*DOMNode*/ node){
+			// summary:
+			//		Function for stripping out the breaker spans inserted by the formatting command.
+			//		Registered as a filter for IE, handles the breaker spans needed to fix up
+			//		How bold/italic/etc, work when selection is collapsed (single cursor).
+			if(!this.isLoaded){
+				return;
+			} // this method requires init to be complete
+			query(".ieFormatBreakerSpan", node).forEach(function(b){
+				while(b.firstChild){
+					domConstruct.place(b.firstChild, b, "before");
+				}
+				domConstruct.destroy(b);
+			});
+			return node;
+		},
+
+		_stripTrailingEmptyNodes: function(/*DOMNode*/ node){
+			// summary:
+			//		Function for stripping trailing nodes without any text, excluding trailing nodes
+			//		like <img> or <div><img></div>, even though they don't have text either.
+
+			function isEmpty(node){
+				// If not for old IE we could check for Element children by node.firstElementChild
+				return (/^(p|div|br)$/i.test(node.nodeName) && node.children.length == 0 &&
+					/^[\s\xA0]*$/.test(node.textContent || node.innerText || "")) ||
+					(node.nodeType === 3/*text*/ && /^[\s\xA0]*$/.test(node.nodeValue));
+			}
+			while(node.lastChild && isEmpty(node.lastChild)){
+				domConstruct.destroy(node.lastChild);
+			}
+
+			return node;
+		}
+	});
+
+	return RichText;
+
+});
+
+},
+'dijit/selection':function(){
+define([
+	"dojo/_base/array",
+	"dojo/dom", // dom.byId
+	"dojo/_base/lang",
+	"dojo/sniff", // has("ie") has("opera")
+	"dojo/_base/window",
+	"dijit/focus"
+], function(array, dom, lang, has, baseWindow, focus){
+
+	// module:
+	//		dijit/selection
+
+	// Note that this class is using feature detection, but doesn't use has() because sometimes on IE the outer window
+	// may be running in standards mode (ie, IE9 mode) but an iframe may be in compatibility mode.   So the code path
+	// used will vary based on the window.
+
+	var SelectionManager = function(win){
+		// summary:
+		//		Class for monitoring / changing the selection (typically highlighted text) in a given window
+		// win: Window
+		//		The window to monitor/adjust the selection on.
+
+		var doc = win.document;
+
+		this.getType = function(){
+			// summary:
+			//		Get the selection type (like doc.select.type in IE).
+			if(doc.getSelection){
+				// W3C path
+				var stype = "text";
+
+				// Check if the actual selection is a CONTROL (IMG, TABLE, HR, etc...).
+				var oSel;
+				try{
+					oSel = win.getSelection();
+				}catch(e){ /*squelch*/ }
+
+				if(oSel && oSel.rangeCount == 1){
+					var oRange = oSel.getRangeAt(0);
+					if(	(oRange.startContainer == oRange.endContainer) &&
+						((oRange.endOffset - oRange.startOffset) == 1) &&
+						(oRange.startContainer.nodeType != 3 /* text node*/)
+						){
+						stype = "control";
+					}
+				}
+				return stype; //String
+			}else{
+				// IE6-8
+				return doc.selection.type.toLowerCase();
+			}
+		};
+
+		this.getSelectedText = function(){
+			// summary:
+			//		Return the text (no html tags) included in the current selection or null if no text is selected
+			if(doc.getSelection){
+				// W3C path
+				var selection = win.getSelection();
+				return selection ? selection.toString() : ""; //String
+			}else{
+				// IE6-8
+				if(this.getType() == 'control'){
+					return null;
+				}
+				return doc.selection.createRange().text;
+			}
+		};
+
+		this.getSelectedHtml = function(){
+			// summary:
+			//		Return the html text of the current selection or null if unavailable
+			if(doc.getSelection){
+				// W3C path
+				var selection = win.getSelection();
+				if(selection && selection.rangeCount){
+					var i;
+					var html = "";
+					for(i = 0; i < selection.rangeCount; i++){
+						//Handle selections spanning ranges, such as Opera
+						var frag = selection.getRangeAt(i).cloneContents();
+						var div = doc.createElement("div");
+						div.appendChild(frag);
+						html += div.innerHTML;
+					}
+					return html; //String
+				}
+				return null;
+			}else{
+				// IE6-8
+				if(this.getType() == 'control'){
+					return null;
+				}
+				return doc.selection.createRange().htmlText;
+			}
+		};
+
+		this.getSelectedElement = function(){
+			// summary:
+			//		Retrieves the selected element (if any), just in the case that
+			//		a single element (object like and image or a table) is
+			//		selected.
+			if(this.getType() == "control"){
+				if(doc.getSelection){
+					// W3C path
+					var selection = win.getSelection();
+					return selection.anchorNode.childNodes[ selection.anchorOffset ];
+				}else{
+					// IE6-8
+					var range = doc.selection.createRange();
+					if(range && range.item){
+						return doc.selection.createRange().item(0);
+					}
+				}
+			}
+			return null;
+		};
+
+		this.getParentElement = function(){
+			// summary:
+			//		Get the parent element of the current selection
+			if(this.getType() == "control"){
+				var p = this.getSelectedElement();
+				if(p){ return p.parentNode; }
+			}else{
+				if(doc.getSelection){
+					var selection = doc.getSelection();
+					if(selection){
+						var node = selection.anchorNode;
+						while(node && (node.nodeType != 1)){ // not an element
+							node = node.parentNode;
+						}
+						return node;
+					}
+				}else{
+					var r = doc.selection.createRange();
+					r.collapse(true);
+					return r.parentElement();
+				}
+			}
+			return null;
+		};
+
+		this.hasAncestorElement = function(/*String*/ tagName /* ... */){
+			// summary:
+			//		Check whether current selection has a  parent element which is
+			//		of type tagName (or one of the other specified tagName)
+			// tagName: String
+			//		The tag name to determine if it has an ancestor of.
+			return this.getAncestorElement.apply(this, arguments) != null; //Boolean
+		};
+
+		this.getAncestorElement = function(/*String*/ tagName /* ... */){
+			// summary:
+			//		Return the parent element of the current selection which is of
+			//		type tagName (or one of the other specified tagName)
+			// tagName: String
+			//		The tag name to determine if it has an ancestor of.
+			var node = this.getSelectedElement() || this.getParentElement();
+			return this.getParentOfType(node, arguments); //DOMNode
+		};
+
+		this.isTag = function(/*DomNode*/ node, /*String[]*/ tags){
+			// summary:
+			//		Function to determine if a node is one of an array of tags.
+			// node:
+			//		The node to inspect.
+			// tags:
+			//		An array of tag name strings to check to see if the node matches.
+			if(node && node.tagName){
+				var _nlc = node.tagName.toLowerCase();
+				for(var i=0; i<tags.length; i++){
+					var _tlc = String(tags[i]).toLowerCase();
+					if(_nlc == _tlc){
+						return _tlc; // String
+					}
+				}
+			}
+			return "";
+		};
+
+		this.getParentOfType = function(/*DomNode*/ node, /*String[]*/ tags){
+			// summary:
+			//		Function to locate a parent node that matches one of a set of tags
+			// node:
+			//		The node to inspect.
+			// tags:
+			//		An array of tag name strings to check to see if the node matches.
+			while(node){
+				if(this.isTag(node, tags).length){
+					return node; // DOMNode
+				}
+				node = node.parentNode;
+			}
+			return null;
+		};
+
+		this.collapse = function(/*Boolean*/ beginning){
+			// summary:
+			//		Function to collapse (clear), the current selection
+			// beginning: Boolean
+			//		Indicates whether to collapse the cursor to the beginning of the selection or end.
+			if(doc.getSelection){
+				// W3C path
+				var selection = win.getSelection();
+				if(selection.removeAllRanges){ // Mozilla
+					if(beginning){
+						selection.collapseToStart();
+					}else{
+						selection.collapseToEnd();
+					}
+				}else{ // Safari
+					// pulled from WebCore/ecma/kjs_window.cpp, line 2536
+					selection.collapse(beginning);
+				}
+			}else{
+				// IE6-8
+				var range = doc.selection.createRange();
+				range.collapse(beginning);
+				range.select();
+			}
+		};
+
+		this.remove = function(){
+			// summary:
+			//		Function to delete the currently selected content from the document.
+			var sel = doc.selection;
+			if(doc.getSelection){
+				// W3C path
+				sel = win.getSelection();
+				sel.deleteFromDocument();
+				return sel; //Selection
+			}else{
+				// IE6-8
+				if(sel.type.toLowerCase() != "none"){
+					sel.clear();
+				}
+				return sel; //Selection
+			}
+		};
+
+		this.selectElementChildren = function(/*DomNode*/ element, /*Boolean?*/ nochangefocus){
+			// summary:
+			//		clear previous selection and select the content of the node
+			//		(excluding the node itself)
+			// element: DOMNode
+			//		The element you wish to select the children content of.
+			// nochangefocus: Boolean
+			//		Indicates if the focus should change or not.
+
+			var range;
+			element = dom.byId(element);
+			if(doc.getSelection){
+				// W3C
+				var selection = win.getSelection();
+				if(has("opera")){
+					//Opera's selectAllChildren doesn't seem to work right
+					//against <body> nodes and possibly others ... so
+					//we use the W3C range API
+					if(selection.rangeCount){
+						range = selection.getRangeAt(0);
+					}else{
+						range = doc.createRange();
+					}
+					range.setStart(element, 0);
+					range.setEnd(element,(element.nodeType == 3) ? element.length : element.childNodes.length);
+					selection.addRange(range);
+				}else{
+					selection.selectAllChildren(element);
+				}
+			}else{
+				// IE6-8
+				range = element.ownerDocument.body.createTextRange();
+				range.moveToElementText(element);
+				if(!nochangefocus){
+					try{
+						range.select(); // IE throws an exception here if the widget is hidden.  See #5439
+					}catch(e){ /* squelch */}
+				}
+			}
+		};
+
+		this.selectElement = function(/*DomNode*/ element, /*Boolean?*/ nochangefocus){
+			// summary:
+			//		clear previous selection and select element (including all its children)
+			// element: DOMNode
+			//		The element to select.
+			// nochangefocus: Boolean
+			//		Boolean indicating if the focus should be changed.  IE only.
+			var range;
+			element = dom.byId(element);	// TODO: remove for 2.0 or sooner, spec listed above doesn't allow for string
+			if(doc.getSelection){
+				// W3C path
+				var selection = doc.getSelection();
+				range = doc.createRange();
+				if(selection.removeAllRanges){ // Mozilla
+					// FIXME: does this work on Safari?
+					if(has("opera")){
+						//Opera works if you use the current range on
+						//the selection if present.
+						if(selection.getRangeAt(0)){
+							range = selection.getRangeAt(0);
+						}
+					}
+					range.selectNode(element);
+					selection.removeAllRanges();
+					selection.addRange(range);
+				}
+			}else{
+				// IE6-8
+				try{
+					var tg = element.tagName ? element.tagName.toLowerCase() : "";
+					if(tg === "img" || tg === "table"){
+						range = baseWindow.body(doc).createControlRange();
+					}else{
+						range = baseWindow.body(doc).createRange();
+					}
+					range.addElement(element);
+					if(!nochangefocus){
+						range.select();
+					}
+				}catch(e){
+					this.selectElementChildren(element, nochangefocus);
+				}
+			}
+		};
+
+		this.inSelection = function(node){
+			// summary:
+			//		This function determines if 'node' is
+			//		in the current selection.
+			// tags:
+			//		public
+			if(node){
+				var newRange;
+				var range;
+
+				if(doc.getSelection){
+					// WC3
+					var sel = win.getSelection();
+					if(sel && sel.rangeCount > 0){
+						range = sel.getRangeAt(0);
+					}
+					if(range && range.compareBoundaryPoints && doc.createRange){
+						try{
+							newRange = doc.createRange();
+							newRange.setStart(node, 0);
+							if(range.compareBoundaryPoints(range.START_TO_END, newRange) === 1){
+								return true;
+							}
+						}catch(e){ /* squelch */}
+					}
+				}else{
+					// IE6-8, so we can't use the range object as the pseudo
+					// range doesn't implement the boundary checking, we have to
+					// use IE specific crud.
+					range = doc.selection.createRange();
+					try{
+						newRange = node.ownerDocument.body.createTextRange();
+						newRange.moveToElementText(node);
+					}catch(e2){/* squelch */}
+					if(range && newRange){
+						// We can finally compare similar to W3C
+						if(range.compareEndPoints("EndToStart", newRange) === 1){
+							return true;
+						}
+					}
+				}
+			}
+			return false; // Boolean
+		},
+
+		this.getBookmark = function(){
+			// summary:
+			//		Retrieves a bookmark that can be used with moveToBookmark to reselect the currently selected range.
+
+			// TODO: merge additional code from Editor._getBookmark into this method
+
+			var bm, rg, tg, sel = doc.selection, cf = focus.curNode;
+
+			if(doc.getSelection){
+				// W3C Range API for selections.
+				sel = win.getSelection();
+				if(sel){
+					if(sel.isCollapsed){
+						tg = cf? cf.tagName : "";
+						if(tg){
+							// Create a fake rangelike item to restore selections.
+							tg = tg.toLowerCase();
+							if(tg == "textarea" ||
+								(tg == "input" && (!cf.type || cf.type.toLowerCase() == "text"))){
+								sel = {
+									start: cf.selectionStart,
+									end: cf.selectionEnd,
+									node: cf,
+									pRange: true
+								};
+								return {isCollapsed: (sel.end <= sel.start), mark: sel}; //Object.
+							}
+						}
+						bm = {isCollapsed:true};
+						if(sel.rangeCount){
+							bm.mark = sel.getRangeAt(0).cloneRange();
+						}
+					}else{
+						rg = sel.getRangeAt(0);
+						bm = {isCollapsed: false, mark: rg.cloneRange()};
+					}
+				}
+			}else if(sel){
+				// If the current focus was a input of some sort and no selection, don't bother saving
+				// a native bookmark.  This is because it causes issues with dialog/page selection restore.
+				// So, we need to create pseudo bookmarks to work with.
+				tg = cf ? cf.tagName : "";
+				tg = tg.toLowerCase();
+				if(cf && tg && (tg == "button" || tg == "textarea" || tg == "input")){
+					if(sel.type && sel.type.toLowerCase() == "none"){
+						return {
+							isCollapsed: true,
+							mark: null
+						}
+					}else{
+						rg = sel.createRange();
+						return {
+							isCollapsed: rg.text && rg.text.length?false:true,
+							mark: {
+								range: rg,
+								pRange: true
+							}
+						};
+					}
+				}
+				bm = {};
+
+				//'IE' way for selections.
+				try{
+					// createRange() throws exception when dojo in iframe
+					// and nothing selected, see #9632
+					rg = sel.createRange();
+					bm.isCollapsed = !(sel.type == 'Text' ? rg.htmlText.length : rg.length);
+				}catch(e){
+					bm.isCollapsed = true;
+					return bm;
+				}
+				if(sel.type.toUpperCase() == 'CONTROL'){
+					if(rg.length){
+						bm.mark=[];
+						var i=0,len=rg.length;
+						while(i<len){
+							bm.mark.push(rg.item(i++));
+						}
+					}else{
+						bm.isCollapsed = true;
+						bm.mark = null;
+					}
+				}else{
+					bm.mark = rg.getBookmark();
+				}
+			}else{
+				console.warn("No idea how to store the current selection for this browser!");
+			}
+			return bm; // Object
+		};
+
+		this.moveToBookmark = function(/*Object*/ bookmark){
+			// summary:
+			//		Moves current selection to a bookmark.
+			// bookmark:
+			//		This should be a returned object from getBookmark().
+
+			// TODO: merge additional code from Editor._moveToBookmark into this method
+
+			var mark = bookmark.mark;
+			if(mark){
+				if(doc.getSelection){
+					// W3C Range API (FF, WebKit, Opera, etc)
+					var sel = win.getSelection();
+					if(sel && sel.removeAllRanges){
+						if(mark.pRange){
+							var n = mark.node;
+							n.selectionStart = mark.start;
+							n.selectionEnd = mark.end;
+						}else{
+							sel.removeAllRanges();
+							sel.addRange(mark);
+						}
+					}else{
+						console.warn("No idea how to restore selection for this browser!");
+					}
+				}else if(doc.selection && mark){
+					//'IE' way.
+					var rg;
+					if(mark.pRange){
+						rg = mark.range;
+					}else if(lang.isArray(mark)){
+						rg = doc.body.createControlRange();
+						//rg.addElement does not have call/apply method, so can not call it directly
+						//rg is not available in "range.addElement(item)", so can't use that either
+						array.forEach(mark, function(n){
+							rg.addElement(n);
+						});
+					}else{
+						rg = doc.body.createTextRange();
+						rg.moveToBookmark(mark);
+					}
+					rg.select();
+				}
+			}
+		};
+
+		this.isCollapsed = function(){
+			// summary:
+			//		Returns true if there is no text selected
+			return this.getBookmark().isCollapsed;
+		};
+	};
+
+	// singleton on the main window
+	var selection = new SelectionManager(window);
+
+	// hook for editor to use class
+	selection.SelectionManager = SelectionManager;
+
+	return selection;
+});
+
+},
+'dijit/_editor/range':function(){
+define([
+	"dojo/_base/array", // array.every
+	"dojo/_base/declare", // declare
+	"dojo/_base/lang" // lang.isArray
+], function(array, declare, lang){
+
+	// module:
+	//		dijit/_editor/range
+
+	var rangeapi = {
+		// summary:
+		//		W3C range API
+
+		getIndex: function(/*DomNode*/ node, /*DomNode*/ parent){
+			var ret = [], retR = [];
+			var onode = node;
+
+			var pnode, n;
+			while(node != parent){
+				var i = 0;
+				pnode = node.parentNode;
+				while((n = pnode.childNodes[i++])){
+					if(n === node){
+						--i;
+						break;
+					}
+				}
+				//if(i>=pnode.childNodes.length){
+				//console.debug("Error finding index of a node in dijit/range.getIndex()");
+				//}
+				ret.unshift(i);
+				retR.unshift(i - pnode.childNodes.length);
+				node = pnode;
+			}
+
+			//normalized() can not be called so often to prevent
+			//invalidating selection/range, so we have to detect
+			//here that any text nodes in a row
+			if(ret.length > 0 && onode.nodeType == 3){
+				n = onode.previousSibling;
+				while(n && n.nodeType == 3){
+					ret[ret.length - 1]--;
+					n = n.previousSibling;
+				}
+				n = onode.nextSibling;
+				while(n && n.nodeType == 3){
+					retR[retR.length - 1]++;
+					n = n.nextSibling;
+				}
+			}
+
+			return {o: ret, r:retR};
+		},
+
+		getNode: function(/*Array*/ index, /*DomNode*/ parent){
+			if(!lang.isArray(index) || index.length == 0){
+				return parent;
+			}
+			var node = parent;
+			//	if(!node)debugger
+			array.every(index, function(i){
+				if(i >= 0 && i < node.childNodes.length){
+					node = node.childNodes[i];
+				}else{
+					node = null;
+					//console.debug('Error: can not find node with index',index,'under parent node',parent );
+					return false; //terminate array.every
+				}
+				return true; //carry on the every loop
+			});
+
+			return node;
+		},
+
+		getCommonAncestor: function(n1, n2, root){
+			root = root || n1.ownerDocument.body;
+			var getAncestors = function(n){
+				var as = [];
+				while(n){
+					as.unshift(n);
+					if(n !== root){
+						n = n.parentNode;
+					}else{
+						break;
+					}
+				}
+				return as;
+			};
+			var n1as = getAncestors(n1);
+			var n2as = getAncestors(n2);
+
+			var m = Math.min(n1as.length, n2as.length);
+			var com = n1as[0]; //at least, one element should be in the array: the root (BODY by default)
+			for(var i = 1; i < m; i++){
+				if(n1as[i] === n2as[i]){
+					com = n1as[i]
+				}else{
+					break;
+				}
+			}
+			return com;
+		},
+
+		getAncestor: function(/*DomNode*/ node, /*RegEx?*/ regex, /*DomNode?*/ root){
+			root = root || node.ownerDocument.body;
+			while(node && node !== root){
+				var name = node.nodeName.toUpperCase();
+				if(regex.test(name)){
+					return node;
+				}
+
+				node = node.parentNode;
+			}
+			return null;
+		},
+
+		BlockTagNames: /^(?:P|DIV|H1|H2|H3|H4|H5|H6|ADDRESS|PRE|OL|UL|LI|DT|DE)$/,
+
+		getBlockAncestor: function(/*DomNode*/ node, /*RegEx?*/ regex, /*DomNode?*/ root){
+			root = root || node.ownerDocument.body;
+			regex = regex || rangeapi.BlockTagNames;
+			var block = null, blockContainer;
+			while(node && node !== root){
+				var name = node.nodeName.toUpperCase();
+				if(!block && regex.test(name)){
+					block = node;
+				}
+				if(!blockContainer && (/^(?:BODY|TD|TH|CAPTION)$/).test(name)){
+					blockContainer = node;
+				}
+
+				node = node.parentNode;
+			}
+			return {blockNode:block, blockContainer:blockContainer || node.ownerDocument.body};
+		},
+
+		atBeginningOfContainer: function(/*DomNode*/ container, /*DomNode*/ node, /*Int*/ offset){
+			var atBeginning = false;
+			var offsetAtBeginning = (offset == 0);
+			if(!offsetAtBeginning && node.nodeType == 3){ //if this is a text node, check whether the left part is all space
+				if(/^[\s\xA0]+$/.test(node.nodeValue.substr(0, offset))){
+					offsetAtBeginning = true;
+				}
+			}
+			if(offsetAtBeginning){
+				var cnode = node;
+				atBeginning = true;
+				while(cnode && cnode !== container){
+					if(cnode.previousSibling){
+						atBeginning = false;
+						break;
+					}
+					cnode = cnode.parentNode;
+				}
+			}
+			return atBeginning;
+		},
+
+		atEndOfContainer: function(/*DomNode*/ container, /*DomNode*/ node, /*Int*/ offset){
+			var atEnd = false;
+			var offsetAtEnd = (offset == (node.length || node.childNodes.length));
+			if(!offsetAtEnd && node.nodeType == 3){ //if this is a text node, check whether the right part is all space
+				if(/^[\s\xA0]+$/.test(node.nodeValue.substr(offset))){
+					offsetAtEnd = true;
+				}
+			}
+			if(offsetAtEnd){
+				var cnode = node;
+				atEnd = true;
+				while(cnode && cnode !== container){
+					if(cnode.nextSibling){
+						atEnd = false;
+						break;
+					}
+					cnode = cnode.parentNode;
+				}
+			}
+			return atEnd;
+		},
+
+		adjacentNoneTextNode: function(startnode, next){
+			var node = startnode;
+			var len = (0 - startnode.length) || 0;
+			var prop = next ? 'nextSibling' : 'previousSibling';
+			while(node){
+				if(node.nodeType != 3){
+					break;
+				}
+				len += node.length;
+				node = node[prop];
+			}
+			return [node,len];
+		},
+
+		create: function(/*Window?*/ win){	// TODO: for 2.0, replace optional window param w/mandatory window or document param
+			win = win || window;
+			if(win.getSelection){
+				return win.document.createRange();
+			}else{//IE
+				return new W3CRange();
+			}
+		},
+
+		getSelection: function(/*Window*/ window, /*Boolean?*/ ignoreUpdate){
+			if(window.getSelection){
+				return window.getSelection();
+			}else{//IE
+				var s = new ie.selection(window);
+				if(!ignoreUpdate){
+					s._getCurrentSelection();
+				}
+				return s;
+			}
+		}
+	};
+
+	// TODO: convert to has() test?   But remember IE9 issues with quirks vs. standards in main frame vs. iframe.
+	if(!window.getSelection){
+		var ie = rangeapi.ie = {
+			cachedSelection: {},
+			selection: function(window){
+				this._ranges = [];
+				this.addRange = function(r, /*boolean*/ internal){
+					this._ranges.push(r);
+					if(!internal){
+						r._select();
+					}
+					this.rangeCount = this._ranges.length;
+				};
+				this.removeAllRanges = function(){
+					//don't detach, the range may be used later
+					//				for(var i=0;i<this._ranges.length;i++){
+					//					this._ranges[i].detach();
+					//				}
+					this._ranges = [];
+					this.rangeCount = 0;
+				};
+				var _initCurrentRange = function(){
+					var r = window.document.selection.createRange();
+					var type = window.document.selection.type.toUpperCase();
+					if(type == "CONTROL"){
+						//TODO: multiple range selection(?)
+						return new W3CRange(ie.decomposeControlRange(r));
+					}else{
+						return new W3CRange(ie.decomposeTextRange(r));
+					}
+				};
+				this.getRangeAt = function(i){
+					return this._ranges[i];
+				};
+				this._getCurrentSelection = function(){
+					this.removeAllRanges();
+					var r = _initCurrentRange();
+					if(r){
+						this.addRange(r, true);
+						this.isCollapsed = r.collapsed;
+					}else{
+						this.isCollapsed = true;
+					}
+				};
+			},
+			decomposeControlRange: function(range){
+				var firstnode = range.item(0), lastnode = range.item(range.length - 1);
+				var startContainer = firstnode.parentNode, endContainer = lastnode.parentNode;
+				var startOffset = rangeapi.getIndex(firstnode, startContainer).o[0];
+				var endOffset = rangeapi.getIndex(lastnode, endContainer).o[0] + 1;
+				return [startContainer, startOffset,endContainer, endOffset];
+			},
+			getEndPoint: function(range, end){
+				var atmrange = range.duplicate();
+				atmrange.collapse(!end);
+				var cmpstr = 'EndTo' + (end ? 'End' : 'Start');
+				var parentNode = atmrange.parentElement();
+
+				var startnode, startOffset, lastNode;
+				if(parentNode.childNodes.length > 0){
+					array.every(parentNode.childNodes, function(node, i){
+						var calOffset;
+						if(node.nodeType != 3){
+							atmrange.moveToElementText(node);
+
+							if(atmrange.compareEndPoints(cmpstr, range) > 0){
+								//startnode = node.previousSibling;
+								if(lastNode && lastNode.nodeType == 3){
+									//where shall we put the start? in the text node or after?
+									startnode = lastNode;
+									calOffset = true;
+								}else{
+									startnode = parentNode;
+									startOffset = i;
+									return false;
+								}
+							}else{
+								if(i == parentNode.childNodes.length - 1){
+									startnode = parentNode;
+									startOffset = parentNode.childNodes.length;
+									return false;
+								}
+							}
+						}else{
+							if(i == parentNode.childNodes.length - 1){//at the end of this node
+								startnode = node;
+								calOffset = true;
+							}
+						}
+						//			try{
+						if(calOffset && startnode){
+							var prevnode = rangeapi.adjacentNoneTextNode(startnode)[0];
+							if(prevnode){
+								startnode = prevnode.nextSibling;
+							}else{
+								startnode = parentNode.firstChild; //firstChild must be a text node
+							}
+							var prevnodeobj = rangeapi.adjacentNoneTextNode(startnode);
+							prevnode = prevnodeobj[0];
+							var lenoffset = prevnodeobj[1];
+							if(prevnode){
+								atmrange.moveToElementText(prevnode);
+								atmrange.collapse(false);
+							}else{
+								atmrange.moveToElementText(parentNode);
+							}
+							atmrange.setEndPoint(cmpstr, range);
+							startOffset = atmrange.text.length - lenoffset;
+
+							return false;
+						}
+						//			}catch(e){ debugger }
+						lastNode = node;
+						return true;
+					});
+				}else{
+					startnode = parentNode;
+					startOffset = 0;
+				}
+
+				//if at the end of startnode and we are dealing with start container, then
+				//move the startnode to nextSibling if it is a text node
+				//TODO: do this for end container?
+				if(!end && startnode.nodeType == 1 && startOffset == startnode.childNodes.length){
+					var nextnode = startnode.nextSibling;
+					if(nextnode && nextnode.nodeType == 3){
+						startnode = nextnode;
+						startOffset = 0;
+					}
+				}
+				return [startnode, startOffset];
+			},
+			setEndPoint: function(range, container, offset){
+				//text node
+				var atmrange = range.duplicate(), node, len;
+				if(container.nodeType != 3){ //normal node
+					if(offset > 0){
+						node = container.childNodes[offset - 1];
+						if(node){
+							if(node.nodeType == 3){
+								container = node;
+								offset = node.length;
+								//pass through
+							}else{
+								if(node.nextSibling && node.nextSibling.nodeType == 3){
+									container = node.nextSibling;
+									offset = 0;
+									//pass through
+								}else{
+									atmrange.moveToElementText(node.nextSibling ? node : container);
+									var parent = node.parentNode;
+									var tempNode = parent.insertBefore(node.ownerDocument.createTextNode(' '), node.nextSibling);
+									atmrange.collapse(false);
+									parent.removeChild(tempNode);
+								}
+							}
+						}
+					}else{
+						atmrange.moveToElementText(container);
+						atmrange.collapse(true);
+					}
+				}
+				if(container.nodeType == 3){
+					var prevnodeobj = rangeapi.adjacentNoneTextNode(container);
+					var prevnode = prevnodeobj[0];
+					len = prevnodeobj[1];
+					if(prevnode){
+						atmrange.moveToElementText(prevnode);
+						atmrange.collapse(false);
+						//if contentEditable is not inherit, the above collapse won't make the end point
+						//in the correctly position: it always has a -1 offset, so compensate it
+						if(prevnode.contentEditable != 'inherit'){
+							len++;
+						}
+					}else{
+						atmrange.moveToElementText(container.parentNode);
+						atmrange.collapse(true);
+
+						// Correct internal cursor position
+						// http://bugs.dojotoolkit.org/ticket/15578
+						atmrange.move('character', 1);
+						atmrange.move('character', -1);
+					}
+
+					offset += len;
+					if(offset > 0){
+						if(atmrange.move('character', offset) != offset){
+							console.error('Error when moving!');
+						}
+					}
+				}
+
+				return atmrange;
+			},
+			decomposeTextRange: function(range){
+				var tmpary = ie.getEndPoint(range);
+				var startContainer = tmpary[0], startOffset = tmpary[1];
+				var endContainer = tmpary[0], endOffset = tmpary[1];
+
+				if(range.htmlText.length){
+					if(range.htmlText == range.text){ //in the same text node
+						endOffset = startOffset + range.text.length;
+					}else{
+						tmpary = ie.getEndPoint(range, true);
+						endContainer = tmpary[0],endOffset = tmpary[1];
+						//					if(startContainer.tagName == "BODY"){
+						//						startContainer = startContainer.firstChild;
+						//					}
+					}
+				}
+				return [startContainer, startOffset, endContainer, endOffset];
+			},
+			setRange: function(range, startContainer, startOffset, endContainer, endOffset, collapsed){
+				var start = ie.setEndPoint(range, startContainer, startOffset);
+
+				range.setEndPoint('StartToStart', start);
+				if(!collapsed){
+					var end = ie.setEndPoint(range, endContainer, endOffset);
+				}
+				range.setEndPoint('EndToEnd', end || start);
+
+				return range;
+			}
+		};
+
+		var W3CRange = rangeapi.W3CRange = declare(null, {
+			constructor: function(){
+				if(arguments.length>0){
+					this.setStart(arguments[0][0],arguments[0][1]);
+					this.setEnd(arguments[0][2],arguments[0][3]);
+				}else{
+					this.commonAncestorContainer = null;
+					this.startContainer = null;
+					this.startOffset = 0;
+					this.endContainer = null;
+					this.endOffset = 0;
+					this.collapsed = true;
+				}
+			},
+			_updateInternal: function(){
+				if(this.startContainer !== this.endContainer){
+					this.commonAncestorContainer = rangeapi.getCommonAncestor(this.startContainer, this.endContainer);
+				}else{
+					this.commonAncestorContainer = this.startContainer;
+				}
+				this.collapsed = (this.startContainer === this.endContainer) && (this.startOffset == this.endOffset);
+			},
+			setStart: function(node, offset){
+				offset=parseInt(offset);
+				if(this.startContainer === node && this.startOffset == offset){
+					return;
+				}
+				delete this._cachedBookmark;
+
+				this.startContainer = node;
+				this.startOffset = offset;
+				if(!this.endContainer){
+					this.setEnd(node, offset);
+				}else{
+					this._updateInternal();
+				}
+			},
+			setEnd: function(node, offset){
+				offset=parseInt(offset);
+				if(this.endContainer === node && this.endOffset == offset){
+					return;
+				}
+				delete this._cachedBookmark;
+
+				this.endContainer = node;
+				this.endOffset = offset;
+				if(!this.startContainer){
+					this.setStart(node, offset);
+				}else{
+					this._updateInternal();
+				}
+			},
+			setStartAfter: function(node, offset){
+				this._setPoint('setStart', node, offset, 1);
+			},
+			setStartBefore: function(node, offset){
+				this._setPoint('setStart', node, offset, 0);
+			},
+			setEndAfter: function(node, offset){
+				this._setPoint('setEnd', node, offset, 1);
+			},
+			setEndBefore: function(node, offset){
+				this._setPoint('setEnd', node, offset, 0);
+			},
+			_setPoint: function(what, node, offset, ext){
+				var index = rangeapi.getIndex(node, node.parentNode).o;
+				this[what](node.parentNode, index.pop()+ext);
+			},
+			_getIERange: function(){
+				var r = (this._body || this.endContainer.ownerDocument.body).createTextRange();
+				ie.setRange(r, this.startContainer, this.startOffset, this.endContainer, this.endOffset, this.collapsed);
+				return r;
+			},
+			getBookmark: function(){
+				this._getIERange();
+				return this._cachedBookmark;
+			},
+			_select: function(){
+				var r = this._getIERange();
+				r.select();
+			},
+			deleteContents: function(){
+				var s = this.startContainer, r = this._getIERange();
+				if(s.nodeType === 3 && !this.startOffset){
+					//if the range starts at the beginning of a
+					//text node, move it to before the textnode
+					//to make sure the range is still valid
+					//after deleteContents() finishes
+					this.setStartBefore(s);
+				}
+				r.pasteHTML('');
+				this.endContainer = this.startContainer;
+				this.endOffset = this.startOffset;
+				this.collapsed = true;
+			},
+			cloneRange: function(){
+				var r = new W3CRange([this.startContainer,this.startOffset,
+					this.endContainer,this.endOffset]);
+				r._body = this._body;
+				return r;
+			},
+			detach: function(){
+				this._body = null;
+				this.commonAncestorContainer = null;
+				this.startContainer = null;
+				this.startOffset = 0;
+				this.endContainer = null;
+				this.endOffset = 0;
+				this.collapsed = true;
+			}
+		});
+	} //if(!window.getSelection)
+
+	// remove for 2.0
+	lang.setObject("dijit.range", rangeapi);
+
+	return rangeapi;
+});
+
+},
+'dijit/_editor/html':function(){
+define([
+	"dojo/_base/array",
+	"dojo/_base/lang", // lang.setObject
+	"dojo/sniff" // has("ie")
+], function(array, lang, has){
+
+	// module:
+	//		dijit/_editor/html
+
+	var exports = {
+		// summary:
+		//		HTML serialization utility functions used by editor
+	};
+	lang.setObject("dijit._editor.html", exports);
+
+	var escape = exports.escapeXml = function(/*String*/ str, /*Boolean?*/ noSingleQuotes){
+		// summary:
+		//		Adds escape sequences for special characters in XML: `&<>"'`.
+		//		Optionally skips escapes for single quotes.
+		str = str.replace(/&/gm, "&amp;").replace(/</gm, "&lt;").replace(/>/gm, "&gt;").replace(/"/gm, "&quot;");
+		if(!noSingleQuotes){
+			str = str.replace(/'/gm, "&#39;");
+		}
+		return str; // string
+	};
+
+	exports.getNodeHtml = function(/*DomNode*/ node){
+		// summary:
+		//		Return string representing HTML for node and it's children
+		var output = [];
+		exports.getNodeHtmlHelper(node, output);
+		return output.join("");
+	};
+
+	exports.getNodeHtmlHelper = function(/*DomNode*/ node, /*String[]*/ output){
+		// summary:
+		//		Pushes array of strings into output[] which represent HTML for node and it's children
+		switch(node.nodeType){
+			case 1: // element node
+				var lName = node.nodeName.toLowerCase();
+				if(!lName || lName.charAt(0) == "/"){
+					// IE does some strange things with malformed HTML input, like
+					// treating a close tag </span> without an open tag <span>, as
+					// a new tag with tagName of /span.  Corrupts output HTML, remove
+					// them.  Other browsers don't prefix tags that way, so will
+					// never show up.
+					return "";
+				}
+				output.push('<', lName);
+
+				// store the list of attributes and sort it to have the
+				// attributes appear in the dictionary order
+				var attrarray = [], attrhash = {};
+				var attr;
+				if(has("dom-attributes-explicit") || has("dom-attributes-specified-flag")){
+					// IE8+ and all other browsers.
+					var i = 0;
+					while((attr = node.attributes[i++])){
+						// ignore all attributes starting with _dj which are
+						// internal temporary attributes used by the editor
+						var n = attr.name;
+						if(n.substr(0, 3) !== '_dj' &&
+							(!has("dom-attributes-specified-flag") || attr.specified) && !(n in attrhash)){    // workaround repeated attributes bug in IE8 (LinkDialog test)
+							var v = attr.value;
+							if(n == 'src' || n == 'href'){
+								if(node.getAttribute('_djrealurl')){
+									v = node.getAttribute('_djrealurl');
+								}
+							}
+							if(has("ie") === 8 && n === "style"){
+								v = v.replace("HEIGHT:", "height:").replace("WIDTH:", "width:");
+							}
+							attrarray.push([n, v]);
+							attrhash[n] = v;
+						}
+					}
+				}else{
+					// IE6-7 code path
+					var clone = /^input$|^img$/i.test(node.nodeName) ? node : node.cloneNode(false);
+					var s = clone.outerHTML;
+					// Split up and manage the attrs via regexp
+					// similar to prettyPrint attr logic.
+					var rgxp_attrsMatch = /[\w-]+=("[^"]*"|'[^']*'|\S*)/gi
+					var attrSplit = s.match(rgxp_attrsMatch);
+					s = s.substr(0, s.indexOf('>'));
+					array.forEach(attrSplit, function(attr){
+						if(attr){
+							var idx = attr.indexOf("=");
+							if(idx > 0){
+								var key = attr.substring(0, idx);
+								if(key.substr(0, 3) != '_dj'){
+									if(key == 'src' || key == 'href'){
+										if(node.getAttribute('_djrealurl')){
+											attrarray.push([key, node.getAttribute('_djrealurl')]);
+											return;
+										}
+									}
+									var val, match;
+									switch(key){
+										case 'style':
+											val = node.style.cssText.toLowerCase();
+											break;
+										case 'class':
+											val = node.className;
+											break;
+										case 'width':
+											if(lName === "img"){
+												// This somehow gets lost on IE for IMG tags and the like
+												// and we have to find it in outerHTML, known IE oddity.
+												match = /width=(\S+)/i.exec(s);
+												if(match){
+													val = match[1];
+												}
+												break;
+											}
+										case 'height':
+											if(lName === "img"){
+												// This somehow gets lost on IE for IMG tags and the like
+												// and we have to find it in outerHTML, known IE oddity.
+												match = /height=(\S+)/i.exec(s);
+												if(match){
+													val = match[1];
+												}
+												break;
+											}
+										default:
+											val = node.getAttribute(key);
+									}
+									if(val != null){
+										attrarray.push([key, val.toString()]);
+									}
+								}
+							}
+						}
+					}, this);
+				}
+				attrarray.sort(function(a, b){
+					return a[0] < b[0] ? -1 : (a[0] == b[0] ? 0 : 1);
+				});
+				var j = 0;
+				while((attr = attrarray[j++])){
+					output.push(' ', attr[0], '="',
+						(typeof attr[1] === "string" ? escape(attr[1], true) : attr[1]), '"');
+				}
+				switch(lName){
+					case 'br':
+					case 'hr':
+					case 'img':
+					case 'input':
+					case 'base':
+					case 'meta':
+					case 'area':
+					case 'basefont':
+						// These should all be singly closed
+						output.push(' />');
+						break;
+					case 'script':
+						// Browsers handle script tags differently in how you get content,
+						// but innerHTML always seems to work, so insert its content that way
+						// Yes, it's bad to allow script tags in the editor code, but some people
+						// seem to want to do it, so we need to at least return them right.
+						// other plugins/filters can strip them.
+						output.push('>', node.innerHTML, '</', lName, '>');
+						break;
+					default:
+						output.push('>');
+						if(node.hasChildNodes()){
+							exports.getChildrenHtmlHelper(node, output);
+						}
+						output.push('</', lName, '>');
+				}
+				break;
+			case 4: // cdata
+			case 3: // text
+				// FIXME:
+				output.push(escape(node.nodeValue, true));
+				break;
+			case 8: // comment
+				// FIXME:
+				output.push('<!--', escape(node.nodeValue, true), '-->');
+				break;
+			default:
+				output.push("<!-- Element not recognized - Type: ", node.nodeType, " Name: ", node.nodeName, "-->");
+		}
+	};
+
+	exports.getChildrenHtml = function(/*DomNode*/ node){
+		// summary:
+		//		Returns the html content of a DomNode's children
+		var output = [];
+		exports.getChildrenHtmlHelper(node, output);
+		return output.join("");
+	};
+
+	exports.getChildrenHtmlHelper = function(/*DomNode*/ dom, /*String[]*/ output){
+		// summary:
+		//		Pushes the html content of a DomNode's children into out[]
+
+		if(!dom){
+			return;
+		}
+		var nodes = dom["childNodes"] || dom;
+
+		// IE issue.
+		// If we have an actual node we can check parent relationships on for IE,
+		// We should check, as IE sometimes builds invalid DOMS.  If no parent, we can't check
+		// And should just process it and hope for the best.
+		var checkParent = !has("ie") || nodes !== dom;
+
+		var node, i = 0;
+		while((node = nodes[i++])){
+			// IE is broken.  DOMs are supposed to be a tree.  But in the case of malformed HTML, IE generates a graph
+			// meaning one node ends up with multiple references (multiple parents).  This is totally wrong and invalid, but
+			// such is what it is.  We have to keep track and check for this because otherwise the source output HTML will have dups.
+			// No other browser generates a graph.  Leave it to IE to break a fundamental DOM rule.  So, we check the parent if we can
+			// If we can't, nothing more we can do other than walk it.
+			if(!checkParent || node.parentNode == dom){
+				exports.getNodeHtmlHelper(node, output);
+			}
+		}
+	};
+
+	return exports;
+});
+
+},
 'dijit/_base/focus':function(){
-define("dijit/_base/focus", [
+define([
 	"dojo/_base/array", // array.forEach
 	"dojo/dom", // dom.isDescendant
 	"dojo/_base/lang", // lang.isArray
 	"dojo/topic", // publish
 	"dojo/_base/window", // win.doc win.doc.selection win.global win.global.getSelection win.withGlobal
 	"../focus",
+	"../selection",
 	"../main"	// for exporting symbols to dijit
-], function(array, dom, lang, topic, win, focus, dijit){
+], function(array, dom, lang, topic, win, focus, selection, dijit){
 
 	// module:
 	//		dijit/_base/focus
@@ -15614,90 +20849,8 @@ define("dijit/_base/focus", [
 		getBookmark: function(){
 			// summary:
 			//		Retrieves a bookmark that can be used with moveToBookmark to return to the same range
-			var bm, rg, tg, sel = win.doc.selection, cf = focus.curNode;
-
-			if(win.global.getSelection){
-				//W3C Range API for selections.
-				sel = win.global.getSelection();
-				if(sel){
-					if(sel.isCollapsed){
-						tg = cf? cf.tagName : "";
-						if(tg){
-							//Create a fake rangelike item to restore selections.
-							tg = tg.toLowerCase();
-							if(tg == "textarea" ||
-									(tg == "input" && (!cf.type || cf.type.toLowerCase() == "text"))){
-								sel = {
-									start: cf.selectionStart,
-									end: cf.selectionEnd,
-									node: cf,
-									pRange: true
-								};
-								return {isCollapsed: (sel.end <= sel.start), mark: sel}; //Object.
-							}
-						}
-						bm = {isCollapsed:true};
-						if(sel.rangeCount){
-							bm.mark = sel.getRangeAt(0).cloneRange();
-						}
-					}else{
-						rg = sel.getRangeAt(0);
-						bm = {isCollapsed: false, mark: rg.cloneRange()};
-					}
-				}
-			}else if(sel){
-				// If the current focus was a input of some sort and no selection, don't bother saving
-				// a native bookmark.  This is because it causes issues with dialog/page selection restore.
-				// So, we need to create psuedo bookmarks to work with.
-				tg = cf ? cf.tagName : "";
-				tg = tg.toLowerCase();
-				if(cf && tg && (tg == "button" || tg == "textarea" || tg == "input")){
-					if(sel.type && sel.type.toLowerCase() == "none"){
-						return {
-							isCollapsed: true,
-							mark: null
-						}
-					}else{
-						rg = sel.createRange();
-						return {
-							isCollapsed: rg.text && rg.text.length?false:true,
-							mark: {
-								range: rg,
-								pRange: true
-							}
-						};
-					}
-				}
-				bm = {};
-
-				//'IE' way for selections.
-				try{
-					// createRange() throws exception when dojo in iframe
-					//and nothing selected, see #9632
-					rg = sel.createRange();
-					bm.isCollapsed = !(sel.type == 'Text' ? rg.htmlText.length : rg.length);
-				}catch(e){
-					bm.isCollapsed = true;
-					return bm;
-				}
-				if(sel.type.toUpperCase() == 'CONTROL'){
-					if(rg.length){
-						bm.mark=[];
-						var i=0,len=rg.length;
-						while(i<len){
-							bm.mark.push(rg.item(i++));
-						}
-					}else{
-						bm.isCollapsed = true;
-						bm.mark = null;
-					}
-				}else{
-					bm.mark = rg.getBookmark();
-				}
-			}else{
-				console.warn("No idea how to store the current selection for this browser!");
-			}
-			return bm; // Object
+			var sel = win.global == window ? selection : new selection.SelectionManager(win.global);
+			return sel.getBookmark();
 		},
 
 		moveToBookmark: function(/*Object*/ bookmark){
@@ -15706,43 +20859,8 @@ define("dijit/_base/focus", [
 			// bookmark:
 			//		This should be a returned object from dijit.getBookmark()
 
-			var _doc = win.doc,
-				mark = bookmark.mark;
-			if(mark){
-				if(win.global.getSelection){
-					//W3C Rangi API (FF, WebKit, Opera, etc)
-					var sel = win.global.getSelection();
-					if(sel && sel.removeAllRanges){
-						if(mark.pRange){
-							var n = mark.node;
-							n.selectionStart = mark.start;
-							n.selectionEnd = mark.end;
-						}else{
-							sel.removeAllRanges();
-							sel.addRange(mark);
-						}
-					}else{
-						console.warn("No idea how to restore selection for this browser!");
-					}
-				}else if(_doc.selection && mark){
-					//'IE' way.
-					var rg;
-					if(mark.pRange){
-						rg = mark.range;
-					}else if(lang.isArray(mark)){
-						rg = _doc.body.createControlRange();
-						//rg.addElement does not have call/apply method, so can not call it directly
-						//rg is not available in "range.addElement(item)", so can't use that either
-						array.forEach(mark, function(n){
-							rg.addElement(n);
-						});
-					}else{
-						rg = _doc.body.createTextRange();
-						rg.moveToBookmark(mark);
-					}
-					rg.select();
-				}
-			}
+			var sel = win.global == window ? selection : new selection.SelectionManager(win.global);
+			return sel.moveToBookmark(bookmark);
 		},
 
 		getFocus: function(/*Widget?*/ menu, /*Window?*/ openedForWindow){
@@ -15904,5087 +21022,10 @@ define("dijit/_base/focus", [
 });
 
 },
-'dijit/ToolbarSeparator':function(){
-define("dijit/ToolbarSeparator", [
-	"dojo/_base/declare", // declare
-	"dojo/dom", // dom.setSelectable
-	"./_Widget",
-	"./_TemplatedMixin"
-], function(declare, dom, _Widget, _TemplatedMixin){
-
-	// module:
-	//		dijit/ToolbarSeparator
-
-
-	return declare("dijit.ToolbarSeparator", [_Widget, _TemplatedMixin], {
-		// summary:
-		//		A spacer between two `dijit.Toolbar` items
-
-		templateString: '<div class="dijitToolbarSeparator dijitInline" role="presentation"></div>',
-
-		buildRendering: function(){
-			this.inherited(arguments);
-			dom.setSelectable(this.domNode, false);
-		},
-
-		isFocusable: function(){
-			// summary:
-			//		This widget isn't focusable, so pass along that fact.
-			// tags:
-			//		protected
-			return false;
-		}
-	});
-});
-
-},
-'dijit/_editor/_Plugin':function(){
-define("dijit/_editor/_Plugin", [
-	"dojo/_base/connect", // connect.connect
-	"dojo/_base/declare", // declare
-	"dojo/_base/lang", // lang.mixin, lang.hitch
-	"../form/Button"
-], function(connect, declare, lang, Button){
-
-// module:
-//		dijit/_editor/_Plugin
-// summary:
-//		Base class for a "plugin" to the editor, which is usually
-//		a single button on the Toolbar and some associated code
-
-
-var _Plugin = declare("dijit._editor._Plugin", null, {
-	// summary:
-	//		Base class for a "plugin" to the editor, which is usually
-	//		a single button on the Toolbar and some associated code
-
-	constructor: function(args){
-		// summary:
-		//		Create the plugin.
-		// args: Object?
-		//		Initial settings for any of the attributes.
-
-		this.params = args || {};
-		lang.mixin(this, this.params);
-		this._connects=[];
-		this._attrPairNames = {};
-	},
-
-	// editor: [const] dijit.Editor
-	//		Points to the parent editor
-	editor: null,
-
-	// iconClassPrefix: [const] String
-	//		The CSS class name for the button node is formed from `iconClassPrefix` and `command`
-	iconClassPrefix: "dijitEditorIcon",
-
-	// button: dijit/_WidgetBase?
-	//		Pointer to `dijit/form/Button` or other widget (ex: `dijit/form/FilteringSelect`)
-	//		that is added to the toolbar to control this plugin.
-	//		If not specified, will be created on initialization according to `buttonClass`
-	button: null,
-
-	// command: String
-	//		String like "insertUnorderedList", "outdent", "justifyCenter", etc. that represents an editor command.
-	//		Passed to editor.execCommand() if `useDefaultCommand` is true.
-	command: "",
-
-	// useDefaultCommand: Boolean
-	//		If true, this plugin executes by calling Editor.execCommand() with the argument specified in `command`.
-	useDefaultCommand: true,
-
-	// buttonClass: Widget Class
-	//		Class of widget (ex: dijit.form.Button or dijit/form/FilteringSelect)
-	//		that is added to the toolbar to control this plugin.
-	//		This is used to instantiate the button, unless `button` itself is specified directly.
-	buttonClass: Button,
-
-	// disabled: Boolean
-	//		Flag to indicate if this plugin has been disabled and should do nothing
-	//		helps control button state, among other things.  Set via the setter api.
-	disabled: false,
-
-	getLabel: function(/*String*/key){
-		// summary:
-		//		Returns the label to use for the button
-		// tags:
-		//		private
-		return this.editor.commands[key];		// String
-	},
-
-	_initButton: function(){
-		// summary:
-		//		Initialize the button or other widget that will control this plugin.
-		//		This code only works for plugins controlling built-in commands in the editor.
-		// tags:
-		//		protected extension
-		if(this.command.length){
-			var label = this.getLabel(this.command),
-				editor = this.editor,
-				className = this.iconClassPrefix+" "+this.iconClassPrefix + this.command.charAt(0).toUpperCase() + this.command.substr(1);
-			if(!this.button){
-				var props = lang.mixin({
-					label: label,
-					ownerDocument: editor.ownerDocument,
-					dir: editor.dir,
-					lang: editor.lang,
-					showLabel: false,
-					iconClass: className,
-					dropDown: this.dropDown,
-					tabIndex: "-1"
-				}, this.params || {});
-				this.button = new this.buttonClass(props);
-			}
-		}
-		if(this.get("disabled") && this.button){
-			this.button.set("disabled", this.get("disabled"));
-		}
-	},
-
-	destroy: function(){
-		// summary:
-		//		Destroy this plugin
-
-		var h;
-		while(h = this._connects.pop()){ h.remove(); }
-		if(this.dropDown){
-			this.dropDown.destroyRecursive();
-		}
-	},
-
-	connect: function(o, f, tf){
-		// summary:
-		//		Make a connect.connect() that is automatically disconnected when this plugin is destroyed.
-		//		Similar to `dijit/_Widget.connect()`.
-		// tags:
-		//		protected
-		this._connects.push(connect.connect(o, f, this, tf));
-	},
-
-	updateState: function(){
-		// summary:
-		//		Change state of the plugin to respond to events in the editor.
-		// description:
-		//		This is called on meaningful events in the editor, such as change of selection
-		//		or caret position (but not simple typing of alphanumeric keys).   It gives the
-		//		plugin a chance to update the CSS of its button.
-		//
-		//		For example, the "bold" plugin will highlight/unhighlight the bold button depending on whether the
-		//		characters next to the caret are bold or not.
-		//
-		//		Only makes sense when `useDefaultCommand` is true, as it calls Editor.queryCommandEnabled(`command`).
-		var e = this.editor,
-			c = this.command,
-			checked, enabled;
-		if(!e || !e.isLoaded || !c.length){ return; }
-		var disabled = this.get("disabled");
-		if(this.button){
-			try{
-				enabled = !disabled && e.queryCommandEnabled(c);
-				if(this.enabled !== enabled){
-					this.enabled = enabled;
-					this.button.set('disabled', !enabled);
-				}
-				if(enabled){
-					if(typeof this.button.checked == 'boolean'){
-						checked = e.queryCommandState(c);
-						if(this.checked !== checked){
-							this.checked = checked;
-							this.button.set('checked', e.queryCommandState(c));
-						}
-					}
-				}
-			}catch(e){
-				console.log(e); // FIXME: we shouldn't have debug statements in our code.  Log as an error?
-			}
-		}
-	},
-
-	setEditor: function(/*dijit/Editor*/ editor){
-		// summary:
-		//		Tell the plugin which Editor it is associated with.
-
-		// TODO: refactor code to just pass editor to constructor.
-
-		// FIXME: detach from previous editor!!
-		this.editor = editor;
-
-		// FIXME: prevent creating this if we don't need to (i.e., editor can't handle our command)
-		this._initButton();
-
-		// Processing for buttons that execute by calling editor.execCommand()
-		if(this.button && this.useDefaultCommand){
-			if(this.editor.queryCommandAvailable(this.command)){
-				this.connect(this.button, "onClick",
-					lang.hitch(this.editor, "execCommand", this.command, this.commandArg)
-				);
-			}else{
-				// hide button because editor doesn't support command (due to browser limitations)
-				this.button.domNode.style.display = "none";
-			}
-		}
-
-		this.connect(this.editor, "onNormalizedDisplayChanged", "updateState");
-	},
-
-	setToolbar: function(/*dijit/Toolbar*/ toolbar){
-		// summary:
-		//		Tell the plugin to add it's controller widget (often a button)
-		//		to the toolbar.  Does nothing if there is no controller widget.
-
-		// TODO: refactor code to just pass toolbar to constructor.
-
-		if(this.button){
-			toolbar.addChild(this.button);
-		}
-		// console.debug("adding", this.button, "to:", toolbar);
-	},
-
-	set: function(/* attribute */ name, /* anything */ value){
-		// summary:
-		//		Set a property on a plugin
-		// name:
-		//		The property to set.
-		// value:
-		//		The value to set in the property.
-		// description:
-		//		Sets named properties on a plugin which may potentially be handled by a
-		//		setter in the plugin.
-		//		For example, if the plugin has a properties "foo"
-		//		and "bar" and a method named "_setFooAttr", calling:
-		//	|	plugin.set("foo", "Howdy!");
-		//		would be equivalent to writing:
-		//	|	plugin._setFooAttr("Howdy!");
-		//		and:
-		//	|	plugin.set("bar", 3);
-		//		would be equivalent to writing:
-		//	|	plugin.bar = 3;
-		//
-		//		set() may also be called with a hash of name/value pairs, ex:
-		//	|	plugin.set({
-		//	|		foo: "Howdy",
-		//	|		bar: 3
-		//	|	})
-		//		This is equivalent to calling set(foo, "Howdy") and set(bar, 3)
-		if(typeof name === "object"){
-			for(var x in name){
-				this.set(x, name[x]);
-	}
-			return this;
-		}
-		var names = this._getAttrNames(name);
-		if(this[names.s]){
-			// use the explicit setter
-			var result = this[names.s].apply(this, Array.prototype.slice.call(arguments, 1));
-		}else{
-			this._set(name, value);
-		}
-		return result || this;
-	},
-
-	get: function(name){
-		// summary:
-		//		Get a property from a plugin.
-		// name:
-		//		The property to get.
-		// description:
-		//		Get a named property from a plugin. The property may
-		//		potentially be retrieved via a getter method. If no getter is defined, this
-		//		just retrieves the object's property.
-		//		For example, if the plugin has a properties "foo"
-		//		and "bar" and a method named "_getFooAttr", calling:
-		//	|	plugin.get("foo");
-		//		would be equivalent to writing:
-		//	|	plugin._getFooAttr();
-		//		and:
-		//	|	plugin.get("bar");
-		//		would be equivalent to writing:
-		//	|	plugin.bar;
-		var names = this._getAttrNames(name);
-		return this[names.g] ? this[names.g]() : this[name];
-	},
-
-	_setDisabledAttr: function(disabled){
-		// summary:
-		//		Function to set the plugin state and call updateState to make sure the
-		//		button is updated appropriately.
-		this.disabled = disabled;
-		this.updateState();
-	},
-
-	_getAttrNames: function(name){
-		// summary:
-		//		Helper function for get() and set().
-		//		Caches attribute name values so we don't do the string ops every time.
-		// tags:
-		//		private
-
-		var apn = this._attrPairNames;
-		if(apn[name]){ return apn[name]; }
-		var uc = name.charAt(0).toUpperCase() + name.substr(1);
-		return (apn[name] = {
-			s: "_set"+uc+"Attr",
-			g: "_get"+uc+"Attr"
-		});
-	},
-
-	_set: function(/*String*/ name, /*anything*/ value){
-		// summary:
-		//		Helper function to set new value for specified attribute
-		this[name] = value;
-	}
-});
-
-// Hash mapping plugin name to factory, used for registering plugins
-_Plugin.registry = {};
-
-return _Plugin;
-
-});
-
-},
-'dijit/_editor/plugins/EnterKeyHandling':function(){
-define("dijit/_editor/plugins/EnterKeyHandling", [
-	"dojo/_base/declare", // declare
-	"dojo/dom-construct", // domConstruct.destroy domConstruct.place
-	"dojo/_base/event", // event.stop
-	"dojo/keys", // keys.ENTER
-	"dojo/_base/lang",
-	"dojo/sniff", // has("ie") has("mozilla") has("webkit")
-	"dojo/_base/window", // win.withGlobal
-	"dojo/window", // winUtils.scrollIntoView
-	"../_Plugin",
-	"../RichText",
-	"../range",
-	"../../_base/focus"
-], function(declare, domConstruct, event, keys, lang, has, win, winUtils, _Plugin, RichText, rangeapi, baseFocus){
-
-// module:
-//		dijit/_editor/plugins/EnterKeyHandling
-
-return declare("dijit._editor.plugins.EnterKeyHandling", _Plugin, {
-	// summary:
-	//		This plugin tries to make all browsers behave consistently with regard to
-	//		how ENTER behaves in the editor window.  It traps the ENTER key and alters
-	//		the way DOM is constructed in certain cases to try to commonize the generated
-	//		DOM and behaviors across browsers.
-	//
-	// description:
-	//		This plugin has three modes:
-	//
-	//		- blockNodeForEnter=BR
-	//		- blockNodeForEnter=DIV
-	//		- blockNodeForEnter=P
-	//
-	//		In blockNodeForEnter=P, the ENTER key starts a new
-	//		paragraph, and shift-ENTER starts a new line in the current paragraph.
-	//		For example, the input:
-	//
-	//	|	first paragraph <shift-ENTER>
-	//	|	second line of first paragraph <ENTER>
-	//	|	second paragraph
-	//
-	//		will generate:
-	//
-	//	|	<p>
-	//	|		first paragraph
-	//	|		<br/>
-	//	|		second line of first paragraph
-	//	|	</p>
-	//	|	<p>
-	//	|		second paragraph
-	//	|	</p>
-	//
-	//		In BR and DIV mode, the ENTER key conceptually goes to a new line in the
-	//		current paragraph, and users conceptually create a new paragraph by pressing ENTER twice.
-	//		For example, if the user enters text into an editor like this:
-	//
-	//	|		one <ENTER>
-	//	|		two <ENTER>
-	//	|		three <ENTER>
-	//	|		<ENTER>
-	//	|		four <ENTER>
-	//	|		five <ENTER>
-	//	|		six <ENTER>
-	//
-	//		It will appear on the screen as two 'paragraphs' of three lines each.  Markupwise, this generates:
-	//
-	//		BR:
-	//	|		one<br/>
-	//	|		two<br/>
-	//	|		three<br/>
-	//	|		<br/>
-	//	|		four<br/>
-	//	|		five<br/>
-	//	|		six<br/>
-	//
-	//		DIV:
-	//	|		<div>one</div>
-	//	|		<div>two</div>
-	//	|		<div>three</div>
-	//	|		<div>&nbsp;</div>
-	//	|		<div>four</div>
-	//	|		<div>five</div>
-	//	|		<div>six</div>
-
-	// blockNodeForEnter: String
-	//		This property decides the behavior of Enter key. It can be either P,
-	//		DIV, BR, or empty (which means disable this feature). Anything else
-	//		will trigger errors.  The default is 'BR'
-	//
-	//		See class description for more details.
-	blockNodeForEnter: 'BR',
-
-	constructor: function(args){
-		if(args){
-			if("blockNodeForEnter" in args){
-				args.blockNodeForEnter = args.blockNodeForEnter.toUpperCase();
-			}
-			lang.mixin(this,args);
-		}
-	},
-
-	setEditor: function(editor){
-		// Overrides _Plugin.setEditor().
-		if(this.editor === editor){ return; }
-		this.editor = editor;
-		if(this.blockNodeForEnter == 'BR'){
-			// While Moz has a mode tht mostly works, it's still a little different,
-			// So, try to just have a common mode and be consistent.  Which means
-			// we need to enable customUndo, if not already enabled.
-			this.editor.customUndo = true;
-				editor.onLoadDeferred.then(lang.hitch(this,function(d){
-					this.connect(editor.document, "onkeypress", function(e){
-						if(e.charOrCode == keys.ENTER){
-							// Just do it manually.  The handleEnterKey has a shift mode that
-							// Always acts like <br>, so just use it.
-							var ne = lang.mixin({},e);
-							ne.shiftKey = true;
-							if(!this.handleEnterKey(ne)){
-								event.stop(e);
-							}
-						}
-					});
-					if(has("ie") >= 9 && has("ie") <= 10){
-						this.connect(editor.document, "onpaste", function(e){
-							setTimeout(dojo.hitch(this, function(){
-								// Use the old range/selection code to kick IE 9 into updating
-								// its range by moving it back, then forward, one 'character'.
-								var r = this.editor.document.selection.createRange();
-								r.move('character',-1);
-								r.select();
-								r.move('character',1);
-								r.select();
-							}),0);
-						});
-					}
-					return d;
-				}));
-		}else if(this.blockNodeForEnter){
-			// add enter key handler
-			// FIXME: need to port to the new event code!!
-			var h = lang.hitch(this,this.handleEnterKey);
-			editor.addKeyHandler(13, 0, 0, h); //enter
-			editor.addKeyHandler(13, 0, 1, h); //shift+enter
-			this.connect(this.editor,'onKeyPressed','onKeyPressed');
-		}
-	},
-	onKeyPressed: function(){
-		// summary:
-		//		Handler for keypress events.
-		// tags:
-		//		private
-		if(this._checkListLater){
-			if(win.withGlobal(this.editor.window, 'isCollapsed', baseFocus)){
-				var liparent = this.editor._sCall('getAncestorElement', ['LI']);
-				if(!liparent){
-					// circulate the undo detection code by calling RichText::execCommand directly
-					RichText.prototype.execCommand.call(this.editor, 'formatblock',this.blockNodeForEnter);
-					// set the innerHTML of the new block node
-					var block = this.editor._sCall('getAncestorElement', [this.blockNodeForEnter]);
-					if(block){
-						block.innerHTML=this.bogusHtmlContent;
-						if(has("ie") <= 9){
-							// move to the start by moving backwards one char
-							var r = this.editor.document.selection.createRange();
-							r.move('character',-1);
-							r.select();
-						}
-					}else{
-						console.error('onKeyPressed: Cannot find the new block node'); // FIXME
-					}
-				}else{
-					if(has("mozilla")){
-						if(liparent.parentNode.parentNode.nodeName == 'LI'){
-							liparent=liparent.parentNode.parentNode;
-						}
-					}
-					var fc=liparent.firstChild;
-					if(fc && fc.nodeType == 1 && (fc.nodeName == 'UL' || fc.nodeName == 'OL')){
-						liparent.insertBefore(fc.ownerDocument.createTextNode('\xA0'),fc);
-						var newrange = rangeapi.create(this.editor.window);
-						newrange.setStart(liparent.firstChild,0);
-						var selection = rangeapi.getSelection(this.editor.window, true);
-						selection.removeAllRanges();
-						selection.addRange(newrange);
-					}
-				}
-			}
-			this._checkListLater = false;
-		}
-		if(this._pressedEnterInBlock){
-			// the new created is the original current P, so we have previousSibling below
-			if(this._pressedEnterInBlock.previousSibling){
-				this.removeTrailingBr(this._pressedEnterInBlock.previousSibling);
-			}
-			delete this._pressedEnterInBlock;
-		}
-	},
-
-	// bogusHtmlContent: [private] String
-	//		HTML to stick into a new empty block
-	bogusHtmlContent: '&#160;',		// &nbsp;
-
-	// blockNodes: [private] Regex
-	//		Regex for testing if a given tag is a block level (display:block) tag
-	blockNodes: /^(?:P|H1|H2|H3|H4|H5|H6|LI)$/,
-
-	handleEnterKey: function(e){
-		// summary:
-		//		Handler for enter key events when blockNodeForEnter is DIV or P.
-		// description:
-		//		Manually handle enter key event to make the behavior consistent across
-		//		all supported browsers. See class description for details.
-		// tags:
-		//		private
-
-		var selection, range, newrange, startNode, endNode, brNode, doc=this.editor.document,br,rs,txt;
-		if(e.shiftKey){		// shift+enter always generates <br>
-			var parent = this.editor._sCall('getParentElement', []);
-			var header = rangeapi.getAncestor(parent,this.blockNodes);
-			if(header){
-				if(header.tagName == 'LI'){
-					return true; // let browser handle
-				}
-				selection = rangeapi.getSelection(this.editor.window);
-				range = selection.getRangeAt(0);
-				if(!range.collapsed){
-					range.deleteContents();
-					selection = rangeapi.getSelection(this.editor.window);
-					range = selection.getRangeAt(0);
-				}
-				if(rangeapi.atBeginningOfContainer(header, range.startContainer, range.startOffset)){
-						br=doc.createElement('br');
-						newrange = rangeapi.create(this.editor.window);
-						header.insertBefore(br,header.firstChild);
-						newrange.setStartAfter(br);
-						selection.removeAllRanges();
-						selection.addRange(newrange);
-				}else if(rangeapi.atEndOfContainer(header, range.startContainer, range.startOffset)){
-					newrange = rangeapi.create(this.editor.window);
-					br=doc.createElement('br');
-						header.appendChild(br);
-						header.appendChild(doc.createTextNode('\xA0'));
-						newrange.setStart(header.lastChild,0);
-					selection.removeAllRanges();
-					selection.addRange(newrange);
-				}else{
-					rs = range.startContainer;
-					if(rs && rs.nodeType == 3){
-						// Text node, we have to split it.
-						txt = rs.nodeValue;
-						startNode = doc.createTextNode(txt.substring(0, range.startOffset));
-						endNode = doc.createTextNode(txt.substring(range.startOffset));
-						brNode = doc.createElement("br");
-
-						if(endNode.nodeValue == "" && has("webkit")){
-							endNode = doc.createTextNode('\xA0')
-						}
-						domConstruct.place(startNode, rs, "after");
-						domConstruct.place(brNode, startNode, "after");
-						domConstruct.place(endNode, brNode, "after");
-						domConstruct.destroy(rs);
-						newrange = rangeapi.create(this.editor.window);
-						newrange.setStart(endNode,0);
-						selection.removeAllRanges();
-						selection.addRange(newrange);
-						return false;
-					}
-					return true; // let browser handle
-				}
-			}else{
-				selection = rangeapi.getSelection(this.editor.window);
-				if(selection.rangeCount){
-					range = selection.getRangeAt(0);
-					if(range && range.startContainer){
-						if(!range.collapsed){
-							range.deleteContents();
-							selection = rangeapi.getSelection(this.editor.window);
-							range = selection.getRangeAt(0);
-						}
-						rs = range.startContainer;
-						if(rs && rs.nodeType == 3){
-							// Text node, we have to split it.
-
-							var offset = range.startOffset;
-							if(rs.length < offset){
-								//We are not splitting the right node, try to locate the correct one
-								ret = this._adjustNodeAndOffset(rs, offset);
-								rs = ret.node;
-								offset = ret.offset;
-							}
-							txt = rs.nodeValue;
-
-							startNode = doc.createTextNode(txt.substring(0, offset));
-							endNode = doc.createTextNode(txt.substring(offset));
-							brNode = doc.createElement("br");
-
-							if(!endNode.length){
-								endNode = doc.createTextNode('\xA0');
-							}
-
-							if(startNode.length){
-								domConstruct.place(startNode, rs, "after");
-							}else{
-								startNode = rs;
-							}
-							domConstruct.place(brNode, startNode, "after");
-							domConstruct.place(endNode, brNode, "after");
-							domConstruct.destroy(rs);
-							newrange = rangeapi.create(this.editor.window);
-							newrange.setStart(endNode,0);
-							newrange.setEnd(endNode, endNode.length);
-							selection.removeAllRanges();
-							selection.addRange(newrange);
-							this.editor._sCall("collapse", [true]);
-						}else{
-							var targetNode;
-							if(range.startOffset >= 0){
-								targetNode = rs.childNodes[range.startOffset];
-							}
-							var brNode = doc.createElement("br");
-							var endNode = doc.createTextNode('\xA0');
-							if(!targetNode){
-								rs.appendChild(brNode);
-								rs.appendChild(endNode);
-							}else{
-								domConstruct.place(brNode, targetNode, "before");
-								domConstruct.place(endNode, brNode, "after");
-							}
-							newrange = rangeapi.create(this.editor.window);
-							newrange.setStart(endNode,0);
-							newrange.setEnd(endNode, endNode.length);
-							selection.removeAllRanges();
-							selection.addRange(newrange);
-							this.editor._sCall("collapse", [true]);
-						}
-						// \xA0 dummy text node remains, but is stripped before get("value")
-						// by RichText._stripTrailingEmptyNodes().  Still, could we just use a plain
-						// space (" ") instead?
-					}
-				}else{
-					// don't change this: do not call this.execCommand, as that may have other logic in subclass
-					RichText.prototype.execCommand.call(this.editor, 'inserthtml', '<br>');
-				}
-			}
-			return false;
-		}
-		var _letBrowserHandle = true;
-
-		// first remove selection
-		selection = rangeapi.getSelection(this.editor.window);
-		range = selection.getRangeAt(0);
-		if(!range.collapsed){
-			range.deleteContents();
-			selection = rangeapi.getSelection(this.editor.window);
-			range = selection.getRangeAt(0);
-		}
-
-		var block = rangeapi.getBlockAncestor(range.endContainer, null, this.editor.editNode);
-		var blockNode = block.blockNode;
-
-		// if this is under a LI or the parent of the blockNode is LI, just let browser to handle it
-		if((this._checkListLater = (blockNode && (blockNode.nodeName == 'LI' || blockNode.parentNode.nodeName == 'LI')))){
-			if(has("mozilla")){
-				// press enter in middle of P may leave a trailing <br/>, let's remove it later
-				this._pressedEnterInBlock = blockNode;
-			}
-			// if this li only contains spaces, set the content to empty so the browser will outdent this item
-			if(/^(\s|&nbsp;|&#160;|\xA0|<span\b[^>]*\bclass=['"]Apple-style-span['"][^>]*>(\s|&nbsp;|&#160;|\xA0)<\/span>)?(<br>)?$/.test(blockNode.innerHTML)){
-				// empty LI node
-				blockNode.innerHTML = '';
-				if(has("webkit")){ // WebKit tosses the range when innerHTML is reset
-					newrange = rangeapi.create(this.editor.window);
-					newrange.setStart(blockNode, 0);
-					selection.removeAllRanges();
-					selection.addRange(newrange);
-				}
-				this._checkListLater = false; // nothing to check since the browser handles outdent
-			}
-			return true;
-		}
-
-		// text node directly under body, let's wrap them in a node
-		if(!block.blockNode || block.blockNode===this.editor.editNode){
-			try{
-				RichText.prototype.execCommand.call(this.editor, 'formatblock',this.blockNodeForEnter);
-			}catch(e2){ /*squelch FF3 exception bug when editor content is a single BR*/ }
-			// get the newly created block node
-			// FIXME
-			block = {blockNode: this.editor._sCall('getAncestorElement', [this.blockNodeForEnter]),
-					blockContainer: this.editor.editNode};
-			if(block.blockNode){
-				if(block.blockNode != this.editor.editNode &&
-					(!(block.blockNode.textContent || block.blockNode.innerHTML).replace(/^\s+|\s+$/g, "").length)){
-					this.removeTrailingBr(block.blockNode);
-					return false;
-				}
-			}else{	// we shouldn't be here if formatblock worked
-				block.blockNode = this.editor.editNode;
-			}
-			selection = rangeapi.getSelection(this.editor.window);
-			range = selection.getRangeAt(0);
-		}
-
-		var newblock = doc.createElement(this.blockNodeForEnter);
-		newblock.innerHTML=this.bogusHtmlContent;
-		this.removeTrailingBr(block.blockNode);
-		var endOffset = range.endOffset;
-		var node = range.endContainer;
-		if(node.length < endOffset){
-			//We are not checking the right node, try to locate the correct one
-			var ret = this._adjustNodeAndOffset(node, endOffset);
-			node = ret.node;
-			endOffset = ret.offset;
-		}
-		if(rangeapi.atEndOfContainer(block.blockNode, node, endOffset)){
-			if(block.blockNode === block.blockContainer){
-				block.blockNode.appendChild(newblock);
-			}else{
-				domConstruct.place(newblock, block.blockNode, "after");
-			}
-			_letBrowserHandle = false;
-			// lets move caret to the newly created block
-			newrange = rangeapi.create(this.editor.window);
-			newrange.setStart(newblock, 0);
-			selection.removeAllRanges();
-			selection.addRange(newrange);
-			if(this.editor.height){
-				winUtils.scrollIntoView(newblock);
-			}
-		}else if(rangeapi.atBeginningOfContainer(block.blockNode,
-				range.startContainer, range.startOffset)){
-			domConstruct.place(newblock, block.blockNode, block.blockNode === block.blockContainer ? "first" : "before");
-			if(newblock.nextSibling && this.editor.height){
-				// position input caret - mostly WebKit needs this
-				newrange = rangeapi.create(this.editor.window);
-				newrange.setStart(newblock.nextSibling, 0);
-				selection.removeAllRanges();
-				selection.addRange(newrange);
-				// browser does not scroll the caret position into view, do it manually
-				winUtils.scrollIntoView(newblock.nextSibling);
-			}
-			_letBrowserHandle = false;
-		}else{ //press enter in the middle of P/DIV/Whatever/
-			if(block.blockNode === block.blockContainer){
-				block.blockNode.appendChild(newblock);
-			}else{
-				domConstruct.place(newblock, block.blockNode, "after");
-			}
-			_letBrowserHandle = false;
-
-			// Clone any block level styles.
-			if(block.blockNode.style){
-				if(newblock.style){
-					if(block.blockNode.style.cssText){
-						newblock.style.cssText = block.blockNode.style.cssText;
-					}
-				}
-			}
-
-			// Okay, we probably have to split.
-			rs = range.startContainer;
-			var firstNodeMoved;
-			if(rs && rs.nodeType == 3){
-				// Text node, we have to split it.
-				var nodeToMove, tNode;
-				endOffset = range.endOffset;
-				if(rs.length < endOffset){
-					//We are not splitting the right node, try to locate the correct one
-					ret = this._adjustNodeAndOffset(rs, endOffset);
-					rs = ret.node;
-					endOffset = ret.offset;
-				}
-
-				txt = rs.nodeValue;
-				startNode = doc.createTextNode(txt.substring(0, endOffset));
-				endNode = doc.createTextNode(txt.substring(endOffset, txt.length));
-
-				// Place the split, then remove original nodes.
-				domConstruct.place(startNode, rs, "before");
-				domConstruct.place(endNode, rs, "after");
-				domConstruct.destroy(rs);
-
-				// Okay, we split the text.  Now we need to see if we're
-				// parented to the block element we're splitting and if
-				// not, we have to split all the way up.  Ugh.
-				var parentC = startNode.parentNode;
-				while(parentC !== block.blockNode){
-					var tg = parentC.tagName;
-					var newTg = doc.createElement(tg);
-					// Clone over any 'style' data.
-					if(parentC.style){
-						if(newTg.style){
-							if(parentC.style.cssText){
-								newTg.style.cssText = parentC.style.cssText;
-							}
-						}
-					}
-					// If font also need to clone over any font data.
-					if(parentC.tagName === "FONT"){
-						if(parentC.color){
-							newTg.color = parentC.color;
-						}
-						if(parentC.face){
-							newTg.face = parentC.face;
-						}
-						if(parentC.size){  // this check was necessary on IE
-							newTg.size = parentC.size;
-						}
-					}
-
-					nodeToMove = endNode;
-					while(nodeToMove){
-						tNode = nodeToMove.nextSibling;
-						newTg.appendChild(nodeToMove);
-						nodeToMove = tNode;
-					}
-					domConstruct.place(newTg, parentC, "after");
-					startNode = parentC;
-					endNode = newTg;
-					parentC = parentC.parentNode;
-				}
-
-				// Lastly, move the split out tags to the new block.
-				// as they should now be split properly.
-				nodeToMove = endNode;
-				if(nodeToMove.nodeType == 1 || (nodeToMove.nodeType == 3 && nodeToMove.nodeValue)){
-					// Non-blank text and non-text nodes need to clear out that blank space
-					// before moving the contents.
-					newblock.innerHTML = "";
-				}
-				firstNodeMoved = nodeToMove;
-				while(nodeToMove){
-					tNode = nodeToMove.nextSibling;
-					newblock.appendChild(nodeToMove);
-					nodeToMove = tNode;
-				}
-			}
-
-			//lets move caret to the newly created block
-			newrange = rangeapi.create(this.editor.window);
-			var nodeForCursor;
-			var innerMostFirstNodeMoved = firstNodeMoved;
-			if(this.blockNodeForEnter !== 'BR'){
-				while(innerMostFirstNodeMoved){
-					nodeForCursor = innerMostFirstNodeMoved;
-					tNode = innerMostFirstNodeMoved.firstChild;
-					innerMostFirstNodeMoved = tNode;
-				}
-				if(nodeForCursor && nodeForCursor.parentNode){
-					newblock = nodeForCursor.parentNode;
-					newrange.setStart(newblock, 0);
-					selection.removeAllRanges();
-					selection.addRange(newrange);
-					if(this.editor.height){
-						winUtils.scrollIntoView(newblock);
-					}
-					if(has("mozilla")){
-						// press enter in middle of P may leave a trailing <br/>, let's remove it later
-						this._pressedEnterInBlock = block.blockNode;
-					}
-				}else{
-					_letBrowserHandle = true;
-				}
-			}else{
-				newrange.setStart(newblock, 0);
-				selection.removeAllRanges();
-				selection.addRange(newrange);
-				if(this.editor.height){
-					winUtils.scrollIntoView(newblock);
-				}
-				if(has("mozilla")){
-					// press enter in middle of P may leave a trailing <br/>, let's remove it later
-					this._pressedEnterInBlock = block.blockNode;
-				}
-			}
-		}
-		return _letBrowserHandle;
-	},
-
-	_adjustNodeAndOffset: function(/*DomNode*/node, /*Int*/offset){
-		// summary:
-		//		In the case there are multiple text nodes in a row the offset may not be within the node.  If the offset is larger than the node length, it will attempt to find
-		//		the next text sibling until it locates the text node in which the offset refers to
-		// node:
-		//		The node to check.
-		// offset:
-		//		The position to find within the text node
-		// tags:
-		//		private.
-		while(node.length < offset && node.nextSibling && node.nextSibling.nodeType==3){
-			//Adjust the offset and node in the case of multiple text nodes in a row
-			offset = offset - node.length;
-			node = node.nextSibling;
-		}
-		return {"node": node, "offset": offset};
-	},
-
-	removeTrailingBr: function(container){
-		// summary:
-		//		If last child of container is a `<br>`, then remove it.
-		// tags:
-		//		private
-		var para = /P|DIV|LI/i.test(container.tagName) ?
-			container : this.editor._sCall("getParentOfType", [container,['P','DIV','LI']]);
-
-		if(!para){ return; }
-		if(para.lastChild){
-			if((para.childNodes.length > 1 && para.lastChild.nodeType == 3 && /^[\s\xAD]*$/.test(para.lastChild.nodeValue)) ||
-				para.lastChild.tagName=='BR'){
-
-				domConstruct.destroy(para.lastChild);
-			}
-		}
-		if(!para.childNodes.length){
-			para.innerHTML=this.bogusHtmlContent;
-		}
-	}
-});
-
-});
-
-},
-'dijit/_editor/RichText':function(){
-define("dijit/_editor/RichText", [
-	"dojo/_base/array", // array.forEach array.indexOf array.some
-	"dojo/_base/config", // config
-	"dojo/_base/declare", // declare
-	"dojo/_base/Deferred", // Deferred
-	"dojo/dom", // dom.byId
-	"dojo/dom-attr", // domAttr.set or get
-	"dojo/dom-class", // domClass.add domClass.remove
-	"dojo/dom-construct", // domConstruct.create domConstruct.destroy domConstruct.place
-	"dojo/dom-geometry", // domGeometry.position
-	"dojo/dom-style", // domStyle.getComputedStyle domStyle.set
-	"dojo/_base/event", // event.stop
-	"dojo/_base/kernel", // kernel.deprecated
-	"dojo/keys", // keys.BACKSPACE keys.TAB
-	"dojo/_base/lang", // lang.clone lang.hitch lang.isArray lang.isFunction lang.isString lang.trim
-	"dojo/on", // on()
-	"dojo/query", // query
-	"dojo/ready", // ready
-	"dojo/sniff", // has("ie") has("mozilla") has("opera") has("safari") has("webkit")
-	"dojo/topic",	// topic.publish() (publish)
-	"dojo/_base/unload", // unload
-	"dojo/_base/url", // url
-	"dojo/_base/window", // win.global
-	"../_Widget",
-	"../_CssStateMixin",
-	"./selection",
-	"./range",
-	"./html",
-	"../focus",
-	"../main"	// dijit._scopeName
-], function(array, config, declare, Deferred, dom, domAttr, domClass, domConstruct, domGeometry, domStyle,
-	event, kernel, keys, lang, on, query, ready, has, topic, unload, _Url, win,
-	_Widget, _CssStateMixin, selectionapi, rangeapi, htmlapi, focus, dijit){
-
-// module:
-//		dijit/_editor/RichText
-// summary:
-//		dijit/_editor/RichText is the core of dijit/Editor, which provides basic
-//		WYSIWYG editing features.
-
-// if you want to allow for rich text saving with back/forward actions, you must add a text area to your page with
-// the id==dijit._scopeName + "._editor.RichText.value" (typically "dijit/_editor/RichText.value). For example,
-// something like this will work:
-//
-//	<textarea id="dijit._editor.RichText.value" style="display:none;position:absolute;top:-100px;left:-100px;height:3px;width:3px;overflow:hidden;"></textarea>
-//
-
-var RichText = declare("dijit._editor.RichText", [_Widget, _CssStateMixin], {
-	// summary:
-	//		dijit/_editor/RichText is the core of dijit.Editor, which provides basic
-	//		WYSIWYG editing features.
-	//
-	// description:
-	//		dijit/_editor/RichText is the core of dijit.Editor, which provides basic
-	//		WYSIWYG editing features. It also encapsulates the differences
-	//		of different js engines for various browsers.  Do not use this widget
-	//		with an HTML &lt;TEXTAREA&gt; tag, since the browser unescapes XML escape characters,
-	//		like &lt;.  This can have unexpected behavior and lead to security issues
-	//		such as scripting attacks.
-	//
-	// tags:
-	//		private
-
-	constructor: function(params /*===== , srcNodeRef =====*/){
-		// summary:
-		//		Create the widget.
-		// params: Object|null
-		//		Initial settings for any of the widget attributes, except readonly attributes.
-		// srcNodeRef: DOMNode
-		//		The widget replaces the specified DOMNode.
-
-		// contentPreFilters: Function(String)[]
-		//		Pre content filter function register array.
-		//		these filters will be executed before the actual
-		//		editing area gets the html content.
-		this.contentPreFilters = [];
-
-		// contentPostFilters: Function(String)[]
-		//		post content filter function register array.
-		//		These will be used on the resulting html
-		//		from contentDomPostFilters. The resulting
-		//		content is the final html (returned by getValue()).
-		this.contentPostFilters = [];
-
-		// contentDomPreFilters: Function(DomNode)[]
-		//		Pre content dom filter function register array.
-		//		These filters are applied after the result from
-		//		contentPreFilters are set to the editing area.
-		this.contentDomPreFilters = [];
-
-		// contentDomPostFilters: Function(DomNode)[]
-		//		Post content dom filter function register array.
-		//		These filters are executed on the editing area dom.
-		//		The result from these will be passed to contentPostFilters.
-		this.contentDomPostFilters = [];
-
-		// editingAreaStyleSheets: dojo._URL[]
-		//		array to store all the stylesheets applied to the editing area
-		this.editingAreaStyleSheets = [];
-
-		// Make a copy of this.events before we start writing into it, otherwise we
-		// will modify the prototype which leads to bad things on pages w/multiple editors
-		this.events = [].concat(this.events);
-
-		this._keyHandlers = {};
-
-		if(params && lang.isString(params.value)){
-			this.value = params.value;
-		}
-
-		this.onLoadDeferred = new Deferred();
-	},
-
-	baseClass: "dijitEditor",
-
-	// inheritWidth: Boolean
-	//		whether to inherit the parent's width or simply use 100%
-	inheritWidth: false,
-
-	// focusOnLoad: [deprecated] Boolean
-	//		Focus into this widget when the page is loaded
-	focusOnLoad: false,
-
-	// name: String?
-	//		Specifies the name of a (hidden) `<textarea>` node on the page that's used to save
-	//		the editor content on page leave.   Used to restore editor contents after navigating
-	//		to a new page and then hitting the back button.
-	name: "",
-
-	// styleSheets: [const] String
-	//		semicolon (";") separated list of css files for the editing area
-	styleSheets: "",
-
-	// height: String
-	//		Set height to fix the editor at a specific height, with scrolling.
-	//		By default, this is 300px.  If you want to have the editor always
-	//		resizes to accommodate the content, use AlwaysShowToolbar plugin
-	//		and set height="".  If this editor is used within a layout widget,
-	//		set height="100%".
-	height: "300px",
-
-	// minHeight: String
-	//		The minimum height that the editor should have.
-	minHeight: "1em",
-
-	// isClosed: [private] Boolean
-	isClosed: true,
-
-	// isLoaded: [private] Boolean
-	isLoaded: false,
-
-	// _SEPARATOR: [private] String
-	//		Used to concat contents from multiple editors into a single string,
-	//		so they can be saved into a single `<textarea>` node.  See "name" attribute.
-	_SEPARATOR: "@@**%%__RICHTEXTBOUNDRY__%%**@@",
-
-	// _NAME_CONTENT_SEP: [private] String
-	//		USed to separate name from content.  Just a colon isn't safe.
-	_NAME_CONTENT_SEP: "@@**%%:%%**@@",
-
-	// onLoadDeferred: [readonly] dojo.Deferred
-	//		Deferred which is fired when the editor finishes loading.
-	//		Call myEditor.onLoadDeferred.then(callback) it to be informed
-	//		when the rich-text area initialization is finalized.
-	onLoadDeferred: null,
-
-	// isTabIndent: Boolean
-	//		Make tab key and shift-tab indent and outdent rather than navigating.
-	//		Caution: sing this makes web pages inaccessible to users unable to use a mouse.
-	isTabIndent: false,
-
-	// disableSpellCheck: [const] Boolean
-	//		When true, disables the browser's native spell checking, if supported.
-	//		Works only in Firefox.
-	disableSpellCheck: false,
-
-	postCreate: function(){
-		if("textarea" === this.domNode.tagName.toLowerCase()){
-			console.warn("RichText should not be used with the TEXTAREA tag.  See dijit._editor.RichText docs.");
-		}
-
-		// Push in the builtin filters now, making them the first executed, but not over-riding anything
-		// users passed in.  See: #6062
-		this.contentPreFilters = [
-			lang.trim,	// avoid IE10 problem hitting ENTER on last line when there's a trailing \n.
-			lang.hitch(this, "_preFixUrlAttributes")
-		].concat(this.contentPreFilters);
-		if(has("mozilla")){
-			this.contentPreFilters = [this._normalizeFontStyle].concat(this.contentPreFilters);
-			this.contentPostFilters = [this._removeMozBogus].concat(this.contentPostFilters);
-		}
-		if(has("webkit")){
-			// Try to clean up WebKit bogus artifacts.  The inserted classes
-			// made by WebKit sometimes messes things up.
-			this.contentPreFilters = [this._removeWebkitBogus].concat(this.contentPreFilters);
-			this.contentPostFilters = [this._removeWebkitBogus].concat(this.contentPostFilters);
-		}
-		if(has("ie") || has("trident")){
-			// IE generates <strong> and <em> but we want to normalize to <b> and <i>
-			// Still happens in IE11!
-			this.contentPostFilters = [this._normalizeFontStyle].concat(this.contentPostFilters);
-				this.contentDomPostFilters = [lang.hitch(this, "_stripBreakerNodes")].concat(this.contentDomPostFilters);
-		}
-		this.contentDomPostFilters = [lang.hitch(this, "_stripTrailingEmptyNodes")].concat(this.contentDomPostFilters);
-		this.inherited(arguments);
-
-		topic.publish(dijit._scopeName + "._editor.RichText::init", this);
-		this.open();
-		this.setupDefaultShortcuts();
-	},
-
-	setupDefaultShortcuts: function(){
-		// summary:
-		//		Add some default key handlers
-		// description:
-		//		Overwrite this to setup your own handlers. The default
-		//		implementation does not use Editor commands, but directly
-		//		executes the builtin commands within the underlying browser
-		//		support.
-		// tags:
-		//		protected
-		var exec = lang.hitch(this, function(cmd, arg){
-			return function(){
-				return !this.execCommand(cmd,arg);
-			};
-		});
-
-		var ctrlKeyHandlers = {
-			b: exec("bold"),
-			i: exec("italic"),
-			u: exec("underline"),
-			a: exec("selectall"),
-			s: function(){ this.save(true); },
-			m: function(){ this.isTabIndent = !this.isTabIndent; },
-
-			"1": exec("formatblock", "h1"),
-			"2": exec("formatblock", "h2"),
-			"3": exec("formatblock", "h3"),
-			"4": exec("formatblock", "h4"),
-
-			"\\": exec("insertunorderedlist")
-		};
-
-		if(!has("ie")){
-			ctrlKeyHandlers.Z = exec("redo"); //FIXME: undo?
-		}
-
-		var key;
-		for(key in ctrlKeyHandlers){
-			this.addKeyHandler(key, true, false, ctrlKeyHandlers[key]);
-		}
-	},
-
-	// events: [private] String[]
-	//		 events which should be connected to the underlying editing area
-	events: ["onKeyPress", "onKeyDown", "onKeyUp"], // onClick handled specially
-
-	// captureEvents: [deprecated] String[]
-	//		 Events which should be connected to the underlying editing
-	//		 area, events in this array will be addListener with
-	//		 capture=true.
-	// TODO: looking at the code I don't see any distinction between events and captureEvents,
-	// so get rid of this for 2.0 if not sooner
-	captureEvents: [],
-
-	_editorCommandsLocalized: false,
-	_localizeEditorCommands: function(){
-		// summary:
-		//		When IE is running in a non-English locale, the API actually changes,
-		//		so that we have to say (for example) danraku instead of p (for paragraph).
-		//		Handle that here.
-		// tags:
-		//		private
-		if(RichText._editorCommandsLocalized){
-			// Use the already generate cache of mappings.
-			this._local2NativeFormatNames = RichText._local2NativeFormatNames;
-			this._native2LocalFormatNames = RichText._native2LocalFormatNames;
-			return;
-		}
-		RichText._editorCommandsLocalized = true;
-		RichText._local2NativeFormatNames = {};
-		RichText._native2LocalFormatNames = {};
-		this._local2NativeFormatNames = RichText._local2NativeFormatNames;
-		this._native2LocalFormatNames = RichText._native2LocalFormatNames;
-		//in IE, names for blockformat is locale dependent, so we cache the values here
-
-		//put p after div, so if IE returns Normal, we show it as paragraph
-		//We can distinguish p and div if IE returns Normal, however, in order to detect that,
-		//we have to call this.document.selection.createRange().parentElement() or such, which
-		//could slow things down. Leave it as it is for now
-		var formats = ['div', 'p', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ol', 'ul', 'address'];
-		var localhtml = "", format, i=0;
-		while((format=formats[i++])){
-			//append a <br> after each element to separate the elements more reliably
-			if(format.charAt(1) !== 'l'){
-				localhtml += "<"+format+"><span>content</span></"+format+"><br/>";
-			}else{
-				localhtml += "<"+format+"><li>content</li></"+format+"><br/>";
-			}
-		}
-		// queryCommandValue returns empty if we hide editNode, so move it out of screen temporary
-		// Also, IE9 does weird stuff unless we do it inside the editor iframe.
-		var style = { position: "absolute", top: "0px", zIndex: 10, opacity: 0.01 };
-		var div = domConstruct.create('div', {style: style, innerHTML: localhtml});
-		this.ownerDocumentBody.appendChild(div);
-
-		// IE9 has a timing issue with doing this right after setting
-		// the inner HTML, so put a delay in.
-		var inject = lang.hitch(this, function(){
-			var node = div.firstChild;
-			while(node){
-				try{
-					this._sCall("selectElement", [node.firstChild]);
-					var nativename = node.tagName.toLowerCase();
-					this._local2NativeFormatNames[nativename] = document.queryCommandValue("formatblock");
-					this._native2LocalFormatNames[this._local2NativeFormatNames[nativename]] = nativename;
-					node = node.nextSibling.nextSibling;
-					//console.log("Mapped: ", nativename, " to: ", this._local2NativeFormatNames[nativename]);
-				}catch(e){ /*Sqelch the occasional IE9 error */ }
-			}
-			domConstruct.destroy(div);
-		});
-		this.defer(inject);
-	},
-
-	open: function(/*DomNode?*/ element){
-		// summary:
-		//		Transforms the node referenced in this.domNode into a rich text editing
-		//		node.
-		// description:
-		//		Sets up the editing area asynchronously. This will result in
-		//		the creation and replacement with an iframe.
-		// tags:
-		//		private
-
-		if(!this.onLoadDeferred || this.onLoadDeferred.fired >= 0){
-			this.onLoadDeferred = new Deferred();
-		}
-
-		if(!this.isClosed){ this.close(); }
-		topic.publish(dijit._scopeName + "._editor.RichText::open", this);
-
-		if(arguments.length === 1 && element.nodeName){ // else unchanged
-			this.domNode = element;
-		}
-
-		var dn = this.domNode;
-
-		// "html" will hold the innerHTML of the srcNodeRef and will be used to
-		// initialize the editor.
-		var html;
-
-		if(lang.isString(this.value)){
-			// Allow setting the editor content programmatically instead of
-			// relying on the initial content being contained within the target
-			// domNode.
-			html = this.value;
-			delete this.value;
-			dn.innerHTML = "";
-		}else if(dn.nodeName && dn.nodeName.toLowerCase() == "textarea"){
-			// if we were created from a textarea, then we need to create a
-			// new editing harness node.
-			var ta = (this.textarea = dn);
-			this.name = ta.name;
-			html = ta.value;
-			dn = this.domNode = this.ownerDocument.createElement("div");
-			dn.setAttribute('widgetId', this.id);
-			ta.removeAttribute('widgetId');
-			dn.cssText = ta.cssText;
-			dn.className += " " + ta.className;
-			domConstruct.place(dn, ta, "before");
-			var tmpFunc = lang.hitch(this, function(){
-				//some browsers refuse to submit display=none textarea, so
-				//move the textarea off screen instead
-				domStyle.set(ta, {
-					display: "block",
-					position: "absolute",
-					top: "-1000px"
-				});
-
-				if(has("ie")){ //nasty IE bug: abnormal formatting if overflow is not hidden
-					var s = ta.style;
-					this.__overflow = s.overflow;
-					s.overflow = "hidden";
-				}
-			});
-			if(has("ie")){
-				this.defer(tmpFunc, 10);
-			}else{
-				tmpFunc();
-			}
-
-			if(ta.form){
-				var resetValue = ta.value;
-				this.reset = function(){
-					var current = this.getValue();
-					if(current !== resetValue){
-						this.replaceValue(resetValue);
-					}
-				};
-				on(ta.form, "submit", lang.hitch(this, function(){
-					// Copy value to the <textarea> so it gets submitted along with form.
-					// FIXME: should we be calling close() here instead?
-					domAttr.set(ta, 'disabled', this.disabled); // don't submit the value if disabled
-					ta.value = this.getValue();
-				}));
-			}
-		}else{
-			html = htmlapi.getChildrenHtml(dn);
-			dn.innerHTML = "";
-		}
-
-		this.value = html;
-
-		// If we're a list item we have to put in a blank line to force the
-		// bullet to nicely align at the top of text
-		if(dn.nodeName && dn.nodeName === "LI"){
-			dn.innerHTML = " <br>";
-		}
-
-		// Construct the editor div structure.
-		this.header = dn.ownerDocument.createElement("div");
-		dn.appendChild(this.header);
-		this.editingArea = dn.ownerDocument.createElement("div");
-		dn.appendChild(this.editingArea);
-		this.footer = dn.ownerDocument.createElement("div");
-		dn.appendChild(this.footer);
-
-		if(!this.name){
-			this.name = this.id + "_AUTOGEN";
-		}
-
-		// User has pressed back/forward button so we lost the text in the editor, but it's saved
-		// in a hidden <textarea> (which contains the data for all the editors on this page),
-		// so get editor value from there
-		if(this.name !== "" && (!config["useXDomain"] || config["allowXdRichTextSave"])){
-			var saveTextarea = dom.byId(dijit._scopeName + "._editor.RichText.value");
-			if(saveTextarea && saveTextarea.value !== ""){
-				var datas = saveTextarea.value.split(this._SEPARATOR), i=0, dat;
-				while((dat=datas[i++])){
-					var data = dat.split(this._NAME_CONTENT_SEP);
-					if(data[0] === this.name){
-						html = data[1];
-						datas = datas.splice(i, 1);
-						saveTextarea.value = datas.join(this._SEPARATOR);
-						break;
-					}
-				}
-			}
-
-			if(!RichText._globalSaveHandler){
-				RichText._globalSaveHandler = {};
-				unload.addOnUnload(function(){
-					var id;
-					for(id in RichText._globalSaveHandler){
-						var f = RichText._globalSaveHandler[id];
-						if(lang.isFunction(f)){
-							f();
-						}
-					}
-				});
-			}
-			RichText._globalSaveHandler[this.id] = lang.hitch(this, "_saveContent");
-		}
-
-		this.isClosed = false;
-
-		var ifr = (this.editorObject = this.iframe = this.ownerDocument.createElement('iframe'));
-		ifr.id = this.id+"_iframe";
-		ifr.style.border = "none";
-		ifr.style.width = "100%";
-		if(this._layoutMode){
-			// iframe should be 100% height, thus getting it's height from surrounding
-			// <div> (which has the correct height set by Editor)
-			ifr.style.height = "100%";
-		}else{
-			if(has("ie") >= 7){
-				if(this.height){
-					ifr.style.height = this.height;
-				}
-				if(this.minHeight){
-					ifr.style.minHeight = this.minHeight;
-				}
-			}else{
-				ifr.style.height = this.height ? this.height : this.minHeight;
-			}
-		}
-		ifr.frameBorder = 0;
-		ifr._loadFunc = lang.hitch( this, function(w){
-			this.window = w;
-				this.document = w.document;
-
-			if(has("ie")){
-				this._localizeEditorCommands();
-			}
-
-			// Do final setup and set initial contents of editor
-			this.onLoad(html);
-		});
-
-		// Attach iframe to document, and set the initial (blank) content.
-			var src = this._getIframeDocTxt().replace(/\\/g, "\\\\").replace(/'/g, "\\'"),
-				s;
-
-			// IE10 and earlier will throw an "Access is denied" error when attempting to access the parent frame if
-			// document.domain has been set, unless the child frame also has the same document.domain set. The child frame
-			// can only set document.domain while the document is being constructed using open/write/close; attempting to
-			// set it later results in a different "This method can't be used in this context" error. See #17529
-			if (has("ie") < 11) {
-				s = 'javascript:document.open();try{parent.window;}catch(e){document.domain="' + document.domain + '";}' +
-					'document.write(\'' + src + '\');document.close()';
-			}
-			else {
-				s = "javascript: '" + src + "'";
-			}
-
-			if(has("ie") == 9){
-				// On IE9, attach to document before setting the content, to avoid problem w/iframe running in
-			// wrong security context, see #16633.
-			this.editingArea.appendChild(ifr);
-			ifr.src = s;
-		}else{
-			// For other browsers, set src first, especially for IE6/7 where attaching first gives a warning on
-			// https:// about "this page contains secure and insecure items, do you want to view both?"
-			ifr.setAttribute('src', s);
-			this.editingArea.appendChild(ifr);
-		}
-
-		if(has("safari") <= 4){
-			src = ifr.getAttribute("src");
-			if(!src || src.indexOf("javascript") === -1){
-				// Safari 4 and earlier sometimes act oddly
-				// So we have to set it again.
-				this.defer(function(){ ifr.setAttribute('src', s); });
-			}
-		}
-
-		// TODO: this is a guess at the default line-height, kinda works
-		if(dn.nodeName === "LI"){
-			dn.lastChild.style.marginTop = "-1.2em";
-		}
-
-		domClass.add(this.domNode, this.baseClass);
-	},
-
-	//static cache variables shared among all instance of this class
-	_local2NativeFormatNames: {},
-	_native2LocalFormatNames: {},
-
-	_getIframeDocTxt: function(){
-		// summary:
-		//		Generates the boilerplate text of the document inside the iframe (ie, `<html><head>...</head><body/></html>`).
-		//		Editor content (if not blank) should be added afterwards.
-		// tags:
-		//		private
-		var _cs = domStyle.getComputedStyle(this.domNode);
-
-		// The contents inside of <body>.  The real contents are set later via a call to setValue().
-			// In auto-expand mode, need a wrapper div for AlwaysShowToolbar plugin to correctly
-			// expand/contract the editor as the content changes.
-			var html = "<div id='dijitEditorBody'></div>";
-
-		var font = [ _cs.fontWeight, _cs.fontSize, _cs.fontFamily ].join(" ");
-
-		// line height is tricky - applying a units value will mess things up.
-		// if we can't get a non-units value, bail out.
-		var lineHeight = _cs.lineHeight;
-		if(lineHeight.indexOf("px") >= 0){
-			lineHeight = parseFloat(lineHeight)/parseFloat(_cs.fontSize);
-			// console.debug(lineHeight);
-		}else if(lineHeight.indexOf("em")>=0){
-			lineHeight = parseFloat(lineHeight);
-		}else{
-			// If we can't get a non-units value, just default
-			// it to the CSS spec default of 'normal'.  Seems to
-			// work better, esp on IE, than '1.0'
-			lineHeight = "normal";
-		}
-		var userStyle = "";
-		var self = this;
-		this.style.replace(/(^|;)\s*(line-|font-?)[^;]+/ig, function(match){
-			match = match.replace(/^;/ig,"") + ';';
-			var s = match.split(":")[0];
-			if(s){
-				s = lang.trim(s);
-				s = s.toLowerCase();
-				var i;
-				var sC = "";
-				for(i = 0; i < s.length; i++){
-					var c = s.charAt(i);
-					switch(c){
-						case "-":
-							i++;
-							c = s.charAt(i).toUpperCase();
-						default:
-							sC += c;
-					}
-				}
-				domStyle.set(self.domNode, sC, "");
-			}
-			userStyle += match + ';';
-		});
-
-
-		// need to find any associated label element, aria-label, or aria-labelledby and update iframe document title
-		var label = query('label[for="'+this.id+'"]');
-		var title = "";
-		if(label.length){
-			title = label[0].innerHTML;
-		}else if(this["aria-label"]){
-			title = this["aria-label"];
-		}else if(this["aria-labelledby"]){
-			title = dom.byId(this["aria-labelledby"]).innerHTML;
-		}
-			
-		// Now that we have the title, also set it as the title attribute on the iframe
-		this.iframe.setAttribute("title", title);
-		
-		return [
-				"<!DOCTYPE html>",
-			this.isLeftToRight() ? "<html lang='"+this.lang+"'>\n<head>\n" : "<html dir='rtl' lang='"+this.lang+"'>\n<head>\n",
-			title ? "<title>" + title + "</title>" : "",
-			"<meta http-equiv='Content-Type' content='text/html'>\n",
-			"<style>\n",
-			"\tbody,html {\n",
-			"\t\tbackground:transparent;\n",
-			"\t\tpadding: 1px 0 0 0;\n",
-			"\t\tmargin: -1px 0 0 0;\n", // remove extraneous vertical scrollbar on safari and firefox
-			"\t}\n",
-				"\tbody,html,#dijitEditorBody { outline: none; }",
-
-				// Set <body> to expand to full size of editor, so clicking anywhere will work.
-				// Except in auto-expand mode, in which case the editor expands to the size of <body>.
-				// Also determine how scrollers should be applied.  In autoexpand mode (height = "") no scrollers on y at all.
-				// But in fixed height mode we want both x/y scrollers.
-				// Scrollers go on <body> since it's been set to height: 100%.
-				"html { height: 100%; width: 100%; overflow: hidden; }\n",	// scroll bar is on #dijitEditorBody, shouldn't be on <html>
-				this.height ? "\tbody,#dijitEditorBody { height: 100%; width: 100%; overflow: auto; }\n" :
-					"\tbody,#dijitEditorBody { min-height: " + this.minHeight + "; width: 100%; overflow-x: auto; overflow-y: hidden; }\n",
-
-			// TODO: left positioning will cause contents to disappear out of view
-			//	   if it gets too wide for the visible area
-			"\tbody{\n",
-			"\t\ttop:0px;\n",
-			"\t\tleft:0px;\n",
-			"\t\tright:0px;\n",
-			"\t\tfont:", font, ";\n",
-				((this.height||has("opera")) ? "" : "\t\tposition: fixed;\n"),
-			"\t\tline-height:", lineHeight,";\n",
-			"\t}\n",
-			"\tp{ margin: 1em 0; }\n",
-
-			"\tli > ul:-moz-first-node, li > ol:-moz-first-node{ padding-top: 1.2em; }\n",
-			// Can't set min-height in IE>=9, it puts layout on li, which puts move/resize handles.
-			(has("ie") || has("trident") ? "" : "\tli{ min-height:1.2em; }\n"),
-			"</style>\n",
-			this._applyEditingAreaStyleSheets(),"\n",
-			"</head>\n<body role='main' ",
-
-			// Onload handler fills in real editor content.
-			// On IE9, sometimes onload is called twice, and the first time frameElement is null (test_FullScreen.html)
-			"onload='frameElement && frameElement._loadFunc(window,document)' ",
-			"style='"+userStyle+"'>", html, "</body>\n</html>"
-		].join(""); // String
-	},
-
-	_applyEditingAreaStyleSheets: function(){
-		// summary:
-		//		apply the specified css files in styleSheets
-		// tags:
-		//		private
-		var files = [];
-		if(this.styleSheets){
-			files = this.styleSheets.split(';');
-			this.styleSheets = '';
-		}
-
-		//empty this.editingAreaStyleSheets here, as it will be filled in addStyleSheet
-		files = files.concat(this.editingAreaStyleSheets);
-		this.editingAreaStyleSheets = [];
-
-		var text='', i=0, url;
-		while((url=files[i++])){
-			var abstring = (new _Url(win.global.location, url)).toString();
-			this.editingAreaStyleSheets.push(abstring);
-			text += '<link rel="stylesheet" type="text/css" href="'+abstring+'"/>';
-		}
-		return text;
-	},
-
-	addStyleSheet: function(/*dojo/_base/url*/ uri){
-		// summary:
-		//		add an external stylesheet for the editing area
-		// uri:
-		//		Url of the external css file
-		var url=uri.toString();
-
-		//if uri is relative, then convert it to absolute so that it can be resolved correctly in iframe
-		if(url.charAt(0) === '.' || (url.charAt(0) !== '/' && !uri.host)){
-			url = (new _Url(win.global.location, url)).toString();
-		}
-
-		if(array.indexOf(this.editingAreaStyleSheets, url) > -1){
-//			console.debug("dijit/_editor/RichText.addStyleSheet(): Style sheet "+url+" is already applied");
-			return;
-		}
-
-		this.editingAreaStyleSheets.push(url);
-		this.onLoadDeferred.then(lang.hitch(this, function(){
-			if(this.document.createStyleSheet){ //IE
-				this.document.createStyleSheet(url);
-			}else{ //other browser
-				var head = this.document.getElementsByTagName("head")[0];
-				var stylesheet = this.document.createElement("link");
-				stylesheet.rel="stylesheet";
-				stylesheet.type="text/css";
-				stylesheet.href=url;
-				head.appendChild(stylesheet);
-			}
-		}));
-	},
-
-	removeStyleSheet: function(/*dojo/_base/url*/ uri){
-		// summary:
-		//		remove an external stylesheet for the editing area
-		var url=uri.toString();
-		//if uri is relative, then convert it to absolute so that it can be resolved correctly in iframe
-		if(url.charAt(0) === '.' || (url.charAt(0) !== '/' && !uri.host)){
-			url = (new _Url(win.global.location, url)).toString();
-		}
-		var index = array.indexOf(this.editingAreaStyleSheets, url);
-		if(index === -1){
-//			console.debug("dijit/_editor/RichText.removeStyleSheet(): Style sheet "+url+" has not been applied");
-			return;
-		}
-		delete this.editingAreaStyleSheets[index];
-		query('link[href="' + url + '"]', this.window.document).orphan();
-	},
-
-	// disabled: Boolean
-	//		The editor is disabled; the text cannot be changed.
-	disabled: false,
-
-	_mozSettingProps: {'styleWithCSS':false},
-	_setDisabledAttr: function(/*Boolean*/ value){
-		value = !!value;
-		this._set("disabled", value);
-		if(!this.isLoaded){ return; } // this method requires init to be complete
-			var preventIEfocus = has("ie") && (this.isLoaded || !this.focusOnLoad);
-			if(preventIEfocus){
-				this.editNode.unselectable = "on";
-			}
-			this.editNode.contentEditable = !value;
-			this.editNode.tabIndex = value ? "-1" : this.tabIndex;
-			if(preventIEfocus){
-				this.defer(function(){
-					if(this.editNode){		// guard in case widget destroyed before timeout
-						this.editNode.unselectable = "off";
-					}
-				});
-			}
-			if(has("mozilla") && !value && this._mozSettingProps){
-				var ps = this._mozSettingProps;
-				var n;
-				for(n in ps){
-					if(ps.hasOwnProperty(n)){
-						try{
-							this.document.execCommand(n,false,ps[n]);
-						}catch(e2){
-					}
-				}
-			}
-			}
-		this._disabledOK = true;
-	},
-
-/* Event handlers
- *****************/
-
-	onLoad: function(/*String*/ html){
-		// summary:
-		//		Handler after the iframe finishes loading.
-		// html: String
-		//		Editor contents should be set to this value
-		// tags:
-		//		protected
-
-		// TODO: rename this to _onLoad, make empty public onLoad() method, deprecate/make protected onLoadDeferred handler?
-
-		if(!this.window.__registeredWindow){
-			this.window.__registeredWindow = true;
-			this._iframeRegHandle = focus.registerIframe(this.iframe);
-		}
-
-			// there's a wrapper div around the content, see _getIframeDocTxt().
-			this.editNode=this.document.body.firstChild;
-			var _this = this;
-
-			// Helper code so IE and FF skip over focusing on the <iframe> and just focus on the inner <div>.
-			// See #4996 IE wants to focus the BODY tag.
-			this.beforeIframeNode = domConstruct.place("<div tabIndex=-1></div>", this.iframe, "before");
-			this.afterIframeNode = domConstruct.place("<div tabIndex=-1></div>", this.iframe, "after");
-			this.iframe.onfocus = this.document.onfocus = function(){
-				_this.editNode.focus();
-			};
-
-		this.focusNode = this.editNode; // for InlineEditBox
-
-
-		var events = this.events.concat(this.captureEvents);
-		var ap = this.iframe ? this.document : this.editNode;
-		array.forEach(events, function(item){
-			this.connect(ap, item.toLowerCase(), item);
-		}, this);
-
-			this.own(
-				// mouseup in the margin does not generate an onclick event
-				on(ap, "mouseup", lang.hitch(this, "onClick"))
-			);
-
-		if(has("ie")){ // IE contentEditable
-			this.connect(this.document, "onmousedown", "_onIEMouseDown"); // #4996 fix focus
-
-			// give the node Layout on IE
-			// TODO: this may no longer be needed, since we've reverted IE to using an iframe,
-			// not contentEditable.   Removing it would also probably remove the need for creating
-			// the extra <div> in _getIframeDocTxt()
-			this.editNode.style.zoom = 1.0;
-		}else{
-			this.connect(this.document, "onmousedown", function(){
-				// Clear the moveToStart focus, as mouse
-				// down will set cursor point.  Required to properly
-				// work with selection/position driven plugins and clicks in
-				// the window. refs: #10678
-				delete this._cursorToStart;
-			});
-		}
-
-		if(has("webkit")){
-			//WebKit sometimes doesn't fire right on selections, so the toolbar
-			//doesn't update right.  Therefore, help it out a bit with an additional
-			//listener.  A mouse up will typically indicate a display change, so fire this
-			//and get the toolbar to adapt.  Reference: #9532
-			this._webkitListener = this.connect(this.document, "onmouseup", "onDisplayChanged");
-			this.connect(this.document, "onmousedown", function(e){
-				var t = e.target;
-				if(t && (t === this.document.body || t === this.document)){
-					// Since WebKit uses the inner DIV, we need to check and set position.
-					// See: #12024 as to why the change was made.
-					this.defer("placeCursorAtEnd");
-				}
-			});
-		}
-
-		if(has("ie")){
-			// Try to make sure 'hidden' elements aren't visible in edit mode (like browsers other than IE
-			// do).  See #9103
-			try{
-				this.document.execCommand('RespectVisibilityInDesign', true, null);
-			}catch(e){/* squelch */}
-		}
-
-		this.isLoaded = true;
-
-		this.set('disabled', this.disabled); // initialize content to editable (or not)
-
-		// Note that setValue() call will only work after isLoaded is set to true (above)
-
-		// Set up a function to allow delaying the setValue until a callback is fired
-		// This ensures extensions like dijit.Editor have a way to hold the value set
-		// until plugins load (and do things like register filters).
-		var setContent = lang.hitch(this, function(){
-			this.setValue(html);
-			if(this.onLoadDeferred){
-				this.onLoadDeferred.resolve(true);
-			}
-			this.onDisplayChanged();
-			if(this.focusOnLoad){
-				// after the document loads, then set focus after updateInterval expires so that
-				// onNormalizedDisplayChanged has run to avoid input caret issues
-				ready(lang.hitch(this, "defer", "focus", this.updateInterval));
-			}
-			// Save off the initial content now
-			this.value = this.getValue(true);
-		});
-		if(this.setValueDeferred){
-			this.setValueDeferred.then(setContent);
-		}else{
-			setContent();
-		}
-	},
-
-	onKeyDown: function(/* Event */ e){
-		// summary:
-		//		Handler for onkeydown event
-		// tags:
-		//		protected
-
-		// we need this event at the moment to get the events from control keys
-		// such as the backspace. It might be possible to add this to Dojo, so that
-		// keyPress events can be emulated by the keyDown and keyUp detection.
-
-		if(e.keyCode === keys.TAB && this.isTabIndent){
-			event.stop(e); //prevent tab from moving focus out of editor
-
-			// FIXME: this is a poor-man's indent/outdent. It would be
-			// better if it added 4 "&nbsp;" chars in an undoable way.
-			// Unfortunately pasteHTML does not prove to be undoable
-			if(this.queryCommandEnabled((e.shiftKey ? "outdent" : "indent"))){
-				this.execCommand((e.shiftKey ? "outdent" : "indent"));
-			}
-		}
-
-			// Make tab and shift-tab skip over the <iframe>, going from the nested <div> to the toolbar
-			// or next element after the editor
-			if(e.keyCode == keys.TAB && !this.isTabIndent && !e.ctrlKey && !e.altKey){
-				if(e.shiftKey){
-					// focus the <iframe> so the browser will shift-tab away from it instead
-					this.beforeIframeNode.focus();
-				}else{
-					// focus node after the <iframe> so the browser will tab away from it instead
-					this.afterIframeNode.focus();
-				}
-			}
-
-			if(has("ie") < 9 && e.keyCode === keys.BACKSPACE && this.document.selection.type === "Control"){
-				// IE has a bug where if a non-text object is selected in the editor,
-				// hitting backspace would act as if the browser's back button was
-				// clicked instead of deleting the object. see #1069
-				e.stopPropagation();
-				e.preventDefault();
-				this.execCommand("delete");
-			}else if((65 <= e.keyCode && e.keyCode <= 90) ||
-				(e.keyCode>=37 && e.keyCode<=40) // FIXME: get this from connect() instead!
-			){ //arrow keys
-				e.charCode = e.keyCode;
-				this.onKeyPress(e);
-			}
-
-		if(has("ff")){
-			if(e.keyCode === keys.PAGE_UP || e.keyCode === keys.PAGE_DOWN ){
-				if(this.editNode.clientHeight >= this.editNode.scrollHeight){
-					// Stop the event to prevent firefox from trapping the cursor when there is no scroll bar.
-					e.preventDefault();
-				}
-			}
-		}
-		return true;
-	},
-
-	onKeyUp: function(/*===== e =====*/){
-		// summary:
-		//		Handler for onkeyup event
-		// tags:
-		//		callback
-	},
-
-	setDisabled: function(/*Boolean*/ disabled){
-		// summary:
-		//		Deprecated, use set('disabled', ...) instead.
-		// tags:
-		//		deprecated
-		kernel.deprecated('dijit.Editor::setDisabled is deprecated','use dijit.Editor::attr("disabled",boolean) instead', 2.0);
-		this.set('disabled',disabled);
-	},
-	_setValueAttr: function(/*String*/ value){
-		// summary:
-		//		Registers that attr("value", foo) should call setValue(foo)
-		this.setValue(value);
-	},
-	_setDisableSpellCheckAttr: function(/*Boolean*/ disabled){
-		if(this.document){
-			domAttr.set(this.document.body, "spellcheck", !disabled);
-		}else{
-			// try again after the editor is finished loading
-			this.onLoadDeferred.then(lang.hitch(this, function(){
-				domAttr.set(this.document.body, "spellcheck", !disabled);
-			}));
-		}
-		this._set("disableSpellCheck", disabled);
-	},
-
-	onKeyPress: function(e){
-		// summary:
-		//		Handle the various key events
-		// tags:
-		//		protected
-
-		if(e.keyCode === keys.SHIFT ||
-		   e.keyCode === keys.ALT ||
-		   e.keyCode === keys.META ||
-		   e.keyCode === keys.CTRL ||
-		   (e.keyCode == keys.TAB && !this.isTabIndent && !e.ctrlKey && !e.altKey)){
-			return true;
-		}
-
-		var c = (e.keyChar && e.keyChar.toLowerCase()) || e.keyCode,
-			handlers = this._keyHandlers[c],
-			args = arguments;
-			
-		if(handlers && !e.altKey){
-			array.some(handlers, function(h){
-				// treat meta- same as ctrl-, for benefit of mac users
-				if(!(h.shift ^ e.shiftKey) && !(h.ctrl ^ (e.ctrlKey||e.metaKey))){ 
-					if(!h.handler.apply(this, args)){
-						e.preventDefault();
-					}
-					return true;
-				}
-			}, this);
-		}
-
-		// function call after the character has been inserted
-		if(!this._onKeyHitch){
-			this._onKeyHitch = lang.hitch(this, "onKeyPressed");
-		}
-		this.defer("_onKeyHitch", 1);
-		return true;
-	},
-
-	addKeyHandler: function(/*String*/ key, /*Boolean*/ ctrl, /*Boolean*/ shift, /*Function*/ handler){
-		// summary:
-		//		Add a handler for a keyboard shortcut
-		// description:
-		//		The key argument should be in lowercase if it is a letter character
-		// tags:
-		//		protected
-		if(!lang.isArray(this._keyHandlers[key])){
-			this._keyHandlers[key] = [];
-		}
-		//TODO: would be nice to make this a hash instead of an array for quick lookups
-		this._keyHandlers[key].push({
-			shift: shift || false,
-			ctrl: ctrl || false,
-			handler: handler
-		});
-	},
-
-	onKeyPressed: function(){
-		// summary:
-		//		Handler for after the user has pressed a key, and the display has been updated.
-		//		(Runs on a timer so that it runs after the display is updated)
-		// tags:
-		//		private
-		this.onDisplayChanged(/*e*/); // can't pass in e
-	},
-
-	onClick: function(/*Event*/ e){
-		// summary:
-		//		Handler for when the user clicks.
-		// tags:
-		//		private
-
-		// console.info('onClick',this._tryDesignModeOn);
-		this.onDisplayChanged(e);
-	},
-
-	_onIEMouseDown: function(){
-		// summary:
-		//		IE only to prevent 2 clicks to focus
-		// tags:
-		//		protected
-
-		if(!this.focused && !this.disabled){
-			this.focus();
-		}
-	},
-
-	_onBlur: function(e){
-		// summary:
-		//		Called from focus manager when focus has moved away from this editor
-		// tags:
-		//		protected
-
-			// Workaround IE problem when you blur the browser windows while an editor is focused: IE hangs
-			// when you focus editor #1, blur the browser window, and then click editor #0.  See #16939.
-			if(has("ie") || has("trident")){
-				this.defer(function(){
-					if(!focus.curNode){
-						this.ownerDocumentBody.focus();
-					}
-				});
-			}
-
-		this.inherited(arguments);
-
-		var newValue = this.getValue(true);
-		if(newValue !== this.value){
-			this.onChange(newValue);
-		}
-		this._set("value", newValue);
-	},
-
-	_onFocus: function(/*Event*/ e){
-		// summary:
-		//		Called from focus manager when focus has moved into this editor
-		// tags:
-		//		protected
-
-		// console.info('_onFocus')
-		if(!this.disabled){
-			if(!this._disabledOK){
-				this.set('disabled', false);
-			}
-			this.inherited(arguments);
-		}
-	},
-
-	// TODO: remove in 2.0
-	blur: function(){
-		// summary:
-		//		Remove focus from this instance.
-		// tags:
-		//		deprecated
-		if(!has("ie") && this.window.document.documentElement && this.window.document.documentElement.focus){
-			this.window.document.documentElement.focus();
-		}else if(this.ownerDocumentBody.focus){
-			this.ownerDocumentBody.focus();
-		}
-	},
-
-	focus: function(){
-		// summary:
-		//		Move focus to this editor
-		if(!this.isLoaded){
-			this.focusOnLoad = true;
-			return;
-		}
-		if(this._cursorToStart){
-			delete this._cursorToStart;
-			if(this.editNode.childNodes){
-				this.placeCursorAtStart(); // this calls focus() so return
-				return;
-			}
-		}
-			if(has("ie") < 9){
-			//this.editNode.focus(); -> causes IE to scroll always (strict and quirks mode) to the top the Iframe
-			// if we fire the event manually and let the browser handle the focusing, the latest
-			// cursor position is focused like in FF
-				this.iframe.fireEvent('onfocus', document.createEventObject()); // createEventObject/fireEvent only in IE < 11
-			}else{
-				// Firefox and chrome
-				this.editNode.focus();
-		}
-	},
-
-	// _lastUpdate: 0,
-	updateInterval: 200,
-	_updateTimer: null,
-	onDisplayChanged: function(/*Event*/ /*===== e =====*/){
-		// summary:
-		//		This event will be fired every time the display context
-		//		changes and the result needs to be reflected in the UI.
-		// description:
-		//		If you don't want to have update too often,
-		//		onNormalizedDisplayChanged should be used instead
-		// tags:
-		//		private
-
-		// var _t=new Date();
-		if(this._updateTimer){
-			this._updateTimer.remove();
-		}
-		this._updateTimer = this.defer("onNormalizedDisplayChanged", this.updateInterval);
-
-		// Technically this should trigger a call to watch("value", ...) registered handlers,
-		// but getValue() is too slow to call on every keystroke so we don't.
-	},
-	onNormalizedDisplayChanged: function(){
-		// summary:
-		//		This event is fired every updateInterval ms or more
-		// description:
-		//		If something needs to happen immediately after a
-		//		user change, please use onDisplayChanged instead.
-		// tags:
-		//		private
-		delete this._updateTimer;
-	},
-	onChange: function(/*===== newContent =====*/){
-		// summary:
-		//		This is fired if and only if the editor loses focus and
-		//		the content is changed.
-	},
-	_normalizeCommand: function(/*String*/ cmd, /*Anything?*/argument){
-		// summary:
-		//		Used as the advice function to map our
-		//		normalized set of commands to those supported by the target
-		//		browser.
-		// tags:
-		//		private
-
-		var command = cmd.toLowerCase();
-		if(command === "formatblock"){
-			if(has("safari") && argument === undefined){ command = "heading"; }
-		}else if(command === "hilitecolor" && !has("mozilla")){
-			command = "backcolor";
-		}
-
-		return command;
-	},
-
-	_qcaCache: {},
-	queryCommandAvailable: function(/*String*/ command){
-		// summary:
-		//		Tests whether a command is supported by the host. Clients
-		//		SHOULD check whether a command is supported before attempting
-		//		to use it, behaviour for unsupported commands is undefined.
-		// command:
-		//		The command to test for
-		// tags:
-		//		private
-
-		// memoizing version. See _queryCommandAvailable for computing version
-		var ca = this._qcaCache[command];
-		if(ca !== undefined){ return ca; }
-		return (this._qcaCache[command] = this._queryCommandAvailable(command));
-	},
-
-	_queryCommandAvailable: function(/*String*/ command){
-		// summary:
-		//		See queryCommandAvailable().
-		// tags:
-		//		private
-
-		var ie = 1;
-		var mozilla = 1 << 1;
-		var webkit = 1 << 2;
-		var opera = 1 << 3;
-
-		function isSupportedBy(browsers){
-			return {
-				ie: Boolean(browsers & ie),
-				mozilla: Boolean(browsers & mozilla),
-				webkit: Boolean(browsers & webkit),
-				opera: Boolean(browsers & opera)
-			};
-		}
-
-		var supportedBy = null;
-
-		switch(command.toLowerCase()){
-			case "bold": case "italic": case "underline":
-			case "subscript": case "superscript":
-			case "fontname": case "fontsize":
-			case "forecolor": case "hilitecolor":
-			case "justifycenter": case "justifyfull": case "justifyleft":
-			case "justifyright": case "delete": case "selectall": case "toggledir":
-				supportedBy = isSupportedBy(mozilla | ie | webkit | opera);
-				break;
-
-			case "createlink": case "unlink": case "removeformat":
-			case "inserthorizontalrule": case "insertimage":
-			case "insertorderedlist": case "insertunorderedlist":
-			case "indent": case "outdent": case "formatblock":
-			case "inserthtml": case "undo": case "redo": case "strikethrough": case "tabindent":
-				supportedBy = isSupportedBy(mozilla | ie | opera | webkit);
-				break;
-
-			case "blockdirltr": case "blockdirrtl":
-			case "dirltr": case "dirrtl":
-			case "inlinedirltr": case "inlinedirrtl":
-				supportedBy = isSupportedBy(ie);
-				break;
-			case "cut": case "copy": case "paste":
-				supportedBy = isSupportedBy( ie | mozilla | webkit | opera);
-				break;
-
-			case "inserttable":
-				supportedBy = isSupportedBy(mozilla | ie);
-				break;
-
-			case "insertcell": case "insertcol": case "insertrow":
-			case "deletecells": case "deletecols": case "deleterows":
-			case "mergecells": case "splitcell":
-				supportedBy = isSupportedBy(ie | mozilla);
-				break;
-
-			default: return false;
-		}
-
-			return ((has("ie") || has("trident")) && supportedBy.ie) ||
-			(has("mozilla") && supportedBy.mozilla) ||
-			(has("webkit") && supportedBy.webkit) ||
-			(has("opera") && supportedBy.opera);	// Boolean return true if the command is supported, false otherwise
-	},
-
-	execCommand: function(/*String*/ command, argument){
-		// summary:
-		//		Executes a command in the Rich Text area
-		// command:
-		//		The command to execute
-		// argument:
-		//		An optional argument to the command
-		// tags:
-		//		protected
-		var returnValue;
-
-		//focus() is required for IE to work
-		//In addition, focus() makes sure after the execution of
-		//the command, the editor receives the focus as expected
-		if(this.focused){
-			// put focus back in the iframe, unless focus has somehow been shifted out of the editor completely
-			this.focus();
-		}
-
-		command = this._normalizeCommand(command, argument);
-		
-		if(argument !== undefined){
-			if(command === "heading"){
-				throw new Error("unimplemented");
-				}else if(command === "formatblock" && (has("ie") || has("trident"))){
-				argument = '<'+argument+'>';
-			}
-		}
-
-		//Check to see if we have any over-rides for commands, they will be functions on this
-		//widget of the form _commandImpl.  If we don't, fall through to the basic native
-		//exec command of the browser.
-		var implFunc = "_" + command + "Impl";
-		if(this[implFunc]){
-			returnValue = this[implFunc](argument);
-		}else{
-			argument = arguments.length > 1 ? argument : null;
-			if(argument || command !== "createlink"){
-				returnValue = this.document.execCommand(command, false, argument);
-			}
-		}
-
-		this.onDisplayChanged();
-		return returnValue;
-	},
-
-	queryCommandEnabled: function(/*String*/ command){
-		// summary:
-		//		Check whether a command is enabled or not.
-		// command:
-		//		The command to execute
-		// tags:
-		//		protected
-		if(this.disabled || !this._disabledOK){ return false; }
-
-		command = this._normalizeCommand(command);
-
-		//Check to see if we have any over-rides for commands, they will be functions on this
-		//widget of the form _commandEnabledImpl.  If we don't, fall through to the basic native
-		//command of the browser.
-		var implFunc = "_" + command + "EnabledImpl";
-
-		if(this[implFunc]){
-			return  this[implFunc](command);
-		}else{
-			return this._browserQueryCommandEnabled(command);
-		}
-	},
-
-	queryCommandState: function(command){
-		// summary:
-		//		Check the state of a given command and returns true or false.
-		// tags:
-		//		protected
-
-		if(this.disabled || !this._disabledOK){ return false; }
-		command = this._normalizeCommand(command);
-		try{
-			return this.document.queryCommandState(command);
-		}catch(e){
-			//Squelch, occurs if editor is hidden on FF 3 (and maybe others.)
-			return false;
-		}
-	},
-
-	queryCommandValue: function(command){
-		// summary:
-		//		Check the value of a given command. This matters most for
-		//		custom selections and complex values like font value setting.
-		// tags:
-		//		protected
-
-		if(this.disabled || !this._disabledOK){ return false; }
-		var r;
-		command = this._normalizeCommand(command);
-			if((has("ie") || has("trident")) && command === "formatblock"){
-			r = this._native2LocalFormatNames[this.document.queryCommandValue(command)];
-		}else if(has("mozilla") && command === "hilitecolor"){
-			var oldValue;
-			try{
-				oldValue = this.document.queryCommandValue("styleWithCSS");
-			}catch(e){
-				oldValue = false;
-			}
-			this.document.execCommand("styleWithCSS", false, true);
-			r = this.document.queryCommandValue(command);
-			this.document.execCommand("styleWithCSS", false, oldValue);
-		}else{
-			r = this.document.queryCommandValue(command);
-		}
-		return r;
-	},
-
-	// Misc.
-
-	_sCall: function(name, args){
-		// summary:
-		//		Run the named method of dijit/_editor/selection over the
-		//		current editor instance's window, with the passed args.
-		// tags:
-		//		private
-		return win.withGlobal(this.window, name, selectionapi, args);
-	},
-
-	// FIXME: this is a TON of code duplication. Why?
-
-	placeCursorAtStart: function(){
-		// summary:
-		//		Place the cursor at the start of the editing area.
-		// tags:
-		//		private
-
-		this.focus();
-
-		//see comments in placeCursorAtEnd
-		var isvalid=false;
-		if(has("mozilla")){
-			// TODO:  Is this branch even necessary?
-			var first=this.editNode.firstChild;
-			while(first){
-				if(first.nodeType === 3){
-					if(first.nodeValue.replace(/^\s+|\s+$/g, "").length>0){
-						isvalid=true;
-						this._sCall("selectElement", [ first ]);
-						break;
-					}
-				}else if(first.nodeType === 1){
-					isvalid=true;
-					var tg = first.tagName ? first.tagName.toLowerCase() : "";
-					// Collapse before childless tags.
-					if(/br|input|img|base|meta|area|basefont|hr|link/.test(tg)){
-						this._sCall("selectElement", [ first ]);
-					}else{
-						// Collapse inside tags with children.
-						this._sCall("selectElementChildren", [ first ]);
-					}
-					break;
-				}
-				first = first.nextSibling;
-			}
-		}else{
-			isvalid=true;
-			this._sCall("selectElementChildren", [ this.editNode ]);
-		}
-		if(isvalid){
-			this._sCall("collapse", [ true ]);
-		}
-	},
-
-	placeCursorAtEnd: function(){
-		// summary:
-		//		Place the cursor at the end of the editing area.
-		// tags:
-		//		private
-
-		this.focus();
-
-		//In mozilla, if last child is not a text node, we have to use
-		// selectElementChildren on this.editNode.lastChild otherwise the
-		// cursor would be placed at the end of the closing tag of
-		//this.editNode.lastChild
-		var isvalid=false;
-		if(has("mozilla")){
-			var last=this.editNode.lastChild;
-			while(last){
-				if(last.nodeType === 3){
-					if(last.nodeValue.replace(/^\s+|\s+$/g, "").length>0){
-						isvalid=true;
-						this._sCall("selectElement", [ last ]);
-						break;
-					}
-				}else if(last.nodeType === 1){
-					isvalid=true;
-					this._sCall("selectElement", [ last.lastChild || last]);
-					break;
-				}
-				last = last.previousSibling;
-			}
-		}else{
-			isvalid=true;
-			this._sCall("selectElementChildren", [ this.editNode ]);
-		}
-		if(isvalid){
-			this._sCall("collapse", [ false ]);
-		}
-	},
-
-	getValue: function(/*Boolean?*/ nonDestructive){
-		// summary:
-		//		Return the current content of the editing area (post filters
-		//		are applied).  Users should call get('value') instead.
-		// nonDestructive:
-		//		defaults to false. Should the post-filtering be run over a copy
-		//		of the live DOM? Most users should pass "true" here unless they
-		//		*really* know that none of the installed filters are going to
-		//		mess up the editing session.
-		// tags:
-		//		private
-		if(this.textarea){
-			if(this.isClosed || !this.isLoaded){
-				return this.textarea.value;
-			}
-		}
-
-		return this.isLoaded ? this._postFilterContent(null, nonDestructive) : this.value;
-	},
-	_getValueAttr: function(){
-		// summary:
-		//		Hook to make attr("value") work
-		return this.getValue(true);
-	},
-
-	setValue: function(/*String*/ html){
-		// summary:
-		//		This function sets the content. No undo history is preserved.
-		//		Users should use set('value', ...) instead.
-		// tags:
-		//		deprecated
-
-		// TODO: remove this and getValue() for 2.0, and move code to _setValueAttr()
-
-		if(!this.isLoaded){
-			// try again after the editor is finished loading
-			this.onLoadDeferred.then(lang.hitch(this, function(){
-				this.setValue(html);
-			}));
-			return;
-		}
-		this._cursorToStart = true;
-		if(this.textarea && (this.isClosed || !this.isLoaded)){
-			this.textarea.value=html;
-		}else{
-			html = this._preFilterContent(html);
-			var node = this.isClosed ? this.domNode : this.editNode;
-
-			// Use &nbsp; to avoid webkit problems where editor is disabled until the user clicks it
-			if(!html && has("webkit")){
-				html = "&#160;";	// &nbsp;
-			}
-			node.innerHTML = html;
-			this._preDomFilterContent(node);
-		}
-
-		this.onDisplayChanged();
-		this._set("value", this.getValue(true));
-	},
-
-	replaceValue: function(/*String*/ html){
-		// summary:
-		//		This function set the content while trying to maintain the undo stack
-		//		(now only works fine with Moz, this is identical to setValue in all
-		//		other browsers)
-		// tags:
-		//		protected
-
-		if(this.isClosed){
-			this.setValue(html);
-		}else if(this.window && this.window.getSelection && !has("mozilla")){ // Safari
-			// look ma! it's a totally f'd browser!
-			this.setValue(html);
-		}else if(this.window && this.window.getSelection){ // Moz
-			html = this._preFilterContent(html);
-			this.execCommand("selectall");
-			this.execCommand("inserthtml", html);
-			this._preDomFilterContent(this.editNode);
-		}else if(this.document && this.document.selection){//IE
-			//In IE, when the first element is not a text node, say
-			//an <a> tag, when replacing the content of the editing
-			//area, the <a> tag will be around all the content
-			//so for now, use setValue for IE too
-			this.setValue(html);
-		}
-
-		this._set("value", this.getValue(true));
-	},
-
-	_preFilterContent: function(/*String*/ html){
-		// summary:
-		//		Filter the input before setting the content of the editing
-		//		area. DOM pre-filtering may happen after this
-		//		string-based filtering takes place but as of 1.2, this is not
-		//		guaranteed for operations such as the inserthtml command.
-		// tags:
-		//		private
-
-		var ec = html;
-		array.forEach(this.contentPreFilters, function(ef){ if(ef){ ec = ef(ec); } });
-		return ec;
-	},
-	_preDomFilterContent: function(/*DomNode*/ dom){
-		// summary:
-		//		filter the input's live DOM. All filter operations should be
-		//		considered to be "live" and operating on the DOM that the user
-		//		will be interacting with in their editing session.
-		// tags:
-		//		private
-		dom = dom || this.editNode;
-		array.forEach(this.contentDomPreFilters, function(ef){
-			if(ef && lang.isFunction(ef)){
-				ef(dom);
-			}
-		}, this);
-	},
-
-	_postFilterContent: function(
-		/*DomNode|DomNode[]|String?*/ dom,
-		/*Boolean?*/ nonDestructive){
-		// summary:
-		//		filter the output after getting the content of the editing area
-		//
-		// description:
-		//		post-filtering allows plug-ins and users to specify any number
-		//		of transforms over the editor's content, enabling many common
-		//		use-cases such as transforming absolute to relative URLs (and
-		//		vice-versa), ensuring conformance with a particular DTD, etc.
-		//		The filters are registered in the contentDomPostFilters and
-		//		contentPostFilters arrays. Each item in the
-		//		contentDomPostFilters array is a function which takes a DOM
-		//		Node or array of nodes as its only argument and returns the
-		//		same. It is then passed down the chain for further filtering.
-		//		The contentPostFilters array behaves the same way, except each
-		//		member operates on strings. Together, the DOM and string-based
-		//		filtering allow the full range of post-processing that should
-		//		be necessaray to enable even the most agressive of post-editing
-		//		conversions to take place.
-		//
-		//		If nonDestructive is set to "true", the nodes are cloned before
-		//		filtering proceeds to avoid potentially destructive transforms
-		//		to the content which may still needed to be edited further.
-		//		Once DOM filtering has taken place, the serialized version of
-		//		the DOM which is passed is run through each of the
-		//		contentPostFilters functions.
-		//
-		// dom:
-		//		a node, set of nodes, which to filter using each of the current
-		//		members of the contentDomPostFilters and contentPostFilters arrays.
-		//
-		// nonDestructive:
-		//		defaults to "false". If true, ensures that filtering happens on
-		//		a clone of the passed-in content and not the actual node
-		//		itself.
-		//
-		// tags:
-		//		private
-
-		var ec;
-		if(!lang.isString(dom)){
-			dom = dom || this.editNode;
-			if(this.contentDomPostFilters.length){
-				if(nonDestructive){
-					dom = lang.clone(dom);
-				}
-				array.forEach(this.contentDomPostFilters, function(ef){
-					dom = ef(dom);
-				});
-			}
-			ec = htmlapi.getChildrenHtml(dom);
-		}else{
-			ec = dom;
-		}
-
-		if(!lang.trim(ec.replace(/^\xA0\xA0*/, '').replace(/\xA0\xA0*$/, '')).length){
-			ec = "";
-		}
-
-		array.forEach(this.contentPostFilters, function(ef){
-			ec = ef(ec);
-		});
-
-		return ec;
-	},
-
-	_saveContent: function(){
-		// summary:
-		//		Saves the content in an onunload event if the editor has not been closed
-		// tags:
-		//		private
-
-		var saveTextarea = dom.byId(dijit._scopeName + "._editor.RichText.value");
-		if(saveTextarea){
-			if(saveTextarea.value){
-				saveTextarea.value += this._SEPARATOR;
-			}
-			saveTextarea.value += this.name + this._NAME_CONTENT_SEP + this.getValue(true);
-		}
-	},
-
-
-	escapeXml: function(/*String*/ str, /*Boolean*/ noSingleQuotes){
-		// summary:
-		//		Adds escape sequences for special characters in XML.
-		//		Optionally skips escapes for single quotes
-		// tags:
-		//		private
-
-		str = str.replace(/&/gm, "&amp;").replace(/</gm, "&lt;").replace(/>/gm, "&gt;").replace(/"/gm, "&quot;");
-		if(!noSingleQuotes){
-			str = str.replace(/'/gm, "&#39;");
-		}
-		return str; // string
-	},
-
-	getNodeHtml: function(/* DomNode */ node){
-		// summary:
-		//		Deprecated.   Use dijit/_editor/html::_getNodeHtml() instead.
-		// tags:
-		//		deprecated
-		kernel.deprecated('dijit.Editor::getNodeHtml is deprecated','use dijit/_editor/html::getNodeHtml instead', 2);
-		return htmlapi.getNodeHtml(node); // String
-	},
-
-	getNodeChildrenHtml: function(/* DomNode */ dom){
-		// summary:
-		//		Deprecated.   Use dijit/_editor/html::getChildrenHtml() instead.
-		// tags:
-		//		deprecated
-		kernel.deprecated('dijit.Editor::getNodeChildrenHtml is deprecated','use dijit/_editor/html::getChildrenHtml instead', 2);
-		return htmlapi.getChildrenHtml(dom);
-	},
-
-	close: function(/*Boolean?*/ save){
-		// summary:
-		//		Kills the editor and optionally writes back the modified contents to the
-		//		element from which it originated.
-		// save:
-		//		Whether or not to save the changes. If false, the changes are discarded.
-		// tags:
-		//		private
-
-		if(this.isClosed){ return; }
-
-		if(!arguments.length){ save = true; }
-		if(save){
-			this._set("value", this.getValue(true));
-		}
-
-		// line height is squashed for iframes
-		// FIXME: why was this here? if(this.iframe){ this.domNode.style.lineHeight = null; }
-
-		if(this.interval){ clearInterval(this.interval); }
-
-		if(this._webkitListener){
-			//Cleaup of WebKit fix: #9532
-			this.disconnect(this._webkitListener);
-			delete this._webkitListener;
-		}
-
-		// Guard against memory leaks on IE (see #9268)
-		if(has("ie")){
-			 this.iframe.onfocus = null;
-		}
-		this.iframe._loadFunc = null;
-
-		if(this._iframeRegHandle){
-			this._iframeRegHandle.remove();
-			delete this._iframeRegHandle;
-		}
-
-		if(this.textarea){
-			var s = this.textarea.style;
-			s.position = "";
-			s.left = s.top = "";
-			if(has("ie")){
-				s.overflow = this.__overflow;
-				this.__overflow = null;
-			}
-			this.textarea.value = this.value;
-			domConstruct.destroy(this.domNode);
-			this.domNode = this.textarea;
-		}else{
-			// Note that this destroys the iframe
-			this.domNode.innerHTML = this.value;
-		}
-		delete this.iframe;
-
-		domClass.remove(this.domNode, this.baseClass);
-		this.isClosed = true;
-		this.isLoaded = false;
-
-		delete this.editNode;
-		delete this.focusNode;
-
-		if(this.window && this.window._frameElement){
-			this.window._frameElement = null;
-		}
-
-		this.window = null;
-		this.document = null;
-		this.editingArea = null;
-		this.editorObject = null;
-	},
-
-	destroy: function(){
-		if(!this.isClosed){ this.close(false); }
-		if(this._updateTimer){
-			this._updateTimer.remove();
-		}
-		this.inherited(arguments);
-		if(RichText._globalSaveHandler){
-			delete RichText._globalSaveHandler[this.id];
-		}
-	},
-
-	_removeMozBogus: function(/* String */ html){
-		// summary:
-		//		Post filter to remove unwanted HTML attributes generated by mozilla
-		// tags:
-		//		private
-		return html.replace(/\stype="_moz"/gi, '').replace(/\s_moz_dirty=""/gi, '').replace(/_moz_resizing="(true|false)"/gi,''); // String
-	},
-	_removeWebkitBogus: function(/* String */ html){
-		// summary:
-		//		Post filter to remove unwanted HTML attributes generated by webkit
-		// tags:
-		//		private
-		html = html.replace(/\sclass="webkit-block-placeholder"/gi, '');
-		html = html.replace(/\sclass="apple-style-span"/gi, '');
-		// For some reason copy/paste sometime adds extra meta tags for charset on
-		// webkit (chrome) on mac.They need to be removed.  See: #12007"
-		html = html.replace(/<meta charset=\"utf-8\" \/>/gi, '');
-		return html; // String
-	},
-	_normalizeFontStyle: function(/* String */ html){
-		// summary:
-		//		Convert 'strong' and 'em' to 'b' and 'i'.
-		// description:
-		//		Moz can not handle strong/em tags correctly, so to help
-		//		mozilla and also to normalize output, convert them to 'b' and 'i'.
-		//
-		//		Note the IE generates 'strong' and 'em' rather than 'b' and 'i'
-		// tags:
-		//		private
-		return html.replace(/<(\/)?strong([ \>])/gi, '<$1b$2')
-			.replace(/<(\/)?em([ \>])/gi, '<$1i$2' ); // String
-	},
-
-	_preFixUrlAttributes: function(/* String */ html){
-		// summary:
-		//		Pre-filter to do fixing to href attributes on `<a>` and `<img>` tags
-		// tags:
-		//		private
-		return html.replace(/(?:(<a(?=\s).*?\shref=)("|')(.*?)\2)|(?:(<a\s.*?href=)([^"'][^ >]+))/gi,
-				'$1$4$2$3$5$2 _djrealurl=$2$3$5$2')
-			.replace(/(?:(<img(?=\s).*?\ssrc=)("|')(.*?)\2)|(?:(<img\s.*?src=)([^"'][^ >]+))/gi,
-				'$1$4$2$3$5$2 _djrealurl=$2$3$5$2'); // String
-	},
-
-	/*****************************************************************************
-		The following functions implement HTML manipulation commands for various
-		browser/contentEditable implementations.  The goal of them is to enforce
-		standard behaviors of them.
-	******************************************************************************/
-
-	/*** queryCommandEnabled implementations ***/
-
-		_browserQueryCommandEnabled: function(command){
-			// summary:
-			//		Implementation to call to the native queryCommandEnabled of the browser.
-			// command:
-			//		The command to check.
-			// tags:
-			//		protected
-			if(!command){
-				return false;
-			}
-			var elem = has("ie") < 9 ? this.document.selection.createRange() : this.document;
-		try{
-			return elem.queryCommandEnabled(command);
-		}catch(e){
-			return false;
-		}
-	},
-
-	_createlinkEnabledImpl: function(/*===== argument =====*/){
-		// summary:
-		//		This function implements the test for if the create link
-		//		command should be enabled or not.
-		// argument:
-		//		arguments to the exec command, if any.
-		// tags:
-		//		protected
-		var enabled = true;
-		if(has("opera")){
-			var sel = this.window.getSelection();
-			if(sel.isCollapsed){
-				enabled = true;
-			}else{
-				enabled = this.document.queryCommandEnabled("createlink");
-			}
-		}else{
-			enabled = this._browserQueryCommandEnabled("createlink");
-		}
-		return enabled;
-	},
-
-	_unlinkEnabledImpl: function(/*===== argument =====*/){
-		// summary:
-		//		This function implements the test for if the unlink
-		//		command should be enabled or not.
-		// argument:
-		//		arguments to the exec command, if any.
-		// tags:
-		//		protected
-		var enabled = true;
-		if(has("mozilla") || has("webkit")){
-			enabled = this._sCall("hasAncestorElement", ["a"]);
-		}else{
-			enabled = this._browserQueryCommandEnabled("unlink");
-		}
-		return enabled;
-	},
-
-	_inserttableEnabledImpl: function(/*===== argument =====*/){
-		// summary:
-		//		This function implements the test for if the inserttable
-		//		command should be enabled or not.
-		// argument:
-		//		arguments to the exec command, if any.
-		// tags:
-		//		protected
-		var enabled = true;
-		if(has("mozilla") || has("webkit")){
-			enabled = true;
-		}else{
-			enabled = this._browserQueryCommandEnabled("inserttable");
-		}
-		return enabled;
-	},
-
-	_cutEnabledImpl: function(/*===== argument =====*/){
-		// summary:
-		//		This function implements the test for if the cut
-		//		command should be enabled or not.
-		// argument:
-		//		arguments to the exec command, if any.
-		// tags:
-		//		protected
-		var enabled = true;
-		if(has("webkit")){
-			// WebKit deems clipboard activity as a security threat and natively would return false
-			var sel = this.window.getSelection();
-			if(sel){ sel = sel.toString(); }
-			enabled = !!sel;
-		}else{
-			enabled = this._browserQueryCommandEnabled("cut");
-		}
-		return enabled;
-	},
-
-	_copyEnabledImpl: function(/*===== argument =====*/){
-		// summary:
-		//		This function implements the test for if the copy
-		//		command should be enabled or not.
-		// argument:
-		//		arguments to the exec command, if any.
-		// tags:
-		//		protected
-		var enabled = true;
-		if(has("webkit")){
-			// WebKit deems clipboard activity as a security threat and natively would return false
-			var sel = this.window.getSelection();
-			if(sel){ sel = sel.toString(); }
-			enabled = !!sel;
-		}else{
-			enabled = this._browserQueryCommandEnabled("copy");
-		}
-		return enabled;
-	},
-
-	_pasteEnabledImpl: function(/*===== argument =====*/){
-		// summary:c
-		//		This function implements the test for if the paste
-		//		command should be enabled or not.
-		// argument:
-		//		arguments to the exec command, if any.
-		// tags:
-		//		protected
-		var enabled = true;
-		if(has("webkit")){
-			return true;
-		}else{
-			enabled = this._browserQueryCommandEnabled("paste");
-		}
-		return enabled;
-	},
-
-	/*** execCommand implementations ***/
-
-	_inserthorizontalruleImpl: function(argument){
-		// summary:
-		//		This function implements the insertion of HTML 'HR' tags.
-		//		into a point on the page.  IE doesn't to it right, so
-		//		we have to use an alternate form
-		// argument:
-		//		arguments to the exec command, if any.
-		// tags:
-		//		protected
-		if(has("ie")){
-			return this._inserthtmlImpl("<hr>");
-		}
-		return this.document.execCommand("inserthorizontalrule", false, argument);
-	},
-
-	_unlinkImpl: function(argument){
-		// summary:
-		//		This function implements the unlink of an 'a' tag.
-		// argument:
-		//		arguments to the exec command, if any.
-		// tags:
-		//		protected
-		if((this.queryCommandEnabled("unlink")) && (has("mozilla") || has("webkit"))){
-			var a = this._sCall("getAncestorElement", [ "a" ]);
-			this._sCall("selectElement", [ a ]);
-			return this.document.execCommand("unlink", false, null);
-		}
-		return this.document.execCommand("unlink", false, argument);
-	},
-
-	_hilitecolorImpl: function(argument){
-		// summary:
-		//		This function implements the hilitecolor command
-		// argument:
-		//		arguments to the exec command, if any.
-		// tags:
-		//		protected
-		var returnValue;
-		var isApplied = this._handleTextColorOrProperties("hilitecolor", argument);
-		if(!isApplied){
-			if(has("mozilla")){
-				// mozilla doesn't support hilitecolor properly when useCSS is
-				// set to false (bugzilla #279330)
-				this.document.execCommand("styleWithCSS", false, true);
-				console.log("Executing color command.");
-				returnValue = this.document.execCommand("hilitecolor", false, argument);
-				this.document.execCommand("styleWithCSS", false, false);
-			}else{
-				returnValue = this.document.execCommand("hilitecolor", false, argument);
-			}
-		}
-		return returnValue;
-	},
-
-	_backcolorImpl: function(argument){
-		// summary:
-		//		This function implements the backcolor command
-		// argument:
-		//		arguments to the exec command, if any.
-		// tags:
-		//		protected
-		if(has("ie")){
-			// Tested under IE 6 XP2, no problem here, comment out
-			// IE weirdly collapses ranges when we exec these commands, so prevent it
-			//	var tr = this.document.selection.createRange();
-			argument = argument ? argument : null;
-		}
-		var isApplied = this._handleTextColorOrProperties("backcolor", argument);
-		if(!isApplied){
-			isApplied = this.document.execCommand("backcolor", false, argument);
-		}
-		return isApplied;
-	},
-
-	_forecolorImpl: function(argument){
-		// summary:
-		//		This function implements the forecolor command
-		// argument:
-		//		arguments to the exec command, if any.
-		// tags:
-		//		protected
-		if(has("ie")){
-			// Tested under IE 6 XP2, no problem here, comment out
-			// IE weirdly collapses ranges when we exec these commands, so prevent it
-			//	var tr = this.document.selection.createRange();
-			argument = argument? argument : null;
-		}
-		var isApplied = false;
-		isApplied = this._handleTextColorOrProperties("forecolor", argument);
-		if(!isApplied){
-			isApplied = this.document.execCommand("forecolor", false, argument);
-		}
-		return isApplied;
-	},
-
-	_inserthtmlImpl: function(argument){
-		// summary:
-		//		This function implements the insertion of HTML content into
-		//		a point on the page.
-		// argument:
-		//		The content to insert, if any.
-		// tags:
-		//		protected
-		argument = this._preFilterContent(argument);
-		var rv = true;
-			if(has("ie") < 9){
-				var insertRange = this.document.selection.createRange();
-				if(this.document.selection.type.toUpperCase() === 'CONTROL'){
-					var n = insertRange.item(0);
-					while(insertRange.length){
-						insertRange.remove(insertRange.item(0));
-					}
-					n.outerHTML = argument;
-				}else{
-					insertRange.pasteHTML(argument);
-				}
-				insertRange.select();
-			}else if(has("trident") < 8){
-			var insertRange;
-			var selection = rangeapi.getSelection(this.window);
-			if(selection && selection.rangeCount && selection.getRangeAt){
-				insertRange = selection.getRangeAt(0);
-				insertRange.deleteContents();
-
-				var div = domConstruct.create('div');
-				div.innerHTML = argument;
-				var node, lastNode;
-				var n = this.document.createDocumentFragment();
-				while((node = div.firstChild)){
-					lastNode = n.appendChild(node);
-				}
-				insertRange.insertNode(n);
-				if(lastNode) {
-					insertRange = insertRange.cloneRange();
-					insertRange.setStartAfter(lastNode);
-					insertRange.collapse(false);
-					selection.removeAllRanges();
-					selection.addRange(insertRange);
-				}
-			}
-		}else if(has("mozilla") && !argument.length){
-			//mozilla can not inserthtml an empty html to delete current selection
-			//so we delete the selection instead in this case
-			this._sCall("remove"); // FIXME
-		}else{
-			rv = this.document.execCommand("inserthtml", false, argument);
-		}
-		return rv;
-	},
-
-	_boldImpl: function(argument){
-		// summary:
-		//		This function implements an over-ride of the bold command.
-		// argument:
-		//		Not used, operates by selection.
-		// tags:
-		//		protected
-		var applied = false;
-		if(has("ie") || has("trident")){
-			this._adaptIESelection();		
-			applied = this._adaptIEFormatAreaAndExec("bold");
-		}
-		if(!applied){
-			applied = this.document.execCommand("bold", false, argument);
-		}
-		return applied;
-	},
-
-	_italicImpl: function(argument){
-		// summary:
-		//		This function implements an over-ride of the italic command.
-		// argument:
-		//		Not used, operates by selection.
-		// tags:
-		//		protected
-		var applied = false;
-		if(has("ie") || has("trident")){
-			this._adaptIESelection();			
-			applied = this._adaptIEFormatAreaAndExec("italic");
-		}
-		if(!applied){
-			applied = this.document.execCommand("italic", false, argument);
-		}
-		return applied;
-	},
-
-	_underlineImpl: function(argument){
-		// summary:
-		//		This function implements an over-ride of the underline command.
-		// argument:
-		//		Not used, operates by selection.
-		// tags:
-		//		protected
-		var applied = false;
-		if(has("ie") || has("trident")){
-			this._adaptIESelection();			
-			applied = this._adaptIEFormatAreaAndExec("underline");
-		}
-		if(!applied){
-			applied = this.document.execCommand("underline", false, argument);
-		}
-		return applied;
-	},
-
-	_strikethroughImpl: function(argument){
-		// summary:
-		//		This function implements an over-ride of the strikethrough command.
-		// argument:
-		//		Not used, operates by selection.
-		// tags:
-		//		protected
-		var applied = false;
-		if(has("ie") || has("trident")){
-			this._adaptIESelection();			
-			applied = this._adaptIEFormatAreaAndExec("strikethrough");
-		}
-		if(!applied){
-			applied = this.document.execCommand("strikethrough", false, argument);
-		}
-		return applied;
-	},
-
-	_superscriptImpl: function(argument){
-		// summary:
-		//		This function implements an over-ride of the superscript command.
-		// argument:
-		//		Not used, operates by selection.
-		// tags:
-		//		protected
-		var applied = false;
-		if(has("ie") || has("trident")){
-			this._adaptIESelection();			
-			applied = this._adaptIEFormatAreaAndExec("superscript");
-		}
-		if(!applied){
-			applied = this.document.execCommand("superscript", false, argument);
-		}
-		return applied;
-	},
-
-	_subscriptImpl: function(argument){
-		// summary:
-		//		This function implements an over-ride of the superscript command.
-		// argument:
-		//		Not used, operates by selection.
-		// tags:
-		//		protected
-		var applied = false;
-		if(has("ie") || has("trident")){
-			this._adaptIESelection();			
-			applied = this._adaptIEFormatAreaAndExec("subscript");
-			
-		}
-		if(!applied){
-			applied = this.document.execCommand("subscript", false, argument);
-		}
-		return applied;
-	},
-	
-	_fontnameImpl: function(argument){
-		// summary:
-		//		This function implements the fontname command
-		// argument:
-		//		arguments to the exec command, if any.
-		// tags:
-		//		protected
-		var isApplied;
-		if(has("ie") || has("trident")){
-			isApplied = this._handleTextColorOrProperties("fontname", argument);
-		}
-		if(!isApplied){
-			isApplied = this.document.execCommand("fontname", false, argument);
-		}
-		return isApplied;
-	},
-
-	_fontsizeImpl: function(argument){
-		// summary:
-		//		This function implements the fontsize command
-		// argument:
-		//		arguments to the exec command, if any.
-		// tags:
-		//		protected
-		var isApplied;
-		if(has("ie") || has("trident")){
-			isApplied = this._handleTextColorOrProperties("fontsize", argument);
-		}
-		if(!isApplied){
-			isApplied = this.document.execCommand("fontsize", false, argument);
-		}
-		return isApplied;
-	},
-	
-	_insertorderedlistImpl: function(argument){
-		// summary:
-		//		This function implements the insertorderedlist command
-		// argument:
-		//		arguments to the exec command, if any.
-		// tags:
-		//		protected
-		var applied = false;
-		if(has("ie") || has("trident")){
-			applied = this._adaptIEList("insertorderedlist", argument);
-		}
-		if(!applied){
-			applied = this.document.execCommand("insertorderedlist", false, argument);
-		}
-		return applied;
-	},
-	
-	_insertunorderedlistImpl: function(argument){
-		// summary:
-		//		This function implements the insertunorderedlist command
-		// argument:
-		//		arguments to the exec command, if any.
-		// tags:
-		//		protected
-		var applied = false;
-		if(has("ie") || has("trident")){
-			applied = this._adaptIEList("insertunorderedlist", argument);
-		}
-		if(!applied){
-			applied = this.document.execCommand("insertunorderedlist", false, argument);
-		}
-		return applied;
-	},
-	
-	getHeaderHeight: function(){
-		// summary:
-		//		A function for obtaining the height of the header node
-		return this._getNodeChildrenHeight(this.header); // Number
-	},
-
-	getFooterHeight: function(){
-		// summary:
-		//		A function for obtaining the height of the footer node
-		return this._getNodeChildrenHeight(this.footer); // Number
-	},
-
-	_getNodeChildrenHeight: function(node){
-		// summary:
-		//		An internal function for computing the cumulative height of all child nodes of 'node'
-		// node:
-		//		The node to process the children of;
-		var h = 0;
-		if(node && node.childNodes){
-			// IE didn't compute it right when position was obtained on the node directly is some cases,
-			// so we have to walk over all the children manually.
-			var i;
-			for(i = 0; i < node.childNodes.length; i++){
-				var size = domGeometry.position(node.childNodes[i]);
-				h += size.h;
-			}
-		}
-		return h; // Number
-	},
-
-	_isNodeEmpty: function(node, startOffset){
-		// summary:
-		//		Function to test if a node is devoid of real content.
-		// node:
-		//		The node to check.
-		// tags:
-		//		private.
-		if(node.nodeType === 1/*element*/){
-			if(node.childNodes.length > 0){
-					return this._isNodeEmpty(node.childNodes[0], startOffset);	// huh?   why test just first child?
-	}
-			return true;
-		}else if(node.nodeType === 3/*text*/){
-			return (node.nodeValue.substring(startOffset) === "");
-		}
-		return false;
-	},
-
-	_removeStartingRangeFromRange: function(node, range){
-		// summary:
-		//		Function to adjust selection range by removing the current
-		//		start node.
-		// node:
-		//		The node to remove from the starting range.
-		// range:
-		//		The range to adapt.
-		// tags:
-		//		private
-		if(node.nextSibling){
-			range.setStart(node.nextSibling,0);
-		}else{
-			var parent = node.parentNode;
-			while(parent && parent.nextSibling == null){
-				//move up the tree until we find a parent that has another node, that node will be the next node
-				parent = parent.parentNode;
-			}
-			if(parent){
-				range.setStart(parent.nextSibling,0);
-			}
-		}
-		return range;
-	},
-
-	_adaptIESelection: function(){
-		// summary:
-		//		Function to adapt the IE range by removing leading 'newlines'
-		//		Needed to fix issue with bold/italics/underline not working if
-		//		range included leading 'newlines'.
-		//		In IE, if a user starts a selection at the very end of a line,
-		//		then the native browser commands will fail to execute correctly.
-		//		To work around the issue,  we can remove all empty nodes from
-		//		the start of the range selection.
-		var selection = rangeapi.getSelection(this.window);
-		if(selection && selection.rangeCount && !selection.isCollapsed){
-			var range = selection.getRangeAt(0);
-			var firstNode = range.startContainer;
-			var startOffset = range.startOffset;
-
-			while(firstNode.nodeType === 3/*text*/ && startOffset >= firstNode.length && firstNode.nextSibling){
-				//traverse the text nodes until we get to the one that is actually highlighted
-				startOffset = startOffset - firstNode.length;
-				firstNode = firstNode.nextSibling;
-			}
-
-			//Remove the starting ranges until the range does not start with an empty node.
-			var lastNode=null;
-			while(this._isNodeEmpty(firstNode, startOffset) && firstNode !== lastNode){
-				lastNode =firstNode; //this will break the loop in case we can't find the next sibling
-				range = this._removeStartingRangeFromRange(firstNode, range); //move the start container to the next node in the range
-				firstNode = range.startContainer;
-				startOffset = 0; //start at the beginning of the new starting range
-			}
-			selection.removeAllRanges();// this will work as long as users cannot select multiple ranges. I have not been able to do that in the editor.
-			selection.addRange(range);
-		}
-	},
-	
-	_adaptIEFormatAreaAndExec: function(command){
-		// summary:
-		//		Function to handle IE's quirkiness regarding how it handles
-		//		format commands on a word.  This involves a lit of node splitting
-		//		and format cloning.
-		// command:
-		//		The format command, needed to check if the desired
-		//		command is true or not.
-		var selection = rangeapi.getSelection(this.window);
-		var doc = this.document;
-		var rs, ret, range, txt, startNode, endNode, breaker, sNode;
-		if(command && selection && selection.isCollapsed){
-			var isApplied = this.queryCommandValue(command);
-			if(isApplied){
-				
-				// We have to split backwards until we hit the format
-				var nNames = this._tagNamesForCommand(command);
-				range = selection.getRangeAt(0);
-				var fs = range.startContainer;
-				if(fs.nodeType === 3){
-					var offset = range.endOffset;
-					if(fs.length < offset){
-						//We are not looking from the right node, try to locate the correct one
-						ret = this._adjustNodeAndOffset(rs, offset);
-						fs = ret.node;
-						offset = ret.offset;
-					}
-				}									
-				var topNode;
-				while(fs && fs !== this.editNode){
-					// We have to walk back and see if this is still a format or not.
-					// Hm, how do I do this?
-					var tName = fs.tagName? fs.tagName.toLowerCase() : "";
-					if(array.indexOf(nNames, tName) > -1){
-						topNode = fs;
-						break;
-					}
-					fs = fs.parentNode;
-				}
-
-				// Okay, we have a stopping place, time to split things apart.
-				if(topNode){
-					// Okay, we know how far we have to split backwards, so we have to split now.
-					rs = range.startContainer;
-					var newblock = doc.createElement(topNode.tagName);
-					domConstruct.place(newblock, topNode, "after");
-					if(rs && rs.nodeType === 3){
-						// Text node, we have to split it.
-						var nodeToMove, tNode;
-						var endOffset = range.endOffset;
-						if(rs.length < endOffset){
-							//We are not splitting the right node, try to locate the correct one
-							ret = this._adjustNodeAndOffset(rs, endOffset);
-							rs = ret.node;
-							endOffset = ret.offset;
-						}
-		
-						txt = rs.nodeValue;
-						startNode = doc.createTextNode(txt.substring(0, endOffset));
-						var endText = txt.substring(endOffset, txt.length);
-						if(endText){
-							endNode = doc.createTextNode(endText);
-						}
-						// Place the split, then remove original nodes.
-						domConstruct.place(startNode, rs, "before");
-						if(endNode){
-							breaker = doc.createElement("span");
-							breaker.className = "ieFormatBreakerSpan";
-							domConstruct.place(breaker, rs, "after");
-							domConstruct.place(endNode, breaker, "after");
-							endNode = breaker;
-						}
-						domConstruct.destroy(rs);
-						
-						// Okay, we split the text.  Now we need to see if we're
-						// parented to the block element we're splitting and if
-						// not, we have to split all the way up.  Ugh.
-						var parentC = startNode.parentNode;
-						var tagList = [];
-						var tagData;
-						while(parentC !== topNode){
-							var tg = parentC.tagName;
-							tagData = {tagName: tg};
-							tagList.push(tagData);
-														
-							var newTg = doc.createElement(tg);
-							// Clone over any 'style' data.
-							if(parentC.style){
-								if(newTg.style){
-									if(parentC.style.cssText){
-										newTg.style.cssText = parentC.style.cssText;
-										tagData.cssText = parentC.style.cssText;
-									}
-								}
-							}
-							// If font also need to clone over any font data.
-							if(parentC.tagName === "FONT"){
-								if(parentC.color){
-									newTg.color = parentC.color;
-									tagData.color = parentC.color;
-								}
-								if(parentC.face){
-									newTg.face = parentC.face;
-									tagData.face = parentC.face;
-								}
-								if(parentC.size){  // this check was necessary on IE
-									newTg.size = parentC.size;
-									tagData.size = parentC.size;
-								}
-							}
-							if(parentC.className){
-								newTg.className = parentC.className;
-								tagData.className = parentC.className;
-							}
-							
-							// Now move end node and every sibling 
-							// after it over into the new tag.
-							if(endNode){
-								nodeToMove = endNode;
-								while(nodeToMove){
-									tNode = nodeToMove.nextSibling;
-									newTg.appendChild(nodeToMove);
-									nodeToMove = tNode;
-								}
-							}
-							if(newTg.tagName == parentC.tagName){
-								breaker = doc.createElement("span");
-								breaker.className = "ieFormatBreakerSpan";
-								domConstruct.place(breaker, parentC, "after");
-								domConstruct.place(newTg, breaker, "after");
-							}else{
-								domConstruct.place(newTg, parentC, "after");
-							}
-							startNode = parentC;
-							endNode = newTg;
-							parentC = parentC.parentNode;
-						}
-
-						// Lastly, move the split out all the split tags 
-						// to the new block as they should now be split properly.
-						if(endNode){
-							nodeToMove = endNode;
-							if(nodeToMove.nodeType === 1 || (nodeToMove.nodeType === 3 && nodeToMove.nodeValue)){
-								// Non-blank text and non-text nodes need to clear out that blank space
-								// before moving the contents.
-								newblock.innerHTML = "";
-							}
-							while(nodeToMove){
-								tNode = nodeToMove.nextSibling;
-								newblock.appendChild(nodeToMove);
-								nodeToMove = tNode;
-							}
-						}
-						
-						// We had intermediate tags, we have to now recreate them inbetween the split
-						// and restore what styles, classnames, etc, we can.
-						var newrange;
-						if(tagList.length){
-							tagData = tagList.pop();
-							var newContTag = doc.createElement(tagData.tagName);
-							if(tagData.cssText && newContTag.style){
-								newContTag.style.cssText = tagData.cssText;
-							}
-							if(tagData.className){
-								newContTag.className = tagData.className;
-							}
-							if(tagData.tagName === "FONT"){
-								if(tagData.color){
-									newContTag.color = tagData.color;
-								}
-								if(tagData.face){
-									newContTag.face = tagData.face;
-								}
-								if(tagData.size){ 
-									newContTag.size = tagData.size;
-								}
-							}								
-							domConstruct.place(newContTag, newblock, "before");
-							while(tagList.length){
-								tagData = tagList.pop();
-								var newTgNode = doc.createElement(tagData.tagName);
-								if(tagData.cssText && newTgNode.style){
-									newTgNode.style.cssText = tagData.cssText;
-								}
-								if(tagData.className){
-									newTgNode.className = tagData.className;
-								}
-								if(tagData.tagName === "FONT"){
-									if(tagData.color){
-										newTgNode.color = tagData.color;
-									}
-									if(tagData.face){
-										newTgNode.face = tagData.face;
-									}
-									if(tagData.size){ 
-										newTgNode.size = tagData.size;
-									}
-								}	
-								newContTag.appendChild(newTgNode);
-								newContTag = newTgNode;
-							}							
-							
-							// Okay, everything is theoretically split apart and removed from the content
-							// so insert the dummy text to select, select it, then
-							// clear to position cursor.
-							sNode = doc.createTextNode(".");
-							breaker.appendChild(sNode);
-							newContTag.appendChild(sNode);
-							newrange = rangeapi.create(this.window);
-							newrange.setStart(sNode, 0);
-							newrange.setEnd(sNode, sNode.length);
-							selection.removeAllRanges();
-							selection.addRange(newrange);
-							this._sCall("collapse", [false]);
-							sNode.parentNode.innerHTML = "";
-						}else{
-							// No extra tags, so we have to insert a breaker point and rely
-							// on filters to remove it later.
-							breaker = doc.createElement("span");
-							breaker.className="ieFormatBreakerSpan";
-							sNode = doc.createTextNode(".");
-							breaker.appendChild(sNode);
-							domConstruct.place(breaker, newblock, "before");
-							newrange = rangeapi.create(this.window);
-							newrange.setStart(sNode, 0);
-							newrange.setEnd(sNode, sNode.length);
-							selection.removeAllRanges();
-							selection.addRange(newrange);
-							this._sCall("collapse", [false]);
-							sNode.parentNode.innerHTML = "";
-						}
-						if(!newblock.firstChild){
-							// Empty, we don't need it.  Split was at end or similar
-							// So, remove it.
-							domConstruct.destroy(newblock);
-						}					
-						return true;
-					}
-				}
-				return false;
-			}else{
-				range = selection.getRangeAt(0);
-				rs = range.startContainer;
-				if(rs && rs.nodeType === 3){
-					// Text node, we have to split it.
-					var offset = range.startOffset;
-					if(rs.length < offset){
-						//We are not splitting the right node, try to locate the correct one
-						ret = this._adjustNodeAndOffset(rs, offset);
-						rs = ret.node;
-						offset = ret.offset;
-					}
-					txt = rs.nodeValue;
-					startNode = doc.createTextNode(txt.substring(0, offset));
-					var endText = txt.substring(offset);
-					if(endText !== ""){
-						endNode = doc.createTextNode(txt.substring(offset));
-					}
-					// Create a space, we'll select and bold it, so
-					// the whole word doesn't get bolded
-					breaker = doc.createElement("span");
-					sNode = doc.createTextNode(".");
-					breaker.appendChild(sNode);
-					if(startNode.length){
-						domConstruct.place(startNode, rs, "after");
-					}else{
-						startNode = rs;
-					}
-					domConstruct.place(breaker, startNode, "after");
-					if(endNode){
-						domConstruct.place(endNode, breaker, "after");
-					}
-					domConstruct.destroy(rs);
-					var newrange = rangeapi.create(this.window);
-					newrange.setStart(sNode, 0);
-					newrange.setEnd(sNode, sNode.length);
-					selection.removeAllRanges();
-					selection.addRange(newrange);
-					doc.execCommand(command);
-					domConstruct.place(breaker.firstChild, breaker, "before");
-					domConstruct.destroy(breaker);
-					newrange.setStart(sNode, 0);
-					newrange.setEnd(sNode, sNode.length);
-					selection.removeAllRanges();
-					selection.addRange(newrange);
-					this._sCall("collapse", [false]);
-					sNode.parentNode.innerHTML = "";
-					return true;
-				}
-			}
-		}else{
-			return false;
-		}
-	},
-	
-	_adaptIEList: function(command /*===== , argument =====*/){
-		// summary:
-		//		This function handles normalizing the IE list behavior as 
-		//		much as possible.
-		// command:
-		//		The list command to execute.
-		// argument:
-		//		Any additional argument.
-		// tags:
-		//		private
-		var selection = rangeapi.getSelection(this.window);
-		if(selection.isCollapsed){
-			// In the case of no selection, lets commonize the behavior and
-			// make sure that it indents if needed.
-			if(selection.rangeCount && !this.queryCommandValue(command)){
-				var range = selection.getRangeAt(0);
-				var sc = range.startContainer;
-				if(sc && sc.nodeType == 3){
-					// text node.  Lets see if there is a node before it that isn't
-					// some sort of breaker.
-					if(!range.startOffset){
-						// We're at the beginning of a text area.  It may have been br split
-						// Who knows?  In any event, we must create the list manually
-						// or IE may shove too much into the list element.  It seems to
-						// grab content before the text node too if it's br split.
-						// Why can't IE work like everyone else?
-
-						// Create a space, we'll select and bold it, so
-						// the whole word doesn't get bolded
-						var lType = "ul";
-						if(command === "insertorderedlist"){
-							lType = "ol";
-						}
-						var list = this.document.createElement(lType);
-						var li = domConstruct.create("li", null, list);
-						domConstruct.place(list, sc, "before");
-						// Move in the text node as part of the li.
-						li.appendChild(sc);
-						// We need a br after it or the enter key handler
-						// sometimes throws errors.
-						domConstruct.create("br", null, list, "after");
-						// Okay, now lets move our cursor to the beginning.
-						var newrange = rangeapi.create(this.window);
-						newrange.setStart(sc, 0);
-						newrange.setEnd(sc, sc.length);
-						selection.removeAllRanges();
-						selection.addRange(newrange);
-						this._sCall("collapse", [true]);
-						return true;
-					}
-				}
-			}
-		}
-		return false;
-	},
-	
-	_handleTextColorOrProperties: function(command, argument){
-		// summary:
-		//		This function handles appplying text color as best it is 
-		//		able to do so when the selection is collapsed, making the
-		//		behavior cross-browser consistent. It also handles the name
-		//		and size for IE.
-		// command:
-		//		The command.
-		// argument:
-		//		Any additional arguments.
-		// tags:
-		//		private
-		var selection = rangeapi.getSelection(this.window);
-		var doc = this.document;
-		var rs, ret, range, txt, startNode, endNode, breaker, sNode;
-		argument = argument || null;
-		if(command && selection && selection.isCollapsed){
-			if(selection.rangeCount){
-				range = selection.getRangeAt(0);
-				rs = range.startContainer;
-				if(rs && rs.nodeType === 3){
-					// Text node, we have to split it.
-					var offset = range.startOffset;
-					if(rs.length < offset){
-						//We are not splitting the right node, try to locate the correct one
-						ret = this._adjustNodeAndOffset(rs, offset);
-						rs = ret.node;
-						offset = ret.offset;
-					}
-					txt = rs.nodeValue;
-					startNode = doc.createTextNode(txt.substring(0, offset));
-					var endText = txt.substring(offset);
-					if(endText !== ""){
-						endNode = doc.createTextNode(txt.substring(offset));
-					}
-					// Create a space, we'll select and bold it, so
-					// the whole word doesn't get bolded
-					breaker = doc.createElement("span");
-					sNode = doc.createTextNode(".");
-					breaker.appendChild(sNode);
-					// Create a junk node to avoid it trying to style the breaker.
-					// This will get destroyed later.
-					var extraSpan = doc.createElement("span");
-					breaker.appendChild(extraSpan);
-					if(startNode.length){
-						domConstruct.place(startNode, rs, "after");
-					}else{
-						startNode = rs;
-					}
-					domConstruct.place(breaker, startNode, "after");
-					if(endNode){
-						domConstruct.place(endNode, breaker, "after");
-					}
-					domConstruct.destroy(rs);
-					var newrange = rangeapi.create(this.window);
-					newrange.setStart(sNode, 0);
-					newrange.setEnd(sNode, sNode.length);
-					selection.removeAllRanges();
-					selection.addRange(newrange);
-					if(has("webkit")){
-						// WebKit is frustrating with positioning the cursor.
-						// It stinks to have a selected space, but there really
-						// isn't much choice here.
-						var style = "color";
-						if(command === "hilitecolor" || command === "backcolor"){
-							style = "backgroundColor";
-						}
-						domStyle.set(breaker, style, argument);
-						this._sCall("remove", []);
-						domConstruct.destroy(extraSpan);
-						breaker.innerHTML = "&#160;";	// &nbsp;
-						this._sCall("selectElement", [breaker]);
-						this.focus();
-					}else{
-						this.execCommand(command, argument);
-						domConstruct.place(breaker.firstChild, breaker, "before");
-						domConstruct.destroy(breaker);
-						newrange.setStart(sNode, 0);
-						newrange.setEnd(sNode, sNode.length);
-						selection.removeAllRanges();
-						selection.addRange(newrange);
-						this._sCall("collapse", [false]);
-						sNode.parentNode.removeChild(sNode);
-					}
-					return true;
-				}
-			}				
-		}
-		return false;
-	},
-	
-	_adjustNodeAndOffset: function(/*DomNode*/node, /*Int*/offset){
-		// summary:
-		//		In the case there are multiple text nodes in a row the offset may not be within the node.  
-		//		If the offset is larger than the node length, it will attempt to find
-		//		the next text sibling until it locates the text node in which the offset refers to
-		// node:
-		//		The node to check.
-		// offset:
-		//		The position to find within the text node
-		// tags:
-		//		private.
-		while(node.length < offset && node.nextSibling && node.nextSibling.nodeType === 3){
-			//Adjust the offset and node in the case of multiple text nodes in a row
-			offset = offset - node.length;
-			node = node.nextSibling;
-		}
-		return {"node": node, "offset": offset};
-	},
-	
-	_tagNamesForCommand: function(command){
-		// summary:
-		//		Function to return the tab names that are associated
-		//		with a particular style.
-		// command: String
-		//		The command to return tags for.
-		// tags:
-		//		private
-		if(command === "bold"){
-			return ["b", "strong"];
-		}else if(command === "italic"){
-			return ["i","em"];
-		}else if(command === "strikethrough"){
-			return ["s", "strike"];
-		}else if(command === "superscript"){
-			return ["sup"];
-		}else if(command === "subscript"){
-			return ["sub"];
-		}else if(command === "underline"){
-			return ["u"];
-		}	
-		return [];
-	},
-
-	_stripBreakerNodes: function(/*DOMNode*/ node){
-		// summary:
-		//		Function for stripping out the breaker spans inserted by the formatting command.
-		//		Registered as a filter for IE, handles the breaker spans needed to fix up
-		//		How bold/italic/etc, work when selection is collapsed (single cursor).
-		if(!this.isLoaded){ return; } // this method requires init to be complete
-		query(".ieFormatBreakerSpan", node).forEach(function(b){
-			while(b.firstChild){
-				domConstruct.place(b.firstChild, b, "before");
-			}
-			domConstruct.destroy(b);
-		});
-			return node;
-		},
-
-		_stripTrailingEmptyNodes: function(/*DOMNode*/ node){
-			// summary:
-			//		Function for stripping trailing nodes without any text, excluding trailing nodes
-			//		like <img> or <div><img></div>, even though they don't have text either.
-
-			function isEmpty(node){
-				// If not for old IE we could check for Element children by node.firstElementChild
-				return (/^(p|div|br)$/i.test(node.nodeName) && node.children.length == 0 &&
-					/^[\s\xA0]*$/.test(node.textContent || node.innerText || "")) ||
-					(node.nodeType === 3/*text*/ && /^[\s\xA0]*$/.test(node.nodeValue));
-			}
-			while(node.lastChild && isEmpty(node.lastChild)){
-				domConstruct.destroy(node.lastChild);
-			}
-
-		return node;
-	}
-});
-
-return RichText;
-
-});
-
-},
-'dijit/_editor/selection':function(){
-define("dijit/_editor/selection", [
-	"dojo/dom", // dom.byId
-	"dojo/_base/lang",
-	"dojo/sniff", // has("ie") has("opera")
-	"dojo/_base/window", // win.body win.doc win.doc.createElement win.doc.selection win.doc.selection.createRange win.doc.selection.type.toLowerCase win.global win.global.getSelection
-	"../main"		// for exporting symbols to dijit._editor.selection (TODO: remove in 2.0)
-], function(dom, lang, has, win, dijit){
-
-// module:
-//		dijit/_editor/selection
-// summary:
-//		Text selection API
-
-// FIXME:
-//		all of these methods branch internally for IE. This is probably
-//		sub-optimal in terms of runtime performance. We should investigate the
-//		size difference for differentiating at definition time.
-
-var selection = {
-	getType: function(){
-		// summary:
-		//		Get the selection type (like win.doc.select.type in IE).
-		if(win.doc.getSelection){
-			// W3C path
-			var stype = "text";
-
-			// Check if the actual selection is a CONTROL (IMG, TABLE, HR, etc...).
-			var oSel;
-			try{
-				oSel = win.global.getSelection();
-			}catch(e){ /*squelch*/ }
-
-			if(oSel && oSel.rangeCount == 1){
-				var oRange = oSel.getRangeAt(0);
-				if(	(oRange.startContainer == oRange.endContainer) &&
-					((oRange.endOffset - oRange.startOffset) == 1) &&
-					(oRange.startContainer.nodeType != 3 /* text node*/)
-				){
-					stype = "control";
-				}
-			}
-			return stype; //String
-		}else{
-			// IE6-8
-			return win.doc.selection.type.toLowerCase();
-		}
-	},
-
-	getSelectedText: function(){
-		// summary:
-		//		Return the text (no html tags) included in the current selection or null if no text is selected
-		if(win.doc.getSelection){
-			// W3C path
-			var selection = win.global.getSelection();
-			return selection ? selection.toString() : ""; //String
-		}else{
-			// IE6-8
-			if(dijit._editor.selection.getType() == 'control'){
-				return null;
-			}
-			return win.doc.selection.createRange().text;
-		}
-	},
-
-	getSelectedHtml: function(){
-		// summary:
-		//		Return the html text of the current selection or null if unavailable
-		if(win.doc.getSelection){
-			// W3C path
-			var selection = win.global.getSelection();
-			if(selection && selection.rangeCount){
-				var i;
-				var html = "";
-				for(i = 0; i < selection.rangeCount; i++){
-					//Handle selections spanning ranges, such as Opera
-					var frag = selection.getRangeAt(i).cloneContents();
-					var div = win.doc.createElement("div");
-					div.appendChild(frag);
-					html += div.innerHTML;
-				}
-				return html; //String
-			}
-			return null;
-		}else{
-			// IE6-8
-			if(dijit._editor.selection.getType() == 'control'){
-				return null;
-			}
-			return win.doc.selection.createRange().htmlText;
-		}
-	},
-
-	getSelectedElement: function(){
-		// summary:
-		//		Retrieves the selected element (if any), just in the case that
-		//		a single element (object like and image or a table) is
-		//		selected.
-		if(dijit._editor.selection.getType() == "control"){
-			if(win.doc.getSelection){
-				// W3C path
-				var selection = win.global.getSelection();
-				return selection.anchorNode.childNodes[ selection.anchorOffset ];
-			}else{
-				// IE6-8
-				var range = win.doc.selection.createRange();
-				if(range && range.item){
-					return win.doc.selection.createRange().item(0);
-				}
-			}
-		}
-		return null;
-	},
-
-	getParentElement: function(){
-		// summary:
-		//		Get the parent element of the current selection
-		if(dijit._editor.selection.getType() == "control"){
-			var p = this.getSelectedElement();
-			if(p){ return p.parentNode; }
-		}else{
-			if(win.doc.getSelection){
-				var selection = win.global.getSelection();
-				if(selection){
-					var node = selection.anchorNode;
-					while(node && (node.nodeType != 1)){ // not an element
-						node = node.parentNode;
-					}
-					return node;
-				}
-			}else{
-				var r = win.doc.selection.createRange();
-				r.collapse(true);
-				return r.parentElement();
-			}
-		}
-		return null;
-	},
-
-	hasAncestorElement: function(/*String*/ tagName /* ... */){
-		// summary:
-		//		Check whether current selection has a  parent element which is
-		//		of type tagName (or one of the other specified tagName)
-		// tagName: String
-		//		The tag name to determine if it has an ancestor of.
-		return this.getAncestorElement.apply(this, arguments) != null; //Boolean
-	},
-
-	getAncestorElement: function(/*String*/ tagName /* ... */){
-		// summary:
-		//		Return the parent element of the current selection which is of
-		//		type tagName (or one of the other specified tagName)
-		// tagName: String
-		//		The tag name to determine if it has an ancestor of.
-		var node = this.getSelectedElement() || this.getParentElement();
-		return this.getParentOfType(node, arguments); //DOMNode
-	},
-
-	isTag: function(/*DomNode*/ node, /*String[]*/ tags){
-		// summary:
-		//		Function to determine if a node is one of an array of tags.
-		// node:
-		//		The node to inspect.
-		// tags:
-		//		An array of tag name strings to check to see if the node matches.
-		if(node && node.tagName){
-			var _nlc = node.tagName.toLowerCase();
-			for(var i=0; i<tags.length; i++){
-				var _tlc = String(tags[i]).toLowerCase();
-				if(_nlc == _tlc){
-					return _tlc; // String
-				}
-			}
-		}
-		return "";
-	},
-
-	getParentOfType: function(/*DomNode*/ node, /*String[]*/ tags){
-		// summary:
-		//		Function to locate a parent node that matches one of a set of tags
-		// node:
-		//		The node to inspect.
-		// tags:
-		//		An array of tag name strings to check to see if the node matches.
-		while(node){
-			if(this.isTag(node, tags).length){
-				return node; // DOMNode
-			}
-			node = node.parentNode;
-		}
-		return null;
-	},
-
-	collapse: function(/*Boolean*/ beginning){
-		// summary:
-		//		Function to collapse (clear), the current selection
-		// beginning: Boolean
-		//		Indicates whether to collapse the cursor to the beginning of the selection or end.
-		if(win.doc.getSelection){
-			// W3C path
-			var selection = win.global.getSelection();
-			if(selection.removeAllRanges){ // Mozilla
-				if(beginning){
-					selection.collapseToStart();
-				}else{
-					selection.collapseToEnd();
-				}
-			}else{ // Safari
-				// pulled from WebCore/ecma/kjs_window.cpp, line 2536
-				selection.collapse(beginning);
-			}
-		}else{
-			// IE6-8
-			var range = win.doc.selection.createRange();
-			range.collapse(beginning);
-			range.select();
-		}
-	},
-
-	remove: function(){
-		// summary:
-		//		Function to delete the currently selected content from the document.
-		var sel = win.doc.selection;
-		if(win.doc.getSelection){
-			// W3C path
-			sel = win.global.getSelection();
-			sel.deleteFromDocument();
-			return sel; //Selection
-		}else{
-			// IE6-8
-			if(sel.type.toLowerCase() != "none"){
-				sel.clear();
-			}
-			return sel; //Selection
-		}
-	},
-
-	selectElementChildren: function(/*DomNode*/ element, /*Boolean?*/ nochangefocus){
-		// summary:
-		//		clear previous selection and select the content of the node
-		//		(excluding the node itself)
-		// element: DOMNode
-		//		The element you wish to select the children content of.
-		// nochangefocus: Boolean
-		//		Indicates if the focus should change or not.
-		var doc = win.doc;
-		var range;
-		element = dom.byId(element);
-		if(win.doc.getSelection){
-			// W3C
-			var selection = win.global.getSelection();
-			if(has("opera")){
-				//Opera's selectAllChildren doesn't seem to work right
-				//against <body> nodes and possibly others ... so
-				//we use the W3C range API
-				if(selection.rangeCount){
-					range = selection.getRangeAt(0);
-				}else{
-					range = doc.createRange();
-				}
-				range.setStart(element, 0);
-				range.setEnd(element,(element.nodeType == 3) ? element.length : element.childNodes.length);
-				selection.addRange(range);
-			}else{
-				selection.selectAllChildren(element);
-			}
-		}else{
-			// IE6-8
-			range = element.ownerDocument.body.createTextRange();
-			range.moveToElementText(element);
-			if(!nochangefocus){
-				try{
-					range.select(); // IE throws an exception here if the widget is hidden.  See #5439
-				}catch(e){ /* squelch */}
-			}
-		}
-	},
-
-	selectElement: function(/*DomNode*/ element, /*Boolean?*/ nochangefocus){
-		// summary:
-		//		clear previous selection and select element (including all its children)
-		// element: DOMNode
-		//		The element to select.
-		// nochangefocus: Boolean
-		//		Boolean indicating if the focus should be changed.  IE only.
-		var range;
-		element = dom.byId(element);	// TODO: remove for 2.0 or sooner, spec listed above doesn't allow for string
-		var doc = element.ownerDocument;
-		var global = win.global;	// TODO: use winUtils.get(doc)?
-		if(doc.getSelection){
-			// W3C path
-			var selection = global.getSelection();
-			range = doc.createRange();
-			if(selection.removeAllRanges){ // Mozilla
-				// FIXME: does this work on Safari?
-				if(has("opera")){
-					//Opera works if you use the current range on
-					//the selection if present.
-					if(selection.getRangeAt(0)){
-						range = selection.getRangeAt(0);
-					}
-				}
-				range.selectNode(element);
-				selection.removeAllRanges();
-				selection.addRange(range);
-			}
-		}else{
-			// IE6-8
-			try{
-				var tg = element.tagName ? element.tagName.toLowerCase() : "";
-				if(tg === "img" || tg === "table"){
-					range = win.body(doc).createControlRange();
-				}else{
-					range = win.body(doc).createRange();
-				}
-				range.addElement(element);
-				if(!nochangefocus){
-					range.select();
-				}
-			}catch(e){
-				this.selectElementChildren(element, nochangefocus);
-			}
-		}
-	},
-
-	inSelection: function(node){
-		// summary:
-		//		This function determines if 'node' is
-		//		in the current selection.
-		// tags:
-		//		public
-		if(node){
-			var newRange;
-			var doc = win.doc;
-			var range;
-
-			if(win.doc.getSelection){
-				// WC3
-				var sel = win.global.getSelection();
-				if(sel && sel.rangeCount > 0){
-					range = sel.getRangeAt(0);
-				}
-				if(range && range.compareBoundaryPoints && doc.createRange){
-					try{
-						newRange = doc.createRange();
-						newRange.setStart(node, 0);
-						if(range.compareBoundaryPoints(range.START_TO_END, newRange) === 1){
-							return true;
-						}
-					}catch(e){ /* squelch */}
-				}
-			}else{
-				// IE6-8, so we can't use the range object as the pseudo
-				// range doesn't implement the boundary checking, we have to
-				// use IE specific crud.
-				range = doc.selection.createRange();
-				try{
-						newRange = node.ownerDocument.body.createTextRange();
-						newRange.moveToElementText(node);
-					}catch(e2){/* squelch */}
-				if(range && newRange){
-					// We can finally compare similar to W3C
-					if(range.compareEndPoints("EndToStart", newRange) === 1){
-						return true;
-					}
-				}
-			}
-		}
-		return false; // Boolean
-	}
-};
-
-
-lang.setObject("dijit._editor.selection", selection);
-
-return selection;
-});
-
-},
-'dijit/_editor/range':function(){
-define("dijit/_editor/range", [
-	"dojo/_base/array", // array.every
-	"dojo/_base/declare", // declare
-	"dojo/_base/lang", // lang.isArray
-	"dojo/_base/window", // win.doc   TODO: remove in 2.0
-	"../main"	// for exporting symbols to dijit, TODO: remove in 2.0
-], function(array, declare, lang, win, dijit){
-
-// module:
-//		dijit/_editor/range
-// summary:
-//		W3C range API
-
-
-dijit.range={};
-
-dijit.range.getIndex = function(/*DomNode*/node, /*DomNode*/parent){
-//	dojo.profile.start("dijit.range.getIndex");
-	var ret = [], retR = [];
-	var onode = node;
-
-	var pnode, n;
-	while(node != parent){
-		var i = 0;
-		pnode = node.parentNode;
-		while((n = pnode.childNodes[i++])){
-			if(n === node){
-				--i;
-				break;
-			}
-		}
-		//if(i>=pnode.childNodes.length){
-			//dojo.debug("Error finding index of a node in dijit/range.getIndex()");
-		//}
-		ret.unshift(i);
-		retR.unshift(i - pnode.childNodes.length);
-		node = pnode;
-	}
-
-	//normalized() can not be called so often to prevent
-	//invalidating selection/range, so we have to detect
-	//here that any text nodes in a row
-	if(ret.length > 0 && onode.nodeType == 3){
-		n = onode.previousSibling;
-		while(n && n.nodeType == 3){
-			ret[ret.length - 1]--;
-			n = n.previousSibling;
-		}
-		n = onode.nextSibling;
-		while(n && n.nodeType == 3){
-			retR[retR.length - 1]++;
-			n = n.nextSibling;
-		}
-	}
-//	dojo.profile.end("dijit/range.getIndex()");
-	return {o: ret, r:retR};
-};
-
-dijit.range.getNode = function(/*Array*/index, /*DomNode*/parent){
-	if(!lang.isArray(index) || index.length == 0){
-		return parent;
-	}
-	var node = parent;
-//	if(!node)debugger
-	array.every(index, function(i){
-		if(i >= 0 && i < node.childNodes.length){
-			node = node.childNodes[i];
-		}else{
-			node = null;
-			//console.debug('Error: can not find node with index',index,'under parent node',parent );
-			return false; //terminate array.every
-		}
-		return true; //carry on the every loop
-	});
-
-	return node;
-};
-
-dijit.range.getCommonAncestor = function(n1, n2, root){
-	root = root || n1.ownerDocument.body;
-	var getAncestors = function(n){
-		var as = [];
-		while(n){
-			as.unshift(n);
-			if(n !== root){
-				n = n.parentNode;
-			}else{
-				break;
-			}
-		}
-		return as;
-	};
-	var n1as = getAncestors(n1);
-	var n2as = getAncestors(n2);
-
-	var m = Math.min(n1as.length, n2as.length);
-	var com = n1as[0]; //at least, one element should be in the array: the root (BODY by default)
-	for(var i = 1; i < m; i++){
-		if(n1as[i] === n2as[i]){
-			com = n1as[i]
-		}else{
-			break;
-		}
-	}
-	return com;
-};
-
-dijit.range.getAncestor = function(/*DomNode*/node, /*RegEx?*/regex, /*DomNode?*/root){
-	root = root || node.ownerDocument.body;
-	while(node && node !== root){
-		var name = node.nodeName.toUpperCase();
-		if(regex.test(name)){
-			return node;
-		}
-
-		node = node.parentNode;
-	}
-	return null;
-};
-
-dijit.range.BlockTagNames = /^(?:P|DIV|H1|H2|H3|H4|H5|H6|ADDRESS|PRE|OL|UL|LI|DT|DE)$/;
-dijit.range.getBlockAncestor = function(/*DomNode*/node, /*RegEx?*/regex, /*DomNode?*/root){
-	root = root || node.ownerDocument.body;
-	regex = regex || dijit.range.BlockTagNames;
-	var block = null, blockContainer;
-	while(node && node !== root){
-		var name = node.nodeName.toUpperCase();
-		if(!block && regex.test(name)){
-			block = node;
-		}
-		if(!blockContainer && (/^(?:BODY|TD|TH|CAPTION)$/).test(name)){
-			blockContainer = node;
-		}
-
-		node = node.parentNode;
-	}
-	return {blockNode:block, blockContainer:blockContainer || node.ownerDocument.body};
-};
-
-dijit.range.atBeginningOfContainer = function(/*DomNode*/container, /*DomNode*/node, /*Int*/offset){
-	var atBeginning = false;
-	var offsetAtBeginning = (offset == 0);
-	if(!offsetAtBeginning && node.nodeType == 3){ //if this is a text node, check whether the left part is all space
-		if(/^[\s\xA0]+$/.test(node.nodeValue.substr(0, offset))){
-			offsetAtBeginning = true;
-		}
-	}
-	if(offsetAtBeginning){
-		var cnode = node;
-		atBeginning = true;
-		while(cnode && cnode !== container){
-			if(cnode.previousSibling){
-				atBeginning = false;
-				break;
-			}
-			cnode = cnode.parentNode;
-		}
-	}
-	return atBeginning;
-};
-
-dijit.range.atEndOfContainer = function(/*DomNode*/container, /*DomNode*/node, /*Int*/offset){
-	var atEnd = false;
-	var offsetAtEnd = (offset == (node.length || node.childNodes.length));
-	if(!offsetAtEnd && node.nodeType == 3){ //if this is a text node, check whether the right part is all space
-		if(/^[\s\xA0]+$/.test(node.nodeValue.substr(offset))){
-			offsetAtEnd = true;
-		}
-	}
-	if(offsetAtEnd){
-		var cnode = node;
-		atEnd = true;
-		while(cnode && cnode !== container){
-			if(cnode.nextSibling){
-				atEnd = false;
-				break;
-			}
-			cnode = cnode.parentNode;
-		}
-	}
-	return atEnd;
-};
-
-dijit.range.adjacentNoneTextNode = function(startnode, next){
-	var node = startnode;
-	var len = (0 - startnode.length) || 0;
-	var prop = next ? 'nextSibling' : 'previousSibling';
-	while(node){
-		if(node.nodeType != 3){
-			break;
-		}
-		len += node.length;
-		node = node[prop];
-	}
-	return [node,len];
-};
-
-dijit.range.create = function(/*Window?*/ win){	// TODO: for 2.0, replace optional window param w/mandatory window or document param
-	win = win || window;
-	if(win.getSelection){
-		return win.document.createRange();
-	}else{//IE
-		return new dijit.range.W3CRange();
-	}
-};
-
-dijit.range.getSelection = function(/*Window*/ window, /*Boolean?*/ ignoreUpdate){
-	if(window.getSelection){
-		return window.getSelection();
-	}else{//IE
-		var s = new dijit.range.ie.selection(window);
-		if(!ignoreUpdate){
-			s._getCurrentSelection();
-		}
-		return s;
-	}
-};
-
-// TODO: convert to has() test?   But remember IE9 issues with quirks vs. standards in main frame vs. iframe.
-if(!window.getSelection){
-	dijit.range.ie = {
-		cachedSelection: {},
-		selection: function(window){
-			this._ranges = [];
-			this.addRange = function(r, /*boolean*/ internal){
-				this._ranges.push(r);
-				if(!internal){
-					r._select();
-				}
-				this.rangeCount = this._ranges.length;
-			};
-			this.removeAllRanges = function(){
-				//don't detach, the range may be used later
-//				for(var i=0;i<this._ranges.length;i++){
-//					this._ranges[i].detach();
-//				}
-				this._ranges = [];
-				this.rangeCount = 0;
-			};
-			var _initCurrentRange = function(){
-				var r = window.document.selection.createRange();
-				var type = window.document.selection.type.toUpperCase();
-				if(type == "CONTROL"){
-					//TODO: multiple range selection(?)
-					return new dijit.range.W3CRange(dijit.range.ie.decomposeControlRange(r));
-				}else{
-					return new dijit.range.W3CRange(dijit.range.ie.decomposeTextRange(r));
-				}
-			};
-			this.getRangeAt = function(i){
-				return this._ranges[i];
-			};
-			this._getCurrentSelection = function(){
-				this.removeAllRanges();
-				var r = _initCurrentRange();
-				if(r){
-					this.addRange(r, true);
-					this.isCollapsed = r.collapsed;
-				}else{
-					this.isCollapsed = true;
-				}
-			};
-		},
-		decomposeControlRange: function(range){
-			var firstnode = range.item(0), lastnode = range.item(range.length - 1);
-			var startContainer = firstnode.parentNode, endContainer = lastnode.parentNode;
-			var startOffset = dijit.range.getIndex(firstnode, startContainer).o[0];
-			var endOffset = dijit.range.getIndex(lastnode, endContainer).o[0] + 1;
-			return [startContainer, startOffset,endContainer, endOffset];
-		},
-		getEndPoint: function(range, end){
-			var atmrange = range.duplicate();
-			atmrange.collapse(!end);
-			var cmpstr = 'EndTo' + (end ? 'End' : 'Start');
-			var parentNode = atmrange.parentElement();
-
-			var startnode, startOffset, lastNode;
-			if(parentNode.childNodes.length > 0){
-				array.every(parentNode.childNodes, function(node, i){
-					var calOffset;
-					if(node.nodeType != 3){
-						atmrange.moveToElementText(node);
-
-						if(atmrange.compareEndPoints(cmpstr, range) > 0){
-							//startnode = node.previousSibling;
-							if(lastNode && lastNode.nodeType == 3){
-								//where shall we put the start? in the text node or after?
-								startnode = lastNode;
-								calOffset = true;
-							}else{
-								startnode = parentNode;
-								startOffset = i;
-								return false;
-							}
-						}else{
-							if(i == parentNode.childNodes.length - 1){
-								startnode = parentNode;
-								startOffset = parentNode.childNodes.length;
-								return false;
-							}
-						}
-					}else{
-						if(i == parentNode.childNodes.length - 1){//at the end of this node
-							startnode = node;
-							calOffset = true;
-						}
-					}
-					//			try{
-					if(calOffset && startnode){
-						var prevnode = dijit.range.adjacentNoneTextNode(startnode)[0];
-						if(prevnode){
-							startnode = prevnode.nextSibling;
-						}else{
-							startnode = parentNode.firstChild; //firstChild must be a text node
-						}
-						var prevnodeobj = dijit.range.adjacentNoneTextNode(startnode);
-						prevnode = prevnodeobj[0];
-						var lenoffset = prevnodeobj[1];
-						if(prevnode){
-							atmrange.moveToElementText(prevnode);
-							atmrange.collapse(false);
-						}else{
-							atmrange.moveToElementText(parentNode);
-						}
-						atmrange.setEndPoint(cmpstr, range);
-						startOffset = atmrange.text.length - lenoffset;
-
-						return false;
-					}
-					//			}catch(e){ debugger }
-					lastNode = node;
-					return true;
-				});
-			}else{
-				startnode = parentNode;
-				startOffset = 0;
-			}
-
-			//if at the end of startnode and we are dealing with start container, then
-			//move the startnode to nextSibling if it is a text node
-			//TODO: do this for end container?
-			if(!end && startnode.nodeType == 1 && startOffset == startnode.childNodes.length){
-				var nextnode = startnode.nextSibling;
-				if(nextnode && nextnode.nodeType == 3){
-					startnode = nextnode;
-					startOffset = 0;
-				}
-			}
-			return [startnode, startOffset];
-		},
-		setEndPoint: function(range, container, offset){
-			//text node
-			var atmrange = range.duplicate(), node, len;
-			if(container.nodeType != 3){ //normal node
-				if(offset > 0){
-					node = container.childNodes[offset - 1];
-					if(node){
-						if(node.nodeType == 3){
-							container = node;
-							offset = node.length;
-							//pass through
-						}else{
-							if(node.nextSibling && node.nextSibling.nodeType == 3){
-								container = node.nextSibling;
-								offset = 0;
-								//pass through
-							}else{
-								atmrange.moveToElementText(node.nextSibling ? node : container);
-								var parent = node.parentNode;
-								var tempNode = parent.insertBefore(node.ownerDocument.createTextNode(' '), node.nextSibling);
-								atmrange.collapse(false);
-								parent.removeChild(tempNode);
-							}
-						}
-					}
-				}else{
-					atmrange.moveToElementText(container);
-					atmrange.collapse(true);
-				}
-			}
-			if(container.nodeType == 3){
-				var prevnodeobj = dijit.range.adjacentNoneTextNode(container);
-				var prevnode = prevnodeobj[0];
-				len = prevnodeobj[1];
-				if(prevnode){
-					atmrange.moveToElementText(prevnode);
-					atmrange.collapse(false);
-					//if contentEditable is not inherit, the above collapse won't make the end point
-					//in the correctly position: it always has a -1 offset, so compensate it
-					if(prevnode.contentEditable != 'inherit'){
-						len++;
-					}
-				}else{
-					atmrange.moveToElementText(container.parentNode);
-					atmrange.collapse(true);
-
-					// Correct internal cursor position
-					// http://bugs.dojotoolkit.org/ticket/15578
-					atmrange.move('character', 1);
-					atmrange.move('character', -1);
-				}
-
-				offset += len;
-				if(offset > 0){
-					if(atmrange.move('character', offset) != offset){
-						console.error('Error when moving!');
-					}
-				}
-			}
-
-			return atmrange;
-		},
-		decomposeTextRange: function(range){
-			var tmpary = dijit.range.ie.getEndPoint(range);
-			var startContainer = tmpary[0], startOffset = tmpary[1];
-			var endContainer = tmpary[0], endOffset = tmpary[1];
-
-			if(range.htmlText.length){
-				if(range.htmlText == range.text){ //in the same text node
-					endOffset = startOffset + range.text.length;
-				}else{
-					tmpary = dijit.range.ie.getEndPoint(range, true);
-					endContainer = tmpary[0],endOffset = tmpary[1];
-//					if(startContainer.tagName == "BODY"){
-//						startContainer = startContainer.firstChild;
-//					}
-				}
-			}
-			return [startContainer, startOffset, endContainer, endOffset];
-		},
-		setRange: function(range, startContainer, startOffset, endContainer, endOffset, collapsed){
-			var start = dijit.range.ie.setEndPoint(range, startContainer, startOffset);
-
-			range.setEndPoint('StartToStart', start);
-			if(!collapsed){
-				var end = dijit.range.ie.setEndPoint(range, endContainer, endOffset);
-			}
-			range.setEndPoint('EndToEnd', end || start);
-
-			return range;
-		}
-	};
-
-declare("dijit.range.W3CRange",null, {
-	constructor: function(){
-		if(arguments.length>0){
-			this.setStart(arguments[0][0],arguments[0][1]);
-			this.setEnd(arguments[0][2],arguments[0][3]);
-		}else{
-			this.commonAncestorContainer = null;
-			this.startContainer = null;
-			this.startOffset = 0;
-			this.endContainer = null;
-			this.endOffset = 0;
-			this.collapsed = true;
-		}
-	},
-	_updateInternal: function(){
-		if(this.startContainer !== this.endContainer){
-			this.commonAncestorContainer = dijit.range.getCommonAncestor(this.startContainer, this.endContainer);
-		}else{
-			this.commonAncestorContainer = this.startContainer;
-		}
-		this.collapsed = (this.startContainer === this.endContainer) && (this.startOffset == this.endOffset);
-	},
-	setStart: function(node, offset){
-		offset=parseInt(offset);
-		if(this.startContainer === node && this.startOffset == offset){
-			return;
-		}
-		delete this._cachedBookmark;
-
-		this.startContainer = node;
-		this.startOffset = offset;
-		if(!this.endContainer){
-			this.setEnd(node, offset);
-		}else{
-			this._updateInternal();
-		}
-	},
-	setEnd: function(node, offset){
-		offset=parseInt(offset);
-		if(this.endContainer === node && this.endOffset == offset){
-			return;
-		}
-		delete this._cachedBookmark;
-
-		this.endContainer = node;
-		this.endOffset = offset;
-		if(!this.startContainer){
-			this.setStart(node, offset);
-		}else{
-			this._updateInternal();
-		}
-	},
-	setStartAfter: function(node, offset){
-		this._setPoint('setStart', node, offset, 1);
-	},
-	setStartBefore: function(node, offset){
-		this._setPoint('setStart', node, offset, 0);
-	},
-	setEndAfter: function(node, offset){
-		this._setPoint('setEnd', node, offset, 1);
-	},
-	setEndBefore: function(node, offset){
-		this._setPoint('setEnd', node, offset, 0);
-	},
-	_setPoint: function(what, node, offset, ext){
-		var index = dijit.range.getIndex(node, node.parentNode).o;
-		this[what](node.parentNode, index.pop()+ext);
-	},
-	_getIERange: function(){
-		var r = (this._body || this.endContainer.ownerDocument.body).createTextRange();
-		dijit.range.ie.setRange(r, this.startContainer, this.startOffset, this.endContainer, this.endOffset, this.collapsed);
-		return r;
-	},
-	getBookmark: function(){
-		this._getIERange();
-		return this._cachedBookmark;
-	},
-	_select: function(){
-		var r = this._getIERange();
-		r.select();
-	},
-	deleteContents: function(){
-		var s = this.startContainer, r = this._getIERange();
-		if(s.nodeType === 3 && !this.startOffset){
-			//if the range starts at the beginning of a
-			//text node, move it to before the textnode
-			//to make sure the range is still valid
-			//after deleteContents() finishes
-			this.setStartBefore(s);
-		}
-		r.pasteHTML('');
-		this.endContainer = this.startContainer;
-		this.endOffset = this.startOffset;
-		this.collapsed = true;
-	},
-	cloneRange: function(){
-		var r = new dijit.range.W3CRange([this.startContainer,this.startOffset,
-			this.endContainer,this.endOffset]);
-		r._body = this._body;
-		return r;
-	},
-	detach: function(){
-		this._body = null;
-		this.commonAncestorContainer = null;
-		this.startContainer = null;
-		this.startOffset = 0;
-		this.endContainer = null;
-		this.endOffset = 0;
-		this.collapsed = true;
-}
-});
-} //if(!window.getSelection)
-
-
-return dijit.range;
-});
-
-},
-'dijit/_editor/html':function(){
-define("dijit/_editor/html", [
-	"dojo/_base/array",
-	"dojo/_base/lang", // lang.setObject
-	"dojo/sniff" // has("ie")
-], function(array, lang, has){
-
-// module:
-//		dijit/_editor/html
-// summary:
-//		HTML serialization utility functions used by editor
-
-var exports = {};
-lang.setObject("dijit._editor.html", exports);
-
-var escape = exports.escapeXml = function(/*String*/ str, /*Boolean?*/ noSingleQuotes){
-	// summary:
-	//		Adds escape sequences for special characters in XML: `&<>"'`.
-	//		Optionally skips escapes for single quotes.
-	str = str.replace(/&/gm, "&amp;").replace(/</gm, "&lt;").replace(/>/gm, "&gt;").replace(/"/gm, "&quot;");
-	if(!noSingleQuotes){
-		str = str.replace(/'/gm, "&#39;");
-	}
-	return str; // string
-};
-
-
-exports.getNodeHtml = function(/*DomNode*/ node){
-	// summary:
-	//		Return string representing HTML for node and it's children
-	var output = [];
-	exports.getNodeHtmlHelper(node, output);
-	return output.join("");
-};
-
-exports.getNodeHtmlHelper = function(/*DomNode*/ node, /*String[]*/ output){
-	// summary:
-	//		Pushes array of strings into output[] which represent HTML for node and it's children
-	switch(node.nodeType){
-		case 1: // element node
-			var lName = node.nodeName.toLowerCase();
-			if(!lName || lName.charAt(0) == "/"){
-				// IE does some strange things with malformed HTML input, like
-				// treating a close tag </span> without an open tag <span>, as
-				// a new tag with tagName of /span.  Corrupts output HTML, remove
-				// them.  Other browsers don't prefix tags that way, so will
-				// never show up.
-				return "";
-			}
-			output.push('<', lName);
-
-			// store the list of attributes and sort it to have the
-			// attributes appear in the dictionary order
-			var attrarray = [], attrhash = {};
-			var attr;
-			if(has("dom-attributes-explicit") || has("dom-attributes-specified-flag")){
-				// IE8+ and all other browsers.
-				var i = 0;
-				while((attr = node.attributes[i++])){
-					// ignore all attributes starting with _dj which are
-					// internal temporary attributes used by the editor
-					var n = attr.name;
-					if(n.substr(0,3) !== '_dj' &&
-						(!has("dom-attributes-specified-flag") || attr.specified) &&
-						!(n in attrhash)){	// workaround repeated attributes bug in IE8 (LinkDialog test)
-						var v = attr.value;
-						if(n == 'src' || n == 'href'){
-							if(node.getAttribute('_djrealurl')){
-								v = node.getAttribute('_djrealurl');
-							}
-						}
-						if(has("ie") === 8 && n === "style"){
-							v = v.replace("HEIGHT:", "height:").replace("WIDTH:", "width:");
-						}
-						attrarray.push([n,v]);
-						attrhash[n] = v;
-					}
-				}
-			}else{
-				// IE6-7 code path
-				var clone = /^input$|^img$/i.test(node.nodeName) ? node : node.cloneNode(false);
-				var s = clone.outerHTML;
-				// Split up and manage the attrs via regexp
-				// similar to prettyPrint attr logic.
-				var rgxp_attrsMatch = /[\w-]+=("[^"]*"|'[^']*'|\S*)/gi
-				var attrSplit = s.match(rgxp_attrsMatch);
-				s = s.substr(0, s.indexOf('>'));
-				array.forEach(attrSplit, function(attr){
-					if(attr){
-						var idx = attr.indexOf("=");
-						if(idx > 0){
-							var key = attr.substring(0,idx);
-							if(key.substr(0,3) != '_dj'){
-								if(key == 'src' || key == 'href'){
-									if(node.getAttribute('_djrealurl')){
-										attrarray.push([key,node.getAttribute('_djrealurl')]);
-										return;
-									}
-								}
-								var val, match;
-								switch(key){
-									case 'style':
-										val = node.style.cssText.toLowerCase();
-										break;
-									case 'class':
-										val = node.className;
-										break;
-									case 'width':
-										if(lName === "img"){
-											// This somehow gets lost on IE for IMG tags and the like
-											// and we have to find it in outerHTML, known IE oddity.
-											match=/width=(\S+)/i.exec(s);
-											if(match){
-												val = match[1];
-											}
-											break;
-										}
-									case 'height':
-										if(lName === "img"){
-											// This somehow gets lost on IE for IMG tags and the like
-											// and we have to find it in outerHTML, known IE oddity.
-											match=/height=(\S+)/i.exec(s);
-											if(match){
-												val = match[1];
-											}
-											break;
-										}
-									default:
-										val = node.getAttribute(key);
-								}
-								if(val != null){
-									attrarray.push([key, val.toString()]);
-								}
-							}
-						}
-					}
-				}, this);
-			}
-			attrarray.sort(function(a,b){
-				return a[0] < b[0] ? -1 : (a[0] == b[0] ? 0 : 1);
-			});
-			var j = 0;
-			while((attr = attrarray[j++])){
-				output.push(' ', attr[0], '="',
-					(typeof attr[1] === "string" ? escape(attr[1], true) : attr[1]), '"');
-			}
-			switch(lName){
-				case 'br':
-				case 'hr':
-				case 'img':
-				case 'input':
-				case 'base':
-				case 'meta':
-				case 'area':
-				case 'basefont':
-					// These should all be singly closed
-					output.push(' />');
-					break;
-				case 'script':
-					// Browsers handle script tags differently in how you get content,
-					// but innerHTML always seems to work, so insert its content that way
-					// Yes, it's bad to allow script tags in the editor code, but some people
-					// seem to want to do it, so we need to at least return them right.
-					// other plugins/filters can strip them.
-					output.push('>', node.innerHTML, '</', lName, '>');
-					break;
-				default:
-					output.push('>');
-					if(node.hasChildNodes()){
-						exports.getChildrenHtmlHelper(node, output);
-					}
-					output.push('</', lName, '>');
-			}
-			break;
-		case 4: // cdata
-		case 3: // text
-			// FIXME:
-			output.push(escape(node.nodeValue, true));
-			break;
-		case 8: // comment
-			// FIXME:
-			output.push('<!--', escape(node.nodeValue, true), '-->');
-			break;
-		default:
-			output.push("<!-- Element not recognized - Type: ", node.nodeType, " Name: ", node.nodeName, "-->");
-	}
-};
-
-exports.getChildrenHtml = function(/*DomNode*/ node){
-	// summary:
-	//		Returns the html content of a DomNode's children
-	var output = [];
-	exports.getChildrenHtmlHelper(node, output);
-	return output.join("");
-};
-
-exports.getChildrenHtmlHelper = function(/*DomNode*/ dom, /*String[]*/ output){
-	// summary:
-	//		Pushes the html content of a DomNode's children into out[]
-
-	if(!dom){ return; }
-	var nodes = dom["childNodes"] || dom;
-
-	// IE issue.
-	// If we have an actual node we can check parent relationships on for IE,
-	// We should check, as IE sometimes builds invalid DOMS.  If no parent, we can't check
-	// And should just process it and hope for the best.
-	var checkParent = !has("ie") || nodes !== dom;
-
-	var node, i = 0;
-	while((node = nodes[i++])){
-		// IE is broken.  DOMs are supposed to be a tree.  But in the case of malformed HTML, IE generates a graph
-		// meaning one node ends up with multiple references (multiple parents).  This is totally wrong and invalid, but
-		// such is what it is.  We have to keep track and check for this because otherwise the source output HTML will have dups.
-		// No other browser generates a graph.  Leave it to IE to break a fundamental DOM rule.  So, we check the parent if we can
-		// If we can't, nothing more we can do other than walk it.
-		if(!checkParent || node.parentNode == dom){
-			exports.getNodeHtmlHelper(node, output);
-		}
-	}
-};
-
-return exports;
-});
-
-},
+'url:dojox/grid/resources/View.html':"<div class=\"dojoxGridView\" role=\"presentation\">\n\t<div class=\"dojoxGridHeader\" dojoAttachPoint=\"headerNode\" role=\"presentation\">\n\t\t<div dojoAttachPoint=\"headerNodeContainer\" style=\"width:9000em\" role=\"presentation\">\n\t\t\t<div dojoAttachPoint=\"headerContentNode\" role=\"row\"></div>\n\t\t</div>\n\t</div>\n\t<input type=\"checkbox\" class=\"dojoxGridHiddenFocus\" dojoAttachPoint=\"hiddenFocusNode\" role=\"presentation\" />\n\t<input type=\"checkbox\" class=\"dojoxGridHiddenFocus\" role=\"presentation\" />\n\t<div class=\"dojoxGridScrollbox\" dojoAttachPoint=\"scrollboxNode\" role=\"presentation\">\n\t\t<div class=\"dojoxGridContent\" dojoAttachPoint=\"contentNode\" hidefocus=\"hidefocus\" role=\"presentation\"></div>\n\t</div>\n</div>\n",
+'url:dojox/grid/resources/_Grid.html':"<div hidefocus=\"hidefocus\" role=\"grid\" dojoAttachEvent=\"onmouseout:_mouseOut\">\n\t<div class=\"dojoxGridMasterHeader\" dojoAttachPoint=\"viewsHeaderNode\" role=\"presentation\"></div>\n\t<div class=\"dojoxGridMasterView\" dojoAttachPoint=\"viewsNode\" role=\"presentation\"></div>\n\t<div class=\"dojoxGridMasterMessages\" style=\"display: none;\" dojoAttachPoint=\"messagesNode\"></div>\n\t<span dojoAttachPoint=\"lastFocusNode\" tabindex=\"0\"></span>\n</div>\n",
+'url:dijit/templates/Calendar.html':"<table cellspacing=\"0\" cellpadding=\"0\" class=\"dijitCalendarContainer\" role=\"grid\" aria-labelledby=\"${id}_mddb ${id}_year\" data-dojo-attach-point=\"gridNode\">\n\t<thead>\n\t\t<tr class=\"dijitReset dijitCalendarMonthContainer\" valign=\"top\">\n\t\t\t<th class='dijitReset dijitCalendarArrow' data-dojo-attach-point=\"decrementMonth\" scope=\"col\">\n\t\t\t\t<span class=\"dijitInline dijitCalendarIncrementControl dijitCalendarDecrease\" role=\"presentation\"></span>\n\t\t\t\t<span data-dojo-attach-point=\"decreaseArrowNode\" class=\"dijitA11ySideArrow\">-</span>\n\t\t\t</th>\n\t\t\t<th class='dijitReset' colspan=\"5\" scope=\"col\">\n\t\t\t\t<div data-dojo-attach-point=\"monthNode\">\n\t\t\t\t</div>\n\t\t\t</th>\n\t\t\t<th class='dijitReset dijitCalendarArrow' scope=\"col\" data-dojo-attach-point=\"incrementMonth\">\n\t\t\t\t<span class=\"dijitInline dijitCalendarIncrementControl dijitCalendarIncrease\" role=\"presentation\"></span>\n\t\t\t\t<span data-dojo-attach-point=\"increaseArrowNode\" class=\"dijitA11ySideArrow\">+</span>\n\t\t\t</th>\n\t\t</tr>\n\t\t<tr role=\"row\">\n\t\t\t${!dayCellsHtml}\n\t\t</tr>\n\t</thead>\n\t<tbody data-dojo-attach-point=\"dateRowsNode\" data-dojo-attach-event=\"ondijitclick: _onDayClick\" class=\"dijitReset dijitCalendarBodyContainer\">\n\t\t\t${!dateRowsHtml}\n\t</tbody>\n\t<tfoot class=\"dijitReset dijitCalendarYearContainer\">\n\t\t<tr>\n\t\t\t<td class='dijitReset' valign=\"top\" colspan=\"7\" role=\"presentation\">\n\t\t\t\t<div class=\"dijitCalendarYearLabel\">\n\t\t\t\t\t<span data-dojo-attach-point=\"previousYearLabelNode\" class=\"dijitInline dijitCalendarPreviousYear\" role=\"button\"></span>\n\t\t\t\t\t<span data-dojo-attach-point=\"currentYearLabelNode\" class=\"dijitInline dijitCalendarSelectedYear\" role=\"button\" id=\"${id}_year\"></span>\n\t\t\t\t\t<span data-dojo-attach-point=\"nextYearLabelNode\" class=\"dijitInline dijitCalendarNextYear\" role=\"button\"></span>\n\t\t\t\t</div>\n\t\t\t</td>\n\t\t</tr>\n\t</tfoot>\n</table>\n",
+'url:dijit/form/templates/HorizontalSlider.html':"<table class=\"dijit dijitReset dijitSlider dijitSliderH\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" rules=\"none\" data-dojo-attach-event=\"onkeydown:_onKeyDown, onkeyup:_onKeyUp\"\n\trole=\"presentation\"\n\t><tr class=\"dijitReset\"\n\t\t><td class=\"dijitReset\" colspan=\"2\"></td\n\t\t><td data-dojo-attach-point=\"topDecoration\" class=\"dijitReset dijitSliderDecoration dijitSliderDecorationT dijitSliderDecorationH\"></td\n\t\t><td class=\"dijitReset\" colspan=\"2\"></td\n\t></tr\n\t><tr class=\"dijitReset\"\n\t\t><td class=\"dijitReset dijitSliderButtonContainer dijitSliderButtonContainerH\"\n\t\t\t><div class=\"dijitSliderDecrementIconH\" style=\"display:none\" data-dojo-attach-point=\"decrementButton\"><span class=\"dijitSliderButtonInner\">-</span></div\n\t\t></td\n\t\t><td class=\"dijitReset\"\n\t\t\t><div class=\"dijitSliderBar dijitSliderBumper dijitSliderBumperH dijitSliderLeftBumper\" data-dojo-attach-event=\"press:_onClkDecBumper\"></div\n\t\t></td\n\t\t><td class=\"dijitReset\"\n\t\t\t><input data-dojo-attach-point=\"valueNode\" type=\"hidden\" ${!nameAttrSetting}\n\t\t\t/><div class=\"dijitReset dijitSliderBarContainerH\" role=\"presentation\" data-dojo-attach-point=\"sliderBarContainer\"\n\t\t\t\t><div role=\"presentation\" data-dojo-attach-point=\"progressBar\" class=\"dijitSliderBar dijitSliderBarH dijitSliderProgressBar dijitSliderProgressBarH\" data-dojo-attach-event=\"press:_onBarClick\"\n\t\t\t\t\t><div class=\"dijitSliderMoveable dijitSliderMoveableH\"\n\t\t\t\t\t\t><div data-dojo-attach-point=\"sliderHandle,focusNode\" class=\"dijitSliderImageHandle dijitSliderImageHandleH\" data-dojo-attach-event=\"press:_onHandleClick\" role=\"slider\"></div\n\t\t\t\t\t></div\n\t\t\t\t></div\n\t\t\t\t><div role=\"presentation\" data-dojo-attach-point=\"remainingBar\" class=\"dijitSliderBar dijitSliderBarH dijitSliderRemainingBar dijitSliderRemainingBarH\" data-dojo-attach-event=\"press:_onBarClick\"></div\n\t\t\t></div\n\t\t></td\n\t\t><td class=\"dijitReset\"\n\t\t\t><div class=\"dijitSliderBar dijitSliderBumper dijitSliderBumperH dijitSliderRightBumper\" data-dojo-attach-event=\"press:_onClkIncBumper\"></div\n\t\t></td\n\t\t><td class=\"dijitReset dijitSliderButtonContainer dijitSliderButtonContainerH\"\n\t\t\t><div class=\"dijitSliderIncrementIconH\" style=\"display:none\" data-dojo-attach-point=\"incrementButton\"><span class=\"dijitSliderButtonInner\">+</span></div\n\t\t></td\n\t></tr\n\t><tr class=\"dijitReset\"\n\t\t><td class=\"dijitReset\" colspan=\"2\"></td\n\t\t><td data-dojo-attach-point=\"containerNode,bottomDecoration\" class=\"dijitReset dijitSliderDecoration dijitSliderDecorationB dijitSliderDecorationH\"></td\n\t\t><td class=\"dijitReset\" colspan=\"2\"></td\n\t></tr\n></table>\n",
 '*now':function(r){r(['dojo/i18n!*preload*JBrowse/View/TrackList/nls/Faceted*["ar","ca","cs","da","de","el","en-gb","en-us","es-es","fi-fi","fr-fr","he-il","hu","it-it","ja-jp","ko-kr","nl-nl","nb","pl","pt-br","pt-pt","ru","sk","sl","sv","th","tr","zh-tw","zh-cn","ROOT"]']);}
 }});
 define(

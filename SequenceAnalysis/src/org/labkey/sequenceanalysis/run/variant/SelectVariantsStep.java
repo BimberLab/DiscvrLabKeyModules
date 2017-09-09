@@ -84,24 +84,24 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
 
         List<String> options = new ArrayList<>();
 
-        String toInclude = getProvider().getParameterByName(SELECT_TYPE_TO_INCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), String.class);
+        String toInclude = getProvider().getParameterByName(SELECT_TYPE_TO_INCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
         addSelectTypeOptions(toInclude, options, "--selectTypeToInclude");
 
-        String toExclude = getProvider().getParameterByName(SELECT_TYPE_TO_EXCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), String.class);
+        String toExclude = getProvider().getParameterByName(SELECT_TYPE_TO_EXCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
         addSelectTypeOptions(toExclude, options, "--selectTypeToExclude");
 
-        String samplesToInclude = getProvider().getParameterByName(SelectSamplesStep.SAMPLE_INCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), String.class);
+        String samplesToInclude = getProvider().getParameterByName(SelectSamplesStep.SAMPLE_INCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
         SelectVariantsStep.addSubjectSelectOptions(samplesToInclude, options, "-sn");
 
-        String samplesToExclude = getProvider().getParameterByName(SelectSamplesStep.SAMPLE_EXCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), String.class);
+        String samplesToExclude = getProvider().getParameterByName(SelectSamplesStep.SAMPLE_EXCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
         SelectVariantsStep.addSubjectSelectOptions(samplesToExclude, options, "-xl_sn");
 
         //intervals:
-        String intervalText = getProvider().getParameterByName(INTERVALS).extractValue(getPipelineCtx().getJob(), getProvider(), String.class, null);
+        String intervalText = getProvider().getParameterByName(INTERVALS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null);
         options.addAll(getIntervalOptions(intervalText, getPipelineCtx().getSequenceSupport()));
 
         //JEXL
-        String selectText = getProvider().getParameterByName("selects").extractValue(getPipelineCtx().getJob(), getProvider(), String.class, null);
+        String selectText = getProvider().getParameterByName("selects").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null);
         if (selectText != null)
         {
             JSONArray filterArr = new JSONArray(selectText);

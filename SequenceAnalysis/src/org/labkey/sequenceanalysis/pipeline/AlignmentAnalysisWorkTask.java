@@ -12,6 +12,7 @@ import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileType;
@@ -89,8 +90,8 @@ public class AlignmentAnalysisWorkTask extends WorkDirectoryTask<AlignmentAnalys
 
         List<RecordedAction> actions = new ArrayList<>();
 
-        List<PipelineStepProvider<AnalysisStep>> providers = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
-        if (providers.isEmpty())
+        List<PipelineStepCtx<AnalysisStep>> steps = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
+        if (steps.isEmpty())
         {
             throw new PipelineJobException("No analysis selected, nothing to do");
         }
@@ -122,7 +123,7 @@ public class AlignmentAnalysisWorkTask extends WorkDirectoryTask<AlignmentAnalys
             outDir.mkdirs();
         }
 
-        outputs.addAll(SequenceAnalysisTask.runAnalysesLocal(actions, m, m.getAlignmentFileObject(), refFasta, providers, getTaskHelper(), outDir));
+        outputs.addAll(SequenceAnalysisTask.runAnalysesLocal(actions, m, m.getAlignmentFileObject(), refFasta, steps, getTaskHelper(), outDir));
 
         return new RecordedActionSet(actions);
     }

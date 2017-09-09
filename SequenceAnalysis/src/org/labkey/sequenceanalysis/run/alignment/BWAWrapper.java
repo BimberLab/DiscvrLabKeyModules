@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.run.alignment;
 
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -46,9 +47,16 @@ public class BWAWrapper extends AbstractCommandWrapper
         public Provider()
         {
             super("BWA", "BWA is a commonly used aligner, optimized for shorter reads. It also supports paired-end reads.", Arrays.asList(
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-n"), "MaxMismatches", "Max Mismatches", "Maximum edit distance if the value is INT, or the fraction of missing alignments given 2% uniform base error rate if FLOAT. In the latter case, the maximum edit distance is automatically chosen for different read lengths. [0.04]", "ldk-numberfield", null, null)
-                    //ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-n"), ),
-                    //ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-n"), )
+                    //bwa aln
+                    ToolParameterDescriptor.create("MaxMismatches", "Max Mismatches", "Maximum edit distance if the value is INT, or the fraction of missing alignments given 2% uniform base error rate if FLOAT. In the latter case, the maximum edit distance is automatically chosen for different read lengths. [0.04]", "ldk-numberfield", null, null),
+
+                    //bwa samse/pe
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-n"), "maxHits", "Max Hits", "Maximum number of alignments to output in the XA tag for reads paired properly. If a read has more than INT hits, the XA tag will not be written.", "ldk-integerfield", new JSONObject(){{
+                        put("minValue", 0);
+                    }}, 20),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-n"), "maxHitsDiscordant", "Max Hits For Pair", "Maximum number of alignments to output in the XA tag for discordant read pairs (excluding singletons). If a read has more than INT hits, the XA tag will not be written.", "ldk-integerfield", new JSONObject(){{
+                        put("minValue", 0);
+                    }}, 20)
             ), null, "http://bio-bwa.sourceforge.net/", true, true);
 
             setAlwaysCacheIndex(true);
@@ -70,9 +78,9 @@ public class BWAWrapper extends AbstractCommandWrapper
         }
     }
 
-    public static class BWAAlignmentStep extends AbstractCommandPipelineStep<BWAWrapper> implements AlignmentStep
+    public static class BWAAlignmentStep<WrapperType extends BWAWrapper> extends AbstractCommandPipelineStep<WrapperType> implements AlignmentStep
     {
-        public BWAAlignmentStep(PipelineStepProvider provider, PipelineContext ctx, BWAWrapper wrapper)
+        public BWAAlignmentStep(PipelineStepProvider provider, PipelineContext ctx, WrapperType wrapper)
         {
             super(provider, ctx, wrapper);
         }
@@ -135,10 +143,22 @@ public class BWAWrapper extends AbstractCommandWrapper
             AlignmentOutputImpl output = new AlignmentOutputImpl();
             AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, "bwa", referenceGenome);
 
-            getWrapper()._performAlignment(getPipelineCtx().getJob(), output, inputFastq1, inputFastq2, outputDirectory, referenceGenome, basename, getClientCommandArgs());
+            doPerformAlignment(output, inputFastq1, inputFastq2, outputDirectory, referenceGenome, basename);
             output.addCommandsExecuted(getWrapper().getCommandsExecuted());
 
             return output;
+        }
+
+        protected void doPerformAlignment(AlignmentOutputImpl output, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
+        {
+            List<String> alnOptions = new ArrayList<>();
+            if (getProvider().getParameterByName("MaxMismatches").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()) != null)
+            {
+                alnOptions.add("-n");
+                alnOptions.add(getProvider().getParameterByName("MaxMismatches").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()));
+            }
+
+            getWrapper().performBwaAlignment(getPipelineCtx().getJob(), output, inputFastq1, inputFastq2, outputDirectory, referenceGenome, basename, getClientCommandArgs(), alnOptions);
         }
 
         @Override
@@ -160,12 +180,13 @@ public class BWAWrapper extends AbstractCommandWrapper
         }
     }
 
-    public File runBWAAln(PipelineJob job, ReferenceGenome referenceGenome, File inputFile) throws PipelineJobException
+    private File runBWAAln(PipelineJob job, ReferenceGenome referenceGenome, File inputFile, List<String> bwaAlnArgs) throws PipelineJobException
     {
         List<String> args = new ArrayList<>();
         args.add(getExe().getPath());
         args.add("aln");
         appendThreads(job, args);
+        args.addAll(bwaAlnArgs);
         args.add(new File(referenceGenome.getAlignerIndexDir("bwa"), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath());
         args.add(inputFile.getPath());
 
@@ -176,23 +197,23 @@ public class BWAWrapper extends AbstractCommandWrapper
         return output;
     }
 
-    protected AlignmentStep.AlignmentOutput _performAlignment(PipelineJob job, AlignmentOutputImpl output, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename, List<String> additionalArgs) throws PipelineJobException
+    protected void performBwaAlignment(PipelineJob job, AlignmentOutputImpl output, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename, List<String> samPeArgs, List<String> bwaAlnArgs) throws PipelineJobException
     {
         setOutputDir(outputDirectory);
 
         getLogger().info("Running BWA");
-        File sai1 = runBWAAln(job, referenceGenome, inputFastq1);
+        File sai1 = runBWAAln(job, referenceGenome, inputFastq1, bwaAlnArgs);
         File sai2 = null;
         if (inputFastq2 != null)
         {
-            sai2 = runBWAAln(job, referenceGenome, inputFastq2);
+            sai2 = runBWAAln(job, referenceGenome, inputFastq2, bwaAlnArgs);
         }
 
         List<String> args = new ArrayList<>();
         args.add(getExe().getPath());
         args.add(inputFastq2 == null ? "samse" : "sampe");
-        if (additionalArgs != null)
-            args.addAll(additionalArgs);
+        if (samPeArgs != null)
+            args.addAll(samPeArgs);
 
         if (!referenceGenome.getWorkingFastaFile().exists())
         {
@@ -236,8 +257,6 @@ public class BWAWrapper extends AbstractCommandWrapper
         }
 
         output.addOutput(bam, AlignmentOutputImpl.BAM_ROLE);
-
-        return output;
     }
 
     protected void appendThreads(PipelineJob job, List<String> args)

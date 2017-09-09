@@ -11,6 +11,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.reader.FastaDataLoader;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -20,6 +21,7 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.run.analysis.AlignmentAggregator;
 import org.labkey.sequenceanalysis.run.analysis.AvgBaseQualityAggregator;
 import org.labkey.sequenceanalysis.run.analysis.BamIterator;
@@ -256,7 +258,20 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
                     agg.writeSummary();
                     job.getLogger().info("writing unmapped reads to: " + ctx.getOutputDir());
                     int minExportLength = ctx.getParams().optInt(SequenceBasedTypingAnalysis.MIN_EXPORT_LENGTH, 0);
-                    Pair<File, File> outputs = agg.outputUnmappedReads(so.getFile(), ctx.getOutputDir(), FileUtil.getBaseName(so.getFile()), prefix, minExportLength);
+
+                    Readset rs = ctx.getSequenceSupport().getCachedReadset(so.getReadset());
+                    if (rs == null)
+                    {
+                        throw new PipelineJobException("File lacks a readset");
+                    }
+
+                    List<Pair<File, File>> readData = new ArrayList<>();
+                    for (ReadData d : rs.getReadData())
+                    {
+                        readData.add(Pair.of(d.getFile1(), d.getFile2()));
+                    }
+
+                    Pair<File, File> outputs = agg.outputUnmappedReads(so.getFile(), readData, ctx.getOutputDir(), FileUtil.getBaseName(so.getFile()), prefix, minExportLength);
                     if (outputs == null)
                     {
                         job.getLogger().info("no unmapped reads, skipping");
@@ -306,15 +321,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
                     so1.setDescription("Unmapped SBT Reads");
                     so1.setAnalysis_id(so.getAnalysis_id());
                     so1.setReadset(so.getReadset());
-                    Readset rs = ctx.getSequenceSupport().getCachedReadset(so.getReadset());
-                    if (rs != null)
-                    {
-                        so1.setName(rs.getName() + ", Unmapped SBT Reads (FASTQ)");
-                    }
-                    else
-                    {
-                        so1.setName(so.getName() + ", Unmapped SBT Reads (FASTQ)");
-                    }
+                    so1.setName(rs.getName() + ", Unmapped SBT Reads (FASTQ)");
                     ctx.addSequenceOutput(so1);
 
                     action.addOutput(unmappedCollapsedGz, "Unmapped SBT Reads (Collapsed)", false, true);
@@ -325,14 +332,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
                     so2.setDescription("Unmapped SBT Reads (Collapsed)");
                     so2.setAnalysis_id(so.getAnalysis_id());
                     so2.setReadset(so.getReadset());
-                    if (rs != null)
-                    {
-                        so2.setName(rs.getName() + ", Unmapped SBT Reads (Collapsed)");
-                    }
-                    else
-                    {
-                        so2.setName(so.getName() + ", Unmapped SBT Reads (Collapsed)");
-                    }
+                    so2.setName(rs.getName() + ", Unmapped SBT Reads (Collapsed)");
                     ctx.addSequenceOutput(so2);
 
                     File referencesCovered = agg.outputReferencesCovered(ctx.getOutputDir(), FileUtil.getBaseName(so.getFile()), rg.getWorkingFastaFile(), prefix);

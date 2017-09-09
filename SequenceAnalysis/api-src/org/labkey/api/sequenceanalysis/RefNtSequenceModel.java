@@ -496,7 +496,8 @@ public class RefNtSequenceModel
             }
 
             //always terminate w/ a newline
-            writer.write('\n');
+            if (lineLength != -1)
+                writer.write('\n');
         }
         else
         {

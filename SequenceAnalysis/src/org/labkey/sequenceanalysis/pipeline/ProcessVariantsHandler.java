@@ -21,6 +21,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.PedigreeRecord;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
@@ -141,21 +142,21 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
 
     public static void initVariantProcessing(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, File outputDir) throws PipelineJobException
     {
-        List<PipelineStepProvider<VariantProcessingStep>> providers = SequencePipelineService.get().getSteps(job, VariantProcessingStep.class);
+        List<PipelineStepCtx<VariantProcessingStep>> providers = SequencePipelineService.get().getSteps(job, VariantProcessingStep.class);
         boolean requiresPedigree = false;
-        for (PipelineStepProvider<VariantProcessingStep> provider : providers)
+        for (PipelineStepCtx<VariantProcessingStep> stepCtx : providers)
         {
-            for (ToolParameterDescriptor pd : provider.getParameters())
+            for (ToolParameterDescriptor pd : stepCtx.getProvider().getParameters())
             {
                 if (pd instanceof ToolParameterDescriptor.CachableParam)
                 {
                     job.getLogger().debug("caching params for : " + pd.getName());
-                    Object val = pd.extractValue(job, provider, Object.class);
+                    Object val = pd.extractValue(job, stepCtx.getProvider(), stepCtx.getStepIdx(), Object.class);
                     ((ToolParameterDescriptor.CachableParam)pd).doCache(job, val, support);
                 }
             }
 
-            if (provider instanceof VariantProcessingStep.RequiresPedigree)
+            if (stepCtx.getProvider() instanceof VariantProcessingStep.RequiresPedigree)
             {
                 requiresPedigree = true;
             }
@@ -248,16 +249,16 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
         ctx.getJob().getLogger().info("***Starting processing of file: " + input.getName());
         ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Processing: " + input.getName());
         int stepIdx = 0;
-        List<PipelineStepProvider<VariantProcessingStep>> providers = SequencePipelineService.get().getSteps(ctx.getJob(), VariantProcessingStep.class);
+        List<PipelineStepCtx<VariantProcessingStep>> providers = SequencePipelineService.get().getSteps(ctx.getJob(), VariantProcessingStep.class);
         if (providers.isEmpty())
         {
             ctx.getLogger().info("no processing steps selected");
             return null;
         }
 
-        for (PipelineStepProvider<VariantProcessingStep> provider : providers)
+        for (PipelineStepCtx<VariantProcessingStep> stepCtx : providers)
         {
-            ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + provider.getLabel());
+            ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + stepCtx.getProvider().getLabel());
             stepIdx++;
 
             if (resumer.isStepComplete(stepIdx, input.getPath()))
@@ -267,7 +268,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
                 continue;
             }
 
-            RecordedAction action = new RecordedAction(provider.getLabel());
+            RecordedAction action = new RecordedAction(stepCtx.getProvider().getLabel());
             Date start = new Date();
             action.setStartTime(start);
             action.addInput(currentVCF, "Input VCF");
@@ -283,7 +284,9 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
             ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(libraryId);
             action.addInput(genome.getSourceFastaFile(), "Reference FASTA");
 
-            VariantProcessingStep step = provider.create(ctx);
+            VariantProcessingStep step = stepCtx.getProvider().create(ctx);
+            step.setStepIdx(stepCtx.getStepIdx());
+
             VariantProcessingStep.Output output = step.processVariants(currentVCF, ctx.getOutputDir(), genome);
             ctx.getFileManager().addStepOutputs(action, output);
 
@@ -311,7 +314,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
 
             Date end = new Date();
             action.setEndTime(end);
-            ctx.getJob().getLogger().info(provider.getLabel() + " Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+            ctx.getJob().getLogger().info(stepCtx.getProvider().getLabel() + " Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
 
             resumer.setStepComplete(stepIdx, input.getPath(), action, currentVCF);
         }
@@ -329,7 +332,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
         return null;
     }
 
-    private static String getVCFLineCount(File vcf, Logger log, boolean passOnly) throws PipelineJobException
+    public static String getVCFLineCount(File vcf, Logger log, boolean passOnly) throws PipelineJobException
     {
         String cat = vcf.getName().endsWith(".gz") ? "zcat" : "cat";
         SimpleScriptWrapper wrapper = new SimpleScriptWrapper(null);
@@ -393,6 +396,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
                         so1.setContainer(ctx.getJob().getContainerId());
                         so1.setCreated(new Date());
                         so1.setModified(new Date());
+                        so1.setReadset(inputFiles.iterator().next().getReadset());
 
                         _resumer.addSequenceOutput(so1);
                     }

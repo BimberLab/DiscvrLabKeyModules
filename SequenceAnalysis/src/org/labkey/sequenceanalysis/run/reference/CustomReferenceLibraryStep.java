@@ -10,11 +10,12 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceLibraryStep;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Arrays;
 
 /**
@@ -75,12 +76,29 @@ public class CustomReferenceLibraryStep extends AbstractPipelineStep implements 
         }
 
         File refFasta = getExpectedFastaFile(outputDirectory);
-        try (FileWriter writer = new FileWriter(refFasta))
+        try (PrintWriter writer = PrintWriters.getPrintWriter(refFasta))
         {
             if (!refFasta.exists())
                 refFasta.createNewFile();
-            writer.write(">" + name + System.getProperty("line.separator"));
-            writer.write(seq);
+            writer.write(">" + name + "\n");
+            seq = seq.replaceAll("\\s+", "");
+
+            int len = seq.length();
+            int count = 0;
+            for (int i = 0; i < len; i++)
+            {
+                if (count == 60)
+                {
+                    writer.write('\n');
+                    count = 0;
+                }
+
+                writer.write(seq.charAt(i));
+                count++;
+            }
+
+            //always terminate w/ a newline
+            writer.write('\n');
         }
         catch (IOException e)
         {

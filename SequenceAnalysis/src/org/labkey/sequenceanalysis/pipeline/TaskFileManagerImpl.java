@@ -598,9 +598,9 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     }
 
     @Override
-    public String getInputfileTreatment()
+    public InputFileTreatment getInputFileTreatment()
     {
-        return _job.getParameters().get("inputfile.inputTreatment");
+        return InputFileTreatment.valueOf(_job.getParameters().get("inputfile.inputTreatment"));
     }
 
     @Override

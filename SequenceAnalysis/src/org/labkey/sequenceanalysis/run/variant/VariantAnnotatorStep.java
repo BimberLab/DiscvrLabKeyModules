@@ -61,7 +61,7 @@ public class VariantAnnotatorStep extends AbstractCommandPipelineStep<VariantAnn
 
         File outputVcf = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".annotated.vcf.gz");
 
-        if (getProvider().getParameterByName("mv").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
+        if (getProvider().getParameterByName("mv").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false))
         {
             options.add("-A");
             options.add("MendelianViolationCount");
@@ -80,7 +80,7 @@ public class VariantAnnotatorStep extends AbstractCommandPipelineStep<VariantAnn
             options.add("SILENT");
         }
 
-        if (getProvider().getParameterByName("maf").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
+        if (getProvider().getParameterByName("maf").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false))
         {
             options.add("-A");
             options.add("MinorAlleleFrequency");

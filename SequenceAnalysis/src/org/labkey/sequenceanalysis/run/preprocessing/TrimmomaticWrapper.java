@@ -67,12 +67,12 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
             _stepName = stepName;
         }
 
-        public List<String> getAdditionalParams(PipelineContext ctx, PreprocessingOutputImpl output) throws PipelineJobException
+        public List<String> getAdditionalParams(PipelineContext ctx, PreprocessingOutputImpl output, int stepIdx) throws PipelineJobException
         {
             List<String> params = new ArrayList<>();
             for (ToolParameterDescriptor desc : getParameters())
             {
-                params.add(desc.extractValue(ctx.getJob(), this));
+                params.add(desc.extractValue(ctx.getJob(), this, stepIdx));
             }
 
             return Collections.singletonList(_stepName + ":" + StringUtils.join(params, ":"));
@@ -123,13 +123,13 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public List<String> getAdditionalParams(PipelineContext ctx, PreprocessingOutputImpl output) throws PipelineJobException
+        public List<String> getAdditionalParams(PipelineContext ctx, PreprocessingOutputImpl output, int stepIdx) throws PipelineJobException
         {
 
             List<String> additionalParams = new ArrayList<>();
             for (AbstractTrimmomaticProvider provider : _providers)
             {
-                additionalParams.addAll(provider.getAdditionalParams(ctx, output));
+                additionalParams.addAll(provider.getAdditionalParams(ctx, output, stepIdx));
             }
 
             return additionalParams;
@@ -168,7 +168,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                 getPipelineCtx().getLogger().info("\t" + input2.getPath());
 
             AbstractTrimmomaticProvider provider = (AbstractTrimmomaticProvider)getProvider();
-            List<String> trimmomaticParams = getWrapper().getTrimmomaticParams(input, input2, provider.getName(), provider.getAdditionalParams(getPipelineCtx(), output));
+            List<String> trimmomaticParams = getWrapper().getTrimmomaticParams(input, input2, provider.getName(), provider.getAdditionalParams(getPipelineCtx(), output, getStepIdx()));
             getWrapper().doTrim(trimmomaticParams);
             output.addCommandExecuted(StringUtils.join(trimmomaticParams, " "));
 
@@ -306,7 +306,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public List<String> getAdditionalParams(PipelineContext ctx, PreprocessingOutputImpl output) throws PipelineJobException
+        public List<String> getAdditionalParams(PipelineContext ctx, PreprocessingOutputImpl output, int stepIdx) throws PipelineJobException
         {
             List<String> params = new ArrayList<>();
 
@@ -318,7 +318,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
 
             for (String name : Arrays.asList("seedMismatches", "palindromeClipThreshold", "simpleClipThreshold"))
             {
-                params.add(getParameterByName(name).extractValue(ctx.getJob(), this));
+                params.add(getParameterByName(name).extractValue(ctx.getJob(), this, stepIdx));
             }
 
             return Collections.singletonList(_stepName + ":" + StringUtils.join(params, ":"));

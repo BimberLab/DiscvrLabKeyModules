@@ -1184,9 +1184,9 @@
             <item text="Reports">
                 <originalText>Reports</originalText>
             </item>
-            <item text="Import Data" permission="INSERT">
-                <originalText>Import Data</originalText>
-            </item>
+            <!--<item text="Import Data" permission="INSERT">-->
+                <!--<originalText>Import Data</originalText>-->
+            <!--</item>-->
             <item text="Delete" permission="DELETE" requiresSelection="true">
                 <onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</onClick>
             </item>
@@ -2605,12 +2605,12 @@
             <item permission="INSERT" text="Add File" insertPosition="beginning">
                 <onClick>SequenceAnalysis.window.ImportChainFileWindow.buttonHandler(dataRegionName)</onClick>
             </item>
-            <item hidden="true">
-                <originalText>Insert New</originalText>
-            </item>
-            <item hidden="true">
-                <originalText>Import Data</originalText>
-            </item>
+            <!--<item hidden="true">-->
+                <!--<originalText>Insert New</originalText>-->
+            <!--</item>-->
+            <!--<item hidden="true">-->
+                <!--<originalText>Import Data</originalText>-->
+            <!--</item>-->
             <item hidden="true">
                 <originalText>Charts</originalText>
             </item>

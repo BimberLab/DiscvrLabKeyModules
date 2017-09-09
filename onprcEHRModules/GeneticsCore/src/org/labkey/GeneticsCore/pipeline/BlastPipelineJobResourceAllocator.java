@@ -1,7 +1,8 @@
 package org.labkey.GeneticsCore.pipeline;
 
-import org.labkey.api.htcondorconnector.HTCondorJobResourceAllocator;
+import org.labkey.api.cluster.ClusterResourceAllocator;
 import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.pipeline.RemoteExecutionEngine;
 import org.labkey.api.pipeline.TaskId;
 
 import java.util.Collections;
@@ -10,12 +11,12 @@ import java.util.List;
 /**
  * Created by bimber on 3/9/2016.
  */
-public class BlastPipelineJobResourceAllocator implements HTCondorJobResourceAllocator
+public class BlastPipelineJobResourceAllocator implements ClusterResourceAllocator
 {
-    public static class Factory implements HTCondorJobResourceAllocator.Factory
+    public static class Factory implements ClusterResourceAllocator.Factory
     {
         @Override
-        public HTCondorJobResourceAllocator getAllocator()
+        public ClusterResourceAllocator getAllocator()
         {
             return new BlastPipelineJobResourceAllocator();
         }
@@ -40,9 +41,16 @@ public class BlastPipelineJobResourceAllocator implements HTCondorJobResourceAll
     }
 
     @Override
-    public List<String> getExtraSubmitScriptLines(PipelineJob job)
+    public void addExtraSubmitScriptLines(PipelineJob job, RemoteExecutionEngine engine, List<String> lines)
     {
         //force BLAST jobs to top of queue, since we assume these run quickly
-        return Collections.singletonList("+JobPrio = 5");
+        if ("HTCondorEngine".equals(engine.getType()))
+        {
+            lines.add("+JobPrio = 5");
+        }
+        else if ("SlurmEngine".equals(engine.getType()))
+        {
+            //TODO?
+        }
     }
 }

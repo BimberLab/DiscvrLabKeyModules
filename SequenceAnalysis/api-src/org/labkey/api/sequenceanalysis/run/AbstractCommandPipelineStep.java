@@ -60,7 +60,7 @@ abstract public class AbstractCommandPipelineStep<Wrapper extends CommandWrapper
             if (desc.getCommandLineParam() != null)
             {
                 if (paramBlacklist == null || !paramBlacklist.contains(desc.getName()))
-                    ret.addAll(desc.getCommandLineParam().getArguments(separator, desc.extractValueForCommandLine(getPipelineCtx().getJob(), getProvider())));
+                    ret.addAll(desc.getCommandLineParam().getArguments(separator, desc.extractValueForCommandLine(getPipelineCtx().getJob(), getProvider(), getStepIdx())));
             }
         }
 

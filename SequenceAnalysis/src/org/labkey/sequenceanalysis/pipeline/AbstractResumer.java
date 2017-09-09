@@ -92,9 +92,6 @@ abstract public class AbstractResumer implements Serializable
         {
             throw new PipelineJobException(e);
         }
-
-        //add to debug intermittent issue w/ XML not saving
-        _log.debug("time since xml last modified: " + DurationFormatUtils.formatDurationWords(new Date().getTime() - output.lastModified(), true, true));
     }
 
     public void markComplete()

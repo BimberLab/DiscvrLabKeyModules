@@ -1,3 +1,5 @@
+require({cache:{
+'url:JBrowse/package.json':"{\n    \"name\": \"JBrowse\",\n    \"version\": \"1.12.3\",\n    \"copyright\":\"© 2007-2017 The Evolutionary Software Foundation\",\n    \"main\": \"main\",\n    \"dependencies\": {\n        \"dojo\": \"current\",\n        \"dijit\": \"current\",\n        \"dojox\": \"current\",\n        \"util\": \"current\"\n    },\n    \"description\": \"A modern client-side genome browser.\",\n    \"licenses\": [\n        {\n            \"type\": \"LGPL-2.1\",\n            \"url\": \"https://raw.github.com/GMOD/jbrowse/master/LICENSE\"\n        }\n    ],\n    \"bugs\": \"https://github.com/gmod/jbrowse/issues\",\n    \"keywords\": [\"JavaScript\", \"JBrowse\", \"Genome Browser\", \"Genomics\", \"Bioinformatics\"],\n    \"homepage\": \"http://jbrowse.org\",\n    \"dojoBuild\": \"JBrowse.profile.js\"\n}\n"}});
 var _gaq = _gaq || []; // global task queue for Google Analytics
 
 define( "JBrowse/Browser", [
@@ -13,6 +15,7 @@ define( "JBrowse/Browser", [
             'dojo/topic',
             'dojo/aspect',
             'dojo/request',
+            'dojo/io-query',
             'JBrowse/has',
             'dojo/_base/array',
             'dijit/layout/ContentPane',
@@ -41,6 +44,7 @@ define( "JBrowse/Browser", [
             'JBrowse/View/FastaFileDialog',
             'JBrowse/Store/SeqFeature/IndexedFasta',
             'JBrowse/Store/SeqFeature/UnindexedFasta',
+            'JBrowse/Store/SeqFeature/TwoBit',
             'JBrowse/Model/Location',
             'JBrowse/View/LocationChoiceDialog',
             'JBrowse/View/Dialog/SetHighlight',
@@ -51,6 +55,7 @@ define( "JBrowse/Browser", [
             'JBrowse/View/StandaloneDatasetList',
             'dijit/focus',
             'lazyload', // for dynamic CSS loading
+            'dojo/text!./package.json',
             'dojo/domReady!'
         ],
         function(
@@ -66,6 +71,7 @@ define( "JBrowse/Browser", [
             topic,
             aspect,
             request,
+            ioQuery,
             has,
             array,
             dijitContentPane,
@@ -94,6 +100,7 @@ define( "JBrowse/Browser", [
             FastaFileDialog,
             IndexedFasta,
             UnindexedFasta,
+            TwoBit,
             Location,
             LocationChoiceDialog,
             SetHighlightDialog,
@@ -103,7 +110,8 @@ define( "JBrowse/Browser", [
             HelpDialog,
             StandaloneDatasetList,
             dijitFocus,
-            LazyLoad
+            LazyLoad,
+            packagejson
         ) {
 
 
@@ -135,7 +143,7 @@ constructor: function(params) {
     this.globalKeyboardShortcuts = {};
 
     this.config = params || {};
-
+    
     // if we're in the unit tests, stop here and don't do any more initialization
     if( this.config.unitTestMode )
         return;
@@ -144,6 +152,7 @@ constructor: function(params) {
 
     // start the initialization process
     var thisB = this;
+	
     dojo.addOnLoad( function() {
         thisB.loadConfig().then( function() {
 
@@ -154,8 +163,8 @@ constructor: function(params) {
             if( thisB.config.initialHighlight && thisB.config.initialHighlight != "/" )
                 thisB.setHighlight( new Location( thisB.config.initialHighlight ) );
 
-            thisB.loadNames();
             thisB.initPlugins().then( function() {
+                thisB.loadNames();
                 thisB.loadUserCSS().then( function() {
 
                     thisB.initTrackMetadata();
@@ -182,7 +191,14 @@ constructor: function(params) {
                            //    if no URL param and no tracks cookie, then use defaultTracks
                            if (thisB.config.forceTracks)   { tracksToShow = tracksToShow.concat(thisB.config.forceTracks.split(",")); }
                            else if (thisB.cookie("tracks")) { tracksToShow = tracksToShow.concat(thisB.cookie("tracks").split(",")); }
-                           else if (thisB.config.defaultTracks) { tracksToShow = tracksToShow.concat(thisB.config.defaultTracks.split(",")); }
+                           else if (thisB.config.defaultTracks) {
+                               // In rare cases thisB.config.defaultTracks already contained an array that appeared to
+                               // have been split in a previous invocation of this function. Thus, we only try and split
+                               // it if it isn't already split.
+                               if (!thisB.config.defaultTracks instanceof Array) {
+                                  tracksToShow = tracksToShow.concat(thisB.config.defaultTracks.split(","));
+                               }
+                           }
                            // currently, force "DNA" _only_ if no other guides as to what to show?
                            //    or should this be changed to always force DNA to show?
                            if (tracksToShow.length == 0) { tracksToShow.push("DNA"); }
@@ -220,8 +236,7 @@ _initialLocation: function() {
 version: function() {
     // when a build is put together, the build system assigns a string
     // to the variable below.
-    var BUILD_SYSTEM_JBROWSE_VERSION = "1.12.1";
-    return BUILD_SYSTEM_JBROWSE_VERSION || 'development';
+    return JSON.parse(packagejson).version;
 }.call(),
 
 
@@ -258,7 +273,7 @@ initPlugins: function() {
             plugins = function() {
                 var newplugins = [];
                 for( var pname in plugins ) {
-                    if( !( 'name' in plugins[pname] ) ) {
+                    if( lang.isObject(plugins[pname]) && !( 'name' in plugins[pname] ) ) {
                         plugins[pname].name = pname;
                     }
                     newplugins.push( plugins[pname] );
@@ -465,8 +480,7 @@ fatalError: function( error ) {
 },
 loadSessions: function() {
     var fs = electronRequire('fs');
-    var remote = electronRequire('remote');
-    var app = remote.require('app');
+    var app = electronRequire('electron').remote.app;
 
     var path = app.getPath('userData') + "/sessions.json";
     var obj = JSON.parse( fs.readFileSync( path, 'utf8' ) );
@@ -731,6 +745,16 @@ initView: function() {
                   }
                 )
             );
+            this.addGlobalMenuItem(this.config.classicMenu ? 'file':'dataset',
+              new dijitMenuItem(
+                  {
+                      id: 'menubar_dataset_home',
+                      label: "Return to main menu",
+                      iconClass: 'dijitIconTask',
+                      onClick: dojo.hitch( this, function() { var container = thisObj.container || document.body;thisObj.welcomeScreen(container); } )
+                  }
+                )
+            );
         }
         else if( !this.config.hideGenomeOptions ) {
             this.addGlobalMenuItem(this.config.classicMenu ? 'file':'dataset',
@@ -884,12 +908,18 @@ initView: function() {
             this.renderGlobalMenu( 'help', {}, menuBar );
         }
 
-        if( this.config.show_nav && this.config.show_tracklist && this.config.show_overview ) {
+        if( this.config.show_nav && this.config.show_tracklist && this.config.show_overview && !Util.isElectron() ) {
             var shareLink = this.makeShareLink();
             if (shareLink) { menuBar.appendChild( shareLink ); }
         }
-        else
-            menuBar.appendChild( this.makeFullViewLink() );
+        else if(Util.isElectron()) {
+            var snapLink = this.makeSnapLink();
+            if(snapLink) { menuBar.appendChild( snapLink ); }
+        }
+        else {
+            if ( this.config.show_fullviewlink )
+                menuBar.appendChild( this.makeFullViewLink() );
+        }
 
 
         this.viewElem = document.createElement("div");
@@ -1045,9 +1075,8 @@ renderDatasetSelect: function( parent ) {
 
 
 saveSessionDir: function( directory ) {
-    var remote = electronRequire('remote');
     var fs = electronRequire('fs');
-    var app = remote.require('app');
+    var app = electronRequire('electron').remote.app;
     var path = app.getPath('userData')+"/sessions.json";
     var obj = [];
 
@@ -1073,18 +1102,30 @@ openDirectoryElectron: function( directory ) {
 openConfig: function( plugins ) {
     if( !confirm("If you have opened any new tracks, please save them before continuing. Are you sure you want to continue?") )
         return;
-    var remote = electronRequire('remote');
     var fs = electronRequire('fs');
 
-    console.log( JSON.stringify( plugins ) );
     var dir = this.config.dataRoot;
-    var trackList = JSON.parse( fs.readFileSync(dir+"/trackList.json", 'utf8') );
+    var trackList = JSON.parse( fs.readFileSync( dir + "/trackList.json", 'utf8') );
+
+    //remap existing plugins to object form
     trackList.plugins = trackList.plugins || {};
+    if( lang.isArray( trackList.plugins ) ) {
+        var temp = {};
+        array.forEach( trackList.plugins, function( p ) {
+            temp[ p ] = { 'name': p, 'location': dir+'/'+p };
+        });
+        trackList.plugins = temp;
+    }
+
+    // add new plugins
     array.forEach( plugins, function( plugin ) {
-        var name = plugin.match(/\/(\w+)$/)[1]
-        trackList.plugins[name] = { location: plugin };
+        var name = plugin.match(/\/(\w+)$/)[1];
+        trackList.plugins[ name ] = { location: plugin, name: name };
     });
-    fs.writeFileSync( dir + "/trackList.json", JSON.stringify(trackList, null, 2) );
+
+    try {
+        fs.writeFileSync( dir + "/trackList.json", JSON.stringify(trackList, null, 2) );
+    } catch(e) { console.log("Failed to save trackList.json"); }
     window.location.reload();
 },
 
@@ -1094,21 +1135,20 @@ saveData: function() {
     if( !confirm("This will overwrite tracks and config data in your data directory. Are you sure you want to continue?") )
         return;
 
-    var remote = electronRequire('remote');
     var fs = electronRequire('fs');
     var dir = this.config.dataRoot;
 
     // use getstore to access the files that were loaded from local files, and create standard configs
-    var trackConfs = array.map( this.view.tracks, function(track) {
-        var temp = dojo.clone( track.config );
-        this.getStore( temp.store, dojo.hitch( this, function( obj ) {
+    var trackConfs = array.map( this.config.tracks, function(trackConfig) {
+        var temp = lang.clone( trackConfig );
+        this.getStore( temp.store, lang.hitch( this, function( obj ) {
             temp.storeClass = obj.config.type;
             if( !temp.urlTemplate ) {
-                dojo.mixin( temp, obj.saveStore() );
+                lang.mixin( temp, obj.saveStore() );
 
                 if( temp.histograms && temp.histograms.store ) {
                     this.getStore( temp.histograms.store, function( obj ) {
-                        dojo.mixin( temp.histograms, obj.saveStore() );
+                        lang.mixin( temp.histograms, obj.saveStore() );
                     });
                 }
             }
@@ -1117,10 +1157,20 @@ saveData: function() {
         return temp;
     }, this);
 
+    var plugins = array.filter( Util.uniq( this.config.plugins ), function(elt) { return elt!="RegexSequenceSearch" });
+    var tmp = {};
+
+    if( lang.isArray( this.config.plugins ) ) {
+        array.forEach( this.config.plugins, function( p ) {
+            tmp[ p ] = typeof p == 'object' ? p : { 'name': p };
+        });
+    }
+    else tmp = this.config.plugins;
     var minTrackList = {
-      tracks: trackConfs,
-      refSeqs: this.config.refSeqs,
-      refSeqOrder: this.config.refSeqOrder
+        tracks: trackConfs,
+        refSeqs: this.config.refSeqs,
+        refSeqOrder: this.config.refSeqOrder,
+        plugins:tmp
     };
     try {
         fs.writeFileSync( Util.unReplacePath(dir) + "/trackList.json", JSON.stringify(minTrackList, null, 2) );
@@ -1131,17 +1181,16 @@ saveData: function() {
 openFastaElectron: function() {
     this.fastaFileDialog = this.fastaFileDialog || new FastaFileDialog({browser: this});
 
-    var remote = electronRequire('remote');
+    var app = electronRequire('electron').remote.app;
     var fs = electronRequire('fs');
     var path = electronRequire('path');
-    var app = remote.require('app');
 
     this.fastaFileDialog.show ({
         openCallback: dojo.hitch(this, function(results) {
           var confs = results.trackConfs || [];
 
           if( confs.length ) {
-            if( confs[0].store.fasta ) {
+            if( confs[0].store.fasta && confs[0].store.fai ) {
                 var fasta = Util.replacePath( confs[0].store.fasta.url );
                 var fai = Util.replacePath( confs[0].store.fai.url );
 
@@ -1173,8 +1222,38 @@ openFastaElectron: function() {
                     window.location = window.location.href.split('?')[0] + "?data=" + Util.replacePath( dir );
                 } catch(e) { alert(e); }
             }
+            else if( confs[0].store.blob ) {
+                var f2bit = Util.replacePath( confs[0].store.blob.url );
+
+                var refseqs = new TwoBit({'browser': this, 'urlTemplate': f2bit });
+                var thisB = this;
+                refseqs.getRefSeqs( function(res) {
+                    var trackList = {
+                        tracks: [{
+                            label: confs[0].label,
+                            key: confs[0].key,
+                            type: "SequenceTrack",
+                            category: "Reference sequence",
+                            useAsRefSeqStore: true,
+                            storeClass: 'JBrowse/Store/SeqFeature/TwoBit',
+                            chunkSize: 20000,
+                            urlTemplate: f2bit
+                        }],
+                        refSeqs: { data: res },
+                        refSeqOrder: results.refSeqOrder
+                    };
+                    try {
+                        var dir = app.getPath('userData')+"/"+confs[0].label;
+                        fs.existsSync(dir) || fs.mkdirSync(dir);
+                        fs.writeFileSync(dir + "/trackList.json", JSON.stringify(trackList, null, 2));
+                        fs.closeSync(fs.openSync( dir+"/tracks.conf", 'w' ));
+                        thisB.saveSessionDir( dir );
+                        window.location = window.location.href.split('?')[0] + "?data=" + Util.replacePath( dir );
+                    } catch(e) { alert(e); }
+                }, function(err) { console.error('error', err); });
+            }
             else {
-                var fasta = Util.replacePath( confs[0].store.blob.url );
+                var fasta = Util.replacePath( confs[0].store.fasta.url );
                 try {
                     var stats = fs.statSync( fasta );
                     if(stats.size>100000000) {
@@ -1209,7 +1288,7 @@ openFastaElectron: function() {
                         thisB.saveSessionDir( dir );
                         window.location = window.location.href.split('?')[0] + "?data=" + Util.replacePath( dir );
                     } catch(e) { alert(e); }
-                }, function() { console.log('error'); });
+                }, function(err) { console.error('error', err); });
             }
           }
         })
@@ -1234,37 +1313,21 @@ openFasta: function() {
                       refSeqs: { data: refSeqs },
                       refSeqOrder: results.refSeqOrder
                   });
-                  setTimeout( function() {
-                    array.forEach( tracks, function( conf ) {
-                        var storeConf = conf.store;
-                        if( storeConf && typeof storeConf == 'object' ) {
-                            delete conf.store;
-                            storeConf.name = 'refseqs'; // important to make it the refseq store
-                            var name = this.addStoreConfig( storeConf.name, storeConf );
-                            conf.store = name;
-                        }
-                    },newBrowser);
-                    newBrowser.publish( '/jbrowse/v1/v/tracks/new', tracks );
-                  }, 1000 );
+                  newBrowser.afterMilestone('completely initialized', function() {
+                      array.forEach( tracks, function( conf ) {
+                          var storeConf = conf.store;
+                          if( storeConf && typeof storeConf == 'object' ) {
+                              delete conf.store;
+                              storeConf.name = 'refseqs'; // important to make it the refseq store
+                              conf.store = this.addStoreConfig( storeConf.name, storeConf );
+                          }
+                      }, newBrowser);
+                      newBrowser.publish( '/jbrowse/v1/v/tracks/new', tracks );
+                  });
               });
           }
           if( confs.length ) {
-            if( confs[0].store.blob ) {
-                if( confs[0].store.blob.size > 100000000 ) {
-                   if(!confirm('Warning: you are opening a non-indexed fasta larger than 100MB. It is recommended to load a fasta (.fa) and the fasta index (.fai) to provide speedier loading. Do you wish to continue anyways?')) {
-                       return;
-                   }
-                }
-                new UnindexedFasta({
-                    browser: this,
-                    fasta: confs[0].store.blob
-                })
-                .getRefSeqs(
-                    function(refSeqs) { loadNewRefSeq( refSeqs, confs ); },
-                    function(error) { alert('Error getting refSeq: '+error); }
-                );
-            }
-            else {
+            if( confs[0].store.fasta && confs[0].store.fai ) {
                 new IndexedFasta({
                     browser: this,
                     fai: confs[0].store.fai,
@@ -1275,6 +1338,32 @@ openFasta: function() {
                     function(error) { alert('Error getting refSeq: '+error); }
                 );
             }
+            else if( confs[0].store.blob ) {
+                new TwoBit({
+                    browser: this,
+                    blob: confs[0].store.blob
+                })
+                .getRefSeqs(
+                    function(refSeqs) { loadNewRefSeq( refSeqs, confs ); },
+                    function(error) { alert('Error getting refSeq: '+error); }
+                );
+            }
+            else if( confs[0].store.fasta ) {
+                if( confs[0].store.fasta.size > 100000000 ) {
+                   if(!confirm('Warning: you are opening a non-indexed fasta larger than 100MB. It is recommended to load a fasta (.fa) and the fasta index (.fai) to provide speedier loading. Do you wish to continue anyways?')) {
+                       return;
+                   }
+                }
+                new UnindexedFasta({
+                    browser: this,
+                    fasta: confs[0].store.fasta
+                })
+                .getRefSeqs(
+                    function(refSeqs) { loadNewRefSeq( refSeqs, confs ); },
+                    function(error) { alert('Error getting refSeq: '+error); }
+                );
+            }
+
           }
         })
       });
@@ -1288,8 +1377,7 @@ browserMeta: function() {
     var about = this.config.aboutThisBrowser || {};
     about.title = about.title || 'JBrowse';
 
-    var verstring = this.version && this.version.match(/^\d/)
-        ? this.version : '(development version)';
+    var verstring = this.version;
 
     if( about.description ) {
         about.description += '<div class="powered_by">'
@@ -1303,7 +1391,15 @@ browserMeta: function() {
             + '  <div class="tagline">A next-generation genome browser<br> built with JavaScript and HTML5.</div>'
             + '  <a class="mainsite" target="_blank" href="http://jbrowse.org">JBrowse website</a>'
             + '  <div class="gmod">JBrowse is a <a target="_blank" href="http://gmod.org">GMOD</a> project.</div>'
-            + '  <div class="copyright">&copy; 2013 The Evolutionary Software Foundation</div>'
+            + '  <div class="copyright">'+JSON.parse(packagejson).copyright+'</div>'
+            + ((Object.keys(this.plugins).length>1&&!this.config.noPluginsForAboutBox) ? (
+                '  <div class="loaded-plugins">Loaded plugins<ul class="plugins-list">'
+                + array.map(Object.keys(this.plugins), function(elt) {
+                    var p = this.plugins[elt];
+                    return '<li>'+
+                        (p.url ? '<a href="'+p.url+'">': '') + p.name + (p.url ? '</a>':'') +
+                        (p.author ? ' ('+p.author+')' : '')+'</li>'; }, this).join('')
+                + '  </ul></div>' ) : '')
             + '</div>';
     }
     return about;
@@ -1356,10 +1452,14 @@ getTrackTypes: function() {
                 'JBrowse/Store/SeqFeature/BigWig'      : 'JBrowse/View/Track/Wiggle/XYPlot',
                 'JBrowse/Store/SeqFeature/VCFTabix'    : 'JBrowse/View/Track/CanvasVariants',
                 'JBrowse/Store/SeqFeature/GFF3'        : 'JBrowse/View/Track/CanvasFeatures',
+                'JBrowse/Store/SeqFeature/GFF3Tabix'   : 'JBrowse/View/Track/CanvasFeatures',
+                'JBrowse/Store/SeqFeature/BED'         : 'JBrowse/View/Track/CanvasFeatures',
+                'JBrowse/Store/SeqFeature/BEDTabix'    : 'JBrowse/View/Track/CanvasFeatures',
                 'JBrowse/Store/SeqFeature/GTF'         : 'JBrowse/View/Track/CanvasFeatures',
                 'JBrowse/Store/SeqFeature/StaticChunked' : 'JBrowse/View/Track/Sequence',
                 'JBrowse/Store/SeqFeature/UnindexedFasta': 'JBrowse/View/Track/Sequence',
-                'JBrowse/Store/SeqFeature/IndexedFasta'  : 'JBrowse/View/Track/Sequence'
+                'JBrowse/Store/SeqFeature/IndexedFasta'  : 'JBrowse/View/Track/Sequence',
+                'JBrowse/Store/SeqFeature/TwoBit'        : 'JBrowse/View/Track/Sequence'
             },
 
             knownTrackTypes: [
@@ -1653,11 +1753,19 @@ getStore: function( storeName, callback ) {
                              });
 
                  var store = new storeClass( storeArgs );
-                 this._storeCache[ storeName ] = { refCount: 1, store: store };
+
+                 var cache = typeof storeArgs.storeCache==='undefined' || storeArgs.storeCache !== false;
+
+                 if (cache)
+                    this._storeCache[ storeName ] = { refCount: 1, store: store };
+
                  callback( store );
                  // release the callback because apparently require
                  // doesn't release this function
                  callback = undefined;
+
+                 //if (cache)
+                 //    delete store;
              }));
 },
 
@@ -1910,7 +2018,7 @@ loadConfig: function () {
                                this._addTrackConfigs( tracks );
 
                                // coerce some config keys to boolean
-                               dojo.forEach( ['show_tracklist','show_nav','show_overview','show_menu', 'show_tracklabels'], function(v) {
+                               dojo.forEach( ['show_tracklist','show_nav','show_overview','show_menu', 'show_fullviewlink', 'show_tracklabels'], function(v) {
                                                  this.config[v] = this._coerceBoolean( this.config[v] );
                                              },this);
 
@@ -2000,6 +2108,7 @@ _configDefaults: function() {
         show_nav: true,
         show_menu: true,
         show_overview: true,
+        show_fullviewlink: true,
 
         refSeqs: "{dataRoot}/seq/refSeqs.json",
         include: [
@@ -2250,23 +2359,27 @@ showRegion: function( location ) {
 navigateTo: function(loc) {
     var thisB = this;
     this.afterMilestone( 'initView', function() {
-        // lastly, try to search our feature names for it
-        thisB.searchNames( loc )
-            .then( function( found ) {
-                if( found )
-                    return;
+        thisB.afterMilestone( 'loadNames', function() {
+            // lastly, try to search our feature names for it
+            thisB.searchNames( loc )
+                .then( function( found ) {
+                    if( found )
+                        return;
 
-                // if it's a foo:123..456 location, go there
-                if(!thisB.callLocation(loc)){return;}
+                    // if it's a foo:123..456 location, go there
+                    if(!thisB.callLocation(loc)){return;}
 
-                new InfoDialog(
-                {
-                    title: 'Not found',
-                    content: 'Not found: <span class="locString">'+loc+'</span>',
-                    className: 'notfound-dialog'
-                }).show();
-            },
-            thisB.callLocation(loc));
+                    new InfoDialog(
+                    {
+                        title: 'Not found',
+                        content: 'Not found: <span class="locString">'+loc+'</span>',
+                        className: 'notfound-dialog'
+                    }).show();
+                });
+
+            // called by default
+            thisB.callLocation(loc);
+        });
     });
 },
 
@@ -2495,10 +2608,36 @@ globalKeyHandler: function( evt ) {
         evt.stopPropagation();
     }
 },
+makeSnapLink: function () {
+    var browser = this;
+    var shareURL = '#';
+    var dataRoot = this.config.dataRoot;
+
+    // make the share link
+    var button = new dijitButton({
+            className: 'share',
+            innerHTML: 'Screenshot',
+            title: 'share this view',
+            onClick: function() {
+                var fs = electronRequire('fs');
+                var screenshot = electronRequire('electron-screenshot')
+                var dialog = electronRequire('electron').remote.dialog;
+                dialog.showSaveDialog(function (fileName) {
+                    screenshot({
+                      filename: fileName,
+                      delay: 1
+                    }, function() { console.log('Saved screenshot',fileName); });
+                });
+            }
+        }
+    );
+
+    return button.domNode;
+},
 
 makeShareLink: function () {
     // don't make the link if we were explicitly configured not to
-    if( ( 'share_link' in this.config ) && !this.config.share_link || Util.isElectron() )
+    if( ( 'share_link' in this.config ) && !this.config.share_link )
         return null;
 
     var browser = this;
@@ -2793,7 +2932,7 @@ cookie: function(keyWithoutId,value) {
 
 createNavBox: function( parent ) {
     var thisB = this;
-    var align = 'left';
+    var align = 'center';
     var navbox = dojo.create( 'div', { id: 'navbox', style: { 'text-align': align } }, parent );
 
     // container adds a white backdrop to the locationTrap.
@@ -3082,6 +3221,15 @@ createNavBox: function( parent ) {
  */
 getHighlight: function() {
     return this._highlight || null;
+},
+
+getBookmarks: function() {
+    if( this.config.bookmarkService ) {
+        return request( this.config.bookmarkService + "?" + ioQuery.objectToQuery({ sequence: this.refSeq.name, organism: this.config.dataset_id }), {
+            handleAs: "json"
+        });
+    }
+    else return this.config.bookmarks;
 },
 
 /**

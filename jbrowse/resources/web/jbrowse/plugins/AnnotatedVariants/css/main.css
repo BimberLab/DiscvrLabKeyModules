@@ -1,0 +1,149 @@
+
+.dgrid-cell-padding {
+    padding: 1px;
+}
+
+.popupcontainer h2.sectiontitle {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    margin: 1em 0 0.7em 0;
+}
+
+.popupcontainer .value_container {
+    display: inline-block;
+    max-height: 20em;
+    overflow-y: auto;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -ms-box-sizing: border-box;
+}
+.popupcontainer .value_container.big, .popupcontainer .value_container.dgrid {
+    border: 1px solid rgba(0,0,50,0.1);
+    margin-left: 1em;
+    margin-top: 0.3em;
+}
+
+.popupcontainer .histogram_container {
+    display: inline-block;
+    max-height: 20em;
+    overflow-y: auto;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -ms-box-sizing: border-box;
+}
+.popupcontainer .histogram_container.big, .popupcontainer .histogram_container.dgrid {
+    border: 0px;
+    margin-left: 1em;
+    margin-top: 0.3em;
+}
+
+
+.popupcontainer .multi_value .value {
+    border: 1px solid #ddd;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    -ms-box-sizing: border-box;
+}
+
+.value {
+    display: inline-block;
+    vertical-align: top;
+    font-family: sans-serif;
+    padding: 0 0.7em;
+    line-height: 1.8;
+}
+.field {
+    margin: 0;
+    display: inline-block;
+    min-width: 90px;
+    vertical-align: top;
+    padding: 2px 0.5em;
+    background: rgba( 50, 85, 255,0.1 );
+    border-bottom: 1px solid #D2D4E4;
+    border-bottom-color: rgba( 0, 0, 0, 0.1 );
+    font-size: 1.1667em;
+}
+/* field names that have tooltips */
+.popupcontainer .field[title], .popupcontainer .dgrid-cell[title] {
+    background: rgba( 255,245,50,0.3 );
+}
+.popupcontainer .field[title]:hover, .popupcontainer .dgrid-cell[title]:hover {
+    background: rgba( 255,255,50,0.7 );
+}
+.popupcontainer .value.seq, .popupcontainer .value.sequence {
+    word-wrap: break-word;
+    width: 45em;
+}
+
+.popupcontainer .field_container {
+    margin-left: 1em;
+    margin-bottom: 2px;
+}
+
+.popupcontainer div.calledFraction {
+    font-size: 110%;
+    padding: 2px;
+}
+.popupcontainer div.snpeff {
+    font-size: 110%;
+    padding: 2px;
+}
+.popupcontainer h2.sectiontitle {
+    margin-top: 0;
+}
+
+.popupcontainer .genotype_histogram table {
+    cellpadding: 2px 0.5em;
+    cellspacing: 4px 1em;
+    border: 0;
+}
+.popupcontainer .calledFraction th {
+    font-weight: bold;
+}
+.popupcontainer .calledFraction td {
+    padding: 0 3em;
+}
+.popupcontainer .calledFraction td.total {
+    font-weight: bold;
+    border-top: 1px solid #444;
+}
+.popupcontainer .calledFraction td.allele {
+    text-align: left;
+}
+.popupcontainer .calledFraction td.alleleRef {
+    text-align: left;
+    text-color: blue;
+}
+.popupcontainer .calledFraction td.count {
+    text-align: right;
+}
+.popupcontainer .calledFraction td.category.level_1 {
+    padding-left: 2em;
+}
+
+.popupcontainer .snpeff table {
+    border: 0;
+    width: 650px;
+    border-collapse: collapse;
+}
+.popupcontainer .snpeff th {
+    font-weight: bold;
+    border: 1px solid rgba(0,0,50,0.1);
+}
+.popupcontainer .snpeff td {
+    border: 1px solid rgba(0,0,50,0.1);
+}
+
+.popupcontainer .snpeff th.header {
+    background-color: rgb(128, 173, 218);
+}
+
+.popupcontainer .snpeff td.effectLong {
+    background-color: lightgray;
+}
+
+.popupcontainer .snpeff td.snpEffDetailLong {
+    background-color: lightgray;
+}

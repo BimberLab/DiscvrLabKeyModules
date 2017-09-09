@@ -47,7 +47,7 @@
             delete window.require;
         }
     </script>
-    <script type="text/javascript" src="<%=h(base)%>src/dojo/dojo.js" data-dojo-config="async: 1, baseUrl: '<%=text(AppProps.getInstance().getBaseServerUrl())%><%=h(base)%>src'"></script>
+    <script type="text/javascript" src="<%=h(base)%>src/dojo/dojo.js" data-dojo-config="async: 1, baseUrl: '<%=h(base)%>src'"></script>
     <script type="text/javascript" src="<%=h(base)%>src/JBrowse/init.js"></script>
 
     <script type="text/javascript">
@@ -94,6 +94,12 @@
                         highResolutionMode: queryParams.highres,
                         aboutThisBrowser: {
                             title: <%=q(form.getPageTitle())%>
+                        },
+                        plugins: {
+                            AnnotatedVariants: {
+                                location: '<%=h(AppProps.getInstance().getContextPath())%>/jbrowse/plugins/AnnotatedVariants',
+                                css: '<%=h(AppProps.getInstance().getContextPath())%>/jbrowse/plugins/AnnotatedVariants/css'
+                            }
                         },
                         stores: { url: { type: "JBrowse/Store/SeqFeature/FromConfig", features: [] } },
                         makeFullViewURL: function( browser ) {

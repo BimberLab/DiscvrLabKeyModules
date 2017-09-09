@@ -68,7 +68,7 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
         File outputFile = new File(outputDir, FileUtil.getBaseName(inputBam) + ".g.vcf.gz");
         File idxFile = new File(outputDir, FileUtil.getBaseName(inputBam) + ".g.vcf.gz.idx");
 
-        if (getProvider().getParameterByName("multithreaded").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
+        if (getProvider().getParameterByName("multithreaded").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false))
         {
             getPipelineCtx().getLogger().debug("HaplotypeCaller will run multi-threaded");
             getWrapper().setMultiThreaded(true);
@@ -77,9 +77,9 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
         getWrapper().setOutputDir(outputDir);
         getWrapper().setWorkingDir(outputDir);
 
-        if (getProvider().getParameterByName("useQueue").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
+        if (getProvider().getParameterByName("useQueue").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false))
         {
-            Integer minRamPerQueueJob = getProvider().getParameterByName("minRamPerQueueJob").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class);
+            Integer minRamPerQueueJob = getProvider().getParameterByName("minRamPerQueueJob").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
             if (minRamPerQueueJob != null)
             {
                 getWrapper().setMinRamPerQueueJob(minRamPerQueueJob);

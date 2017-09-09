@@ -47,10 +47,13 @@ abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
     private int _minSnpQual = 0;
     private int _minAvgDipQual = 0;
     private int _minDipQual = 0;
+    private int _minMapQual = 0;
     protected AvgBaseQualityAggregator _avgQualAggregator;
     protected boolean _logProgress = true;
     private File _refFasta;
     private ReferenceLibraryHelper _libraryHelper;
+
+    protected long _lowMappingQual = 0L;
 
     public AbstractAlignmentAggregator(Logger log, File refFasta, AvgBaseQualityAggregator avgQualAggregator, Map<String, String> settings)
     {
@@ -81,12 +84,30 @@ abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
         return _log;    
     }
 
+    protected boolean inspectMapQual(SAMRecord r)
+    {
+        //zero mapping quality usually indicates that the aligner didnt set it
+        if (r.getMappingQuality() < _minMapQual && r.getMappingQuality() != 0)
+        {
+            _lowMappingQual++;
+            return false;
+        }
+
+        return true;
+    }
+
     protected boolean evaluateSnp(SAMRecord r, NTSnp snp) throws PipelineJobException
     {
         //this SNP will likely be inspected by multiple aggregators, so we
         if (snp.isFlagSet())
         {
             return snp.getFlag() == null;
+        }
+
+        if (r.getMappingQuality() < _minMapQual)
+        {
+            snp.setFlag("Below Minimum Mapping Quality");
+            return false;
         }
 
         Map<Integer, Map<String, Double>> avgQualsForRef = getQualsForReference(r.getReferenceIndex());
@@ -173,6 +194,8 @@ abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
             _minAvgDipQual = Integer.parseInt(settings.get("minAvgDipQual"));
         if (settings.get("minDipQual") != null)
             _minDipQual = Integer.parseInt(settings.get("minDipQual"));
+        if (settings.get("minMapQual") != null)
+            _minMapQual = Integer.parseInt(settings.get("minMapQual"));
     }
 
     protected List<AASnp> translateSnpsForRead(SAMRecord record, Map<Integer, List<NTSnp>> readSnps)
@@ -249,6 +272,16 @@ abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
     public int getMinSnpQual()
     {
         return _minSnpQual;
+    }
+
+    public int getMinMapQual()
+    {
+        return _minMapQual;
+    }
+
+    public void setMinMapQual(int minMapQual)
+    {
+        _minMapQual = minMapQual;
     }
 
     public void setMinSnpQual(int minSnpQual)

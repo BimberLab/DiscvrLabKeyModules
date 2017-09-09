@@ -40,6 +40,7 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.IndexOutputImpl;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -252,7 +253,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         {
             AlignmentStep alignmentStep = taskHelper.getSingleStep(AlignmentStep.class).create(taskHelper);
             ToolParameterDescriptor discardBamParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM);
-            discardBam = discardBamParam.extractValue(getJob(), alignmentStep.getProvider(), Boolean.class, false);
+            discardBam = discardBamParam.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
         }
 
         if (analysisModel == null)
@@ -306,8 +307,8 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
     private void processAnalyses(AnalysisModelImpl analysisModel, int runId, List<RecordedAction> actions, SequenceTaskHelper taskHelper, boolean discardBam) throws PipelineJobException
     {
         List<AnalysisStep.Output> outputs = new ArrayList<>();
-        List<PipelineStepProvider<AnalysisStep>> providers = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
-        if (providers.isEmpty())
+        List<PipelineStepCtx<AnalysisStep>> steps = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
+        if (steps.isEmpty())
         {
             getJob().getLogger().info("no analyses were selected");
         }
@@ -330,7 +331,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
 
         getJob().getLogger().info("creating analysis record for BAM: " + bam.getName());
         TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
-        Table.insert(getJob().getUser(), ti, analysisModel);
+        analysisModel = Table.insert(getJob().getUser(), ti, analysisModel);
 
         if (!discardBam)
         {
@@ -363,27 +364,28 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             getJob().getLogger().debug("BAM will be discarded, will not create output file");
         }
 
-        if (!providers.isEmpty())
+        if (!steps.isEmpty())
         {
-            outputs.addAll(runAnalysesLocal(actions, analysisModel, bam, refDB, providers, taskHelper, bam.getParentFile()));
+            outputs.addAll(runAnalysesLocal(actions, analysisModel, bam, refDB, steps, taskHelper, bam.getParentFile()));
         }
     }
 
-    public static List<AnalysisStep.Output> runAnalysesLocal(List<RecordedAction> actions, AnalysisModel model, File inputBam, File refFasta, List<PipelineStepProvider<AnalysisStep>> providers, SequenceTaskHelper taskHelper, File outDir) throws PipelineJobException
+    public static List<AnalysisStep.Output> runAnalysesLocal(List<RecordedAction> actions, AnalysisModel model, File inputBam, File refFasta, List<PipelineStepCtx<AnalysisStep>> steps, SequenceTaskHelper taskHelper, File outDir) throws PipelineJobException
     {
         List<AnalysisStep.Output> ret = new ArrayList<>();
-        for (PipelineStepProvider<AnalysisStep> provider : providers)
+        for (PipelineStepCtx<AnalysisStep> stepCtx : steps)
         {
-            taskHelper.getJob().getLogger().info("Running " + provider.getLabel() + " for analysis: " + model.getRowId());
-            taskHelper.getJob().setStatus(PipelineJob.TaskStatus.running, ("Running: " + provider.getLabel()).toUpperCase());
+            taskHelper.getJob().getLogger().info("Running " + stepCtx.getProvider().getLabel() + " for analysis: " + model.getRowId());
+            taskHelper.getJob().setStatus(PipelineJob.TaskStatus.running, ("Running: " + stepCtx.getProvider().getLabel()).toUpperCase());
             taskHelper.getJob().getLogger().info("\tUsing alignment: " + inputBam.getPath());
 
-            RecordedAction action = new RecordedAction(provider.getLabel());
+            RecordedAction action = new RecordedAction(stepCtx.getProvider().getLabel());
             taskHelper.getFileManager().addInput(action, "Input BAM File", inputBam);
             taskHelper.getFileManager().addInput(action, "Reference DB FASTA", refFasta);
             //taskHelper.getFileManager().addInput(action, SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, fastqFile);
 
-            AnalysisStep step = provider.create(taskHelper);
+            AnalysisStep step = stepCtx.getProvider().create(taskHelper);
+            step.setStepIdx(stepCtx.getStepIdx());
             AnalysisStep.Output o = step.performAnalysisPerSampleLocal(model, inputBam, refFasta, outDir);
             if (o != null)
             {
@@ -397,15 +399,15 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         return ret;
     }
 
-    public static List<AnalysisStep.Output> runAnalysesRemote(List<RecordedAction> actions, Readset rs, File inputBam, ReferenceGenome referenceGenome, List<PipelineStepProvider<AnalysisStep>> providers, SequenceTaskHelper taskHelper) throws PipelineJobException
+    public static List<AnalysisStep.Output> runAnalysesRemote(List<RecordedAction> actions, Readset rs, File inputBam, ReferenceGenome referenceGenome, List<PipelineStepCtx<AnalysisStep>> steps, SequenceTaskHelper taskHelper) throws PipelineJobException
     {
         List<AnalysisStep.Output> ret = new ArrayList<>();
-        for (PipelineStepProvider<AnalysisStep> provider : providers)
+        for (PipelineStepCtx<AnalysisStep> stepCtx : steps)
         {
-            taskHelper.getJob().getLogger().info("Running " + provider.getLabel() + " for BAM: " + inputBam.getPath());
-            taskHelper.getJob().setStatus(PipelineJob.TaskStatus.running, ("Running: " + provider.getLabel()).toUpperCase());
+            taskHelper.getJob().getLogger().info("Running " + stepCtx.getProvider().getLabel() + " for BAM: " + inputBam.getPath());
+            taskHelper.getJob().setStatus(PipelineJob.TaskStatus.running, ("Running: " + stepCtx.getProvider().getLabel()).toUpperCase());
 
-            RecordedAction action = new RecordedAction(provider.getLabel());
+            RecordedAction action = new RecordedAction(stepCtx.getProvider().getLabel());
             taskHelper.getFileManager().addInput(action, "Input BAM File", inputBam);
             taskHelper.getFileManager().addInput(action, "Reference DB FASTA", referenceGenome.getSourceFastaFile());
 
@@ -415,7 +417,8 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                 outDir.mkdirs();
             }
 
-            AnalysisStep step = provider.create(taskHelper);
+            AnalysisStep step = stepCtx.getProvider().create(taskHelper);
+            step.setStepIdx(stepCtx.getStepIdx());
             AnalysisStep.Output o = step.performAnalysisPerSampleRemote(rs, inputBam, referenceGenome, outDir);
             if (o != null)
             {

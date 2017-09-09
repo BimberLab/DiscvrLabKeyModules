@@ -55,6 +55,20 @@ html, body {
     border-right-width: 1px;
 }
 
+.track .global_highlight_mod {
+    position: absolute;
+    background: rgba( 255, 255, 0, 0.7 );
+    box-sizing: border-box;
+
+    border: 1px solid black;
+    border-width: 0;
+}
+.track .global_highlight_mod.left {
+    border-left-width: 1px;
+}
+.track .global_highlight_mod.right {
+    border-right-width: 1px;
+}
 
 .tundra input {
     outline: none;
@@ -79,6 +93,16 @@ fieldset > legend {
 .fasta {
     font-family: Courier New,monospace;
     font-size: 14px;
+}
+
+.verticaltext {
+    transform: rotate(-90deg);
+    position: absolute;
+    border: 1px solid black;
+}
+.horizontaltext {
+    position: absolute;
+    border: 1px solid black;
 }
 
 /* styles for the autocomplete menu */
@@ -596,6 +620,7 @@ div.textfilter {
 div.textfilter input {
     padding: 2px 0 2px 18px;
     width: 100%;
+    /*LK Compatibility*/
     /*height: 100%;*/
 
     box-sizing: border-box;
@@ -1053,3 +1078,17 @@ table.baseQuality td {
     display: block;
     text-align: center;
 }
+
+.about-dialog .loaded-plugins {
+    text-align: left;
+}
+
+.about-dialog .loaded-plugins li {
+    margin: 0em;
+}
+
+.about-dialog .plugins-list {
+    max-height: 100px;
+    overflow: auto;
+}
+

@@ -49,6 +49,7 @@ public class SequenceReadsetImpl implements Readset
     private String _chemistry;
     private Integer _instrument_run_id;
     private Integer _runId;
+    private String _status;
     private String _container;
     private Date _created;
     private Integer _createdBy;
@@ -231,6 +232,17 @@ public class SequenceReadsetImpl implements Readset
     public void setRunId(Integer runId)
     {
         _runId = runId;
+    }
+
+    @Override
+    public String getStatus()
+    {
+        return _status;
+    }
+
+    public void setStatus(String status)
+    {
+        _status = status;
     }
 
     @Override

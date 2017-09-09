@@ -62,9 +62,9 @@ public class IndelRealignerStep extends AbstractCommandPipelineStep<IndelRealign
 
         File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".realigned.bam");
         File created;
-        if (getProvider().getParameterByName("useQueue").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
+        if (getProvider().getParameterByName("useQueue").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false))
         {
-            Integer minRamPerQueueJob = getProvider().getParameterByName("minRamPerQueueJob").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class);
+            Integer minRamPerQueueJob = getProvider().getParameterByName("minRamPerQueueJob").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
             if (minRamPerQueueJob != null)
             {
                 getWrapper().setMinRamPerQueueJob(minRamPerQueueJob);

@@ -92,7 +92,7 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
         args.addAll(getClientCommandArgs());
 
         //site fields
-        String fieldText = StringUtils.trimToNull(getProvider().getParameterByName("fields").extractValue(getPipelineCtx().getJob(), getProvider(), String.class));
+        String fieldText = StringUtils.trimToNull(getProvider().getParameterByName("fields").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
         if (fieldText != null)
         {
             String[] fields = fieldText.split("\n");
@@ -108,7 +108,7 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
         }
 
         //genotype fields
-        String genotypeFieldText = StringUtils.trimToNull(getProvider().getParameterByName("genotypeFields").extractValue(getPipelineCtx().getJob(), getProvider(), String.class));
+        String genotypeFieldText = StringUtils.trimToNull(getProvider().getParameterByName("genotypeFields").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
         if (genotypeFieldText != null)
         {
             String[] fields = genotypeFieldText.split("\n");
@@ -123,7 +123,7 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
             }
         }
 
-        String intervalText = StringUtils.trimToNull(getProvider().getParameterByName("intervals").extractValue(getPipelineCtx().getJob(), getProvider(), String.class));
+        String intervalText = StringUtils.trimToNull(getProvider().getParameterByName("intervals").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
         List<Interval> il = parseAndSortIntervals(intervalText);
         if (il != null)
         {
@@ -137,7 +137,7 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
         File outputFile = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".txt");
         getWrapper().generateTable(inputVCF, outputFile, genome.getWorkingFastaFile(), args);
 
-        if (getProvider().getParameterByName("gzipOutput").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
+        if (getProvider().getParameterByName("gzipOutput").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false))
         {
             getPipelineCtx().getLogger().info("compressing output: " + outputFile.getName());
             File outputGz = Compress.compressGzip(outputFile);
@@ -151,11 +151,11 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
 
         output.addOutput(outputFile, "Variant Table");
 
-        boolean createOutputFile = getProvider().getParameterByName("createOutputFile").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false);
+        boolean createOutputFile = getProvider().getParameterByName("createOutputFile").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
         getPipelineCtx().getLogger().debug("output file: [" + createOutputFile + "]");
         if (createOutputFile)
         {
-            String description = getProvider().getParameterByName("outputFileDescription").extractValue(getPipelineCtx().getJob(), getProvider(), String.class);
+            String description = getProvider().getParameterByName("outputFileDescription").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
             output.addSequenceOutput(outputFile, outputFile.getName(), "Table of Variants", null, null, genome.getGenomeId(), description);
         }
         else

@@ -86,7 +86,7 @@ Ext4.define('SequenceAnalysis.window.VisualizeDataWindow', {
         }
         else {
             ret.push({
-                html: 'The following actions are supported for the selected files.  Select the desired action then hit submit.',
+                html: 'The following actions are supported for the ' + this.outputFileIds.length + ' selected files.  Select the desired action then hit submit.',
                 border: false,
                 style: 'padding-bottom: 10px;'
             });

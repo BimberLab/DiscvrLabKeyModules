@@ -45,14 +45,18 @@ public class ViralAnalysis extends AbstractPipelineStep implements AnalysisStep
                     {{
                             put("minValue", 0);
                         }}, 17),
-                    ToolParameterDescriptor.create("minSnpQual", "Minimum DIP Qual", "Only DIPs (deletion/indel polymorphisms) with a quality score above this threshold will be included.", "ldk-integerfield", new JSONObject()
+                    ToolParameterDescriptor.create("minDipQual", "Minimum DIP Qual", "Only DIPs (deletion/indel polymorphisms) with a quality score above this threshold will be included.", "ldk-integerfield", new JSONObject()
                     {{
                             put("minValue", 0);
                         }}, 17),
-                    ToolParameterDescriptor.create("minSnpAvgQual", "Minimum DIP Avg Qual", "If provided, the average quality score of all DIPs (deletion/indel polymorphisms) of a give base at each position must be above this value.", "ldk-integerfield", new JSONObject()
+                    ToolParameterDescriptor.create("minDipAvgQual", "Minimum DIP Avg Qual", "If provided, the average quality score of all DIPs (deletion/indel polymorphisms) of a give base at each position must be above this value.", "ldk-integerfield", new JSONObject()
                     {{
                             put("minValue", 0);
-                        }}, 17)
+                        }}, 17),
+                    ToolParameterDescriptor.create("minMapQual", "Minimum Mapping Qual", "If provided, any alignment with a mapping quality lower than this value will be discarded", "ldk-integerfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                    }}, 30)
             ), null, null);
         }
 
@@ -72,7 +76,7 @@ public class ViralAnalysis extends AbstractPipelineStep implements AnalysisStep
             List<ToolParameterDescriptor> params = getProvider().getParameters();
             for (ToolParameterDescriptor td : params)
             {
-                toolParams.put(td.getName(), td.extractValue(getPipelineCtx().getJob(), getProvider()));
+                toolParams.put(td.getName(), td.extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()));
             }
 
             //first calculate avg qualities at each position

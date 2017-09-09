@@ -1,0 +1,19 @@
+<module xmlns="http://labkey.org/moduleProperties/xml/">
+    <properties>
+        <propertyDescriptor name="ClusterUser">
+            <description>This is the user or account that will be used for cluster jobs.  Currently only one cluster is expected to be active per folder.</description>
+            <canSetPerContainer>true</canSetPerContainer>
+            <editPermissions>
+                <permission>ADMIN</permission>
+            </editPermissions>
+        </propertyDescriptor>
+        <propertyDescriptor name="PreventClusterInteraction">
+            <description>If set to 'true', new jobs to the cluster and all polling of active jobs on the cluster will be halted.</description>
+            <canSetPerContainer>false</canSetPerContainer>
+            <defaultValue>false</defaultValue>
+            <editPermissions>
+                <permission>ADMIN</permission>
+            </editPermissions>
+        </propertyDescriptor>
+    </properties>
+</module>

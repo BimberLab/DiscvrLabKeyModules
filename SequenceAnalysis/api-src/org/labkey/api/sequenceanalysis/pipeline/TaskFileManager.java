@@ -74,9 +74,17 @@ public interface TaskFileManager
     //should be used for remote jobs or local jobs running in a separate working directory
     public void cleanup(Collection<RecordedAction> actions) throws PipelineJobException;
 
-    public String getInputfileTreatment();
+    public InputFileTreatment getInputFileTreatment();
 
     public void processUnzippedInputs();
 
     public void decompressInputFiles(Pair<File, File> pair, List<RecordedAction> actions);
+
+    public enum InputFileTreatment
+    {
+        none(),
+        delete(),
+        compress(),
+        leaveInPlace();
+    }
 }

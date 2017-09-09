@@ -55,10 +55,10 @@ public class SelectSamplesStep extends AbstractCommandPipelineStep<SelectVariant
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
         List<String> options = new ArrayList<>();
 
-        String toInclude = getProvider().getParameterByName(SAMPLE_INCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), String.class);
+        String toInclude = getProvider().getParameterByName(SAMPLE_INCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
         SelectVariantsStep.addSubjectSelectOptions(toInclude, options, "-sn");
 
-        String toExclude = getProvider().getParameterByName(SAMPLE_EXCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), String.class);
+        String toExclude = getProvider().getParameterByName(SAMPLE_EXCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
         SelectVariantsStep.addSubjectSelectOptions(toExclude, options, "-xl_sn");
 
         File outputVcf = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".selectSamples.vcf.gz");

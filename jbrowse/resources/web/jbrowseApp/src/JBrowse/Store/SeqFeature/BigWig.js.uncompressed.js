@@ -3,7 +3,7 @@ require({cache:{
 /**
  * Subclass of jDataView with a getUint64 method.
  */
-define("JBrowse/Model/DataView", [
+define([
            'jDataView'
        ],
        function( jDataView ) {
@@ -50,7 +50,7 @@ return DataView;
 
 },
 'jDataView/jdataview':function(){
-define("jDataView/jdataview", [], function() {
+define([], function() {
 var scope = {};
 
 //
@@ -1118,7 +1118,7 @@ return fastpromise;
 });
 },
 'JBrowse/Model/Range':function(){
-define( "JBrowse/Model/Range", [
+define( [
             'dojo/_base/declare'
         ],
         function( declare ) {
@@ -1330,6 +1330,8 @@ return declare([ SeqFeatureStore, DeferredFeaturesMixin, DeferredStatsMixin ],
                        );
 
         this.name = args.name || ( this.data.url && new urlObj( this.data.url ).path.replace(/^.+\//,'') ) || 'anonymous';
+
+        this.storeTimeout = 3000;
 
         this._load();
     },

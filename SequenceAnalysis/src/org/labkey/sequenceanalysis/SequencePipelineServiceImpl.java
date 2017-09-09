@@ -16,6 +16,7 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.HasJobParams;
 import org.labkey.api.sequenceanalysis.pipeline.JobResourceSettings;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -23,6 +24,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.api.util.Pair;
+import org.labkey.sequenceanalysis.pipeline.PipelineStepCtxImpl;
 import org.labkey.sequenceanalysis.pipeline.SequenceJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerFinalTask;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
@@ -151,7 +153,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         }
     }
 
-    public <StepType extends PipelineStep> List<PipelineStepProvider<StepType>> getSteps(PipelineJob job, Class<StepType> stepType)
+    public <StepType extends PipelineStep> List<PipelineStepCtx<StepType>> getSteps(PipelineJob job, Class<StepType> stepType)
     {
         Map<String, String> params;
         if (job instanceof HasJobParams)
@@ -169,14 +171,21 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
             return Collections.EMPTY_LIST;
         }
 
-        List<PipelineStepProvider<StepType>> providers = new ArrayList<>();
+        List<PipelineStepCtx<StepType>> steps = new ArrayList<>();
         String[] pipelineSteps = params.get(type.name()).split(";");
+
+        List<String> encounteredStepNames = new ArrayList<>();
         for (String stepName : pipelineSteps)
         {
-            providers.add(SequencePipelineService.get().getProviderByName(stepName, stepType));
+            PipelineStepProvider<StepType> provider = SequencePipelineService.get().getProviderByName(stepName, stepType);
+            int stepIdx = Collections.frequency(encounteredStepNames, provider.getName());
+
+            steps.add(new PipelineStepCtxImpl<>(provider, stepIdx));
+
+            encounteredStepNames.add(provider.getName());
         }
 
-        return providers;
+        return steps;
     }
 
     @Override

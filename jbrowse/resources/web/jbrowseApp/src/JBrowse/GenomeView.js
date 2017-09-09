@@ -69,6 +69,8 @@ constructor: function( args ) {
     this.browser = browser;
     this.setFeatureFilterParentComponent( this.browser );
 
+    this.focusTrack = null;
+
     //the page element that the GenomeView lives in
     this.elem = elem;
 
@@ -423,6 +425,8 @@ _behaviors: function() { return {
             handles.push(
                 dojo.connect( this.scrollContainer,     wheelevent,     this, 'wheelScroll', false ),
 
+                dojo.connect( this.verticalScrollBar.container,     'onclick',     this, 'scrollBarClickScroll', false ),
+
                 dojo.connect( this.scaleTrackDiv,       "mousedown",
                               dojo.hitch( this, 'startRubberZoom',
                                           dojo.hitch( this,'absXtoBp'),
@@ -611,6 +615,39 @@ calculatePositionLabelHeight: function( containerElement ) {
     containerElement.removeChild(heightTest);
     return h;
 },
+
+scrollBarClickScroll : function( event ) {
+
+    if ( !event )
+        event = window.event;
+
+    var containerHeight = parseInt( this.verticalScrollBar.container.style.height,10 );
+    var markerHeight = parseInt( this.verticalScrollBar.positionMarker.style.height,10 );
+    var trackContainerHeight = this.trackContainer.clientHeight;
+    var absY = this.getY()*( trackContainerHeight/containerHeight );
+    if ( absY > event.clientY )
+      this.setY( this.getY() - 300 );
+    else if (absY + markerHeight < event.clientY)
+      this.setY( this.getY() + 300 );
+
+    //the timeout is so that we don't have to run showVisibleBlocks
+    //for every scroll wheel click (we just wait until so many ms
+    //after the last one).
+
+    if ( this.wheelScrollTimeout )
+        window.clearTimeout( this.wheelScrollTimeout );
+
+    // 100 milliseconds since the last scroll event is an arbitrary
+    // cutoff for deciding when the user is done scrolling
+    // (set by a bit of experimentation)
+    this.wheelScrollTimeout = window.setTimeout( dojo.hitch( this, function() {
+        this.showVisibleBlocks(true);
+        this.wheelScrollTimeout = null;
+    }, 100));
+
+    dojo.stopEvent(event);
+},
+
 
 wheelScroll: function( event ) {
 
@@ -2217,6 +2254,12 @@ renderTrack: function( /**Object*/ trackConfig ) {
 
         trackDiv.track = track;
 
+        // track focus handler
+        dojo.connect(trackDiv, "onclick", function(evt){
+            thisB.setTrackFocus(track,1);
+        });
+
+
         var heightUpdate = dojo.hitch( this, 'trackHeightUpdate', trackName );
         track.setViewInfo( this, heightUpdate, this.stripeCount, trackDiv,
                            this.stripePercent, this.stripeWidth,
@@ -2255,6 +2298,37 @@ renderTrack: function( /**Object*/ trackConfig ) {
     });
 
     return trackDiv;
+},
+/**
+ * 
+ * @param {type} track
+ * @param {type} state
+ * @returns {undefined}
+ */
+setTrackFocus: function(track,state) {
+    var thisB = this;
+    
+    if (state === 1) {
+        if (this.focusTrack !== null) {
+
+            // if already in focus, don't do anything
+            if (this.focusTrack == track)  return;
+
+            thisB.browser.publish( '/jbrowse/v1/n/tracks/unfocus', this.focusTrack );
+            this.focusTrack = null;
+        }
+        thisB.focusTrack = track;
+        thisB.browser.publish( '/jbrowse/v1/n/tracks/focus', track );
+    }
+    if (state === 0) {
+        // if already in focus, don't do anything
+        if (this.focusTrack === null) {
+            console.log("no track in focus");
+            return;
+        }
+        thisB.browser.publish( '/jbrowse/v1/n/tracks/unfocus', this.focusTrack );
+        this.focusTrack = null;
+    }
 },
 
 trackIterate: function(callback) {

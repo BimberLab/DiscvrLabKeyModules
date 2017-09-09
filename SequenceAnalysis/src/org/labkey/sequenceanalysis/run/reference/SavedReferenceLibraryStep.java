@@ -90,7 +90,7 @@ public class SavedReferenceLibraryStep extends AbstractPipelineStep implements R
         else
         {
             //when not on the local server, we have to infer the filename
-            Integer libraryId = ConvertHelper.convert(getProvider().getParameterByName(LIBRARY_ID).extractValue(getPipelineCtx().getJob(), getProvider()), Integer.class);
+            Integer libraryId = ConvertHelper.convert(getProvider().getParameterByName(LIBRARY_ID).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()), Integer.class);
             List<File> matches = new ArrayList<>();
             FileType ft = new FileType("fasta");
             for (File f : outputDirectory.listFiles())
@@ -118,7 +118,7 @@ public class SavedReferenceLibraryStep extends AbstractPipelineStep implements R
     {
         assert PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer : "This method can only be run on the webserver";
 
-        Integer libraryId = ConvertHelper.convert(getProvider().getParameterByName(LIBRARY_ID).extractValue(getPipelineCtx().getJob(), getProvider()), Integer.class);
+        Integer libraryId = ConvertHelper.convert(getProvider().getParameterByName(LIBRARY_ID).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()), Integer.class);
         if (libraryId == null)
         {
             throw new PipelineJobException("No Library Id Provided");
@@ -166,6 +166,6 @@ public class SavedReferenceLibraryStep extends AbstractPipelineStep implements R
 
     public Integer getLibraryId() throws PipelineJobException
     {
-        return ConvertHelper.convert(getProvider().getParameterByName(LIBRARY_ID).extractValue(getPipelineCtx().getJob(), getProvider()), Integer.class);
+        return ConvertHelper.convert(getProvider().getParameterByName(LIBRARY_ID).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()), Integer.class);
     }
 }

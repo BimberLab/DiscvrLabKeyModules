@@ -105,8 +105,8 @@ public class MosaikWrapper extends AbstractCommandWrapper
             AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, getProvider().getName(), referenceGenome);
             getWrapper().setOutputDir(outputDirectory);
 
-            String mfl = StringUtils.trimToNull(getProvider().getParameterByName(MFL).extractValue(getPipelineCtx().getJob(), getProvider()));
-            String localAlignmentRadius = StringUtils.trimToNull(getProvider().getParameterByName(LOCAL_SEARCH_RADIUS).extractValue(getPipelineCtx().getJob(), getProvider()));
+            String mfl = StringUtils.trimToNull(getProvider().getParameterByName(MFL).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()));
+            String localAlignmentRadius = StringUtils.trimToNull(getProvider().getParameterByName(LOCAL_SEARCH_RADIUS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()));
 
             //TODO: can we infer the technology?
             File reads = getWrapper().buildFastqReads(outputDirectory, inputFastq1, inputFastq2, SequencingTechnology.illumina_long, mfl);
@@ -168,8 +168,6 @@ public class MosaikWrapper extends AbstractCommandWrapper
         public Provider()
         {
 ////            'ma|mode' => 'm',
-////            'ma|hash_size' => 'hs',
-////            'ma|use_aligned_length' => 'mmal',
 
             super("Mosaik", "Mosaik is suitable for longer reads and has the option to retain multiple hits per read. The only downside is that it can be slower. When this pipeline was first written, this aligner was preferred for sequence-based genotyping and similar applications which require retaining multiple hits. It supports paired end reads. The aligner is still good; however, Lastz also seems to perform well for SBT.", Arrays.asList(
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-om"), "output_multiple", "Retain All Hits", "If selected, all hits above thresholds will be reported. If not, only a single hit will be retained", "checkbox", new JSONObject()

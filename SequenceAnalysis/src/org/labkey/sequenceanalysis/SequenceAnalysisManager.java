@@ -416,7 +416,7 @@ public class SequenceAnalysisManager
         return new SqlSelector(SequenceAnalysisSchema.getInstance().getSchema(), sql).getObject(String.class);
     }
 
-    public ReferenceLibraryPipelineJob createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String description, boolean skipCacheIndexes, @Nullable List<String> unplacedContigPrefixes) throws IOException
+    public ReferenceLibraryPipelineJob createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String assemblyId, String description, boolean skipCacheIndexes, boolean skipTriggers, @Nullable List<String> unplacedContigPrefixes) throws IOException
     {
         List<ReferenceLibraryMember> libraryMembers = new ArrayList<>();
         for (Integer sequenceId : sequenceIds)
@@ -431,15 +431,15 @@ public class SequenceAnalysisManager
             libraryMembers.add(m);
         }
 
-        return createReferenceLibrary(c, u, name, description, libraryMembers, skipCacheIndexes, unplacedContigPrefixes);
+        return createReferenceLibrary(c, u, name, assemblyId, description, libraryMembers, skipCacheIndexes, skipTriggers, unplacedContigPrefixes);
     }
 
-    public ReferenceLibraryPipelineJob createReferenceLibrary(Container c, User u, String name, String description, List<ReferenceLibraryMember> libraryMembers, boolean skipCacheIndexes, @Nullable List<String> unplacedContigPrefixes) throws IOException
+    public ReferenceLibraryPipelineJob createReferenceLibrary(Container c, User u, String name, String assemblyId, String description, List<ReferenceLibraryMember> libraryMembers, boolean skipCacheIndexes, boolean skipTriggers, @Nullable List<String> unplacedContigPrefixes) throws IOException
     {
         try
         {
             PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
-            ReferenceLibraryPipelineJob job = new ReferenceLibraryPipelineJob(c, u, root, name, description, libraryMembers, null, skipCacheIndexes, unplacedContigPrefixes);
+            ReferenceLibraryPipelineJob job = new ReferenceLibraryPipelineJob(c, u, root, name, assemblyId, description, libraryMembers, null, skipCacheIndexes, skipTriggers, unplacedContigPrefixes);
             PipelineService.get().queueJob(job);
 
             return job;
@@ -605,7 +605,7 @@ public class SequenceAnalysisManager
     private static final Set<String> pipelineDirs = PageFlowUtil.set(ReadsetImportJob.FOLDER_NAME, ReadsetImportJob.FOLDER_NAME + "Pipeline", AlignmentAnalysisJob.FOLDER_NAME, AlignmentAnalysisJob.FOLDER_NAME + "Pipeline", "sequenceOutputs", SequenceOutputHandlerJob.FOLDER_NAME + "Pipeline", "illuminaImport", "analyzeAlignment");
     private static final Set<String> skippedDirs = PageFlowUtil.set(".sequences", ".jbrowse");
 
-    public void getOrphanFilesForContainer(Container c, User u, Set<File> orphanFiles, Set<File> orphanIndexes, Set<PipelineStatusFile> orphanJobs, List<String> messages)
+    public void getOrphanFilesForContainer(Container c, User u, Set<File> orphanFiles, Set<File> orphanIndexes, Set<PipelineStatusFile> orphanJobs, List<String> messages, Set<File> probableDeletes)
     {
         PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
         if (root == null)
@@ -710,8 +710,11 @@ public class SequenceAnalysisManager
                     {
                         if (!knownJobPaths.remove(subdir))
                         {
-                            messages.add("#pipeline path listed as orphan, but not present in known paths: ");
+                            messages.add("#pipeline path listed as orphan, and not present in known job paths: ");
+                            long size = FileUtils.sizeOfDirectory(subdir);
+                            messages.add("## size: " + FileUtils.byteCountToDisplaySize(size));
                             messages.add(subdir.getPath());
+                            probableDeletes.add(subdir);
                         }
 
                         getOrphanFilesForDirectory(c, knownExpDatas, dataMap, subdir, orphanFiles, orphanIndexes);
@@ -785,7 +788,7 @@ public class SequenceAnalysisManager
         {
             if (child.isWorkbook())
             {
-                getOrphanFilesForContainer(child, u, orphanFiles, orphanIndexes, orphanJobs, messages);
+                getOrphanFilesForContainer(child, u, orphanFiles, orphanIndexes, orphanJobs, messages, probableDeletes);
             }
         }
     }
@@ -796,10 +799,9 @@ public class SequenceAnalysisManager
         List<Integer> jobIds = new TableSelector(jobsTable, PageFlowUtil.set("RowId"), new SimpleFilter(FieldKey.fromString("FilePath"), dir.getPath() + System.getProperty("file.separator"), CompareType.STARTS_WITH), null).getArrayList(Integer.class);
         if (jobIds.isEmpty())
         {
-            long size = FileUtils.sizeOfDirectory(dir);
-            messages.add("## Unable to find matching job, might be orphan: ");
-            messages.add("## size: " + FileUtils.byteCountToDisplaySize(size));
-            messages.add(dir.getPath());
+            //NOTE: this is logged above
+            //messages.add("## Unable to find matching job, might be orphan: ");
+            //messages.add(dir.getPath());
             return false;
         }
         else if (jobIds.size() > 1)
@@ -813,7 +815,7 @@ public class SequenceAnalysisManager
             return false;
         }
 
-        // NOTE: if this files within a known job path, it still could be an orphan.  first check whether the directory has registered files.
+        // NOTE: if this file is within a known job path, it still could be an orphan.  first check whether the directory has registered files.
         // If so, remove that path from the set of known job paths
         List<? extends ExpData> dataUnderPath = ExperimentService.get().getExpDatasUnderPath(dir, c);
         Set<Integer> dataIdsUnderPath = new HashSet<>();

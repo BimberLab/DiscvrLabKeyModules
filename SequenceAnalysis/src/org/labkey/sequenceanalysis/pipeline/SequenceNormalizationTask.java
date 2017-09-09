@@ -632,7 +632,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             File baseDirectory = new File(_wd.getDir(), SequenceTaskHelper.NORMALIZATION_SUBFOLDER_NAME);
             baseDirectory.mkdirs();
 
-            Set<File> finalOutputs = ReadsetInitTask.handleInputs(getPipelineJob(), getHelper().getFileManager().getInputfileTreatment(), actions, _finalOutputs, null);
+            Set<File> finalOutputs = ReadsetInitTask.handleInputs(getPipelineJob(), getHelper().getFileManager().getInputFileTreatment(), actions, _finalOutputs, null);
             FileType gz = new FileType("gz");
             int idx = 0;
             for (File f : finalOutputs)
@@ -682,13 +682,20 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
                 //calculate/cache metrics to save time on server
                 getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING QUALITY METRICS (" + idx + " of " + finalOutputs.size() + ")");
-                Map<String, Object> metricsMap = FastqUtils.getQualityMetrics(f, getJob().getLogger());
                 File cachedMetrics = new File(f.getPath() + ".metrics");
-                try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(cachedMetrics), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+                if (cachedMetrics.exists())
                 {
-                    for (String key : metricsMap.keySet())
+                    getJob().getLogger().debug("reusing cached metrics file");
+                }
+                else
+                {
+                    Map<String, Object> metricsMap = FastqUtils.getQualityMetrics(f, getJob().getLogger());
+                    try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(cachedMetrics), '\t', CSVWriter.NO_QUOTE_CHARACTER))
                     {
-                        writer.writeNext(new String[]{key, String.valueOf(metricsMap.get(key))});
+                        for (String key : metricsMap.keySet())
+                        {
+                            writer.writeNext(new String[]{key, String.valueOf(metricsMap.get(key))});
+                        }
                     }
                 }
             }

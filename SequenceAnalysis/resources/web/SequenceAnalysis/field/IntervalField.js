@@ -31,6 +31,8 @@ Ext4.define('SequenceAnalysis.field.IntervalField', {
         if (val){
             val = Ext4.String.trim(val);
             val = val.replace(/(\r\n|\n|\r)/gm,";");
+            val = val.replace(/ /g, '');
+            val = val.replace(/;+/g, ';');
             val = val.replace(/(^;|;$)/g, '');
             val = val.split(';');
 

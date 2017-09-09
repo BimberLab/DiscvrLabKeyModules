@@ -60,7 +60,7 @@ public class GenotypeFiltrationStep extends AbstractCommandPipelineStep<VariantF
         params.addAll(getClientCommandArgs());
 
         //filters
-        String filterText = getProvider().getParameterByName("filters").extractValue(getPipelineCtx().getJob(), getProvider(), String.class, null);
+        String filterText = getProvider().getParameterByName("filters").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null);
         if (filterText != null)
         {
             JSONArray filterArr = new JSONArray(filterText);

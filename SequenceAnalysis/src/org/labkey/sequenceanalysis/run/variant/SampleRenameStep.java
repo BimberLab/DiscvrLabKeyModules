@@ -61,8 +61,8 @@ public class SampleRenameStep extends AbstractCommandPipelineStep<VariantFiltrat
     @Override
     public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome) throws PipelineJobException
     {
-        boolean enforceChangeAll = getProvider().getParameterByName("enforceChangeAll").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false);
-        String sampleMapString = getProvider().getParameterByName("sampleMap").extractValue(getPipelineCtx().getJob(), getProvider(), String.class);
+        boolean enforceChangeAll = getProvider().getParameterByName("enforceChangeAll").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+        String sampleMapString = getProvider().getParameterByName("sampleMap").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
         Map<String, String> sampleMap = parseSampleMap(sampleMapString);
 
         File outputFile = new File(outputDirectory, SequenceAnalysisService.get().getUnzippedBaseName(inputVCF.getName()) + ".renamed.vcf.gz");

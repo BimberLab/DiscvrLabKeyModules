@@ -59,7 +59,7 @@ abstract public class SequencePipelineService
 
     abstract public <StepType extends PipelineStep> PipelineStepProvider<StepType> getProviderByName(String name, Class<? extends StepType> stepType);
 
-    abstract public <StepType extends PipelineStep> List<PipelineStepProvider<StepType>> getSteps(PipelineJob job, Class<StepType> stepType);
+    abstract public <StepType extends PipelineStep> List<PipelineStepCtx<StepType>> getSteps(PipelineJob job, Class<StepType> stepType);
 
     abstract public File getExeForPackage(String packageName, String exe);
 

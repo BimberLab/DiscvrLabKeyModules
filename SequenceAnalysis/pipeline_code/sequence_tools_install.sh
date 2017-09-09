@@ -301,9 +301,18 @@ then
     rm -Rf VariantQC*
     rm -Rf ${LKTOOLS_DIR}/VariantQC.jar
 
-    wget $WGET_OPTS https://github.com/bbimber/gatk-protected/releases/download/0.06/VariantQC-0.06.jar
-    cp VariantQC-0.06.jar ${LKTOOLS_DIR}/VariantQC.jar
+    wget $WGET_OPTS https://github.com/bbimber/gatk-protected/releases/download/0.08/VariantQC-0.08.jar
+    cp VariantQC-0.08.jar ${LKTOOLS_DIR}/VariantQC.jar
 
+fi
+
+if [[ ! -e ${LKTOOLS_DIR}/DISCVRSeq.jar || ! -z $FORCE_REINSTALL ]];
+then
+    rm -Rf DISCVRSeq*
+    rm -Rf ${LKTOOLS_DIR}/DISCVRSeq.jar
+
+    wget $WGET_OPTS https://github.com/DISCVRSeq/DISCVRSeq/releases/download/0.01/DISCVRSeq-0.01.jar
+    cp DISCVRSeq-0.01.jar ${LKTOOLS_DIR}/DISCVRSeq.jar
 fi
 
 if [[ ! -e ${LKTOOLS_DIR}/GenomeAnalysisTK-discvr.jar || ! -z $FORCE_REINSTALL ]];

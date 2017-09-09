@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+    <!--NOTE: if you plan to use ActiveMQ for status updates, you will need to configure this in labkey.xml-->
+
+    <bean id="pipelineJobService" class="org.labkey.pipeline.api.PipelineServiceImpl">
+        <!--You will list all remote execution engines.  You will most likely only have one engine to register, but this example contains multiples to show different configurations-->
+        <property name="remoteExecutionEngines">
+            <list>
+                <bean id="condorEngine" class="org.labkey.cluster.pipeline.HTCondorExecutionEngine">
+                    <constructor-arg type="org.labkey.cluster.pipeline.HTCondorExecutionEngineConfig" ref="condorProperties"/>
+                </bean>
+                <bean id="condorSSHEngine" class="org.labkey.cluster.pipeline.HTCondorExecutionEngine">
+                    <constructor-arg type="org.labkey.cluster.pipeline.HTCondorExecutionEngineConfig" ref="condorSSHProperties"/>
+                </bean>
+                <bean id="condorDockerEngine" class="org.labkey.cluster.pipeline.HTCondorExecutionEngine">
+                    <constructor-arg type="org.labkey.cluster.pipeline.HTCondorExecutionEngineConfig" ref="condorDockerProperties"/>
+                </bean>
+            </list>
+        </property>
+    </bean>
+
+    <!--This is a fairly simple configuration, assuming your LK server is configured for remote condor submission-->
+    <bean id="condorProperties" class="org.labkey.cluster.pipeline.HTCondorExecutionEngineConfig">
+        <property name="location" value="cluster" />
+        <property name="submitCommand" value="/usr/bin/condor_submit ${submitScript}"/>
+        <property name="statusCommand" value="/usr/bin/condor_q owner ${clusterUser}"/>
+        <property name="historyCommand" value="/usr/bin/condor_history ${clusterId}"/>
+        <property name="removeCommand" value="/usr/bin/condor_rm ${clusterId}"/>
+
+        <!--the following are optional.  their default values are shown-->
+
+        <!--This is the directory where the LabKey is installed, relative to the cluster-->
+        <!--<property name="labKeyDir" value="/usr/local/labkey/" />-->
+        <!--The path to the executable on the cluster.  Normally this would be the desired java; however, see example below for docker.-->
+        <!--<property name="remoteExecutable" value="java" />-->
+        <!--This is placed in the submit script.  It is the value in GBs-->
+        <!--<property name="requestMemory" value="48" />-->
+        <!--This is placed in the submit script-->
+        <!--<property name="requestCpus" value="24" />-->
+        <!--This is the cluster path there a working directory will be created.-->
+        <!--<property name="workingDir" value="/pipeline" />-->
+        <!--Value for JAVA_HOME.  If empty or omitted, nothing will be set.-->
+        <!--<property name="javaHome" value="" />-->
+        <!--Additional arguments passed to the remote java process.  Typically would be memory, etc: -Xmx4g-->
+        <!--<property name="javaOpts">-->
+            <!--<list>-->
+                <!--<value>-Xmx4g</value>-->
+            <!--</list>-->
+        <!--</property>-->
+        <!--Additional lines passed verbatim into the condor submit script-->
+        <!--<property name="extraSubmitScriptLines">-->
+        <!--<list>-->
+        <!--<value>requirements = myRequirement</value>-->
+        <!--</list>-->
+        <!--</property>-->
+        <!--Environment variables to include the in submit script.  These are joined together with spaces, but otherwise passed as-is, so please refer to condor docs on use of space and quotes-->
+        <!--<property name="environmentVars">-->
+        <!--<list>-->
+        <!--<value>variableName=value</value>-->
+        <!--</list>-->
+        <!--</property>-->
+
+        <!--It is common to need path mapping between the local and remote servers-->
+        <!--<property name="pathMapper">-->
+            <!--<bean class="org.labkey.api.pipeline.file.PathMapperImpl">-->
+                <!--<property name="localIgnoreCase" value="true"/>-->
+                <!--<property name="remoteIgnoreCase" value="false"/>-->
+                <!--<property name="pathMap">-->
+                    <!--<map>-->
+                        <!--<entry key="file:/c:/labkey/fileRoot" value="file:/labKeyFileRoot"/>-->
+                    <!--</map>-->
+                <!--</property>-->
+            <!--</bean>-->
+        <!--</property>-->
+    </bean>
+
+    <!--A variation on the config above.  This uses SSH for remote submission-->
+    <!--If using SSH, this must be configured not to require prompts, such as passwords.  SSH keys can be configured between the servers-->
+    <bean id="condorSSHProperties" class="org.labkey.cluster.pipeline.HTCondorExecutionEngineConfig">
+        <property name="location" value="cluster" />
+        <property name="submitCommand" value="ssh ${clusterUser}@condorServer.edu -c 'condor_submit ${submitScript}'"/>
+        <property name="statusCommand" value="ssh ${clusterUser}@condorServer.edu -c 'condor_q owner ${clusterUser}'"/>
+        <property name="historyCommand" value="ssh ${clusterUser}@condorServer.edu -c 'condor_history ${clusterId}'"/>
+        <property name="removeCommand" value="ssh ${clusterUser}@condorServer.edu -c 'condor_rm ${clusterId}'"/>
+
+        <!--See the condorProperties bean for examples of supported config options-->
+    </bean>
+
+    <!--This is an example of using docker for executing jobs.  This is not mutually exclusive with the options above-->
+    <!--Your server must still execute condor_submit, and you will need to configure something along the lines of the configuration above for this-->
+    <!--Because this config uses DockerHTCondorExecutionEngineConfig, this means the engine will run within docker-->
+    <bean id="condorDockerProperties" class="org.labkey.cluster.pipeline.DockerHTCondorExecutionEngineConfig">
+        <property name="location" value="clusterDocker" />
+
+        <!--Note: you will likely need to configure submitCommand, statusCommand, etc. as above-->
+
+        <!--The path to docker on the cluster.-->
+        <!--<property name="remoteExecutable" value="docker" />-->
+
+        <!--See the condorProperties bean for examples of supported config options.  All of the same options are supported here-->
+        <!--In addition to those, the following additional options are supported:-->
+        <!--If using ActiveMQ, this should be a URL, relative to the cluster nodes, of your ActiveMQ server-->
+        <!--<property name="activeMqHost" value=""/>-->
+        <!--Your remote nodes will need a pipelineConfig.xml, comparable to this one.  This specifies the folder holding this file-->
+        <!--<property name="configDir" value=""/>-->
+        <!--You do not necessarily need to base of this image, but it will have matching LabKey code.  XX.X should match your server's version-->
+        <!--<property name="dockerImageName" value="bbimber/discvr-seq:XX.X"/>-->
+    </bean>
+
+    <!--Note: A another route that might be useful for some clusters is to wrap java with a simple bash script.  This can be useful if you need to set aspects of the environment-->
+    <!--and do not have enough control over the cluster to do this directly.  For example, we needed to set 'umask 0002' on one cluster, and this was the best route we found-->
+    <!--The rough pattern would involve changing the remoteExecutable to point to your wrapper: -->
+    <!--<property name="remoteExecutable" value="javaWrapper.sh" />-->
+    <!--and within this script, do something like:-->
+    <!--#!/bin/bash-->
+    <!--#put any commands you need here:-->
+    <!--umask 0002-->
+    <!--#then run java, passing through the arguments:-->
+    <!--java "$@"-->
+</beans>

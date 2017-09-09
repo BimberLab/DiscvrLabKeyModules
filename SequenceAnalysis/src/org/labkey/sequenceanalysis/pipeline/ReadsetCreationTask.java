@@ -337,10 +337,11 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         {
             idx++;
             getJob().getLogger().info("calculating quality metrics for readset: " + model.getName() + ", " + idx + " of " + newReadsets.size());
+            long totalReads = 0L;
             for (ReadDataImpl d : model.getReadDataImpl())
             {
                 getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING QUALITY METRICS (" + idx + " of " + newReadsets.size() + ")");
-                addQualityMetricsForReadset(model, d.getFileId1(), getJob());
+                totalReads += addQualityMetricsForReadset(model, d.getFileId1(), getJob());
                 if (d.getFileId2() != null)
                 {
                     addQualityMetricsForReadset(model, d.getFileId2(), getJob());
@@ -355,6 +356,13 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                         runFastqcForFile(d.getFileId2());
                     }
                 }
+            }
+
+            if (settings.doFlagLowReads() && totalReads < settings.getLowReadThreshold())
+            {
+                getJob().getLogger().info("readset being flagged because of low read count: " + totalReads);
+                model.setStatus(settings.getLowReadStatusLabel());
+                Table.update(getJob().getUser(), SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_READSETS), model, model.getRowId());
             }
         }
     }
@@ -380,7 +388,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         }
     }
 
-    public static void addQualityMetricsForReadset(Readset rs, int fileId, PipelineJob job) throws PipelineJobException
+    public static long addQualityMetricsForReadset(Readset rs, int fileId, PipelineJob job) throws PipelineJobException
     {
         try
         {
@@ -422,6 +430,8 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
             {
                 cachedMetrics.delete();
             }
+
+            return metricsMap.get("Total Reads") == null ? 0L : Long.parseLong(metricsMap.get("Total Reads").toString());
         }
         catch (Exception e)
         {

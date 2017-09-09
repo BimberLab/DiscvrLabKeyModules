@@ -71,6 +71,11 @@ public class AASnpByCodonAggregator extends NtSnpByPosAggregator
             return;
         }
 
+        if (!super.inspectMapQual(record))
+        {
+            return;
+        }
+
         assert ref != null;
         _refSequenceMap.put(ref.getName(), ref.getBases());
 
@@ -208,6 +213,7 @@ public class AASnpByCodonAggregator extends NtSnpByPosAggregator
             transaction.commit();
 
             getLogger().info("\tTotal AA Reference sequences encountered: " + summary.keySet().size());
+            getLogger().info("\tTotal alignments discarded due to low mapping quality: " + _lowMappingQual);
             getLogger().info("\tSNPs saved by reference:");
             for (String refId : summary.keySet())
             {
@@ -356,6 +362,7 @@ public class AASnpByCodonAggregator extends NtSnpByPosAggregator
     public String getSynopsis()
     {
         return "AA SNP By Codon Aggregator:\n" +
+                "\tMinMapQual: " + getMinMapQual() + "\n" +
                 "\tMinSnpQual: " + getMinSnpQual() + "\n" +
                 "\tMinAvgSnpQual: " + getMinAvgSnpQual() + "\n" +
                 "\tMinDipQual: " + getMinDipQual() + "\n" +

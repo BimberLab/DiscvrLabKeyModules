@@ -104,10 +104,10 @@ public class GSnapWrapper extends AbstractCommandWrapper
             args.add("-N");
             args.add("1");
 
-            if (!StringUtils.isEmpty(getProvider().getParameterByName("splice_sites_file").extractValue(getPipelineCtx().getJob(), getProvider())))
+            if (!StringUtils.isEmpty(getProvider().getParameterByName("splice_sites_file").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx())))
             {
                 getPipelineCtx().getLogger().info("creating splice site file");
-                File gtf = getPipelineCtx().getSequenceSupport().getCachedData(getProvider().getParameterByName("splice_sites_file").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class));
+                File gtf = getPipelineCtx().getSequenceSupport().getCachedData(getProvider().getParameterByName("splice_sites_file").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class));
                 if (gtf.exists())
                 {
                     //cat <gtf file> | gtf_splicesites > foo.splicesites
@@ -160,7 +160,7 @@ public class GSnapWrapper extends AbstractCommandWrapper
             }
 
             //--fails-as-input
-            if (getProvider().getParameterByName("outputFailed").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false))
+            if (getProvider().getParameterByName("outputFailed").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false))
             {
                 args.add("--failed-input");
                 args.add(new File(outputDirectory, basename).getPath() + "_failed");
@@ -315,9 +315,9 @@ public class GSnapWrapper extends AbstractCommandWrapper
                     }})
                     {
                         @Override
-                        public String extractValueForCommandLine(PipelineJob job, PipelineStepProvider provider) throws PipelineJobException
+                        public String extractValueForCommandLine(PipelineJob job, PipelineStepProvider provider, int stepIdx) throws PipelineJobException
                         {
-                            Boolean ret = extractValue(job, provider, Boolean.class);
+                            Boolean ret = extractValue(job, provider, stepIdx, Boolean.class);
                             if (ret == null || !ret)
                             {
                                 return "0";

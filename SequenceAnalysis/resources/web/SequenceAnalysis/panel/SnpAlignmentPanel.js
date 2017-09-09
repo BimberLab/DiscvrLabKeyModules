@@ -203,7 +203,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             maxRows: -1,
             timeout: 0,
             includeTotalCount: false,
-            columns: 'analysis_id,q_aas,q_non_ref_aas,ref_aa,ref_aa_id,ref_aa_insert_index,ref_aa_position,ref_nt_id,ref_aa,readcount,adj_depth,pct,indel_fraction,synon_fraction,ref_aa_id/name,ref_nt_id/name',
+            columns: 'analysis_id,q_aas,q_non_ref_aas,ref_aa,ref_aa_id,ref_aa_insert_index,ref_aa_position,ref_nt_id,ref_aa,readcount,readcounts,adj_depth,pct,indel_fraction,synon_fraction,ref_aa_id/name,ref_nt_id/name',
             filterArray: [
                 LABKEY.Filter.create('analysis_id', this.analysisIds.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF),
                 //NOTE: added to reduce the total rowcount being sent to the client, as these datapoints rarely alter presentation
@@ -393,8 +393,27 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                 this.inserts[row.ref_aa_id][row.ref_aa_position][row.ref_aa_insert_index]['samples'][row.analysis_id] = row;
             }
 
+            if (row.readcounts){
+                if (Ext4.isArray(row.readcounts)){
+                    row.readcounts = row.readcounts.join(',');
+                }
+                row.readcounts = row.readcounts.split(',');
+
+                var readCountMap = {};
+                Ext4.Array.forEach(row.readcounts, function(c){
+                    var arr = c.split(':');
+                    if (!readCountMap[arr[0]]){
+                        readCountMap[arr[0]] = 0;
+                    }
+
+                    readCountMap[arr[0]] += Number(arr[1]);
+                    LDK.Assert.assertTrue('Non-numeric SNP: ' + arr.join(','), !isNaN(arr[1]));
+                }, this);
+            }
+
             this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['adj_num_reads'] = row.readcount;
             this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['adj_percent'] = row.pct;
+            this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['readCountMap'] = readCountMap;
             this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['indel_fraction'] = row.indel_fraction;
             this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['synon_fraction'] = row.synon_fraction;
         };
@@ -678,8 +697,36 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         snp.q_aas = this.updateSnpField(snp.q_aas);
         snp.q_non_ref_aas = this.updateSnpField(snp.q_non_ref_aas);
 
-        //TODO: consider only those passing pct thresholds
         snp.displayResidues = snp.q_aas;
+
+        //dont display the residues for lower freq SNPs if there is a dominant SNP
+        var readCounts = [];
+        var totalSnpReads = 0;
+        for (var key in snp.readCountMap) {
+            readCounts.push(snp.readCountMap[key]);
+            totalSnpReads += snp.readCountMap[key];
+        }
+
+        readCounts = Ext4.unique(readCounts);
+        readCounts = readCounts.sort(function(a,b){
+            return a - b;
+        });
+
+        var maxReadCt = readCounts[readCounts.length - 1];
+        var fraction = maxReadCt / totalSnpReads;
+
+        if (readCounts.length > 1 && fraction > 0.85){
+            var maxBases = [];
+            for (var key in snp.readCountMap) {
+                if (snp.readCountMap[key] == maxReadCt) {
+                    maxBases.push(key);
+                }
+            }
+
+            if (maxBases.length == 1){
+                snp.displayResidues = [maxBases[0]];
+            }
+        }
     },
 
     getColorSettings: function(reset){

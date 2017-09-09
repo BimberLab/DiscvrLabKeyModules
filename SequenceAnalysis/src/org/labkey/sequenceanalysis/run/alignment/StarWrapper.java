@@ -69,7 +69,7 @@ public class StarWrapper extends AbstractCommandWrapper
             getPipelineCtx().getLogger().info("Aligning sample with STAR using two pass mode");
             List<String> args = new ArrayList<>();
 
-            Boolean longReads = getProvider().getParameterByName(LONG_READS).extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class);
+            Boolean longReads = getProvider().getParameterByName(LONG_READS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class);
             if (longReads)
             {
                 getPipelineCtx().getLogger().info("long reads were selected, using STARlong");
@@ -86,12 +86,18 @@ public class StarWrapper extends AbstractCommandWrapper
             args.add("BAM");
             args.add("SortedByCoordinate");  //optional
 
-            //args.add("--outSAMunmapped");
+            args.add("--outBAMcompression");
+            args.add("6");
+
+            args.add("--outSAMunmapped");
+            args.add("None");
+            //args.add("KeepPairs");
 
             args.add("--genomeDir");
             File indexDir = referenceGenome.getAlignerIndexDir(getProvider().getName());
             args.add(indexDir.getPath());
 
+            //TODO: consider option?
             args.add("--twopassMode");
             args.add("Basic");
 
@@ -116,27 +122,31 @@ public class StarWrapper extends AbstractCommandWrapper
                 args.add("zcat");
             }
 
-            Boolean addSAMStrandField = getProvider().getParameterByName("addSAMStrandField").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false);
+            Boolean addSAMStrandField = getProvider().getParameterByName("addSAMStrandField").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
             if (addSAMStrandField)
             {
                 args.add("--outSAMstrandField");
                 args.add("intronMotif");
             }
 
-            Boolean removeNoncanonicalUnannotated = getProvider().getParameterByName("removeNoncanonicalUnannotated").extractValue(getPipelineCtx().getJob(), getProvider(), Boolean.class, false);
+            Boolean removeNoncanonicalUnannotated = getProvider().getParameterByName("removeNoncanonicalUnannotated").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
             if (removeNoncanonicalUnannotated)
             {
                 args.add("--outFilterIntronMotifs");
                 args.add("RemoveNoncanonicalUnannotated");
             }
 
+            args.add("--outSAMattributes");
+            args.add("All");
+
             args.addAll(getClientCommandArgs());
 
             //GTF
-            if (!StringUtils.isEmpty(getProvider().getParameterByName("splice_sites_file").extractValue(getPipelineCtx().getJob(), getProvider())))
+            boolean hasGtf = !StringUtils.isEmpty(getProvider().getParameterByName("splice_sites_file").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()));
+            if (hasGtf)
             {
                 getPipelineCtx().getLogger().debug("using splice sites file");
-                File gtf = getPipelineCtx().getSequenceSupport().getCachedData(getProvider().getParameterByName("splice_sites_file").extractValue(getPipelineCtx().getJob(), getProvider(), Integer.class));
+                File gtf = getPipelineCtx().getSequenceSupport().getCachedData(getProvider().getParameterByName("splice_sites_file").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class));
                 if (gtf.exists())
                 {
                     output.addInput(gtf, "Splice Sites File");
@@ -147,7 +157,7 @@ public class StarWrapper extends AbstractCommandWrapper
                     FileType gtfType = new FileType("gtf");
                     if (!gtfType.isType(gtf))
                     {
-                        String parentTranscript = StringUtils.trimToNull(getProvider().getParameterByName("sjdbGTFtagExonParentTranscript").extractValue(getPipelineCtx().getJob(), getProvider(), String.class));
+                        String parentTranscript = StringUtils.trimToNull(getProvider().getParameterByName("sjdbGTFtagExonParentTranscript").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
                         if (parentTranscript != null)
                         {
                             args.add("--sjdbGTFtagExonParentTranscript");
@@ -164,10 +174,10 @@ public class StarWrapper extends AbstractCommandWrapper
                 {
                     getPipelineCtx().getLogger().error("Unable to find GTF/GFF file: " + gtf.getPath());
                 }
-            }
 
-            args.add("--quantMode");
-            args.add("GeneCounts");
+                args.add("--quantMode");
+                args.add("GeneCounts");
+            }
 
             addThreadArgs(args);
             getWrapper().execute(args);
@@ -181,28 +191,32 @@ public class StarWrapper extends AbstractCommandWrapper
 
             output.addOutput(out, AlignmentOutputImpl.BAM_ROLE);
 
-            File readCounts = new File(outputDirectory, basename + "ReadsPerGene.out.tab");
-            if (!readCounts.exists())
+            if (hasGtf)
             {
-                throw new PipelineJobException("Unable to find expected output: " + readCounts.getPath());
-            }
-
-            File readCountsMoved = new File(outputDirectory, basename + "ReadsPerGene.out.txt");
-            try
-            {
-                if (readCountsMoved.exists())
+                File readCounts = new File(outputDirectory, basename + "ReadsPerGene.out.tab");
+                if (!readCounts.exists())
                 {
-                    readCountsMoved.delete();
+                    throw new PipelineJobException("Unable to find expected output: " + readCounts.getPath());
                 }
-                FileUtils.moveFile(readCounts, readCountsMoved);
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
+
+                File readCountsMoved = new File(outputDirectory, basename + "ReadsPerGene.out.txt");
+                try
+                {
+                    if (readCountsMoved.exists())
+                    {
+                        readCountsMoved.delete();
+                    }
+                    FileUtils.moveFile(readCounts, readCountsMoved);
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+
+                output.addOutput(readCountsMoved, "Reads Per Gene");
+                output.addSequenceOutput(readCountsMoved, rs.getName() + " Gene Counts (STAR)", "Reads Per Gene", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
             }
 
-            output.addOutput(readCountsMoved, "Reads Per Gene");
-            output.addSequenceOutput(readCountsMoved, rs.getName() + " Gene Counts (STAR)", "Reads Per Gene", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
             output.addCommandsExecuted(getWrapper().getCommandsExecuted());
 
             //set permissions on directories.  it is possible we actually want to delete these
@@ -359,7 +373,7 @@ public class StarWrapper extends AbstractCommandWrapper
                 {{
                     put("extensions", Arrays.asList("gtf", "gff"));
                     put("width", 400);
-                    put("allowBlank", false);
+                    put("allowBlank", true);
                 }}, null),
                 ToolParameterDescriptor.create(LONG_READS, "Reads >500bp", "If the reads are expected to exceed 500bp (per pair), this will use STARlong instead of STAR.", "checkbox", new JSONObject(){{
                     put("checked", false);
@@ -374,12 +388,13 @@ public class StarWrapper extends AbstractCommandWrapper
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--outFilterMismatchNmax"), "outFilterMismatchNmax", "Remove Noncanonical Unannotated Junctions", "Alignments with more than this number of mismatches will be filtered", "ldk-integerfield", new JSONObject(){{
                     put("minValue", 0);
                 }}, null),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--outFilterMismatchNoverLmax"), "outFilterMismatchNoverLmax", "An alignment will be output only if its ratio of mismatches to *mapped* length is less than or equal to this value.  Defaults to 0.3", "Alignments with more than this number of mismatches will be filtered", "ldk-numberfield", new JSONObject(){{
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--outFilterMismatchNoverLmax"), "outFilterMismatchNoverLmax", "Mismatch Ratio", "An alignment will be output only if its ratio of mismatches to *mapped* length is less than or equal to this value.  Defaults to 0.3", "ldk-numberfield", new JSONObject(){{
                     put("minValue", 0);
                     put("maxValue", 1);
-                }}, null)
-
-
+                }}, null),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--outFilterMultimapNmax"), "outFilterMultimapNmax", "Max Number of Alignments", "Maximum number of loci the read is allowed to map to. Alignments (all of them) will be output only if the read maps to no more loci than this value.", "ldk-integerfield", new JSONObject(){{
+                    put("minValue", 0);
+                }}, 10)
             ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "https://github.com/alexdobin/STAR/", true, true, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
 
             setAlwaysCacheIndex(true);;

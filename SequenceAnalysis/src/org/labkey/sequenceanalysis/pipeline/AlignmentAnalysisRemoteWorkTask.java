@@ -9,6 +9,7 @@ import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -93,8 +94,8 @@ public class AlignmentAnalysisRemoteWorkTask extends WorkDirectoryTask<Alignment
 
         List<RecordedAction> actions = new ArrayList<>();
 
-        List<PipelineStepProvider<AnalysisStep>> providers = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
-        if (providers.isEmpty())
+        List<PipelineStepCtx<AnalysisStep>> steps = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
+        if (steps.isEmpty())
         {
             throw new PipelineJobException("No analysis selected, nothing to do");
         }
@@ -121,7 +122,7 @@ public class AlignmentAnalysisRemoteWorkTask extends WorkDirectoryTask<Alignment
 
             Readset rs = getTaskHelper().getSequenceSupport().getCachedReadset(m.getReadset());
             ReferenceGenome genome = getTaskHelper().getSequenceSupport().getCachedGenome(m.getLibraryId());
-            outputs.addAll(SequenceAnalysisTask.runAnalysesRemote(actions, rs, inputBam, genome, providers, getTaskHelper()));
+            outputs.addAll(SequenceAnalysisTask.runAnalysesRemote(actions, rs, inputBam, genome, steps, getTaskHelper()));
         }
 
         getTaskHelper().getFileManager().deleteIntermediateFiles();

@@ -1,6 +1,6 @@
 require({cache:{
 'dojo/fx/easing':function(){
-define("dojo/fx/easing", ["../_base/lang"], function(lang){
+define(["../_base/lang"], function(lang){
 
 // module:
 //		dojo/fx/easing

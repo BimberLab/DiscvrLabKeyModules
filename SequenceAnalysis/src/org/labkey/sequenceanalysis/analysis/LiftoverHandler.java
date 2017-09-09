@@ -27,11 +27,13 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.run.util.LiftoverVcfWrapper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
@@ -297,6 +299,12 @@ public class LiftoverHandler implements SequenceOutputHandler
     {
         LiftoverVcfWrapper wrapper = new LiftoverVcfWrapper(job.getLogger());
         wrapper.doLiftover(input, chain, targetGenome.getWorkingFastaFile(), unmappedOutput, output, pct);
+
+        if (output.exists())
+        {
+            job.getLogger().info("total variants: " + ProcessVariantsHandler.getVCFLineCount(output, job.getLogger(), false));
+            job.getLogger().info("passing variants: " + ProcessVariantsHandler.getVCFLineCount(output, job.getLogger(), true));
+        }
     }
 
     public void liftOverBed(File chain, File input, File output, File unmappedOutput, PipelineJob job, double pct) throws IOException, PipelineJobException

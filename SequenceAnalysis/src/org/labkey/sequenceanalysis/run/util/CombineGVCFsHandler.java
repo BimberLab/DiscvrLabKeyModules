@@ -1,5 +1,7 @@
 package org.labkey.sequenceanalysis.run.util;
 
+import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
 import org.json.JSONObject;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -148,7 +150,15 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler
             ctx.getLogger().debug("adding sequence output: " + outputFile.getPath());
             SequenceOutputFile so1 = new SequenceOutputFile();
             so1.setName(outputFile.getName());
-            so1.setDescription("GATK CombineGVCFs Output, created from " + inputFiles.size() + " files.  GATK Version: " + wrapper.getVersionString());
+
+            int sampleCount;
+            try (VCFFileReader reader = new VCFFileReader(outputFile))
+            {
+                VCFHeader header = reader.getFileHeader();
+                sampleCount = header.getSampleNamesInOrder().size();
+            }
+
+            so1.setDescription("GATK CombineGVCFs Output, created from " + inputFiles.size() + " files, " + sampleCount + " samples.  GATK Version: " + wrapper.getVersionString());
             so1.setFile(outputFile);
             so1.setLibrary_id(genomeId);
             so1.setCategory("Combined gVCF File");

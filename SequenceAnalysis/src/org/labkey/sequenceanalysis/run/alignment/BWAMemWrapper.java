@@ -40,11 +40,17 @@ public class BWAMemWrapper extends BWAWrapper
         super(logger);
     }
 
-    public static class BWAMemAlignmentStep extends BWAAlignmentStep
+    public static class BWAMemAlignmentStep extends BWAAlignmentStep<BWAMemWrapper>
     {
         public BWAMemAlignmentStep(PipelineStepProvider provider, PipelineContext ctx)
         {
             super(provider, ctx, new BWAMemWrapper(ctx.getLogger()));
+        }
+
+        @Override
+        protected void doPerformAlignment(AlignmentOutputImpl output, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
+        {
+            getWrapper().performMemAlignment(getPipelineCtx().getJob(), output, inputFastq1, inputFastq2, outputDirectory, referenceGenome, basename, getClientCommandArgs());
         }
     }
 
@@ -71,8 +77,7 @@ public class BWAMemWrapper extends BWAWrapper
         }
     }
 
-    @Override
-    protected AlignmentStep.AlignmentOutput _performAlignment(PipelineJob job, AlignmentOutputImpl output, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename, List<String> additionalArgs) throws PipelineJobException
+    private void performMemAlignment(PipelineJob job, AlignmentOutputImpl output, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename, List<String> additionalArgs) throws PipelineJobException
     {
         setOutputDir(outputDirectory);
 
@@ -158,8 +163,6 @@ public class BWAMemWrapper extends BWAWrapper
             }
 
             output.addOutput(bam, AlignmentOutputImpl.BAM_ROLE);
-
-            return output;
         }
         catch (IOException e)
         {

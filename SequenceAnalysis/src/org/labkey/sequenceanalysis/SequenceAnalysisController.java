@@ -495,9 +495,11 @@ public class SequenceAnalysisController extends SpringActionController
 
             Set<File> orphanFiles = new HashSet<>();
             Set<File> orphanIndexes = new HashSet<>();
+            Set<File> probableDeletes = new HashSet<>();
             Set<PipelineStatusFile> orphanJobs = new HashSet<>();
             List<String> messages = new ArrayList<>();
-            SequenceAnalysisManager.get().getOrphanFilesForContainer(getContainer(), getUser(), orphanFiles, orphanIndexes, orphanJobs, messages);
+            SequenceAnalysisManager.get().getOrphanFilesForContainer(getContainer(), getUser(), orphanFiles, orphanIndexes, orphanJobs, messages, probableDeletes);
+            probableDeletes.addAll(orphanIndexes);
 
             if (!orphanFiles.isEmpty())
             {
@@ -521,7 +523,8 @@ public class SequenceAnalysisController extends SpringActionController
 
             if (!orphanJobs.isEmpty())
             {
-                html.append("## The following sequence jobs are not referenced by readsets, analyses or output files:<br>");
+                html.append("## The following sequence jobs are not referenced by readsets, analyses or output files.<br>");
+                html.append("## The best action would be to view the pipeline job list, 'Sequence Jobs' view, and filter for jobs without sequence outputs.  Deleting any unwanted jobs through the UI should also delete files.<br>");
                 for (PipelineStatusFile sf : orphanJobs)
                 {
                     File f = new File(sf.getFilePath()).getParentFile();
@@ -547,6 +550,16 @@ public class SequenceAnalysisController extends SpringActionController
             {
                 html.append("## The following messages were generated:<br>");
                 html.append(StringUtils.join(messages, "<br>"));
+            }
+
+            if (!probableDeletes.isEmpty())
+            {
+                html.append("<hr>");
+                html.append("## The following files can almost certainly be deleted; however, please exercise caution:<br>");
+                for (File f : probableDeletes)
+                {
+                    html.append(f.getPath() + "<br>");
+                }
             }
 
             return new HtmlView(html.toString());
@@ -2158,7 +2171,7 @@ public class SequenceAnalysisController extends SpringActionController
                 idx++;
             }
 
-            SequenceAnalysisManager.get().createReferenceLibrary(getContainer(), getUser(), form.getName(), form.getDescription(), members, form.isSkipCacheIndexes(), null);
+            SequenceAnalysisManager.get().createReferenceLibrary(getContainer(), getUser(), form.getName(), form.getAssemblyId(), form.getDescription(), members, form.isSkipCacheIndexes(), form.isSkipTriggers(), null);
 
             return new ApiSimpleResponse("Success", true);
         }
@@ -2167,10 +2180,12 @@ public class SequenceAnalysisController extends SpringActionController
     public static class CreateReferenceLibraryForm
     {
         private String _name;
+        private String _assemblyId;
         private String _description;
         private Integer[] _sequenceIds;
         private String[] _intervals;
         private boolean _skipCacheIndexes = false;
+        private boolean _skipTriggers = false;
 
         public String getName()
         {
@@ -2221,6 +2236,26 @@ public class SequenceAnalysisController extends SpringActionController
         {
             _skipCacheIndexes = skipCacheIndexes;
         }
+
+        public String getAssemblyId()
+        {
+            return _assemblyId;
+        }
+
+        public void setAssemblyId(String assemblyId)
+        {
+            _assemblyId = assemblyId;
+        }
+
+        public boolean isSkipTriggers()
+        {
+            return _skipTriggers;
+        }
+
+        public void setSkipTriggers(boolean skipTriggers)
+        {
+            _skipTriggers = skipTriggers;
+        }
     }
 
     @RequiresPermission(InsertPermission.class)
@@ -2257,7 +2292,7 @@ public class SequenceAnalysisController extends SpringActionController
                     File file = entry.getValue().getKey();
 
                     Map<String, String> params = form.getNtParams();
-                    Map<String, String> libraryParams = form.getLibraryParams();
+                    Map<String, Object> libraryParams = form.getLibraryParams();
 
                     try
                     {
@@ -2324,7 +2359,7 @@ public class SequenceAnalysisController extends SpringActionController
             }
 
             Map<String, String> params = form.getNtParams();
-            Map<String, String> libraryParams = form.getLibraryParams();
+            Map<String, Object> libraryParams = form.getLibraryParams();
             JSONObject resp = new JSONObject();
 
             try
@@ -2356,9 +2391,12 @@ public class SequenceAnalysisController extends SpringActionController
         private boolean _splitWhitespace = false;
         private boolean _createLibrary = false;
         private String _libraryName;
+        private String _assemblyId;
         private String _libraryDescription;
         private String _path;
         private String[] _fileNames;
+        private boolean _skipCacheIndexes = false;
+        private boolean _skipTriggers = false;
 
         public String getJsonData()
         {
@@ -2388,6 +2426,36 @@ public class SequenceAnalysisController extends SpringActionController
         public void setMolType(String molType)
         {
             _molType = molType;
+        }
+
+        public String getAssemblyId()
+        {
+            return _assemblyId;
+        }
+
+        public void setAssemblyId(String assemblyId)
+        {
+            _assemblyId = assemblyId;
+        }
+
+        public boolean isSkipCacheIndexes()
+        {
+            return _skipCacheIndexes;
+        }
+
+        public void setSkipCacheIndexes(boolean skipCacheIndexes)
+        {
+            _skipCacheIndexes = skipCacheIndexes;
+        }
+
+        public boolean isSkipTriggers()
+        {
+            return _skipTriggers;
+        }
+
+        public void setSkipTriggers(boolean skipTriggers)
+        {
+            _skipTriggers = skipTriggers;
         }
 
         public boolean isCreateLibrary()
@@ -2466,13 +2534,16 @@ public class SequenceAnalysisController extends SpringActionController
             return params;
         }
 
-        public Map<String, String> getLibraryParams()
+        public Map<String, Object> getLibraryParams()
         {
-            Map<String, String> libraryParams = new HashMap<>();
+            Map<String, Object> libraryParams = new HashMap<>();
             if (isCreateLibrary())
             {
                 libraryParams.put("name", getLibraryName());
                 libraryParams.put("description", getLibraryDescription());
+                libraryParams.put("assemblyId", getAssemblyId());
+                libraryParams.put("skipCacheIndexes", isSkipCacheIndexes());
+                libraryParams.put("skipTriggers", isSkipTriggers());
             }
 
             return libraryParams;
@@ -3087,7 +3158,7 @@ public class SequenceAnalysisController extends SpringActionController
                         throw new PipelineValidationException("Insufficient permissions to update reference genome: " + libraryId);
                     }
 
-                    PipelineService.get().queueJob(ReferenceLibraryPipelineJob.recreate(c, getUser(), root, libraryId, form.isSkipCacheIndexes()));
+                    PipelineService.get().queueJob(ReferenceLibraryPipelineJob.recreate(c, getUser(), root, libraryId, form.isSkipCacheIndexes(), false));
                 }
 
                 return new ApiSimpleResponse("success", true);

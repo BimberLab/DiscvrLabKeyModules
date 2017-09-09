@@ -32,15 +32,18 @@ Ext4.define('SequenceAnalysis.panel.VariantMaskPanel', {
                     items: [{
                         boxLabel: 'None',
                         inputValue: 'none',
+                        formId: this.getId(),
                         name: 'selectionType',
                         checked: true
                     },{
                         boxLabel: 'From Genome',
                         inputValue: 'fromGenome',
+                        formId: this.getId(),
                         name: 'selectionType'
                     },{
                         boxLabel: 'By File Id',
                         inputValue: 'byFileId',
+                        formId: this.getId(),
                         name: 'selectionType'
 
                     }],
