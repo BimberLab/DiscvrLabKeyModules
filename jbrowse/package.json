@@ -19,9 +19,7 @@
       }
     }
   },
-  "dependencies": {
-
-  },
+  "dependencies": {},
   "devDependencies": {
     "jbrowse": "git+https://github.com/GMOD/jbrowse.git",
     "better-npm-run": "0.1.0",
