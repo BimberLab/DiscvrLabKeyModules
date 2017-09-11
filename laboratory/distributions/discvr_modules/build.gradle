@@ -11,6 +11,7 @@ BuildUtils.addModuleDistributionDependencies(project, [":externalModules:labModu
                                                        ":externalModules:DISCVR:blast",
                                                        ":externalModules:DISCVR:htcondorconnector",
                                                        ":externalModules:DISCVR:variantdb",
+                                                       ":externalModules:DISCVR:mgap",
                                                        ":externalModules:DISCVR:omerointegration",
                                                        ":externalModules:DISCVR:tcrdb"])
 

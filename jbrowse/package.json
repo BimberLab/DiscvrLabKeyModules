@@ -1,0 +1,32 @@
+{
+  "name": "jbrowse-lk",
+  "version": "0.0.0",
+  "scripts": {
+    "clean": "bnr clean",
+    "build": "npm run clean && bnr copy:code",
+    "build-prod": "npm run build",
+    "prebuild": "npm run clean",
+    "setup": "npm install"
+  },
+  "betterScripts": {
+    "clean": {
+      "command": "rimraf resources/web/jbrowseApp"
+    },
+    "copy:code": {
+      "command": "node webpack/copyCode.js",
+      "env": {
+        "NODE_ENV": "development"
+      }
+    }
+  },
+  "dependencies": {
+
+  },
+  "devDependencies": {
+    "jbrowse": "git+https://github.com/GMOD/jbrowse.git",
+    "better-npm-run": "0.1.0",
+    "fs-extra": "4.0",
+    "rimraf": "2.6.2",
+    "webpack": "3.5.6"
+  }
+}

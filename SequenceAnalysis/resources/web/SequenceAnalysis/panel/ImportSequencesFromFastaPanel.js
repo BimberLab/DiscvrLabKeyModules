@@ -79,21 +79,23 @@ Ext4.define('SequenceAnalysis.panel.ImportSequencesFromFastaPanel', {
                                 },{
                                     xtype: 'textfield',
                                     fieldLabel: 'Assembly Id',
-                                    itemId: 'assemblyId',
+                                    name: 'assemblyId',
                                     allowBlank: true
                                 },{
                                     xtype: 'textarea',
                                     fieldLabel: 'Description',
-                                    itemId: 'libraryDescription'
+                                    name: 'libraryDescription'
                                 },{
                                     xtype: 'checkbox',
                                     fieldLabel: 'Skip Aligner Index Creation',
-                                    itemId: 'skipCacheIndexes'
+                                    name: 'skipCacheIndexes',
+                                    inputValue: true
                                 },{
                                     xtype: 'checkbox',
                                     fieldLabel: 'Skip Triggers',
                                     helpPopup: 'When a new genome is created, it fires events that can trigger other modules to perform work.  For example, the BLAST module will automatically create a new database.  If checked, this event will not be fired.  The primary purpose for this would be if you expect this genome to change after the initial import.  Generally speaking, it is best if this is left alone.',
-                                    itemId: 'skipTriggers'
+                                    name: 'skipTriggers',
+                                    inputValue: true
                                 }]);
                             }
                         },

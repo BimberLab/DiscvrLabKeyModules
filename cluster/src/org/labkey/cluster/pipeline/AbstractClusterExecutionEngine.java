@@ -29,6 +29,7 @@ import org.labkey.api.security.UserManager;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.Pair;
 import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.cluster.ClusterManager;
 import org.labkey.cluster.ClusterSchema;
@@ -161,7 +162,7 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
         TestCase.runTestJob(c, u, this);
     }
 
-    abstract protected String getStatusForJob(ClusterJob job, Container c);
+    abstract protected Pair<String, String> getStatusForJob(ClusterJob job, Container c);
 
     private File getSerializedJobFile(File statusFile)
     {
@@ -298,10 +299,10 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
             }
 
             //check condor_history
-            String jobStatus = getStatusForJob(j, ContainerManager.getForId(j.getContainer()));
+            Pair<String, String> jobStatus = getStatusForJob(j, ContainerManager.getForId(j.getContainer()));
             if (jobStatus != null)
             {
-                updateJobStatus(jobStatus, j);
+                updateJobStatus(jobStatus.first, j, jobStatus.second);
             }
             else
             {
@@ -377,7 +378,7 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
     /**
      * this expects the status normalized from cluster codes to LK TaskStatus
      */
-    protected void updateJobStatus(@Nullable String status, ClusterJob j) throws PipelineJobException
+    protected void updateJobStatus(@Nullable String status, ClusterJob j, @Nullable String info) throws PipelineJobException
     {
         //update DB
         boolean statusChanged = (status != null && !status.equals(j.getStatus()));
@@ -400,7 +401,7 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
                 File xml = getSerializedJobFile(new File(sf.getFilePath()));
                 if (!xml.exists())
                 {
-                    throw new PipelineJobException("unable to find pipeline XML file");
+                    throw new PipelineJobException("unable to find pipeline XML file, expected: " + xml.getPath());
                 }
 
                 //NOTE: this should read from serialized XML file, not rely on the DB
@@ -460,7 +461,7 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
                     {
                         if (taskStatus == PipelineJob.TaskStatus.running)
                         {
-                            pj.setStatus(taskStatus, sf.getInfo());
+                            pj.setStatus(taskStatus, info == null ? sf.getInfo() : info);
                         }
                         else
                         {

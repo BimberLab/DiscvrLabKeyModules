@@ -1,0 +1,7 @@
+<webpart xmlns="http://labkey.org/data/xml/webpart" >
+    <view name="jbrowseSearch"/>
+    <locations>
+        <location name="right"/>
+    </locations>
+    <customizeHandler>JBrowse.window.SearchCustomizeWindow.buttonHandler(webPartRowId, webPartProperties);</customizeHandler>
+</webpart>

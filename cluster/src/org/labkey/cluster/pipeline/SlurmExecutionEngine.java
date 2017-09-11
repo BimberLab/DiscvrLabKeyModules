@@ -10,6 +10,7 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.Pair;
 import org.labkey.cluster.ClusterServiceImpl;
 import org.quartz.JobExecutionException;
 
@@ -138,8 +139,8 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                         }
                         else
                         {
-                            String status = translateSlurmStatusToTaskStatus(StringUtils.trimToNull(tokens[4]));
-                            updateJobStatus(status, j);
+                            Pair<String, String> status = translateSlurmStatusToTaskStatus(StringUtils.trimToNull(tokens[4]));
+                            updateJobStatus(status == null ? null : status.first, j, status == null ? null : status.second);
                             jobsUpdated.add(j.getClusterId());
                         }
                     }
@@ -158,7 +159,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
     }
 
     @Override
-    protected String getStatusForJob(ClusterJob job, Container c)
+    protected Pair<String, String> getStatusForJob(ClusterJob job, Container c)
     {
         Map<String, String> ctx = getBaseCtx(c);
         ctx.put("clusterId", job.getClusterId());
@@ -205,7 +206,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         }
 
         //if not found in condor_history, it could mean it is sitting in the queue
-        String status = getStatusFromQueue(job.getClusterId());
+        Pair<String, String> status = getStatusFromQueue(job.getClusterId());
         if (status != null)
         {
             return status;
@@ -275,6 +276,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     writer.write("#SBATCH --job-name=" + job.getJobGUID() + "\n");
                     writer.write("#SBATCH --ntasks=1\n");
                     writer.write("#SBATCH --get-user-env\n");
+                    writer.write("#SBATCH --requeue\n");
 
                     //NOTE: this is just the output of the java process, so do not put into regular pipeline log
                     writer.write("#SBATCH --output=" + getConfig().getClusterPath(new File(outDir, basename + "-%j.java.log")) + "\n");
@@ -327,8 +329,10 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     if (maxRam != null || getConfig().getRequestMemory() != null)
                     {
                         //NOTE: see comment above for CPUs
+                        //Also, add buffer between the amount allocated for the slurm job and the amount set in LK.
+                        //slurm is more aggressive about killed over memory jobs
                         ram = maxRam != null ? maxRam : getConfig().getRequestMemory();
-                        writer.write("#SBATCH --mem=" + ram + "000\n");
+                        writer.write("#SBATCH --mem=" + (ram + 2) + "000\n");
                     }
 
                     List<String> environment = new ArrayList<>();
@@ -383,7 +387,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         }
     }
 
-    private String translateSlurmStatusToTaskStatus(String status)
+    private Pair<String, String> translateSlurmStatusToTaskStatus(String status)
     {
         if (status == null)
             return null;
@@ -391,14 +395,14 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         try
         {
             StatusType st = StatusType.parseValue(status);
-            return st.getLabkeyStatus().toUpperCase();
+            return Pair.of(st.getLabkeyStatus().toUpperCase(), st.getInfo());
         }
         catch (IllegalArgumentException e)
         {
             _log.error("Unknown status type: [" + status + "]");
         }
 
-        return status;
+        return Pair.of(status, null);
     }
 
     public static enum StatusType
@@ -411,15 +415,16 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         F("Failed", PipelineJob.TaskStatus.error),
         NF("Failed", PipelineJob.TaskStatus.error, Arrays.asList("NODE_FAIL")),
         PD("Submitted, Idle", PipelineJob.TaskStatus.waiting, Arrays.asList("PENDING")),
-        PR("Preempted", PipelineJob.TaskStatus.waiting),
+        PR("Preempted", PipelineJob.TaskStatus.waiting, null, "Job preempted"),
         R("Running", PipelineJob.TaskStatus.running),
         SE("Error", PipelineJob.TaskStatus.error, Arrays.asList("SPECIAL_EXIT")),
         ST("Stopped", PipelineJob.TaskStatus.error),
-        S("Suspended", PipelineJob.TaskStatus.waiting),
-        TO("Timeout", PipelineJob.TaskStatus.waiting);
+        S("Suspended", PipelineJob.TaskStatus.waiting, null, "Job suspended"),
+        TO("Timeout", PipelineJob.TaskStatus.waiting, null, "Job timeout");
 
         private Set<String> _aliases = new CaseInsensitiveHashSet();
         private String _labkeyStatus;
+        private String _info;
         private PipelineJob.TaskStatus _taskStatus;
 
         StatusType(String labkeyStatus, PipelineJob.TaskStatus taskStatus)
@@ -429,7 +434,13 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
 
         StatusType(String labkeyStatus, PipelineJob.TaskStatus taskStatus, List<String> aliases)
         {
+            this(labkeyStatus, taskStatus, null, null);
+        }
+
+        StatusType(String labkeyStatus, PipelineJob.TaskStatus taskStatus, List<String> aliases, String info)
+        {
             _labkeyStatus = labkeyStatus;
+            _info = info;
             _taskStatus = taskStatus;
 
             if (aliases != null)
@@ -443,6 +454,11 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
             return _taskStatus == null ? _labkeyStatus : _taskStatus.name();
         }
 
+        public String getInfo()
+        {
+            return _info;
+        }
+
         public static StatusType parseValue(String value)
         {
             try
@@ -454,6 +470,8 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                 //ignore
             }
 
+            //NOTE: slurm can report a status with '+' after it.
+            value = value.replaceAll("\\+", "");
             for (StatusType t : values())
             {
                 if (t._labkeyStatus.equalsIgnoreCase(value))
@@ -473,7 +491,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
     /**
      * @return The string status, always translated to the LabKey TaskStatus instead of raw condor code
      */
-    private String getStatusFromQueue(String clusterId)
+    private Pair<String, String> getStatusFromQueue(String clusterId)
     {
         String command = getConfig().getStatusCommandExpr().eval(getBaseCtx(ContainerManager.getRoot()));
         List<String> ret = execute(command);

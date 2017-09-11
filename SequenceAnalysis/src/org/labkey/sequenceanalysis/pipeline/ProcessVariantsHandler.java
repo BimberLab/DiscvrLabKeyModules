@@ -3,6 +3,7 @@ package org.labkey.sequenceanalysis.pipeline;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.FeatureReader;
 import htsjdk.variant.vcf.VCFCodec;
+import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -388,6 +389,13 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
                     }
                     else
                     {
+                        int sampleCount;
+                        try (VCFFileReader reader = new VCFFileReader(processed))
+                        {
+                            VCFHeader header = reader.getFileHeader();
+                            sampleCount = header.getSampleNamesInOrder().size();
+                        }
+
                         SequenceOutputFile so1 = new SequenceOutputFile();
                         so1.setName(processed.getName());
                         so1.setFile(processed);
@@ -397,6 +405,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
                         so1.setCreated(new Date());
                         so1.setModified(new Date());
                         so1.setReadset(inputFiles.iterator().next().getReadset());
+                        so1.setDescription("Total samples: " + sampleCount);
 
                         _resumer.addSequenceOutput(so1);
                     }

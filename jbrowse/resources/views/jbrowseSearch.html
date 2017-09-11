@@ -1,0 +1,163 @@
+<style type="text/css">
+    .noBorder .dijitButtonNode {
+        border: 0px;
+    }
+
+</style>
+<script type="text/javascript" src="<%=contextPath%>/jbrowseApp/src/dojo/dojo.js" data-dojo-config="async: 1, baseUrl: '<%=contextPath%>/jbrowseApp/src'"></script>
+<script type="text/javascript" src="<%=contextPath%>/jbrowseApp/src/JBrowse/init.js"></script>
+
+<script type="text/javascript">
+
+    require([
+        'JBrowse/Browser',
+        'dijit/form/ComboBox',
+        'dijit/form/Button',
+        'dojo/keys',
+        'JBrowse/View/InfoDialog',
+        "dojo/html"
+    ],
+    function(
+            Browser,
+            dijitComboBox,
+            dijitButton,
+            keys,
+            InfoDialog,
+            html
+    ) {
+        var webpart = <%=webpartContext%>;
+
+        var databaseId = webpart.databaseId;
+        if (!databaseId){
+            html.set(webpart.wrapperDivId, 'The target database has not been set for this webpart.  Use the customize link to do this.');
+            return;
+        }
+
+        var base = LABKEY.contextPath + "/jbrowseApp/";
+        var browserRoot = LABKEY.contextPath + "/jbrowseApp/";
+        var dataRoot = LABKEY.contextPath + "/_webdav" + LABKEY.Security.currentContainer.path + "/@Files/.jbrowse/" + "databases/" + databaseId;
+
+        var browser = new Browser({
+            baseUrl: base,
+            names: {
+                type: 'Hash',
+                url: dataRoot + '/names/'
+            },
+            browserRoot: browserRoot,
+            dataRoot: dataRoot,
+            unitTestMode: true
+        });
+
+        browser.afterMilestone( 'loadNames', function() {
+            this.nameStore = browser.nameStore;
+
+            var searchbox = dojo.create('div', {
+                style: 'display:inline-block;'
+            }, webpart.wrapperDivId);
+
+            this.locationBox = new dijitComboBox({
+                style: {width: '200px'},
+                maxLength: 400,
+                searchAttr: "name",
+                placeHolder: "Enter gene or feature name",
+                title: 'Enter gene or feature name'
+            }, dojo.create('input', {placeHolder: "type in your name"}, searchbox));
+
+            browser.afterMilestone('loadNames', dojo.hitch(this, function () {
+                if (this.nameStore) {
+                    this.locationBox.set('store', browser.nameStore);
+                }
+            }));
+            this.locationBox.focusNode.spellcheck = false;
+
+            dojo.query('div.dijitArrowButton', this.locationBox.domNode ).orphan();
+
+            dojo.connect( this.locationBox.focusNode, "keydown", this, function(event) {
+                if( event.keyCode == keys.ESCAPE ) {
+                    this.locationBox.set('value','');
+                }
+                else if (event.keyCode == keys.ENTER) {
+                    this.locationBox.closeDropDown(false);
+                    this.navigateTo( this.locationBox.get('value') );
+                    this.goButton.set('disabled',true);
+                    dojo.stopEvent(event);
+                } else {
+                    this.goButton.set('disabled', false);
+                }
+            });
+            dojo.connect( searchbox, 'onselectstart', function(evt) { evt.stopPropagation(); return true; });
+
+            this.searchNames = function( /**String*/ loc ) {
+                return browser.nameStore.query({ name: loc }).then(
+                function( nameMatches ) {
+                    // if we have no matches, pop up a dialog saying so, and
+                    // do nothing more
+                    if( ! nameMatches.length ) {
+                        return false;
+                    }
+
+                    var goingTo;
+
+                    //first check for exact case match
+                    for (var i = 0; i < nameMatches.length; i++) {
+                        if( nameMatches[i].name  == loc )
+                            goingTo = nameMatches[i];
+                    }
+                    //if no exact case match, try a case-insentitive match
+                    if( !goingTo ) {
+                        for( i = 0; i < nameMatches.length; i++ ) {
+                            if( nameMatches[i].name.toLowerCase() == loc.toLowerCase() )
+                                goingTo = nameMatches[i];
+                        }
+                    }
+                    //else just pick a match
+                    if( !goingTo ) goingTo = nameMatches[0];
+
+                    return goingTo;
+                },
+                function(e) {
+                    console.error( e );
+                    new InfoDialog({title: 'Error', content: 'Error reading from name store.'}).show();
+                    return false;
+                });
+            };
+
+            this.navigateTo = function (loc, callee) {
+                if (!loc){
+                    return;
+                }
+
+                this.searchNames(loc).then(function(loc, callee){
+                    if (!loc){
+                        new InfoDialog({title: 'Error', content: 'Coordinates not found for this location.'}).show();
+                    }
+                    else if (loc.multipleLocations){
+                        new InfoDialog({title: 'Error', content: 'This location matched multiple positions in the genome.'}).show();
+                        LDK.Utils.logToServer('Jbrowse multiple locations found: ' + JSON.stringify(loc.location));
+                    }
+                    else {
+                        var url = LABKEY.ActionURL.buildURL('jbrowse', 'browser', null, {database: databaseId, loc: loc.location.ref + ':' + loc.location.start + '..' + loc.location.end})
+                        //console.log(url)
+                        window.location = url;
+                    }
+                });
+            };
+
+            // make the 'Go' button
+            this.goButton = new dijitButton({
+                label: 'Go',
+                baseClass: "noBorder",
+                onClick: dojo.hitch(this, function (event) {
+                    this.navigateTo(this.locationBox.get('value'));
+                    this.goButton.set('disabled', true);
+                    dojo.stopEvent(event);
+                }),
+                className: 'labkey-button'
+            }, dojo.create('button', {}, searchbox));
+        });
+
+        browser.loadNames();
+    });
+
+
+</script>

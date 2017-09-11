@@ -6,14 +6,10 @@ import org.jetbrains.annotations.NotNull;
 import org.labkey.api.cluster.ClusterResourceAllocator;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.TableInfo;
-import org.labkey.api.data.TableSelector;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.query.FieldKey;
 import org.labkey.api.util.FileUtil;
-import org.labkey.cluster.ClusterSchema;
+import org.labkey.api.util.Pair;
 import org.labkey.cluster.ClusterServiceImpl;
 import org.quartz.JobExecutionException;
 
@@ -84,7 +80,7 @@ public class HTCondorExecutionEngine extends AbstractClusterExecutionEngine<HTCo
                             else
                             {
                                 String status = translateCondorStatusToTaskStatus(StringUtils.trimToNull(tokens[5]));
-                                updateJobStatus(status, j);
+                                updateJobStatus(status, j, null);
                                 jobsUpdated.add(j.getClusterId());
                             }
                         }
@@ -320,7 +316,7 @@ public class HTCondorExecutionEngine extends AbstractClusterExecutionEngine<HTCo
      * @return The string status, always translated to the LabKey TaskStatus instead of raw condor code
      */
     @Override
-    protected String getStatusForJob(ClusterJob job, Container c)
+    protected Pair<String, String> getStatusForJob(ClusterJob job, Container c)
     {
         Map<String, String> ctx = getBaseCtx(c);
         ctx.put("clusterId", job.getClusterId());
@@ -366,7 +362,8 @@ public class HTCondorExecutionEngine extends AbstractClusterExecutionEngine<HTCo
                             continue;
                         }
 
-                        return translateCondorStatusToTaskStatus(StringUtils.trimToNull(tokens[5]));
+                        String s = translateCondorStatusToTaskStatus(StringUtils.trimToNull(tokens[5]));
+                        return s != null ? Pair.of(s, null) : null;
                     }
                 }
                 else if (line.startsWith("ID "))
@@ -380,7 +377,7 @@ public class HTCondorExecutionEngine extends AbstractClusterExecutionEngine<HTCo
         String status = getStatusFromQueue(job.getClusterId());
         if (status != null)
         {
-            return status;
+            return Pair.of(status, null);
         }
 
         checkForCompletedJob(job);

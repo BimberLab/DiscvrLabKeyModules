@@ -23,6 +23,15 @@ define([
                     //console.log('VCFVariants track added');
                 },
 
+                _isPassing: function(feat){
+                    var f = feat.get('filter');
+                    try {
+                        return f.values.join('').toUpperCase() == 'PASS';
+                    } catch(e) {
+                        return f.toUpperCase() == 'PASS';
+                    }
+                },
+
                 _defaultConfig: function() {
                     var thisB = this;
                     return Util.deepUpdate(
@@ -33,10 +42,16 @@ define([
                                     if (feature.get('Type')) {
                                         if (! /SNV/.test ( feature.get('Type') ) ) { thisGlyph = "JBrowse/View/FeatureGlyph/Box"; }
                                     }
+
+                                    if (!thisB._isPassing(feature)){
+                                        thisGlyph = "JBrowse/View/FeatureGlyph/Box";
+                                    }
                                     return thisGlyph;
                                 },
 
                                 style: {
+                                    showLabels: false,
+
                                     color: function(feature){
                                         var effArray = feature.get('ANN') || [];
                                         if( effArray &&  typeof effArray == 'object' && 'values' in effArray )
@@ -66,7 +81,7 @@ define([
                                     }
                                 },
 
-                                displayMode: 'compact',
+                                displayMode: 'normal',
 
                                 onClick: {
                                     style: "width:700px",
@@ -97,29 +112,47 @@ define([
                                 }
                             });
                 },
-                // /** overriding JBrowse/Component.js resolveUrl() so we get proper relative URLs here */
-                // resolveUrl: function( url, args ) {
-                //     args = args || {};
-                //     /** default to use this server's origin (prefix plus domain), not JBrowse baseUrl (contains dataRoot path)
-                //      if an external baseUrl is not configured as a parameter for this track */
-                //     var browserRoot = window.location.origin || "";
-                //     if (this.config.externalBaseUrl)
-                //         browserRoot = this.config.externalBaseUrl
-                //     if( browserRoot && browserRoot.charAt( browserRoot.length - 1 ) != '/' )
-                //         browserRoot += '/';
-                //     return Util.resolveUrl(
-                //             browserRoot,
-                //             this.fillTemplate( url, args )
-                //     );
-                // },
 
                 _trackMenuOptions: function() {
+                    var thisB = this;
+
                     // disable default VCF FILTER column filters
-                    //return all([ this.inherited(arguments), this._snpeffImpactFilterTrackMenuOptions(), this._variantsFilterTrackMenuOptions() ])
                     return all([ this.inherited(arguments), this._snpeffImpactFilterTrackMenuOptions() ])
                             .then( function( options ) {
                                 var o = options.shift();
-                                options.unshift( { type: 'dijit/MenuSeparator' } );
+                                var allowed = ['About this track', 'Pin to top', 'Edit config', 'Delete track', 'Save track data'];
+                                o = array.filter(o, function(item) {
+                                    return allowed.indexOf(item.label) == -1;
+                                });
+
+                                if (o[0].type == 'dijit/MenuSeparator'){
+                                    o.shift();
+                                }
+
+                                o.push( { type: 'dijit/MenuSeparator' } );
+                                o.push({
+                                    label: 'Show sites not passing filters',
+                                    type: "dijit/CheckedMenuItem",
+                                    checked: thisB.config.filterEnabled['SHOW_FILTERED'] !== false,
+                                    onClick: (function(filterName){ return function() {
+                                        if (!this.checked) {
+                                            thisB.addFeatureFilter(function(f) {
+                                                var f = f.get('filter');
+                                                try {
+                                                    return f.values.join('').toUpperCase() == 'PASS';
+                                                } catch(e) {
+                                                    return f.toUpperCase() == 'PASS';
+                                                }
+                                            }, filterName);
+                                        }
+                                        else {
+                                            thisB.removeFeatureFilter(filterName);
+                                        }
+                                        thisB.config.filterEnabled[filterName] = this.checked;
+                                        thisB.redraw();
+                                    }})('SHOW_FILTERED')
+                                });
+
                                 return o.concat.apply( o, options );
                             });
                 },
@@ -187,7 +220,7 @@ define([
                             }})(filterName)
                         });
                     }
-                    //opts.push( { type: 'dijit/MenuSeparator' } );
+
                     return opts;
                 }
             });

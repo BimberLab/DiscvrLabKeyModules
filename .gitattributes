@@ -118,6 +118,7 @@ DISCVR/galaxyintegration/src/org/labkey/galaxyintegration/pipeline/GalaxyProvena
 DISCVR/jbrowse/api-src/org/labkey/api/jbrowse/JBrowseService.java -text
 DISCVR/jbrowse/build.gradle -text
 DISCVR/jbrowse/module.properties -text
+DISCVR/jbrowse/package.json -text
 DISCVR/jbrowse/resources/queries/jbrowse/database_members/.qview.xml -text
 DISCVR/jbrowse/resources/queries/jbrowse/databases.js -text
 DISCVR/jbrowse/resources/queries/jbrowse/databases/.qview.xml -text
@@ -142,6 +143,9 @@ DISCVR/jbrowse/resources/views/begin.html -text
 DISCVR/jbrowse/resources/views/begin.view.xml -text
 DISCVR/jbrowse/resources/views/databaseDetails.html -text
 DISCVR/jbrowse/resources/views/databaseDetails.view.xml -text
+DISCVR/jbrowse/resources/views/jbrowseSearch.html -text
+DISCVR/jbrowse/resources/views/jbrowseSearch.view.xml -text
+DISCVR/jbrowse/resources/views/jbrowseSearch.webpart.xml -text
 DISCVR/jbrowse/resources/views/settings.html -text
 DISCVR/jbrowse/resources/views/settings.view.xml -text
 DISCVR/jbrowse/resources/web/README.txt -text
@@ -159,6 +163,7 @@ DISCVR/jbrowse/resources/web/jbrowse/window/DatabaseWindow.js -text
 DISCVR/jbrowse/resources/web/jbrowse/window/GenomeBrowserHelpWindow.js -text
 DISCVR/jbrowse/resources/web/jbrowse/window/ModifyJsonConfigWindow.js -text
 DISCVR/jbrowse/resources/web/jbrowse/window/ReprocessResourcesWindow.js -text
+DISCVR/jbrowse/resources/web/jbrowse/window/SearchCustomizeWindow.js -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/JBrowseController.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/JBrowseDataProvider.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/JBrowseGenomeTrigger.java -text
@@ -190,6 +195,8 @@ DISCVR/jbrowse/tools/demoImages/img3.psd -text
 DISCVR/jbrowse/tools/demoImages/img4.psd -text
 DISCVR/jbrowse/tools/jbrowse_install.sh -text
 DISCVR/jbrowse/webapp/WEB-INF/jbrowse/jbrowseContext.xml -text
+DISCVR/jbrowse/webpack/copyCode.js -text
+DISCVR/jbrowse/webpack/main.css -text
 DISCVR/omerointegration/build.gradle -text
 DISCVR/omerointegration/module.properties -text
 DISCVR/omerointegration/resources/credits/jars.txt -text

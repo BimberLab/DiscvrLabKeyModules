@@ -1,0 +1,10 @@
+<view xmlns="http://labkey.org/data/xml/view" title="JBrowse Search" frame="portal">
+    <permissions>
+        <permission name="read"/>
+    </permissions>
+    <dependencies>
+        <dependency path="LDK.context"/>
+        <dependency path="jbrowseApp/css/genome.css" />
+        <dependency path="jbrowse/window/SearchCustomizeWindow.js"/>
+    </dependencies>
+</view>

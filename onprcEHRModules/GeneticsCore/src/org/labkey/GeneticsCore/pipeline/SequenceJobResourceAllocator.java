@@ -179,13 +179,7 @@ public class SequenceJobResourceAllocator implements ClusterResourceAllocator
 
         if (isSequenceAlignmentTask(job))
         {
-            if (totalFileSize <= 10e9)
-            {
-                job.getLogger().debug("file size less than 10gb, setting memory to 16");
-
-                ret = 16;
-            }
-            else if (totalFileSize <= 30e9)
+            if (totalFileSize <= 30e9)
             {
                 job.getLogger().debug("file size less than 30gb, setting memory to 24");
 
@@ -290,7 +284,7 @@ public class SequenceJobResourceAllocator implements ClusterResourceAllocator
             while (it.hasNext())
             {
                 String line = it.next();
-                if (line.contains("#SBATCH --partition="))
+                if (line.contains("#SBATCH --partition=") || line.contains("#SBATCH --time="))
                 {
                     it.remove();
                 }
@@ -298,6 +292,7 @@ public class SequenceJobResourceAllocator implements ClusterResourceAllocator
 
             //then add
             lines.add("#SBATCH --partition=long_jobs");
+            lines.add("#SBATCH --time=14400");
         }
     }
 

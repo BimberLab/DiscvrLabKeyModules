@@ -184,7 +184,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
 
                 for (File child : libraryDir.listFiles())
                 {
-                    if ("log".equals(FileUtil.getExtension(child)))
+                    if ("log".equals(FileUtil.getExtension(child)) || "xml".equals(FileUtil.getExtension(child)))
                     {
                         continue;  //always ignore log files
                     }
@@ -224,6 +224,11 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                         {
                             if (!expectedChildren.contains(fileName))
                             {
+                                if ("log".equals(FileUtil.getExtension(fileName)) || "xml".equals(FileUtil.getExtension(fileName)))
+                                {
+                                    continue;
+                                }
+
                                 deleteFile(new File(child, fileName), log);
                             }
                         }

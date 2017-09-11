@@ -1,5 +1,7 @@
 package org.labkey.sequenceanalysis.analysis;
 
+import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -191,11 +193,18 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler, SequenceOutpu
                 processed = outputVcf;
             }
 
+            int sampleCount;
+            try (VCFFileReader reader = new VCFFileReader(processed))
+            {
+                VCFHeader header = reader.getFileHeader();
+                sampleCount = header.getSampleNamesInOrder().size();
+            }
+
             ctx.getLogger().debug("adding sequence output: " + processed.getPath());
             SequenceOutputFile so1 = new SequenceOutputFile();
             so1.setName(processed.getName());
             GenotypeGVCFsWrapper wrapper = new GenotypeGVCFsWrapper(ctx.getLogger());
-            so1.setDescription("GATK GenotypeGVCF output.  GATK Version: " + wrapper.getVersionString());
+            so1.setDescription("GATK GenotypeGVCF output.  GATK Version: " + wrapper.getVersionString() + ".  Total samples: " + sampleCount);
             so1.setFile(processed);
             so1.setLibrary_id(genomeId);
             so1.setCategory("VCF File");

@@ -300,10 +300,28 @@ public class LiftoverHandler implements SequenceOutputHandler
         LiftoverVcfWrapper wrapper = new LiftoverVcfWrapper(job.getLogger());
         wrapper.doLiftover(input, chain, targetGenome.getWorkingFastaFile(), unmappedOutput, output, pct);
 
+        Long mapped = null;
         if (output.exists())
         {
-            job.getLogger().info("total variants: " + ProcessVariantsHandler.getVCFLineCount(output, job.getLogger(), false));
+            String mappedStr = ProcessVariantsHandler.getVCFLineCount(output, job.getLogger(), false);
+            mapped = StringUtils.trimToNull(mappedStr) == null ? 0L : Long.parseLong(mappedStr);
+            job.getLogger().info("total variants mapped: " + mappedStr);
+            job.getLogger().info("passing variants mapped: " + ProcessVariantsHandler.getVCFLineCount(output, job.getLogger(), true));
+        }
+
+        Long unmapped = null;
+        if (unmappedOutput.exists())
+        {
+            String unmappedStr = ProcessVariantsHandler.getVCFLineCount(output, job.getLogger(), false);
+            unmapped = StringUtils.trimToNull(unmappedStr) == null ? 0L : Long.parseLong(unmappedStr);
+            job.getLogger().info("total variants: " + unmappedStr);
             job.getLogger().info("passing variants: " + ProcessVariantsHandler.getVCFLineCount(output, job.getLogger(), true));
+        }
+
+        if (mapped != null && unmapped != null)
+        {
+            Double fraction = (double)mapped / (mapped + unmapped);
+            job.getLogger().info("fraction mapped of total: " + fraction);
         }
     }
 
