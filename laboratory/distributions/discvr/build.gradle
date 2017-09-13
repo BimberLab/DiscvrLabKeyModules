@@ -14,7 +14,7 @@ BuildUtils.addModuleDistributionDependencies(project, [":externalModules:labModu
                                                        ":externalModules:DISCVR:blast",
                                                        ":externalModules:DISCVR:cluster",
                                                        ":externalModules:DISCVR:variantdb",
-                                                       ":externalModules:DISCVR:mgap",
+                                                       ":externalModules:DISCVR:mGAP",
                                                        ":externalModules:DISCVR:omerointegration",
                                                        ":externalModules:DISCVR:tcrdb"])
 
