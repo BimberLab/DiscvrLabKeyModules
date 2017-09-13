@@ -12,7 +12,7 @@ BuildUtils.addModuleDistributionDependencies(project, [":externalModules:labModu
                                                        ":externalModules:labModules:SequenceAnalysis",
                                                        ":externalModules:DISCVR:jbrowse",
                                                        ":externalModules:DISCVR:blast",
-                                                       ":externalModules:DISCVR:htcondorconnector",
+                                                       ":externalModules:DISCVR:cluster",
                                                        ":externalModules:DISCVR:variantdb",
                                                        ":externalModules:DISCVR:mgap",
                                                        ":externalModules:DISCVR:omerointegration",
