@@ -1,22 +1,21 @@
+<div class="genetics-nav-menu-panel"></div>
+
 <script type="text/javascript">
 
     Ext4.onReady(function(){
-        var webpart = <%=webpartContext%>;
-        var div = Ext4.get(webpart.wrapperDivId).parent('div');
-        if (div)
-            div.setStyle('padding', '0px');
-        else
-            div = Ext4.get(webpart.wrapperDivId);  //allow this to work in non-menu contexts
-
         Ext4.QuickTips.init();
 
+        var webpart = <%=webpartContext%>;
+        var div = Ext4.get(webpart.wrapperDivId).down('.genetics-nav-menu-panel');
+
         var panel = Ext4.create('Ext.panel.Panel', {
+            renderTo: div.id,
             cls: 'labkey-iconpanel',
             width: 300,
-            border: true,
+            autoResize: false,
+            border: false,
             itemId: 'menuPanel',
             defaults: {
-                //bodyStyle: 'padding: 5px;',
                 items: [{
                     xtype: 'dataview',
                     overItemCls: 'x4-item-over',
@@ -98,7 +97,6 @@
                 title: 'Internal Projects'
             }]
         });
-        panel.render(div.id);
 
         LABKEY.Ajax.request({
             url : LABKEY.ActionURL.buildURL('geneticsCore', 'getNavItems', null),
