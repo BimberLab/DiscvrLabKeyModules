@@ -65,7 +65,7 @@
 
         //set page title
         var titleId = Ext4.id();
-        LABKEY.NavTrail.setTrail("<span class='wb-name'>" + workbookId + ":&nbsp;</span><span class='labkey-edit-in-place' id='" + titleId + "'>" + title + "</span>", null, title);
+        LABKEY.NavTrail.setTrail("<span class='wb-name'>" + workbookId + ":&nbsp;</span><span class='labkey-edit-in-place' id='" + titleId + "'>" + title + "</span>", null, title, false /* encode */);
 
         new LABKEY.ext.EditInPlaceElement({
             applyTo: titleId,
