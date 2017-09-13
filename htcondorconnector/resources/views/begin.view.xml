@@ -1,0 +1,8 @@
+<view xmlns="http://labkey.org/data/xml/view" title="HTCondor Connector">
+    <permissions>
+
+    </permissions>
+    <dependencies>
+        <dependency path="Ext4ClientApi" />
+    </dependencies>
+</view>
