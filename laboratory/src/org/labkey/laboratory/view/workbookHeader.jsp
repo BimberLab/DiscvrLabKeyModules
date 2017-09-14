@@ -69,6 +69,7 @@
 
         new LABKEY.ext.EditInPlaceElement({
             applyTo: titleId,
+            widthBuffer: 0,
             updateConfig: {
                 url: LABKEY.ActionURL.buildURL("core", "updateTitle"),
                 jsonDataPropName: 'title'
