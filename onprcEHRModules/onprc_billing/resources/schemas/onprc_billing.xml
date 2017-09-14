@@ -691,17 +691,14 @@
             <item text="Grid Views">
                 <originalText>Grid Views</originalText>
             </item>
-            <item text="Reports">
-                <originalText>Reports</originalText>
+            <item text="Charts">
+                <originalText>Charts</originalText>
             </item>
             <item text="Delete" permission="DELETE" requiresSelection="true">
                 <onClick>ONPRC.BillingUtils.deleteInvoiceRuns(dataRegionName);</onClick>
             </item>
             <item text="Export">
                 <originalText>Export</originalText>
-            </item>
-            <item text="Paging">
-                <originalText>Paging</originalText>
             </item>
         </buttonBarOptions>
     </table>
