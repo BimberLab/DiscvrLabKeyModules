@@ -424,7 +424,7 @@ then
     rm -Rf RNA-SeQC*
     rm -Rf $LKTOOLS_DIR/RNA-SeQC.jar
 
-    wget $WGET_OPTS http://www.broadinstitute.org/cancer/cga/tools/rnaseqc/RNA-SeQC_v1.1.8.jar
+    wget $WGET_OPTS https://data.broadinstitute.org/cancer/cga/tools/rnaseqc/RNA-SeQC_v1.1.8.jar
 
     install ./RNA-SeQC_v1.1.8.jar $LKTOOLS_DIR/RNA-SeQC.jar
 else
