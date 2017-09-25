@@ -1,6 +1,7 @@
 import org.labkey.gradle.util.BuildUtils;
 
 repositories {
+   jcenter()
    maven {
       url "http://clojars.org/repo"
    }
@@ -17,4 +18,8 @@ dependencies {
    external 'org.itadaki:bzip2:0.9.1'
    external 'org.clojars.chapmanb:sam:1.96'
    external "org.apache.commons:commons-math3:${commonsMath3Version}"
+   // picard brings in a version of servlet-api and a very old one at that, so we excluded it
+   external("com.github.broadinstitute:picard:2.12.1") {
+      exclude group: "javax.servlet", module: "servlet-api"
+   }
 }
