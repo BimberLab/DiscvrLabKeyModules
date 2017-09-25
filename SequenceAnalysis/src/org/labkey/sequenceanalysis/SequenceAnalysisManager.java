@@ -327,7 +327,7 @@ public class SequenceAnalysisManager
 
     public static File getHtsJdkJar()
     {
-        Resource r = ModuleLoader.getInstance().getResource(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), Path.parse("lib/htsjdk-2.8.1.jar"));
+        Resource r = ModuleLoader.getInstance().getResource(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), Path.parse("lib/htsjdk-2.11.0.jar"));
         if (r == null)
         {
             throw new IllegalArgumentException("Unable to find htsjdk JAR file");
