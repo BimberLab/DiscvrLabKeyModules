@@ -3,11 +3,9 @@ package org.labkey.sequenceanalysis.run.util;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -26,14 +24,7 @@ public class LiftoverVcfWrapper extends PicardWrapper
         Date start = new Date();
         getLogger().info("Liftover VCF: " + inputVcf.getPath());
 
-        List<String> params = new ArrayList<>();
-        params.add(SequencePipelineService.get().getJavaFilepath());
-        params.addAll(SequencePipelineService.get().getJavaOpts());
-        params.add("-jar");
-        params.add(getPicardJar().getPath());
-        params.add(getToolName());
-
-        params.add("VALIDATION_STRINGENCY=" + getStringency().name());
+        List<String> params = getBaseArgs();
         params.add("INPUT=" + inputVcf.getPath());
         params.add("OUTPUT=" + outputVcf.getPath());
         params.add("CHAIN=" + chainFile.getPath());

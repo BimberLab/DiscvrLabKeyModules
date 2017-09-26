@@ -26,16 +26,13 @@ import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.module.ModuleLoader;
-import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.PipelineService;
-import org.labkey.api.pipeline.RemoteExecutionEngine;
 import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.view.WebPartFactory;
-import org.labkey.cluster.pipeline.ClusterPipelineJob;
 import org.labkey.cluster.pipeline.ClusterPipelineProvider;
 import org.labkey.cluster.pipeline.TestCase;
 
@@ -60,7 +57,7 @@ public class ClusterModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 15.22;
+        return 15.23;
     }
 
     @Override

@@ -11,4 +11,9 @@ public class CollectWgsMetricsWithNonZeroCoverageWrapper extends CollectWgsMetri
     {
         super(log);
     }
+
+    protected String getToolName()
+    {
+        return "CollectWgsMetricsWithNonZeroCoverage";
+    }
 }

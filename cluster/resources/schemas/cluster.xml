@@ -24,6 +24,7 @@
             <column columnName="rowId"/>
             <column columnName="clusterId"/>
             <column columnName="jobId">
+                <isHidden>true</isHidden>
                 <isUserEditable>false</isUserEditable>
                 <shownInInsertView>false</shownInInsertView>
                 <shownInUpdateView>false</shownInUpdateView>
@@ -31,6 +32,17 @@
                     <fkDbSchema>pipeline</fkDbSchema>
                     <fkTable>Job</fkTable>
                     <fkColumnName>Job</fkColumnName>
+                    <fkDisplayColumnName>RowId</fkDisplayColumnName>
+                </fk>
+            </column>
+            <column columnName="statusFileId">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <fk>
+                    <fkDbSchema>pipeline</fkDbSchema>
+                    <fkTable>Job</fkTable>
+                    <fkColumnName>RowId</fkColumnName>
                     <fkDisplayColumnName>RowId</fkDisplayColumnName>
                 </fk>
             </column>

@@ -3,12 +3,10 @@ package org.labkey.sequenceanalysis.run.util;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 import org.labkey.api.util.FileUtil;
 
 import java.io.File;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -42,12 +40,7 @@ public class DownsampleSamWrapper extends PicardWrapper
 
     private List<String> getParams(File file, Double pctRetained) throws PipelineJobException
     {
-        List<String> params = new LinkedList<>();
-        params.add(SequencePipelineService.get().getJavaFilepath());
-        params.addAll(SequencePipelineService.get().getJavaOpts());
-        params.add("-jar");
-        params.add(getPicardJar().getPath());
-        params.add(getToolName());
+        List<String> params = getBaseArgs();
         params.add("INPUT=" + file.getPath());
         params.add("OUTPUT=" + new File(getOutputDir(file), getOutputFilename(file)).getPath());
         params.add("PROBABILITY=" + pctRetained);

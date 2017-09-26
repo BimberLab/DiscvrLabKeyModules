@@ -21,9 +21,9 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "jbrowse": "git+https://github.com/GMOD/jbrowse.git",
     "better-npm-run": "0.1.0",
     "fs-extra": "4.0",
+    "jbrowse": "github:GMOD/jbrowse",
     "rimraf": "2.6.2",
     "webpack": "3.5.6"
   }

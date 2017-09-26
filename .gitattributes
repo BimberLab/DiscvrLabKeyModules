@@ -71,7 +71,9 @@ DISCVR/cluster/module.properties -text
 DISCVR/cluster/resources/module.xml -text
 DISCVR/cluster/resources/schemas/cluster.xml -text
 DISCVR/cluster/resources/schemas/dbscripts/postgresql/cluster-15.20-15.21.sql -text
+DISCVR/cluster/resources/schemas/dbscripts/postgresql/cluster-15.22-15.23.sql -text
 DISCVR/cluster/resources/schemas/dbscripts/sqlserver/cluster-15.20-15.21.sql -text
+DISCVR/cluster/resources/schemas/dbscripts/sqlserver/cluster-15.22-15.23.sql -text
 DISCVR/cluster/resources/views/begin.html -text
 DISCVR/cluster/resources/views/begin.view.xml -text
 DISCVR/cluster/resources/web/cluster/htcondor/pipelineConfig.xml -text

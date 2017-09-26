@@ -5,13 +5,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 import org.labkey.api.util.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -35,14 +33,7 @@ public class CleanSamWrapper extends PicardWrapper
 
         File outputBam = outputFile == null ? new File(getOutputDir(inputFile), FileUtil.getBaseName(inputFile) + ".cleaned.bam") : outputFile;
 
-        List<String> params = new LinkedList<>();
-        params.add(SequencePipelineService.get().getJavaFilepath());
-        params.addAll(SequencePipelineService.get().getJavaOpts());
-        params.add("-jar");
-        params.add(getPicardJar().getPath());
-        params.add(getToolName());
-        params.add("VALIDATION_STRINGENCY=" + getStringency().name());
-        params.add("COMPRESSION_LEVEL=" + getCompressionLevel());
+        List<String> params = getBaseArgs();
         inferMaxRecordsInRam(params);
         params.add("INPUT=" + inputFile.getPath());
         params.add("OUTPUT=" + outputBam.getPath());

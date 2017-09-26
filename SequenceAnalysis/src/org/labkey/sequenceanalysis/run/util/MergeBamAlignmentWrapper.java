@@ -9,7 +9,6 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.SortSamWrapper;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
@@ -19,7 +18,6 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -56,13 +54,7 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
                 sortSamWrapper.execute(alignedBam, querySortedAlignedBam, SAMFileHeader.SortOrder.queryname);
             }
 
-            List<String> params = new LinkedList<>();
-            params.add(SequencePipelineService.get().getJavaFilepath());
-            params.addAll(SequencePipelineService.get().getJavaOpts());
-            params.add("-jar");
-            params.add(getPicardJar().getPath());
-            params.add(getToolName());
-            params.add("COMPRESSION_LEVEL=" + getCompressionLevel());
+            List<String> params = getBaseArgs();
             params.add("ALIGNED_BAM=" + querySortedAlignedBam.getPath());
             params.add("MAX_INSERTIONS_OR_DELETIONS=-1");
             inferMaxRecordsInRam(params);
@@ -118,7 +110,6 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
             params.add("CLIP_OVERLAPPING_READS=false");
             params.add("INCLUDE_SECONDARY_ALIGNMENTS=true");
             params.add("ALIGNER_PROPER_PAIR_FLAGS=false");
-            params.add("VALIDATION_STRINGENCY=" + getStringency().name());
             params.add("SORT_ORDER=" + SAMFileHeader.SortOrder.coordinate.name());
 
             File mergedFile = new File(getOutputDir(alignedBam), FileUtil.getBaseName(alignedBam) + ".merged.bam");

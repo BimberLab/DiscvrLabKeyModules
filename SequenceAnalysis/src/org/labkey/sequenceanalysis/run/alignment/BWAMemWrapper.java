@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
@@ -48,8 +49,26 @@ public class BWAMemWrapper extends BWAWrapper
         }
 
         @Override
-        protected void doPerformAlignment(AlignmentOutputImpl output, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
+        public boolean doAddReadGroups()
         {
+            return false;
+        }
+
+        @Override
+        protected void doPerformAlignment(AlignmentOutputImpl output, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename, Readset rs, String readGroupId, @Nullable String platformUnit) throws PipelineJobException
+        {
+            List<String> extraArgs = getClientCommandArgs();
+
+            extraArgs.add("-R");
+
+            List<String> rg = new ArrayList<>();
+            rg.add("ID:" + readGroupId);
+            rg.add("LB:" + rs.getReadsetId().toString());
+            rg.add("PL:" + (rs.getPlatform() == null ? "ILLUMINA" : rs.getPlatform()));
+            rg.add("PU:" + (platformUnit == null ? rs.getReadsetId().toString() : platformUnit));
+            rg.add("SM:" + rs.getName().replaceAll(" ", "_"));
+            extraArgs.add(StringUtils.join(rg, "\t"));
+
             getWrapper().performMemAlignment(getPipelineCtx().getJob(), output, inputFastq1, inputFastq2, outputDirectory, referenceGenome, basename, getClientCommandArgs());
         }
     }

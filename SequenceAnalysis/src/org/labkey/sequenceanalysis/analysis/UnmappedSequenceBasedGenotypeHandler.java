@@ -21,7 +21,6 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
-import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.run.analysis.AlignmentAggregator;
 import org.labkey.sequenceanalysis.run.analysis.AvgBaseQualityAggregator;
 import org.labkey.sequenceanalysis.run.analysis.BamIterator;
@@ -271,7 +270,8 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
                         readData.add(Pair.of(d.getFile1(), d.getFile2()));
                     }
 
-                    Pair<File, File> outputs = agg.outputUnmappedReads(so.getFile(), readData, ctx.getOutputDir(), FileUtil.getBaseName(so.getFile()), prefix, minExportLength);
+                    String suffix = so.getAnalysis_id() == null ? "" : "." + so.getAnalysis_id();
+                    Pair<File, File> outputs = agg.outputUnmappedReads(so.getFile(), readData, ctx.getOutputDir(), FileUtil.getBaseName(so.getFile()) + suffix, prefix, minExportLength);
                     if (outputs == null)
                     {
                         job.getLogger().info("no unmapped reads, skipping");

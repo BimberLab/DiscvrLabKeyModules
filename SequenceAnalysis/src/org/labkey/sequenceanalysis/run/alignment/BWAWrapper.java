@@ -138,18 +138,18 @@ public class BWAWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public final AlignmentOutput performAlignment(Readset rs, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
+        public final AlignmentOutput performAlignment(Readset rs, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
             AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, "bwa", referenceGenome);
 
-            doPerformAlignment(output, inputFastq1, inputFastq2, outputDirectory, referenceGenome, basename);
+            doPerformAlignment(output, inputFastq1, inputFastq2, outputDirectory, referenceGenome, basename, rs, readGroupId, platformUnit);
             output.addCommandsExecuted(getWrapper().getCommandsExecuted());
 
             return output;
         }
 
-        protected void doPerformAlignment(AlignmentOutputImpl output, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
+        protected void doPerformAlignment(AlignmentOutputImpl output, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename, Readset rs, String readGroupId, @Nullable String platformUnit) throws PipelineJobException
         {
             List<String> alnOptions = new ArrayList<>();
             if (getProvider().getParameterByName("MaxMismatches").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()) != null)

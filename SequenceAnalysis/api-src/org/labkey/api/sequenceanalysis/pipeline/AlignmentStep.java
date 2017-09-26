@@ -46,7 +46,7 @@ public interface AlignmentStep extends PipelineStep
      * @param basename The basename to use as the output
      * @throws PipelineJobException
      */
-    public AlignmentOutput performAlignment(Readset rs, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException;
+    public AlignmentOutput performAlignment(Readset rs, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException;
 
     public boolean doAddReadGroups();
 

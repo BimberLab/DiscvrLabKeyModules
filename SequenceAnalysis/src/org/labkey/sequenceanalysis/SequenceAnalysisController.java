@@ -53,7 +53,6 @@ import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.data.DataRegionSelection;
-import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.Results;
 import org.labkey.api.data.ResultsImpl;
 import org.labkey.api.data.SQLFragment;
@@ -1035,7 +1034,7 @@ public class SequenceAnalysisController extends SpringActionController
                 if (form.getFileNames() != null)
                 {
                     //TODO: consider proper container??
-                    File root = PipelineService.get().getPipelineRootSetting(getContainer()).getRootPath();
+                    File root = PipelineService.get().findPipelineRoot(getContainer()).getRootPath();
                     File base = root;
                     if (form.getPath() != null)
                         base = new File(base, form.getPath());

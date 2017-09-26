@@ -25,7 +25,6 @@ import org.labkey.api.pipeline.PipelineStatusFile;
 import org.labkey.api.pipeline.RemoteExecutionEngine;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
-import org.labkey.api.security.UserManager;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.PageFlowUtil;
@@ -101,6 +100,17 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
         j.setActiveTaskId(job.getActiveTaskId() == null ? null : job.getActiveTaskId().toString());
         j.setLocation(getConfig().getLocation());
         j.setStatus(PREPARING);
+
+        PipelineStatusFile sf = PipelineService.get().getStatusFile(job.getJobGUID());
+        if (sf == null)
+        {
+            _log.error("Unable to find status file for job: " + job.getJobGUID(), new Exception());
+        }
+        else
+        {
+            j.setStatusFileId(sf.getRowId());
+        }
+
         j = Table.insert(job.getUser(), ClusterSchema.getInstance().getSchema().getTable(ClusterSchema.CLUSTER_JOBS), j);
 
         if (j.getRowId() == 0)
@@ -191,6 +201,19 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
         return serializedJobFile;
     }
 
+//    @NotNull
+//    private List<ClusterJob> getClusterSubmissionsForJob(String jobId, boolean includeInactive)
+//    {
+//        PipelineStatusFile sf = PipelineService.get().getStatusFile(jobId);
+//        if (sf != null)
+//        {
+//            return getClusterSubmissionsForJob(sf.getRowId(), includeInactive);
+//        }
+//
+//        _log.error("Unable to find statusFile for job: " + jobId, new Exception());
+//        return Collections.emptyList();
+//    }
+
     @NotNull
     private List<ClusterJob> getClusterSubmissionsForJob(String jobId, boolean includeInactive)
     {
@@ -254,7 +277,7 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
                 PipelineJob job = PipelineJobService.get().getJobStore().getJob(j.getJobId());
                 if (job == null)
                 {
-                    _log.error("unable to find PipelineJob matching: " + j.getJobId());
+                    _log.error("unable to find PipelineJob matching: " + j.getJobId(), new Exception());
                 }
                 else
                 {
@@ -395,7 +418,7 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
         //and update the actual PipelineJob
         try
         {
-            PipelineStatusFile sf = getStatusFileForSubmission(j);
+            PipelineStatusFile sf = PipelineService.get().getStatusFile(j.getStatusFileId());
             if (sf != null && status != null)
             {
                 File xml = getSerializedJobFile(new File(sf.getFilePath()));
@@ -483,7 +506,7 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
             }
             else
             {
-                _log.error("unable to find statusfile for job: " + j.getClusterId() + ", status: " + j.getStatus());
+                _log.error("unable to find statusfile for job: " + j.getClusterId() + ", status: " + j.getStatus(), new Exception());
                 j.setStatus("UNKNOWN");
             }
 
@@ -495,17 +518,6 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
         }
     }
 
-    private PipelineStatusFile getStatusFileForSubmission(ClusterJob j)
-    {
-        Integer rowId = PipelineService.get().getJobId(UserManager.getUser(j.getCreatedBy()), ContainerManager.getForId(j.getContainer()), j.getJobId());
-        if (rowId != null)
-        {
-            return PipelineService.get().getStatusFile(rowId);
-        }
-
-        return null;
-    }
-
     @Override
     public void cancelJob(String jobId) throws PipelineJobException
     {
@@ -513,7 +525,7 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
         ClusterJob clusterJob = getMostRecentClusterSubmission(jobId, false);
         if (clusterJob == null)
         {
-            _log.error("unable to find active cluster submission for jobId: " + jobId);
+            _log.error("unable to find active cluster submission for jobId: " + jobId, new Exception());
             return;
         }
 
@@ -523,16 +535,15 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
             clusterJob.setStatus(PipelineJob.TaskStatus.cancelling.name().toUpperCase());
             Table.update(null, ClusterSchema.getInstance().getSchema().getTable(ClusterSchema.CLUSTER_JOBS), clusterJob, clusterJob.getRowId());
 
-            Integer jobIdx = PipelineService.get().getJobId(UserManager.getUser(clusterJob.getCreatedBy()), ContainerManager.getForId(clusterJob.getContainer()), clusterJob.getJobId());
-            if (jobIdx != null)
+            //if this job was never submitted, the job in the database should be up to date
+            PipelineStatusFile sf = PipelineService.get().getStatusFile(clusterJob.getStatusFileId());
+            if (sf == null)
             {
-                //if this job was never submitted, the job in the database should be up to date
-                PipelineStatusFile sf = PipelineService.get().getStatusFile(jobIdx);
                 sf.createJobInstance().setStatus(PipelineJob.TaskStatus.cancelled);
             }
             else
             {
-                _log.error("unable to find rowid for PipelineJob with Id: " + jobId);
+                _log.error("unable to find rowid for PipelineJob with Id: " + jobId + ", status file: " + clusterJob.getStatusFileId(), new Exception());
             }
         }
 
@@ -632,7 +643,7 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
         filter.addCondition(FieldKey.fromString("status"), PipelineJob.TaskStatus.complete.name().toUpperCase());
         if (new TableSelector(ti, filter, null).exists())
         {
-            _log.error("unable to find record of job from condor; however, the submissions table indicates it was marked as complete.  this might indicate a lost JMS message to update the job's status.");
+            _log.error("unable to find record of job from condor; however, the submissions table indicates it was marked as complete.  this might indicate a lost JMS message to update the job's status.", new Exception());
             //return PipelineJob.TaskStatus.complete.name().toUpperCase();
         }
     }

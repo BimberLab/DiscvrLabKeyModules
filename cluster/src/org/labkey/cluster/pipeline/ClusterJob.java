@@ -9,6 +9,7 @@ public class ClusterJob
 {
     private int _rowId;
     private String _jobId;
+    private int _statusFileId;
     private String _status;
     private Boolean _hasStarted;
     private String _clusterId;
@@ -160,5 +161,15 @@ public class ClusterJob
     public void setClusterUser(String clusterUser)
     {
         _clusterUser = clusterUser;
+    }
+
+    public int getStatusFileId()
+    {
+        return _statusFileId;
+    }
+
+    public void setStatusFileId(int statusFileId)
+    {
+        _statusFileId = statusFileId;
     }
 }

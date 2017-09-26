@@ -152,6 +152,7 @@ public class SequenceJobResourceAllocator implements ClusterResourceAllocator
 
         boolean hasHaplotypeCaller = false;
         boolean hasStar = false;
+        boolean hasBismark = false;
 
         if (isSequenceSequenceOutputHandlerTask(job))
         {
@@ -179,17 +180,20 @@ public class SequenceJobResourceAllocator implements ClusterResourceAllocator
 
         if (isSequenceAlignmentTask(job))
         {
-            if (totalFileSize <= 30e9)
+            if (ret == null)
             {
-                job.getLogger().debug("file size less than 30gb, setting memory to 24");
+                if (totalFileSize <= 30e9)
+                {
+                    job.getLogger().debug("file size less than 30gb, setting memory to 24");
 
-                ret = 24;
-            }
-            else
-            {
-                job.getLogger().debug("file size greater than 30gb, setting memory to 48");
+                    ret = 24;
+                }
+                else
+                {
+                    job.getLogger().debug("file size greater than 30gb, setting memory to 48");
 
-                ret = 48;
+                    ret = 48;
+                }
             }
 
             Map<String, String> params = job.getParameters();
@@ -203,6 +207,11 @@ public class SequenceJobResourceAllocator implements ClusterResourceAllocator
                 if (params.containsKey(PipelineStep.StepType.alignment.name()) && params.get(PipelineStep.StepType.alignment.name()).contains("STAR"))
                 {
                     hasStar = true;
+                }
+
+                if (params.containsKey(PipelineStep.StepType.alignment.name()) && params.get(PipelineStep.StepType.alignment.name()).contains("Bismark"))
+                {
+                    hasBismark = true;
                 }
             }
         }
@@ -224,6 +233,16 @@ public class SequenceJobResourceAllocator implements ClusterResourceAllocator
             if (!ret.equals(orig))
             {
                 job.getLogger().debug("adjusting RAM for STAR to: " + ret);
+            }
+        }
+
+        if (hasBismark)
+        {
+            Integer orig = ret;
+            ret = ret == null ? 48 : Math.max(ret, 48);
+            if (!ret.equals(orig))
+            {
+                job.getLogger().debug("adjusting RAM for Bismark to: " + ret);
             }
         }
 

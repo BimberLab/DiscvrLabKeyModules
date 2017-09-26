@@ -4,15 +4,11 @@ import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -82,6 +78,24 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
     }
 
     abstract protected String getToolName();
+
+    protected List<String> getBaseArgs()
+    {
+        List<String> params = new LinkedList<>();
+        params.add(SequencePipelineService.get().getJavaFilepath());
+        params.addAll(SequencePipelineService.get().getJavaOpts());
+        params.add("-jar");
+        params.add(getPicardJar().getPath());
+        params.add(getToolName());
+        params.add("VALIDATION_STRINGENCY=" + getStringency().name());
+        params.add("COMPRESSION_LEVEL=" + getCompressionLevel());
+
+        //note: having issues, probably due to OS versions
+        params.add("USE_JDK_DEFLATER=true");
+        params.add("USE_JDK_INFLATER=true");
+
+        return params;
+    }
 
     protected void inferMaxRecordsInRam(List<String> args)
     {

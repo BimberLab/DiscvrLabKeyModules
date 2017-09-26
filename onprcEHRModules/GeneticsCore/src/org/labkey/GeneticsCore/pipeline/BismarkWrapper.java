@@ -92,7 +92,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public AlignmentOutput performAlignment(Readset rs, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
+        public AlignmentOutput performAlignment(Readset rs, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
 
@@ -150,7 +150,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
             if (threads != null)
             {
                 args.add("--multicore"); //multi-threaded
-                threads = Math.max(6, threads); //we seem to have intermittent failures due to memory
+                threads = Math.min(4, threads); //we seem to have intermittent failures due to memory
                 args.add(threads.toString());
             }
 

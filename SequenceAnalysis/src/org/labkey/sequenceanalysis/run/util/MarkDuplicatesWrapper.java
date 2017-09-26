@@ -7,7 +7,6 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.SamSorter;
-import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
@@ -15,7 +14,6 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -74,14 +72,7 @@ public class MarkDuplicatesWrapper extends PicardWrapper
             (new File(outputBam.getPath() + ".bai")).delete();
         }
 
-        List<String> params = new LinkedList<>();
-        params.add(SequencePipelineService.get().getJavaFilepath());
-        params.addAll(SequencePipelineService.get().getJavaOpts());
-        params.add("-jar");
-        params.add(getPicardJar().getPath());
-        params.add(getToolName());
-        params.add("VALIDATION_STRINGENCY=" + getStringency().name());
-        params.add("COMPRESSION_LEVEL=" + getCompressionLevel());
+        List<String> params = getBaseArgs();
         inferMaxRecordsInRam(params);
         // added for compatibility with GATK.  see:
         // http://gatkforums.broadinstitute.org/discussion/2790/indelrealigner-with-markduplicates

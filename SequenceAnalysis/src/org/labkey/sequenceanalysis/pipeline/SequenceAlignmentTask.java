@@ -1181,7 +1181,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             }
 
             getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING: " + alignmentStep.getProvider().getLabel().toUpperCase() + msgSuffix);
-            AlignmentStep.AlignmentOutput alignmentOutput = alignmentStep.performAlignment(rs, inputFiles.first, inputFiles.second, outputDirectory, referenceGenome, SequenceTaskHelper.getUnzippedBaseName(inputFiles.first.getName()) + "." + alignmentStep.getProvider().getName().toLowerCase());
+            AlignmentStep.AlignmentOutput alignmentOutput = alignmentStep.performAlignment(rs, inputFiles.first, inputFiles.second, outputDirectory, referenceGenome, SequenceTaskHelper.getUnzippedBaseName(inputFiles.first.getName()) + "." + alignmentStep.getProvider().getName().toLowerCase(), String.valueOf(readDataId), platformUnit);
             getHelper().getFileManager().addStepOutputs(alignmentAction, alignmentOutput);
 
             if (alignmentOutput.getBAM() == null || !alignmentOutput.getBAM().exists())
