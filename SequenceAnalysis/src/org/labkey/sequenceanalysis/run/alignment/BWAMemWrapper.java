@@ -62,14 +62,15 @@ public class BWAMemWrapper extends BWAWrapper
             extraArgs.add("-R");
 
             List<String> rg = new ArrayList<>();
+            rg.add("@RG");
             rg.add("ID:" + readGroupId);
             rg.add("LB:" + rs.getReadsetId().toString());
             rg.add("PL:" + (rs.getPlatform() == null ? "ILLUMINA" : rs.getPlatform()));
             rg.add("PU:" + (platformUnit == null ? rs.getReadsetId().toString() : platformUnit));
             rg.add("SM:" + rs.getName().replaceAll(" ", "_"));
-            extraArgs.add(StringUtils.join(rg, "\t"));
+            extraArgs.add(StringUtils.join(rg, "\\t"));
 
-            getWrapper().performMemAlignment(getPipelineCtx().getJob(), output, inputFastq1, inputFastq2, outputDirectory, referenceGenome, basename, getClientCommandArgs());
+            getWrapper().performMemAlignment(getPipelineCtx().getJob(), output, inputFastq1, inputFastq2, outputDirectory, referenceGenome, basename, extraArgs);
         }
     }
 
@@ -101,12 +102,13 @@ public class BWAMemWrapper extends BWAWrapper
         setOutputDir(outputDirectory);
 
         getLogger().info("Running BWA-Mem (Piped)");
+        getLogger().debug("will write BAM to: " + outputDirectory);
 
         List<String> args = new ArrayList<>();
         args.add(getExe().getPath());
         args.add("mem");
         args.add("-v");
-        args.add("2");
+        args.add("1");
         if (additionalArgs != null)
             args.addAll(additionalArgs);
         appendThreads(job, args);
@@ -129,10 +131,10 @@ public class BWAMemWrapper extends BWAWrapper
             getLogger().info(StringUtils.join(args, " "));
 
             SamtoolsRunner sr = new SamtoolsRunner(getLogger());
-            List<String> samtoolsArgs = Arrays.asList(sr.getSamtoolsPath().getPath(), "view", "-b", "-h", "-S", "-T", referenceGenome.getWorkingFastaFile().getPath(), "-");
+            List<String> samtoolsArgs = Arrays.asList(sr.getSamtoolsPath().getPath(), "view", "-b", "-h", "-S", "-T", referenceGenome.getWorkingFastaFile().getPath(), "-o", bam.getPath(), "-");
             output.addCommandExecuted(StringUtils.join(samtoolsArgs, " "));
             ProcessBuilder samtoolsProcessBuilder = sr.getProcessBuilder(samtoolsArgs);
-            samtoolsProcessBuilder.redirectOutput(ProcessBuilder.Redirect.to(bam));
+            samtoolsProcessBuilder.redirectErrorStream(true);
             getLogger().info(StringUtils.join(samtoolsArgs, " "));
 
             Process bwaProcess = null;
@@ -144,7 +146,7 @@ public class BWAMemWrapper extends BWAWrapper
                 new ProcessUtils.ProcessReader(getLogger(), true, true).readProcess(bwaProcess); //read STDERR in separate thread
                 new ProcessUtils.StreamRedirector(getLogger()).redirectStreams(bwaProcess, samtoolsProcess);
 
-                try (BufferedReader procReader = new BufferedReader(new InputStreamReader(samtoolsProcess.getErrorStream(), StringUtilsLabKey.DEFAULT_CHARSET)))
+                try (BufferedReader procReader = new BufferedReader(new InputStreamReader(samtoolsProcess.getInputStream(), StringUtilsLabKey.DEFAULT_CHARSET)))
                 {
                     String line;
                     while ((line = procReader.readLine()) != null)

@@ -15,11 +15,11 @@
  */
 package org.labkey.sequenceanalysis.util;
 
-import com.google.common.base.Charsets;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.util.FastqQualityFormat;
 import htsjdk.samtools.util.QualityEncodingDetector;
+import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -67,7 +67,7 @@ public class FastqUtils
     public static long getSequenceCount(File inputFile) throws PipelineJobException
     {
         FileType gz = new FileType(".gz");
-        try (InputStream is = gz.isType(inputFile) ? new GZIPInputStream(new FileInputStream(inputFile)) : new FileInputStream(inputFile);BufferedReader lnr = new BufferedReader(new InputStreamReader(is));)
+        try (InputStream is = gz.isType(inputFile) ? new GZIPInputStream(new FileInputStream(inputFile)) : new FileInputStream(inputFile);BufferedReader lnr = new BufferedReader(new InputStreamReader(is, Charsets.US_ASCII));)
         {
             int count = 0;
             while (lnr.readLine() != null)

@@ -434,7 +434,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
 
         StatusType(String labkeyStatus, PipelineJob.TaskStatus taskStatus, List<String> aliases)
         {
-            this(labkeyStatus, taskStatus, null, null);
+            this(labkeyStatus, taskStatus, aliases, null);
         }
 
         StatusType(String labkeyStatus, PipelineJob.TaskStatus taskStatus, List<String> aliases, String info)

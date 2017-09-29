@@ -22,6 +22,7 @@ LK_DIR=/home/exacloud/lustre1/prime-seq/labkey
 LK_SRC_DIR=/home/exacloud/lustre1/prime-seq/src
 TEMP_BASEDIR=/home/exacloud/lustre1/prime-seq/tempDir
 PATH=${JAVA_HOME}/bin/:$PATH
+GZ_PREFIX=Labkey17.2
 
 umask 0006
 
@@ -97,7 +98,7 @@ mkdir -p $LABKEY_HOME
     rm -Rf ./modules_unzip
     rm -Rf $MODULE_ZIP
 
-    GZ=$(ls -tr $LK_SRC_DIR | grep '^LabKey.*\.gz$' | tail -n -1)
+    GZ=$(ls -tr $LK_SRC_DIR | grep "^${GZ_PREFIX}.*\.gz$" | tail -n -1)
     cp ${LK_SRC_DIR}/$GZ ./
 
     gunzip $GZ

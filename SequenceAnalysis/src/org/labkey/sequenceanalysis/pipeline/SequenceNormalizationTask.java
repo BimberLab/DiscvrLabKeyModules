@@ -690,6 +690,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                 else
                 {
                     Map<String, Object> metricsMap = FastqUtils.getQualityMetrics(f, getJob().getLogger());
+                    getJob().getLogger().debug("saving quality metrics to file: " + cachedMetrics.getPath());
                     try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(cachedMetrics), '\t', CSVWriter.NO_QUOTE_CHARACTER))
                     {
                         for (String key : metricsMap.keySet())

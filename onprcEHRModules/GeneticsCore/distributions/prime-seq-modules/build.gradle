@@ -8,6 +8,7 @@ BuildUtils.addModuleDistributionDependencies(project, [":externalModules:onprcEH
                                                        ":server:customModules:ehr",
                                                        ":server:customModules:onprc_ehr",
                                                        ":externalModules:onprcEHRModules:onprc_reports",
+                                                       ":externalModules:onprcEHRModules:sla",
                                                        ":externalModules:onprcEHRModules:mergesync",
                                                        ":externalModules:labModules:GenotypeAssays",
                                                        ":externalModules:labModules:elispot_assay",

@@ -139,7 +139,7 @@ elif [ $(which apt-get) ]; then
     #update-alternatives --config java
     #update-alternatives --config javac
 
-    apt-get -q -y install libc6 libc6-dev libncurses5-dev libgtextutils-dev python-dev unzip zip ncftp gcc make perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc git cmake maven r-base r-cran-rcpp
+    apt-get -q -y install bzip2 libbz2-dev libc6 libc6-dev libncurses5-dev libgtextutils-dev python-dev unzip zip ncftp gcc make perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc git cmake maven r-base r-cran-rcpp
 else
     echo "No known package manager present, aborting"
     exit 1
@@ -172,7 +172,7 @@ then
     rm -Rf bwa-0.7.12*
     rm -Rf $LKTOOLS_DIR/bwa
 
-    wget $WGET_OPTS http://downloads.sourceforge.net/project/bio-bwa/bwa-0.7.12.tar.bz2
+    wget $WGET_OPTS https://downloads.sourceforge.net/project/bio-bwa/bwa-0.7.12.tar.bz2
     bunzip2 bwa-0.7.12.tar.bz2
     tar -xf bwa-0.7.12.tar
     bzip2 bwa-0.7.12.tar
@@ -228,7 +228,7 @@ then
     rm -Rf FLASH-1.2.7
     rm -Rf $LKTOOLS_DIR/flash
 
-    wget $WGET_OPTS http://downloads.sourceforge.net/project/flashpage/FLASH-1.2.7.tar.gz
+    wget $WGET_OPTS https://downloads.sourceforge.net/project/flashpage/FLASH-1.2.7.tar.gz
     gunzip FLASH-1.2.7.tar.gz
     tar -xf FLASH-1.2.7.tar
     echo "Compressing TAR"
@@ -448,7 +448,7 @@ then
     rm -Rf BisSNP*
     rm -Rf $LKTOOLS_DIR/BisSNP.jar
 
-    wget $WGET_OPTS http://downloads.sourceforge.net/project/bissnp/BisSNP-0.82.2/BisSNP-0.82.2.jar
+    wget $WGET_OPTS https://downloads.sourceforge.net/project/bissnp/BisSNP-0.82.2/BisSNP-0.82.2.jar
 
     install ./BisSNP-0.82.2.jar $LKTOOLS_DIR/BisSNP.jar
 else
@@ -577,12 +577,12 @@ then
     rm -Rf $LKTOOLS_DIR/samtools
     rm -Rf $LKTOOLS_DIR/bcftools
 
-    wget $WGET_OPTS https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2
-    bunzip2 samtools-1.3.1.tar.bz2
-    tar -xf samtools-1.3.1.tar
+    wget $WGET_OPTS https://github.com/samtools/samtools/releases/download/1.5/samtools-1.5.tar.bz2
+    bunzip2 samtools-1.5.tar.bz2
+    tar -xf samtools-1.5.tar
     echo "Compressing TAR"
-    bzip2 samtools-1.3.1.tar
-    cd samtools-1.3.1
+    bzip2 samtools-1.5.tar
+    cd samtools-1.5
     #note: this is used later by Bio::DB::Samtools
     make CXXFLAGS=-fPIC CFLAGS=-fPIC CPPFLAGS=-fPIC
     install samtools ${LKTOOLS_DIR}/samtools
@@ -607,7 +607,7 @@ then
     rm -Rf $LKTOOLS_DIR/tabix
     rm -Rf $LKTOOLS_DIR/bgzip
 
-    wget $WGET_OPTS http://downloads.sourceforge.net/project/samtools/tabix/tabix-0.2.6.tar.bz2
+    wget $WGET_OPTS https://downloads.sourceforge.net/project/samtools/tabix/tabix-0.2.6.tar.bz2
     bunzip2 tabix-0.2.6.tar.bz2
     tar -xf tabix-0.2.6.tar
     echo "Compressing TAR"
@@ -672,7 +672,7 @@ then
     rm -Rf snpEff*
     rm -Rf $LKTOOLS_DIR/snpEff
 
-    wget $WGET_OPTS http://downloads.sourceforge.net/project/snpeff/snpEff_latest_core.zip
+    wget $WGET_OPTS https://downloads.sourceforge.net/project/snpeff/snpEff_latest_core.zip
     unzip snpEff_latest_core.zip
     rm -Rf ./snpEff/examples
     rm -Rf ./snpEff/galaxy
@@ -828,7 +828,7 @@ then
     rm -Rf $LKTOOLS_DIR/bowtie
     rm -Rf $LKTOOLS_DIR/bowtie-build
 
-    wget $WGET_OPTS http://downloads.sourceforge.net/project/bowtie-bio/bowtie/1.0.1/bowtie-1.0.1-linux-x86_64.zip
+    wget $WGET_OPTS https://downloads.sourceforge.net/project/bowtie-bio/bowtie/1.0.1/bowtie-1.0.1-linux-x86_64.zip
     unzip bowtie-1.0.1-linux-x86_64.zip
 
     install ./bowtie-1.0.1/bowtie $LKTOOLS_DIR/bowtie
@@ -857,7 +857,7 @@ then
     rm -Rf $LKTOOLS_DIR/bowtie2
     rm -Rf $LKTOOLS_DIR/bowtie2-*
 
-    wget $WGET_OPTS http://downloads.sourceforge.net/project/bowtie-bio/bowtie2/2.2.6/bowtie2-2.2.6-linux-x86_64.zip
+    wget $WGET_OPTS https://downloads.sourceforge.net/project/bowtie-bio/bowtie2/2.2.6/bowtie2-2.2.6-linux-x86_64.zip
     unzip bowtie2-2.2.6-linux-x86_64.zip
 
     install ./bowtie2-2.2.6/bowtie2 $LKTOOLS_DIR/bowtie2
@@ -1098,7 +1098,7 @@ then
     rm -Rf JBrowse-*
     rm -Rf $LKTOOLS_DIR/JBrowse-*
 
-    wget $WGET_OPTS http://jbrowse.org/releases/JBrowse-1.12.1.zip
+    wget $WGET_OPTS https://jbrowse.org/releases/JBrowse-1.12.1.zip
     unzip JBrowse-1.12.1.zip
     rm JBrowse-1.12.1.zip
     cd JBrowse-1.12.1
@@ -1193,7 +1193,7 @@ then
     rm -Rf muscle3.8.31_i86linux64
     rm -Rf $LKTOOLS_DIR/muscle
 
-    wget $WGET_OPTS http://www.drive5.com/muscle/downloads3.8.31/muscle3.8.31_i86linux64.tar.gz
+    wget $WGET_OPTS https://www.drive5.com/muscle/downloads3.8.31/muscle3.8.31_i86linux64.tar.gz
     gunzip muscle3.8.31_i86linux64.tar.gz
     tar -xf muscle3.8.31_i86linux64.tar
     gzip muscle3.8.31_i86linux64.tar

@@ -394,10 +394,12 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         {
             ExpData d = ExperimentService.get().getExpData(fileId);
             File cachedMetrics = new File(d.getFile().getPath() + ".metrics");
+            job.getLogger().debug("looking for cached metrics: " + cachedMetrics.getPath());
+
             Map<String, Object> metricsMap;
             if (cachedMetrics.exists())
             {
-                job.getLogger().debug("reading previously calculated metrics from file: " + cachedMetrics.getPath());
+                job.getLogger().debug("reading previously calculated metrics from file:");
                 metricsMap = new HashMap<>();
                 try (CSVReader reader = new CSVReader(Readers.getReader(cachedMetrics), '\t'))
                 {
