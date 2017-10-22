@@ -5,6 +5,7 @@ import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineDirectory;
 import org.labkey.api.pipeline.PipelineProvider;
 import org.labkey.api.pipeline.PipelineStatusFile;
+import org.labkey.api.security.User;
 import org.labkey.api.view.ViewContext;
 
 /**
