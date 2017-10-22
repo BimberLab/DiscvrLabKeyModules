@@ -26,7 +26,7 @@ public class SequencePipelineProvider extends PipelineProvider
     }
 
     @Override
-    public void preDeleteStatusFile(PipelineStatusFile sf)
+    public void preDeleteStatusFile(User user, PipelineStatusFile sf)
     {
         //TODO
     }
