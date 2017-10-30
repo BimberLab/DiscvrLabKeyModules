@@ -48,6 +48,11 @@ public class SequenceOutputFile implements Serializable
     private Date _modified;
     private File _file;
 
+    public SequenceOutputFile()
+    {
+
+    }
+
     public Integer getRowid()
     {
         return _rowid;

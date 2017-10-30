@@ -47,6 +47,7 @@ import org.labkey.sequenceanalysis.analysis.LiftoverHandler;
 import org.labkey.sequenceanalysis.analysis.PicardAlignmentMetricsHandler;
 import org.labkey.sequenceanalysis.analysis.RecalculateSequenceMetricsHandler;
 import org.labkey.sequenceanalysis.analysis.RnaSeqcHandler;
+import org.labkey.sequenceanalysis.analysis.SbtGeneCountHandler;
 import org.labkey.sequenceanalysis.analysis.UnmappedSequenceBasedGenotypeHandler;
 import org.labkey.sequenceanalysis.button.AddSraRunButton;
 import org.labkey.sequenceanalysis.button.ReprocessLibraryButton;
@@ -284,6 +285,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new HaplotypeCallerHandler());
         SequenceAnalysisService.get().registerFileHandler(new RnaSeqcHandler());
         SequenceAnalysisService.get().registerFileHandler(new CombineStarGeneCountsHandler());
+        SequenceAnalysisService.get().registerFileHandler(new SbtGeneCountHandler());
         SequenceAnalysisService.get().registerFileHandler(new ProcessVariantsHandler());
         SequenceAnalysisService.get().registerFileHandler(new UnmappedReadExportHandler());
         SequenceAnalysisService.get().registerFileHandler(new CombineVariantsHandler());

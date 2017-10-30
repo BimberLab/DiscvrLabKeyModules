@@ -777,7 +777,7 @@ public class JBrowseRoot
 
         if (!defaultTrackLabels.isEmpty())
         {
-            trackList.put("defaultTracks", StringUtils.join(defaultTrackLabels, ","));
+            trackList.put("alwaysOnTracks", StringUtils.join(defaultTrackLabels, ","));
         }
         writeJsonToFile(new File(seqDir, "refSeqs.json"), refSeq.toString(1));
         writeJsonToFile(new File(outDir, "trackList.json"), trackList.toString(1));

@@ -4,7 +4,7 @@ define([
             'dojo/_base/array',
             'dojo/_base/lang',
             'JBrowse/View/Track/CanvasFeatures',
-            //'./_VariantTrackVariantDetailsMixin',
+            './_VariantTrackVariantDetailsMixin',
             'JBrowse/Util'
         ],
         function(
@@ -13,16 +13,10 @@ define([
                 array,
                 lang,
                 CanvasFeatures,
-                //VariantTrackDetailMixin,
-                //VariantDetailMixin,
+                VariantTrackDetailMixin,
                 Util
         ) {
-            return declare([ CanvasFeatures ], {
-                //    return declare([ CanvasFeatures, VariantDetailMixin ], {
-                constructor: function(args) {
-                    //console.log('VCFVariants track added');
-                },
-
+            return declare([ CanvasFeatures, VariantTrackDetailMixin ], {
                 _isPassing: function(feat){
                     var f = feat.get('filter');
                     try {
@@ -54,7 +48,7 @@ define([
 
                                     color: function(feature){
                                         var effArray = feature.get('ANN') || [];
-                                        if( effArray &&  typeof effArray == 'object' && 'values' in effArray )
+                                        if( effArray &&  typeof effArray === 'object' && 'values' in effArray )
                                             effArray = effArray.values;
                                         if( effArray && ! Array.isArray( effArray ) )
                                             effArray = [effArray];
@@ -67,11 +61,11 @@ define([
                                         if ( isHigh ) { return 'red'; }
                                         if ( isModerate ) { return 'goldenrod'; }
                                         /* switch logic here to return blue for SNV or mutation feature types */
-                                        if (feature.get('type') == 'mutation') {
+                                        if (feature.get('type') === 'mutation') {
                                             return 'blue';
                                         }
                                         else {
-                                            if (feature.get('type') != 'SNV') {
+                                            if (feature.get('type') !== 'SNV') {
                                                 return 'green';
                                             }
                                             else {
@@ -86,15 +80,15 @@ define([
                                 onClick: {
                                     style: "width:700px",
                                     content: function(track, feature, featDiv, container) {
+                                        //TODO: eventually load genotypes
                                         //var url = thisB.resolveUrl(thisB.config.genotypeUrlTemplate, { name: feature.get('name'), vcfws_proteomeid: thisB.config.vcfws_proteomeid, vcfws_dataset: thisB.config.vcfws_dataset });
                                         //console.log("genotypeUrl: "+url);
                                         //var ret = dojo.xhrGet({
                                         //    url: url
                                         //}).then(function(genotypeUrlResult) {
-                                            var content = track.defaultFeatureDetail(track, feature, featDiv, container, '{}');
-                                            return content;
+                                            return track.defaultFeatureDetail(track, feature, featDiv, container, '{}');
                                         //});
-                                        return ret;
+                                        //return ret;
                                     },
                                     title: function(track, feature, div) {
                                         var ret = "Variant Call {name}";
@@ -104,9 +98,7 @@ define([
                                             ret += ' at position ' + realStart;
                                         }
                                         ret += ": {description}";
-                                        if (feature.get('score')) {
-                                            ret += ' (score: ' + feature.get('score') + ')';
-                                        }
+
                                         return ret;
                                     }
                                 }
@@ -120,9 +112,9 @@ define([
                     return all([ this.inherited(arguments), this._snpeffImpactFilterTrackMenuOptions() ])
                             .then( function( options ) {
                                 var o = options.shift();
-                                var allowed = ['About this track', 'Pin to top', 'Edit config', 'Delete track', 'Save track data'];
+                                var blackList = ['About this track', 'Pin to top', 'Edit config', 'Delete track'];
                                 o = array.filter(o, function(item) {
-                                    return allowed.indexOf(item.label) == -1;
+                                    return blackList.indexOf(item.label) == -1;
                                 });
 
                                 if (o[0].type == 'dijit/MenuSeparator'){

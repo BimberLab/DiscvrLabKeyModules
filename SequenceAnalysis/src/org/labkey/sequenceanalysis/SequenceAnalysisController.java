@@ -765,6 +765,12 @@ public class SequenceAnalysisController extends SpringActionController
                 msg.append("The following pipeline jobs appear to be unused, and will be deleted.  Be aware, this will delete all files as well:<br><br>");
                 for (Integer runId : expRunsToDelete)
                 {
+                    if (runId == null)
+                    {
+                        _log.error("attempting to delete a null runId");
+                        continue;
+                    }
+
                     ExpRun run = ExperimentService.get().getExpRun(runId);
                     if (run != null)
                     {
@@ -812,6 +818,7 @@ public class SequenceAnalysisController extends SpringActionController
         private Set<Integer> getExpRunIds(String tableName, Collection<Integer> keys, String pkColName, String runIdCol)
         {
             SimpleFilter filter = new SimpleFilter(FieldKey.fromString(pkColName), StringUtils.join(keys, ";"), CompareType.IN);
+            filter.addCondition(FieldKey.fromString(runIdCol), null, CompareType.NONBLANK);
             TableSelector ts = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(tableName), PageFlowUtil.set(runIdCol), filter, null);
 
             return new HashSet<>(ts.getArrayList(Integer.class));

@@ -83,7 +83,7 @@ mkdir -p $LABKEY_HOME
     #cp -R -p $LK_DIR/config $LABKEY_HOME
 
     cd $LABKEY_HOME
-    MODULE_ZIP=$(ls -tr $LK_SRC_DIR | grep '^LabKey.*\.zip$' | tail -n -1)
+    MODULE_ZIP=$(ls -tr $LK_SRC_DIR | grep "^${GZ_PREFIX}.*\.zip$" | tail -n -1)
     rm -Rf ${LABKEY_HOME}/externalModules
     mkdir -p ${LABKEY_HOME}/externalModules
     if [ -e modules_unzip ];then

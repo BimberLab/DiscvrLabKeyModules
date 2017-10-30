@@ -266,10 +266,20 @@ then
     git checkout tags/3.7
     cd ../
 
+    #libVectorLogless compile:
+    #see: https://gatkforums.broadinstitute.org/gatk/discussion/9947/crashes-with-segmentation-fault-in-shipped-libvectorloglesspairhmm-so
+    sed -i 's/<!--<USE_GCC>1<\/USE_GCC>-->/<USE_GCC>1<\/USE_GCC>/g' ./gatk-protected/public/VectorPairHMM/pom.xml
+    sed -i 's/<!--<C_COMPILER>\/opt\/gcc-4.8.2\/bin\/gcc<\/C_COMPILER>-->/<C_COMPILER>\/usr\/bin\/gcc<\/C_COMPILER>/g' ./gatk-protected/public/VectorPairHMM/pom.xml
+    sed -i 's/<!--<CPP_COMPILER>\/opt\/gcc-4.8.2\/bin\/g++<\/CPP_COMPILER>-->/<CPP_COMPILER>\/usr\/bin\/g++<\/CPP_COMPILER>/g' ./gatk-protected/public/VectorPairHMM/pom.xml
+    cd gatk-protected/public/VectorPairHMM/
+    mvn verify
+    cd ../../../
+    cp gatk-protected/public/VectorPairHMM/target/libVectorLoglessPairHMM.so ${LKTOOLS_DIR}
+
     #this is a custom extension: https://github.com/biodev/HTCondor_drivers
-    git clone https://github.com/biodev/HTCondor_drivers.git
-    mkdir ./gatk-protected/public/gatk-queue/src/main/scala/org/broadinstitute/gatk/queue/engine/condor
-    cp ./HTCondor_drivers/Queue/CondorJob* ./gatk-protected/public/gatk-queue/src/main/scala/org/broadinstitute/gatk/queue/engine/condor/
+    #git clone https://github.com/biodev/HTCondor_drivers.git
+    #mkdir ./gatk-protected/public/gatk-queue/src/main/scala/org/broadinstitute/gatk/queue/engine/condor
+    #cp ./HTCondor_drivers/Queue/CondorJob* ./gatk-protected/public/gatk-queue/src/main/scala/org/broadinstitute/gatk/queue/engine/condor/
 
     #another, for MV checking
     mkdir -p ${LK_HOME}/svn/trunk/pipeline_code/
@@ -285,9 +295,10 @@ then
 
     cd gatk-protected
 
-    #remove due to compilation error
+    #remove due to compilation / dependency resolution error
     rm ./public/external-example/src/main/java/org/mycompany/app/*
     rm ./public/external-example/src/test/java/org/mycompany/app/*
+    sed -i '/<module>external-example<\/module>/d' ./public/pom.xml
 
     #NOTE: can add -P\!queue to skip queue in some cases
     mvn verify -U

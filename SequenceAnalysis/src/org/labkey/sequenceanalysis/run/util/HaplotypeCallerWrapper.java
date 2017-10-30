@@ -57,6 +57,9 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
         List<String> args = new ArrayList<>();
         args.add(SequencePipelineService.get().getJavaFilepath());
         args.addAll(SequencePipelineService.get().getJavaOpts());
+        //explicitly set library.path so we pick up libVectorLoglessPairHMM, built in our install script
+        //revisit this in GATK3.8
+        args.add("-Djava.library.path=" + getJAR().getParent());
         args.add("-jar");
         args.add(getJAR().getPath());
         args.add("-T");

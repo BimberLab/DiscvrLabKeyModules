@@ -27,12 +27,22 @@ Ext4.define('JBrowse.window.GenomeBrowserHelpWindow', {
                     src: LABKEY.ActionURL.getContextPath() + '/jbrowse/img/img0.jpg',
                     active: true
                 },{
+                    //choose tracks
                     src: LABKEY.ActionURL.getContextPath() + '/jbrowse/img/img1.jpg'
                 },{
+                    //return menu
+                    src: LABKEY.ActionURL.getContextPath() + '/jbrowse/img/img1b.jpg'
+                },{
+                    //click on features
                     src: LABKEY.ActionURL.getContextPath() + '/jbrowse/img/img2.jpg'
                 },{
+                    //variants colored by type
+                    src: LABKEY.ActionURL.getContextPath() + '/jbrowse/img/img2b.jpg'
+                },{
+                    //search box
                     src: LABKEY.ActionURL.getContextPath() + '/jbrowse/img/img3.jpg'
                 },{
+                    //save
                     src: LABKEY.ActionURL.getContextPath() + '/jbrowse/img/img4.jpg'
                 }]
             }],

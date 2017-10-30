@@ -151,9 +151,12 @@ DISCVR/jbrowse/resources/views/jbrowseSearch.webpart.xml -text
 DISCVR/jbrowse/resources/views/settings.html -text
 DISCVR/jbrowse/resources/views/settings.view.xml -text
 DISCVR/jbrowse/resources/web/README.txt -text
+DISCVR/jbrowse/resources/web/jbrowse/Browser.js -text
 DISCVR/jbrowse/resources/web/jbrowse/img/img0.jpg -text
 DISCVR/jbrowse/resources/web/jbrowse/img/img1.jpg -text
+DISCVR/jbrowse/resources/web/jbrowse/img/img1b.jpg -text
 DISCVR/jbrowse/resources/web/jbrowse/img/img2.jpg -text
+DISCVR/jbrowse/resources/web/jbrowse/img/img2b.jpg -text
 DISCVR/jbrowse/resources/web/jbrowse/img/img3.jpg -text
 DISCVR/jbrowse/resources/web/jbrowse/img/img4.jpg -text
 DISCVR/jbrowse/resources/web/jbrowse/plugins/AnnotatedVariants/css/main.css -text
@@ -1081,6 +1084,8 @@ labModules/SequenceAnalysis/resources/views/populateSequences.view.xml -text
 labModules/SequenceAnalysis/resources/views/readsetDetails.html -text
 labModules/SequenceAnalysis/resources/views/readsetDetails.view.xml -text
 labModules/SequenceAnalysis/resources/views/releaseNotes.html -text
+labModules/SequenceAnalysis/resources/views/sbtToGeneTable.html -text
+labModules/SequenceAnalysis/resources/views/sbtToGeneTable.view.xml -text
 labModules/SequenceAnalysis/resources/views/search.html -text
 labModules/SequenceAnalysis/resources/views/search.view.xml -text
 labModules/SequenceAnalysis/resources/views/sequenceAnalysis.html -text
@@ -1205,6 +1210,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/LiftoverHan
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/PicardAlignmentMetricsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/RecalculateSequenceMetricsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/RnaSeqcHandler.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/SbtGeneCountHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/UnmappedSequenceBasedGenotypeHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/picard/CigarPositionIterable.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/AddSraRunButton.java -text

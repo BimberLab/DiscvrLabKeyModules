@@ -1,6 +1,7 @@
 <%@ page import="org.labkey.api.settings.AppProps" %>
 <%@ page import="org.labkey.api.util.PageFlowUtil" %>
 <%@ page import="org.labkey.jbrowse.JBrowseController" %>
+<%@ page import="org.labkey.api.view.ActionURL" %>
 <%
     /*
      * Copyright (c) 2005-2014 LabKey Corporation
@@ -25,8 +26,13 @@
     String base = AppProps.getInstance().getContextPath() + "/jbrowseApp/";
     String browserRoot = AppProps.getInstance().getContextPath() + "/jbrowseApp/";
     String dataRoot = AppProps.getInstance().getContextPath() + "/_webdav" + getContainer().getPath() + "/@Files/.jbrowse/" + "databases/" + form.getDatabase();
+    ActionURL returnUrl = getContainer().getStartURL(getUser());
 %>
-
+<style type="text/css">
+    .sectiontitle {
+        padding-top: 10px;
+    }
+</style>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title><%=h(form.getPageTitle())%></title>
@@ -60,7 +66,7 @@
         // free to move it into function scope if you want to keep it
         // out of the global namespace
         var JBrowse;
-        require(['JBrowse/Browser', 'dojo/io-query', 'dojo/json' ],
+        require(['<%=h(AppProps.getInstance().getContextPath())%>/jbrowse/Browser.js', 'dojo/io-query', 'dojo/json' ],
                 function (Browser,ioQuery,JSON) {
                     // the initial configuration of this JBrowse
                     // instance
@@ -90,8 +96,10 @@
                         show_tracklist: queryParams.tracklist,
                         show_overview: queryParams.overview,
                         show_menu: queryParams.menu,
+                        classicMenu: false,
                         show_tracklabels: queryParams.tracklabels,
                         highResolutionMode: queryParams.highres,
+                        returnUrl: '<%=h(returnUrl.toString())%>',
                         aboutThisBrowser: {
                             title: <%=q(form.getPageTitle())%>
                         },

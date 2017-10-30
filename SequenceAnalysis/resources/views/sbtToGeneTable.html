@@ -1,0 +1,430 @@
+<script type="text/javascript">
+    Ext4.onReady(function(){
+        //TODO: account for features duplicated across genomes?
+        Ext4.define('SequenceAnalysis.panel.SBTExportPanel', {
+            extend: 'Ext.panel.Panel',
+            initComponent: function () {
+                Ext4.apply(this, {
+                    border: false,
+                    bodyStyle: 'padding: 5px;',
+                    items: [{
+                        xtype: 'ldk-simplecombo',
+                        fieldLabel: 'Header Type',
+                        storeValues: ['ReadsetId', 'OutputFileId'],
+                        itemId: 'headerType',
+                        value: 'ReadsetId',
+                        forceSelection: true
+                    },{
+                        xtype: 'button',
+                        text: 'Load',
+                        handler: this.loadData,
+                        scope: this
+                    },{
+                        xtype: 'checkbox',
+                        fieldLabel: 'Show Pct Instead of Reads',
+                        itemId: 'showPct'
+                    },{
+                        itemId: 'genomeValues',
+                        style: 'padding-top: 10px;padding-bottom: 10px;',
+                        border: false,
+                        defaults: {
+                            border: false
+                        }
+                    },{
+                        itemId: 'output',
+                        xtype: 'textarea',
+                        height: 300,
+                        width: 800
+                    }]
+                });
+
+                this.callParent(arguments);
+
+                Ext4.Msg.wait('Loading...');
+                this.loadTable();
+            },
+
+            loadTable: function(){
+                LABKEY.Query.selectRows({
+                    containerPath: Laboratory.Utils.getQueryContainerPath(),
+                    schemaName: 'sequenceanalysis',
+                    queryName: 'outputfiles',
+                    filterArray: [LABKEY.Filter.create('rowid', this.outputFileId)],
+                    scope: this,
+                    columns: 'rowid,dataid,library_id',
+                    failure: LDK.Utils.getErrorCallback(),
+                    success: function(results){
+                        if (!results || !results.rows || !results.rows.length){
+                            Ext4.Msg.hide();
+                            Ext4.Msg.alert('Error', 'No rows found for ID: ' + this.outputFileId);
+                            return;
+                        }
+
+                        LABKEY.Ajax.request({
+                            url: LABKEY.ActionURL.buildURL('experiment', 'showFile', Laboratory.Utils.getQueryContainerPath(), {rowId: results.rows[0].dataid, inline: false}),
+                            scope: this,
+                            failure: LDK.Utils.getErrorCallback(),
+                            success: this.parseTable
+                        });
+                    }
+                })
+            },
+
+            parseTable: function(results){
+                if (!results || !results.responseText){
+                    Ext4.Msg.hide();
+                    Ext4.Msg.alert('Error', 'Unable to load gene table');
+                    return;
+                }
+
+                Ext4.Msg.hide();
+                var header = results.responseText.split('\n')[0];
+                this.headerValues = header.split('\t');
+                this.headerValues = this.headerValues.slice(4);
+
+                this.loadData();
+            },
+
+            loadData: function(){
+                var type = this.down('#headerType').getValue();
+
+                //first find readsets:
+                var queryName, queryField, columns, readsetField;
+                if (type === 'ReadsetId'){
+                    queryName = 'sequence_readsets';
+                    queryField = 'rowid';
+                    columns = 'rowid';
+                    readsetField = 'rowid';
+                }
+                else {
+                    queryName = 'outputfiles';
+                    queryField = 'rowid';
+                    columns = 'readset,rowid';
+                    readsetField = 'readset';
+                }
+
+                LABKEY.Query.selectRows({
+                    containerPath: Laboratory.Utils.getQueryContainerPath(),
+                    schemaName: 'sequenceanalysis',
+                    queryName: queryName,
+                    filterArray: [LABKEY.Filter.create(queryField, this.headerValues.join(';'), LABKEY.Filter.Types.IN)],
+                    scope: this,
+                    columns: columns,
+                    failure: LDK.Utils.getErrorCallback(),
+                    success: function(results) {
+                        if (!results || !results.rows || !results.rows.length) {
+                            Ext4.Msg.hide();
+                            Ext4.Msg.alert('Error', 'No readsets found to match header line');
+                            return;
+                        }
+
+                        this.readsets = [];
+                        this.headerToReadset = {};
+                        var hasError = false;
+                        Ext4.Array.forEach(results.rows, function(r){
+                            if (r[readsetField]){
+                                this.readsets.push(r[readsetField]);
+                                this.headerToReadset[r.rowid] = [r[readsetField]];
+                            }
+                            else {
+                                Ext4.Msg.hide();
+                                Ext4.Msg.alert('Error', 'Row lacks a readset: ' + r.rowid);
+                                hasError = true;
+                                return false;
+                            }
+                        }, this);
+
+                        if (hasError){
+                            return;
+                        }
+
+                        this.queryAnalyses(this.readsets);
+                    }
+                });
+            },
+
+            queryAnalyses: function(readsets){
+                LABKEY.Query.executeSql({
+                    containerPath: Laboratory.Utils.getQueryContainerPath(),
+                    schemaName: 'sequenceanalysis',
+                    sql: 'SELECT distinct a.analysis_id, a.analysis_id.readset, a.analysis_id.library_id, a.analysis_id.library_id.name FROM sequenceanalysis.alignment_summary a WHERE a.analysis_id.readset IN (' + readsets.join(',') + ')',
+                    scope: this,
+                    failure: LDK.Utils.getErrorCallback(),
+                    success: function(results) {
+                        if (!results || !results.rows || !results.rows.length) {
+                            Ext4.Msg.hide();
+                            Ext4.Msg.alert('Error', 'No analyses found for readsets');
+                            return;
+                        }
+
+                        var genomeMap = {};
+                        Ext4.Array.forEach(results.rows, function(r){
+                            genomeMap[r.library_id] = genomeMap[r.library_id] || {name: r.name, readsets: {}, analyses: []};
+                            genomeMap[r.library_id].readsets[r.readset] = genomeMap[r.library_id].readsets[r.readset] || [];
+                            genomeMap[r.library_id].readsets[r.readset].push(r.analysis_id);
+                            genomeMap[r.library_id].analyses.push(r.analysis_id);
+                        }, this);
+
+                        var toAdd = [];
+                        toAdd.push({
+                            html: 'Genome'
+                        });
+
+                        toAdd.push({
+                            html: 'Readsets '
+                        });
+
+                        toAdd.push({
+                            html: 'Include?'
+                        });
+
+                        toAdd.push({
+                            html: 'Min Pct'
+                        });
+
+                        toAdd.push({
+                            html: 'Report By'
+                        });
+
+                        toAdd.push({
+                            html: ''
+                        });
+
+                        for (var genomeId in genomeMap){
+                            toAdd.push({
+                                html: genomeMap[genomeId].name
+                            });
+
+                            var msgs = [];
+                            for (var rs in genomeMap[genomeId].readsets){
+                                if (genomeMap[genomeId].readsets[rs].length > 1){
+                                    msgs.push('Readset ' + rs + ' has multiple analyses for this genome (' + genomeMap[genomeId].readsets[rs].join(',') + ').  Analysis ' + genomeMap[genomeId].readsets[rs][0] + ' will be selected.')
+                                }
+                            }
+
+                            toAdd.push({
+                                html: Ext4.Object.getKeys(genomeMap[genomeId].readsets).length  + ' / ' + this.headerValues.length
+                            });
+
+                            toAdd.push({
+                                xtype: 'checkbox',
+                                checked: true,
+                                genomeId: genomeId
+                            });
+
+                            toAdd.push({
+                                xtype: 'ldk-numberfield',
+                                minValue: 0,
+                                maxValue: 100,
+                                genomeId: genomeId,
+                                value: 0
+                            });
+
+                            toAdd.push({
+                                xtype: 'ldk-simplecombo',
+                                storeValues: ['Allele', 'Lineage'],
+                                genomeId: genomeId,
+                                value: 'Allele'
+                            });
+
+                            toAdd.push({
+                                html: msgs.length ? msgs.join('<br>') : ''
+                            });
+                        }
+                        this.genomeMap = genomeMap;
+
+                        this.down('#genomeValues').removeAll();
+                        this.down('#genomeValues').add({
+                            xtype: 'form',
+                            itemId: 'genomeSelections',
+                            defaults: {
+                                border: false,
+                                style: 'padding-right: 10px;'
+                            },
+                            layout: {
+                                type: 'table',
+                                columns: 6
+                            },
+                            items: toAdd,
+                            buttonAlign: 'left',
+                            buttons: [{
+                                text: 'Load Results',
+                                scope: this,
+                                handler: this.loadResults
+                            }]
+                        });
+                    }
+                });
+            },
+
+            loadResults: function(){
+                var genomeIds = [];
+                var analysisIds = [];
+
+                //note: query everything upfront, then filter later
+                Ext4.Array.forEach(this.query('checkbox'), function(cb){
+                    genomeIds.push(cb.genomeId);
+                    for (var rs in this.genomeMap[cb.genomeId].readsets){
+                        analysisIds.push(this.genomeMap[cb.genomeId].readsets[rs][0]);
+                    }
+                }, this);
+                analysisIds = Ext4.unique(analysisIds);
+
+                if (!genomeIds.length){
+                    Ext4.Msg.alert('Error', 'No genomes selected');
+                    return;
+                }
+
+                Ext4.Msg.wait('Loading...');
+                if (!this.hasLoadedAlleles){
+                    var multi = new LABKEY.MultiRequest();
+
+                    multi.add(LABKEY.Query.selectRows, {
+                        containerPath: Laboratory.Utils.getQueryContainerPath(),
+                        schemaName: 'sequenceanalysis',
+                        queryName: 'alignment_summary_by_lineage',
+                        columns: 'analysis_id,analysis_id/readset,analysis_id/library_id,lineages,percent,percent_from_locus,total',
+                        filterArray: [
+                            LABKEY.Filter.create('analysis_id', analysisIds.join(';'), LABKEY.Filter.Types.IN)
+                        ],
+                        scope: this,
+                        failure: LDK.Utils.getErrorCallback(),
+                        success: function(results) {
+                            if (!results || !results.rows || !results.rows.length) {
+                                return;
+                            }
+
+                            this.resultsByLineage = {};
+                            Ext4.Array.forEach(results.rows, function(r){
+                                var readset = r['analysis_id/readset'];
+                                var genomeId = r['analysis_id/library_id'];
+
+                                this.resultsByLineage[genomeId] = this.resultsByLineage[genomeId] || {};
+                                this.resultsByLineage[genomeId][readset] = this.resultsByLineage[genomeId][readset] || [];
+                                this.resultsByLineage[genomeId][readset].push(r);
+                            }, this);
+                        }
+                    });
+
+                    multi.add(LABKEY.Query.selectRows, {
+                        containerPath: Laboratory.Utils.getQueryContainerPath(),
+                        schemaName: 'sequenceanalysis',
+                        queryName: 'alignment_summary_grouped',
+                        columns: 'analysis_id,analysis_id/readset,analysis_id/library_id,alleles,percent,percent_from_locus,total_reads',
+                        filterArray: [
+                            LABKEY.Filter.create('analysis_id', analysisIds.join(';'), LABKEY.Filter.Types.IN)
+                        ],
+                        scope: this,
+                        failure: LDK.Utils.getErrorCallback(),
+                        success: function(results) {
+                            if (!results || !results.rows || !results.rows.length) {
+                                return;
+                            }
+
+                            this.resultsByAllele = {};
+                            Ext4.Array.forEach(results.rows, function(r){
+                                var readset = r['analysis_id/readset'];
+                                var genomeId = r['analysis_id/library_id'];
+
+                                this.resultsByAllele[genomeId] = this.resultsByAllele[genomeId] || {};
+                                this.resultsByAllele[genomeId][readset] = this.resultsByAllele[genomeId][readset] || [];
+                                this.resultsByAllele[genomeId][readset].push(r);
+                            }, this);
+
+                        }
+                    });
+
+                    multi.send(function(){
+                        this.hasLoadedAlleles = true;
+                        this.onAlleleLoad();
+                    }, this);
+                }
+                else {
+                    this.onAlleleLoad();
+                }
+            },
+
+            onAlleleLoad: function(){
+                var output = [];
+                output.push(['GeneId', 'GeneName', 'GeneDescription', 'SamplesWithReads'].concat(this.headerValues).join('\t'));
+                Ext4.Array.forEach(this.query('checkbox'), function(cb){
+                    if (!cb.getValue()){
+                        return;
+                    }
+
+                    var showPct = this.down('#showPct').getValue();
+                    var type = this.query('ldk-simplecombo[genomeId=' + cb.genomeId + ']')[0].getValue();
+                    var data = type === 'Allele' ? this.resultsByAllele[cb.genomeId] : this.resultsByLineage[cb.genomeId];
+                    var pctField = type === 'Allele' ? 'percent_from_locus' : 'percent_from_locus';
+                    var featureField = type === 'Allele' ? 'alleles' : 'lineages';
+                    var totalField = type === 'Allele' ? 'total_reads' : 'total';
+                    var threshold = this.query('ldk-numberfield[genomeId=' + cb.genomeId + ']')[0].getValue();
+
+                    var allPassingFeatures = [];
+                    var dataByReadset = {};
+                    Ext4.Array.forEach(this.readsets, function(readsetId){
+                        dataByReadset[readsetId] = dataByReadset[readsetId] || {};
+                        if (data[readsetId] && !Ext4.isEmpty(data[readsetId])){
+                            Ext4.Array.forEach(data[readsetId], function(r){
+                                if (threshold){
+                                    var pct = r[pctField];
+                                    if (pct < threshold){
+                                        return;
+                                    }
+                                }
+
+                                var name = r[featureField];
+                                if (Ext4.isArray(name)){
+                                    name = name.join(',');
+                                }
+
+                                if (!name){
+                                    return;
+                                }
+
+                                name = name.replace(/\s+/g, ',');
+
+                                allPassingFeatures.push(name);
+
+                                if (dataByReadset[readsetId][name]) {
+                                    console.error('Already present: ' + readsetId + '/' + name + '/' + dataByReadset[readsetId][name]);
+                                }
+
+                                dataByReadset[readsetId][name] = showPct ? r[pctField] : r[totalField];
+                            }, this);
+                        }
+                    }, this);
+
+                    allPassingFeatures = Ext4.unique(allPassingFeatures);
+
+                    Ext4.Array.forEach(allPassingFeatures, function(name){
+                        var row = [name, '', '', ''];
+                        var samplesWithReads = 0;
+                        Ext4.Array.forEach(this.headerValues, function(hv){
+                            var readsetId = this.headerToReadset[hv];
+                            row.push(dataByReadset[readsetId][name] || 0);
+                            if (dataByReadset[readsetId][name]){
+                                samplesWithReads++;
+                            }
+                        }, this);
+                        row[3] = samplesWithReads;
+                        output.push(row.join('\t'));
+                    }, this);
+                }, this);
+
+                this.down('textarea').setValue(output.join('\n'));
+                Ext4.Msg.hide();
+            }
+        });
+
+        var webpart = <%=webpartContext%>;
+        var rowId = LABKEY.ActionURL.getParameter('outputFileId');
+        if (!rowId){
+            alert('Must Provide Output File Id');
+            return;
+        }
+        Ext4.create('SequenceAnalysis.panel.SBTExportPanel', {
+            outputFileId: rowId
+        }).render(webpart.wrapperDivId);
+    });
+</script>

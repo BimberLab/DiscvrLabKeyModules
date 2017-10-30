@@ -92,7 +92,7 @@
                 </ft:webPart>
             </ft:preferredWebParts>
             <ft:permissions>
-                <ft:permission name="admin"/>
+                <ft:permission name="org.labkey.api.security.permissions.AdminPermission"/>
             </ft:permissions>
         </ft:folderTab>
     </ft:folderTabs>

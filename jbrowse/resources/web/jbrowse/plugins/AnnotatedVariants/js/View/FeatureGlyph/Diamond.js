@@ -79,6 +79,36 @@ define(['dojo/_base/declare',
                         }
 
                     }
+                },
+
+                makeFeatureDescriptionLabel: function(feature){
+                    var ret = this.inherited(arguments);
+
+                    var effArray = feature.get('ANN') || [];
+                    if( effArray &&  typeof effArray === 'object' && 'values' in effArray )
+                        effArray = effArray.values;
+                    if( effArray && ! Array.isArray( effArray ) )
+                        effArray = [effArray];
+
+                    var texts = [];
+                    for ( var i in effArray ) {
+                        if ( /HIGH/.test ( effArray[i] ) ) { texts.push("<br>SnpEff: Predicted High Impact"); }
+                        if ( /MODERATE/.test ( effArray[i] ) ) { texts.push("<br>SnpEff: Predicted Moderate Impact"); }
+                    }
+
+                    var unique = {};
+                    texts = dojo.filter(texts, function(value) {
+                        if (!unique[value]) {
+                            unique[value] = true;
+                            return true;
+                        }
+                        return false;
+                    }).sort();
+
+                    ret.text += texts.join('');
+
+
+                    return ret;
                 }
 
             });

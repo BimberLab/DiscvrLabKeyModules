@@ -3,6 +3,14 @@
         border: 0px;
     }
 
+    div.dijitTextBox {
+        border: 1px solid #BFBFBF; !important;
+    }
+
+    span.digitPlaceHolder {
+        font-size: 14px;
+    }
+
 </style>
 <script type="text/javascript" src="<%=contextPath%>/jbrowseApp/src/dojo/dojo.js" data-dojo-config="async: 1, baseUrl: '<%=contextPath%>/jbrowseApp/src'"></script>
 <script type="text/javascript" src="<%=contextPath%>/jbrowseApp/src/JBrowse/init.js"></script>
@@ -55,13 +63,16 @@
                 style: 'display:inline-block;'
             }, webpart.wrapperDivId);
 
+            this.inputBox = dojo.create('input', {placeHolder: "type in your name", baseClass: 'myClass'}, searchbox);
+
             this.locationBox = new dijitComboBox({
                 style: {width: '200px'},
                 maxLength: 400,
                 searchAttr: "name",
-                placeHolder: "Enter gene or feature name",
-                title: 'Enter gene or feature name'
-            }, dojo.create('input', {placeHolder: "type in your name"}, searchbox));
+                placeHolder: "Enter gene name",
+                title: 'Enter gene or feature name',
+                'class': 'lk-input'
+            }, this.inputBox);
 
             browser.afterMilestone('loadNames', dojo.hitch(this, function () {
                 if (this.nameStore) {

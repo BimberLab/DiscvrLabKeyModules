@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.analysis;
 
 import au.com.bytecode.opencsv.CSVWriter;
 import org.json.JSONObject;
+import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -42,6 +43,8 @@ import java.util.regex.Pattern;
 public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHandler
 {
     private FileType _fileType = new FileType(Arrays.asList("ReadsPerGene.out.txt", "ReadsPerGene.out.tab"), "ReadsPerGene.out.txt", false);
+    private static final String STRAND1 = "Strand1";
+    private static final String STRAND2 = "Strand2";
     private static final String STRANDED = "Stranded";
     private static final String UNSTRANDED = "Unstranded";
     private static final String INFER = "Infer";
@@ -68,8 +71,8 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
                     put("value", ReadsetId);
                 }}, ReadsetId),
                 ToolParameterDescriptor.create("skipGenesWithoutData", "Skip Genes Without Data", "If checked, the output table will omit any genes with zero read counts across all samples.", "checkbox", null, false),
-                ToolParameterDescriptor.create(STRANDED, "Stranded", "Choose whether to treat these data as stranded, unstranded, or to have the script infer the strandedness", "ldk-simplecombo", new JSONObject(){{
-                    put("storeValues", STRANDED + ";" + UNSTRANDED + ";"+ INFER);
+                ToolParameterDescriptor.create(STRANDED, "Strand 1", "Choose whether to treat these data as stranded, unstranded, or to have the script infer the strandedness", "ldk-simplecombo", new JSONObject(){{
+                    put("storeValues", STRAND1 + ";" + STRAND2 + ";" + UNSTRANDED + ";"+ INFER);
                     put("value", INFER);
                 }}, INFER)
         ));
@@ -122,6 +125,7 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
             }
 
             Integer libraryId = null;
+            Set<String> distinctHeaderValues = new CaseInsensitiveHashSet();
             for (SequenceOutputFile o : inputFiles)
             {
                 if (o.getLibrary_id() != null)
@@ -142,6 +146,15 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
                 {
                     throw new PipelineJobException("No library Id provided for file: " + o.getRowid());
                 }
+
+                String idInHeader = params.optString("idInHeader", OutputFileId);
+                String val = getHeaderValue(idInHeader, support, o);
+
+                if (distinctHeaderValues.contains(val))
+                {
+                    throw new PipelineJobException("Duplicate values found for gene table headers.  Value was: " + val + " using the field: " + idInHeader);
+                }
+                distinctHeaderValues.add(val);
             }
         }
 
@@ -161,31 +174,7 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
                 @Override
                 public String getHeader(JobContext ctx, SequenceOutputFile so)
                 {
-                    if (idInHeader.equals(ReadsetName))
-                    {
-                        Readset rs = ctx.getSequenceSupport().getCachedReadset(so.getReadset());
-                        if (rs == null)
-                        {
-                            throw new IllegalArgumentException("Readset not found for: " + so.getRowid());
-                        }
-
-                        return rs.getName();
-
-                    }
-                    else if (idInHeader.equals(ReadsetId))
-                    {
-                        Readset rs = ctx.getSequenceSupport().getCachedReadset(so.getReadset());
-                        if (rs == null)
-                        {
-                            throw new IllegalArgumentException("Readset not found for: " + so.getRowid());
-                        }
-
-                        return rs.getReadsetId().toString();
-                    }
-                    else
-                    {
-                        return so.getRowid().toString();
-                    }
+                    return getHeaderValue(idInHeader, ctx.getSequenceSupport(), so);
                 }
             }, "Gene Count Table");
 
@@ -318,19 +307,32 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
             job.getLogger().warn("total lines lacking a gene id: " + noGeneId);
         }
 
-        String stranded = params.optString(STRANDED, STRANDED);
+        String strandedSelection = params.optString(STRANDED, INFER);
+        final Set<String> OTHER_IDS = PageFlowUtil.set("N_ambiguous", "N_multimapping", "N_noFeature", "N_unmapped");
 
         //next iterate all read count TSVs to guess strandedness
         double sumStrandRatio = 0.0;
-        int countStrandRatio = 0;
+        long countStrandRatio = 0;
+
+        long totalStrand1 = 0L;
+        long totalStrand2 = 0L;
         Set<String> distinctGenes = new TreeSet<>();
         distinctGenes.addAll(geneMap.keySet());
         Map<Integer, Map<String, Long>> unstrandedCounts = new HashMap<>(inputFiles.size());
-        Map<Integer, Map<String, Long>> strandedCounts = new HashMap<>(inputFiles.size());
+        Map<Integer, Map<String, Long>> strand1Counts = new HashMap<>(inputFiles.size());
+        Map<Integer, Map<String, Long>> strand2Counts = new HashMap<>(inputFiles.size());
+        Map<Integer, Long> nonZeroCounts = new HashMap<>(inputFiles.size());
+
         for (SequenceOutputFile so : inputFiles)
         {
             job.getLogger().info("reading file: " + so.getFile().getName());
             action.addInput(so.getFile(), "Gene Counts File");
+
+            if (!nonZeroCounts.containsKey(so.getRowid()))
+            {
+                nonZeroCounts.put(so.getRowid(), 0L);
+            }
+
             try (BufferedReader reader = Readers.getReader(so.getFile()))
             {
                 String line;
@@ -339,9 +341,16 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
                     line = line.trim();
                     String[] cells = line.split("\\s+");
                     String geneId = cells[0];
+                    if (OTHER_IDS.contains(geneId))
+                    {
+                        continue;
+                    }
+
                     Long unstranded = Long.parseLong(cells[1]);
                     Long strand1 = Long.parseLong(cells[2]);
+                    totalStrand1 += strand1;
                     Long strand2 = Long.parseLong(cells[3]);
+                    totalStrand2 += strand2;
                     Long strandMax = Math.max(strand1, strand2);
 
                     distinctGenes.add(geneId);
@@ -359,19 +368,31 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
                         unstrandedMap = new HashMap<>(Math.max(distinctGenes.size() + 500, 5000));
                     }
 
-                    Map<String, Long> strandedMap = strandedCounts.get(so.getRowid());
-                    if (strandedMap == null)
+                    Map<String, Long> strand1Map = strand1Counts.get(so.getRowid());
+                    if (strand1Map == null)
                     {
-                        strandedMap = new HashMap<>(Math.max(distinctGenes.size() + 500, 5000));
+                        strand1Map = new HashMap<>(Math.max(distinctGenes.size() + 500, 5000));
                     }
 
-                    strandedMap.put(geneId, strandMax);
+                    Map<String, Long> strand2Map = strand2Counts.get(so.getRowid());
+                    if (strand2Map == null)
+                    {
+                        strand2Map = new HashMap<>(Math.max(distinctGenes.size() + 500, 5000));
+                    }
+
                     unstrandedMap.put(geneId, unstranded);
+                    strand1Map.put(geneId, strand1);
+                    strand2Map.put(geneId, strand2);
 
                     unstrandedCounts.put(so.getRowid(), unstrandedMap);
-                    strandedCounts.put(so.getRowid(), strandedMap);
-                }
+                    strand1Counts.put(so.getRowid(), strand1Map);
+                    strand2Counts.put(so.getRowid(), strand2Map);
 
+                    if (unstranded > 0 || strand1 > 0 || strand2 > 0)
+                    {
+                        nonZeroCounts.put(so.getRowid(), nonZeroCounts.get(so.getRowid()) + 1);
+                    }
+                }
             }
             catch (IOException e)
             {
@@ -389,7 +410,8 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
         if (avgStrandRatio > threshold)
         {
             job.getLogger().info("These data appear to be stranded because more than " + (100 * threshold) + "% of the reads are either on one strand or the other (ratio: " + avgStrandRatio + ").  Counts from the strand with the most reads will be used.");
-            inferredStrandedness = STRANDED;
+            inferredStrandedness = totalStrand1 > totalStrand2 ? STRAND1 : STRAND2;
+            job.getLogger().info("counts for strand 1 vs 2 are: " +  totalStrand1 + "/" + totalStrand2 + ". using " + inferredStrandedness);
         }
         else
         {
@@ -397,39 +419,72 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
             inferredStrandedness = UNSTRANDED;
         }
 
-        if (STRANDED.equalsIgnoreCase(stranded))
+        if (STRAND1.equalsIgnoreCase(strandedSelection))
         {
-            job.getLogger().info("Using stranded counts as specified in the job");
-            counts = strandedCounts;
+            job.getLogger().info("Using strand 1 counts as specified in the job");
+            counts = strand1Counts;
 
-            if (!STRANDED.equals(inferredStrandedness))
+            if (!STRAND1.equals(inferredStrandedness))
             {
-                job.getLogger().warn("These data appear to be unstranded based on read counts");
+                job.getLogger().warn("The inferred strandedness doesnt match strand 1.  inferred: " + inferredStrandedness);
             }
         }
-        else if (UNSTRANDED.equalsIgnoreCase(stranded))
+        else if (STRAND2.equalsIgnoreCase(strandedSelection))
+        {
+            job.getLogger().info("Using strand 2 counts as specified in the job");
+            counts = strand2Counts;
+
+            if (!STRAND2.equals(inferredStrandedness))
+            {
+                job.getLogger().warn("The inferred strandedness doesnt match strand 2.  inferred: " + inferredStrandedness);
+            }
+        }
+        else if (UNSTRANDED.equalsIgnoreCase(strandedSelection))
         {
             job.getLogger().info("Using unstranded counts as specified in the job");
             counts = unstrandedCounts;
 
             if (!UNSTRANDED.equals(inferredStrandedness))
             {
-                job.getLogger().warn("These data appear to be stranded based on read counts");
+                job.getLogger().warn("The inferred strandedness doesnt match unstranded.  inferred: " + inferredStrandedness);
             }
         }
-        else if (INFER.equalsIgnoreCase(stranded))
+        else if (INFER.equalsIgnoreCase(strandedSelection))
         {
             job.getLogger().info("Using inferred value for strandedness: " + inferredStrandedness);
-            counts = STRANDED.equals(inferredStrandedness) ? strandedCounts : unstrandedCounts;
+            counts = STRAND1.equals(inferredStrandedness) ? strand1Counts: STRAND2.equals(inferredStrandedness) ? strand2Counts : unstrandedCounts;
         }
         else
         {
-            throw new PipelineJobException("Unknown value for stranded: " + stranded);
+            throw new PipelineJobException("Unknown value for stranded: " + strandedSelection);
         }
 
         job.getLogger().info("writing output.  total genes: " + distinctGenes.size());
 
-        final Set<String> OTHER_IDS = PageFlowUtil.set("N_ambiguous", "N_multimapping", "N_noFeature", "N_unmapped");
+        double sumNonZero = 0.0;
+        for (SequenceOutputFile so : inputFiles)
+        {
+            sumNonZero += nonZeroCounts.get(so.getRowid());
+        }
+        double avgNonZero = sumNonZero / (double)inputFiles.size();
+
+        job.getLogger().info("total non-zero genes per sample (and ratio relative to avg)");
+        job.getLogger().info("average: " + avgNonZero);
+
+        for (SequenceOutputFile so : inputFiles)
+        {
+            long totalNonZero = nonZeroCounts.get(so.getRowid());
+            double ratio = (double)totalNonZero / avgNonZero;
+
+            job.getLogger().info(so.getRowid() + "/" + so.getName() + ": " + totalNonZero + " (" + ratio + ")");
+            if (ratio > 2 || ratio < 0.5)
+            {
+                job.getLogger().warn("total non zero more than 2-fold different than average");
+            }
+
+            //TODO: consider a warn threshold based on total features?
+        }
+
         File outputFile = new File(ctx.getOutputDir(), name + ".txt");
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(outputFile), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
@@ -451,7 +506,7 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
             for (String geneId : distinctGenes)
             {
                 List<String> row = new ArrayList<>(inputFiles.size() + 3);
-                if (geneMap.containsKey(geneId) || OTHER_IDS.contains(geneId))
+                if (geneMap.containsKey(geneId))
                 {
                     if (geneMap.containsKey(geneId))
                     {
@@ -538,5 +593,34 @@ public class CombineStarGeneCountsHandler extends AbstractParameterizedOutputHan
     public static interface HeaderProvider
     {
         public String getHeader(JobContext ctx, SequenceOutputFile so);
+    }
+
+    private static String getHeaderValue(String idInHeader, SequenceAnalysisJobSupport support, SequenceOutputFile so)
+    {
+        if (idInHeader.equals(ReadsetName))
+        {
+            Readset rs = support.getCachedReadset(so.getReadset());
+            if (rs == null)
+            {
+                throw new IllegalArgumentException("Readset not found for: " + so.getRowid());
+            }
+
+            return rs.getName();
+
+        }
+        else if (idInHeader.equals(ReadsetId))
+        {
+            Readset rs = support.getCachedReadset(so.getReadset());
+            if (rs == null)
+            {
+                throw new IllegalArgumentException("Readset not found for: " + so.getRowid());
+            }
+
+            return rs.getReadsetId().toString();
+        }
+        else
+        {
+            return so.getRowid().toString();
+        }
     }
 }

@@ -12,6 +12,7 @@ BuildUtils.addModuleDistributionDependencies(project, [":externalModules:onprcEH
                                                        ":externalModules:onprcEHRModules:mergesync",
                                                        ":externalModules:labModules:GenotypeAssays",
                                                        ":externalModules:labModules:elispot_assay",
+                                                       ":externalModules:labModules:Viral_Load_Assay",
                                                        ":externalModules:DISCVR:galaxyintegration"])
 
 

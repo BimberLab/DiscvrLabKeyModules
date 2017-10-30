@@ -16,6 +16,7 @@ import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -126,6 +127,13 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
 
         //run final handler
         getPipelineJob().getHandler().getProcessor().complete(getPipelineJob(), getPipelineJob().getFiles(), outputsCreated);
+
+        File xml = getPipelineJob().getSerializedOutputFilesFile();
+        if (xml.exists())
+        {
+            getJob().getLogger().debug("deleting outputfiles XML file: " + xml.getPath());
+            xml.delete();
+        }
 
         return new RecordedActionSet();
     }
