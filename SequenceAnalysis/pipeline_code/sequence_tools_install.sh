@@ -40,6 +40,9 @@ CLEAN_SRC=
 LK_HOME=
 LK_USER=
 
+#NOTE: java/javac not automatically picked up
+PATH=${JAVA_HOME}/bin:$PATH
+
 while getopts "d:u:fpc" arg;
 do
   case $arg in
