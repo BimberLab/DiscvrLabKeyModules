@@ -1,0 +1,9 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="SetName"/>
+        <column name="Label"/>
+    </columns>
+    <sorts>
+        <sort column="SetName" descending="false" />
+    </sorts>
+</customView>

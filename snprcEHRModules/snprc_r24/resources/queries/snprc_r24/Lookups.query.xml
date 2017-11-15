@@ -1,0 +1,33 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="Lookups" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="SetName">
+                        <columnTitle>Set Name</columnTitle>
+                        <fk>
+                            <fkDbSchema>snprc_r24</fkDbSchema>
+                            <fkTable>LookupSets</fkTable>
+                            <fkColumnName>SetName</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="Value">
+                        <columnTitle>Value</columnTitle>
+                    </column>
+                    <column columnName="SortOrder">
+                        <columnTitle>Sort Order</columnTitle>
+                    </column>
+                    <column columnName="DateDisabled">
+                        <columnTitle>Disable Date</columnTitle>
+                    </column>
+                    <column columnName="ObjectId">
+                        <shownInInsertView>false</shownInInsertView>
+                        <shownInUpdateView>false</shownInUpdateView>
+                        <isUnselectable>true</isUnselectable>
+                        <columnTitle>ObjectId</columnTitle>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

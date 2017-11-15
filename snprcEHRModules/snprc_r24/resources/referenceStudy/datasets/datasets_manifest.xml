@@ -1,43 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <datasets metaDataFile="datasets_metadata.xml" xmlns="http://labkey.org/study/xml" xmlns:rep="http://labkey.org/data/xml/reportProps">
   <datasets>
-    <dataset name="demographics" id="5001" category="Animal Info" demographicData="true" type="Standard">
-      <tags>
-        <rep:property>
-          <rep:propDef name="status" label="Status" type="http://www.w3.org/2001/XMLSchema#string"/>
-          <rep:propValue value="None"/>
-        </rep:property>
-        <rep:property>
-          <rep:propDef name="author" label="Author" type="http://www.w3.org/2001/XMLSchema#int"/>
-          <rep:propValue value="-1.0"/>
-        </rep:property>
-      </tags>
-    </dataset>
-    <dataset name="weight" id="5002" category="Animal Info" type="Standard">
-      <tags>
-        <rep:property>
-          <rep:propDef name="status" label="Status" type="http://www.w3.org/2001/XMLSchema#string"/>
-          <rep:propValue value="None"/>
-        </rep:property>
-        <rep:property>
-          <rep:propDef name="author" label="Author" type="http://www.w3.org/2001/XMLSchema#int"/>
-          <rep:propValue value="-1.0"/>
-        </rep:property>
-      </tags>
-    </dataset>
-    <dataset name="idHistory" id="5003" category="Animal Info" type="Standard">
-      <tags>
-        <rep:property>
-          <rep:propDef name="status" label="Status" type="http://www.w3.org/2001/XMLSchema#string"/>
-          <rep:propValue value="None"/>
-        </rep:property>
-        <rep:property>
-          <rep:propDef name="author" label="Author" type="http://www.w3.org/2001/XMLSchema#int"/>
-          <rep:propValue value="-1.0"/>
-        </rep:property>
-      </tags>
-    </dataset>
-    <dataset name="Microbiome" id="5004" category="Assays" type="Standard">
+     <dataset name="demographics" id="5001" category="Animal Info" demographicData="true" type="Standard">
       <tags>
         <rep:property>
           <rep:propDef name="status" label="Status" type="http://www.w3.org/2001/XMLSchema#string"/>
@@ -45,7 +9,55 @@
         </rep:property>
         <rep:property>
           <rep:propDef name="author" label="Author" type="http://www.w3.org/2001/XMLSchema#int"/>
-          <rep:propValue value="1003.0"/>
+          <rep:propValue value="Terry"/>
+        </rep:property>
+      </tags>
+    </dataset>
+    <dataset name="weight" id="5002" category="Animal Info" type="Standard">
+      <tags>
+        <rep:property>
+          <rep:propDef name="status" label="Status" type="http://www.w3.org/2001/XMLSchema#string"/>
+          <rep:propValue value="Final"/>
+        </rep:property>
+        <rep:property>
+          <rep:propDef name="author" label="Author" type="http://www.w3.org/2001/XMLSchema#int"/>
+          <rep:propValue value="Terry"/>
+        </rep:property>
+      </tags>
+    </dataset>
+    <dataset name="SampleInventory" id="7001" category="Samples" type="Standard">
+      <tags>
+        <rep:property>
+          <rep:propDef name="status" label="Status" type="http://www.w3.org/2001/XMLSchema#string"/>
+          <rep:propValue value="None"/>
+        </rep:property>
+        <rep:property>
+          <rep:propDef name="author" label="Author" type="http://www.w3.org/2001/XMLSchema#int"/>
+          <rep:propValue value="Terry"/>
+        </rep:property>
+      </tags>
+    </dataset>
+    <dataset name="Biomarkers" id="7002" category="Samples" type="Standard">
+    <tags>
+      <rep:property>
+        <rep:propDef name="status" label="Status" type="http://www.w3.org/2001/XMLSchema#string"/>
+        <rep:propValue value="None"/>
+      </rep:property>
+      <rep:property>
+        <rep:propDef name="author" label="Author" type="http://www.w3.org/2001/XMLSchema#int"/>
+        <rep:propValue value="Terry"/>
+      </rep:property>
+    </tags>
+  </dataset>
+    <dataset name="InVivoResults" id="7003" category="Samples" type="Standard">
+      <tags>
+        <rep:property>
+          <rep:propDef name="status" label="Status" type="http://www.w3.org/2001/XMLSchema#string"/>
+          <rep:propValue value="None"/>
+        </rep:property>
+        <rep:property>
+          <rep:propDef name="author" label="Author" type="http://www.w3.org/2001/XMLSchema#int"/>
+          <rep:propValue value="Terry"/>
         </rep:property>
       </tags>
     </dataset>

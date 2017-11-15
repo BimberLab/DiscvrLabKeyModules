@@ -19,8 +19,14 @@ package org.labkey.snprc_r24;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.module.DefaultModule;
+import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.query.DefaultSchema;
+import org.labkey.api.query.QuerySchema;
+import org.labkey.api.query.QueryService;
 import org.labkey.api.view.WebPartFactory;
 
 import java.util.Collection;
@@ -40,7 +46,7 @@ public class snprc_r24Module extends DefaultModule
     @Override
     public double getVersion()
     {
-        return 16.21;
+        return 17.12;
     }
 
     @Override
@@ -67,7 +73,22 @@ public class snprc_r24Module extends DefaultModule
     {
         // add a container listener so we'll know when our container is deleted:
         ContainerManager.addContainerListener(new snprc_r24ContainerListener());
+
+
+        for (final String schemaName : getSchemaNames())
+        {
+            final DbSchema dbSchema = DbSchema.get(schemaName, DbSchemaType.Module);
+            DefaultSchema.registerProvider(dbSchema.getQuerySchemaName(), new DefaultSchema.SchemaProvider(this)
+            {
+                public QuerySchema createSchema(final DefaultSchema schema, Module module)
+                {
+                    DbSchema dbSchema = DbSchema.get(schemaName, DbSchemaType.Module);
+                    return QueryService.get().createSimpleUserSchema(dbSchema.getQuerySchemaName(), null, schema.getUser(), schema.getContainer(), dbSchema);
+                }
+            });
+        }
     }
+
 
     @Override
     @NotNull

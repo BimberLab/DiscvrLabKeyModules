@@ -1,0 +1,11 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="SampleId"/>
+        <column name="Lab" />
+        <column name="Analyte"/>
+        <column name="Value"/>
+    </columns>
+    <sorts>
+        <sort column="AnimalId" descending="true" />
+    </sorts>
+</customView>

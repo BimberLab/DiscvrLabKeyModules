@@ -1,0 +1,24 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="livingCohortsByGroup" tableDbType="NOT_IN_DB" useColumnOrder="true">
+                <tableUrl />
+                <insertUrl />
+                <importUrl />
+                <updateUrl />
+                <deleteUrl />
+                <columns>
+                    <column columnName="AnimalId">
+                        <columnTitle>Animal Id</columnTitle>
+                    </column>
+                    <column columnName="Date">
+                        <columnTitle>Creation Date</columnTitle>
+                    </column>
+                    <column columnName="SourceColony">
+                        <columnTitle>Source Colony</columnTitle>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

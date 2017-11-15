@@ -16,5 +16,297 @@
  * limitations under the License.
 
  -->
-<tables xsi:schemaLocation="http://labkey.org/data/xml ..\..\..\..\schemas\tableInfo.xsd" xmlns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<tables xsi:schemaLocation="http://labkey.org/data/xml ..\..\..\..\schemas\tableInfo.xsd"
+        xmlns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <table tableName="Biomarkers" tableDbType="TABLE">
+        <description>Contains one row of sample data data for each Animal Id/Date/SampleId combination.</description>
+        <pkColumnName>RowId</pkColumnName>
+        <columns>
+            <column columnName="RowId">
+                <nullable>false</nullable>
+                <isAutoInc>true</isAutoInc>
+            </column>
+            <column columnName="SampleId">
+                <datatype>varchar</datatype>
+                <columnTitle>Sample Id</columnTitle>
+                <isKeyField>true</isKeyField>
+                <scale>32</scale>
+                <fk>
+                    <fkDbSchema>snprc_r24</fkDbSchema>
+                    <fkTable>SampleInventory</fkTable>
+                    <fkColumnName>SampleId</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="Lab">
+                <columnTitle>Lab</columnTitle>
+                <nullable>true</nullable>
+            </column>
+            <column columnName="Analyte">
+                <datatype>varchar</datatype>
+                <columnTitle>Analyte</columnTitle>
+                <isKeyField>true</isKeyField>
+                <scale>128</scale>
+            </column>
+            <column columnName="Value">
+                <datatype>double</datatype>
+                <columnTitle>Value</columnTitle>
+            </column>
+            <column columnName="objectid">
+                <nullable>true</nullable>
+            </column>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="diCreatedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+                <fk>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>Users</fkTable>
+                    <fkColumnName>UserId</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="diCreated">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="diModifiedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+                <fk>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>Users</fkTable>
+                    <fkColumnName>UserId</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="diModified">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+        <tableTitle>Biomarkers</tableTitle>
+    </table>
+    <table tableName="SampleInventory" tableDbType="TABLE">
+        <description>Contains one row of sample data data for each Animal Id/Date/SampleId combination.</description>
+        <pkColumnName>RowId</pkColumnName>
+        <columns>
+            <column columnName="RowId">
+                <nullable>false</nullable>
+                <isAutoInc>true</isAutoInc>
+            </column>
+            <column columnName="AnimalId">
+                <datatype>varchar</datatype>
+                <columnTitle>Animal Id</columnTitle>
+                <description>Subject identifier</description>
+                <propertyURI>http://cpas.labkey.com/Study#ParticipantId</propertyURI>
+                <nullable>false</nullable>
+                <importAliases>
+                    <importAlias>ptid</importAlias>
+                </importAliases>
+                <fk>
+                    <fkDbSchema>study</fkDbSchema>
+                    <fkTable>AnimalId</fkTable>
+                    <fkColumnName>AnimalId</fkColumnName>
+                </fk>
+                <scale>32</scale>
+            </column>
+            <column columnName="Date">
+                <datatype>timestamp</datatype>
+                <columnTitle>Date</columnTitle>
+                <propertyURI>http://cpas.labkey.com/Study#VisitDate</propertyURI>
+                <conceptURI>http://cpas.labkey.com/Study#VisitDate</conceptURI>
+                <nullable>false</nullable>
+                <formatString>Date</formatString>
+            </column>
+            <column columnName="SampleId">
+                <datatype>varchar</datatype>
+                <columnTitle>Sample Id</columnTitle>
+                <isKeyField>true</isKeyField>
+                <scale>32</scale>
+            </column>
+            <column columnName="Aim">
+                <datatype>varchar</datatype>
+                <columnTitle>Aim</columnTitle>
+                <nullable>true</nullable>
+                <scale>128</scale>
+            </column>
+            <column columnName="SampleType">
+                <datatype>varchar</datatype>
+                <columnTitle>Sample Type</columnTitle>
+                <scale>128</scale>
+            </column>
+            <column columnName="Objectid">
+                <nullable>true</nullable>
+            </column>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="diCreatedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+                <fk>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>Users</fkTable>
+                    <fkColumnName>UserId</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="diCreated">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="diModifiedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+                <fk>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>Users</fkTable>
+                    <fkColumnName>UserId</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="diModified">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+        <tableTitle>SampleInventory</tableTitle>
+    </table>
+    <table tableName="LookupSets" tableDbType="TABLE">
+        <description>Provides lookup values.</description>
+        <pkColumnName>RowId</pkColumnName>
+        <columns>
+            <column columnName="RowId">
+                <nullable>false</nullable>
+                <isAutoInc>true</isAutoInc>
+            </column>
+            <column columnName="SetName">
+                <datatype>varchar</datatype>
+                <columnTitle>Set Name</columnTitle>
+                <nullable>false</nullable>
+                <scale>32</scale>
+            </column>
+            <column columnName="Label">
+                <datatype>varchar</datatype>
+                <scale>32</scale>
+                <nullable>true</nullable>
+            </column>
+             <column columnName="Objectid">
+                <nullable>true</nullable>
+            </column>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="diCreatedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+                <fk>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>Users</fkTable>
+                    <fkColumnName>UserId</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="diCreated">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="diModifiedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+                <fk>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>Users</fkTable>
+                    <fkColumnName>UserId</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="diModified">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+        <tableTitle>LookupSets</tableTitle>
+    </table>
+    <table tableName="Lookups" tableDbType="TABLE">
+        <description>Provides lookup values.</description>
+        <pkColumnName>RowId</pkColumnName>
+        <columns>
+            <column columnName="RowId">
+                <nullable>false</nullable>
+                <isAutoInc>true</isAutoInc>
+            </column>
+            <column columnName="SetName">
+                <datatype>varchar</datatype>
+                <columnTitle>Set Name</columnTitle>
+                <nullable>false</nullable>
+                <scale>32</scale>
+            </column>
+            <column columnName="Value">
+                <datatype>varchar</datatype>
+                <nullable>false</nullable>
+                <scale>128</scale>
+            </column>
+            <column columnName="SortOrder">
+                <datatype>integer</datatype>
+                <columnTitle>Sort Order</columnTitle>
+                <nullable>true</nullable>
+            </column>
+            <column columnName="DateDisabled">
+                <datatype>timestamp</datatype>
+                <columnTitle>Date</columnTitle>
+                <nullable>true</nullable>
+                <formatString>Date</formatString>
+            </column>
+            <column columnName="Objectid">
+                <nullable>true</nullable>
+            </column>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+            <column columnName="diCreatedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+                <fk>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>Users</fkTable>
+                    <fkColumnName>UserId</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="diCreated">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="diModifiedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+                <fk>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>Users</fkTable>
+                    <fkColumnName>UserId</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="diModified">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+        <tableTitle>Lookups</tableTitle>
+    </table>
 </tables>

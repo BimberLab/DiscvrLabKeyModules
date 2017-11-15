@@ -1,0 +1,12 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="SetName"/>
+        <column name="Value"/>
+        <column name="SortOrder"/>
+        <column name="DateDisabled"/>
+    </columns>
+    <sorts>
+        <sort column="SetName" descending="false" />
+        <sort column="SortOrder" descending="false"/>
+    </sorts>
+</customView>

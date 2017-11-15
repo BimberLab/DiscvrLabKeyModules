@@ -1,0 +1,30 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="InVivoResults" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="AnimalId">
+                        <columnTitle>Animal Id</columnTitle>
+                    </column>
+                    <column columnName="Date">
+                        <columnTitle>Creation Date</columnTitle>
+                    </column>
+                    <column columnName="Aim">
+                        <fk>
+                            <fkDbSchema>snprc_r24</fkDbSchema>
+                            <fkTable>LookupAims</fkTable>
+                            <fkColumnName>Value</fkColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="DataType">
+                    <fk>
+                        <fkDbSchema>snprc_r24</fkDbSchema>
+                        <fkTable>LookupDataTypes</fkTable>
+                        <fkColumnName>Value</fkColumnName>
+                    </fk>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

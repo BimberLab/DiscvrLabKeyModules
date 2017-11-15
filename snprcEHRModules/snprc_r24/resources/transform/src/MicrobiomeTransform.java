@@ -2,6 +2,7 @@
 import java.io.*;
 import java.util.*;
 
+
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -17,6 +18,7 @@ public class MicrobiomeTransform extends AbstractAssayValidator
     private Map<String, String> _runProperties = new HashMap<>();
     private Map<Integer, String> _colMap = new HashMap<>();
     private Map<String, String> _dictionary = new HashMap<>();
+    private final int numHeaderCols = 4;
 
     public static void main(String[] args)
     {
@@ -71,28 +73,31 @@ public class MicrobiomeTransform extends AbstractAssayValidator
     {
         Iterator<Cell> cellIter = row.iterator();
         StringBuilder sb = new StringBuilder();
+
         int col = 0;
         int i = 0;
         Cell cell;
         String s;
 
         // column header lookup HashMap
+        _dictionary.put("Sample Id", "SampleId\t");
         _dictionary.put("Marmoset ID", "ParticipantId\t");
         _dictionary.put("Sample Date", "Date\t");
-        _dictionary.put("UI ID", "UiId\t");
-        _dictionary.put("GRC ID", "GrcId\t");
-        _dictionary.put("Sample Id", "SampleId\t");
+        //_dictionary.put("UI ID", "UiId\t");
+        _dictionary.put("Barcode", "Barcode\t");
 
-        // Populate column map
-        while (cellIter.hasNext())
+        try
         {
-            cell = cellIter.next();
-            _colMap.put(col++, getValue(cell));
 
-            try
+            // Populate column map
+            while (cellIter.hasNext())
             {
+
+                cell = cellIter.next();
+                _colMap.put(col++, getValue(cell));
+
                 // Get header columns
-                if (i < 5)
+                if (i < numHeaderCols)
                 {
                     s = _dictionary.get(getValue(cell));
                     if (s != null)
@@ -101,29 +106,23 @@ public class MicrobiomeTransform extends AbstractAssayValidator
                     }
                     else
                     {
-                        writeError("Encountered Invalid column header: " + getValue(cell), "");
-                        //throw new IllegalArgumentException("Encountered Invalid column header: " + getValue(cell) + "\n");
+                        writeError("Encountered Invalid column header: " + getValue(cell) + " " + sb.toString(), "");
+                       //throw new IllegalArgumentException("Encountered Invalid column header: " + getValue(cell) + "\n");
                     }
+
                 }
-            }
-            catch (IOException e)
-            {
-                throw new RuntimeException(e);
-            }
+                i++;
 
-            i++;
-
+            }
         }
-        sb.append("OTU\tValue\n");
-
-        /* debug...
-
-        for(Map.Entry<Integer, String> entry : _colMap.entrySet())
+        catch (IOException e)
         {
-            System.out.println(entry.getValue());
+            throw new RuntimeException(e);
         }
-        System.out.println(sb.toString());
-        */
+
+        //i++;
+
+        sb.append("OTU\tValue\n");
 
         return sb.toString();
     }
@@ -150,14 +149,14 @@ public class MicrobiomeTransform extends AbstractAssayValidator
         for (Map.Entry<Integer, String> entry : _colMap.entrySet())
         {
             // get columns that will be used as common values for each unpivoted row
-            if (i < 5)
+            if (i < numHeaderCols)
             {
                 i++;
                 col = entry.getKey();
                 cell = row.getCell(col);
                 try
                 {
-                    if (cell != null )
+                    if (cell != null)
                     {
                         common.append(getValue(cell));
                         common.append('\t');
@@ -179,11 +178,22 @@ public class MicrobiomeTransform extends AbstractAssayValidator
                 // Get OTUs
                 col = entry.getKey();
                 String value = getValue(row.getCell(col));
-                rows.append(common);
-                rows.append(entry.getValue() + "\t");
-                rows.append(value);
-                rows.append('\n');
+                try
+                {
+                    // only store rows with valued > 0 10/31/2017 tjh
+                    int intValue = Integer.parseInt(value);
+                    // is an integer!
 
+                    if (intValue > 0)
+                    {
+                        rows.append(common);
+                        rows.append(entry.getValue() + "\t");
+                        rows.append(value);
+                        rows.append('\n');
+                    }
+                } catch (NumberFormatException e) {
+                    // not an integer!
+                }
             }
         }
         return rows.toString();
@@ -192,12 +202,16 @@ public class MicrobiomeTransform extends AbstractAssayValidator
     public void runTransform(File inputFile)
     {
 
-//        System.out.println("Starting with... " + inputFile );
+
 
         parseRunProperties(inputFile);
 
         try
         {
+
+
+            //writeError("runfile name: " + inputFile, "");
+
             if (getRunProperties().containsKey(Props.runDataFile.name()))
             {
 
@@ -207,10 +221,13 @@ public class MicrobiomeTransform extends AbstractAssayValidator
                 try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(transformFile))))
                 {
                     try {
+                        //writeError("inputDataFile  " + inputDataFile.getName() , "");
                         FileInputStream stream = new FileInputStream(inputDataFile);
 
                         Workbook workbook = new XSSFWorkbook(stream);
+
                         Sheet firstSheet = workbook.getSheetAt(0);
+
                         Iterator<Row> rowIter = firstSheet.iterator();
 
                         boolean first = true;
@@ -224,9 +241,11 @@ public class MicrobiomeTransform extends AbstractAssayValidator
                             sb = new StringBuilder();
                             if(first)
                             {
+
                                 sb.append(getColumns(nextRow));
                                 System.out.println(sb.toString());
                                 first = false;
+
                             }
                             else
                             {
@@ -235,6 +254,7 @@ public class MicrobiomeTransform extends AbstractAssayValidator
 
                             writer.print(sb.toString());
                         }
+
                     }
                     catch (Exception e)
                     {

@@ -1,0 +1,18 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="AnimalId"/>
+        <column name="NeprcId" />
+        <column name="birth"/>
+        <column name="death"/>
+        <column name="gender"/>
+        <column name="sourceColony"/>
+        <column name="currentColony"/>
+        <column name="species"/>
+        <column name="dam"/>
+        <column name="sire"/>
+
+    </columns>
+    <sorts>
+        <sort column="AnimalId" descending="false" />
+    </sorts>
+</customView>

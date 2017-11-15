@@ -1,0 +1,11 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="AnimalId"/>
+        <column name="Date" />
+        <column name="Weight"/>
+    </columns>
+    <sorts>
+        <sort column="AnimalId" descending="false" />
+        <sort column="Date" descending="true"/>
+    </sorts>
+</customView>
