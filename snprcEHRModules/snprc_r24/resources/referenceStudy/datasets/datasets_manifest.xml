@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <datasets metaDataFile="datasets_metadata.xml" xmlns="http://labkey.org/study/xml" xmlns:rep="http://labkey.org/data/xml/reportProps">
   <datasets>
-     <dataset name="demographics" id="5001" category="Animal Info" demographicData="true" type="Standard">
+     <dataset name="Demographics" id="5001" category="Animal Info" demographicData="true" type="Standard">
       <tags>
         <rep:property>
           <rep:propDef name="status" label="Status" type="http://www.w3.org/2001/XMLSchema#string"/>
@@ -13,7 +13,7 @@
         </rep:property>
       </tags>
     </dataset>
-    <dataset name="weight" id="5002" category="Animal Info" type="Standard">
+    <dataset name="Weight" id="5002" category="Animal Info" type="Standard">
       <tags>
         <rep:property>
           <rep:propDef name="status" label="Status" type="http://www.w3.org/2001/XMLSchema#string"/>
