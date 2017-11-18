@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.DeferredUpgrade;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.data.UpgradeCode;
@@ -29,6 +30,7 @@ public class SequenceAnalysisUpgradeCode implements UpgradeCode
 
     /** called at 12.277-12.278 */
     @SuppressWarnings({"UnusedDeclaration"})
+    @DeferredUpgrade
     public void migrateSequenceField(final ModuleContext moduleContext)
     {
         TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
@@ -67,6 +69,7 @@ public class SequenceAnalysisUpgradeCode implements UpgradeCode
 
     /** called at 12.292-12.293 and 12.293-12.294*/
     @SuppressWarnings({"UnusedDeclaration"})
+    @DeferredUpgrade
     public void migrateLibraryTracks(final ModuleContext moduleContext)
     {
         if (moduleContext.isNewInstall())
@@ -166,8 +169,12 @@ public class SequenceAnalysisUpgradeCode implements UpgradeCode
 
     /** called at 12.306-12.307*/
     @SuppressWarnings({"UnusedDeclaration"})
+    @DeferredUpgrade
     public void appendSequenceLength(final ModuleContext moduleContext)
     {
+        if (moduleContext.isNewInstall())
+            return;
+
         SequenceAnalysisManager.get().apppendSequenceLength(moduleContext.getUpgradeUser(), _log);
     }
 }
