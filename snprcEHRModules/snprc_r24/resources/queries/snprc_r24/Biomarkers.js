@@ -1,6 +1,7 @@
 var console = require("console");
 
 function init(event, errors) {
+    return;
     console.log('init called');
 }
 

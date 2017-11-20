@@ -19,6 +19,7 @@
 <tables xsi:schemaLocation="http://labkey.org/data/xml ..\..\..\..\schemas\tableInfo.xsd"
         xmlns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <table tableName="Biomarkers" tableDbType="TABLE">
+        <auditLogging>DETAILED</auditLogging>
         <description>Contains one row of sample data data for each Animal Id/Date/SampleId combination.</description>
         <pkColumnName>RowId</pkColumnName>
         <columns>
@@ -96,6 +97,7 @@
         <tableTitle>Biomarkers</tableTitle>
     </table>
     <table tableName="SampleInventory" tableDbType="TABLE">
+        <auditLogging>DETAILED</auditLogging>
         <description>Contains one row of sample data data for each Animal Id/Date/SampleId combination.</description>
         <pkColumnName>RowId</pkColumnName>
         <columns>
@@ -189,6 +191,7 @@
         <tableTitle>SampleInventory</tableTitle>
     </table>
     <table tableName="LookupSets" tableDbType="TABLE">
+        <auditLogging>DETAILED</auditLogging>
         <description>Provides lookup values.</description>
         <pkColumnName>RowId</pkColumnName>
         <columns>
@@ -252,6 +255,7 @@
         <tableTitle>LookupSets</tableTitle>
     </table>
     <table tableName="Lookups" tableDbType="TABLE">
+        <auditLogging>DETAILED</auditLogging>
         <description>Provides lookup values.</description>
         <pkColumnName>RowId</pkColumnName>
         <columns>

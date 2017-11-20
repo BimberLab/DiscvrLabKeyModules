@@ -7,8 +7,8 @@
                         <columnTitle>Animal Id</columnTitle>
                         <fk>
                             <fkDbSchema>study</fkDbSchema>
-                            <fkTable>livingAnimalCohorts</fkTable>
-                            <fkColumnName>animalId</fkColumnName>
+                            <fkTable>Animal</fkTable>
+                            <fkColumnName>id</fkColumnName>
                         </fk>
                     </column>
                     <column columnName="Date">

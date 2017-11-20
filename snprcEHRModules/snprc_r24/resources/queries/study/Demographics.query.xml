@@ -1,0 +1,68 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="Demographics" tableDbType="TABLE" useColumnOrder="true">
+                <tableUrl />
+                <insertUrl />
+                <importUrl />
+                <updateUrl />
+                <deleteUrl />
+                <columns>
+                    <column columnName="AnimalId"/>
+                    <column columnName="date">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="gender">
+                        <columnTitle>Gender</columnTitle>
+                    </column>
+                    <column columnName="species">
+                        <columnTitle>Species</columnTitle>
+                    </column>
+                    <column columnName="birth">
+                        <formatString>MM-dd-yy</formatString>
+                        <columnTitle>Date of Birth</columnTitle>
+                    </column>
+                    <column columnName="death">
+                        <formatString>MM-dd-yy</formatString>
+                        <columnTitle>Date of Death</columnTitle>
+                    </column>
+                    <column columnName="status">
+                        <shownInInsertView>false</shownInInsertView>
+                        <isHidden>true</isHidden>
+                        <columnTitle>Status</columnTitle>
+                    </column>
+                    <column columnName="dam">
+                        <columnTitle>Dam</columnTitle>
+                        <fk>
+                            <fkDbSchema>study</fkDbSchema>
+                            <fkTable>animal</fkTable>
+                            <fkColumnName>id</fkColumnName>
+                        </fk>
+                        <url>/query/executeQuery.view?schemaName=${schemaName}&amp;query.queryName=Demographics&amp;query.participantId~eq=${dam}</url>
+                    </column>
+                    <column columnName="sire">
+                        <columnTitle>Sire</columnTitle>
+                        <fk>
+                            <fkDbSchema>study</fkDbSchema>
+                            <fkTable>animal</fkTable>
+                            <fkColumnName>id</fkColumnName>
+                        </fk>
+                        <url>/query/executeQuery.view?schemaName=${schemaName}&amp;query.queryName=Demographics&amp;query.participantId~eq=${sire}</url>
+                    </column>
+                    <column columnName="diCreated">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="diCreatedBy">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="diModified">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="diModifiedBy">
+                        <isHidden>true</isHidden>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

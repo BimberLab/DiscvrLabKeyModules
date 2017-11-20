@@ -12,11 +12,6 @@
         <importAliases>
           <importAlias>ptid</importAlias>
         </importAliases>
-        <!--<fk>-->
-          <!--<fkDbSchema>study</fkDbSchema>-->
-          <!--<fkTable>AnimalId</fkTable>-->
-          <!--<fkColumnName>AnimalId</fkColumnName>-->
-        <!--</fk>-->
         <scale>32</scale>
       </column>
       <column columnName="NeprcId">
@@ -110,11 +105,6 @@
         <importAliases>
           <importAlias>ptid</importAlias>
         </importAliases>
-        <fk>
-          <fkDbSchema>study</fkDbSchema>
-          <fkTable>AnimalId</fkTable>
-          <fkColumnName>AnimalId</fkColumnName>
-        </fk>
         <scale>32</scale>
       </column>
       <column columnName="date">
@@ -153,11 +143,6 @@
         <importAliases>
           <importAlias>ptid</importAlias>
         </importAliases>
-        <fk>
-          <fkDbSchema>study</fkDbSchema>
-          <fkTable>AnimalId</fkTable>
-          <fkColumnName>AnimalId</fkColumnName>
-        </fk>
         <scale>32</scale>
       </column>
       <column columnName="date">

@@ -3,30 +3,30 @@
         <tables xmlns="http://labkey.org/data/xml">
             <table tableName="Biomarkers" tableDbType="TABLE" useColumnOrder="true">
                 <columns>
-                    <!--<column columnName="AnimalId" wrappedColumnName="SampleId">-->
-                        <!--<shownInInsertView>false</shownInInsertView>-->
-                        <!--<shownInUpdateView>false</shownInUpdateView>-->
-                        <!--<isUnselectable>true</isUnselectable>-->
-                        <!--<columnTitle>AnimalId</columnTitle>-->
-                        <!--<fk>-->
-                            <!--<fkDbSchema>study</fkDbSchema>-->
-                            <!--<fkTable>SampleInventory</fkTable>-->
-                            <!--<fkColumnName>SampleId</fkColumnName>-->
-                            <!--<fkDisplayColumnName>AnimalId</fkDisplayColumnName>-->
-                        <!--</fk>-->
-                    <!--</column>-->
-                    <!--<column columnName="Date" wrappedColumnName="SampleId">-->
-                        <!--<shownInInsertView>false</shownInInsertView>-->
-                        <!--<shownInUpdateView>false</shownInUpdateView>-->
-                        <!--<isUnselectable>true</isUnselectable>-->
-                        <!--<columnTitle>Draw Date</columnTitle>-->
-                        <!--<fk>-->
-                            <!--<fkDbSchema>study</fkDbSchema>-->
-                            <!--<fkTable>SampleInventory</fkTable>-->
-                            <!--<fkColumnName>SampleId</fkColumnName>-->
-                            <!--<fkDisplayColumnName>Date</fkDisplayColumnName>-->
-                        <!--</fk>-->
-                    <!--</column>-->
+                    <column columnName="AnimalId" wrappedColumnName="SampleId">
+                        <shownInInsertView>false</shownInInsertView>
+                        <shownInUpdateView>false</shownInUpdateView>
+                        <isUnselectable>true</isUnselectable>
+                        <columnTitle>AnimalId</columnTitle>
+                        <fk>
+                            <fkDbSchema>snprc_r24</fkDbSchema>
+                            <fkTable>SampleInventory</fkTable>
+                            <fkColumnName>SampleId</fkColumnName>
+                            <fkDisplayColumnName>AnimalId</fkDisplayColumnName>
+                        </fk>
+                    </column>
+                    <column columnName="Date" wrappedColumnName="SampleId">
+                        <shownInInsertView>false</shownInInsertView>
+                        <shownInUpdateView>false</shownInUpdateView>
+                        <isUnselectable>true</isUnselectable>
+                        <columnTitle>Draw Date</columnTitle>
+                        <fk>
+                            <fkDbSchema>snprc_r24</fkDbSchema>
+                            <fkTable>SampleInventory</fkTable>
+                            <fkColumnName>SampleId</fkColumnName>
+                            <fkDisplayColumnName>Date</fkDisplayColumnName>
+                        </fk>
+                    </column>
                     <column columnName="SampleId">
                         <columnTitle>Sample Id</columnTitle>
                         <fk>

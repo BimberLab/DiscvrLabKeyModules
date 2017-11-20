@@ -6,7 +6,7 @@
         <transform type="RemoteQueryTransformStep" id="step1">
             <description>Copy to target</description>
             <source remoteSource="snprcLkSrc" schemaName="study" queryName="R24DemographicsSrc" />
-            <destination schemaName="study" queryName="demographics" targetOption="merge"/>
+            <destination schemaName="study" queryName="Demographics" targetOption="merge"/>
         </transform>
     </transforms>
     <incrementalFilter className="ModifiedSinceFilterStrategy" timestampColumnName="modified" />
