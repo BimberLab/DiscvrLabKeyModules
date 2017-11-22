@@ -10,6 +10,7 @@
         <column name="species"/>
         <column name="dam"/>
         <column name="sire"/>
+        <column name="status"/>
 
     </columns>
     <sorts>

@@ -27,8 +27,6 @@
                         <columnTitle>Date of Death</columnTitle>
                     </column>
                     <column columnName="status">
-                        <shownInInsertView>false</shownInInsertView>
-                        <isHidden>true</isHidden>
                         <columnTitle>Status</columnTitle>
                     </column>
                     <column columnName="dam">
