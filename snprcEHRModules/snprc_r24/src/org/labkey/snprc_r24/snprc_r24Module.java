@@ -46,7 +46,7 @@ public class snprc_r24Module extends DefaultModule
     @Override
     public double getVersion()
     {
-        return 17.12;
+        return 18.11;
     }
 
     @Override

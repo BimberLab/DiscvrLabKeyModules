@@ -12,7 +12,7 @@
                         </fk>
                     </column>
                     <column columnName="Date">
-                        <columnTitle>Draw Date</columnTitle>
+                        <columnTitle>Collection Date</columnTitle>
                     </column>
                     <column columnName="SampleId">
                         <columnTitle>Sample Id</columnTitle>
@@ -36,6 +36,12 @@
                             <fkTable>LookupSampleTypes</fkTable>
                             <fkColumnName>Value</fkColumnName>
                         </fk>
+                    </column>
+                    <column columnName="SampleWeight">
+                        <columnTitle>Sample Weight</columnTitle>
+                    </column>
+                    <column columnName="SampleAmount">
+                        <columnTitle>Sample Amount</columnTitle>
                     </column>
                 </columns>
             </table>

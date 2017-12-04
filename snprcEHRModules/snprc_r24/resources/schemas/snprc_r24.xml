@@ -146,6 +146,14 @@
                 <columnTitle>Sample Type</columnTitle>
                 <scale>128</scale>
             </column>
+            <column columnName="SampleWeight">
+                <datatype>numeric</datatype>
+                <columnTitle>Sample Weight</columnTitle>
+            </column>
+            <column columnName="SampleAmount">
+               <datatype>numeric</datatype>
+                <columnTitle>Sample Amount</columnTitle>
+            </column>
             <column columnName="Objectid">
                 <nullable>true</nullable>
             </column>

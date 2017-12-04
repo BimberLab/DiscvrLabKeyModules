@@ -5,6 +5,8 @@
         <column name="Date"/>
         <column name="Aim"/>
         <column name="SampleType"/>
+        <column name="SampleWeight"/>
+        <column name="SampleAmount"/>
     </columns>
     <sorts>
         <sort column="Date" descending="true" />
