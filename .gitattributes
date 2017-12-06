@@ -2486,6 +2486,7 @@ snprcEHRModules/snprc_r24/resources/schemas/dbscripts/sqlserver/snprc_r24-15.30-
 snprcEHRModules/snprc_r24/resources/schemas/dbscripts/sqlserver/snprc_r24-16.21-17.10.sql -text
 snprcEHRModules/snprc_r24/resources/schemas/dbscripts/sqlserver/snprc_r24-17.10-17.11.sql -text
 snprcEHRModules/snprc_r24/resources/schemas/dbscripts/sqlserver/snprc_r24-17.11-17.12.sql -text
+snprcEHRModules/snprc_r24/resources/schemas/dbscripts/sqlserver/snprc_r24-18.10-18.11.sql -text
 snprcEHRModules/snprc_r24/resources/schemas/snprc_r24.xml -text
 snprcEHRModules/snprc_r24/resources/transform/MANIFEST.MF -text
 snprcEHRModules/snprc_r24/resources/transform/META-INF/MANIFEST.MF -text
