@@ -1,16 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<etl xmlns="http://labkey.org/etl/xml">
-    <name>weights</name>
-    <description>SNPRC Marmoset weights</description>
+<etl xmlns="http://labkey.org/etl/xml" standalone="false">
+    <name>SNPRC weights third component (update)</name>
+    <description>SNPRC weights third component (update)</description>
     <transforms>
-        <transform type="RemoteQueryTransformStep" id="step1">
+        <transform id="step1" type="org.labkey.di.pipeline.TransformTask">
             <description>Copy to target</description>
-            <source remoteSource="snprcLkSrc" schemaName="study" queryName="R24weightsSrc" />
-            <destination schemaName="study" queryName="weight" targetOption="merge"/>
+            <source schemaName="snprc_r24" queryName="WeightStaging"/>
+            <destination schemaName="study" queryName="weight" bulkLoad="true" batchSize="5000" targetOption="merge"/>
         </transform>
     </transforms>
-    <incrementalFilter className="ModifiedSinceFilterStrategy" timestampColumnName="modified" />
+
+    <incrementalFilter className="ModifiedSinceFilterStrategy" timestampColumnName="modified">
+        <deletedRowsSource schemaName="snprc_r24" queryName="RowsToDelete" timestampColumnName="modified"
+                           deletedSourceKeyColumnName="objectid" targetKeyColumnName="ObjectId"/>
+    </incrementalFilter>
     <schedule>
-        <poll interval="60m" />
+        <poll interval="60m"/>
     </schedule>
 </etl>

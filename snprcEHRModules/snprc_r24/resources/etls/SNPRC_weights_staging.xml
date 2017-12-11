@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<etl xmlns="http://labkey.org/etl/xml" standalone="false">
+    <name>SNPRC weights second component (staging)</name>
+    <description>SNPRC weights second component (staging) </description>
+    <transforms>
+        <transform type="RemoteQueryTransformStep" id="step1">
+            <description>Copy weights to local table</description>
+            <source remoteSource="snprcLkSrc" schemaName="study" queryName="R24WeightsSrc" />
+            <destination schemaName="snprc_r24" queryName="WeightStaging" targetOption="merge"/>
+        </transform>
+    </transforms>
+    <incrementalFilter className="ModifiedSinceFilterStrategy" timestampColumnName="modified" >
+    </incrementalFilter>
+</etl>

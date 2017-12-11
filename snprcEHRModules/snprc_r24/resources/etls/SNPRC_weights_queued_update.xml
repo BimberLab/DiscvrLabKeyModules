@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<etl xmlns="http://labkey.org/etl/xml">
+    <name>SNPRC queued weights update</name>
+    <description>Queue up package related ETLs</description>
+    <transforms>
+        <transform id="step 1" type="TaskrefTransformStep">
+            <taskref ref="org.labkey.di.steps.QueueJobTask">
+                <settings>
+                    <setting name="transformId" value="{snprc_r24}/SNPRC_delete_weights"/>
+                </settings>
+            </taskref>
+        </transform>
+        <transform id="step 2" type="TaskrefTransformStep">
+            <taskref ref="org.labkey.di.steps.QueueJobTask">
+                <settings>
+                    <setting name="transformId" value="{snprc_r24}/SNPRC_weights_staging"/>
+                </settings>
+            </taskref>
+        </transform>
+        <transform id="step 3" type="TaskrefTransformStep">
+            <taskref ref="org.labkey.di.steps.QueueJobTask">
+                <settings>
+                    <setting name="transformId" value="{snprc_r24}/SNPRC_weights"/>
+                </settings>
+            </taskref>
+        </transform>
+    </transforms>
+    <schedule>
+        <poll interval="60m" />
+    </schedule>
+</etl>

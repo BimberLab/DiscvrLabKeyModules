@@ -2450,8 +2450,11 @@ snprcEHRModules/snprc_genetics/src/org/labkey/snprc_genetics/SNPRC_GeneticsContr
 snprcEHRModules/snprc_genetics/src/org/labkey/snprc_genetics/SNPRC_GeneticsModule.java -text
 snprcEHRModules/snprc_r24/build.gradle -text
 snprcEHRModules/snprc_r24/module.properties -text
+snprcEHRModules/snprc_r24/resources/etls/SNPRC_delete_weights.xml -text
 snprcEHRModules/snprc_r24/resources/etls/SNPRC_demographics.xml -text
 snprcEHRModules/snprc_r24/resources/etls/SNPRC_weights.xml -text
+snprcEHRModules/snprc_r24/resources/etls/SNPRC_weights_queued_update.xml -text
+snprcEHRModules/snprc_r24/resources/etls/SNPRC_weights_staging.xml -text
 snprcEHRModules/snprc_r24/resources/queries/snprc_r24/Biomarkers.js -text
 snprcEHRModules/snprc_r24/resources/queries/snprc_r24/Biomarkers.query.xml -text
 snprcEHRModules/snprc_r24/resources/queries/snprc_r24/Biomarkers/.qview.xml -text
@@ -2487,6 +2490,7 @@ snprcEHRModules/snprc_r24/resources/schemas/dbscripts/sqlserver/snprc_r24-16.21-
 snprcEHRModules/snprc_r24/resources/schemas/dbscripts/sqlserver/snprc_r24-17.10-17.11.sql -text
 snprcEHRModules/snprc_r24/resources/schemas/dbscripts/sqlserver/snprc_r24-17.11-17.12.sql -text
 snprcEHRModules/snprc_r24/resources/schemas/dbscripts/sqlserver/snprc_r24-18.10-18.11.sql -text
+snprcEHRModules/snprc_r24/resources/schemas/dbscripts/sqlserver/snprc_r24-18.11-18.12.sql -text
 snprcEHRModules/snprc_r24/resources/schemas/snprc_r24.xml -text
 snprcEHRModules/snprc_r24/resources/transform/MANIFEST.MF -text
 snprcEHRModules/snprc_r24/resources/transform/META-INF/MANIFEST.MF -text

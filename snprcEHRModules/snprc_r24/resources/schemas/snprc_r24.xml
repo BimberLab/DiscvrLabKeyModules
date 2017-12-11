@@ -337,4 +337,25 @@
         </columns>
         <tableTitle>Lookups</tableTitle>
     </table>
+    <table tableName="RowsToDelete" tableDbType="TABLE">
+        <columns>
+            <column columnName="ObjectId" />
+            <column columnName="Modified" />
+        </columns>
+        <tableTitle>RowsToDelete</tableTitle>
+     </table>
+    <table tableName="WeightStaging" tableDbType="TABLE">
+        <description>Table to stage remote ETLs into.</description>
+        <columns>
+            <column columnName="AnimalId" />
+            <column columnName="Date" />
+            <column columnName="Weight" />
+            <column columnName="ObjectId" />
+            <column columnName="Objectid"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
+        </columns>
+    </table>
 </tables>
