@@ -187,6 +187,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         });
 
         Ext4.apply(this, {
+            configDefaults: {},
             buttonAlign: 'left',
             buttons: [{
                 text: 'Import Data',
@@ -229,28 +230,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 html: 'Note: all input files will be automatically converted to FASTQ (ASCII offset 33) if not already.',
                 style: 'padding-bottom:10px;',
                 border: false
-            },{
-                fieldLabel: 'Treatment of Input Files',
-                xtype: 'combo',
-                helpPopup: 'This determines how the input files are handled.  By default, files are normalized to FASTQ and the originals deleted to save space.  However, you can choose to keep the original (compressed), or leave the originals alone.',
-                itemId: 'originalFileTreatment',
-                name: 'inputfile.inputTreatment',
-                width: 600,
-                editable: false,
-                displayField: 'display',
-                valueField: 'value',
-                value: 'delete',
-                store: {
-                    type: 'array',
-                    fields: ['display', 'value'],
-                    data: [
-                        ['Copy, delete originals', 'delete'],
-                        ['Move originals and compress', 'compress'],
-                        ['Copy, leave originals in place', 'none'],
-                        ['Leave in place', 'leaveInPlace']
-                    ]
-                }
-            },{
+            },SequenceAnalysis.panel.SequenceImportPanel.getInputFileTreatmentField({itemId: 'originalFileTreatment', name: 'inputFileTreatment'}),{
                 xtype: 'checkbox',
                 name: 'deleteIntermediateFiles',
                 fieldLabel: 'Delete Intermediate Files',
@@ -379,6 +359,29 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
     },
 
     statics: {
+        getInputFileTreatmentField: function(config){
+            return Ext4.apply({
+                fieldLabel: 'Treatment of Input Files',
+                xtype: 'combo',
+                helpPopup: 'This determines how the input files are handled.  By default, files are normalized to FASTQ and the originals deleted to save space.  However, you can choose to keep the original (compressed), or leave the originals alone.',
+                width: 600,
+                forceSelection: true,
+                displayField: 'display',
+                valueField: 'value',
+                value: 'delete',
+                store: {
+                    type: 'array',
+                    fields: ['display', 'value'],
+                    data: [
+                        ['Copy, delete originals', 'delete'],
+                        ['Move originals and compress', 'compress'],
+                        ['Copy, leave originals in place', 'none'],
+                        ['Leave in place', 'leaveInPlace']
+                    ]
+                }
+            }, config || {});
+        },
+
         getRenderer: function (colName) {
             var column;
             return function (value, cellMetaData, record, rowIndex, colIndex, store) {
@@ -415,6 +418,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
     populateSamples: function(orderType, isPaired){
         this.fileNameStore.sort('displayName', 'ASC');
         this.readDataStore.removeAll();
+        var errorMsgs = [];
 
         if (!orderType || orderType == 'illumina'){
             var map = {};
@@ -437,7 +441,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     var setNo = match[5];
                     var setId = platformUnit + '_' + setNo;
                     var direction = match[4];
-                    this.processIlluminaMatch(sample, platformUnit, setNo, setId, direction, rec, map);
+                    this.processIlluminaMatch(sample, platformUnit, setNo, setId, direction, rec, map, errorMsgs);
                 }
                 else if (this.ILLUMINA_REGEX_NO_LANE.test(rec.get('fileName'))){
                    var match = this.ILLUMINA_REGEX_NO_LANE.exec(rec.get('fileName'));
@@ -446,7 +450,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                    var platformUnit = match[1];
                    var setId = match[1] + (setNo ? '-' + setNo : '');
                    var direction = match[3];
-                   this.processIlluminaMatch(sample, platformUnit, null, setId, direction, rec, map);
+                   this.processIlluminaMatch(sample, platformUnit, null, setId, direction, rec, map, errorMsgs);
                 }
                 else {
                     var m = Ext4.create('SequenceAnalysis.model.ReadsetDataModel', {});
@@ -580,9 +584,11 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
             LDK.Utils.logError(msg);
         }
+
+        return errorMsgs;
     },
 
-    processIlluminaMatch: function(sample, platformUnit, lane, setId, readSet, rec, map){
+    processIlluminaMatch: function(sample, platformUnit, lane, setId, readSet, rec, map, errorMsgs){
         map[sample] = map[sample] || {};
         map[sample][setId] = map[sample][setId] || [];
 
@@ -602,6 +608,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 }, this);
 
                 LDK.Utils.logError(msg);
+                errorMsgs.push('Possible error: Encountered reverse reads prior to forward reads for ' + setId + ', which can indicate files are out of alphabetical order, one file from a pair is missing, or a problem parsing the filenames.  Please check over the file groups carefully.');
 
                 var m = Ext4.create('SequenceAnalysis.model.ReadsetDataModel', {});
                 m.set('fileRecord2', rec.get('id'));
@@ -875,6 +882,32 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 itemId: 'runDescription',
                 name: 'runDescription',
                 allowBlank:true
+            }, {
+                xtype: 'ldk-linkbutton',
+                style: 'margin-left: ' + (this.fieldDefaults.labelWidth + 4) + 'px;',
+                width: null,
+                hidden: !LABKEY.Security.currentUser.isAdmin,
+                text: 'Set Page Defaults',
+                itemId: 'copyPrevious',
+                linkCls: 'labkey-text-link',
+                scope: this,
+                handler: function (btn) {
+                    Ext4.create('Ext.window.Window', {
+                        title: 'Set Page Defaults',
+                        items: [{
+                            xtype: 'sequenceanalysis-sequenceimportsettingspanel',
+                            border: false,
+                            hidePageLoadWarning: false,
+                            hideButtons: true
+                        }],
+                        buttons: SequenceAnalysis.panel.SequenceImportSettingsPanel.getButtons().concat([{
+                            text: 'Cancel',
+                            handler: function (btn) {
+                                btn.up('window').close();
+                            }
+                        }])
+                    }).show();
+                }
             }]
         }
     },
@@ -890,7 +923,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
         this.fileNames.sort();
         Ext4.Msg.wait('Loading...');
-        LABKEY.Ajax.request({
+        var multi = new LABKEY.MultiRequest();
+        multi.add(LABKEY.Ajax.request, {
             method: 'POST',
             url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'validateReadsetFiles'),
             params: {
@@ -900,8 +934,43 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
             },
             scope: this,
             success: this.onFileLoad,
-            failure: LDK.Utils.getErrorCallback
+            failure: LDK.Utils.getErrorCallback()
         });
+
+        multi.add(LABKEY.Ajax.request, {
+            method: 'POST',
+            url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'getSequenceImportDefaults'),
+            scope: this,
+            success: function(response){
+                LDK.Utils.decodeHttpResponseJson(response);
+                if (response.responseJSON){
+                    this.configDefaults = response.responseJSON;
+                    for (var name in this.configDefaults){
+                        var item = this.down('component[name=' + name + ']');
+                        LDK.Assert.assertNotEmpty('Unable to find SequenceImportField with name: ' + name, item);
+                        if (item){
+                            item.setValue(this.configDefaults[name]);
+                        }
+                    }
+                }
+            },
+            failure: LDK.Utils.getErrorCallback()
+        });
+
+        multi.send(this.onSendComplete, this);
+    },
+
+    onSendComplete: function(){
+        if (this.fileLoadSuccess) {
+            var warnings = this.populateSamples();
+
+            Ext4.Msg.hide();
+
+            if (warnings && warnings.length) {
+                warnings = Ext4.unique(warnings);
+                Ext4.Msg.alert('Warning', warnings.join('<br>'));
+            }
+        }
     },
 
     onFileLoad: function(response){
@@ -948,9 +1017,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         this.fileNameStoreCopy.sort('displayName');
 
         this.down('#fileListView').refresh();
-        this.populateSamples();
-
-        Ext4.Msg.hide();
+        this.fileLoadSuccess = true;
     },
 
     getReadDataSection: function(){
@@ -989,7 +1056,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                                 var editor = field.up('editor');
                                 LDK.Assert.assertNotEmpty('Unable to find editor for fileGroupField', editor);
                                 if (editor){
-                                    editor.on('complete', function (editor, value, startValue) {
+                                    field.mon(editor, 'complete', function (editor, value, startValue) {
                                         if (value !== startValue) {
                                             editor.field.updateReadset.apply(editor.field, [editor.field, value, startValue]);
                                         }
@@ -1299,7 +1366,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
     updateForReadsetIds: function(readsetIds){
         var recordsById = {};
         this.readsetStore.each(function(r){
-            if (readsetIds.indexOf(r.get('readset')) != -1){
+            if (readsetIds.indexOf(r.get('readset')) !== -1){
                 recordsById[r.get('readset')] = recordsById[r.get('readset')] || [];
                 recordsById[r.get('readset')].push(r);
             }
@@ -1373,8 +1440,25 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
                 for (var readsetId in recordsById){
                     msgs.push('Unable to find readset with rowid: ' +  readsetId);
+                    //deliberately dont fire event.  will refresh below.
                     Ext4.Array.forEach(recordsById[readsetId], function(record){
-                        record.data.readset = null;
+                        Ext4.apply(record.data, {
+                            readset: null,
+                            readsetname: null,
+                            platform: null,
+                            application: null,
+                            chemistry: null,
+                            librarytype: null,
+                            sampleid: null,
+                            subjectid: null,
+                            sampledate: null,
+                            comments: null,
+                            sampletype: null,
+                            instrument_run_id: null,
+                            barcode5: null,
+                            barcode3: null,
+                            isValid: false
+                        });
                     }, this);
                 }
 
@@ -1590,9 +1674,40 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         listeners: {
                             buffer: 200,
                             scope: this,
-                            blur: function(field){
-                                if (field.getValue()) {
-                                    this.updateForReadsetIds([field.getValue()]);
+                            beforerender: function (field) {
+                                var editor = field.up('editor');
+                                LDK.Assert.assertNotEmpty('Unable to find editor for readsetId', editor);
+                                if (editor){
+                                    field.mon(editor, 'complete', function (editor, value, startValue) {
+                                        if (value !== startValue) {
+                                            if (value){
+                                                this.updateForReadsetIds([field.getValue()]);
+                                            }
+                                            else {
+                                                var records = editor.grid.getSelectionModel().getSelection();
+                                                LDK.Assert.assertTrue('Unable to find record from editor for readsetId', records && records.length);
+                                                if (records && records.length) {
+                                                    records[0].set({
+                                                        readset: null,
+                                                        readsetname: null,
+                                                        platform: null,
+                                                        application: null,
+                                                        chemistry: null,
+                                                        librarytype: null,
+                                                        sampleid: null,
+                                                        subjectid: null,
+                                                        sampledate: null,
+                                                        comments: null,
+                                                        sampletype: null,
+                                                        instrument_run_id: null,
+                                                        barcode5: null,
+                                                        barcode3: null,
+                                                        isValid: false
+                                                    });
+                                                }
+                                            }
+                                        }
+                                    }, this);
                                 }
                             }
                         }
@@ -2084,6 +2199,12 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         }
 
                         if (!Ext4.isEmpty(value)){
+                            //Dates for format YYYY-MM-DD not always parsed properly through Ext4 (assumed to be GMT; resulting in 1 day added for some time zones).
+                            var type = this.readsetStore.model.prototype.fields.get(col.dataIndex).type;
+                            if (type == Ext4.data.Types.DATE){
+                                value = LDK.ConvertUtils.parseDate(value);
+                            }
+
                             obj[col.dataIndex] = value;
                         }
                     }, this);

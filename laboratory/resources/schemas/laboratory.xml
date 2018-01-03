@@ -369,9 +369,16 @@
             <item text="Grid Views">
                 <originalText>Grid Views</originalText>
             </item>
-            <item text="Import Data">
-                <originalText>Import Bulk Data</originalText>
-                <onClick>Laboratory.buttonHandlers.importDataHandler(dataRegionName, arguments[0] ? arguments[0].ownerCt : null, 'laboratory', 'samples', 'rowid')</onClick>
+            <item text="Insert" hidden="true">
+                <originalText>Insert</originalText>
+            </item>
+            <item text="Insert">
+                <item text="Insert New">
+                    <onClick>Laboratory.buttonHandlers.importDataHandler(dataRegionName, arguments[0] ? arguments[0].ownerCt : null, 'laboratory', 'samples', 'rowid', false)</onClick>
+                </item>
+                <item text="Import Bulk Data">
+                    <onClick>Laboratory.buttonHandlers.importDataHandler(dataRegionName, arguments[0] ? arguments[0].ownerCt : null, 'laboratory', 'samples', 'rowid', true)</onClick>
+                </item>
             </item>
             <item text="Delete">
                 <originalText>Delete</originalText>

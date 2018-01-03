@@ -7,9 +7,9 @@ Ext4.namespace('Laboratory.buttonHandlers');
 
 Laboratory.buttonHandlers = new function(){
     return {
-        importDataHandler: function(dataregionName, target, schema, query, keyField){
+        importDataHandler: function(dataregionName, target, schema, query, keyField, bulkUpload){
             if (LABKEY.Security.currentContainer.type == 'workbook'){
-                window.location = LABKEY.ActionURL.buildURL('query', 'importData', null, {schemaName: schema, queryName: query, keyField: keyField})
+                window.location = LABKEY.ActionURL.buildURL('query', 'importData', null, {schemaName: schema, queryName: query, keyField: keyField, bulkUpload: !!bulkUpload})
             }
             else {
                 Ext4.create('Laboratory.window.WorkbookCreationWindow', {
@@ -18,7 +18,8 @@ Laboratory.buttonHandlers = new function(){
                     urlParams: {
                         schemaName: schema,
                         queryName: query,
-                        keyField: keyField
+                        keyField: keyField,
+                        bulkUpload: !!bulkUpload
                     },
                     title: 'Import Data'
                 }).show(target);

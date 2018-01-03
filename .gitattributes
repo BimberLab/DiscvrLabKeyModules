@@ -1092,6 +1092,8 @@ labModules/SequenceAnalysis/resources/views/sequenceAnalysis.html -text
 labModules/SequenceAnalysis/resources/views/sequenceAnalysis.view.xml -text
 labModules/SequenceAnalysis/resources/views/sequenceAnalysisDetails.html -text
 labModules/SequenceAnalysis/resources/views/sequenceAnalysisDetails.view.xml -text
+labModules/SequenceAnalysis/resources/views/sequenceDefaults.html -text
+labModules/SequenceAnalysis/resources/views/sequenceDefaults.view.xml -text
 labModules/SequenceAnalysis/resources/views/sequenceOutputImport.html -text
 labModules/SequenceAnalysis/resources/views/sequenceOutputImport.view.xml -text
 labModules/SequenceAnalysis/resources/views/siteAdmin.html -text
@@ -1146,6 +1148,7 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/InstrumentImpor
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/IntervalPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/SequenceAnalysisPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/SequenceImportPanel.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/SequenceImportSettingsPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/SnpAlignmentConfigPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/SnpAlignmentPanel.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/panel/SnpCallPanel.js -text

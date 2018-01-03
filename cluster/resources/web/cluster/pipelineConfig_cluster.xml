@@ -22,7 +22,8 @@
                     <map>
                         <!--If the sequence tools are not in the standard pipeline tools dir (supplied above), this is required-->
                         <entry key="SEQUENCEANALYSIS_TOOLS" value="/pipeline_tools/bin"/>
-                        <entry key="SEQUENCEANALYSIS_JAVA_OPTS" value="-Xmx32g"/>
+                        <entry key="SEQUENCEANALYSIS_JAVA_OPTS" value="-Xss2m"/>
+                        <entry key="SEQUENCEANALYSIS_MAX_RAM" value="32"/>
                         <entry key="SEQUENCEANALYSIS_MAX_THREADS" value="12"/>
                     </map>
                 </property>

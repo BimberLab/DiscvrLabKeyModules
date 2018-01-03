@@ -128,6 +128,7 @@ public class SequenceProvider extends AbstractSequenceDataProvider
             items.add(new SimpleSettingsItem(this, "sequenceanalysis", "library_types", categoryName, "Library Types"));
 
             items.add(new DetailsUrlWithoutLabelNavItem(this, "Find Orphan Sequence Files", DetailsURL.fromString("/sequenceAnalysis/findOrphanFiles.view", c), LaboratoryService.NavItemCategory.settings, categoryName));
+            items.add(new DetailsUrlWithoutLabelNavItem(this, "Change Sequence Import Defaults", DetailsURL.fromString("/sequenceAnalysis/sequenceDefaults.view", c), LaboratoryService.NavItemCategory.settings, categoryName));
         }
 
         return items;

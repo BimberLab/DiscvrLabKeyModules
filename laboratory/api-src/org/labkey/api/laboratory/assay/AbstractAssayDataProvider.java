@@ -225,8 +225,7 @@ abstract public class AbstractAssayDataProvider extends AbstractDataProvider imp
         {
             AssayNavItem nav = new AssayNavItem(this, p);
             AssayProtocolSchema schema = cache.getAssaySchema(c, u, _providerName, p);
-            QueryImportNavItem item = new QueryImportNavItem(this, schema.getSchemaName(), AssayProtocolSchema.DATA_TABLE_NAME, LaboratoryService.NavItemCategory.reports, p.getName() + ": Raw Data", _providerName);
-            item.setQueryCache(cache);
+            QueryImportNavItem item = new QueryImportNavItem(this, schema.getSchemaName(), AssayProtocolSchema.DATA_TABLE_NAME, p.getName() + ": Raw Data", LaboratoryService.NavItemCategory.reports, _providerName, cache);
             item.setVisible(nav.isVisible(c, u));
             item.setOwnerKey(nav.getPropertyManagerKey());
             items.add(item);

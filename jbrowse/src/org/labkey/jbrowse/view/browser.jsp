@@ -2,6 +2,7 @@
 <%@ page import="org.labkey.api.util.PageFlowUtil" %>
 <%@ page import="org.labkey.jbrowse.JBrowseController" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
+<%@ page import="org.labkey.api.data.Container" %>
 <%
     /*
      * Copyright (c) 2005-2014 LabKey Corporation
@@ -26,7 +27,8 @@
     String base = AppProps.getInstance().getContextPath() + "/jbrowseApp/";
     String browserRoot = AppProps.getInstance().getContextPath() + "/jbrowseApp/";
     String dataRoot = AppProps.getInstance().getContextPath() + "/_webdav" + getContainer().getPath() + "/@Files/.jbrowse/" + "databases/" + form.getDatabase();
-    ActionURL returnUrl = getContainer().getStartURL(getUser());
+    Container returnContainer = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
+    ActionURL returnUrl = returnContainer.getStartURL(getUser());
 %>
 <style type="text/css">
     .sectiontitle {

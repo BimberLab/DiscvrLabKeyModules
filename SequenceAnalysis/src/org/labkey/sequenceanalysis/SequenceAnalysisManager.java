@@ -26,6 +26,7 @@ import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbSchemaType;
@@ -42,6 +43,7 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.iterator.CloseableIterator;
 import org.labkey.api.module.ModuleLoader;
@@ -49,8 +51,11 @@ import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineStatusFile;
 import org.labkey.api.pipeline.PipelineValidationException;
+import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.InvalidKeyException;
 import org.labkey.api.query.QueryService;
+import org.labkey.api.query.QueryUpdateServiceException;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.reader.FastaDataLoader;
 import org.labkey.api.reader.FastaLoader;
@@ -72,6 +77,7 @@ import org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisJob;
 import org.labkey.sequenceanalysis.pipeline.ReadsetImportJob;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerJob;
+import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -174,9 +180,10 @@ public class SequenceAnalysisManager
         return _platforms;
     }
 
-    public void deleteReadset(List<Integer> rowIds) throws SQLException
+    public void deleteReadset(List<Integer> rowIds, User user, Container c) throws SQLException
     {
         SequenceAnalysisSchema s = SequenceAnalysisSchema.getInstance();
+        TableInfo readsets = QueryService.get().getUserSchema(user, c, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_READSETS);
 
         try (DbScope.Transaction transaction = s.getSchema().getScope().ensureTransaction())
         {
@@ -198,9 +205,18 @@ public class SequenceAnalysisManager
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " WHERE readset = ?", rowId));
 
                 //then the readsets themselves
-                new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READSETS + " WHERE rowId = ?", rowId));
+                List<Map<String, Object>> keysToDelete = new ArrayList<>();
+                keysToDelete.add(new CaseInsensitiveHashMap<Object>(){{put("rowId", rowId);}});
+
+                Map<String, Object> scriptContext = new HashMap<>();
+                scriptContext.put("deleteFromServer", true);  //a flag to make the trigger script accept this
+                readsets.getUpdateService().deleteRows(user, c, keysToDelete, null, scriptContext);
             }
             transaction.commit();
+        }
+        catch (InvalidKeyException | BatchValidationException | QueryUpdateServiceException e)
+        {
+            throw new SQLException(e);
         }
     }
 
@@ -228,36 +244,74 @@ public class SequenceAnalysisManager
         }
     }
 
-    public void deleteOutputFiles(List<Integer> rowIds) throws SQLException
+    public List<Integer> deleteOutputFiles(List<Integer> rowIds, User user, Container container, boolean doDelete) throws SQLException
     {
         SequenceAnalysisSchema s = SequenceAnalysisSchema.getInstance();
 
         try (DbScope.Transaction transaction = s.getSchema().getScope().ensureTransaction())
         {
+            Set<Integer> notDeleted = new HashSet<>();
             List<SequenceOutputFile> files = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), new SimpleFilter(FieldKey.fromString("rowid"), rowIds, CompareType.IN), null).getArrayList(SequenceOutputFile.class);
             for (SequenceOutputFile so : files)
             {
                 ExpData d = so.getExpData();
                 if (d != null && d.getFile() != null && d.getFile().exists())
                 {
-                    d.getFile().delete();
+                    // account for possibility that another sequence output is using this file.  this would probably be from an error, like a pipeline resume/double import, but even in this case we shouldnt delete it
+                    // also check based on filepath
+                    SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), rowIds, CompareType.NOT_IN);
+                    filter.addCondition(new SimpleFilter.OrClause(
+                            new CompareType.CompareClause(FieldKey.fromString("dataId"), CompareType.EQUAL, so.getDataId()),
+                            new CompareType.CompareClause(FieldKey.fromString("dataId/DataFileUrl"), CompareType.EQUAL, so.getExpData().getDataFileUrl())
+                    ));
+
+                    if (container.isWorkbook())
+                    {
+                        container = container.getParent();
+                    }
+
+                    UserSchema us = QueryService.get().getUserSchema(user, container, SequenceAnalysisSchema.SCHEMA_NAME);
+                    if (us == null)
+                    {
+                        throw new IllegalArgumentException("Unable to find sequenceanalysis user schema");
+                    }
+
+                    if (new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), filter, null).exists())
+                    {
+                        _log.error("outputfile appears to be in use by another record, will not delete.  dataId: " + so.getDataId() + ", " + d.getDataFileUrl());
+                        notDeleted.add(so.getRowid());
+                    }
+                    else
+                    {
+                        if (doDelete)
+                        {
+                            d.getFile().delete();
+                        }
+                    }
                 }
             }
 
-            List<Integer> additionalAnalysisIds = SequenceAnalysisManager.get().getAnalysesAssociatedWithOutputFiles(rowIds);
+            List<Integer> toCheck = new ArrayList<>(rowIds);
+            toCheck.removeAll(notDeleted);
+            List<Integer> additionalAnalysisIds = SequenceAnalysisManager.get().getAnalysesAssociatedWithOutputFiles(toCheck);
 
-            new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " WHERE rowid IN (" + StringUtils.join(rowIds, ",") + ")"));
+            if (doDelete)
+            {
+                new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " WHERE rowid IN (" + StringUtils.join(rowIds, ",") + ")"));
 
-            if (!additionalAnalysisIds.isEmpty())
-                SequenceAnalysisManager.get().deleteAnalysis(additionalAnalysisIds);
+                if (!additionalAnalysisIds.isEmpty())
+                    SequenceAnalysisManager.get().deleteAnalysis(additionalAnalysisIds);
+            }
 
             transaction.commit();
+
+            return additionalAnalysisIds;
         }
     }
 
     public List<Integer> getAnalysesAssociatedWithOutputFiles(List<Integer> keys)
     {
-        return new SqlSelector(SequenceAnalysisSchema.getInstance().getSchema(), new SQLFragment("SELECT distinct a.rowid FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " o JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " a ON (o.dataId = a.alignmentFile) WHERE o.rowid IN (" + StringUtils.join(keys, ",") +")")).getArrayList(Integer.class);
+        return keys.isEmpty() ? Collections.emptyList() : new SqlSelector(SequenceAnalysisSchema.getInstance().getSchema(), new SQLFragment("SELECT distinct a.rowid FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " o JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " a ON (o.dataId = a.alignmentFile) WHERE o.rowid IN (" + StringUtils.join(keys, ",") + ")")).getArrayList(Integer.class);
     }
 
     public void deleteRefNtSequence(List<Integer> rowIds) throws SQLException
@@ -337,7 +391,7 @@ public class SequenceAnalysisManager
             throw new IllegalArgumentException("resource not instance of FileResource: " + r.getClass().getName());
         }
 
-        File htsjdkJar = ((FileResource)r).getFile();
+        File htsjdkJar = ((FileResource) r).getFile();
         if (!htsjdkJar.exists())
             throw new RuntimeException("Not found: " + htsjdkJar.getPath());
 
@@ -482,7 +536,7 @@ public class SequenceAnalysisManager
 
                     if (!map.containsKey("name"))
                     {
-                        String header = (String)fastaRecord.get("header");
+                        String header = (String) fastaRecord.get("header");
                         if (splitWhitespace && header.contains(" "))
                         {
                             int idx = header.indexOf(" ");
@@ -846,6 +900,8 @@ public class SequenceAnalysisManager
         //    return;
         //}
 
+        //TODO: look for a /Shared folder with large items under it
+
         File[] arr = dir.listFiles();
         if (arr == null)
         {
@@ -853,7 +909,7 @@ public class SequenceAnalysisManager
             return;
         }
 
-        for (File f : arr)
+        OUTER: for (File f : arr)
         {
             //skipped for perf reasons.  extremely unlikely
             //if (Files.isSymbolicLink(f.toPath()))
@@ -891,8 +947,23 @@ public class SequenceAnalysisManager
                         {
                             if (f.getPath().contains("/Normalization/") && f.getName().startsWith("Undetermined_"))
                                 continue;
+                            else if (f.getPath().contains("/Normalization/") && f.getName().contains("_unknowns"))
+                                continue;
                             else if (f.getPath().contains("/Alignment/") && (f.getName().contains("unaligned") || f.getName().contains("unmapped")))
                                 continue;
+                        }
+
+                        if (dataIdsForFile != null)
+                        {
+                            for (int rowId : dataIdsForFile)
+                            {
+                                ExpData d = ExperimentService.get().getExpData(rowId);
+                                Set<String> roles = ExperimentService.get().getDataInputRoles(d.getContainer(), ContainerFilter.EVERYTHING, ExpProtocol.ApplicationType.ExperimentRunOutput);
+                                if (roles != null && roles.contains(SequenceTaskHelper.NORMALIZED_FASTQ_OUTPUTNAME))
+                                {
+                                    continue OUTER;
+                                }
+                            }
                         }
 
                         orphanSequenceFiles.add(f);

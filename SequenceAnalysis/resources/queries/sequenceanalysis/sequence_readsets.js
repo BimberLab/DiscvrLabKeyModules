@@ -5,5 +5,7 @@
  */
 
 function beforeDelete(row, errors){
-    errors._form = 'You cannot directly delete readsets.  To delete these records, use the delete button above the readset grid.'
+    if (!this.extraContext.deleteFromServer){
+        errors._form = 'You cannot directly delete readsets.  To delete these records, use the delete button above the readset grid.';
+    }
 }

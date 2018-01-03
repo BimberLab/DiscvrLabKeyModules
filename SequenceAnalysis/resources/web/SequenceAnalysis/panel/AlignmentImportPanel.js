@@ -98,7 +98,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                 xtype: 'combo',
                 helpPopup: 'This determines how the input files are handled.  By default, files are moved to a standardized location and the originals deleted to save space.  However, you can choose to copy the BAMs to the new location, but leave the originals alone.  This is not usually recommended for space reasons.',
                 itemId: 'originalFileTreatment',
-                name: 'inputfile.inputTreatment',
+                name: 'inputFileTreatment',
                 width: 600,
                 editable: false,
                 displayField: 'display',

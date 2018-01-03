@@ -41,11 +41,14 @@
                         <!--The number of threads to use, where supported by external tools-->
                         <entry key="SEQUENCEANALYSIS_MAX_THREADS" value="6"/>
 
+                        <!--The value, in GB, that will be used to set -Xmx and -Xms for java tools-->
+                        <entry key="SEQUENCEANALYSIS_MAX_RAM" value="32"/>
+
                         <!--optional, can be used to shift tmp dir from the system disk to another disk-->
                         <!--<entry key="JAVA_TMP_DIR" value="/tmp"/>-->
 
                         <!--a whitespace separated list of arguments passed directly to java when running picard tools and GATK-->
-                        <entry key="SEQUENCEANALYSIS_JAVA_OPTS" value="-Xmx8g"/>
+                        <!--<entry key="SEQUENCEANALYSIS_JAVA_OPTS" value="-Xss4m"/>-->
                     </map>
                 </property>
             </bean>

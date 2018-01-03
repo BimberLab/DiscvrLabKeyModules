@@ -40,20 +40,15 @@ public class QueryImportNavItem extends AbstractImportingNavItem
     private String _query;
     private boolean _visible = true;
 
-    public QueryImportNavItem(DataProvider provider, String schema, String query, LaboratoryService.NavItemCategory itemType, String reportCategory)
-    {
-        this(provider, schema, query, itemType, query, reportCategory);
-    }
-
     public QueryImportNavItem(DataProvider provider, String schema, String query, LaboratoryService.NavItemCategory itemType, String reportCategory, QueryCache cache)
     {
-        this(provider, schema, query, itemType, query, reportCategory);
-        _queryCache = cache;
+        this(provider, schema, query, query, itemType, reportCategory, cache);
     }
 
-    public QueryImportNavItem(DataProvider provider, String schema, String query, LaboratoryService.NavItemCategory itemType, String label, String reportCategory)
+    public QueryImportNavItem(DataProvider provider, String schema, String query, String label, LaboratoryService.NavItemCategory itemType, String reportCategory, QueryCache cache)
     {
         this(provider, null, schema, query, itemType, label, reportCategory);
+        _queryCache = cache;
     }
 
     public QueryImportNavItem(DataProvider provider, Container targetContainer, String schema, String query, LaboratoryService.NavItemCategory itemType, String label, String reportCategory)

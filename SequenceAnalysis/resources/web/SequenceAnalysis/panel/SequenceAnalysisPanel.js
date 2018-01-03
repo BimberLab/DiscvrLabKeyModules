@@ -298,7 +298,15 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 inputValue: true,
                 checked: false,
                 xtype: 'checkbox'
-            }, this.getSaveTemplateCfg()]
+            }, this.getSaveTemplateCfg(),{
+                fieldLabel: 'Submit Jobs To Same Container As Readset?',
+                helpPopup: 'If checked, each alignment job will be submitted to the container/workbook of the parent readset, rather than this container',
+                hidden: !LABKEY.Security.currentUser.isAdmin,
+                name: 'submitJobToReadsetContainer',
+                inputValue: true,
+                checked: false,
+                xtype: 'checkbox'
+            }]
         };
     },
 

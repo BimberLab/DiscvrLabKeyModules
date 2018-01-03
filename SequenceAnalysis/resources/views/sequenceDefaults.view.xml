@@ -1,7 +1,10 @@
-<view xmlns="http://labkey.org/data/xml/view" title="Import Sequence Data">
+<view xmlns="http://labkey.org/data/xml/view" title="DISCVR-Seq Settings">
+    <permissions>
+        <permission name="admin"/>
+    </permissions>
     <dependencies>
         <dependency path="laboratory.context"/>
-        <!--<dependency path="SequenceAnalysis/sequenceAnalysis.css"/>-->
+        <dependency path="SequenceAnalysis/sequenceAnalysis"/>
         <dependency path="SequenceAnalysis/panel/BaseSequencePanel.js"/>
         <dependency path="SequenceAnalysis/panel/SequenceImportSettingsPanel.js"/>
         <dependency path="SequenceAnalysis/panel/SequenceImportPanel.js"/>

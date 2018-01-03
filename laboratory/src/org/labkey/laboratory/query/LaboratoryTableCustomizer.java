@@ -1,5 +1,6 @@
 package org.labkey.laboratory.query;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.AbstractTableInfo;
@@ -28,6 +29,7 @@ import org.labkey.api.query.QueryException;
 import org.labkey.api.query.QueryForeignKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
+import org.labkey.api.view.ActionURL;
 import org.labkey.laboratory.DemographicsSource;
 import org.labkey.laboratory.LaboratoryModule;
 import org.labkey.laboratory.LaboratorySchema;
@@ -60,11 +62,11 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         {
             customizeColumns((AbstractTableInfo) ti);
             appendCalculatedCols((AbstractTableInfo) ti);
+            customizeURLs((AbstractTableInfo) ti);
 
             LDKService.get().getColumnsOrderCustomizer().customize(ti);
 
-            if (ti instanceof AbstractTableInfo)
-                ensureWorkbookCol((AbstractTableInfo)ti);
+            ensureWorkbookCol((AbstractTableInfo) ti);
 
             customizeButtonBar((AbstractTableInfo) ti);
 
@@ -99,6 +101,38 @@ public class LaboratoryTableCustomizer implements TableCustomizer
                 cols.add(wrappedContainer.getFieldKey());
                 ti.setDefaultVisibleColumns(cols);
             }
+        }
+    }
+
+    public void customizeURLs(AbstractTableInfo ti)
+    {
+        String schemaName = ti.getUserSchema().getSchemaName();
+        assert schemaName != null;
+
+        String queryName = ti.getPublicName();
+        assert queryName != null;
+
+        List<String> keyFields = ti.getPkColumnNames();
+        assert keyFields.size() > 0 : "No key fields found for the table: " + ti.getPublicSchemaName() + "." + ti.getPublicName();
+        if (keyFields.size() != 1)
+        {
+            _log.warn("Table: " + schemaName + "." + queryName + " has more than 1 PK: " + StringUtils.join(keyFields, ";"));
+            return;
+        }
+
+        String keyField = keyFields.get(0);
+        //NOTE: this is a proxy for a table using the default insert UI
+        ActionURL insertUrl = ti.getInsertURL(ti.getUserSchema().getContainer());
+        if (insertUrl == null || insertUrl.getAction().equalsIgnoreCase("insertQueryRow"))
+        {
+            if (!AbstractTableInfo.LINK_DISABLER_ACTION_URL.equals(ti.getInsertURL(ti.getUserSchema().getContainer())))
+                ti.setInsertURL(DetailsURL.fromString("/query/importData.view?schemaName=" + schemaName + "&query.queryName=" + queryName + "&keyField=" + keyField + "&bulkImport=false"));
+
+            if (!AbstractTableInfo.LINK_DISABLER_ACTION_URL.equals(ti.getImportDataURL(ti.getUserSchema().getContainer())))
+                ti.setImportURL(DetailsURL.fromString("/query/importData.view?schemaName=" + schemaName + "&query.queryName=" + queryName + "&keyField=" + keyField + "&bulkImport=true"));
+
+            if (!AbstractTableInfo.LINK_DISABLER_ACTION_URL.equals(ti.getUpdateURL(null, ti.getUserSchema().getContainer())))
+                ti.setUpdateURL(DetailsURL.fromString("/ldk/manageRecord.view?schemaName=" + schemaName + "&query.queryName=" + queryName + "&keyField=" + keyField + "&key=${" + keyField + "}"));
         }
     }
 
@@ -255,6 +289,16 @@ public class LaboratoryTableCustomizer implements TableCustomizer
 
                             return ti;
                         }
+
+//                        @Override
+//                        public Set<FieldKey> getSuggestedColumns()
+//                        {
+//                            Set<FieldKey> keys = super.getSuggestedColumns();
+//                            keys = keys == null ? new HashSet<>() : new HashSet<>(keys);
+//                            keys.add(getRemappedField(subjectCol.getFieldKey()));
+//
+//                            return keys;
+//                        }
                     });
 
                     ti.addColumn(col);

@@ -16,15 +16,11 @@
 package org.labkey.api.laboratory;
 
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.laboratory.security.LaboratoryAdminPermission;
-import org.labkey.api.query.QueryAction;
-import org.labkey.api.query.QueryService;
+import org.labkey.api.ldk.table.QueryCache;
 import org.labkey.api.security.User;
-import org.labkey.api.security.permissions.AdminPermission;
-import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 
 /**
@@ -36,7 +32,7 @@ public class SimpleSettingsItem extends QueryImportNavItem implements SettingsNa
 {
     public SimpleSettingsItem(DataProvider provider, String schema, String query, String reportCategory, String label)
     {
-        super(provider, schema, query, LaboratoryService.NavItemCategory.settings, label, reportCategory);
+        super(provider, schema, query, label, LaboratoryService.NavItemCategory.settings, reportCategory, new QueryCache());
     }
 
     @Override

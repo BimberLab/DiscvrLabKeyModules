@@ -3,6 +3,7 @@ package org.labkey.sequenceanalysis.pipeline;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.module.ModuleLoader;
@@ -49,12 +50,8 @@ public class SequenceAlignmentJob extends SequenceJob
         getSequenceSupport().cacheReadset(readset);
     }
 
-    public static List<SequenceAlignmentJob> createForReadsets(Container c, User u, String jobName, String description, JSONObject params, JSONArray readsetIds) throws ClassNotFoundException, IOException, PipelineValidationException
+    public static List<SequenceAlignmentJob> createForReadsets(Container c, User u, String jobName, String description, JSONObject params, JSONArray readsetIds, boolean submitJobToReadsetContainer) throws ClassNotFoundException, IOException, PipelineValidationException
     {
-        PipeRoot pr = PipelineService.get().findPipelineRoot(c);
-        if (pr == null || !pr.isValid())
-            throw new NotFoundException();
-
         List<SequenceAlignmentJob> ret = new ArrayList<>();
         for (int i=0;i<readsetIds.length();i++)
         {
@@ -64,12 +61,18 @@ public class SequenceAlignmentJob extends SequenceJob
             {
                 throw new PipelineValidationException("Unable to find readset: " + readsetId);
             }
-            SequenceAlignmentJob j = new SequenceAlignmentJob(c, u, jobName, pr, params, readset);
+
+            Container targetContainer = submitJobToReadsetContainer ? ContainerManager.getForId(readset.getContainer()) : c;
+
+            PipeRoot pr = PipelineService.get().findPipelineRoot(targetContainer);
+            if (pr == null || !pr.isValid())
+                throw new NotFoundException();
+
+            SequenceAlignmentJob j = new SequenceAlignmentJob(targetContainer, u, jobName, pr, params, readset);
             j.setDescription(description);
 
             List<File> inputFiles = new ArrayList<>();
-            Readset rs = SequenceAnalysisService.get().getReadset(readsetId, u);
-            for (ReadData rd : rs.getReadData())
+            for (ReadData rd : readset.getReadData())
             {
                 if (rd.getFileId1() != null)
                 {

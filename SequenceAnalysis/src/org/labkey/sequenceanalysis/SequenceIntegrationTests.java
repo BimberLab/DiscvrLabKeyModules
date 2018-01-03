@@ -374,7 +374,7 @@ public class SequenceIntegrationTests
 
         protected void verifyFileInputs(File basedir, String[] fileNames, JSONObject config, String prefix)
         {
-            String handling = config.getString("inputfile.inputTreatment");
+            String handling = config.getString("inputFileTreatment");
             if ("none".equals(handling))
             {
                 for (String fn : fileNames)
@@ -777,7 +777,7 @@ public class SequenceIntegrationTests
             g.filePairs.get(0).file1 = new File(prefix + PAIRED_FILENAME1);
 
             appendSamplesForImport(config, Arrays.asList(g));
-            config.put("inputfile.inputTreatment", "leaveInPlace");
+            config.put("inputFileTreatment", "leaveInPlace");
 
             Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport);
             waitForJobs(jobs);
@@ -839,12 +839,12 @@ public class SequenceIntegrationTests
             if (deleteIntermediates)
             {
                 config.put("deleteIntermediateFiles", true);
-                config.put("inputfile.inputTreatment", "delete");
+                config.put("inputFileTreatment", "delete");
             }
             else
             {
                 config.put("deleteIntermediateFiles", false);
-                config.put("inputfile.inputTreatment", "compress");
+                config.put("inputFileTreatment", "compress");
             }
             config.put("inputfile.runFastqc", true);
             appendSamplesForImport(config, Arrays.asList(g, g2, g3));
@@ -1060,7 +1060,7 @@ public class SequenceIntegrationTests
 
             JSONObject config = getBarcodeConfig(jobName, fileNames, prefix);
             config.put("deleteIntermediateFiles", true);
-            config.put("inputfile.inputTreatment", "compress");
+            config.put("inputFileTreatment", "compress");
 
             Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport);
             waitForJobs(jobs);
@@ -1144,7 +1144,7 @@ public class SequenceIntegrationTests
             String jobName = prefix + System.currentTimeMillis();
             String[] fileNames = new String[]{PAIRED_FILENAME1, PAIRED_FILENAME2, UNZIPPED_PAIRED_FILENAME1, UNZIPPED_PAIRED_FILENAME2};
             JSONObject config = substituteParams(new File(_sampleData, READSET_JOB), jobName);
-            config.put("inputfile.inputTreatment", "compress");
+            config.put("inputFileTreatment", "compress");
 
             FileGroup g = new FileGroup();
             g.name = "Group1";
@@ -1192,7 +1192,7 @@ public class SequenceIntegrationTests
             String jobName = prefix + System.currentTimeMillis();
             String[] fileNames = new String[]{PAIRED_FILENAME1, PAIRED_FILENAME2, UNZIPPED_PAIRED_FILENAME1, UNZIPPED_PAIRED_FILENAME2};
             JSONObject config = substituteParams(new File(_sampleData, READSET_JOB), jobName);
-            config.put("inputfile.inputTreatment", "delete");
+            config.put("inputFileTreatment", "delete");
 
             FileGroup g = new FileGroup();
             g.name = "Group1";

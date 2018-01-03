@@ -234,22 +234,22 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
 
         //try environment first:
         String maxRam = StringUtils.trimToNull(System.getenv("SEQUENCEANALYSIS_MAX_RAM"));
-        if (maxRam != null)
+        if (maxRam == null)
         {
-            if (!"-1".equals(maxRam))
-            {
-                params.add("-Xmx" + maxRam + "g");
-                params.add("-Xms" + maxRam + "g");
-            }
+            maxRam = StringUtils.trimToNull(PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("SEQUENCEANALYSIS_MAX_RAM"));
         }
-        else
+
+        if (maxRam != null && !"-1".equals(maxRam))
         {
-            String xmx = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("SEQUENCEANALYSIS_JAVA_OPTS");
-            if (StringUtils.trimToNull(xmx) != null)
-            {
-                String[] tokens = xmx.split(" ");
-                params.addAll(Arrays.asList(tokens));
-            }
+            params.add("-Xmx" + maxRam + "g");
+            params.add("-Xms" + maxRam + "g");
+        }
+
+        String otherOpts = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("SEQUENCEANALYSIS_JAVA_OPTS");
+        if (StringUtils.trimToNull(otherOpts) != null)
+        {
+            String[] tokens = otherOpts.split(" ");
+            params.addAll(Arrays.asList(tokens));
         }
 
         return params;

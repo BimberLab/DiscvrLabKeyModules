@@ -53,6 +53,7 @@ import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.data.DataRegionSelection;
+import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.Results;
 import org.labkey.api.data.ResultsImpl;
 import org.labkey.api.data.SQLFragment;
@@ -192,6 +193,8 @@ public class SequenceAnalysisController extends SpringActionController
     private static final Logger _log = Logger.getLogger(SequenceAnalysisController.class);
     private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(SequenceAnalysisController.class);
 
+    public final static String CONFIG_PROPERTY_DOMAIN_IMPORT = "org.labkey.sequenceanalysis.importsettings";
+
     public SequenceAnalysisController()
     {
         setActionResolver(_actionResolver);
@@ -313,7 +316,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(InsertPermission.class)
     public class SequenceAnalysisAction extends BasePipelineStepAction
     {
-        public SequenceAnalysisAction ()
+        public SequenceAnalysisAction()
         {
             super("views/sequenceAnalysis.html");
         }
@@ -394,7 +397,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(InsertPermission.class)
     public class AlignmentAnalysisAction extends BasePipelineStepAction
     {
-        public AlignmentAnalysisAction ()
+        public AlignmentAnalysisAction()
         {
             super("views/alignmentAnalysis.html");
         }
@@ -739,7 +742,7 @@ public class SequenceAnalysisController extends SpringActionController
                 outputFileIds.addAll(keys);
 
                 //we will delete these expDatas, so find any analysis records matching this file
-                List<Integer> additionalAnalysisIds = SequenceAnalysisManager.get().getAnalysesAssociatedWithOutputFiles(keys);
+                List<Integer> additionalAnalysisIds = SequenceAnalysisManager.get().deleteOutputFiles(keys, getUser(), getContainer(), false);
                 analysisIds.addAll(additionalAnalysisIds);
 
                 if (!additionalAnalysisIds.isEmpty())
@@ -851,7 +854,7 @@ public class SequenceAnalysisController extends SpringActionController
                 }
                 else if (SequenceAnalysisSchema.TABLE_READSETS.equals(_table.getName()))
                 {
-                    SequenceAnalysisManager.get().deleteReadset(rowIds);
+                    SequenceAnalysisManager.get().deleteReadset(rowIds, getUser(), getContainer());
                 }
                 else if (SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES.equals(_table.getName()))
                 {
@@ -863,7 +866,7 @@ public class SequenceAnalysisController extends SpringActionController
                 }
                 else if (SequenceAnalysisSchema.TABLE_OUTPUTFILES.equals(_table.getName()))
                 {
-                    SequenceAnalysisManager.get().deleteOutputFiles(rowIds);
+                    SequenceAnalysisManager.get().deleteOutputFiles(rowIds, getUser(), getContainer(), true);
                 }
 
                 if (form.getJobIds() != null)
@@ -1942,7 +1945,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                         JSONObject params = new JSONObject(form.getJobParameters());
                         params.remove("readsetIds");
-                        jobs.addAll(SequenceAlignmentJob.createForReadsets(getContainer(), getUser(), form.getJobName(), form.getDescription(), params, form.getReadsetIds()));
+                        jobs.addAll(SequenceAlignmentJob.createForReadsets(getContainer(), getUser(), form.getJobName(), form.getDescription(), params, form.getReadsetIds(), form.isSubmitJobToReadsetContainer()));
                         break;
                     case alignmentAnalysis:
                         if (form.getAnalysisIds() == null)
@@ -2019,12 +2022,17 @@ public class SequenceAnalysisController extends SpringActionController
 
         public JSONArray getReadsetIds()
         {
-            return getJobParameters() == null ?  null : getJobParameters().optJSONArray("readsetIds");
+            return getJobParameters() == null ? null : getJobParameters().optJSONArray("readsetIds");
         }
 
         public JSONArray getAnalysisIds()
         {
-            return getJobParameters() == null ?  null : getJobParameters().optJSONArray("analysisIds");
+            return getJobParameters() == null ? null : getJobParameters().optJSONArray("analysisIds");
+        }
+
+        public boolean isSubmitJobToReadsetContainer()
+        {
+            return getJobParameters() == null ? false : getJobParameters().optBoolean("submitJobToReadsetContainer", false);
         }
 
         public List<File> getFiles(PipeRoot pr) throws PipelineValidationException
@@ -4694,6 +4702,53 @@ public class SequenceAnalysisController extends SpringActionController
             }
 
             return new ApiSimpleResponse("success", true);
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    @CSRF
+    public class GetSequenceImportDefaultsAction extends ApiAction<Object>
+    {
+        public ApiResponse execute(Object form, BindException errors) throws Exception
+        {
+            Map<String, Object> resultProperties = new HashMap<>();
+            Container target = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
+            resultProperties.putAll(PropertyManager.getProperties(target, CONFIG_PROPERTY_DOMAIN_IMPORT));
+
+            return new ApiSimpleResponse(resultProperties);
+        }
+    }
+
+    @RequiresPermission(AdminPermission.class)
+    @CSRF
+    public class SetSequenceImportDefaultsAction extends ApiAction<SetSequenceImportDefaultsForm>
+    {
+        public static final String INPUT_FILE_TREATMENT = "inputFileTreatment";
+
+        public ApiResponse execute(SetSequenceImportDefaultsForm form, BindException errors) throws Exception
+        {
+            Container target = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
+            PropertyManager.PropertyMap configMap = PropertyManager.getWritableProperties(target, CONFIG_PROPERTY_DOMAIN_IMPORT, true);
+            configMap.put(INPUT_FILE_TREATMENT, form.getInputFileTreatment());
+
+            configMap.save();
+
+            return new ApiSimpleResponse("success", true);
+        }
+    }
+
+    public static class SetSequenceImportDefaultsForm
+    {
+        private String _inputFileTreatment;
+
+        public String getInputFileTreatment()
+        {
+            return _inputFileTreatment;
+        }
+
+        public void setInputFileTreatment(String inputFileTreatment)
+        {
+            _inputFileTreatment = inputFileTreatment;
         }
     }
 }

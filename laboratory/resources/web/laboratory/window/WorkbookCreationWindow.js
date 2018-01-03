@@ -215,6 +215,8 @@ Ext4.define('Laboratory.panel.WorkbookCreationPanel', {
 Ext4.define('Laboratory.window.WorkbookCreationWindow', {
     extend: 'Ext.Window',
     alias: 'widget.laboratory-workbookcreationwindow',
+    abortIfContainerIsWorkbook: true,
+
     initComponent: function(){
         Ext4.apply(this, {
             closeAction:'destroy',
@@ -272,7 +274,7 @@ Ext4.define('Laboratory.window.WorkbookCreationWindow', {
 
         this.addEvents('uploadexception', 'uploadcomplete');
 
-        if ((LABKEY.container && LABKEY.container.type == 'workbook')){
+        if ((this.abortIfContainerIsWorkbook && LABKEY.container && LABKEY.container.type == 'workbook')){
             this.on('beforeshow', function(){return false});
             var form = this.down('#theForm');
             form.doLoad.call(form, LABKEY.ActionURL.getContainer());

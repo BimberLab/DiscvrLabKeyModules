@@ -1,7 +1,7 @@
 {
 	"protocolName":"@@PROTOCOLNAME@@",
 	"protocolDescription":"This is a pipeline test",
-	"inputfile.inputTreatment":"none",
+	"inputFileTreatment":"none",
 	"deleteIntermediateFiles":false,
 	"inputfile.merge":false,
 	"inputfile.merge.basename":"",

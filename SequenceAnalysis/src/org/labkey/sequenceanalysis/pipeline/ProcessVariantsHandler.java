@@ -341,13 +341,16 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
         String ret = wrapper.executeWithOutput(Arrays.asList("/bin/bash", "-c", cat + " \"" + vcf.getPath() + "\" | grep -v \"#\" | " + (passOnly ? "awk ' $7 == \"PASS\" || $7 == \"\\.\" ' | " : "") + "wc -l | awk \" { print $1 } \""));
 
         //NOTE: unsure how to get awk to omit this warning, so discard it:
+        //the warning is: escape '\.' treated as plain '.'
         if (ret != null)
         {
+            ret = ret.trim();
             String[] tokens = ret.split("\n");
             if (tokens.length > 1)
             {
                 tokens = ArrayUtils.remove(tokens, 0);
                 ret = StringUtils.join(tokens, "\n");
+                ret = ret.trim();
             }
         }
 

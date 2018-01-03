@@ -298,7 +298,7 @@ public class LabSummaryNotification implements Notification
                     String key = json.getString("path");
                     Long size = fr.containsKey("rootSizeInt") ? fr.getLong("rootSizeInt") : null;
 
-                    newValueMap.put(key, size.toString());
+                    newValueMap.put(key, String.valueOf(size));
                     Long previousSize = null;
                     if (oldValueMap != null && oldValueMap.containsKey(key))
                     {
@@ -312,7 +312,7 @@ public class LabSummaryNotification implements Notification
                     String fileCountKey = json.getString("path");
                     Long totalFiles = fr.containsKey("totalFiles") ? fr.getLong("totalFiles") : null;
 
-                    newValueMapCounts.put(fileCountKey, totalFiles.toString());
+                    newValueMapCounts.put(fileCountKey, String.valueOf(totalFiles));
                     Long previousCount = null;
                     if (oldValueMapCounts != null && oldValueMapCounts.containsKey(fileCountKey))
                     {

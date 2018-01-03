@@ -269,6 +269,11 @@ then
     git checkout tags/3.7
     cd ../
 
+    #fix multithreading bug
+    sed -i 's/private final List<GenomeLoc> upstreamDeletionsLoc = new LinkedList<>();/sed -i 's/private final List<GenomeLoc> upstreamDeletionsLoc = new LinkedList<>();/private final ThreadLocal< List<GenomeLoc> > upstreamDeletionsLoc = ThreadLocal.withInitial(() -> new LinkedList<GenomeLoc>());/g' ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/genotyper/GenotypingEngine.java/g' ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/genotyper/GenotypingEngine.java
+    sed -i 's/upstreamDeletionsLoc.add(genomeLoc);/upstreamDeletionsLoc.get().add(genomeLoc);/g' ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/genotyper/GenotypingEngine.java
+    sed -i 's/upstreamDeletionsLoc.iterator();/upstreamDeletionsLoc.get().iterator();/g' ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/genotyper/GenotypingEngine.java
+
     #libVectorLogless compile:
     #see: https://gatkforums.broadinstitute.org/gatk/discussion/9947/crashes-with-segmentation-fault-in-shipped-libvectorloglesspairhmm-so
     sed -i 's/<!--<USE_GCC>1<\/USE_GCC>-->/<USE_GCC>1<\/USE_GCC>/g' ./gatk-protected/public/VectorPairHMM/pom.xml

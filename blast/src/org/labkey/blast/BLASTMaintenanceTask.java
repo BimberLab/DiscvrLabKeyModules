@@ -174,6 +174,7 @@ public class BLASTMaintenanceTask implements MaintenanceTask
                 if (!allowablePaths.contains(f.getAbsolutePath()))
                 {
                     log.info("deleting BLAST file: " + f.getPath());
+                    f.delete();
                 }
             }
         }
