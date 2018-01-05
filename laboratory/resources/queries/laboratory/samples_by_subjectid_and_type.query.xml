@@ -3,7 +3,7 @@
         <tables xmlns="http://labkey.org/data/xml">
             <table tableName="samples_by_subjectid_and_type" tableDbType="TABLE">
                 <tableTitle>Samples By SubjectId And Type</tableTitle>
-                <javaCustomizer>org.labkey.laboratory.query.SamplesCustomizer</javaCustomizer>
+                <javaCustomizer class="org.labkey.laboratory.query.SamplesCustomizer" />
                 <columns>
                     <column columnName="subjectid">
                         <isKeyField>true</isKeyField>

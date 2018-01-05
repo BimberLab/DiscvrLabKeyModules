@@ -3,7 +3,7 @@
         <tables xmlns="http://labkey.org/data/xml">
             <table tableName="" tableDbType="TABLE">
                 <tableTitle>Events</tableTitle>
-                <javaCustomizer>org.labkey.su2c.Su2cCustomizer</javaCustomizer>
+                <javaCustomizer class="org.labkey.su2c.Su2cCustomizer" />
                 <columns>
 
                 </columns>

@@ -18,7 +18,7 @@
  -->
 <tables xmlns="http://labkey.org/data/xml">
     <table tableName="testnamemapping" tableDbType="TABLE">
-        <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ehr.table.DefaultEHRCustomizer" />
         <tableTitle>LabKey to Merge Service/Panel Name Mapping</tableTitle>
         <columns>
             <column columnName="servicename">
@@ -34,7 +34,7 @@
         </columns>
     </table>
     <table tableName="mergetolkmapping" tableDbType="TABLE">
-        <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ehr.table.DefaultEHRCustomizer" />
         <tableTitle>Merge to LabKey Service/Panel Name Mapping</tableTitle>
         <columns>
             <column columnName="mergetestname">
@@ -46,7 +46,7 @@
         </columns>
     </table>
     <table tableName="orderssynced" tableDbType="TABLE">
-        <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ehr.table.DefaultEHRCustomizer" />
         <tableTitle>Orders Synced To/From Merge</tableTitle>
         <columns>
             <column columnName="runid">

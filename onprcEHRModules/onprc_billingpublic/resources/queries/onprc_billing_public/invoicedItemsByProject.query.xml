@@ -2,7 +2,7 @@
     <metadata>
         <tables xmlns="http://labkey.org/data/xml">
             <table tableName="invoicedItemsByProject" tableDbType="TABLE">
-                <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+                <javaCustomizer class="org.labkey.ehr.table.DefaultEHRCustomizer" />
                 <tableTitle>Invoices By Project</tableTitle>
                 <!--<tableUrl>/query/executeQuery.view?schemaName=onprc_billing_public&amp;queryName=invoicedItemsByProjectItem&amp;query.invoiceId/rowid~eq=${invoiceId/rowid}&amp;query.project~eq=${project}</tableUrl>-->
                 <columns>

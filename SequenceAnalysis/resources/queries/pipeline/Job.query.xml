@@ -2,7 +2,7 @@
     <metadata>
         <tables xmlns="http://labkey.org/data/xml">
             <table tableName="Job" tableDbType="TABLE">
-                <javaCustomizer>org.labkey.sequenceanalysis.query.JobsTableCustomizer</javaCustomizer>
+                <javaCustomizer class="org.labkey.sequenceanalysis.query.JobsTableCustomizer" />
             </table>
         </tables>
     </metadata>

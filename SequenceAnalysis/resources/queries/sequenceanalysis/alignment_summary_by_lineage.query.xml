@@ -3,7 +3,7 @@
         <tables xmlns="http://labkey.org/data/xml">
             <table tableName="alignment_summary_by_lineage" tableDbType="TABLE">
                 <tableTitle>Alignment Summary By Lineage</tableTitle>
-                <javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</javaCustomizer>
+                <javaCustomizer class="org.labkey.laboratory.query.LaboratoryTableCustomizer" />
                 <columns>
                     <column columnName="key">
                         <isKeyField>true</isKeyField>

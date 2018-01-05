@@ -2,7 +2,7 @@
     <metadata>
         <tables xmlns="http://labkey.org/data/xml">
             <table tableName="Data" tableDbType="NOT_IN_DB">
-                <javaCustomizer>org.labkey.laboratory.query.DefaultAssayCustomizer</javaCustomizer>
+                <javaCustomizer class="org.labkey.laboratory.query.DefaultAssayCustomizer" />
                 <columns>
                     <column columnName="subjectId">
                         <fk>

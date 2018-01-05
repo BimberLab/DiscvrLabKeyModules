@@ -20,7 +20,7 @@
         xmlns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <table tableName="census" tableDbType="TABLE" useColumnOrder="true">
         <tableTitle>SLA Census</tableTitle>
-        <javaCustomizer>org.labkey.sla.table.SLATableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.sla.table.SLATableCustomizer" />
         <columns>
 
             <column columnName="date">
@@ -107,7 +107,7 @@
         </columns>
     </table>
     <table tableName="etl_runs" tableDbType="TABLE">
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <columns>
             <column columnName="rowid"/>
             <column columnName="date">
@@ -124,7 +124,7 @@
     </table>
     <table tableName="purchase" tableDbType="TABLE">
         <tableTitle>SLA Purchases</tableTitle>
-        <javaCustomizer>org.labkey.sla.table.SLATableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.sla.table.SLATableCustomizer" />
         <columns>
             <column columnName="rowid" />
             <column columnName="project" />
@@ -165,7 +165,7 @@
     </table>
     <table tableName="purchaseDetails" tableDbType="TABLE">
         <tableTitle>SLA Purchase Details</tableTitle>
-        <javaCustomizer>org.labkey.sla.table.SLATableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.sla.table.SLATableCustomizer" />
         <columns>
             <column columnName="rowid" />
             <column columnName="purchaseid">
@@ -222,7 +222,7 @@
     </table>
     <table tableName="vendors" tableDbType="TABLE">
         <tableTitle>SLA Vendors</tableTitle>
-        <javaCustomizer>org.labkey.sla.table.SLATableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.sla.table.SLATableCustomizer" />
         <columns>
             <column columnName="rowid">
                 <columnTitle>Row Id</columnTitle>
@@ -245,7 +245,7 @@
     </table>
     <table tableName="requestors" tableDbType="TABLE">
         <tableTitle>SLA Requestors</tableTitle>
-        <javaCustomizer>org.labkey.sla.table.SLATableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.sla.table.SLATableCustomizer" />
         <columns>
             <column columnName="rowid">
                 <columnTitle>Row Id</columnTitle>
@@ -271,7 +271,7 @@
     </table>
     <table tableName="allowableAnimals" tableDbType="TABLE" useColumnOrder="true">
         <tableTitle>SLAs Allowed Per Protocol</tableTitle>
-        <javaCustomizer>org.labkey.ehr.table.DefaultEHRCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ehr.table.DefaultEHRCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <importUrl></importUrl>
         <insertUrl></insertUrl>

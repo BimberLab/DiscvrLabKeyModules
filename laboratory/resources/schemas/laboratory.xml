@@ -1,7 +1,7 @@
 <tables xmlns="http://labkey.org/data/xml">
     <table tableName="dna_oligos" tableDbType="TABLE" useColumnOrder="true">
         <tableTitle>DNA Oligos</tableTitle>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <pkColumnName>rowid</pkColumnName>
         <titleColumn>oligo_id</titleColumn>
@@ -91,7 +91,7 @@
     </table>
     <table tableName="samples" tableDbType="TABLE" useColumnOrder="true">
         <tableTitle>Samples</tableTitle>
-        <javaCustomizer>org.labkey.laboratory.query.SamplesCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.laboratory.query.SamplesCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <importTemplates>
             <template label="Default Template" url="/query/exportExcelTemplate.view?schemaName=laboratory&amp;query.queryName=samples&amp;captionType=Label&amp;filenamePrefix=samples"/>
@@ -397,7 +397,7 @@
     <table tableName="peptides" tableDbType="TABLE" useColumnOrder="true">
         <pkColumnName>rowid</pkColumnName>
         <tableTitle>Peptides</tableTitle>
-        <javaCustomizer>org.labkey.laboratory.query.ReagentTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.laboratory.query.ReagentTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <titleColumn>peptideId</titleColumn>
         <columns>
@@ -480,7 +480,7 @@
     <table tableName="antibodies" tableDbType="TABLE" useColumnOrder="true">
         <pkColumnName>rowid</pkColumnName>
         <tableTitle>Antibodies</tableTitle>
-        <javaCustomizer>org.labkey.laboratory.query.ReagentTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.laboratory.query.ReagentTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <titleColumn>antibodyId</titleColumn>
         <columns>
@@ -591,7 +591,7 @@
         </columns>
     </table>
     <table tableName="sample_type" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Sample Type</tableTitle>
         <columns>
@@ -605,7 +605,7 @@
         </columns>
     </table>
     <table tableName="cell_type" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Cell Types</tableTitle>
         <pkColumnName>type</pkColumnName>
@@ -615,7 +615,7 @@
         </columns>
     </table>
     <table tableName="dna_mol_type" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>DNA Molecule Types</tableTitle>
         <pkColumnName>mol_type</pkColumnName>
@@ -627,7 +627,7 @@
         </columns>
     </table>
     <table tableName="sample_additive" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Sample Additives</tableTitle>
         <pkColumnName>additive</pkColumnName>
@@ -638,7 +638,7 @@
     </table>
     <table tableName="reports" tableDbType="TABLE" useColumnOrder="true">
         <pkColumnName>rowid</pkColumnName>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <columns>
             <column columnName="rowid">
@@ -727,7 +727,7 @@
     </table>
     <table tableName="report_types" tableDbType="TABLE" useColumnOrder="true">
         <pkColumnName>type</pkColumnName>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <columns>
             <column columnName="type">
@@ -736,7 +736,7 @@
     </table>
     <table tableName="subjects" tableDbType="TABLE" useColumnOrder="true">
         <tableTitle>Subjects</tableTitle>
-        <javaCustomizer>org.labkey.laboratory.query.SubjectsTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.laboratory.query.SubjectsTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <columns>
             <column columnName="rowid">
@@ -845,7 +845,7 @@
     </table>
     <table tableName="species" tableDbType="TABLE" useColumnOrder="true">
         <pkColumnName>common_name</pkColumnName>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <columns>
             <column columnName="common_name">
@@ -860,7 +860,7 @@
         </columns>
     </table>
     <table tableName="geographic_origins" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Geographic Origins</tableTitle>
         <pkColumnName>geographic_origin</pkColumnName>
@@ -873,7 +873,7 @@
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Well Layouts</tableTitle>
         <pkColumnName>rowid</pkColumnName>
-        <javaCustomizer>org.labkey.ldk.query.BuiltInColumnsCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.BuiltInColumnsCustomizer" />
         <tableUrl>/query/detailsQueryRow.view?schemaName=laboratory&amp;query.queryName=Well_Layout&amp;rowid=${rowid}</tableUrl>
         <importUrl></importUrl>
         <insertUrl></insertUrl>
@@ -917,7 +917,7 @@
         </columns>
     </table>
     <table tableName="genders" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <pkColumnName>code</pkColumnName>
         <columns>
@@ -931,7 +931,7 @@
         </columns>
     </table>
     <table tableName="assay_run_templates" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.laboratory.query.AssayRunTemplatesCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.laboratory.query.AssayRunTemplatesCustomizer" />
         <tableTitle>Planned Assay Runs</tableTitle>
         <columns>
             <column columnName="rowid">
@@ -991,7 +991,7 @@
         </columns>
     </table>
     <table tableName="qual_results" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Qualitative Results</tableTitle>
         <columns>
@@ -1001,7 +1001,7 @@
         </columns>
     </table>
     <table tableName="samplecategory" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Sample Categories</tableTitle>
         <columns>
@@ -1012,7 +1012,7 @@
         </columns>
     </table>
     <table tableName="reference_peptides" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Reference Peptides</tableTitle>
         <columns>
@@ -1060,7 +1060,7 @@
     </table>
     <table tableName="freezers" tableDbType="TABLE" useColumnOrder="true">
         <tableTitle>Freezers</tableTitle>
-        <javaCustomizer>org.labkey.laboratory.query.FreezersCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.laboratory.query.FreezersCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <columns>
             <column columnName="rowid">
@@ -1115,7 +1115,7 @@
     <table tableName="plate_templates" tableDbType="TABLE" useColumnOrder="true">
         <tableTitle>Plate Templates</tableTitle>
         <auditLogging>DETAILED</auditLogging>
-        <javaCustomizer>org.labkey.ldk.query.BuiltInColumnsCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.BuiltInColumnsCustomizer" />
         <importUrl></importUrl>
         <updateUrl></updateUrl>
         <insertUrl></insertUrl>
@@ -1163,7 +1163,7 @@
     <table tableName="project_usage" tableDbType="TABLE" useColumnOrder="true">
         <tableTitle>Groups</tableTitle>
         <auditLogging>DETAILED</auditLogging>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <columns>
             <column columnName="rowid">
                 <isHidden>true</isHidden>
@@ -1220,7 +1220,7 @@
     <table tableName="major_events" tableDbType="TABLE" useColumnOrder="true">
         <tableTitle>Major Events</tableTitle>
         <auditLogging>DETAILED</auditLogging>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <columns>
             <column columnName="rowid">
                 <isHidden>true</isHidden>
@@ -1360,7 +1360,7 @@
     </table>
     <table tableName="workbook_tags" tableDbType="TABLE" useColumnOrder="true">
         <tableTitle>Workbook Tags</tableTitle>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <importUrl></importUrl>
         <insertUrl></insertUrl>
         <updateUrl></updateUrl>
@@ -1395,7 +1395,7 @@
     </table>
     <table tableName="result_status" tableDbType="TABLE" useColumnOrder="true">
         <tableTitle>Result Status Values</tableTitle>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <importUrl></importUrl>
         <insertUrl></insertUrl>
         <updateUrl></updateUrl>

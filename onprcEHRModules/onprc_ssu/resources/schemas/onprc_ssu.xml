@@ -1,7 +1,7 @@
 <tables xmlns="http://labkey.org/data/xml">
     <table tableName="schedule" tableDbType="TABLE" useColumnOrder="true">
         <tableTitle>SSU Schedule</tableTitle>
-        <javaCustomizer>org.labkey.ehr.table.WrappingTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ehr.table.WrappingTableCustomizer" />
         <columns>
             <column columnName="rowid">
                 <columnTitle>Row Id</columnTitle>

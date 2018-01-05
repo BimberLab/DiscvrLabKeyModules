@@ -3,7 +3,7 @@
         <tables xmlns="http://labkey.org/data/xml">
             <table tableName="aa_snps_by_position" tableDbType="TABLE">
                 <tableTitle>AA SNPs By Position</tableTitle>
-                <javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</javaCustomizer>
+                <javaCustomizer class="org.labkey.laboratory.query.LaboratoryTableCustomizer" />
                 <columns>
                     <column columnName="key">
                         <isKeyField>true</isKeyField>

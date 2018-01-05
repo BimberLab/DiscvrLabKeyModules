@@ -3,7 +3,7 @@
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>DNA Barcodes</tableTitle>
         <pkColumnName>tag_name</pkColumnName>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <columns>
             <column columnName="tag_name">
                 <nullable>false</nullable>
@@ -43,7 +43,7 @@
     <table tableName="sequence_platforms" tableDbType="TABLE" useColumnOrder="true">
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Sequence Platforms</tableTitle>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <pkColumnName>platform</pkColumnName>
         <columns>
             <column columnName="platform">
@@ -55,7 +55,7 @@
     <table tableName="sequence_applications" tableDbType="TABLE" useColumnOrder="true">
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Sequence Applications</tableTitle>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <pkColumnName>application</pkColumnName>
         <columns>
             <column columnName="application">
@@ -65,7 +65,7 @@
     <table tableName="sequence_chemistries" tableDbType="TABLE" useColumnOrder="true">
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Sequence Chemistries</tableTitle>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <pkColumnName>chemistry</pkColumnName>
         <columns>
             <column columnName="chemistry">
@@ -76,7 +76,7 @@
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>DNA Loci</tableTitle>
         <pkColumnName>locus</pkColumnName>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <columns>
             <column columnName="locus">
             </column>
@@ -87,7 +87,7 @@
     </table>
     <table tableName="ref_nt_category" tableDbType="TABLE">
         <auditLogging>DETAILED</auditLogging>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <tableTitle>Reference NT Category</tableTitle>
         <pkColumnName>category</pkColumnName>
         <columns>
@@ -97,7 +97,7 @@
     </table>
     <table tableName="dna_region" tableDbType="TABLE">
         <auditLogging>DETAILED</auditLogging>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <tableTitle>DNA Regions</tableTitle>
         <pkColumnName>region</pkColumnName>
         <columns>
@@ -106,7 +106,7 @@
         </columns>
     </table>
     <table tableName="sequence_coverage" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.laboratory.query.LaboratoryTableCustomizer" />
         <tableTitle>Sequence Coverage</tableTitle>
         <pkColumnName>rowid</pkColumnName>
         <tableUrl>/query/recordDetails.view?schemaName=sequenceanalysis&amp;query.queryName=Sequence_Coverage&amp;keyField=rowid&amp;key=${rowid}</tableUrl>
@@ -245,7 +245,7 @@
         </columns>
     </table>
     <table tableName="ref_aa_sequences" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.ldk.query.BuiltInColumnsCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.BuiltInColumnsCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Reference AA Sequences</tableTitle>
         <pkColumnName>rowid</pkColumnName>
@@ -348,7 +348,7 @@
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>DNA Adapters</tableTitle>
         <pkColumnName>name</pkColumnName>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <columns>
             <column columnName="name">
                 <nullable>false</nullable>
@@ -364,7 +364,7 @@
         </columns>
     </table>
     <table tableName="sequence_analyses" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.sequenceanalysis.query.AnalysesTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.sequenceanalysis.query.AnalysesTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Sequence Analysis Runs</tableTitle>
         <pkColumnName>rowid</pkColumnName>
@@ -549,7 +549,7 @@
         </buttonBarOptions>        
     </table>
     <table tableName="ref_aa_features" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.ldk.query.BuiltInColumnsCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.BuiltInColumnsCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Reference AA Features</tableTitle>
         <pkColumnName>rowid</pkColumnName>
@@ -631,7 +631,7 @@
         </columns>
     </table>
     <table tableName="ref_nt_features" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.ldk.query.BuiltInColumnsCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.BuiltInColumnsCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Reference NT Features</tableTitle>
         <pkColumnName>rowid</pkColumnName>
@@ -703,7 +703,7 @@
         </columns>
     </table>
     <table tableName="ref_nt_sequences" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.sequenceanalysis.query.SequenceAnalysisCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.sequenceanalysis.query.SequenceAnalysisCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Reference NT Sequences</tableTitle>
         <pkColumnName>rowid</pkColumnName>
@@ -914,7 +914,7 @@
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Drug Resistance Mutations</tableTitle>
         <pkColumnName>rowid</pkColumnName>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <columns>
             <column columnName="rowid">
                 <isAutoInc>true</isAutoInc>
@@ -985,14 +985,14 @@
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Analysis Types</tableTitle>
         <pkColumnName>type</pkColumnName>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <columns>
             <column columnName="type">
             </column>
         </columns>
     </table>
     <table tableName="sequence_readsets" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.laboratory.query.LaboratoryTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Sequence Readsets</tableTitle>
         <pkColumnName>rowid</pkColumnName>
@@ -1219,7 +1219,7 @@
         </buttonBarOptions>
     </table>
     <table tableName="readData" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Sequence Read Data</tableTitle>
         <pkColumnName>rowid</pkColumnName>
@@ -1328,7 +1328,7 @@
     </table>
     <table tableName="haplotype_types" tableDbType="TABLE">
         <auditLogging>DETAILED</auditLogging>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <tableTitle>Haplotype Types</tableTitle>
         <pkColumnName>type</pkColumnName>
         <columns>
@@ -1340,7 +1340,7 @@
     </table>
     <table tableName="haplotype_sequences" tableDbType="TABLE" useColumnOrder="true">
         <auditLogging>DETAILED</auditLogging>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <tableTitle>Haplotype Definitions</tableTitle>
         <pkColumnName>rowid</pkColumnName>
         <columns>
@@ -1397,7 +1397,7 @@
     </table>
     <table tableName="haplotypes" tableDbType="TABLE" useColumnOrder="true">
         <auditLogging>DETAILED</auditLogging>
-        <javaCustomizer>org.labkey.ldk.query.BuiltInColumnsCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.BuiltInColumnsCustomizer" />
         <tableTitle>Haplotypes</tableTitle>
         <tableUrl>/sequenceanalysis/haplotypeDetails.view?haplotypeId=${name}</tableUrl>
         <pkColumnName>name</pkColumnName>
@@ -1455,7 +1455,7 @@
     </table>
     <table tableName="instruments" tableDbType="TABLE" useColumnOrder="true">
         <auditLogging>DETAILED</auditLogging>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <tableTitle>Sequencers</tableTitle>
         <columns>
             <column columnName="rowid">
@@ -1513,7 +1513,7 @@
         </columns>
     </table>
     <table tableName="quality_metrics" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.ldk.query.BuiltInColumnsCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.BuiltInColumnsCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Quality Metrics</tableTitle>
         <tableUrl>/query/recordDetails.view?schemaName=sequenceanalysis&amp;query.queryName=Quality_Metrics&amp;keyField=rowid&amp;key=${rowid}</tableUrl>
@@ -1622,14 +1622,14 @@
     <table tableName="quality_metrics_types" tableDbType="TABLE">
         <auditLogging>DETAILED</auditLogging>
         <tableUrl></tableUrl>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <tableTitle>Quality Metric Types</tableTitle>
         <columns>
             <column columnName="type"/>
         </columns>
     </table>
     <table tableName="instrument_runs" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.ldk.query.BuiltInColumnsCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.BuiltInColumnsCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Instrument Runs</tableTitle>
         <tableUrl>/sequenceanalysis/instrumentRunDetails.view?id=${rowid}</tableUrl>
@@ -1695,7 +1695,7 @@
         </columns>
     </table>
     <table tableName="alignment_summary" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.laboratory.query.LaboratoryTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableUrl></tableUrl>
         <importUrl></importUrl>
@@ -1759,7 +1759,7 @@
     <table tableName="alignment_summary_junction" tableDbType="TABLE" useColumnOrder="true">
         <!--NOTE: changed to summary b/c a large amount of events are accumulated otherwise-->
         <auditLogging>SUMMARY</auditLogging>
-        <javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.laboratory.query.LaboratoryTableCustomizer" />
         <tableUrl></tableUrl>
         <importUrl></importUrl>
         <updateUrl></updateUrl>
@@ -1820,7 +1820,7 @@
         </columns>
     </table>
     <table tableName="nt_snps_by_pos" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.laboratory.query.LaboratoryTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableUrl></tableUrl>
         <updateUrl></updateUrl>
@@ -1905,7 +1905,7 @@
         </columns>
     </table>
     <table tableName="aa_snps_by_codon" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.laboratory.query.LaboratoryTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableUrl></tableUrl>
         <updateUrl></updateUrl>
@@ -1998,7 +1998,7 @@
         </columns>
     </table>
     <table tableName="illumina_applications" tableDbType="TABLE">
-        <javaCustomizer>org.labkey.ldk.query.BuiltInColumnsCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.BuiltInColumnsCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableUrl></tableUrl>
         <updateUrl></updateUrl>
@@ -2037,7 +2037,7 @@
         </buttonBarOptions>
     </table>
     <table tableName="illumina_genome_folders" tableDbType="TABLE">
-        <javaCustomizer>org.labkey.ldk.query.BuiltInColumnsCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.BuiltInColumnsCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableUrl></tableUrl>
         <updateUrl></updateUrl>
@@ -2051,7 +2051,7 @@
         </columns>
     </table>
     <table tableName="illumina_param_types" tableDbType="TABLE">
-        <javaCustomizer>org.labkey.ldk.query.BuiltInColumnsCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.BuiltInColumnsCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableUrl></tableUrl>
         <updateUrl></updateUrl>
@@ -2064,7 +2064,7 @@
         </columns>
     </table>
     <table tableName="illumina_sample_kits" tableDbType="TABLE">
-        <javaCustomizer>org.labkey.ldk.query.BuiltInColumnsCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.BuiltInColumnsCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableUrl></tableUrl>
         <updateUrl></updateUrl>
@@ -2088,7 +2088,7 @@
         </buttonBarOptions>
     </table>
     <table tableName="reference_libraries" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.laboratory.query.LaboratoryTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableUrl>/sequenceanalysis/libraryDetails.view?libraryId=${rowid}</tableUrl>
         <updateUrl></updateUrl>
@@ -2163,7 +2163,7 @@
         </buttonBarOptions>
     </table>
     <table tableName="reference_library_members" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.laboratory.query.LaboratoryTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableUrl></tableUrl>
         <updateUrl></updateUrl>
@@ -2235,7 +2235,7 @@
         </buttonBarOptions>
     </table>
     <table tableName="reference_library_tracks" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.laboratory.query.LaboratoryEditingTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.laboratory.query.LaboratoryEditingTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableUrl></tableUrl>
         <!--<updateUrl></updateUrl>-->
@@ -2322,7 +2322,7 @@
         </buttonBarOptions>
     </table>
     <table tableName="saved_analyses" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.laboratory.query.LaboratoryTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableUrl></tableUrl>
         <updateUrl></updateUrl>
@@ -2384,7 +2384,7 @@
         </buttonBarOptions>
     </table>
     <table tableName="outputfiles" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.laboratory.query.LaboratoryEditingTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.laboratory.query.LaboratoryEditingTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableUrl></tableUrl>
         <insertUrl></insertUrl>
@@ -2518,7 +2518,7 @@
     <table tableName="readset_status" tableDbType="TABLE" useColumnOrder="true">
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Readset Status</tableTitle>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <columns>
             <column columnName="rowid"/>
             <column columnName="status"/>
@@ -2532,7 +2532,7 @@
     <table tableName="chain_files" tableDbType="TABLE" useColumnOrder="true">
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Chain Files</tableTitle>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <tableUrl></tableUrl>
         <!--<updateUrl></updateUrl>-->
         <insertUrl></insertUrl>
@@ -2619,7 +2619,7 @@
     <table tableName="library_types" tableDbType="TABLE" useColumnOrder="true">
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Library Types</tableTitle>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <columns>
             <column columnName="rowid"/>
             <column columnName="type"/>
@@ -2633,7 +2633,7 @@
     <table tableName="genomeAliases" tableDbType="TABLE" useColumnOrder="true">
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Aliases in External Datasources</tableTitle>
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <columns>
             <column columnName="rowId"/>
             <column columnName="genomeId">
@@ -2658,7 +2658,7 @@
         </buttonBarOptions>
     </table>
     <table tableName="analysisSets" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Analysis Sets</tableTitle>
         <pkColumnName>rowid</pkColumnName>
@@ -2729,7 +2729,7 @@
         </buttonBarOptions>
     </table>
     <table tableName="analysisSetMembers" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Analysis Set Files</tableTitle>
         <pkColumnName>rowid</pkColumnName>

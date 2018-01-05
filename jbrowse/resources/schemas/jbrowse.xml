@@ -19,7 +19,7 @@
 <tables xsi:schemaLocation="http://labkey.org/data/xml" xmlns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <table tableName="jsonfiles" tableDbType="TABLE" useColumnOrder="true">
         <!--NOTE: required to allow modules to register buttons-->
-        <javaCustomizer>org.labkey.laboratory.query.LaboratoryEditingTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.laboratory.query.LaboratoryEditingTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableUrl></tableUrl>
         <updateUrl></updateUrl>
@@ -97,7 +97,7 @@
     </table>
     <table tableName="databases" tableDbType="TABLE" useColumnOrder="true">
         <!--NOTE: required to allow modules to register buttons-->
-        <javaCustomizer>org.labkey.laboratory.query.LaboratoryEditingTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.laboratory.query.LaboratoryEditingTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableUrl>/jbrowse/databaseDetails.view?databaseId=${objectid}</tableUrl>
         <insertUrl></insertUrl>
@@ -191,7 +191,7 @@
         </buttonBarOptions>
     </table>
     <table tableName="database_members" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer>org.labkey.ldk.query.DefaultTableCustomizer</javaCustomizer>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableUrl></tableUrl>
         <insertUrl></insertUrl>

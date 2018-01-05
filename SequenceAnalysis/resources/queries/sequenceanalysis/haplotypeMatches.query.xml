@@ -2,7 +2,7 @@
     <metadata>
         <tables xmlns="http://labkey.org/data/xml">
             <table tableName="haplotypeMatches" tableDbType="TABLE">
-                <javaCustomizer>org.labkey.laboratory.query.LaboratoryTableCustomizer</javaCustomizer>
+                <javaCustomizer class="org.labkey.laboratory.query.LaboratoryTableCustomizer" />
                 <tableTitle>Matching Haplotypes</tableTitle>
                 <columns>
                     <column columnName="key">
