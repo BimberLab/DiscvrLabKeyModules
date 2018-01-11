@@ -358,7 +358,10 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
         ExperimentService.get().registerExperimentDataHandler(new HtmlExpDataHandler());
 
-        SearchService.get().addDocumentParser(new SequenceNoOpDocumentParser());
+        SearchService ss = SearchService.get();
+
+        if (null != ss)
+            ss.addDocumentParser(new SequenceNoOpDocumentParser());
     }
 
     @Override
