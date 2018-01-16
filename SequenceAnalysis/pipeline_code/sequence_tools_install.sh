@@ -270,7 +270,7 @@ then
     cd ../
 
     #fix multithreading bug
-    sed -i 's/private final List<GenomeLoc> upstreamDeletionsLoc = new LinkedList<>();/sed -i 's/private final List<GenomeLoc> upstreamDeletionsLoc = new LinkedList<>();/private final ThreadLocal< List<GenomeLoc> > upstreamDeletionsLoc = ThreadLocal.withInitial(() -> new LinkedList<GenomeLoc>());/g' ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/genotyper/GenotypingEngine.java/g' ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/genotyper/GenotypingEngine.java
+    sed -i 's/private final List<GenomeLoc> upstreamDeletionsLoc = new LinkedList<>();/private final ThreadLocal< List<GenomeLoc> > upstreamDeletionsLoc = ThreadLocal.withInitial(() -> new LinkedList<GenomeLoc>());/g' ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/genotyper/GenotypingEngine.java/g' ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/genotyper/GenotypingEngine.java
     sed -i 's/upstreamDeletionsLoc.add(genomeLoc);/upstreamDeletionsLoc.get().add(genomeLoc);/g' ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/genotyper/GenotypingEngine.java
     sed -i 's/upstreamDeletionsLoc.iterator();/upstreamDeletionsLoc.get().iterator();/g' ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/genotyper/GenotypingEngine.java
 
