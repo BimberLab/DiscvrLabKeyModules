@@ -73,10 +73,10 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         _params = params;
         writeParameters(params);
 
-        setLogFile(getLogFilePath());
+        setLogFile(_getLogFile());
     }
 
-    private File getLogFilePath() throws IOException
+    private File _getLogFile() throws IOException
     {
         return AssayFileWriter.findUniqueFileName((FileUtil.makeLegalName(_jobName) + ".log"), getDataDirectory());
     }
