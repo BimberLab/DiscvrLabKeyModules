@@ -84,7 +84,7 @@
                     xtype: 'textfield',
                     itemId: 'protocolName',
                     fieldLabel: 'Name',
-                    value: 'Billing_Run_' + (new Date()).format('Y-m-d_h_m')
+                    value: 'Billing_Run_' +  (Ext4.util.Format.date(new Date()), 'Y-m-d_h_m')
                 },{
                     xtype: 'datefield',
                     itemId: 'startDate',
