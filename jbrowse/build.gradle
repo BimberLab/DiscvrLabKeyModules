@@ -12,3 +12,33 @@ dependencies {
    BuildUtils.addLabKeyDependency(project: project, config: "compile", depProjectPath: ":externalModules:labModules:SequenceAnalysis", depProjectConfig: "apiCompile")
    BuildUtils.addLabKeyDependency(project: project, config: "compile", depProjectPath: ":externalModules:labModules:laboratory", depProjectConfig: "apiCompile")
 }
+
+project.task("copyJBrowse",
+        type: Copy,
+        group: "Build",
+        description: "Copy jbrowse app into webapp directory",
+        { CopySpec copy ->
+           copy.from fileTree("./node_modules/jbrowse").exclude('css/main.css')
+           copy.into new File("./resources/web/jbrowseApp/")
+        }
+)
+
+project.task("copyJBrowseCss",
+        type: Copy,
+        group: "Build",
+        description: "Copy jbrowse main.css into webapp directory",
+        { CopySpec copy ->
+            copy.from new File("./webpack/main.css")
+            copy.into new File("./resources/web/jbrowseApp/css/")
+        }
+)
+
+project.tasks.copyJBrowse.dependsOn(project.tasks.npmInstall)
+
+
+project.tasks.copyJBrowse.mustRunAfter("npmRunBuild")
+project.tasks.copyJBrowse.mustRunAfter("npmRunBuildProd")
+
+project.tasks.copyJBrowseCss.dependsOn(project.tasks.copyJBrowse)
+project.tasks.module.dependsOn(project.tasks.copyJBrowse)
+project.tasks.module.dependsOn(project.tasks.copyJBrowseCss)

@@ -847,6 +847,11 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     '</tpl>',
                     '</table>'
                 ]
+            },{
+                html: '',
+                itemId: 'totalFiles',
+                border: false,
+                style: 'padding-left: 5px;padding-top: 10px;'
             }]
         }
     },
@@ -1017,6 +1022,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         this.fileNameStoreCopy.sort('displayName');
 
         this.down('#fileListView').refresh();
+        this.down('#totalFiles').update('Total files: ' + this.fileNameStore.getCount());
         this.fileLoadSuccess = true;
     },
 

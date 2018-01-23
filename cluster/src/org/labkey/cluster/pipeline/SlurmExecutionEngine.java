@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -163,11 +164,17 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
     {
         Map<String, String> ctx = getBaseCtx(c);
         ctx.put("clusterId", job.getClusterId());
+        if (job.getClusterId() == null)
+        {
+            _log.error("clusterId was null for job: " + job.getRowId() + " / " + job.getStatus());
+        }
+
         List<String> ret = execute(getConfig().getHistoryCommandExpr().eval(ctx));
         if (ret != null)
         {
             //verify success
             boolean headerFound = false;
+            LinkedHashSet<String> statuses = new LinkedHashSet<>();
             for (String line : ret)
             {
                 line = StringUtils.trimToNull(line);
@@ -185,23 +192,31 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                 if (headerFound)
                 {
                     String[] tokens = line.split("( )+");
-                    if (tokens.length < 7)
+                    if (tokens.length < 6)
                     {
-                        _log.warn("sacct line unexpectedly short: [" + line + "]");
+                        _log.error("sacct line unexpectedly short: [" + line + "]");
                         continue;
                     }
+                    int statusIdx = tokens.length == 7 ? 5 : 4;
 
                     String id = StringUtils.trimToNull(tokens[0]);
-                    if (!id.equals(job.getClusterId()))
+                    if (id.equals(job.getClusterId()))
                     {
-                        //NOTE: as we're currently using this, it returns all jobs
-                        //_log.error("incorrect line found when calling condor_history for: " + job.getClusterId());
-                        //_log.error(line);
-                        continue;
+                        statuses.add(StringUtils.trimToNull(tokens[statusIdx]));
                     }
-
-                    return translateSlurmStatusToTaskStatus(StringUtils.trimToNull(tokens[5]));
                 }
+            }
+
+            //NOTE: in the situation where a job is evicted and is then cancelled while waiting, we need to inspect more lines to verify whether this job is actually cancelled
+            if (!statuses.isEmpty())
+            {
+                String status = statuses.stream().skip(statuses.size()-1).findFirst().get();
+                if (statuses.size() > 1)
+                {
+                    _log.error("more than one status returned for job " + job.getClusterId() + ": " + StringUtils.join(statuses, ";") + ", using: " + status);
+                }
+
+                return translateSlurmStatusToTaskStatus(status);
             }
         }
 
@@ -276,14 +291,13 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     writer.write("#SBATCH --job-name=" + job.getJobGUID() + "\n");
                     writer.write("#SBATCH --ntasks=1\n");
                     writer.write("#SBATCH --get-user-env\n");
-                    writer.write("#SBATCH --requeue\n");
+
+                    //NOTE: changing behavior.  instead of requeue, these will now be converted to cancelled
+                    //writer.write("#SBATCH --requeue\n");
 
                     //NOTE: this is just the output of the java process, so do not put into regular pipeline log
                     writer.write("#SBATCH --output=" + getConfig().getClusterPath(new File(outDir, basename + "-%j.java.log")) + "\n");
                     writer.write("#SBATCH --error=" + getConfig().getClusterPath(new File(outDir, basename + "-%j.java.log")) + "\n");
-
-                    //TODO
-                    //writer.write("log=" + getConfig().getClusterPath(new File(outDir, basename + "-$(Cluster).$(Process).condor.log")) + "\n");
 
                     // This allows modules to register code to modify resource usage per task.
                     Integer maxCpus = null;
@@ -420,7 +434,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         SE("Error", PipelineJob.TaskStatus.error, Arrays.asList("SPECIAL_EXIT")),
         ST("Stopped", PipelineJob.TaskStatus.error),
         S("Suspended", PipelineJob.TaskStatus.waiting, null, "Job suspended"),
-        TO("Timeout", PipelineJob.TaskStatus.waiting, null, "Job timeout");
+        TO("Timeout", PipelineJob.TaskStatus.error, null, "Job timeout");
 
         private Set<String> _aliases = new CaseInsensitiveHashSet();
         private String _labkeyStatus;

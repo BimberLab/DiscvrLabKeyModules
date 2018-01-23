@@ -31,6 +31,7 @@ import org.labkey.api.query.QueryException;
 import org.labkey.api.query.QueryForeignKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
+import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.view.ActionURL;
 import org.labkey.laboratory.DemographicsSource;
 import org.labkey.laboratory.LaboratoryModule;
@@ -119,6 +120,11 @@ public class LaboratoryTableCustomizer implements TableCustomizer
 
     public void customizeURLs(AbstractTableInfo ti)
     {
+        if (!ti.hasPermission(ti.getUserSchema().getUser(), InsertPermission.class))
+        {
+            return;
+        }
+
         String schemaName = ti.getUserSchema().getSchemaName();
         assert schemaName != null;
 
@@ -126,8 +132,12 @@ public class LaboratoryTableCustomizer implements TableCustomizer
         assert queryName != null;
 
         List<String> keyFields = ti.getPkColumnNames();
-        assert keyFields.size() > 0 : "No key fields found for the table: " + ti.getPublicSchemaName() + "." + ti.getPublicName();
-        if (keyFields.size() != 1)
+        if (keyFields.size() == 0)
+        {
+            _log.error("Table: " + schemaName + "." + queryName + " has no key fields: " + StringUtils.join(keyFields, ";"));
+            return;
+        }
+        else if (keyFields.size() != 1)
         {
             _log.warn("Table: " + schemaName + "." + queryName + " has more than 1 PK: " + StringUtils.join(keyFields, ";"));
             return;

@@ -372,7 +372,7 @@
             <item text="Insert" hidden="true">
                 <originalText>Insert</originalText>
             </item>
-            <item text="Insert">
+            <item text="Insert" iconCls="plus">
                 <item text="Insert New">
                     <onClick>Laboratory.buttonHandlers.importDataHandler(dataRegionName, arguments[0] ? arguments[0].ownerCt : null, 'laboratory', 'samples', 'rowid', false)</onClick>
                 </item>
@@ -388,9 +388,6 @@
             </item>
             <item text="Print">
                 <originalText>Print</originalText>
-            </item>
-            <item text="Paging">
-                <originalText>Paging</originalText>
             </item>
         </buttonBarOptions>
     </table>
@@ -1324,9 +1321,9 @@
                 <isHidden>true</isHidden>
             </column>
         </columns>
-        <buttonBarOptions position="top" includeStandardButtons="false">
+        <buttonBarOptions position="top" includeStandardButtons="true">
             <includeScript>laboratory.context</includeScript>
-            <item text="Create New Workbook" permission="INSERT">
+            <item text="Create New Workbook" permission="INSERT" iconCls="plus">
                 <onClick>Ext4.create('Laboratory.window.WorkbookCreationWindow', {
                     canAddToExistingExperiment: false,
                     controller: 'project',
@@ -1335,26 +1332,14 @@
                     }).show(arguments[0].srcElement);
                 </onClick>
             </item>
-            <item text="Delete">
-                <originalText>Delete</originalText>
+            <item hidden="true">
+                <originalText>Charts</originalText>
             </item>
-            <item text="Grid Views">
-                <originalText>Grid Views</originalText>
-            </item>
-            <item text="Add Tag" requiresSelection="true">
+            <item text="Add Tag" requiresSelection="true" iconCls="hashtag" insertPosition="end">
                 <onClick>Ext4.create('Laboratory.window.WorkbookTagsWindow', {
-                        dataRegionName: dataRegionName
+                    dataRegionName: dataRegionName
                     }).show(arguments[0].srcElement);
                 </onClick>
-            </item>
-            <item text="Export">
-                <originalText>Export</originalText>
-            </item>
-            <item text="Print">
-                <originalText>Print</originalText>
-            </item>
-            <item text="Paging">
-                <originalText>Paging</originalText>
             </item>
         </buttonBarOptions>
     </table>

@@ -227,6 +227,13 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         List<String> params = new ArrayList<>();
 
         String tmpDir = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_TMP_DIR");
+        if (PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
+        {
+            tmpDir = System.getProperty("java.io.tmpdir");
+            if (tmpDir != null)
+                _log.debug("setting temp directory to: " + tmpDir);
+        }
+
         if (StringUtils.trimToNull(tmpDir) != null)
         {
             params.add("-Djava.io.tmpdir=" + tmpDir);

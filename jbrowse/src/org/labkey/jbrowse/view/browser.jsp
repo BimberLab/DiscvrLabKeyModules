@@ -102,6 +102,8 @@
                         show_tracklabels: queryParams.tracklabels,
                         highResolutionMode: queryParams.highres,
                         returnUrl: '<%=h(returnUrl.toString())%>',
+                        contextPath: "<%=h(AppProps.getInstance().getContextPath())%>",
+                        containerPath: "<%=h(getContainer().getPath())%>",
                         aboutThisBrowser: {
                             title: <%=q(form.getPageTitle())%>
                         },

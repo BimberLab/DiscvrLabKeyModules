@@ -162,8 +162,14 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
             }
 
             //force checkboxes to submit true instead of 'on'
-            if (o.xtype == 'checkbox' && !Ext4.isDefined(o.inputValue)){
-                o.inputValue = true;
+            if (o.xtype == 'checkbox'){
+                if (!Ext4.isDefined(o.inputValue)){
+                    o.inputValue = true;
+                }
+
+                if (o.value){
+                    o.checked = true;
+                }
             }
 
             paramCfg.push(o);

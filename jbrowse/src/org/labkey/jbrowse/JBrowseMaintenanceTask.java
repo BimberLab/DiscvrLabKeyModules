@@ -4,15 +4,16 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
+import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.util.SystemMaintenance.MaintenanceTask;
+import org.labkey.jbrowse.model.Database;
 import org.labkey.jbrowse.model.JsonFile;
 
 import java.io.File;
@@ -49,6 +50,29 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
     @Override
     public void run(Logger log)
     {
+        //find sessions linked to a non-existent genome
+        SQLFragment sqlDB = new SQLFragment("SELECT d.objectid FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_DATABASES + " d LEFT JOIN sequenceanalysis.reference_libraries l on (d.libraryId = l.rowid) WHERE l.rowid IS NULL");
+        SqlSelector ss = new SqlSelector(JBrowseSchema.getInstance().getSchema().getScope(), sqlDB);
+        if (ss.exists())
+        {
+            List<String> toDelete = ss.getArrayList(String.class);
+            for (String objectId : toDelete)
+            {
+                log.info("deleting JBrowse session because genome does not exist: " + objectId);
+                Database db = new TableSelector(JBrowseSchema.getInstance().getSchema().getTable(JBrowseSchema.TABLE_DATABASES)).getObject(objectId, Database.class);
+                Table.delete(JBrowseSchema.getInstance().getSchema().getTable(JBrowseSchema.TABLE_DATABASES), objectId);
+
+                try
+                {
+                    Database.onDatabaseDelete(db.getContainer(), db.getObjectId(), false);
+                }
+                catch (IOException e)
+                {
+                    log.error("error deleting JBrowse session: " + e.getMessage(), e);
+                }
+            }
+        }
+
         //delete JSON in output dir not associated with DB record
         try
         {

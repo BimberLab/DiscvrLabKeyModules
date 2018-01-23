@@ -145,6 +145,8 @@ DISCVR/jbrowse/resources/views/begin.html -text
 DISCVR/jbrowse/resources/views/begin.view.xml -text
 DISCVR/jbrowse/resources/views/databaseDetails.html -text
 DISCVR/jbrowse/resources/views/databaseDetails.view.xml -text
+DISCVR/jbrowse/resources/views/genotypeTable.html -text
+DISCVR/jbrowse/resources/views/genotypeTable.view.xml -text
 DISCVR/jbrowse/resources/views/jbrowseSearch.html -text
 DISCVR/jbrowse/resources/views/jbrowseSearch.view.xml -text
 DISCVR/jbrowse/resources/views/jbrowseSearch.webpart.xml -text

@@ -9,6 +9,8 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
     FIELD_WIDTH: 450,
     HEADER_HTML: 'This assay is part of the <a href="https://github.com/bbimber/discvr/wiki">DISCVR software package</a>, an open-source collection of extensions to LabKey Server.  Please use the previous link for more detail.',
 
+    includeDescriptionInExcelTemplate: true,
+
     getDomainConfig: function(domain, forTemplate){
         var meta = this.getMetadata(forTemplate)[domain].map;
         var domainFields = new Array();
@@ -96,6 +98,12 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
 
         if (forTemplate && this.templateMetadata && this.templateMetadata.domains){
             Ext4.Object.merge(meta, this.templateMetadata.domains);
+        }
+
+        if (forTemplate && this.selectedMethod){
+            if (this.templateMetadata.importMethods[this.selectedMethod.name] && this.templateMetadata.importMethods[this.selectedMethod.name].domains){
+                Ext4.Object.merge(meta, this.templateMetadata.importMethods[this.selectedMethod.name].domains);
+            }
         }
 
         return {
@@ -189,7 +197,7 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
 //
 //        LDK.StoreUtils.createExcelTemplate({
 //            fields: fields,
-//            fileName: this.assayDesign.name + '_' + (new Date().format('Y-m-d H_i_s')) + '.xls'
+//            fileName: this.assayDesign.name + '_' + Ext4.Date.format('Y-m-d H_i_s')) + '.xls'
 //        });
 //    },
 
@@ -212,6 +220,7 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
                     Ext4.create('Laboratory.ext.AssaySpreadsheetImportWindow', {
                         targetGrid: grid,
                         includeVisibleColumnsOnly: true,
+                        includeDescriptionInExcelTemplate: this.includeDescriptionInExcelTemplate,
                         fileNamePrefix: btn.fileNamePrefix
                     }).show(btn);
                 }

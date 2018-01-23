@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "clean": "bnr clean",
-    "build": "npm run clean && bnr copy:code",
+    "build": "npm run clean",
     "build-prod": "npm run build",
     "prebuild": "npm run clean",
     "setup": "npm install"
@@ -11,20 +11,12 @@
   "betterScripts": {
     "clean": {
       "command": "rimraf resources/web/jbrowseApp"
-    },
-    "copy:code": {
-      "command": "node webpack/copyCode.js",
-      "env": {
-        "NODE_ENV": "development"
-      }
     }
   },
   "dependencies": {},
   "devDependencies": {
     "better-npm-run": "0.1.0",
-    "fs-extra": "4.0",
     "jbrowse": "github:GMOD/jbrowse",
-    "rimraf": "2.6.2",
-    "webpack": "3.5.6"
+    "rimraf": "2.6.2"
   }
 }

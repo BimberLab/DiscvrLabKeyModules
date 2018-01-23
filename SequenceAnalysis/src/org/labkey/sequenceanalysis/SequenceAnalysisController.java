@@ -3252,6 +3252,15 @@ public class SequenceAnalysisController extends SpringActionController
                 }
             }
 
+            JSONObject intermediateFiles = new JSONObject();
+            intermediateFiles.put("name", "deleteIntermediateFiles");
+            intermediateFiles.put("defaultValue", true);
+            intermediateFiles.put("label", "Delete Intermediate Files");
+            intermediateFiles.put("description", "Is selected, intermediate files from this job will be deleted automatically");
+            intermediateFiles.put("fieldXtype", "checkbox");
+
+            toolArr.put(intermediateFiles);
+
             ret.put("toolParameters", toolArr);
 
             ret.put("description", handler.getDescription());

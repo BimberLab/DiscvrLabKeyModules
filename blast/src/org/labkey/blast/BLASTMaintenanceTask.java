@@ -4,9 +4,12 @@ import org.apache.log4j.Logger;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
+import org.labkey.api.data.SqlSelector;
+import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
@@ -47,6 +50,31 @@ public class BLASTMaintenanceTask implements MaintenanceTask
     @Override
     public void run(Logger log)
     {
+        //delete DBs linked to a genome that no longer exists
+        SQLFragment sqlDB = new SQLFragment("SELECT d.objectid FROM " + BLASTSchema.NAME + "." + BLASTSchema.TABLE_DATABASES + " d LEFT JOIN sequenceanalysis.reference_libraries l on (d.libraryId = l.rowid) WHERE l.rowid IS NULL");
+        SqlSelector ss = new SqlSelector(BLASTSchema.getInstance().getSchema().getScope(), sqlDB);
+        if (ss.exists())
+        {
+            List<String> toDelete = ss.getArrayList(String.class);
+            try (DbScope.Transaction transaction = BLASTSchema.getInstance().getSchema().getScope().ensureTransaction())
+            {
+                for (String objectId : toDelete)
+                {
+                    log.info("deleting BLAST DB because genome does not exist: " + objectId);
+                    Table.delete(BLASTSchema.getInstance().getSchema().getTable(BLASTSchema.TABLE_DATABASES), objectId);
+
+                    SqlExecutor ex = new SqlExecutor(BLASTSchema.getInstance().getSchema().getScope());
+                    int deleted = ex.execute(new SQLFragment("DELETE FROM " + BLASTSchema.NAME + "." + BLASTSchema.TABLE_BLAST_JOBS + " WHERE databaseid = ? ", objectId));
+                    if (deleted > 0)
+                    {
+                        log.info("also deleted " + deleted + " blast jobs associated with this database");
+                    }
+                }
+
+                transaction.commit();
+            }
+        }
+
         //delete BLAST jobs not flagged to persist
         TableInfo blastJobs = BLASTSchema.getInstance().getSchema().getTable(BLASTSchema.TABLE_BLAST_JOBS);
         TableSelector ts = new TableSelector(blastJobs);

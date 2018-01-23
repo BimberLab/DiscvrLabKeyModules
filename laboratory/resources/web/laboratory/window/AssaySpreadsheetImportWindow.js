@@ -1,6 +1,8 @@
 Ext4.define('Laboratory.ext.AssaySpreadsheetImportWindow', {
     extend: 'Ext.window.Window',
 
+    includeDescriptionInExcelTemplate: true,
+
     initComponent: function(){
         Ext4.apply(this, {
             modal: true,
@@ -27,6 +29,7 @@ Ext4.define('Laboratory.ext.AssaySpreadsheetImportWindow', {
 
                         LDK.StoreUtils.createExcelTemplate({
                             fields: fields,
+                            includeDescription: this.includeDescriptionInExcelTemplate,
                             skippedFields: [],
                             fileName: win.fileNamePrefix + '_' + Ext4.Date.format(new Date(), 'Y-m-d H_i_s') + '.xls'
                         });

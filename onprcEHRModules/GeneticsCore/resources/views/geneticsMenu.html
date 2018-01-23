@@ -8,6 +8,9 @@
         var webpart = <%=webpartContext%>;
         var div = Ext4.get(webpart.wrapperDivId).down('.genetics-nav-menu-panel');
 
+        var parent = Ext4.get(webpart.wrapperDivId).up('.lk-custom-dropdown-menu');
+        parent.setStyle('padding' , '0px 0px 0px 0px');
+
         var panel = Ext4.create('Ext.panel.Panel', {
             renderTo: div.id,
             cls: 'labkey-iconpanel',

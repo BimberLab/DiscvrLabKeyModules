@@ -42,6 +42,12 @@ Ext4.define('JBrowse.window.ModifyJsonConfigWindow', {
                             this.addAttribute('visibleByDefault', true);
                         }
                     },{
+                        text: 'Index Features',
+                        scope: this,
+                        handler: function (gridBtn) {
+                            this.addAttribute('doIndex', false);
+                        }
+                    },{
                         text: 'Max Score',
                         scope: this,
                         handler: function (gridBtn) {
@@ -52,6 +58,12 @@ Ext4.define('JBrowse.window.ModifyJsonConfigWindow', {
                         scope: this,
                         handler: function (gridBtn) {
                             this.addAttribute('type', 'JBrowse/View/Track/Wiggle/XYPlot');
+                        }
+                    },{
+                        text: 'Omit This Track',
+                        scope: this,
+                        handler: function (gridBtn) {
+                            this.addAttribute('omitTrack', true);
                         }
                     },{
                         text: 'Other',
@@ -65,7 +77,7 @@ Ext4.define('JBrowse.window.ModifyJsonConfigWindow', {
                 })],
                 store: {
                     type: 'array',
-                    fields: ['attribute', 'value']
+                    fields: ['attribute', {name: 'value', type: 'object'}]
                 },
                 columns: [{
                     dataIndex: 'attribute',
@@ -126,7 +138,7 @@ Ext4.define('JBrowse.window.ModifyJsonConfigWindow', {
                 return false;
             }
 
-            ret[r.data.attribute] = r.data.value;
+            ret[r.data.attribute] = JSON.parse(r.data.value);
         }, this);
 
         if (hasError){

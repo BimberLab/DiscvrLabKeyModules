@@ -5,7 +5,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -14,10 +13,12 @@ import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.files.FileContentService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.services.ServiceRegistry;
+import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.jbrowse.JBrowseManager;
 
 import java.io.File;
+import java.util.Arrays;
 
 /**
  * User: bimber
@@ -74,14 +75,29 @@ public class JsonFile
 
     public ExpData getExpData()
     {
-        if (_outputFile == null)
-            return null;
+        Integer dataId = null;
+        if (_outputFile != null)
+        {
+            dataId = new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("outputfiles"), PageFlowUtil.set("dataid"), new SimpleFilter(FieldKey.fromString("rowid"), _outputFile), null).getObject(Integer.class);
+        }
+        else if (_trackId != null)
+        {
+            dataId = new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("reference_library_tracks"), PageFlowUtil.set("fileid"), new SimpleFilter(FieldKey.fromString("rowid"), _trackId), null).getObject(Integer.class);
+        }
 
-        Integer dataId = new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("outputfiles"), PageFlowUtil.set("dataid"), new SimpleFilter(FieldKey.fromString("rowid"), _outputFile), null).getObject(Integer.class);
         if (dataId == null)
             return null;
 
         return ExperimentService.get().getExpData(dataId);
+    }
+
+    public File getTrackFile()
+    {
+        ExpData d = getExpData();
+        if (d == null || d.getFile() == null)
+            return null;
+
+        return d.getFile();
     }
 
     public ExpData getRefLibraryData()
@@ -187,13 +203,27 @@ public class JsonFile
         return getRelativePath() == null ? null : new File(jbrowseDir, getRelativePath());
     }
 
+    private static final FileType _ft = new FileType(Arrays.asList(".bam", ".vcf"), ".vcf", FileType.gzSupportLevel.SUPPORT_GZ);
+
+    //NOTE: if the track file isnt parsed to JSON (VCF or BAM), then the file will be in getBaseDir()
+    public boolean expectDataSubdirForTrack()
+    {
+        File f = getTrackFile();
+        if (f == null)
+        {
+            throw new IllegalArgumentException("Unable to find file for JSONFile: " + _objectId);
+        }
+
+        return !_ft.isType(f);
+    }
+
     public File getTrackRootDir()
     {
         File ret = getBaseDir();
-        if (getRelativePath() == null)
+        if (ret == null)
             return null;
 
-        if (getTrackId() != null)
+        if (expectDataSubdirForTrack())
         {
             ret = new File(ret, "data");
         }
@@ -204,16 +234,7 @@ public class JsonFile
     public File getTrackListFile()
     {
         File ret = new File(getTrackRootDir(), "trackList.json");
-        return ret.exists() ? ret : null;
 
-    }
-
-    public File getTracksJsonFile()
-    {
-        if (getRelativePath() == null)
-            return null;
-
-        File ret = new File(getTrackRootDir(), "tracks.json");
         return ret.exists() ? ret : null;
     }
 

@@ -1,0 +1,29 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Genotypes">
+    <permissions>
+        <permission name="read"/>
+    </permissions>
+    <dependencies>
+        <dependency path="laboratory.context" />
+        <dependency path="internal/jQuery"/>
+
+        <!--dev-->
+        <!--TODO: re-add mode="dev"-->
+        <dependency path="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.js" />
+        <dependency path="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.css" />
+        <dependency path="https://cdn.datatables.net/buttons/1.5.1/js/dataTables.buttons.js" />
+        <dependency path="https://cdn.datatables.net/buttons/1.5.1/css/buttons.dataTables.css" />
+
+        <!--prod-->
+        <!--<dependency path="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js" mode="production"/>-->
+        <!--<dependency path="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css" mode="production"/>-->
+        <!--<dependency path="https://cdn.datatables.net/buttons/1.5.1/js/dataTables.buttons.min.js" mode="production"/>-->
+        <!--<dependency path="https://cdn.datatables.net/buttons/1.5.1/css/buttons.dataTables.min.css" mode="production"/>-->
+
+        <dependency path="https://cdn.datatables.net/buttons/1.5.1/js/buttons.flash.min.js"/>
+        <dependency path="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"/>
+        <dependency path="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"/>
+        <dependency path="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"/>
+        <dependency path="https://cdn.datatables.net/buttons/1.5.1/js/buttons.html5.min.js"/>
+        <dependency path="https://cdn.datatables.net/buttons/1.5.1/js/buttons.print.min.js"/>
+    </dependencies>
+</view>

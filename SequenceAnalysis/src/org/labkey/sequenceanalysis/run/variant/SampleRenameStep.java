@@ -90,17 +90,30 @@ public class SampleRenameStep extends AbstractCommandPipelineStep<VariantFiltrat
                 {
                     throw new PipelineJobException("No alternate name provided for sample: " + sample);
                 }
-
-                remappedSamples.add(sample);
+                else
+                {
+                    remappedSamples.add(sample);
+                }
             }
 
             getPipelineCtx().getLogger().info("renamed " + totalRenamed + " of " + samples.size() + " samples");
+            if (remappedSamples.size() != samples.size())
+            {
+                throw new PipelineJobException("The number of renamed samples does not equal starting samples: " + samples.size() + " / " + remappedSamples.size());
+            }
 
             writer.writeHeader(new VCFHeader(header.getMetaDataInInputOrder(), remappedSamples));
             try (CloseableIterator<VariantContext> it = reader.iterator())
             {
+                int i = 0;
                 while (it.hasNext())
                 {
+                    i++;
+                    if (i % 100000 == 0)
+                    {
+                        getPipelineCtx().getLogger().info("processed " + i + " variants");
+                    }
+
                     writer.add(it.next());
                 }
             }

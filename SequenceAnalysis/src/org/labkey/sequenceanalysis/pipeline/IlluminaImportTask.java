@@ -137,6 +137,8 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
 
             Map<String, Integer> sampleMap = parseCsv(input, schema);
 
+            //NOTE: it might be just as easy to match filename based on expected pattern
+
             //this step will be slow
             IlluminaFastqSplitter<Integer> parser = new IlluminaFastqSplitter<>("Illumina", sampleMap, job.getLogger(), input.getParent(), prefix);
             parser.setOutputGzip(true);

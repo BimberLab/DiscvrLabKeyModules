@@ -26,7 +26,7 @@
     @Override
     public void addClientDependencies(ClientDependencies dependencies)
     {
-        dependencies.add("Ext3");
+        dependencies.add("Ext4");
         dependencies.add("laboratory.context");
         dependencies.add("laboratory/panel/WorkbookHeaderPanel.js");
         dependencies.add("editInPlaceElement.css");
@@ -55,6 +55,15 @@
         var workbookId = <%=h(workbookId)%>;
         var title = <%=q(getViewContext().getContainer().getTitle())%> || '';
 
+        //set page title
+        var titleId = Ext4.id();
+        var markup = '<span class="wb-name">' + workbookId + ':&nbsp;</span><span class="labkey-edit-in-place" id="' + titleId + '">' + title + '</span>';
+        var elem = document.querySelector('.lk-body-title h3');
+        if (elem){
+            elem.innerHTML = markup;
+            //elem.style.display = 'table';
+        }
+
         Ext4.create('Laboratory.panel.WebpartHeaderPanel', {
             description: <%=q(getViewContext().getContainer().getDescription())%>,
             materials: <%=q(model.getMaterials())%>,
@@ -63,22 +72,20 @@
             tags: <%=text(model.getTags() == null || model.getTags().length == 0 ? "null" : "['" + text(StringUtils.join(Arrays.asList(model.getTags()), "','")) + "']")%>
         }).render(webpartId);
 
-        //set page title
-        var titleId = Ext4.id();
-        LABKEY.NavTrail.setTrail("<span class='wb-name'>" + workbookId + ":&nbsp;</span><span class='labkey-edit-in-place' id='" + titleId + "'>" + title + "</span>", null, title, false /* encode */);
-
-        new LABKEY.ext.EditInPlaceElement({
-            applyTo: titleId,
-            widthBuffer: 0,
-            updateConfig: {
-                url: LABKEY.ActionURL.buildURL("core", "updateTitle"),
-                jsonDataPropName: 'title'
-            },
-            listeners: {
-                beforecomplete: function(newText){
-                    return (newText.length > 0);
+        if (LABKEY.Security.currentUser.canInsert) {
+            Ext4.create('LABKEY.ext.EditInPlaceElement', {
+                applyTo: titleId,
+                widthBuffer: 0,
+                updateConfig: {
+                    url: LABKEY.ActionURL.buildURL("core", "updateTitle"),
+                    jsonDataPropName: 'title'
+                },
+                listeners: {
+                    beforecomplete: function (newText) {
+                        return (newText.length > 0);
+                    }
                 }
-            }
-        });
+            });
+        }
     });
 </script>

@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -44,6 +45,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -84,7 +86,8 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
             //this means we have a duplicate
             if (job.getActiveTaskId() != null && job.getActiveTaskId().toString().equals(existingSubmission.getActiveTaskId()))
             {
-                job.getLogger().warn("duplicate submission attempt, skipping.  original cluster id: " + existingSubmission.getClusterId());
+                job.getLogger().error("duplicate submission attempt, skipping.  original cluster id: " + existingSubmission.getClusterId());
+                _log.error("duplicate submission attempt, skipping.  original cluster id: " + existingSubmission.getClusterId() + ", job id: " +  job.getJobGUID());
                 return;
             }
         }
@@ -201,18 +204,12 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
         return serializedJobFile;
     }
 
-//    @NotNull
-//    private List<ClusterJob> getClusterSubmissionsForJob(String jobId, boolean includeInactive)
-//    {
-//        PipelineStatusFile sf = PipelineService.get().getStatusFile(jobId);
-//        if (sf != null)
-//        {
-//            return getClusterSubmissionsForJob(sf.getRowId(), includeInactive);
-//        }
-//
-//        _log.error("Unable to find statusFile for job: " + jobId, new Exception());
-//        return Collections.emptyList();
-//    }
+    private final Set<String> INACTIVE_STATUS = new CaseInsensitiveHashSet()
+    {{
+        add(PipelineJob.TaskStatus.cancelled.name().toUpperCase());
+        add(PipelineJob.TaskStatus.error.name().toUpperCase());
+        add(PipelineJob.TaskStatus.complete.name().toUpperCase());
+    }};
 
     @NotNull
     private List<ClusterJob> getClusterSubmissionsForJob(String jobId, boolean includeInactive)
@@ -224,9 +221,10 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
 
         if (!includeInactive)
         {
-            filter.addCondition(FieldKey.fromString("status"), PipelineJob.TaskStatus.cancelled.name().toUpperCase(), CompareType.NEQ_OR_NULL);
-            filter.addCondition(FieldKey.fromString("status"), PipelineJob.TaskStatus.error.name().toUpperCase(), CompareType.NEQ_OR_NULL);
-            filter.addCondition(FieldKey.fromString("status"), PipelineJob.TaskStatus.complete.name().toUpperCase(), CompareType.NEQ_OR_NULL);
+            for (String status : INACTIVE_STATUS)
+            {
+                filter.addCondition(FieldKey.fromString("status"), status, CompareType.NEQ_OR_NULL);
+            }
         }
 
         filter.addCondition(FieldKey.fromString("status"), PREPARING, CompareType.NEQ_OR_NULL);
@@ -235,10 +233,35 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
         List<ClusterJob> clusterJobs = new TableSelector(ti, filter, new Sort("-created")).getArrayList(ClusterJob.class);
         if (clusterJobs.isEmpty())
         {
-            return Collections.emptyList();
+            //translate jobId to statusFileId:
+            PipelineStatusFile sf = PipelineService.get().getStatusFile(jobId);
+            if (sf != null)
+            {
+                List<ClusterJob> potentialJobs = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("statusFileId"), sf.getRowId()), new Sort("-created")).getArrayList(ClusterJob.class);
+
+                //potentially filter out inactive
+                if (!includeInactive)
+                {
+                    potentialJobs.removeIf(x -> INACTIVE_STATUS.contains(x.getStatus()));
+                }
+
+                if (!potentialJobs.isEmpty())
+                {
+                    //save the new jobID for the most recent job
+                    ClusterJob clusterJob = potentialJobs.get(0);
+                    if (!clusterJob.getJobId().equalsIgnoreCase(jobId))
+                    {
+                        _log.error("updating jobId from " + clusterJob.getJobId() + "  to " + jobId + ", status: " + clusterJob.getStatus());
+                        clusterJob.setJobId(sf.getJobId());
+                        Table.update(null, ClusterSchema.getInstance().getSchema().getTable(ClusterSchema.CLUSTER_JOBS), clusterJob, clusterJob.getRowId());
+                    }
+
+                    clusterJobs = potentialJobs;
+                }
+            }
         }
 
-        return clusterJobs;
+        return clusterJobs.isEmpty() ? Collections.emptyList() : clusterJobs;
     }
 
     protected ClusterJob getClusterSubmission(String clusterId)
@@ -320,6 +343,11 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
             {
                 continue;
             }
+            else if (j.getClusterId() == null)
+            {
+                _log.error("clusterId was null for job: " + j.getRowId() + " / " + j.getStatus(), new Exception());
+                continue;
+            }
 
             //check condor_history
             Pair<String, String> jobStatus = getStatusForJob(j, ContainerManager.getForId(j.getContainer()));
@@ -371,15 +399,41 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
 
         if (!extraJobIds.isEmpty())
         {
-            Set<String> filterIds = new HashSet<>(extraJobIds);
+            List<String> filterIds = new ArrayList<>(new HashSet<>(extraJobIds));
             jobs.forEach(x -> filterIds.remove(x.getJobId()));
 
             if (!filterIds.isEmpty())
             {
-                _log.error("status update was requested on more jobs than are in the DB.  additional IDs: " + StringUtils.join(filterIds, ", "));
-                filter.addCondition(FieldKey.fromString("jobId"), filterIds, CompareType.IN);
-                ts = new TableSelector(ti, filter, null);
-                jobs.addAll(ts.getArrayList(ClusterJob.class));
+                //translate jobId -> statusFile -> clusterId
+                Iterator<String> it = filterIds.listIterator();
+                while (it.hasNext())
+                {
+                    String jobId = it.next();
+
+                    // Note: JobId is not always persistent across server restart.
+                    // this should account for translating jobId -> statusFileId -> new jobId
+                    ClusterJob j = getMostRecentClusterSubmission(jobId, true);
+                    if (j != null)
+                    {
+                        jobs.add(j);
+                        it.remove();
+                    }
+                }
+            }
+
+            if (!filterIds.isEmpty())
+            {
+                _log.error("status update was requested on " + filterIds.size() + " more jobs than expected based on status.  additional IDs: " + StringUtils.join(filterIds, ", "));
+                SimpleFilter filter2 = new SimpleFilter(FieldKey.fromString("location"), getConfig().getLocation());
+                filter2.addCondition(FieldKey.fromString("jobId"), filterIds, CompareType.IN);
+                ts = new TableSelector(ti, filter2, null);
+                List<ClusterJob> addedJobs = ts.getArrayList(ClusterJob.class);
+                for (ClusterJob j : addedJobs)
+                {
+                    _log.error("adding additional job: " + j.getJobId() + ", status: " + j.getStatus());
+                }
+
+                jobs.addAll(addedJobs);
             }
         }
 
@@ -482,7 +536,8 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
                     pj.getLogger().debug("setting active task status for job: " + j.getClusterId() + " to: " + taskStatus.name() + ". status was: " + pj.getActiveTaskStatus() + " (PipelineJob) /" + sf.getStatus() + " (StatusFile) / activeTaskId: " + (pj.getActiveTaskId() != null ? pj.getActiveTaskId().toString() : "no active task") + ", hostname: " + sf.getActiveHostName());
                     try
                     {
-                        if (taskStatus == PipelineJob.TaskStatus.running)
+                        //NOTE: PipelineService.setPipelineJobStatus() is needed to requeue a job upon completion, but in all other cases go through JMS
+                        if (taskStatus != PipelineJob.TaskStatus.complete)
                         {
                             pj.setStatus(taskStatus, info == null ? sf.getInfo() : info);
                         }
@@ -526,6 +581,31 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
         if (clusterJob == null)
         {
             _log.error("unable to find active cluster submission for jobId: " + jobId, new Exception());
+            PipelineStatusFile sf = PipelineService.get().getStatusFile(jobId);
+            if (sf != null)
+            {
+                _log.error("status: " + sf.getStatus());
+                PipelineJob pj = sf.createJobInstance();
+                if  (pj != null)
+                {
+                    pj.getLogger().error("unable to find active cluster submission for jobId: " + jobId + ", current status: " + sf.getStatus(), new Exception());
+                }
+            }
+
+            List<ClusterJob> jobs = getClusterSubmissionsForJob(jobId, true);
+            if (!jobs.isEmpty())
+            {
+                _log.error("all submission records: ");
+                for (ClusterJob j : jobs)
+                {
+                    _log.error(j.getJobId() + ", " + j.getStatus() + ", " + j.getClusterId() + ", " + j.getStatusFileId());
+                }
+            }
+            else
+            {
+                _log.error("no records of job submissions");
+            }
+
             return;
         }
 

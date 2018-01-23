@@ -22,7 +22,7 @@ LK_DIR=/home/exacloud/lustre1/prime-seq/labkey
 LK_SRC_DIR=/home/exacloud/lustre1/prime-seq/src
 TEMP_BASEDIR=/home/exacloud/lustre1/prime-seq/tempDir
 PATH=${JAVA_HOME}/bin/:$PATH
-GZ_PREFIX=Labkey17.2
+GZ_PREFIX=LabKey17.3
 
 umask 0006
 

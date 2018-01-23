@@ -326,10 +326,12 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
 
     private Map<String, Pair<String, Integer>> getNameTranslationMap(List<RefNtSequenceModel> refNtSequenceModels) throws PipelineJobException
     {
-        getJob().getLogger().info("building list of chromosome name translations");
         if (getPipelineJob().doChrTranslation())
             getJob().getLogger().info("will translate between common forms of chromosome names, like chr01, chr1 and 1");
+        else
+            return Collections.emptyMap();
 
+        getJob().getLogger().info("building list of chromosome name translations");
         Map<String, Pair<String, Integer>> ret = new CaseInsensitiveHashMap<>();
         for (RefNtSequenceModel m : refNtSequenceModels)
         {
@@ -466,6 +468,11 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
                     continue;
                 }
 
+                if (lineNo % 100000 == 0)
+                {
+                    getJob().getLogger().info("processed " + lineNo + " records");
+                }
+
                 Pair<String, Integer> translation = getOffset(line[colChr], nameTranslationMap);
                 if (translation != null)
                 {
@@ -539,90 +546,95 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
             throw new PipelineJobException("Cannot import VCF tracks without a sequence dictionary");
         }
 
-        Map<String, Integer> warnedChrs = new CaseInsensitiveHashMap<>();
-        File outLog = new File(getPipelineJob().getOutDir(), "translations.txt");
-        action.addOutput(outLog, "Transformed Lines", false);
-        getJob().getLogger().info("writing log of translation to : " + outLog.getPath());
-
-        VariantContextWriterBuilder builder = new VariantContextWriterBuilder();
-        builder.setOutputFile(out);
-        builder.setOption(Options.USE_ASYNC_IO);
-        builder.setReferenceDictionary(dict);
-
-        try (VCFFileReader reader = new VCFFileReader(file); VariantContextWriter writer = builder.build(); CSVWriter logWriter = new CSVWriter(PrintWriters.getPrintWriter(outLog), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+        try
         {
-            VCFHeader header = reader.getFileHeader();
-            header.setSequenceDictionary(dict);
-            writer.writeHeader(header);
+            SequenceAnalysisService.get().ensureVcfIndex(file, getPipelineJob().getLogger());
 
-            logWriter.writeNext(new String[]{"LineNo", "OrigContig", "OrigStart", "OrigEnd", "NewContig", "Offset"});
+            Map<String, Integer> warnedChrs = new CaseInsensitiveHashMap<>();
+            File outLog = new File(getPipelineJob().getOutDir(), "translations.txt");
+            action.addOutput(outLog, "Transformed Lines", false);
+            getJob().getLogger().info("writing log of translation to : " + outLog.getPath());
 
-            int lineNo = 0;
-            int totalShifted = 0;
-            int totalRenamed = 0;
+            VariantContextWriterBuilder builder = new VariantContextWriterBuilder();
+            builder.setOutputFile(out);
+            builder.setOption(Options.USE_ASYNC_IO);
+            builder.setReferenceDictionary(dict);
 
-            try (CloseableIterator<VariantContext> it = reader.iterator())
+            try (VCFFileReader reader = new VCFFileReader(file); VariantContextWriter writer = builder.build(); CSVWriter logWriter = new CSVWriter(PrintWriters.getPrintWriter(outLog), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
-                while (it.hasNext())
+                VCFHeader header = reader.getFileHeader();
+                header.setSequenceDictionary(dict);
+                writer.writeHeader(header);
+
+                logWriter.writeNext(new String[]{"LineNo", "OrigContig", "OrigStart", "OrigEnd", "NewContig", "Offset"});
+
+                int lineNo = 0;
+                int totalShifted = 0;
+                int totalRenamed = 0;
+
+                try (CloseableIterator<VariantContext> it = reader.iterator())
                 {
-                    lineNo++;
-                    VariantContext vc = it.next();
-
-                    VariantContextBuilder vcb = new VariantContextBuilder(vc);
-
-                    Pair<String, Integer> translation = getOffset(vc.getContig(), nameTranslationMap);
-                    if (translation != null)
+                    while (it.hasNext())
                     {
-                        if (translation.second > 0)
-                            totalShifted++;
+                        lineNo++;
+                        VariantContext vc = it.next();
 
-                        if (!vc.getContig().equalsIgnoreCase(translation.first))
-                            totalRenamed++;
+                        VariantContextBuilder vcb = new VariantContextBuilder(vc);
 
-                        logWriter.writeNext(new String[]{String.valueOf(lineNo), vc.getContig(), String.valueOf(vc.getStart()), String.valueOf(vc.getEnd()), translation.first, translation.second.toString()});
-
-                        vcb.chr(translation.first);
-                        vcb.start(vc.getStart() + translation.second);
-                        vcb.stop(vc.getEnd() + translation.second);
-                    }
-
-                    if (!knownChrs.containsKey(vc.getContig()))
-                    {
-                        if (!warnedChrs.containsKey(vc.getContig()))
+                        Pair<String, Integer> translation = getOffset(vc.getContig(), nameTranslationMap);
+                        if (translation != null)
                         {
-                            getPipelineJob().getLogger().warn("Unknown chromosome on line: " + lineNo + ", " + vc.getContig());
-                            warnedChrs.put(vc.getContig(), 0);
+                            if (translation.second > 0)
+                                totalShifted++;
+
+                            if (!vc.getContig().equalsIgnoreCase(translation.first))
+                                totalRenamed++;
+
+                            logWriter.writeNext(new String[]{String.valueOf(lineNo), vc.getContig(), String.valueOf(vc.getStart()), String.valueOf(vc.getEnd()), translation.first, translation.second.toString()});
+
+                            vcb.chr(translation.first);
+                            vcb.start(vc.getStart() + translation.second);
+                            vcb.stop(vc.getEnd() + translation.second);
                         }
 
-                        warnedChrs.put(vc.getContig(), 1 + warnedChrs.get(vc.getContig()));
-                        continue;
-                    }
-                    else
-                    {
-                        //ensure correct case
-                        vcb.chr(knownChrs.get(vc.getContig()));
-                    }
-                    vc = vcb.make();
+                        if (!knownChrs.containsKey(vc.getContig()))
+                        {
+                            if (!warnedChrs.containsKey(vc.getContig()))
+                            {
+                                getPipelineJob().getLogger().warn("Unknown chromosome on line: " + lineNo + ", " + vc.getContig());
+                                warnedChrs.put(vc.getContig(), 0);
+                            }
 
-                    SAMSequenceRecord r = dict.getSequence(vc.getContig());
-                    if (vc.getEnd() > r.getSequenceLength())
-                    {
-                        getJob().getLogger().error("feature extended beyond contig end at line: " + lineNo + ", " + vc.getContig() + ": " + vc.getStart() + "-" + vc.getEnd());
-                    }
+                            warnedChrs.put(vc.getContig(), 1 + warnedChrs.get(vc.getContig()));
+                            continue;
+                        }
+                        else
+                        {
+                            //ensure correct case
+                            vcb.chr(knownChrs.get(vc.getContig()));
+                        }
+                        vc = vcb.make();
 
-                    writer.add(vc);
+                        SAMSequenceRecord r = dict.getSequence(vc.getContig());
+                        if (vc.getEnd() > r.getSequenceLength())
+                        {
+                            getJob().getLogger().error("feature extended beyond contig end at line: " + lineNo + ", " + vc.getContig() + ": " + vc.getStart() + "-" + vc.getEnd());
+                        }
+
+                        writer.add(vc);
+                    }
                 }
-            }
 
-            getJob().getLogger().info("total lines inspected: " + lineNo);
-            getJob().getLogger().info("total features renamed: " + totalRenamed);
-            getJob().getLogger().info("total features with coordinates transformed: " + totalShifted);
-            if (!warnedChrs.isEmpty())
-            {
-                getJob().getLogger().info("features skipped: ");
-                for (String chr : warnedChrs.keySet())
+                getJob().getLogger().info("total lines inspected: " + lineNo);
+                getJob().getLogger().info("total features renamed: " + totalRenamed);
+                getJob().getLogger().info("total features with coordinates transformed: " + totalShifted);
+                if (!warnedChrs.isEmpty())
                 {
-                    getJob().getLogger().info(chr + ": " + warnedChrs.get(chr));
+                    getJob().getLogger().info("features skipped: ");
+                    for (String chr : warnedChrs.keySet())
+                    {
+                        getJob().getLogger().info(chr + ": " + warnedChrs.get(chr));
+                    }
                 }
             }
         }

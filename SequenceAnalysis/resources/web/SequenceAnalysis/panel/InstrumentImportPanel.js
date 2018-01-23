@@ -44,7 +44,6 @@ Ext4.define('SequenceAnalysis.panel.InstrumentImportPanel', {
                 name: 'jobName',
                 itemId: 'jobName',
                 allowBlank:false,
-                //value: 'analysis_'+new Date().format('Ymd'),
                 maskRe: new RegExp('[A-Za-z0-9_]'),
                 validator: function(val){
                     return (this.isValidProtocol === false ? 'Job Name Already In Use' : true);

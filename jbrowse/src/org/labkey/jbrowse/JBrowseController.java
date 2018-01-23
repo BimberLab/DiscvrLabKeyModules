@@ -16,6 +16,10 @@
 
 package org.labkey.jbrowse;
 
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.vcf.VCFFileReader;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
@@ -30,6 +34,7 @@ import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.Results;
@@ -38,11 +43,13 @@ import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.StopIteratingException;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
+import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.CSRF;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.AdminOperationsPermission;
@@ -56,10 +63,13 @@ import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.api.view.WebPartView;
+import org.labkey.api.view.template.ClientDependency;
 import org.labkey.api.view.template.PageConfig;
 import org.labkey.jbrowse.model.Database;
+import org.labkey.jbrowse.model.JsonFile;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
 import org.springframework.validation.BindException;
+import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.io.IOException;
@@ -522,6 +532,179 @@ public class JBrowseController extends SpringActionController
             }
 
             return new ApiSimpleResponse("success", true);
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    @CSRF
+    public class GetGenotypes extends ApiAction<GetGenotypesForm>
+    {
+        private List<JsonFile> getJsonFiles(GetGenotypesForm form)
+        {
+            String field;
+            Integer rowId;
+            if (form.getTrackId().startsWith("data"))
+            {
+                field = "outputfile";
+                rowId = ConvertHelper.convert(form.getTrackId().replaceAll("^data(-)?", ""), Integer.class);
+
+            }
+            else if (form.getTrackId().startsWith("track"))
+            {
+                field = "trackid";
+                rowId = ConvertHelper.convert(form.getTrackId().replaceAll("^track(-)?", ""), Integer.class);
+            }
+            else
+            {
+                return null;
+            }
+
+            Container targetContainer = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
+            UserSchema us = QueryService.get().getUserSchema(getUser(), targetContainer, JBrowseSchema.NAME);
+
+            TableInfo ti = us.getTable(JBrowseSchema.TABLE_JSONFILES);
+            TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString(field), rowId, CompareType.EQUAL), null);
+
+            return ts.getArrayList(JsonFile.class);
+        }
+
+        @Override
+        public void validateForm(GetGenotypesForm form, Errors errors)
+        {
+            if (form.getTrackId() == null)
+            {
+                errors.reject(ERROR_MSG, "Must provide the trackId");
+                return;
+            }
+
+
+            List<JsonFile> jsonFiles = getJsonFiles(form);
+            if (jsonFiles == null)
+            {
+                errors.reject(ERROR_MSG, "Unknown trackId: " + form.getTrackId());
+                return;
+            }
+
+            if (jsonFiles.isEmpty())
+            {
+                errors.reject(ERROR_MSG, "Unable to find trackId: " + form.getTrackId());
+                return;
+            }
+            else if (jsonFiles.size() > 1)
+            {
+                logger.error("More than one jsonfile returned for: " + form.getTrackId());
+            }
+
+            JsonFile track = jsonFiles.get(0);
+            ExpData d = track.getExpData();
+            if (d == null)
+            {
+                errors.reject(ERROR_MSG, "Unable to find ExpData for: " + form.getTrackId());
+                return;
+            }
+
+            if (d.getFile() == null)
+            {
+                errors.reject(ERROR_MSG, "Unable to find file for: " + form.getTrackId());
+                return;
+            }
+            else if (!d.getFile().exists())
+            {
+                errors.reject(ERROR_MSG, "File does not exist for track: " + form.getTrackId());
+                return;
+            }
+
+            if (form.getChr() == null || form.getStart() == null || form.getStop() == null)
+            {
+                errors.reject(ERROR_MSG, "Must provide the chromosome, start and stop");
+            }
+        }
+
+        public ApiResponse execute(GetGenotypesForm form, BindException errors)
+        {
+            JSONArray ret = new JSONArray();
+
+            List<JsonFile> jsonFiles = getJsonFiles(form);
+            try (VCFFileReader reader = new VCFFileReader(jsonFiles.get(0).getExpData().getFile()))
+            {
+                try (CloseableIterator<VariantContext> it = reader.query(form.getChr(), form.getStart(), form.getStop()))
+                {
+                    while (it.hasNext())
+                    {
+                        VariantContext vc = it.next();
+                        JSONObject pos = new JSONObject();
+                        pos.put("contig", vc.getContig());
+                        pos.put("start", vc.getStart());
+                        pos.put("end", vc.getEnd());
+
+                        JSONArray genotypes = new JSONArray();
+                        for (Genotype g : vc.getGenotypes())
+                        {
+                            JSONObject gt = new JSONObject();
+                            gt.put("sample", g.getSampleName());
+                            gt.put("gt", g.getGenotypeString());
+
+                            genotypes.put(gt);
+                        }
+
+                        pos.put("genotypes", genotypes);
+                        ret.put(pos);
+                    }
+                }
+            }
+
+            Map<String, Object> resultProperties = new HashMap<>();
+            resultProperties.put("results", ret);
+
+            return new ApiSimpleResponse(resultProperties);
+        }
+    }
+
+    public static class GetGenotypesForm
+    {
+        private String _trackId;
+        private String _chr;
+        private Integer _start;
+        private Integer _stop;
+
+        public String getTrackId()
+        {
+            return _trackId;
+        }
+
+        public void setTrackId(String trackId)
+        {
+            _trackId = trackId;
+        }
+
+        public String getChr()
+        {
+            return _chr;
+        }
+
+        public void setChr(String chr)
+        {
+            _chr = chr;
+        }
+
+        public Integer getStart()
+        {
+            return _start;
+        }
+
+        public void setStart(Integer start)
+        {
+            _start = start;
+        }
+
+        public Integer getStop()
+        {
+            return _stop;
+        }
+
+        public void setStop(Integer stop)
+        {
+            _stop = stop;
         }
     }
 }

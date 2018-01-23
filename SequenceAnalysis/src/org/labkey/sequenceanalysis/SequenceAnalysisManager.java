@@ -379,9 +379,11 @@ public class SequenceAnalysisManager
         }
     }
 
+    private static final String htsjdkVersion = "2.13.1";
+
     public static File getHtsJdkJar()
     {
-        Resource r = ModuleLoader.getInstance().getResource(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), Path.parse("lib/htsjdk-2.11.0.jar"));
+        Resource r = ModuleLoader.getInstance().getResource(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), Path.parse("lib/htsjdk-" + htsjdkVersion + ".jar"));
         if (r == null)
         {
             throw new IllegalArgumentException("Unable to find htsjdk JAR file");
@@ -953,18 +955,19 @@ public class SequenceAnalysisManager
                                 continue;
                         }
 
-                        if (dataIdsForFile != null)
-                        {
-                            for (int rowId : dataIdsForFile)
-                            {
-                                ExpData d = ExperimentService.get().getExpData(rowId);
-                                Set<String> roles = ExperimentService.get().getDataInputRoles(d.getContainer(), ContainerFilter.EVERYTHING, ExpProtocol.ApplicationType.ExperimentRunOutput);
-                                if (roles != null && roles.contains(SequenceTaskHelper.NORMALIZED_FASTQ_OUTPUTNAME))
-                                {
-                                    continue OUTER;
-                                }
-                            }
-                        }
+                        //this is too broad a net
+//                        if (dataIdsForFile != null)
+//                        {
+//                            for (int rowId : dataIdsForFile)
+//                            {
+//                                ExpData d = ExperimentService.get().getExpData(rowId);
+//                                Set<String> roles = ExperimentService.get().getDataInputRoles(d.getContainer(), ContainerFilter.EVERYTHING, ExpProtocol.ApplicationType.ExperimentRunOutput);
+//                                if (roles != null && roles.contains(SequenceTaskHelper.NORMALIZED_FASTQ_OUTPUTNAME))
+//                                {
+//                                    continue OUTER;
+//                                }
+//                            }
+//                        }
 
                         orphanSequenceFiles.add(f);
                     }

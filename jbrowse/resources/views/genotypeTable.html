@@ -1,0 +1,46 @@
+<script type="text/javascript">
+    (function ($){
+        var trackId = LABKEY.ActionURL.getParameter("trackId");
+        var chr = LABKEY.ActionURL.getParameter("chr");
+        var start = LABKEY.ActionURL.getParameter("start");
+        var stop = LABKEY.ActionURL.getParameter("stop");
+
+        LABKEY.Ajax.request({
+            url: LABKEY.ActionURL.buildURL('jbrowse', 'getGenotypes', null, {trackId: trackId, chr: chr, start: start, stop: stop}),
+            scope: this,
+            failure: LDK.Utils.getErrorCallback(),
+            success: LABKEY.Utils.getCallbackWrapper(function(response){
+                //each row is one position
+                var rows = response.results;
+                var dataSet = [];
+                $.each(rows, function(idx, row){
+                    var contig = row.contig;
+                    var start = row.start;
+
+                    $.each(row.genotypes, function(idx, gt){
+                        dataSet.push([contig, start, gt.sample, gt.gt]);
+                    });
+                });
+
+                $('#genotypeTable').DataTable({
+                    data: dataSet,
+                    pageLength: 500,
+                    dom: 'Bfrtip',
+                    buttons: [
+                        'copy', 'csv', 'excel'
+                    ],
+                    columns: [
+                        {title: 'Contig'},
+                        {title: 'Position'},
+                        {title: 'Sample Name'},
+                        {title: 'Genotype'}
+                    ]
+                } );
+            }, this)
+        });
+    })(jQuery);
+</script>
+
+<div style="width: 60%">
+    <table id="genotypeTable" class="stripe hover" ></table>
+</div>

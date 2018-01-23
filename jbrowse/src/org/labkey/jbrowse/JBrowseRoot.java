@@ -487,6 +487,7 @@ public class JBrowseRoot
         int j = 0;
         for (JsonFile f : jsonFiles)
         {
+            JSONObject config = f.getExtraTrackConfig(job.getLogger());
             //NOTE: this should also have the effect of allowing the job to cancel if it has been cancelled by the user
             if (job != null && j % 100 == 0)
             {
@@ -495,6 +496,12 @@ public class JBrowseRoot
             j++;
 
             getLogger().info("processing JSON file: " + f.getObjectId());
+            if (config != null && config.optBoolean("omitTrack", false))
+            {
+                job.getLogger().info("skipping track because omitTrack=true in extra config");
+                continue;
+            }
+
             if (f.getSequenceId() != null)
             {
                 getLogger().info("adding ref seq: " + f.getSequenceId());
@@ -557,7 +564,7 @@ public class JBrowseRoot
                             getLogger().debug("adding extra track config");
                             o.putAll(f.getExtraTrackConfig(getLogger()));
 
-                            if (f.getExtraTrackConfig(getLogger()).optBoolean("visibleByDefault", false))
+                            if (isVisible(f))
                             {
                                 getLogger().debug("adding default visible track: " + o.getString("label"));
                                 defaultTrackLabels.add(o.getString("label"));
@@ -584,7 +591,7 @@ public class JBrowseRoot
                 }
 
                 //even through we're loading the raw data based on urlTemplate, make a symlink from this location into our DB so help generate-names.pl work properly
-                File sourceFile = new File(f.getTrackRootDir(), "tracks/track-" + f.getTrackId());
+                File sourceFile = f.expectDataSubdirForTrack() ? new File(f.getTrackRootDir(), "tracks/track-" + f.getTrackId()) : f.getTrackRootDir();
                 File targetFile = new File(outDir, "tracks/track-" + f.getTrackId());
 
                 createSymlink(targetFile, sourceFile);
@@ -657,7 +664,7 @@ public class JBrowseRoot
                     processFile(d, outputDir, "data-" + f.getOutputFile(), f.getLabel(), metadata, f.getCategory(), f.getRefLibraryData());
                     if (getTrackListForOutputFile(f) == null)
                     {
-                        getLogger().error("this track lacks a trackList.conf file.  this probably indicates a problem when this resource was originally processed.  you should try to re-process it." + (f.getTrackRootDir() == null ? "" : "  expected to find file in: " + f.getTrackRootDir()));
+                        getLogger().error("this outputfile/track lacks a trackList.conf file.  this probably indicates a problem when this resource was originally processed.  you should try to re-process it." + (f.getTrackRootDir() == null ? "" : "  expected to find file in: " + f.getTrackRootDir()));
                         continue;
                     }
                 }
@@ -674,7 +681,7 @@ public class JBrowseRoot
                             getLogger().debug("adding extra track config");
                             o.putAll(f.getExtraTrackConfig(getLogger()));
 
-                            if (f.getExtraTrackConfig(getLogger()).optBoolean("visibleByDefault", false))
+                            if (isVisible(f))
                             {
                                 getLogger().debug("adding default visible track: " + o.getString("label"));
                                 defaultTrackLabels.add(o.getString("label"));
@@ -698,7 +705,7 @@ public class JBrowseRoot
                         existingTracks.put(o);
                         trackList.put("tracks", existingTracks);
 
-                        File sourceFile = new File(getTracksDir(f.getContainerObj()), "data-" + f.getOutputFile().toString());
+                        File sourceFile = f.expectDataSubdirForTrack() ? new File(f.getTrackRootDir(), "tracks/data-" + f.getOutputFile()) : f.getTrackRootDir();
                         File targetFile = new File(outDir, outDirPrefix);
                         if (!targetFile.getParentFile().exists())
                         {
@@ -833,15 +840,18 @@ public class JBrowseRoot
 
                 args.add("--verbose");
                 args.add("--mem");
-                args.add("512000000");
+                args.add("536870912");
 
                 args.add("--completionLimit");
-                args.add("100");
+                args.add("20");
+
+                //args.add("--hashBits");
+                //args.add("16");
 
                 Set<String> tracksToIndex = new HashSet<>();
                 for (JSONObject track : trackList.getJSONArray("tracks").toJSONObjectArray())
                 {
-                    if (!track.containsKey("doIndex") || track.getBoolean("doIndex"))
+                    if (!track.containsKey("doIndex") || Boolean.parseBoolean(track.get("doIndex").toString()))
                     {
                         tracksToIndex.add(track.getString("label"));
                     }
@@ -887,6 +897,15 @@ public class JBrowseRoot
 
         getLogger().debug("this session will attempt to use the previously cached index from the parent session for this genome");
         return false;
+    }
+
+    private boolean isVisible(JsonFile f)
+    {
+        JSONObject json = f.getExtraTrackConfig(getLogger());
+        if (json == null || json.get("visibleByDefault") == null)
+            return false;
+
+        return Boolean.parseBoolean(json.get("visibleByDefault").toString());
     }
 
     private File getPreviouslyCreatedIndex(String databaseId) throws PipelineJobException

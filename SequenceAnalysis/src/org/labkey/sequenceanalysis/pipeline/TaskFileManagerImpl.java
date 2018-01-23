@@ -737,6 +737,11 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
                 _job.getLogger().debug("discarding copied inputs");
                 _wd.discardCopiedInputs();
 
+                if (!_wd.getDir().exists())
+                {
+                    throw new PipelineJobException("work dir does not exist: " + _wd.getDir());
+                }
+
                 //NOTE: preserving relative locations is a pain.  therefore we copy all outputs, including directories
                 //then sort out which files were specified as named outputs later
                 for (File input : _wd.getDir().listFiles())

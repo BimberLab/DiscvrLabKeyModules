@@ -80,15 +80,7 @@ define([
                                 onClick: {
                                     style: "width:700px",
                                     content: function(track, feature, featDiv, container) {
-                                        //TODO: eventually load genotypes
-                                        //var url = thisB.resolveUrl(thisB.config.genotypeUrlTemplate, { name: feature.get('name'), vcfws_proteomeid: thisB.config.vcfws_proteomeid, vcfws_dataset: thisB.config.vcfws_dataset });
-                                        //console.log("genotypeUrl: "+url);
-                                        //var ret = dojo.xhrGet({
-                                        //    url: url
-                                        //}).then(function(genotypeUrlResult) {
-                                            return track.defaultFeatureDetail(track, feature, featDiv, container, '{}');
-                                        //});
-                                        //return ret;
+                                        return track.defaultFeatureDetail(track, feature, featDiv, container);
                                     },
                                     title: function(track, feature, div) {
                                         var ret = "Variant Call {name}";

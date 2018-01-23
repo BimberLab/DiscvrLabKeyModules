@@ -68,51 +68,61 @@ public class DefaultAssayImportMethod implements AssayImportMethod
         _providerName = providerName;
     }
 
+    @Override
     public AssayParser getFileParser(Container c, User u, int assayId)
     {
         return new DefaultAssayParser(this, c, u, assayId);
     }
 
+    @Override
     public String getName()
     {
         return NAME;
     }
 
+    @Override
     public String getLabel()
     {
         return "Default Excel Import";
     }
 
+    @Override
     public String getProviderName()
     {
         return _providerName;
     }
 
+    @Override
     public boolean hideTemplateDownload()
     {
         return false;
     }
 
+    @Override
     public String getTooltip()
     {
         return "Choose this option to upload data using the basic, non-instrument specific excel template";
     }
 
+    @Override
     public boolean doEnterResultsInGrid()
     {
         return false;
     }
 
+    @Override
     public String getExampleDataUrl(ViewContext ctx)
     {
         return null;
     }
 
+    @Override
     public String getTemplateInstructions()
     {
         return null;
     }
 
+    @Override
     public JSONObject getMetadata(ViewContext ctx, ExpProtocol protocol)
     {
         JSONObject meta = new JSONObject();
@@ -158,16 +168,19 @@ public class DefaultAssayImportMethod implements AssayImportMethod
         return parent.containsKey(key) ? parent.getJSONObject(key): new JSONObject();
     }
 
+    @Override
     public String getPreviewPanelClass()
     {
         return "Laboratory.ext.AssayPreviewPanel";
     }
 
+    @Override
     public boolean supportsRunTemplates()
     {
         return false;
     }
 
+    @Override
     public JSONObject toJson(ViewContext ctx, ExpProtocol protocol)
     {
         JSONObject json = new JSONObject();
@@ -187,6 +200,7 @@ public class DefaultAssayImportMethod implements AssayImportMethod
         return json;
     }
 
+    @Override
     public void generateTemplate(ViewContext ctx, ExpProtocol protocol, @Nullable Integer templateId, String title, JSONObject json) throws BatchValidationException
     {
         if (!supportsRunTemplates())
@@ -203,6 +217,7 @@ public class DefaultAssayImportMethod implements AssayImportMethod
         doGenerateTemplate(json, ctx.getRequest(), ctx.getResponse());
     }
 
+    @Override
     public void validateTemplate(User u, Container c, ExpProtocol protocol, @Nullable Integer templateId, String title, JSONObject json, BatchValidationException errors) throws BatchValidationException
     {
         //NOTE: consider checking required fields; however, we need to differentiate which field we expect now, and which we expect later
@@ -344,6 +359,7 @@ public class DefaultAssayImportMethod implements AssayImportMethod
         }
     }
 
+    @Override
     public List<String> getImportColumns(ViewContext ctx, ExpProtocol protocol)
     {
         List<String> columns = new ArrayList<>();
@@ -359,6 +375,12 @@ public class DefaultAssayImportMethod implements AssayImportMethod
         }
 
         return columns;
+    }
+
+    @Override
+    public JSONObject getSupplementalTemplateMetadata()
+    {
+        return null;
     }
 
     public static enum SAMPLE_CATEGORY

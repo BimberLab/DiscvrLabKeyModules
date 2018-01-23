@@ -330,7 +330,7 @@
             <item text="Grid Views">
                 <originalText>Grid Views</originalText>
             </item>
-            <item text="Delete" permission="ADMIN" requiresSelection="true">
+            <item text="Delete" permission="ADMIN" requiresSelection="true" iconCls="trash">
                 <onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</onClick>
             </item>
             <item text="Export">
@@ -338,9 +338,6 @@
             </item>
             <item text="Print">
                 <originalText>Print</originalText>
-            </item>
-            <item text="Paging">
-                <originalText>Paging</originalText>
             </item>
         </buttonBarOptions>        
     </table>
@@ -487,7 +484,7 @@
             <item text="Grid Views">
                 <originalText>Grid Views</originalText>
             </item>
-            <item text="Delete" permission="DELETE" requiresSelection="true">
+            <item text="Delete" permission="DELETE" requiresSelection="true" iconCls="trash">
                 <onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</onClick>
             </item>
             <item text="Export">
@@ -496,10 +493,7 @@
             <item text="Print">
                 <originalText>Print</originalText>
             </item>
-            <item text="Paging">
-                <originalText>Paging</originalText>
-            </item>
-            <item insertPosition="end" requiresSelection="true" text="More Actions">
+            <item insertPosition="end" requiresSelection="false" text="More Actions" iconCls="ellipsis-h">
                 <item text="Analyze Selected BAMs">
                     <onClick>SequenceAnalysis.Buttons.performAnalysis(dataRegionName)</onClick>
                 </item>
@@ -885,10 +879,10 @@
             <item hidden="true">
                 <originalText>Charts</originalText>
             </item>
-            <item text="Delete" permission="ADMIN" requiresSelection="true">
+            <item text="Delete" permission="ADMIN" requiresSelection="true" iconCls="trash">
                 <onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</onClick>
             </item>
-            <item insertPosition="end" text="More Actions">
+            <item insertPosition="end" text="More Actions" iconCls="ellipsis-h">
                 <item text="Create Reference Genome">
                     <onClick>SequenceAnalysis.window.CreateReferenceLibraryWindow.buttonHandler(dataRegionName)</onClick>
                 </item>
@@ -1181,13 +1175,7 @@
             <item text="Grid Views">
                 <originalText>Grid Views</originalText>
             </item>
-            <item text="Reports">
-                <originalText>Reports</originalText>
-            </item>
-            <!--<item text="Import Data" permission="INSERT">-->
-                <!--<originalText>Import Data</originalText>-->
-            <!--</item>-->
-            <item text="Delete" permission="DELETE" requiresSelection="true">
+            <item text="Delete" permission="DELETE" requiresSelection="true" iconCls="trash">
                 <onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</onClick>
             </item>
             <item text="Export">
@@ -1196,10 +1184,7 @@
             <item text="Print">
                 <originalText>Print</originalText>
             </item>
-            <item text="Paging">
-                <originalText>Paging</originalText>
-            </item>
-            <item insertPosition="end" requiresSelection="true" text="More Actions">
+            <item insertPosition="end" requiresSelection="true" text="More Actions" iconCls="ellipsis-h">
                 <item text="Align/Analyze Selected">
                     <onClick>SequenceAnalysis.Buttons.performAnalysisFromReadsets(dataRegionName)</onClick>
                 </item>
@@ -2155,7 +2140,7 @@
             <item hidden="true">
                 <originalText>Charts</originalText>
             </item>
-            <item insertPosition="end" text="More Actions">
+            <item insertPosition="end" text="More Actions" iconCls="ellipsis-h">
                 <item text="Import From FASTA">
                     <onClick>SequenceAnalysis.window.ImportSequencesFromFastaWindow.buttonHandler(dataRegionName, true)</onClick>
                 </item>
@@ -2313,7 +2298,7 @@
             <includeScript>laboratory.context</includeScript>
             <includeScript>/sequenceanalysis/window/ImportTrackWindow.js</includeScript>
             <includeScript>sequenceanalysis/sequenceAnalysis</includeScript>
-            <item permission="INSERT" text="Add Annotation" insertPosition="beginning">
+            <item permission="INSERT" text="Add Annotation" insertPosition="beginning" iconCls="plus">
                 <onClick>SequenceAnalysis.window.ImportTrackWindow.buttonHandler(dataRegionName)</onClick>
             </item>
             <item hidden="true">
@@ -2504,7 +2489,7 @@
             <item text="Import Files" insertPosition="beginning">
                 <onClick>SequenceAnalysis.window.ImportOutputFileWindow.buttonHandler(dataRegionName);</onClick>
             </item>
-            <item text="Delete" permission="DELETE" requiresSelection="true" insertBefore="Export">
+            <item text="Delete" permission="DELETE" requiresSelection="true" insertBefore="Export" iconCls="trash">
                 <onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</onClick>
             </item>
             <item text="View Quality Metrics" insertPosition="end">
@@ -2602,7 +2587,7 @@
             <includeScript>laboratory.context</includeScript>
             <includeScript>/sequenceanalysis/window/ImportChainFileWindow.js</includeScript>
             <includeScript>sequenceanalysis/sequenceAnalysis</includeScript>
-            <item permission="INSERT" text="Add File" insertPosition="beginning">
+            <item permission="INSERT" text="Add File" insertPosition="beginning" iconCls="plus">
                 <onClick>SequenceAnalysis.window.ImportChainFileWindow.buttonHandler(dataRegionName)</onClick>
             </item>
             <!--<item hidden="true">-->

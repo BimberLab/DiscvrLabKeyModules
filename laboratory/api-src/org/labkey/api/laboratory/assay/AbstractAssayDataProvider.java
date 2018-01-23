@@ -213,6 +213,18 @@ abstract public class AbstractAssayDataProvider extends AbstractDataProvider imp
 
         meta.put("domains", domainMeta);
 
+        //allow import methods to inject other metadata:
+        JSONObject importMethods = new JSONObject();
+        for (AssayImportMethod m : getImportMethods())
+        {
+            JSONObject j = m.getSupplementalTemplateMetadata();
+            if (j != null)
+            {
+                importMethods.put(m.getName(), j);
+            }
+        }
+        meta.put("importMethods", importMethods);
+
         return meta;
     }
 
