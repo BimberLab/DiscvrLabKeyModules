@@ -1311,6 +1311,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/Assembl
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/AvgBaseQualityAggregator.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/BamIterator.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/BlastUnmappedReadAnalysis.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/ExportOverlappingReadsAnalysis.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/HaplotypeCallerAnalysis.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/ImmunoGenotypingAnalysis.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/NtCoverageAggregator.java -text

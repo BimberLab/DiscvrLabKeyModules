@@ -291,7 +291,20 @@ Ext4.define('Laboratory.panel.AssayTemplatePanel', {
         this.domains = result.domains;
         this.assayDesign = result.assayDesign;
         this.importMethods = result.protocols[0].importMethods;
+
+        //this should be the first that actually supports templates:
+        var supportedMethods = [];
+        Ext4.each(this.importMethods, function(m){
+            if (m.supportsTemplates)
+                supportedMethods.push(m.name);
+        }, this);
+        supportedMethods = Ext4.unique(supportedMethods);
+
         this.defaultImportMethod = result.protocols[0].defaultImportMethod || 'Default Excel';
+        if (supportedMethods.indexOf(this.defaultImportMethod) == -1){
+            this.defaultImportMethod = supportedMethods[0];
+        }
+
         this.templateMetadata = result.templateMetadata;
 
         var templateId = LABKEY.ActionURL.getParameter('templateId');
@@ -318,6 +331,8 @@ Ext4.define('Laboratory.panel.AssayTemplatePanel', {
             fields: ['name', 'label'],
             data: data
         });
+
+        var defaultSupportsTemplates = importMethodStore.find('name', this.defaultImportMethod) > -1;
 
         var toAdd = [];
         toAdd.push({
@@ -349,7 +364,7 @@ Ext4.define('Laboratory.panel.AssayTemplatePanel', {
                 forceSelection: true,
                 store: importMethodStore,
                 editable: false,
-                value: this.defaultImportMethod || data[0][1],
+                value: defaultSupportsTemplates ? this.defaultImportMethod : data[0][1],
                 listeners: {
                     scope: this,
                     buffer: 10,
