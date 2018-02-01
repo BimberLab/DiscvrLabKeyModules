@@ -103,7 +103,7 @@ Ext4.define('Laboratory.panel.AssayImportPanel', {
 
         if (!result.domains || LABKEY.Utils.isEmptyObj(result.domains)){
             Ext4.Msg.alert('Error', 'Error: assay not found: ' + this.assayId);
-            console.log(result);
+            console.error(result);
             return;
         }
 
@@ -154,24 +154,13 @@ Ext4.define('Laboratory.panel.AssayImportPanel', {
         if (field)
             field.setValue(this.selectedMethod.name);
 
-        //TODO
-        Laboratory.Utils.getAssayImportHeaders({
-            assayId: this.assayId,
-            importMethod: this.selectedMethod.name,
-            success: function(results){
-                console.log(results);
-            },
-            failure: LDK.Utils.getErrorCallback()
-        });
-
         this.renderFileArea();
     },
 
     handleFailure: function(response){
-        if (!response.responseText)
-        {
+        if (!response.responseText) {
             Ext4.Msg.alert('Error', response.statusText || 'There was an error');
-            console.log(response);
+            console.error(response);
             return;
         }
 
@@ -301,8 +290,6 @@ Ext4.define('Laboratory.panel.AssayImportPanel', {
             importMethod: this.selectedMethod.name,
             scope: this,
             success: function(results){
-                console.log(results.columnNames);
-
                 this.setDownloadPending(true);
                 LABKEY.Utils.convertToExcel({
                     fileName : this.assayDesign.name + '_' + Ext4.Date.format(new Date(), 'Y-m-d H_i_s') + '.xls',
@@ -368,13 +355,13 @@ Ext4.define('Laboratory.panel.AssayImportPanel', {
 
         if (!action){
             Ext4.Msg.alert("Upload Failed", "Something went horribly wrong when uploading.");
-            console.log(arguments);
+            console.error(arguments);
             return;
         }
 
         if (!action.response || !action.response.responseText){
             Ext4.Msg.alert("Upload Failed", action.statusText || "Something went wrong uploading.");
-            console.log(arguments);
+            console.error(arguments);
             return;
         }
 
@@ -393,7 +380,6 @@ Ext4.define('Laboratory.panel.AssayImportPanel', {
     },
 
     generatePreview: function(results){
-        console.log(results);
         var panel = this.down('#resultsPreview');
         if (panel){
             panel.destroy();
@@ -599,8 +585,8 @@ Ext4.define('Laboratory.ext.AssayPreviewPanel', {
             for (var prop in properties){
                 var meta = this.getField(domain, prop);
                 if (!meta){
-                    console.log('not found: ' + domain + '/' + prop);
-                    console.log(this.metadata[domain]);
+                    console.error('not found: ' + domain + '/' + prop);
+                    console.error(this.metadata[domain]);
                     continue;
                 }
                 if(!meta.hidden){

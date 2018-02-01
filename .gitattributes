@@ -154,6 +154,7 @@ DISCVR/jbrowse/resources/views/settings.html -text
 DISCVR/jbrowse/resources/views/settings.view.xml -text
 DISCVR/jbrowse/resources/web/README.txt -text
 DISCVR/jbrowse/resources/web/jbrowse/Browser.js -text
+DISCVR/jbrowse/resources/web/jbrowse/css/search.css -text
 DISCVR/jbrowse/resources/web/jbrowse/img/img0.jpg -text
 DISCVR/jbrowse/resources/web/jbrowse/img/img1.jpg -text
 DISCVR/jbrowse/resources/web/jbrowse/img/img1b.jpg -text
@@ -1204,10 +1205,12 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceOutputsNavIt
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequencePipelineServiceImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceProvider.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/SequenceReadsetImpl.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/AbstractCombineGeneCountsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/AlignmentMetricsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/BamCleanupHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/BamHaplotypeHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CombineStarGeneCountsHandler.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CombineSubreadGeneCountsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CompareVariantsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/GenotypeGVCFHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/HaplotypeCallerHandler.java -text
@@ -1320,6 +1323,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/PARalyz
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/SequenceBasedTypingAlignmentAggregator.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/SequenceBasedTypingAnalysis.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/SnpCountAnalysis.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/SubreadAnalysis.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/UnmappedReadExportAnalysis.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/UnmappedReadExportHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/analysis/ViralAnalysis.java -text

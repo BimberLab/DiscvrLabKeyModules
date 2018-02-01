@@ -41,6 +41,7 @@ import org.labkey.api.view.WebPartFactory;
 import org.labkey.sequenceanalysis.analysis.BamCleanupHandler;
 import org.labkey.sequenceanalysis.analysis.BamHaplotypeHandler;
 import org.labkey.sequenceanalysis.analysis.CombineStarGeneCountsHandler;
+import org.labkey.sequenceanalysis.analysis.CombineSubreadGeneCountsHandler;
 import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
 import org.labkey.sequenceanalysis.analysis.HaplotypeCallerHandler;
 import org.labkey.sequenceanalysis.analysis.LiftoverHandler;
@@ -80,6 +81,7 @@ import org.labkey.sequenceanalysis.run.analysis.ImmunoGenotypingAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.PARalyzerAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SnpCountAnalysis;
+import org.labkey.sequenceanalysis.run.analysis.SubreadAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.UnmappedReadExportHandler;
 import org.labkey.sequenceanalysis.run.analysis.ViralAnalysis;
 import org.labkey.sequenceanalysis.run.assembly.TrinityRunner;
@@ -253,6 +255,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new HaplotypeCallerAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new SnpCountAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new ExportOverlappingReadsAnalysis.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SubreadAnalysis.Provider());
 
         //SequencePipelineService.get().registerPipelineStep(new BlastUnmappedReadAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new PARalyzerAnalysis.Provider());
@@ -287,6 +290,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new HaplotypeCallerHandler());
         SequenceAnalysisService.get().registerFileHandler(new RnaSeqcHandler());
         SequenceAnalysisService.get().registerFileHandler(new CombineStarGeneCountsHandler());
+        SequenceAnalysisService.get().registerFileHandler(new CombineSubreadGeneCountsHandler());
         SequenceAnalysisService.get().registerFileHandler(new SbtGeneCountHandler());
         SequenceAnalysisService.get().registerFileHandler(new ProcessVariantsHandler());
         SequenceAnalysisService.get().registerFileHandler(new UnmappedReadExportHandler());

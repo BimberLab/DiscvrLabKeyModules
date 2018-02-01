@@ -1,0 +1,19 @@
+/* styles for the autocomplete menu */
+.dijitComboBoxMenu .locString, .dijitComboBoxMenu .multipleLocations {
+    margin-left: 1em;
+}
+.dijitComboBoxMenu .multipleLocations {
+    color: #333;
+}
+
+.noBorder .dijitButtonNode {
+    border: 0px;
+}
+
+div.dijitTextBox {
+    border: 1px solid #BFBFBF; !important;
+}
+
+span.digitPlaceHolder {
+    font-size: 14px;
+}

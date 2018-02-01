@@ -13,7 +13,7 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
 
     getDomainConfig: function(domain, forTemplate){
         var meta = this.getMetadata(forTemplate)[domain].map;
-        var domainFields = new Array();
+        var domainFields = [];
         switch (domain){
             case 'Results':
                 for (var prop in meta){
@@ -35,31 +35,18 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
             }
 
             domainFields[i].domain = domainFields[i].domain || domain;
+            var fieldObj = this.getFieldConfig(domainFields[i]);
+            if (!fieldObj)
+                continue;
 
             if (LABKEY.ext4.Util.shouldShowInInsertView(domainFields[i])){
-                var fieldObj = this.getFieldConfig(domainFields[i]);
-                if (!fieldObj)
-                    continue;
-
                 var editor = LABKEY.ext4.Util.getFormEditorConfig(fieldObj);
-
                 if (fieldObj.getInitialValue){
-                    try
-                    {
-                        if (!Ext4.isFunction(fieldObj.getInitialValue))
-                            fieldObj.getInitialValue = eval('(' + fieldObj.getInitialValue + ')');
-
-                        editor.value = fieldObj.getInitialValue(this);
-                    }
-                    catch (error)
-                    {
-                        LDK.Utils.logToServer({message: "unable to parse getInitialValue() for field: " + fieldObj.name});
-                        console.error(error);
-                    }
+                    editor.value = fieldObj.getInitialValue(this);
                 }
-            }
 
-            toAdd.push(editor);
+                toAdd.push(editor);
+            }
         }
 
         return toAdd;
@@ -106,6 +93,17 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
             }
         }
 
+        Ext4.Array.forEach(Ext4.Object.getKeys(meta), function(domain){
+            var d = meta[domain];
+            Ext4.Array.forEach(Ext4.Object.getKeys(d), function(colName){
+                if (d[colName].getInitialValue){
+                    if (!Ext4.isFunction(d[colName].getInitialValue)){
+                        d[colName].getInitialValue = eval('(' + d[colName].getInitialValue + ')');
+                    }
+                }
+            }, this);
+        }, this);
+
         return {
             Batch: {
                 map: meta.Batch,
@@ -136,8 +134,8 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
             fieldObj.lookup.containerPath = Laboratory.Utils.getQueryContainerPath();
         }
         if (!fieldObj.name && !fieldObj.dataIndex){
-            console.log('improper field, probably the result of bad metadata merging');
-            console.log(fieldObj);
+            console.error('improper field, probably the result of bad metadata merging');
+            console.error(fieldObj);
             return;
         }
 
@@ -182,6 +180,17 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
             }
         }
 
+        if (fieldObj.getInitialValue){
+            try {
+                if (!Ext4.isFunction(fieldObj.getInitialValue))
+                    fieldObj.getInitialValue = eval('(' + fieldObj.getInitialValue + ')');
+            }
+            catch (error) {
+                LDK.Utils.logToServer({message: "unable to parse getInitialValue() for field: " + fieldObj.name});
+                console.error(error);
+            }
+        }
+
         return fieldObj;
     },
 
@@ -215,6 +224,7 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
                 text: 'Add From Spreadsheet',
                 tooltip: 'Click to upload data using an excel template, or download this template',
                 fileNamePrefix: this.assayDesign.name + '_',
+                scope: this,
                 handler: function(btn){
                     var grid = btn.up('gridpanel');
                     Ext4.create('Laboratory.ext.AssaySpreadsheetImportWindow', {
@@ -555,6 +565,19 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
                             nameField.setValue(rec.get('title'));
                         }
 
+                        //set import method based on saved template
+                        var json = Ext4.decode(rec.get('json'));
+                        var importMethod = json.importMethod;
+                        var imf = this.down('#importMethodToggle');
+                        var current = imf.getValue();
+                        if (current.importMethodToggle !== importMethod){
+                            imf.setValue({
+                                importMethodToggle: importMethod
+                            });
+
+                            imf.fireEvent('change', this, imf.getValues, current);
+                        }
+
                         var target = this.down('#templatePreviewPanel');
                         target.removeAll();
                         var cfg = this.getResultGridConfig(true);
@@ -571,7 +594,7 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
                         var grid = this.down('#templateGrid');
                         grid.store.removeAll();
 
-                        this.loadTemplateToGrid(grid, rec.get('json'));
+                        this.loadTemplateToGrid(grid, json);
                     }
                 }
             }
@@ -581,11 +604,10 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
         }];
     },
 
-    loadTemplateToGrid: function(grid, jsonString){
-        var json = Ext4.decode(jsonString);
+    loadTemplateToGrid: function(grid, json){
         if (grid.store.isLoading()){
             grid.store.on('load', function(){
-                this.loadTemplateToGrid(grid, jsonString);
+                this.loadTemplateToGrid(grid, json);
             }, this);
             return;
         }

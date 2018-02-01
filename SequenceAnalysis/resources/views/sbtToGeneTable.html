@@ -262,7 +262,7 @@
                 var analysisIds = [];
 
                 //note: query everything upfront, then filter later
-                Ext4.Array.forEach(this.query('checkbox'), function(cb){
+                Ext4.Array.forEach(this.query('checkbox[genomeId]'), function(cb){
                     genomeIds.push(cb.genomeId);
                     for (var rs in this.genomeMap[cb.genomeId].readsets){
                         analysisIds.push(this.genomeMap[cb.genomeId].readsets[rs][0]);
@@ -347,7 +347,7 @@
             onAlleleLoad: function(){
                 var output = [];
                 output.push(['GeneId', 'GeneName', 'GeneDescription', 'SamplesWithReads'].concat(this.headerValues).join('\t'));
-                Ext4.Array.forEach(this.query('checkbox'), function(cb){
+                Ext4.Array.forEach(this.query('checkbox[genomeId]'), function(cb){
                     if (!cb.getValue()){
                         return;
                     }

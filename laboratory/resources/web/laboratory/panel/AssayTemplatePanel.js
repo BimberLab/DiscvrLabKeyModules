@@ -130,13 +130,6 @@ Ext4.define('Laboratory.panel.AssayTemplatePanel', {
                     return false;
                 }
             }
-
-            if (fields.indexOf('sampleCategory') != -1){
-                grid.store.each(function(rec){
-                    var cat = rec.get('sampleCategory');
-                    console.log(cat);
-                }, this);
-            }
         }
 
         return true;
@@ -179,8 +172,8 @@ Ext4.define('Laboratory.panel.AssayTemplatePanel', {
             params: params,
             scope: this,
             failure: function(response){
-                console.log('error');
-                console.log(arguments);
+                console.error('error');
+                console.error(arguments);
             }
         });
     },
@@ -217,7 +210,7 @@ Ext4.define('Laboratory.panel.AssayTemplatePanel', {
                 }
                 else {
                     Ext4.Msg.alert('Error', 'There was an error with the template');
-                    console.log(arguments);
+                    console.error(arguments);
                 }
             }, this),
             success: LABKEY.Utils.getCallbackWrapper(function(results){
@@ -258,7 +251,8 @@ Ext4.define('Laboratory.panel.AssayTemplatePanel', {
 
         if (map.json && loadRecords){
             var grid = this.down('#resultGrid');
-            this.loadTemplateToGrid(grid, map.json);
+            var json = Ext4.decode(map.json);
+            this.loadTemplateToGrid(grid, json);
         }
     },
 
@@ -284,7 +278,7 @@ Ext4.define('Laboratory.panel.AssayTemplatePanel', {
 
         if (!result.domains || LABKEY.Utils.isEmptyObj(result.domains)){
             Ext4.Msg.alert('Error', 'Error: assay not found: ' + this.assayId);
-            console.log(result);
+            console.error(result);
             return;
         }
 
@@ -459,89 +453,4 @@ Ext4.define('Laboratory.panel.AssayTemplatePanel', {
             resultFields.setVisible(false);
         }
     },
-
-    // another good example of WNPRC-specific code - shouldnt be here.
-    // If you find working within this class too restrictive, consider making your own subclass of this panel
-    // and placing it in ViralLoad module.  we could probably make the ViralLoadAssay use this subclass instead of
-    // the default one.  this might make it easier for you to work around this
-    // toggleFields: function (val, oldVal) {
-    //     var resultGrid = this.getComponent('resultGrid');
-    //     var resultFields = this.getComponent('resultFields');
-    //     if (this.WNPRCImportMethods.includes(val) && !this.WNPRCImportMethods.includes(oldVal)) {
-    //         if (this.templateMetadata.domains.Results.sourceMaterial) {
-    //             this.templateMetadata.domains.Results.sourceMaterial.setGlobally = false;
-    //             this.templateMetadata.domains.Results.sourceMaterial.hidden = false;
-    //             this.templateMetadata.domains.Results.sourceMaterial.required = true;
-    //         }
-    //         if (this.templateMetadata.domains.Results.sampleType) {
-    //             this.templateMetadata.domains.Results.sampleType.hidden = false;
-    //             this.templateMetadata.domains.Results.sampleType.required = true;
-    //         }
-    //         if (this.templateMetadata.domains.Results.sampleId) {
-    //             this.templateMetadata.domains.Results.sampleId.hidden = true;
-    //         }
-    //
-    //         this.remove(resultGrid);
-    //
-    //         var cfg = this.getDomainConfig('Results', true);
-    //         resultFields = this.down('#resultFields');
-    //         if (cfg && cfg.length){
-    //             resultFields.setVisible(true);
-    //             resultFields.removeAll();
-    //             resultFields.add(cfg);
-    //         }
-    //
-    //         resultGrid = this.getResultGridConfig(true);
-    //
-    //         Ext4.apply(resultGrid, {
-    //             title: 'Sample Information',
-    //             columns: this.getTemplateGridColumns(),
-    //             viewConfig: {
-    //                 plugins: {
-    //                     ptype: 'gridviewdragdrop',
-    //                     dragText: 'Drag and drop to reorder'
-    //                 }
-    //             }
-    //         });
-    //         this.insert(4, resultGrid);
-    //         var uniqueIdBtn = Ext4.getCmp('uniqueIdBtn');
-    //         uniqueIdBtn.show();
-    //     } else if (!this.WNPRCImportMethods.includes(val) && this.WNPRCImportMethods.includes(oldVal)) {
-    //         //reset everything to their default values
-    //         if (this.templateMetadata.domains.Results.sourceMaterial) {
-    //             this.templateMetadata.domains.Results.sourceMaterial.setGlobally = true;
-    //             this.templateMetadata.domains.Results.sourceMaterial.hidden = true;
-    //             this.templateMetadata.domains.Results.sourceMaterial.required = false;
-    //         }
-    //         if (this.templateMetadata.domains.Results.sampleType) {
-    //             this.templateMetadata.domains.Results.sampleType.hidden = true;
-    //             this.templateMetadata.domains.Results.sampleType.required = false;
-    //         }
-    //         if (this.templateMetadata.domains.Results.sampleId) {
-    //             delete this.templateMetadata.domains.Results.sampleId.hidden;
-    //         }
-    //         this.remove(resultGrid);
-    //
-    //         var cfg = this.getDomainConfig('Results', true);
-    //         resultFields = this.down('#resultFields');
-    //         if (cfg && cfg.length){
-    //             resultFields.setVisible(true);
-    //             resultFields.removeAll();
-    //             resultFields.add(cfg);
-    //         }
-    //
-    //         resultGrid = this.getResultGridConfig(true);
-    //         Ext4.apply(resultGrid, {
-    //             title: 'Sample Information',
-    //             columns: this.getTemplateGridColumns(),
-    //             viewConfig: {
-    //                 plugins: {
-    //                     ptype: 'gridviewdragdrop',
-    //                     dragText: 'Drag and drop to reorder'
-    //                 }
-    //             }
-    //         });
-    //         this.insert(4, resultGrid);
-    //     }
-    // }
 });

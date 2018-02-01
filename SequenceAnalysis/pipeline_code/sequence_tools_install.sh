@@ -34,11 +34,14 @@
 #
 set -e
 set -u
+set -x
+
 FORCE_REINSTALL=
 SKIP_PACKAGE_MANAGER=
 CLEAN_SRC=
 LK_HOME=
 LK_USER=
+MAVEN_OPTS="-Xss10m"
 
 #NOTE: java/javac not automatically picked up
 PATH=${JAVA_HOME}/bin:$PATH
@@ -214,6 +217,35 @@ else
 fi
 
 #
+# subread
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install subread"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/featureCounts || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf subread*
+    rm -Rf $LKTOOLS_DIR/featureCounts
+
+    wget $WGET_OPTS https://downloads.sourceforge.net/project/subread/subread-1.6.0/subread-1.6.0-source.tar.gz
+    gunzip subread-1.6.0-source.tar.gz
+    tar -xf subread-1.6.0-source.tar
+
+    cd subread-1.6.0-source/src
+    make -f Makefile.Linux
+    cd ../
+
+    install ./bin/featureCounts $LKTOOLS_DIR/
+else
+    echo "Already installed"
+fi
+
+#
 #FLASH
 #
 echo ""
@@ -268,6 +300,9 @@ then
     cd gatk-protected
     git checkout tags/3.7
     cd ../
+
+    #this manually increases Xss in the hope of fixing intermittent StackOverlowErrors
+    sed -i '/<groupId>org.scala-tools<\/groupId>/a <configuration><jvmArgs><jvmArg>-Xss10m<\/jvmArg><\/jvmArgs><\/configuration>' ./gatk-protected/pom.xml
 
     #fix multithreading bug
     sed -i 's/private final List<GenomeLoc> upstreamDeletionsLoc = new LinkedList<>();/private final ThreadLocal< List<GenomeLoc> > upstreamDeletionsLoc = ThreadLocal.withInitial(() -> new LinkedList<GenomeLoc>());/g' ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/genotyper/GenotypingEngine.java
@@ -876,19 +911,19 @@ then
     rm -Rf $LKTOOLS_DIR/bowtie2
     rm -Rf $LKTOOLS_DIR/bowtie2-*
 
-    wget $WGET_OPTS https://downloads.sourceforge.net/project/bowtie-bio/bowtie2/2.2.6/bowtie2-2.2.6-linux-x86_64.zip
-    unzip bowtie2-2.2.6-linux-x86_64.zip
+    wget $WGET_OPTS https://sourceforge.net/projects/bowtie-bio/files/bowtie2/2.3.4/bowtie2-2.3.4-linux-x86_64.zip
+    unzip bowtie2-2.3.4-linux-x86_64.zip
 
-    install ./bowtie2-2.2.6/bowtie2 $LKTOOLS_DIR/bowtie2
-    install ./bowtie2-2.2.6/bowtie2-build $LKTOOLS_DIR/bowtie2-build
+    install ./bowtie2-2.3.4-linux-x86_64/bowtie2 $LKTOOLS_DIR/bowtie2
+    install ./bowtie2-2.3.4-linux-x86_64/bowtie2-build $LKTOOLS_DIR/bowtie2-build
 
-    install ./bowtie2-2.2.6/bowtie2-align-s $LKTOOLS_DIR/bowtie2-align-s
-    install ./bowtie2-2.2.6/bowtie2-align-l $LKTOOLS_DIR/bowtie2-align-l
-    install ./bowtie2-2.2.6/bowtie2-build-s $LKTOOLS_DIR/bowtie2-build-s
-    install ./bowtie2-2.2.6/bowtie2-build-l $LKTOOLS_DIR/bowtie2-build-l
-    install ./bowtie2-2.2.6/bowtie2-inspect $LKTOOLS_DIR/bowtie2-inspect
-    install ./bowtie2-2.2.6/bowtie2-inspect-s $LKTOOLS_DIR/bowtie2-inspect-s
-    install ./bowtie2-2.2.6/bowtie2-inspect-l $LKTOOLS_DIR/bowtie2-inspect-l
+    install ./bowtie2-2.3.4-linux-x86_64/bowtie2-align-s $LKTOOLS_DIR/bowtie2-align-s
+    install ./bowtie2-2.3.4-linux-x86_64/bowtie2-align-l $LKTOOLS_DIR/bowtie2-align-l
+    install ./bowtie2-2.3.4-linux-x86_64/bowtie2-build-s $LKTOOLS_DIR/bowtie2-build-s
+    install ./bowtie2-2.3.4-linux-x86_64/bowtie2-build-l $LKTOOLS_DIR/bowtie2-build-l
+    install ./bowtie2-2.3.4-linux-x86_64/bowtie2-inspect $LKTOOLS_DIR/bowtie2-inspect
+    install ./bowtie2-2.3.4-linux-x86_64/bowtie2-inspect-s $LKTOOLS_DIR/bowtie2-inspect-s
+    install ./bowtie2-2.3.4-linux-x86_64/bowtie2-inspect-l $LKTOOLS_DIR/bowtie2-inspect-l
 else
     echo "Already installed"
 fi
@@ -913,13 +948,14 @@ then
     rm -Rf trinityrnaseq-*
     rm -Rf $LKTOOLS_DIR/Trinity
 
-    wget $WGET_OPTS https://github.com/trinityrnaseq/trinityrnaseq/archive/Trinity-v2.3.2.zip
-    unzip  Trinity-v2.3.2.zip
+    wget $WGET_OPTS https://github.com/trinityrnaseq/trinityrnaseq/archive/Trinity-v2.5.1.zip
+    unzip  Trinity-v2.5.1.zip
 
-    cd trinityrnaseq-Trinity-v2.3.2
+    cd trinityrnaseq-Trinity-v2.5.1
     make
 
-    install ./Trinity $LKTOOLS_DIR/Trinity
+    cd ../
+    cp -R trinityrnaseq-Trinity-v2.5.1 $LKTOOLS_DIR/trinity
 else
     echo "Already installed"
 fi

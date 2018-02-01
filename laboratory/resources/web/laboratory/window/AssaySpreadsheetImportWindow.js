@@ -23,6 +23,7 @@ Ext4.define('Laboratory.ext.AssaySpreadsheetImportWindow', {
                     linkPrefix: '[',
                     linkSuffix: ']',
                     style: 'padding-bottom: 10px;',
+                    scope: this,
                     handler: function(btn){
                         var win = btn.up('window');
                         var fields = win.getFieldsInTemplate();

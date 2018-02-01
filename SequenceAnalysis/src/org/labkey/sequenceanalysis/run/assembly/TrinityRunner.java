@@ -83,7 +83,7 @@ public class TrinityRunner extends AbstractCommandWrapper
                 extraParams.add(SequenceTaskHelper.getMaxThreads(getPipelineCtx().getJob()).toString());
             }
 
-            File fasta = getWrapper().performAssembly(inputFastq1, inputFastq2, outputDirectory, basename, extraParams);
+            File fasta = getWrapper().performAssembly(inputFastq1, inputFastq2, outputDirectory, basename, extraParams, false);
             ret.addOutput(fasta, "Assembled Contigs");
 
             return ret;
@@ -91,7 +91,12 @@ public class TrinityRunner extends AbstractCommandWrapper
 
     }
 
-    public File performAssembly(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, String basename, @Nullable List<String> extraParams) throws PipelineJobException
+    public File performAssembly(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, String basename, @Nullable List<String> extraParams, boolean doCleanup) throws PipelineJobException
+    {
+        return performAssembly(inputFastq1, inputFastq2, outputDirectory, basename, extraParams, doCleanup, false);
+    }
+
+    public File performAssembly(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, String basename, @Nullable List<String> extraParams, boolean doCleanup, boolean allowMissingOutput) throws PipelineJobException
     {
         List<String> args = new ArrayList<>();
         args.add(getExe().getPath());
@@ -117,13 +122,61 @@ public class TrinityRunner extends AbstractCommandWrapper
             args.add(inputFastq1.getPath());
         }
 
+        if (doCleanup)
+        {
+            args.add("--full_cleanup");
+        }
+
+        //NOTE: for some odd reason Trinity requires this to contain 'trinity'
+        if (!basename.toLowerCase().contains("trinity"))
+        {
+            basename = "trinity-" + basename;
+        }
+
         File output = new File(outputDirectory, basename);
         args.add("--output");
         args.add(output.getPath());
 
-        File fasta = new File(output, "Trinity.fasta");
+        execute(args);
+
+        File fasta;
+        if (!doCleanup)
+        {
+            fasta = new File(output, "Trinity.fasta");
+        }
+        else
+        {
+            fasta = new File(output.getParentFile().getPath(), output.getName() + ".Trinity.fasta");
+        }
+
         if (!fasta.exists())
         {
+            if (allowMissingOutput)
+            {
+                getLogger().info("no output created.  expected: " + fasta.getPath());
+                return null;
+            }
+
+            if (output.exists())
+            {
+                String[] files = output.list();
+                getLogger().debug("files in output directory: " + output.getPath());
+                for (String fn : files)
+                {
+                    getLogger().debug(fn);
+                }
+            }
+            else
+            {
+                String[] files = outputDirectory.list();
+                getLogger().debug("output directory not found: " + output.getPath());
+                getLogger().debug("files in: " + outputDirectory.getPath());
+                for (String fn : files)
+                {
+                    getLogger().debug(fn);
+                }
+            }
+
             throw new PipelineJobException("Unable to find expected output: " + fasta.getPath());
         }
 
@@ -132,6 +185,8 @@ public class TrinityRunner extends AbstractCommandWrapper
 
     public File getExe()
     {
-        return SequencePipelineService.get().getExeForPackage("TRINITYPATH", "Trinity");
+        File ret = SequencePipelineService.get().getExeForPackage("TRINITYPATH", "trinity");
+
+        return new File(ret, "Trinity");
     }
 }

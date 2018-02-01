@@ -4,7 +4,9 @@
     </permissions>
     <dependencies>
         <dependency path="LDK.context"/>
-        <dependency path="jbrowseApp/css/genome.css" />
+        <dependency path="jbrowseApp/src/dijit/themes/tundra/tundra.css" />
+        <dependency path="jbrowse/css/search.css" />
+        <dependency path="internal/jQuery"/>
         <dependency path="jbrowse/window/SearchCustomizeWindow.js"/>
     </dependencies>
 </view>
