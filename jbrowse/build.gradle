@@ -18,7 +18,7 @@ project.task("copyJBrowse",
         group: "Build",
         description: "Copy jbrowse app into webapp directory",
         { CopySpec copy ->
-           copy.from fileTree("./node_modules/jbrowse").exclude('css/main.css')
+           copy.from fileTree("./node_modules/@gmod/jbrowse").exclude('css/main.css')
            copy.into new File("./resources/web/jbrowseApp/")
         }
 )
@@ -31,14 +31,36 @@ project.task("copyJBrowseCss",
             copy.from new File("./webpack/main.css")
             copy.into new File("./resources/web/jbrowseApp/css/")
         }
-)
+).doFirst({
+    File f = project.file('./resources/web/jbrowseApp/index.html');
+    if (!f.exists())
+    {
+        throw new GradleException("copyJBrowse was not successful.  missing: " + f.getAbsolutePath())
+    }
+
+    File f2 = project.file('./resources/web/jbrowseApp/src/dijit/themes/dijit.css');
+    if (!f2.exists())
+    {
+        throw new GradleException("copyJBrowse was not successful.  missing jbrowse dependencies: " + f2.getAbsolutePath())
+    }
+})
+
+project.task("verifySourceFiles", {
+    File f = project.file('./node_modules/@gmod/jbrowse');
+    if (!f.exists()){
+        throw new GradleException("Input source for copyJBrowse doesn't exist: " + f.getAbsolutePath())
+    }
+})
 
 project.tasks.copyJBrowse.dependsOn(project.tasks.npmInstall)
 
-
 project.tasks.copyJBrowse.mustRunAfter("npmRunBuild")
 project.tasks.copyJBrowse.mustRunAfter("npmRunBuildProd")
+project.tasks.copyJBrowse.mustRunAfter("verifySourceFiles")
+
+project.tasks.verifySourceFiles.dependsOn(project.tasks.npmInstall)
 
 project.tasks.copyJBrowseCss.dependsOn(project.tasks.copyJBrowse)
 project.tasks.module.dependsOn(project.tasks.copyJBrowse)
 project.tasks.module.dependsOn(project.tasks.copyJBrowseCss)
+project.tasks.module.dependsOn(project.tasks.verifySourceFiles)
