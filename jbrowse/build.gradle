@@ -21,7 +21,12 @@ project.task("copyJBrowse",
            copy.from fileTree("./node_modules/@gmod/jbrowse").exclude('css/main.css')
            copy.into new File("./resources/web/jbrowseApp/")
         }
-)
+).doFirst({
+    File f = project.file('./node_modules/@gmod/jbrowse');
+    if (!f.exists()){
+        throw new GradleException("Input source for copyJBrowse doesn't exist: " + f.getAbsolutePath())
+    }
+})
 
 project.task("copyJBrowseCss",
         type: Copy,
@@ -45,22 +50,12 @@ project.task("copyJBrowseCss",
     }
 })
 
-project.task("verifySourceFiles", {
-    File f = project.file('./node_modules/@gmod/jbrowse');
-    if (!f.exists()){
-        throw new GradleException("Input source for copyJBrowse doesn't exist: " + f.getAbsolutePath())
-    }
-})
 
 project.tasks.copyJBrowse.dependsOn(project.tasks.npmInstall)
 
 project.tasks.copyJBrowse.mustRunAfter("npmRunBuild")
 project.tasks.copyJBrowse.mustRunAfter("npmRunBuildProd")
-project.tasks.copyJBrowse.mustRunAfter("verifySourceFiles")
-
-project.tasks.verifySourceFiles.dependsOn(project.tasks.npmInstall)
 
 project.tasks.copyJBrowseCss.dependsOn(project.tasks.copyJBrowse)
 project.tasks.module.dependsOn(project.tasks.copyJBrowse)
 project.tasks.module.dependsOn(project.tasks.copyJBrowseCss)
-project.tasks.module.dependsOn(project.tasks.verifySourceFiles)
