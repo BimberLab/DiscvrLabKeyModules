@@ -16,7 +16,7 @@
   "dependencies": {},
   "devDependencies": {
     "better-npm-run": "0.1.0",
-    "jbrowse": "github:GMOD/jbrowse#1.12.4-release",
+    "jbrowse": "github:GMOD/jbrowse#1.12.3-release",
     "rimraf": "2.6.2"
   }
 }
