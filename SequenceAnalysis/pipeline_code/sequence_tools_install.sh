@@ -100,7 +100,7 @@ echo "Install location"
 echo ""
 echo "LKTOOLS_DIR: $LKTOOLS_DIR"
 echo "LKSRC_DIR: $LKSRC_DIR"
-WGET_OPTS="--read-timeout=10 --secure-protocol=TLSv1"
+WGET_OPTS="--read-timeout=10 --secure-protocol=auto"
 
 #
 # Install required software
