@@ -1291,7 +1291,16 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             if (xml != null)
             {
                 job.getLogger().debug("using xml file: " + xml.getPath());
-                return createFromXml(job, task, xml);
+                try
+                {
+                    return createFromXml(job, task, xml);
+                }
+                catch (Exception e)
+                {
+                    //allow for the possibility of a malformed XML file
+                    job.getLogger().error("Error reading XML file: " +  xml.getPath(), e);
+                    xml.delete();
+                }
             }
 
             return new Resumer(task);

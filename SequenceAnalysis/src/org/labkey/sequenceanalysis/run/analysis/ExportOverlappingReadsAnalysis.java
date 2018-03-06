@@ -135,6 +135,7 @@ public class ExportOverlappingReadsAnalysis extends AbstractPipelineStep impleme
 
         //now run Trinity:
         TrinityRunner tr = new TrinityRunner(getPipelineCtx().getLogger());
+        tr.setThrowNonZeroExits(false); //this will occur if no contigs are found
         File trinityFasta = tr.performAssembly(fq1, fq2, outputDir, FileUtil.getBaseName(inputBam), Arrays.asList("--max_memory", "8G"), true, true);
         if (trinityFasta == null)
         {
@@ -143,7 +144,7 @@ public class ExportOverlappingReadsAnalysis extends AbstractPipelineStep impleme
         }
         else if (trinityFasta.exists())
         {
-            long lineCount = SequenceUtil.getLineCount(trinityFasta) / 4;
+            long lineCount = SequenceUtil.getLineCount(trinityFasta) / 2;
             String description = "Total contigs: " + lineCount + ". \n" + "Total pairs: " + totalAdded + ". \n" + StringUtils.join(comments, ". \n");
             output.addSequenceOutput(trinityFasta, "Assembled Overlapping Reads: " + rs.getName(), "Overlapping Contigs", rs.getRowId(), null, referenceGenome.getGenomeId(), description);
         }
@@ -170,13 +171,17 @@ public class ExportOverlappingReadsAnalysis extends AbstractPipelineStep impleme
         bamFact.validationStringency(ValidationStringency.SILENT);
         try (SamReader sam = bamFact.open(inputBam);SamReader mateReader = bamFact.open(inputBam))
         {
-            IntervalList il = new IntervalList(sam.getFileHeader());
-            il.add(new Interval(refName, start, stop));
-
             try (SAMRecordIterator it = sam.queryOverlapping(refName, start, stop))
             {
+                int i = 0;
                 while (it.hasNext())
                 {
+                    i++;
+                    if (i % 10000 == 0)
+                    {
+                        getPipelineCtx().getLogger().info("processed " + i + " reads");
+                    }
+
                     SAMRecord r = it.next();
                     if (r.isSecondaryOrSupplementary())
                     {

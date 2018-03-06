@@ -385,13 +385,17 @@ public class StarWrapper extends AbstractCommandWrapper
                 ToolParameterDescriptor.create("removeNoncanonicalUnannotated", "Remove Noncanonical Unannotated Junctions", "If checked, the argument --outFilterIntronMotifs=RemoveNoncanonicalUnannotated will be added, which will filter out noncanonical, unannotated junctions.", "checkbox", new JSONObject(){{
                     put("checked", false);
                 }}, true),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--outFilterMismatchNmax"), "outFilterMismatchNmax", "Remove Noncanonical Unannotated Junctions", "Alignments with more than this number of mismatches will be filtered", "ldk-integerfield", new JSONObject(){{
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--outFilterMismatchNmax"), "outFilterMismatchNmax", "Max Mismatch", "Alignments with more than this number of mismatches will be filtered", "ldk-integerfield", new JSONObject(){{
                     put("minValue", 0);
                 }}, null),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--outFilterMismatchNoverLmax"), "outFilterMismatchNoverLmax", "Mismatch Ratio", "An alignment will be output only if its ratio of mismatches to *mapped* length is less than or equal to this value.  Defaults to 0.3", "ldk-numberfield", new JSONObject(){{
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--outFilterMismatchNoverLmax"), "outFilterMismatchNoverLmax", "Alignment Mismatch Ratio", "An alignment will be output only if its ratio of mismatches to *mapped* length is less than or equal to this value.  Defaults to 0.3", "ldk-numberfield", new JSONObject(){{
                     put("minValue", 0);
                     put("maxValue", 1);
                 }}, null),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--outFilterMismatchNoverReadLmax"), "outFilterMismatchNoverReadLmax", "Read Mismatch Ratio", "An alignment will be output only if its ratio of mismatches to *read* length is less than or equal to this value.  Defaults to 1.0", "ldk-numberfield", new JSONObject(){{
+                        put("minValue", 0);
+                        put("maxValue", 1);
+                    }}, null),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--outFilterMultimapNmax"), "outFilterMultimapNmax", "Max Number of Alignments", "Maximum number of loci the read is allowed to map to. Alignments (all of them) will be output only if the read maps to no more loci than this value.", "ldk-integerfield", new JSONObject(){{
                     put("minValue", 0);
                 }}, 10)

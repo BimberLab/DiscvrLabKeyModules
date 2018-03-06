@@ -3,6 +3,7 @@ package org.labkey.sequenceanalysis.util;
 import htsjdk.samtools.liftover.LiftOver;
 import htsjdk.samtools.util.BufferedLineReader;
 import htsjdk.samtools.util.IOUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SQLFragment;
@@ -55,13 +56,8 @@ public class ChainFileValidator
             String line;
             while ((line = reader.readLine()) != null)
             {
-                if (line.equals(""))
+                if (line.equals("") || line.startsWith("#"))
                 {
-                    continue;
-                }
-                else if (line.startsWith("#"))
-                {
-                    hasChanges = true;
                     continue;
                 }
 
@@ -91,7 +87,7 @@ public class ChainFileValidator
 
                         //and targetRefName
                         String targetSeq = chainFields[7];
-                        if (resolveSequenceId(sourceSeq, sourceGenome) == null)
+                        if (resolveSequenceId(targetSeq, targetGenome) == null)
                         {
                             throw new IllegalArgumentException("Line " + reader.getLineNumber() + ": unable to resolve sequence with name " + targetSeq + " in reference genome: " + targetGenome + ".  There names of the contigs in the chain file must match the names used for the sequences within the site.");
                         }
@@ -120,11 +116,7 @@ public class ChainFileValidator
                     String line;
                     while ((line = reader.readLine()) != null)
                     {
-                        if (line.startsWith("#"))
-                        {
-                            continue;
-                        }
-
+                        line = StringUtils.trimToEmpty(line);
                         if (line.startsWith("chain"))
                         {
                             String[] chainFields = SPLITTER.split(line);
@@ -147,8 +139,6 @@ public class ChainFileValidator
                             {
                                 throw new IllegalArgumentException("Line " + reader.getLineNumber() + ": chain Id should be an integer: " + chainFields[12]);
                             }
-
-                            //TODO: make sure the sequence names match our DB
                         }
                         else
                         {

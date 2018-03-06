@@ -16,9 +16,7 @@ import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.pipeline.file.FileAnalysisTaskPipeline;
 import org.labkey.api.pipeline.file.FileAnalysisTaskPipelineSettings;
 import org.labkey.api.security.User;
-import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.ReadData;
-import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
@@ -29,7 +27,9 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * User: bimber
@@ -52,6 +52,8 @@ public class SequenceAlignmentJob extends SequenceJob
 
     public static List<SequenceAlignmentJob> createForReadsets(Container c, User u, String jobName, String description, JSONObject params, JSONArray readsetIds, boolean submitJobToReadsetContainer) throws ClassNotFoundException, IOException, PipelineValidationException
     {
+        Map<Container, PipeRoot> containerToPipeRootMap = new HashMap<>();
+
         List<SequenceAlignmentJob> ret = new ArrayList<>();
         for (int i=0;i<readsetIds.length();i++)
         {
@@ -64,9 +66,15 @@ public class SequenceAlignmentJob extends SequenceJob
 
             Container targetContainer = submitJobToReadsetContainer ? ContainerManager.getForId(readset.getContainer()) : c;
 
-            PipeRoot pr = PipelineService.get().findPipelineRoot(targetContainer);
-            if (pr == null || !pr.isValid())
-                throw new NotFoundException();
+            PipeRoot pr = containerToPipeRootMap.get(targetContainer);
+            if (pr == null)
+            {
+                pr = PipelineService.get().findPipelineRoot(targetContainer);
+                if (pr == null || !pr.isValid())
+                    throw new NotFoundException();
+
+                containerToPipeRootMap.put(targetContainer, pr);
+            }
 
             SequenceAlignmentJob j = new SequenceAlignmentJob(targetContainer, u, jobName, pr, params, readset);
             j.setDescription(description);

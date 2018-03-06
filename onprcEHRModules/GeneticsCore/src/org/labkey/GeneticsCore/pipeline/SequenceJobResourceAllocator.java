@@ -153,6 +153,7 @@ public class SequenceJobResourceAllocator implements ClusterResourceAllocator
         boolean hasHaplotypeCaller = false;
         boolean hasStar = false;
         boolean hasBismark = false;
+        boolean hasBowtie2 = false;
 
         if (isSequenceSequenceOutputHandlerTask(job))
         {
@@ -213,6 +214,11 @@ public class SequenceJobResourceAllocator implements ClusterResourceAllocator
                 {
                     hasBismark = true;
                 }
+
+                if (params.containsKey(PipelineStep.StepType.alignment.name()) && params.get(PipelineStep.StepType.alignment.name()).contains("Bowtie2"))
+                {
+                    hasBowtie2 = true;
+                }
             }
         }
 
@@ -243,6 +249,16 @@ public class SequenceJobResourceAllocator implements ClusterResourceAllocator
             if (!ret.equals(orig))
             {
                 job.getLogger().debug("adjusting RAM for Bismark to: " + ret);
+            }
+        }
+
+        if (hasBowtie2)
+        {
+            Integer orig = ret;
+            ret = ret == null ? 48 : Math.max(ret, 48);
+            if (!ret.equals(orig))
+            {
+                job.getLogger().debug("adjusting RAM for bowtie2 to: " + ret);
             }
         }
 

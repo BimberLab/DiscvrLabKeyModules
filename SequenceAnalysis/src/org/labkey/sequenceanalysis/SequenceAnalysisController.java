@@ -1954,7 +1954,7 @@ public class SequenceAnalysisController extends SpringActionController
                             return null;
                         }
 
-                        jobs.addAll(AlignmentAnalysisJob.createForAnalyses(getContainer(), getUser(), form.getJobName(), form.getDescription(), form.getJobParameters(), form.getAnalysisIds()));
+                        jobs.addAll(AlignmentAnalysisJob.createForAnalyses(getContainer(), getUser(), form.getJobName(), form.getDescription(), form.getJobParameters(), form.getAnalysisIds(), form.isSubmitJobToReadsetContainer()));
                         break;
                     case readsetImport:
                         jobs.addAll(ReadsetImportJob.create(getContainer(), getUser(), form.getJobName(), form.getDescription(), form.getJobParameters(), form.getFiles(pr)));
@@ -3993,7 +3993,6 @@ public class SequenceAnalysisController extends SpringActionController
         private String[] _fileNames;
         private String _path;
         private String _records;
-        private Boolean _doChrTranslation;
 
         public String[] getFileNames()
         {
@@ -4024,6 +4023,11 @@ public class SequenceAnalysisController extends SpringActionController
         {
             _records = records;
         }
+    }
+
+    public static class ImportTracksForm extends ImportOutputFilesForm
+    {
+        private Boolean _doChrTranslation = false;
 
         public Boolean getDoChrTranslation()
         {
@@ -4035,7 +4039,6 @@ public class SequenceAnalysisController extends SpringActionController
             _doChrTranslation = doChrTranslation;
         }
     }
-
 
     @RequiresPermission(InsertPermission.class)
     @CSRF
@@ -4630,9 +4633,9 @@ public class SequenceAnalysisController extends SpringActionController
 
     @RequiresPermission(InsertPermission.class)
     @CSRF
-    public class ImportSequenceTracksAction extends ApiAction<ImportOutputFilesForm>
+    public class ImportSequenceTracksAction extends ApiAction<ImportTracksForm>
     {
-        public ApiResponse execute(ImportOutputFilesForm form, BindException errors) throws Exception
+        public ApiResponse execute(ImportTracksForm form, BindException errors) throws Exception
         {
             Container target = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
             PipeRoot root = PipelineService.get().getPipelineRootSetting(target);

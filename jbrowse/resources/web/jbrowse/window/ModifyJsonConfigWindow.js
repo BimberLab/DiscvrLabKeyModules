@@ -54,6 +54,12 @@ Ext4.define('JBrowse.window.ModifyJsonConfigWindow', {
                             this.addAttribute('max_score', 1);
                         }
                     },{
+                        text: 'Category',
+                        scope: this,
+                        handler: function (gridBtn) {
+                            this.addAttribute('category', null);
+                        }
+                    },{
                         text: 'XY Plot',
                         scope: this,
                         handler: function (gridBtn) {

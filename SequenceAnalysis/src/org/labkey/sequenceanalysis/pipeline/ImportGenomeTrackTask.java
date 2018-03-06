@@ -251,27 +251,34 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
         {
             validateAndTransformVcf(file, outputFile, nameTranslationMap, knownChrs, dict, action);
 
-            File sorted = new File(getPipelineJob().getOutDir(), "tmpSorted.vcf" + (outputFile.getName().toLowerCase().endsWith(".gz") ? ".gz" : ""));
-            SequencePipelineService.get().sortVcf(outputFile, sorted, genome.getSequenceDictionary(), getJob().getLogger());
-            if (sorted.exists())
+            if (getPipelineJob().doChrTranslation())
             {
-                for (String suffix : Arrays.asList(".tbi", "idx"))
+                File sorted = new File(getPipelineJob().getOutDir(), "tmpSorted.vcf" + (outputFile.getName().toLowerCase().endsWith(".gz") ? ".gz" : ""));
+                SequencePipelineService.get().sortVcf(outputFile, sorted, genome.getSequenceDictionary(), getJob().getLogger());
+                if (sorted.exists())
                 {
-                    File origIdx = new File(outputFile.getPath() + suffix);
-                    File newIdx = new File(sorted.getPath() + suffix);
-                    if (origIdx.exists())
+                    for (String suffix : Arrays.asList(".tbi", "idx"))
                     {
-                        origIdx.delete();
+                        File origIdx = new File(outputFile.getPath() + suffix);
+                        File newIdx = new File(sorted.getPath() + suffix);
+                        if (origIdx.exists())
+                        {
+                            origIdx.delete();
+                        }
+
+                        if (newIdx.exists())
+                        {
+                            FileUtils.moveFile(newIdx, origIdx);
+                        }
                     }
 
-                    if (newIdx.exists())
-                    {
-                        FileUtils.moveFile(newIdx, origIdx);
-                    }
+                    outputFile.delete();
+                    FileUtils.moveFile(sorted, outputFile);
                 }
-
-                outputFile.delete();
-                FileUtils.moveFile(sorted, outputFile);
+            }
+            else
+            {
+                getJob().getLogger().info("skipping VCF sort");
             }
         }
         else
@@ -444,13 +451,21 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
     private void validateAndTransformTsv(File file, File out, Map<String, Pair<String, Integer>> nameTranslationMap, Map<String, String> knownChrs, int colChr, int colStart, int colEnd, int startOffset, @Nullable SAMSequenceDictionary dict, RecordedAction action) throws PipelineJobException
     {
         Map<String, Integer> warnedChrs = new CaseInsensitiveHashMap<>();
+        getJob().getLogger().info("validating file: " + file.getPath());
+
         File outLog = new File(getPipelineJob().getOutDir(), "translations.txt");
-        action.addOutput(outLog, "Transformed Lines", false);
-        getJob().getLogger().info("writing log of translation to : " + outLog.getPath());
+        if (getPipelineJob().doChrTranslation())
+        {
+            action.addOutput(outLog, "Transformed Lines", false);
+            getJob().getLogger().info("writing log of translation to : " + outLog.getPath());
+        }
 
         try (CSVReader reader = new CSVReader(IOUtil.openFileForBufferedReading(file), '\t'); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(out), '\t', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER);CSVWriter logWriter = new CSVWriter(PrintWriters.getPrintWriter(outLog), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
-            logWriter.writeNext(new String[]{"LineNo", "OrigContig", "OrigStart", "OrigEnd", "NewContig", "Offset"});
+            if (getPipelineJob().doChrTranslation())
+            {
+                logWriter.writeNext(new String[]{"LineNo", "OrigContig", "OrigStart", "OrigEnd", "NewContig", "Offset"});
+            }
 
             String[] line;
             int lineNo = 0;
@@ -473,19 +488,22 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
                     getJob().getLogger().info("processed " + lineNo + " records");
                 }
 
-                Pair<String, Integer> translation = getOffset(line[colChr], nameTranslationMap);
-                if (translation != null)
+                if (getPipelineJob().doChrTranslation())
                 {
-                    if (translation.second > 0)
-                        totalShifted++;
+                    Pair<String, Integer> translation = getOffset(line[colChr], nameTranslationMap);
+                    if (translation != null)
+                    {
+                        if (translation.second > 0)
+                            totalShifted++;
 
-                    if (!line[colChr].equalsIgnoreCase(translation.first))
-                        totalRenamed++;
+                        if (!line[colChr].equalsIgnoreCase(translation.first))
+                            totalRenamed++;
 
-                    logWriter.writeNext(new String[]{String.valueOf(lineNo), line[colChr], line[colStart], line[colEnd], translation.first, translation.second.toString()});
-                    line[colChr] = translation.first;
-                    line[colStart] = String.valueOf(Integer.parseInt(line[colStart]) + translation.second + startOffset);
-                    line[colEnd] = String.valueOf(Integer.parseInt(line[colEnd]) + translation.second);
+                        logWriter.writeNext(new String[]{String.valueOf(lineNo), line[colChr], line[colStart], line[colEnd], translation.first, translation.second.toString()});
+                        line[colChr] = translation.first;
+                        line[colStart] = String.valueOf(Integer.parseInt(line[colStart]) + translation.second + startOffset);
+                        line[colEnd] = String.valueOf(Integer.parseInt(line[colEnd]) + translation.second);
+                    }
                 }
 
                 if (!knownChrs.containsKey(line[colChr]))
@@ -535,12 +553,19 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
             throw new PipelineJobException(e);
         }
 
+        if (!getPipelineJob().doChrTranslation())
+        {
+            outLog.delete();
+        }
+
         long count = SequenceUtil.getLineCount(out);
         getJob().getLogger().info("total lines in output: " + count);
     }
 
     private void validateAndTransformVcf(File file, File out, Map<String, Pair<String, Integer>> nameTranslationMap, Map<String, String> knownChrs, SAMSequenceDictionary dict, RecordedAction action) throws PipelineJobException
     {
+        getJob().getLogger().info("validating file: " + file.getPath());
+
         if (dict == null)
         {
             throw new PipelineJobException("Cannot import VCF tracks without a sequence dictionary");
@@ -552,8 +577,11 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
 
             Map<String, Integer> warnedChrs = new CaseInsensitiveHashMap<>();
             File outLog = new File(getPipelineJob().getOutDir(), "translations.txt");
-            action.addOutput(outLog, "Transformed Lines", false);
-            getJob().getLogger().info("writing log of translation to : " + outLog.getPath());
+            if (getPipelineJob().doChrTranslation())
+            {
+                action.addOutput(outLog, "Transformed Lines", false);
+                getJob().getLogger().info("writing log of translation to : " + outLog.getPath());
+            }
 
             VariantContextWriterBuilder builder = new VariantContextWriterBuilder();
             builder.setOutputFile(out);
@@ -566,7 +594,10 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
                 header.setSequenceDictionary(dict);
                 writer.writeHeader(header);
 
-                logWriter.writeNext(new String[]{"LineNo", "OrigContig", "OrigStart", "OrigEnd", "NewContig", "Offset"});
+                if (getPipelineJob().doChrTranslation())
+                {
+                    logWriter.writeNext(new String[]{"LineNo", "OrigContig", "OrigStart", "OrigEnd", "NewContig", "Offset"});
+                }
 
                 int lineNo = 0;
                 int totalShifted = 0;
@@ -577,24 +608,32 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
                     while (it.hasNext())
                     {
                         lineNo++;
+                        if (lineNo % 100000 == 0)
+                        {
+                            getJob().getLogger().info("processed " + lineNo + " records");
+                        }
+
                         VariantContext vc = it.next();
 
                         VariantContextBuilder vcb = new VariantContextBuilder(vc);
 
-                        Pair<String, Integer> translation = getOffset(vc.getContig(), nameTranslationMap);
-                        if (translation != null)
+                        if (getPipelineJob().doChrTranslation())
                         {
-                            if (translation.second > 0)
-                                totalShifted++;
+                            Pair<String, Integer> translation = getOffset(vc.getContig(), nameTranslationMap);
+                            if (translation != null)
+                            {
+                                if (translation.second > 0)
+                                    totalShifted++;
 
-                            if (!vc.getContig().equalsIgnoreCase(translation.first))
-                                totalRenamed++;
+                                if (!vc.getContig().equalsIgnoreCase(translation.first))
+                                    totalRenamed++;
 
-                            logWriter.writeNext(new String[]{String.valueOf(lineNo), vc.getContig(), String.valueOf(vc.getStart()), String.valueOf(vc.getEnd()), translation.first, translation.second.toString()});
+                                logWriter.writeNext(new String[]{String.valueOf(lineNo), vc.getContig(), String.valueOf(vc.getStart()), String.valueOf(vc.getEnd()), translation.first, translation.second.toString()});
 
-                            vcb.chr(translation.first);
-                            vcb.start(vc.getStart() + translation.second);
-                            vcb.stop(vc.getEnd() + translation.second);
+                                vcb.chr(translation.first);
+                                vcb.start(vc.getStart() + translation.second);
+                                vcb.stop(vc.getEnd() + translation.second);
+                            }
                         }
 
                         if (!knownChrs.containsKey(vc.getContig()))
@@ -636,6 +675,11 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
                         getJob().getLogger().info(chr + ": " + warnedChrs.get(chr));
                     }
                 }
+            }
+
+            if (!getPipelineJob().doChrTranslation())
+            {
+                outLog.delete();
             }
         }
         catch (IOException e)

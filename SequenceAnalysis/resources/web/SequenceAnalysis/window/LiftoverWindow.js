@@ -56,7 +56,8 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
                                         containerPath: containerPath,
                                         dataRegionName: dataRegionName,
                                         outputFileIds: checked,
-                                        libraryId: distinctGenomes.length == 1 ? distinctGenomes[0] : null
+                                        libraryId: distinctGenomes.length == 1 ? distinctGenomes[0] : null,
+                                        toolParameters: results.toolParameters
                                     }).show();
                                 }
                             }
@@ -102,7 +103,7 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
                 fieldLabel: 'Min Percent Match',
                 helpPopup: 'In order to lift to the target genome, the feature must have at least this percent match.  Lower this value to be more permissive; however, this risks incorrect liftovers',
                 itemId: 'pctField'
-            }],
+            }].concat(SequenceAnalysis.window.OutputHandlerWindow.getCfgForToolParameters(this.toolParameters)),
             buttons: [{
                 text: 'Submit',
                 handler: this.onSubmit,

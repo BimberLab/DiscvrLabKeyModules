@@ -75,6 +75,49 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
                     }
                 }, this)
             });
+        },
+
+        getCfgForToolParameters: function(parameters){
+            var paramCfg = [];
+            Ext4.Array.forEach(parameters, function (i, idx) {
+                var o = {
+                    xtype: i.fieldXtype,
+                    labelWidth: 200,
+                    isToolParam: true,
+                    fieldLabel: i.label,
+                    helpPopup: (i.description || '') + (i.commandLineParam ? '<br>Parameter name: \'' + i.commandLineParam + '\'' : ''),
+                    name: i.name,
+                    value: i.defaultValue
+                };
+
+                if (i.additionalExtConfig){
+                    for (var prop in i.additionalExtConfig){
+                        var val = i.additionalExtConfig[prop];
+                        if (Ext4.isString(val) && val.match(/^js:/)){
+                            val = val.replace(/^js:/, '');
+                            val = eval(val);
+
+                            i.additionalExtConfig[prop] = val;
+                        }
+                    }
+                    Ext4.apply(o, i.additionalExtConfig);
+                }
+
+                //force checkboxes to submit true instead of 'on'
+                if (o.xtype == 'checkbox'){
+                    if (!Ext4.isDefined(o.inputValue)){
+                        o.inputValue = true;
+                    }
+
+                    if (o.value){
+                        o.checked = true;
+                    }
+                }
+
+                paramCfg.push(o);
+            }, this);
+
+            return paramCfg;
         }
     },
 
@@ -129,53 +172,10 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
 
     getParams: function(){
         if (this.handlerConfig.toolParameters && this.handlerConfig.toolParameters.length){
-            return this.getCfgForToolParameters(this.handlerConfig.toolParameters);
+            return SequenceAnalysis.window.OutputHandlerWindow.getCfgForToolParameters(this.handlerConfig.toolParameters);
         }
 
         return [];
-    },
-
-    getCfgForToolParameters: function(parameters){
-        var paramCfg = [];
-        Ext4.Array.forEach(parameters, function (i, idx) {
-            var o = {
-                xtype: i.fieldXtype,
-                labelWidth: 200,
-                isToolParam: true,
-                fieldLabel: i.label,
-                helpPopup: (i.description || '') + (i.commandLineParam ? '<br>Parameter name: \'' + i.commandLineParam + '\'' : ''),
-                name: i.name,
-                value: i.defaultValue
-            };
-
-            if (i.additionalExtConfig){
-                for (var prop in i.additionalExtConfig){
-                    var val = i.additionalExtConfig[prop];
-                    if (Ext4.isString(val) && val.match(/^js:/)){
-                        val = val.replace(/^js:/, '');
-                        val = eval(val);
-
-                        i.additionalExtConfig[prop] = val;
-                    }
-                }
-                Ext4.apply(o, i.additionalExtConfig);
-            }
-
-            //force checkboxes to submit true instead of 'on'
-            if (o.xtype == 'checkbox'){
-                if (!Ext4.isDefined(o.inputValue)){
-                    o.inputValue = true;
-                }
-
-                if (o.value){
-                    o.checked = true;
-                }
-            }
-
-            paramCfg.push(o);
-        }, this);
-
-        return paramCfg;
     },
 
     onSubmit: function() {

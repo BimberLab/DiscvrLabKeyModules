@@ -41,9 +41,9 @@ public class CombineStarGeneCountsHandler extends AbstractCombineGeneCountsHandl
         long totalStrand2 = 0L;
 
         results.distinctGenes.addAll(geneMap.keySet());
-        Map<Integer, Map<String, Long>> unstrandedCounts = new HashMap<>(inputFiles.size());
-        Map<Integer, Map<String, Long>> strand1Counts = new HashMap<>(inputFiles.size());
-        Map<Integer, Map<String, Long>> strand2Counts = new HashMap<>(inputFiles.size());
+        Map<Integer, Map<String, Double>> unstrandedCounts = new HashMap<>(inputFiles.size());
+        Map<Integer, Map<String, Double>> strand1Counts = new HashMap<>(inputFiles.size());
+        Map<Integer, Map<String, Double>> strand2Counts = new HashMap<>(inputFiles.size());
 
         for (SequenceOutputFile so : inputFiles)
         {
@@ -84,27 +84,27 @@ public class CombineStarGeneCountsHandler extends AbstractCombineGeneCountsHandl
                         countStrandRatio++;
                     }
 
-                    Map<String, Long> unstrandedMap = unstrandedCounts.get(so.getRowid());
+                    Map<String, Double> unstrandedMap = unstrandedCounts.get(so.getRowid());
                     if (unstrandedMap == null)
                     {
                         unstrandedMap = new HashMap<>(Math.max(results.distinctGenes.size() + 500, 5000));
                     }
 
-                    Map<String, Long> strand1Map = strand1Counts.get(so.getRowid());
+                    Map<String, Double> strand1Map = strand1Counts.get(so.getRowid());
                     if (strand1Map == null)
                     {
                         strand1Map = new HashMap<>(Math.max(results.distinctGenes.size() + 500, 5000));
                     }
 
-                    Map<String, Long> strand2Map = strand2Counts.get(so.getRowid());
+                    Map<String, Double> strand2Map = strand2Counts.get(so.getRowid());
                     if (strand2Map == null)
                     {
                         strand2Map = new HashMap<>(Math.max(results.distinctGenes.size() + 500, 5000));
                     }
 
-                    unstrandedMap.put(geneId, unstranded);
-                    strand1Map.put(geneId, strand1);
-                    strand2Map.put(geneId, strand2);
+                    unstrandedMap.put(geneId, unstranded.doubleValue());
+                    strand1Map.put(geneId, strand1.doubleValue());
+                    strand2Map.put(geneId, strand2.doubleValue());
 
                     unstrandedCounts.put(so.getRowid(), unstrandedMap);
                     strand1Counts.put(so.getRowid(), strand1Map);

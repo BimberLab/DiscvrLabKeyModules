@@ -48,6 +48,14 @@ project.task("copyJBrowseCss",
     {
         throw new GradleException("copyJBrowse was not successful.  missing jbrowse dependencies: " + f2.getAbsolutePath())
     }
+
+    // NOTE: due to bug/inconsistency in how the jbrowse postinstall script is run, several modules may not be copied to /src.  This is a check against this.
+    // There's a jbrowse PR around this as well.
+    File f3 = project.file('./resources/web/jbrowseApp/src/jszlib');
+    if (!f3.exists())
+    {
+        throw new GradleException("copyJBrowse was not successful.  missing jbrowse dependencies: " + f3.getAbsolutePath())
+    }
 })
 
 

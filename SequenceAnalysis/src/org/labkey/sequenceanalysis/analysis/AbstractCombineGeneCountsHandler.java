@@ -33,6 +33,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -198,8 +199,15 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
             {
                 writer.writeNext(new String[]{"RowId", "Name", "ReadsetId", "ReadsetName", "AnalysisId", "SubjectId"});
 
+                Map<Integer, SequenceOutputFile> outputFileMap = new TreeMap<>();
                 for (SequenceOutputFile so : inputFiles)
                 {
+                    outputFileMap.put(so.getRowid(), so);
+                }
+
+                for (Integer rowId : outputFileMap.keySet())
+                {
+                    SequenceOutputFile so = outputFileMap.get(rowId);
                     Readset rs = so.getReadset() != null ? ctx.getSequenceSupport().getCachedReadset(so.getReadset()) : null;
 
                     writer.writeNext(new String[]{so.getRowid().toString(), so.getName(), appendIfNotNull(so.getReadset()), (rs == null ? "" : rs.getName()), appendIfNotNull(so.getAnalysis_id()), (rs == null ? "" : appendIfNotNull(rs.getSubjectId()))});
@@ -354,6 +362,12 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
             //TODO: consider a warn threshold based on total features?
         }
 
+        Map<Integer, SequenceOutputFile> outputFileMap = new TreeMap<>();
+        for (SequenceOutputFile so : inputFiles)
+        {
+            outputFileMap.put(so.getRowid(), so);
+        }
+
         File outputFile = new File(ctx.getOutputDir(), name + ".txt");
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(outputFile), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
@@ -364,9 +378,9 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
             header.add("GeneDescription");
             header.add("SamplesWithReads");
 
-            for (SequenceOutputFile so : inputFiles)
+            for (Integer rowId : outputFileMap.keySet())
             {
-                header.add(hp.getHeader(ctx, so));
+                header.add(hp.getHeader(ctx, outputFileMap.get(rowId)));
             }
 
             writer.writeNext(header.toArray(new String[header.size()]));
@@ -392,9 +406,9 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
 
                     List<String> toAdd = new ArrayList<>();
                     Integer totalWithData = 0;
-                    for (SequenceOutputFile so : inputFiles)
+                    for (Integer rowId : outputFileMap.keySet())
                     {
-                        Long count = results.counts.get(so.getRowid()).get(geneId);
+                        Double count = results.counts.get(rowId).get(geneId);
                         if (count != null && count > 0)
                         {
                             totalWithData++;
@@ -495,7 +509,7 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
 
     protected static class CountResults
     {
-        Map<Integer, Map<String, Long>> counts;
+        Map<Integer, Map<String, Double>> counts;
         Set<String> distinctGenes = new HashSet<>(5000);
         Map<Integer, Long> nonZeroCounts;
 

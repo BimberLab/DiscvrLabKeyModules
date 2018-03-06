@@ -3,6 +3,7 @@ package org.labkey.sequenceanalysis.pipeline;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineActionConfig;
@@ -15,13 +16,17 @@ import org.labkey.api.pipeline.file.FileAnalysisTaskPipelineSettings;
 import org.labkey.api.security.User;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
+import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * User: bimber
@@ -46,11 +51,9 @@ public class AlignmentAnalysisJob extends SequenceJob
         getSequenceSupport().cacheAnalysis(model, this);
     }
 
-    public static List<AlignmentAnalysisJob> createForAnalyses(Container c, User u, String jobName, String description, JSONObject params, JSONArray analysisIds) throws ClassNotFoundException, IOException, PipelineValidationException
+    public static List<AlignmentAnalysisJob> createForAnalyses(Container c, User u, String jobName, String description, JSONObject params, JSONArray analysisIds, boolean submitJobToReadsetContainer) throws ClassNotFoundException, IOException, PipelineValidationException
     {
-        PipeRoot pr = PipelineService.get().findPipelineRoot(c);
-        if (pr == null || !pr.isValid())
-            throw new NotFoundException();
+        Map<Container, PipeRoot> containerToPipeRootMap = new HashMap<>();
 
         List<AlignmentAnalysisJob> ret = new ArrayList<>();
         for (int i=0;i<analysisIds.length();i++)
@@ -67,7 +70,33 @@ public class AlignmentAnalysisJob extends SequenceJob
                 throw new PipelineValidationException("Analysis lacks a BAM file: " + analysisId);
             }
 
-            AlignmentAnalysisJob j = new AlignmentAnalysisJob(c, u, jobName, pr, params, model);
+            Container targetContainer = c;
+            if (submitJobToReadsetContainer)
+            {
+                Integer readsetId = model.getReadset();
+                if (readsetId != null)
+                {
+                    SequenceReadsetImpl readset = SequenceAnalysisServiceImpl.get().getReadset(readsetId, u);
+                    if (readset == null)
+                    {
+                        throw new PipelineValidationException("Unable to find readset: " + readsetId);
+                    }
+
+                    targetContainer = ContainerManager.getForId(readset.getContainer());
+                }
+            }
+
+            PipeRoot pr = containerToPipeRootMap.get(targetContainer);
+            if (pr == null)
+            {
+                pr = PipelineService.get().findPipelineRoot(targetContainer);
+                if (pr == null || !pr.isValid())
+                    throw new NotFoundException();
+
+                containerToPipeRootMap.put(targetContainer, pr);
+            }
+
+            AlignmentAnalysisJob j = new AlignmentAnalysisJob(targetContainer, u, jobName, pr, params, model);
             j.setDescription(description);
             j.setInputFiles(Arrays.asList(model.getAlignmentFileObject()));
 

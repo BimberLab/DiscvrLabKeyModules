@@ -37,6 +37,9 @@
                         <originalText>Create Workbook</originalText>
                     </item>
                     <item hidden="true">
+                        <originalText>Insert new row</originalText>
+                    </item>
+                    <item hidden="true">
                         <originalText>Charts</originalText>
                     </item>
                     <item text="Add Tag" requiresSelection="true" iconCls="hashtag" insertPosition="end">

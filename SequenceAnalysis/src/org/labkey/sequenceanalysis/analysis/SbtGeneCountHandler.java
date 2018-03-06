@@ -82,7 +82,7 @@ public class SbtGeneCountHandler implements SequenceOutputHandler
     @Override
     public boolean canProcess(SequenceOutputFile f)
     {
-        return "Gene Count Table".equals(f.getCategory()) && (_txtType.isType(f.getFile()));
+        return f.getCategory().startsWith("Gene Count Table") && (_txtType.isType(f.getFile()));
     }
 
     @Override

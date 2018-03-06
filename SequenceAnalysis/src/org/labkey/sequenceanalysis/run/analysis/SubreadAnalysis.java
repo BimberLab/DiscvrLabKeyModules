@@ -84,6 +84,18 @@ public class SubreadAnalysis extends AbstractCommandPipelineStep<SubreadAnalysis
 
         args.addAll(getClientCommandArgs());
 
+        if (args.contains("--fraction") && !(args.contains("-O") || args.contains("-M")))
+        {
+            getPipelineCtx().getLogger().warn("--fraction argument supplied without -O or -M, ignoring");
+            args.remove("--fraction");
+        }
+
+        if (args.contains("-M") && args.contains("--primary"))
+        {
+            getPipelineCtx().getLogger().warn("--primary argument supplied along with -M, ignoring --primary");
+            args.remove("--primary");
+        }
+
         String strandSpecific = getProvider().getParameterByName("strandSpecific").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
         if (strandSpecific != null)
         {

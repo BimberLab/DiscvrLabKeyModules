@@ -48,6 +48,11 @@ public class CombineSubreadGeneCountsHandler extends AbstractCombineGeneCountsHa
                 while ((line = reader.readLine()) != null)
                 {
                     line = line.trim();
+                    if (line.startsWith("#") || line.startsWith("Geneid"))
+                    {
+                        continue;
+                    }
+
                     String[] cells = line.split("\\s+");
                     String geneId = cells[0];
                     if (OTHER_IDS.contains(geneId))
@@ -57,9 +62,9 @@ public class CombineSubreadGeneCountsHandler extends AbstractCombineGeneCountsHa
 
                     results.distinctGenes.add(geneId);
 
-                    Long count = Long.parseLong(cells[6]);
+                    Double count = Double.parseDouble(cells[6]);
 
-                    Map<String, Long> countMap = results.counts.get(so.getRowid());
+                    Map<String, Double> countMap = results.counts.get(so.getRowid());
                     if (countMap == null)
                     {
                         countMap = new HashMap<>(Math.max(results.distinctGenes.size() + 500, 5000));

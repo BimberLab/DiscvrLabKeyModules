@@ -125,7 +125,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
     private void processContainer(Container c, Logger log) throws IOException
     {
         PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
-        if (root != null)
+        if (root != null && !root.isCloudRoot())
         {
             //first sequences
             File sequenceDir = new File(root.getRootPath(), ".sequences");

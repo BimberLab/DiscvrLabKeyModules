@@ -559,6 +559,11 @@ public class JBrowseRoot
                     for (int i = 0; i < arr.length(); i++)
                     {
                         JSONObject o = arr.getJSONObject(i);
+                        if (f.getCategory() != null)
+                        {
+                            o.put("category", f.getCategory());
+                        }
+
                         if (f.getExtraTrackConfig(getLogger()) != null)
                         {
                             getLogger().debug("adding extra track config");
@@ -569,11 +574,6 @@ public class JBrowseRoot
                                 getLogger().debug("adding default visible track: " + o.getString("label"));
                                 defaultTrackLabels.add(o.getString("label"));
                             }
-                        }
-
-                        if (f.getCategory() != null)
-                        {
-                            o.put("category", f.getCategory());
                         }
 
                         if (o.get("urlTemplate") != null)
@@ -676,6 +676,11 @@ public class JBrowseRoot
                     JSONArray outputFileTracks = json.containsKey("tracks") ? json.getJSONArray("tracks") : new JSONArray();
                     for (JSONObject o : outputFileTracks.toJSONObjectArray())
                     {
+                        if (f.getCategory() != null)
+                        {
+                            o.put("category", f.getCategory());
+                        }
+
                         if (f.getExtraTrackConfig(getLogger()) != null)
                         {
                             getLogger().debug("adding extra track config");
@@ -686,11 +691,6 @@ public class JBrowseRoot
                                 getLogger().debug("adding default visible track: " + o.getString("label"));
                                 defaultTrackLabels.add(o.getString("label"));
                             }
-                        }
-
-                        if (f.getCategory() != null)
-                        {
-                            o.put("category", f.getCategory());
                         }
 
                         String outDirPrefix = "tracks/data-" + f.getOutputFile().toString();

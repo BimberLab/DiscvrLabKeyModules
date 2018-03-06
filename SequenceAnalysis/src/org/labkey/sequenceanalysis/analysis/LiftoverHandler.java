@@ -92,7 +92,7 @@ public class LiftoverHandler implements SequenceOutputHandler
     @Override
     public LinkedHashSet<String> getClientDependencies()
     {
-        return new LinkedHashSet<>(Arrays.asList("sequenceanalysis/window/LiftoverWindow.js"));
+        return new LinkedHashSet<>(Arrays.asList("sequenceanalysis/window/OutputHandlerWindow.js", "sequenceanalysis/window/LiftoverWindow.js"));
     }
 
     @Override
@@ -309,7 +309,7 @@ public class LiftoverHandler implements SequenceOutputHandler
             job.getLogger().info("passing variants mapped: " + ProcessVariantsHandler.getVCFLineCount(output, job.getLogger(), true));
         }
 
-        Long unmapped = null;
+        Long unmapped = 0L;
         if (unmappedOutput.exists())
         {
             String unmappedStr = ProcessVariantsHandler.getVCFLineCount(output, job.getLogger(), false);
@@ -318,7 +318,7 @@ public class LiftoverHandler implements SequenceOutputHandler
             job.getLogger().info("passing variants: " + ProcessVariantsHandler.getVCFLineCount(output, job.getLogger(), true));
         }
 
-        if (mapped != null && unmapped != null)
+        if (mapped != null)
         {
             Double fraction = (double)mapped / (mapped + unmapped);
             job.getLogger().info("fraction mapped of total: " + fraction);
@@ -359,8 +359,9 @@ public class LiftoverHandler implements SequenceOutputHandler
                     NumberFormat pctFormat = NumberFormat.getPercentInstance();
                     pctFormat.setMaximumFractionDigits(1);
 
-                    job.getLogger().info("total mapped: " + mapped + " (" + pctFormat.format(mapped / (mapped + unmapped)) + "%)");
-                    job.getLogger().info("total unmapped: " + unmapped + " (" + pctFormat.format(unmapped / (mapped + unmapped)) + "%)");
+                    double total = (double)mapped +  unmapped;
+                    job.getLogger().info("total mapped: " + mapped + (total > 0 ? " (" + pctFormat.format(mapped / total) + "%)" : ""));
+                    job.getLogger().info("total unmapped: " + unmapped + (total > 0 ? " (" + pctFormat.format(unmapped / total) + "%)" : ""));
                 }
             }
         }
