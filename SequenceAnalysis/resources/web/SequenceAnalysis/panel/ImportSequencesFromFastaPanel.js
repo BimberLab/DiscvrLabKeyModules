@@ -111,6 +111,8 @@ Ext4.define('SequenceAnalysis.panel.ImportSequencesFromFastaPanel', {
                         width: 450,
                         labelWidth: 150
                     }
+                },{
+                    xtype: 'hidden', name: 'X-LABKEY-CSRF', value: LABKEY.CSRF
                 }]
             }],
             buttons: this.getButtonConfig()

@@ -42,6 +42,8 @@
                     border: false
                 },
                 items: [{
+                    xtype: 'hidden', name: 'X-LABKEY-CSRF', value: LABKEY.CSRF
+                },{
                     xtype: 'textfield',
                     fieldLabel: 'Job Title',
                     name: 'title',

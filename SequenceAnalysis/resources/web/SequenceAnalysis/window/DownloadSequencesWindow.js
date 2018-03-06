@@ -249,7 +249,10 @@ Ext4.define('SequenceAnalysis.window.DownloadSequencesWindow', {
 
         if (btn.toBrowser){
             Ext4.create('Ext.form.Panel', {
-                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'downloadReferences', null)
+                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'downloadReferences', null),
+                items: [{
+                    xtype: 'hidden', name: 'X-LABKEY-CSRF', value: LABKEY.CSRF
+                }]
             }).submit({
                 params: params,
                 scope: this,

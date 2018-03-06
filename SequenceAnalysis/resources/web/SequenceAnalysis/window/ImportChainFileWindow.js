@@ -63,6 +63,8 @@ Ext4.define('SequenceAnalysis.window.ImportChainFileWindow', {
                     fieldLabel: 'Version',
                     name: 'version',
                     allowBlank: false
+                },{
+                    xtype: 'hidden', name: 'X-LABKEY-CSRF', value: LABKEY.CSRF
                 }]
             }],
             buttons: [{

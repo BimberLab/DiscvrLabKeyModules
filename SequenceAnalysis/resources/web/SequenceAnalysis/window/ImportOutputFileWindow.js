@@ -80,6 +80,8 @@ Ext4.define('SequenceAnalysis.window.ImportOutputFileWindow', {
                     xtype: 'sequenceanalysis-readsetfield',
                     fieldLabel: 'Readset',
                     name: 'readset'
+                },{
+                    xtype: 'hidden', name: 'X-LABKEY-CSRF', value: LABKEY.CSRF
                 }]
             }],
             buttons: [{

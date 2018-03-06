@@ -583,6 +583,7 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
+    @CSRF
     public class ProcessAssayDataAction extends AbstractFileUploadAction<ProcessAssayForm>
     {
         @Override
@@ -987,6 +988,7 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
+    @CSRF
     public class CreateTemplateAction extends ExportAction<ProcessAssayForm>
     {
         @Override

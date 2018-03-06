@@ -408,7 +408,10 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
     },
 
     getInitialItems: function(){
-        var toAdd = [];
+        var toAdd = [{
+            xtype: 'hidden', name: 'X-LABKEY-CSRF', value: LABKEY.CSRF
+        }];
+
         toAdd.push({
             xtype: 'form',
             title: 'General Information: ' + this.assayDesign.name,

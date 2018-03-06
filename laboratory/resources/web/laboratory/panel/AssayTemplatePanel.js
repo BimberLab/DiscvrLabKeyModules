@@ -328,7 +328,10 @@ Ext4.define('Laboratory.panel.AssayTemplatePanel', {
 
         var defaultSupportsTemplates = importMethodStore.find('name', this.defaultImportMethod) > -1;
 
-        var toAdd = [];
+        var toAdd = [{
+            xtype: 'hidden', name: 'X-LABKEY-CSRF', value: LABKEY.CSRF
+        }];
+
         toAdd.push({
             xtype: 'form',
             title: 'Run Information',

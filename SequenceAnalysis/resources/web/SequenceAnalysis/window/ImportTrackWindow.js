@@ -69,6 +69,8 @@ Ext4.define('SequenceAnalysis.window.ImportTrackWindow', {
                     helpPopup: 'If checked, the system will attempt to translate between common forms of chromosome names, like chr1, chr01 and 1.  If found, any of these forms will be converted to the name used by the target genome.  This includes numbers, X and Y.',
                     inputValue: true,
                     checked: true
+                },{
+                    xtype: 'hidden', name: 'X-LABKEY-CSRF', value: LABKEY.CSRF
                 }]
             }],
             buttons: [{
