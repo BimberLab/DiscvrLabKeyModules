@@ -1467,8 +1467,6 @@ labModules/laboratory/api-src/org/labkey/api/laboratory/assay/SimpleAssayDataPro
 labModules/laboratory/api-src/org/labkey/api/laboratory/button/ChangeAssayResultStatusBtn.java -text
 labModules/laboratory/api-src/org/labkey/api/laboratory/security/LaboratoryAdminPermission.java -text
 labModules/laboratory/build.gradle -text
-labModules/laboratory/distributions/discvr/build.gradle -text
-labModules/laboratory/distributions/discvr_modules/build.gradle -text
 labModules/laboratory/module.properties -text
 labModules/laboratory/resources/folderTypes/Expt[!!-~]Workbook.folderType.xml -text
 labModules/laboratory/resources/folderTypes/Laboratory.folderType.xml -text
@@ -1740,7 +1738,6 @@ labModules/laboratory/src/org/labkey/laboratory/table/WrappingTableCustomizer.ja
 labModules/laboratory/src/org/labkey/laboratory/view/dataBrowser.jsp -text
 labModules/laboratory/src/org/labkey/laboratory/view/workbookHeader.jsp -text
 onprcEHRModules/GeneticsCore/build.gradle -text
-onprcEHRModules/GeneticsCore/distributions/prime-seq-modules/build.gradle -text
 onprcEHRModules/GeneticsCore/module.properties -text
 onprcEHRModules/GeneticsCore/resources/external/amplicon_standard_curve.R -text
 onprcEHRModules/GeneticsCore/resources/external/comb-p/Dockerfile -text
