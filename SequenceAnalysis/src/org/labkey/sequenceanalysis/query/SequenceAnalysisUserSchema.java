@@ -79,25 +79,25 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             return createReadDataTable(sourceTable);
         }
         else if (SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable, true).init();
+            return new SharedDataTable(this, sourceTable).init();
         else if (SequenceAnalysisSchema.TABLE_REF_AA_FEATURES.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable, true).init();
+            return new SharedDataTable(this, sourceTable).init();
         else if (SequenceAnalysisSchema.TABLE_REF_NT_FEATURES.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable, true).init();
+            return new SharedDataTable(this, sourceTable).init();
         else if (SequenceAnalysisSchema.TABLE_SAVED_ANALYSES.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable, true).init();
+            return new SharedDataTable(this, sourceTable).init();
         else if (SequenceAnalysisSchema.TABLE_REF_LIBRARIES.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable, true).init();
+            return new SharedDataTable(this, sourceTable).init();
         else if (SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable, true).init();
+            return new SharedDataTable(this, sourceTable).init();
         else if (SequenceAnalysisSchema.TABLE_LIBRARY_TRACKS.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable, true).init();
+            return new SharedDataTable(this, sourceTable).init();
         else if (SequenceAnalysisSchema.TABLE_AA_FEATURES.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable, true).init();
+            return new SharedDataTable(this, sourceTable).init();
         else if (SequenceAnalysisSchema.TABLE_NT_FEATURES.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable, true).init();
+            return new SharedDataTable(this, sourceTable).init();
         else if (SequenceAnalysisSchema.TABLE_CHAIN_FILES.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable, true).init();
+            return new SharedDataTable(this, sourceTable).init();
         else if (SequenceAnalysisSchema.TABLE_READSET_STATUS.equalsIgnoreCase(name))
             return new ContainerScopedTable<>(this, sourceTable, "status").init();
         else if (SequenceAnalysisSchema.TABLE_LIBRARY_TYPES.equalsIgnoreCase(name))
@@ -308,7 +308,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
 
     private TableInfo createRefSequencesTable(TableInfo sourceTable)
     {
-        SharedDataTable ret = new SharedDataTable(this, sourceTable, true);
+        SharedDataTable ret = new SharedDataTable(this, sourceTable);
         String chr = sourceTable.getSqlDialect().isPostgreSQL() ? "chr" : "char";
         SQLFragment sql = new SQLFragment("(SELECT ").append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("r.name"), true, true, chr + "(10)")).append(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS + " rm JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_LIBRARIES + " r ON (rm.library_id = r.rowid) WHERE rm.ref_nt_id = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
         ExprColumn newCol = new ExprColumn(ret, "genomes", sql, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));

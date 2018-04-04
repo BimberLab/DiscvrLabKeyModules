@@ -43,7 +43,7 @@ public class BlastUserSchema extends SimpleUserSchema
     protected TableInfo createWrappedTable(String name, @NotNull TableInfo sourceTable)
     {
         if (BLASTSchema.TABLE_DATABASES.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable, true).init();
+            return new SharedDataTable(this, sourceTable).init();
         else
             return super.createWrappedTable(name, sourceTable);
     }
