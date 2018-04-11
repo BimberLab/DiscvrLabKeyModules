@@ -441,7 +441,7 @@ public class RefNtSequenceModel
 
     private File getReferenceSequenceDir(Container c) throws IllegalArgumentException
     {
-        FileContentService fileService = ServiceRegistry.get().getService(FileContentService.class);
+        FileContentService fileService = FileContentService.get();
         File root = fileService == null ? null : fileService.getFileRoot(c, FileContentService.ContentType.files);
         if (root == null)
         {

@@ -102,7 +102,7 @@ public class BLASTManager
 
     public File getDatabaseDir(Container c, boolean createIfDoesntExist)
     {
-        FileContentService fileService = ServiceRegistry.get().getService(FileContentService.class);
+        FileContentService fileService = FileContentService.get();
         File fileRoot = fileService == null ? null : fileService.getFileRoot(c, FileContentService.ContentType.files);
         if (fileRoot == null || !fileRoot.exists())
         {

@@ -136,7 +136,7 @@ public class LaboratoryDataProvider extends AbstractDataProvider
                 items.add(new DetailsUrlWithoutLabelNavItem(this, study.getLabel(), DetailsURL.fromString("/study/begin.view", study.getContainer()), LaboratoryService.NavItemCategory.reports, "Studies"));
             }
 
-//            FileContentService service = ServiceRegistry.get().getService(FileContentService.class);
+//            FileContentService service = FileContentService.get();
 //            for (AttachmentDirectory dir : service.getRegisteredDirectories(c))
 //            {
 //                items.add(new DetailsUrlWithoutLabelNavItem(this, DetailsURL.fromString("/filecontent/begin.view?fileSetName=" + dir.getName(), c), dir.getLabel(), "Filesets"));

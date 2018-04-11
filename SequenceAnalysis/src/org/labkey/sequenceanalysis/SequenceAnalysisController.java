@@ -217,7 +217,7 @@ public class SequenceAnalysisController extends SpringActionController
             {
                 for (String fn : form.getFilenames())
                 {
-                    File root = ServiceRegistry.get().getService(FileContentService.class).getFileRoot(getContainer(), FileContentService.ContentType.files);
+                    File root = FileContentService.get().getFileRoot(getContainer(), FileContentService.ContentType.files);
                     File target = new File(root, fn);
                     if (target.exists())
                     {

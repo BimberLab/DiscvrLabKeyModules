@@ -97,7 +97,7 @@ public class BlastFilterPipelineStep extends AbstractPipelineStep implements Pre
                 TableInfo ti = DbSchema.get("blast", DbSchemaType.Module).getTable("databases");
                 String containerId = new TableSelector(ti, PageFlowUtil.set("container"), new SimpleFilter(FieldKey.fromString("objectid"), dbId), null).getObject(String.class);
                 Container dbContainer = ContainerManager.getForId(containerId);
-                FileContentService fileService = ServiceRegistry.get().getService(FileContentService.class);
+                FileContentService fileService = FileContentService.get();
                 File fileRoot = fileService == null ? null : fileService.getFileRoot(dbContainer, FileContentService.ContentType.files);
                 if (fileRoot == null || !fileRoot.exists())
                 {
