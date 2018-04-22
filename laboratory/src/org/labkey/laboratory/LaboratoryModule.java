@@ -43,6 +43,7 @@ import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.api.view.WebPartView;
 import org.labkey.api.view.template.ClientDependency;
+import org.labkey.api.writer.ContainerUser;
 import org.labkey.laboratory.notification.LabSummaryNotification;
 import org.labkey.laboratory.query.WorkbookModel;
 import org.labkey.laboratory.security.LaboratoryAdminRole;
@@ -219,7 +220,7 @@ public class LaboratoryModule extends ExtendedSimpleModule
     }
 
     @Override
-    public @NotNull JSONObject getPageContextJson(ViewContext context)
+    public JSONObject getPageContextJson(ContainerUser context)
     {
         Map<String, Object> ret = new HashMap<>();
         ret.putAll(super.getPageContextJson(context));
