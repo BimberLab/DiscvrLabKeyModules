@@ -35,6 +35,7 @@ import org.labkey.api.query.QuerySchema;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.WebPartFactory;
+import org.labkey.api.writer.ContainerUser;
 import org.labkey.onprc_billing.button.ChangeBillDateButton;
 import org.labkey.onprc_billing.button.ChargeEditButton;
 import org.labkey.onprc_billing.button.ProjectEditButton;
@@ -164,7 +165,7 @@ public class ONPRC_BillingModule extends ExtendedSimpleModule
 
     @NotNull
     @Override
-    public JSONObject getPageContextJson(ViewContext ctx)
+    public JSONObject getPageContextJson(ContainerUser ctx)
     {
         Map<String, Object> ret = new HashMap<>();
         Map<String, String> map = getDefaultPageContextJson(ctx.getContainer());
