@@ -58,11 +58,12 @@ public class GenotypeConcordance extends GenotypeAnnotation {
                 if (warningsLogged < 10) {
                     logger.warn("position not found in reference VCF: " + vc.getContig() + ":" + vc.getStart());
                     warningsLogged++;
+
+                    if (warningsLogged == 10){
+                        logger.warn("future warnings will not be logged");
+                    }
                 }
 
-                if (warningsLogged == 10){
-                    logger.warn("future warnings will not be logged");
-                }
                 return;
             }
 

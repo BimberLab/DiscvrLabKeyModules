@@ -144,7 +144,7 @@ public class Bowtie2Wrapper extends AbstractCommandWrapper
             IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
             File indexDir = new File(outputDir, getProvider().getName());
-            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(), referenceGenome);
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(getPipelineCtx().getJob()), referenceGenome);
             if (!hasCachedIndex)
             {
                 if (!indexDir.exists())

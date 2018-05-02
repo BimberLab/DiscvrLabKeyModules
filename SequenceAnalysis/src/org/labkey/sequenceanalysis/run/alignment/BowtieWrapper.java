@@ -141,7 +141,7 @@ public class BowtieWrapper extends AbstractCommandWrapper
             IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
             File indexDir = new File(outputDir, getProvider().getName());
-            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(), referenceGenome);
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(getPipelineCtx().getJob()), referenceGenome);
             if (!hasCachedIndex)
             {
                 if (!indexDir.exists())
@@ -179,6 +179,7 @@ public class BowtieWrapper extends AbstractCommandWrapper
         {
             super("Bowtie", "Bowtie is a fast aligner often used for short reads. Disadvantages are that it does not perform gapped alignment. It will return a single hit for each read.", Arrays.asList(
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-l"), "seed_length", "Seed Length", null, "ldk-numberfield", null, 20),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-k"), "max_hits", "Max Alignments", "Report up to this many valid alignments per read or pair (default: 1).", "ldk-numberfield", null, 20),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-n"), "max_seed_mismatches", "Max Seed Mismatches", "Maximum number of mismatches permitted in the 'seed', i.e. the first L base pairs of the read (where L is set with -l/--seedlen). This may be 0, 1, 2 or 3 and the default is 2. This option is mutually exclusive with the Max Mismatches (-v) option.", "ldk-integerfield", null, 3),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-v"), "max_mismatches", "Max Mismatches", "Report alignments with at most <int> mismatches. -e and -l options are ignored and quality values have no effect on what alignments are valid. -v is mutually exclusive with Max Seed Mismatches (-n).", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);

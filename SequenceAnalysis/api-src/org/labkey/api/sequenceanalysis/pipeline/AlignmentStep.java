@@ -16,6 +16,7 @@
 package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.Readset;
 
@@ -34,7 +35,7 @@ public interface AlignmentStep extends PipelineStep
      */
     public IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException;
 
-    default public String getIndexCachedDirName()
+    default public String getIndexCachedDirName(PipelineJob job)
     {
         return getProvider().getName();
     }

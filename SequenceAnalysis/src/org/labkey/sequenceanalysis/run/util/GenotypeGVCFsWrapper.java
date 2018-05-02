@@ -47,7 +47,7 @@ public class GenotypeGVCFsWrapper extends AbstractGatkWrapper
         if (doCopyLocal)
         {
             getLogger().info("making local copies of gVCFs prior to genotyping");
-            vcfsToProcess.addAll(copyVcfsLocally(Arrays.asList(inputGVCFs), toDelete, outputFile.getParentFile(), getLogger()));
+            vcfsToProcess.addAll(copyVcfsLocally(Arrays.asList(inputGVCFs), toDelete, outputFile.getParentFile(), getLogger(), false));
         }
         else
         {
@@ -101,7 +101,7 @@ public class GenotypeGVCFsWrapper extends AbstractGatkWrapper
         }
     }
 
-    public static List<File> copyVcfsLocally(Collection<File> inputGVCFs, Collection<File> toDelete, File localWorkDir, Logger log) throws PipelineJobException
+    public static List<File> copyVcfsLocally(Collection<File> inputGVCFs, Collection<File> toDelete, File localWorkDir, Logger log, boolean isResume) throws PipelineJobException
     {
         List<File> vcfsToProcess = new ArrayList<>();
         for (File f : inputGVCFs)
@@ -114,25 +114,28 @@ public class GenotypeGVCFsWrapper extends AbstractGatkWrapper
 
             File movedIdx = new File(localWorkDir, f.getName() + ".tbi");
             File movedVcf = new File(localWorkDir, f.getName());
-            if (movedIdx.exists())
+            if (!isResume)
             {
-                log.debug("moved index exists, skipping file: " + f.getName());
-            }
-            else
-            {
-                log.debug("copying file: " + f.getName());
-                try
+                if (movedIdx.exists())
                 {
-                    if (movedVcf.exists())
-                    {
-                        movedVcf.delete();
-                    }
-                    FileUtils.copyFile(f, movedVcf);
-                    FileUtils.copyFile(origIdx, movedIdx);
+                    log.debug("moved index exists, skipping file: " + f.getName());
                 }
-                catch (IOException e)
+                else
                 {
-                    throw new PipelineJobException(e);
+                    log.debug("copying file: " + f.getName());
+                    try
+                    {
+                        if (movedVcf.exists())
+                        {
+                            movedVcf.delete();
+                        }
+                        FileUtils.copyFile(f, movedVcf);
+                        FileUtils.copyFile(origIdx, movedIdx);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
                 }
             }
 

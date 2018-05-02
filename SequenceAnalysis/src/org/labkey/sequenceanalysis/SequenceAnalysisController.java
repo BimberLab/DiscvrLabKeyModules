@@ -100,6 +100,8 @@ import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceDataProvider;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.ReadData;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.JobResourceSettings;
 import org.labkey.api.sequenceanalysis.pipeline.ParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
@@ -141,6 +143,7 @@ import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceConcatPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerJob;
+import org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.BamHaplotyper;
 import org.labkey.sequenceanalysis.run.analysis.AASnpByCodonAggregator;
@@ -625,6 +628,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
+    //TODO: add genome
     @RequiresPermission(DeletePermission.class)
     public class DeleteRecordsAction extends ConfirmAction<DeleteForm>
     {
@@ -737,6 +741,15 @@ public class SequenceAnalysisController extends SpringActionController
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_FEATURES, "AA features", keys, "ref_aa_id", "rowid");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_DRUG_RESISTANCE, "drug resistance mutations", keys, "ref_aa_id", "rowid");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "ref_aa_id", "rowid");
+            }
+            else if (SequenceAnalysisSchema.TABLE_REF_LIBRARIES.equals(_table.getName()))
+            {
+                msg.append("Reference genomes " + StringUtils.join(keys, ", ") + "?  This will delete the reference genomes, plus all associated data.  This includes:<br>");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS, "genome sequences", keys, "library_id", "rowid");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_LIBRARY_TRACKS, "tracks", keys, "library_id", "rowid");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_CHAIN_FILES, "chain files from this genome", keys, "genomeId1", "rowid");
+                appendTotal(msg, SequenceAnalysisSchema.TABLE_CHAIN_FILES, "chain files to this genome", keys, "genomeId2", "rowid");
+
             }
             else if (SequenceAnalysisSchema.TABLE_OUTPUTFILES.equals(_table.getName()))
             {
@@ -852,7 +865,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                 if (SequenceAnalysisSchema.TABLE_ANALYSES.equals(_table.getName()))
                 {
-                    SequenceAnalysisManager.get().deleteAnalysis(rowIds);
+                    SequenceAnalysisManager.get().deleteAnalysis(getUser(), getContainer(), rowIds);
                 }
                 else if (SequenceAnalysisSchema.TABLE_READSETS.equals(_table.getName()))
                 {
@@ -860,7 +873,11 @@ public class SequenceAnalysisController extends SpringActionController
                 }
                 else if (SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES.equals(_table.getName()))
                 {
-                    SequenceAnalysisManager.get().deleteRefNtSequence(rowIds);
+                    SequenceAnalysisManager.get().deleteRefNtSequence(getUser(), getContainer(), rowIds);
+                }
+                else if (SequenceAnalysisSchema.TABLE_REF_LIBRARIES.equals(_table.getName()))
+                {
+                    SequenceAnalysisManager.get().deleteReferenceLibraries(getUser(), rowIds);
                 }
                 else if (SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES.equals(_table.getName()))
                 {
@@ -881,6 +898,14 @@ public class SequenceAnalysisController extends SpringActionController
                 //if someone else already deleted this, no need to throw exception
                 _log.error(e.getMessage(), e);
             }
+            catch (Exception e)
+            {
+                _log.error(e.getMessage(), e);
+
+                errors.reject(ERROR_MSG, e.getMessage());
+                return false;
+            }
+
             return true;
         }
 
@@ -3236,17 +3261,24 @@ public class SequenceAnalysisController extends SpringActionController
                 return null;
             }
 
-            SequenceOutputHandler handler = SequenceAnalysisManager.get().getFileHandler(form.getHandlerClass());
+            if (StringUtils.isEmpty(form.getHandlerType()))
+            {
+                errors.reject(ERROR_MSG, "Must provide the file handler type");
+                return null;
+            }
+
+            SequenceOutputHandler handler = SequenceAnalysisManager.get().getFileHandler(form.getHandlerClass(), form.getHandlerEnum());
             if (handler == null)
             {
-                errors.reject(ERROR_MSG, "Unknown handler type: " + form.getHandlerClass());
+                errors.reject(ERROR_MSG, "Unknown handler class: " + form.getHandlerClass());
                 return null;
             }
 
             JSONArray toolArr = new JSONArray();
             if (handler instanceof ParameterizedOutputHandler)
             {
-                for (ToolParameterDescriptor pd : ((ParameterizedOutputHandler) handler).getParameters())
+                List<ToolParameterDescriptor> toolParams = form.getHandlerEnum() == SequenceOutputHandler.TYPE.Readset ? ((ParameterizedOutputHandler<SequenceOutputHandler.SequenceReadsetProcessor>) handler).getParameters() : ((ParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>) handler).getParameters();
+                for (ToolParameterDescriptor pd : toolParams)
                 {
                     toolArr.put(pd.toJSON());
                 }
@@ -3322,9 +3354,25 @@ public class SequenceAnalysisController extends SpringActionController
                 }
             }
 
+            if (form.getReadsetIds() != null)
+            {
+                for (Integer readsetId : form.getReadsetIds())
+                {
+                    SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(readsetId, getUser());
+                    if (rs == null)
+                    {
+                        errors.reject(ERROR_MSG, "Unknown readset: " + readsetId);
+                        return null;
+                    }
+
+                    arr.put(getDataJsonForReadset(handler, rs));
+                }
+            }
+
             ret.put("files", arr);
 
-            ActionURL url = handler.getButtonSuccessUrl(getContainer(), getUser(), Arrays.asList(ArrayUtils.toObject(form.getOutputFileIds())));
+            int[] pkArr = form.getOutputFileIds() != null ? form.getOutputFileIds() : form.getReadsetIds();
+            ActionURL url = handler.getButtonSuccessUrl(getContainer(), getUser(), Arrays.asList(ArrayUtils.toObject(pkArr)));
             if (url != null)
             {
                 Map<String, Object> urlMap = new HashMap<>();
@@ -3344,6 +3392,16 @@ public class SequenceAnalysisController extends SpringActionController
         {
             JSONObject o = new JSONObject();
             SequenceOutputFile outputFile = SequenceOutputFile.getForId(outputFileId);
+            if (outputFile == null)
+            {
+                _log.error("getDataJson was provided with an invalid outputFileId: " + outputFileId, new Exception());
+
+                o = new JSONObject();
+                o.put("outputFileId", outputFileId);
+                o.put("fileExists", false);
+                o.put("error", true);
+                return o;
+            }
 
             o.put("dataId", outputFile.getDataId());
             o.put("outputFileId", outputFileId);
@@ -3362,6 +3420,47 @@ public class SequenceAnalysisController extends SpringActionController
 
             boolean canProcess = handler.canProcess(outputFile);
             o.put("canProcess", canProcess);
+
+            return o;
+        }
+
+        private JSONObject getDataJsonForReadset(SequenceOutputHandler handler, Readset rs)
+        {
+            JSONObject o = new JSONObject();
+            o.put("readsetId", rs.getReadsetId());
+
+            if (rs.getReadData() == null || rs.getReadData().isEmpty())
+            {
+                o.put("totalReadData", 0);
+                o.put("error", true);
+                return o;
+            }
+
+            o.put("totalReadData", rs.getReadData().size());
+            for (ReadData rd : rs.getReadData())
+            {
+                ExpData d = rd.getFileId1() == 0 ? null : ExperimentService.get().getExpData(rd.getFileId1());
+                if (d == null || d.getFile() == null || !d.getFile().exists())
+                {
+                    o.put("fileExists", false);
+                    o.put("error", true);
+                    return o;
+                }
+
+                if (rd.getFileId2() != null)
+                {
+                    d = rd.getFileId2() == 0 ? null : ExperimentService.get().getExpData(rd.getFileId2());
+                    if (d == null || d.getFile() == null || !d.getFile().exists())
+                    {
+                        o.put("fileExists", false);
+                        o.put("error", true);
+                        return o;
+                    }
+                }
+            }
+
+            o.put("fileExists", true);
+            o.put("canProcess", true);
 
             return o;
         }
@@ -3396,8 +3495,10 @@ public class SequenceAnalysisController extends SpringActionController
 
     public static class CheckFileStatusForm
     {
+        private String _handlerType = SequenceOutputHandler.TYPE.OutputFile.name();  //default to this for backward compatibility
         private String _handlerClass;
         private int[] _outputFileIds;
+        private int[] _readsetIds;
 
         public String getHandlerClass()
         {
@@ -3417,6 +3518,31 @@ public class SequenceAnalysisController extends SpringActionController
         public void setOutputFileIds(int[] outputFileIds)
         {
             _outputFileIds = outputFileIds;
+        }
+
+        public int[] getReadsetIds()
+        {
+            return _readsetIds;
+        }
+
+        public void setReadsetIds(int[] readsetIds)
+        {
+            _readsetIds = readsetIds;
+        }
+
+        public String getHandlerType()
+        {
+            return _handlerType;
+        }
+
+        public void setHandlerType(String handlerType)
+        {
+            _handlerType = handlerType;
+        }
+
+        public SequenceOutputHandler.TYPE getHandlerEnum()
+        {
+            return _handlerType == null ? null : SequenceOutputHandler.TYPE.valueOf(_handlerType);
         }
     }
 
@@ -3742,14 +3868,14 @@ public class SequenceAnalysisController extends SpringActionController
                 return null;
             }
 
-            SequenceOutputHandler handler = SequenceAnalysisManager.get().getFileHandler(form.getHandlerClass());
+            SequenceOutputHandler handler = SequenceAnalysisManager.get().getFileHandler(form.getHandlerClass(), form.getHandlerEnum());
             if (handler == null)
             {
                 errors.reject(ERROR_MSG, "Unknown handler: " + form.getHandlerClass());
                 return null;
             }
 
-            List<SequenceOutputFile> files = new ArrayList<>();
+            List<SequenceOutputFile> outputFiles = new ArrayList<>();
             if (form.getOutputFileIds() != null)
             {
                 for (int outputFileId : form.getOutputFileIds())
@@ -3767,13 +3893,48 @@ public class SequenceAnalysisController extends SpringActionController
                         return null;
                     }
 
-                    files.add(o);
+                    outputFiles.add(o);
+                }
+
+                if (outputFiles.isEmpty())
+                {
+                    errors.reject(ERROR_MSG, "No valid outputfiles found");
+                    return null;
                 }
             }
 
-            if (files.isEmpty())
+            List<SequenceReadsetImpl> readsets = new ArrayList<>();
+            if (form.getReadsetIds() != null)
             {
-                errors.reject(ERROR_MSG, "No output files provided");
+                for (int readsetId : form.getReadsetIds())
+                {
+                    SequenceReadsetImpl readset = SequenceAnalysisServiceImpl.get().getReadset(readsetId, getUser());
+                    if (readset == null)
+                    {
+                        errors.reject(ERROR_MSG, "Unable to find readset: " + readsetId);
+                        return null;
+                    }
+
+                    if (readset.getReadData().isEmpty())
+                    {
+                        errors.reject(ERROR_MSG, "No files have been imported for the readset: " + readsetId);
+                        return null;
+                    }
+
+                    readsets.add(readset);
+                }
+
+                if (readsets.isEmpty())
+                {
+                    errors.reject(ERROR_MSG, "No readsets found");
+                    return null;
+                }
+            }
+
+
+            if (outputFiles.isEmpty() && readsets.isEmpty())
+            {
+                errors.reject(ERROR_MSG, "Must provide either output files or readsets");
                 return null;
             }
 
@@ -3782,7 +3943,7 @@ public class SequenceAnalysisController extends SpringActionController
                 List<String> guids = new ArrayList<>();
                 if (handler.doSplitJobs() || form.getDoSplitJobs())
                 {
-                    for (SequenceOutputFile o : files)
+                    for (SequenceOutputFile o : outputFiles)
                     {
                         JSONObject json = new JSONObject(form.getParams());
                         String jobName = form.getJobName();
@@ -3797,14 +3958,40 @@ public class SequenceAnalysisController extends SpringActionController
                         PipelineService.get().queueJob(job);
                         guids.add(job.getJobGUID());
                     }
+
+                    for (SequenceReadsetImpl o : readsets)
+                    {
+                        JSONObject json = new JSONObject(form.getParams());
+                        String jobName = form.getJobName();
+                        if (StringUtils.isEmpty(jobName))
+                        {
+                            jobName = handler.getName().replaceAll(" ", "_") + "_" + FileUtil.getTimestamp();
+                        }
+
+                        jobName = jobName + "." + o.getReadsetId();
+
+                        SequenceReadsetHandlerJob job = new SequenceReadsetHandlerJob(getContainer(), getUser(), jobName, pr, handler, Arrays.asList(o), json);
+                        PipelineService.get().queueJob(job);
+                        guids.add(job.getJobGUID());
+                    }
                 }
                 else
                 {
-                    JSONObject json = new JSONObject(form.getParams());
+                    if (!outputFiles.isEmpty())
+                    {
+                        JSONObject json = new JSONObject(form.getParams());
+                        SequenceOutputHandlerJob job = new SequenceOutputHandlerJob(getContainer(), getUser(), (StringUtils.isEmpty(form.getJobName()) ? handler.getName().replaceAll(" ", "_") + "_" + FileUtil.getTimestamp() : form.getJobName()), pr, handler, outputFiles, json);
+                        PipelineService.get().queueJob(job);
+                        guids.add(job.getJobGUID());
+                    }
 
-                    SequenceOutputHandlerJob job = new SequenceOutputHandlerJob(getContainer(), getUser(), (StringUtils.isEmpty(form.getJobName()) ? handler.getName().replaceAll(" ", "_") + "_" + FileUtil.getTimestamp() : form.getJobName()), pr, handler, files, json);
-                    PipelineService.get().queueJob(job);
-                    guids.add(job.getJobGUID());
+                    if (!readsets.isEmpty())
+                    {
+                        JSONObject json = new JSONObject(form.getParams());
+                        SequenceReadsetHandlerJob job = new SequenceReadsetHandlerJob(getContainer(), getUser(), (StringUtils.isEmpty(form.getJobName()) ? handler.getName().replaceAll(" ", "_") + "_" + FileUtil.getTimestamp() : form.getJobName()), pr, handler, readsets, json);
+                        PipelineService.get().queueJob(job);
+                        guids.add(job.getJobGUID());
+                    }
                 }
 
                 Map<String, Object> ret = new HashMap<>();
@@ -3883,7 +4070,7 @@ public class SequenceAnalysisController extends SpringActionController
             }
 
             AssayFileWriter writer = new AssayFileWriter();
-            File targetDirectory = writer.ensureUploadDirectory(getContainer(), "sequenceOutputs");
+            File targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer(), "sequenceOutputs");
             if (!targetDirectory.exists())
             {
                 targetDirectory.mkdirs();
@@ -4096,7 +4283,7 @@ public class SequenceAnalysisController extends SpringActionController
             }
 
             List<JSONObject> partialHandlers = new ArrayList<>();
-            for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers(getContainer()))
+            for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers(getContainer(), form.getHandlerEnum()))
             {
                 boolean available = true;
                 JSONObject json = new JSONObject();
@@ -4151,6 +4338,7 @@ public class SequenceAnalysisController extends SpringActionController
 
     public static class GetAvailableHandlersForm
     {
+        private String _handlerType;
         int[] _outputFileIds;
 
         public int[] getOutputFileIds()
@@ -4161,6 +4349,21 @@ public class SequenceAnalysisController extends SpringActionController
         public void setOutputFileIds(int[] outputFileIds)
         {
             _outputFileIds = outputFileIds;
+        }
+
+        public String getHandlerType()
+        {
+            return _handlerType;
+        }
+
+        public void setHandlerType(String handlerType)
+        {
+            _handlerType = handlerType;
+        }
+
+        public SequenceOutputHandler.TYPE getHandlerEnum()
+        {
+            return _handlerType == null ? null : SequenceOutputHandler.TYPE.valueOf(_handlerType);
         }
     }
 

@@ -222,10 +222,9 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         }
     }
 
-    public List<String> getJavaOpts()
+    @Override
+    public String getJavaTempDir()
     {
-        List<String> params = new ArrayList<>();
-
         String tmpDir = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_TMP_DIR");
         if (PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
         {
@@ -234,19 +233,41 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
                 _log.debug("setting temp directory to: " + tmpDir);
         }
 
+        return tmpDir;
+    }
+
+    @Override
+    public Integer getMaxRam()
+    {
+        String maxRamStr = StringUtils.trimToNull(System.getenv("SEQUENCEANALYSIS_MAX_RAM"));
+        if (maxRamStr == null)
+        {
+            maxRamStr = StringUtils.trimToNull(PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("SEQUENCEANALYSIS_MAX_RAM"));
+        }
+
+        Integer maxRam = null;
+        if (maxRamStr != null)
+        {
+            maxRam = "-1".equals(maxRamStr) ? null : Integer.parseInt(maxRamStr);
+        }
+
+        return maxRam;
+    }
+
+    @Override
+    public List<String> getJavaOpts()
+    {
+        List<String> params = new ArrayList<>();
+        String tmpDir = getJavaTempDir();
         if (StringUtils.trimToNull(tmpDir) != null)
         {
             params.add("-Djava.io.tmpdir=" + tmpDir);
         }
 
         //try environment first:
-        String maxRam = StringUtils.trimToNull(System.getenv("SEQUENCEANALYSIS_MAX_RAM"));
-        if (maxRam == null)
-        {
-            maxRam = StringUtils.trimToNull(PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("SEQUENCEANALYSIS_MAX_RAM"));
-        }
 
-        if (maxRam != null && !"-1".equals(maxRam))
+        Integer maxRam = getMaxRam();
+        if (maxRam != null)
         {
             params.add("-Xmx" + maxRam + "g");
             params.add("-Xms" + maxRam + "g");

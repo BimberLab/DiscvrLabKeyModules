@@ -11,6 +11,7 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
@@ -28,7 +29,7 @@ import static org.labkey.GeneticsCore.analysis.MethylationRateComparisonHandler.
 /**
  * Created by bimber on 3/22/2017.
  */
-public class CombineMethylationRatesHandler extends AbstractParameterizedOutputHandler
+public class CombineMethylationRatesHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
     public CombineMethylationRatesHandler()
     {
@@ -81,12 +82,12 @@ public class CombineMethylationRatesHandler extends AbstractParameterizedOutputH
     }
 
     @Override
-    public OutputProcessor getProcessor()
+    public SequenceOutputProcessor getProcessor()
     {
         return new Processor();
     }
 
-    public class Processor implements OutputProcessor
+    public class Processor implements SequenceOutputProcessor
     {
         @Override
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException

@@ -16,6 +16,7 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
                 method: 'POST',
                 url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'checkFileStatusForHandler'),
                 params: {
+                    handlerType: 'OutputFile',
                     handlerClass: handlerClass,
                     outputFileIds: checked
                 },
@@ -62,6 +63,7 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
                                     Ext4.create('SequenceAnalysis.window.OutputHandlerWindow', {
                                         containerPath: containerPath,
                                         dataRegionName: dataRegionName,
+                                        handlerType: 'OutputFile',
                                         handlerClass: handlerClass,
                                         outputFileIds: checked,
                                         title: results.name,
@@ -77,7 +79,70 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
             });
         },
 
-        getCfgForToolParameters: function(parameters){
+        readsetButtonHandler: function(dataRegionName, handlerClass) {
+            var dataRegion = LABKEY.DataRegions[dataRegionName];
+            var checked = dataRegion.getChecked();
+            if (!checked || !checked.length) {
+                Ext4.Msg.alert('Error', 'No records selected');
+                return;
+            }
+
+            //first validate
+            Ext4.Msg.wait('Validating files...');
+            LABKEY.Ajax.request({
+                method: 'POST',
+                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'checkFileStatusForHandler'),
+                params: {
+                    handlerType: 'Readset',
+                    handlerClass: handlerClass,
+                    readsetIds: checked
+                },
+                scope: this,
+                failure: LABKEY.Utils.getCallbackWrapper(LDK.Utils.getErrorCallback(), this),
+                success: LABKEY.Utils.getCallbackWrapper(function (results) {
+                    Ext4.Msg.hide();
+
+                    var errors = [];
+                    Ext4.Array.forEach(results.files, function (r) {
+                        if (!r.canProcess) {
+                            if (!r.totalReadData) {
+                                errors.push('No files imported for readset: ' + r.readsetId);
+                            }
+                            else if (!r.fileExists) {
+                                errors.push('File does not exist for readset: ' + r.readsetId);
+                            }
+                        }
+                    }, this);
+
+                    if (errors.length) {
+                        errors = Ext4.Array.unique(errors);
+                        Ext4.Msg.alert('Error', errors.join('<br>'));
+                    }
+                    else
+                    {
+                        Ext4.create('Laboratory.window.WorkbookCreationWindow', {
+                            title: 'Create New Workbook or Add To Existing?',
+                            workbookPanelCfg: {
+                                doLoad: function (containerPath) {
+                                    Ext4.create('SequenceAnalysis.window.OutputHandlerWindow', {
+                                        containerPath: containerPath,
+                                        dataRegionName: dataRegionName,
+                                        handlerType: 'Readset',
+                                        handlerClass: handlerClass,
+                                        readsetIds: checked,
+                                        title: results.name,
+                                        handlerConfig: results,
+                                        toolParameters: results.toolParameters
+                                    }).show();
+                                }
+                            }
+                        }).show();
+                    }
+                }, this)
+            });
+        },
+
+            getCfgForToolParameters: function(parameters){
             var paramCfg = [];
             Ext4.Array.forEach(parameters, function (i, idx) {
                 var o = {
@@ -136,7 +201,7 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
                     border: false
                 },
                 items: [{
-                    html: 'You have selected ' + this.outputFileIds.length + ' files' ,
+                    html: 'You have selected ' + (this.outputFileIds || this.readsetIds).length + ' files' ,
                     style: 'padding-bottom: 20px;',
                     border: false
                 },{
@@ -190,8 +255,10 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler', this.containerPath),
             jsonData: {
+                handlerType: this.handlerType,
                 handlerClass: this.handlerClass,
                 outputFileIds: this.outputFileIds,
+                readsetIds: this.readsetIds,
                 doSplitJobs: !!params.doSplitJobs,
                 params: Ext4.encode(params)
             },

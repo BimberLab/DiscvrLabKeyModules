@@ -2,6 +2,7 @@ package org.labkey.GeneticsCore.pipeline;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.cluster.ClusterResourceAllocator;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.pipeline.PipelineJob;
@@ -16,7 +17,6 @@ import org.labkey.api.util.FileUtil;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -270,64 +270,76 @@ public class SequenceJobResourceAllocator implements ClusterResourceAllocator
     {
         if (job instanceof HasJobParams)
         {
-            Map<String, String> params = ((HasJobParams)job).getJobParams();
-            if (params.get("resourceSettings.resourceSettings.weekLongJob") != null)
-            {
-                Boolean weekLongJob = ConvertHelper.convert(params.get("resourceSettings.resourceSettings.weekLongJob"), Boolean.class);
-                if (weekLongJob)
-                {
-                    job.getLogger().debug("adding WEEK_LONG_JOB as supplied by job");
-                    possiblyAddWeekLongLines(engine, lines);
-                    return;
-                }
-            }
-        }
+            possiblyAddWeekLongLines(job, engine, lines);
 
-        Long totalFileSize = getFileSize(job);
-        if (UNABLE_TO_DETERMINE.equals(totalFileSize))
-        {
             possiblyAddHighIoFlag(job, engine, lines);
-            return;
         }
-
-        //NOTE: no longer auotmatically add this.  only support when the user specifically requests it
-        //25gb alignment
-        //if (isSequenceAlignmentTask(job) && totalFileSize > 25e9 && jobProvidedCpusOrRam(job))
-        //{
-        //    return getWeekLongLines(engine);
-        //}
-
-        possiblyAddHighIoFlag(job, engine, lines);
+        else
+        {
+            job.getLogger().error("This job type does not implement HasJobParams");
+        }
     }
 
-    private void possiblyAddWeekLongLines(RemoteExecutionEngine engine, List<String> lines)
+    private void removeExistingPartition(List<String> lines, boolean removeTime)
     {
-        if (engine.getType().equals("HTCondorEngine"))
+        lines.removeIf(line -> line.contains("#SBATCH --partition="));
+
+        if (removeTime)
         {
-            lines.add("concurrency_limits = WEEK_LONG_JOBS");
+            lines.removeIf(line -> line.contains("#SBATCH --time="));
         }
-        else if (engine.getType().equals("SlurmEngine"))
+    }
+
+    private void possiblyAddWeekLongLines(PipelineJob job, RemoteExecutionEngine engine, List<String> lines)
+    {
+        Map<String, String> params = ((HasJobParams)job).getJobParams();
+        if (params.get("resourceSettings.resourceSettings.weekLongJob") != null)
         {
-            //exacloud: 36 hours
-            //long_jobs: 10 days (max 60 jobs currently)
-            //very_long_jobs: 30 days (suspends when node is busy)
-
-            //Note: consider supporting --time, which allows request of a shorter duration job
-
-            //first remove existing
-            Iterator<String> it = lines.iterator();
-            while (it.hasNext())
+            Boolean weekLongJob = ConvertHelper.convert(params.get("resourceSettings.resourceSettings.weekLongJob"), Boolean.class);
+            if (weekLongJob)
             {
-                String line = it.next();
-                if (line.contains("#SBATCH --partition=") || line.contains("#SBATCH --time="))
+                job.getLogger().debug("adding WEEK_LONG_JOB as supplied by job");
+                if (engine.getType().equals("HTCondorEngine"))
                 {
-                    it.remove();
+                    lines.add("concurrency_limits = WEEK_LONG_JOBS");
+                }
+                else if (engine.getType().equals("SlurmEngine"))
+                {
+                    //exacloud: 36 hours
+                    //long_jobs: 10 days (max 60 jobs currently)
+                    //very_long_jobs: 30 days (suspends when node is busy)
+
+                    //Note: consider supporting --time, which allows request of a shorter duration job
+
+                    //first remove existing
+                    removeExistingPartition(lines, true);
+
+                    //then add
+                    lines.add("#SBATCH --partition=long_jobs");
+                    lines.add("#SBATCH --time=14400");
                 }
             }
+        }
+        else if (params.get("resourceSettings.resourceSettings.veryLongJob") != null)
+        {
+            Boolean weekLongJob = ConvertHelper.convert(params.get("resourceSettings.resourceSettings.veryLongJob"), Boolean.class);
+            if (weekLongJob)
+            {
+                job.getLogger().debug("adding very_long_jobs as supplied by job");
+                if (engine.getType().equals("SlurmEngine"))
+                {
+                    //first remove existing
+                    removeExistingPartition(lines, true);
 
-            //then add
-            lines.add("#SBATCH --partition=long_jobs");
-            lines.add("#SBATCH --time=14400");
+                    //then add
+                    lines.add("#SBATCH --partition=very_long_jobs");
+                    lines.add("#SBATCH --time=43200");
+                }
+            }
+            else
+            {
+                job.getLogger().warn("This pipeline engine does not support very_long_job");
+            }
         }
     }
 
@@ -349,26 +361,39 @@ public class SequenceJobResourceAllocator implements ClusterResourceAllocator
         return false;
     }
 
+    private boolean getHighIOValue(PipelineJob job)
+    {
+        Map<String, String> params = ((HasJobParams) job).getJobParams();
+        if (params.get("resourceSettings.resourceSettings.highio") != null)
+        {
+            return ConvertHelper.convert(params.get("resourceSettings.resourceSettings.highio"), Boolean.class);
+        }
+
+        return false;
+    }
+
     private void possiblyAddHighIoFlag(PipelineJob job, RemoteExecutionEngine engine, List<String> lines)
     {
         if (job instanceof HasJobParams)
         {
-            Map<String, String> params = ((HasJobParams) job).getJobParams();
-            if (params.get("resourceSettings.resourceSettings.highio") != null)
+            boolean highio = getHighIOValue(job);
+            if (highio)
             {
-                Boolean highio = ConvertHelper.convert(params.get("resourceSettings.resourceSettings.highio"), Boolean.class);
-                if (highio)
+                job.getLogger().debug("adding highio as supplied by job");
+                if (engine.getType().equals("HTCondorEngine"))
                 {
-                    job.getLogger().debug("adding highio as supplied by job");
-                    if (engine.getType().equals("HTCondorEngine"))
-                    {
-                        lines.add("concurrency_limits = highio");
-                        return;
-                    }
-                    else
-                    {
-                        job.getLogger().debug("HighIO was selected, but it is not support on this cluster type: " + engine.getType());
-                    }
+                    lines.add("concurrency_limits = highio");
+                    return;
+                }
+                else if (engine.getType().equals("SlurmEngine"))
+                {
+                    removeExistingPartition(lines, false);
+
+                    lines.add("#SBATCH --partition=highio");
+                }
+                else
+                {
+                    job.getLogger().debug("HighIO was selected, but it is not supported on this cluster type: " + engine.getType());
                 }
             }
         }
@@ -404,5 +429,25 @@ public class SequenceJobResourceAllocator implements ClusterResourceAllocator
         }
 
         return _totalFileSize;
+    }
+
+    @Override
+    public void processJavaOpts(PipelineJob job, RemoteExecutionEngine engine, @NotNull List<String> existingJavaOpts)
+    {
+        if (job instanceof HasJobParams)
+        {
+            Map<String, String> params = ((HasJobParams) job).getJobParams();
+            if (params.get("resourceSettings.resourceSettings.javaProcessXmx") != null && !StringUtils.isEmpty(params.get("resourceSettings.resourceSettings.javaProcessXmx")))
+            {
+                Integer xmx = ConvertHelper.convert(params.get("resourceSettings.resourceSettings.javaProcessXmx"), Integer.class);
+                if (xmx != null)
+                {
+                    job.getLogger().debug("using java process -xmx supplied by job: " + xmx);
+                    existingJavaOpts.removeIf(x -> x.startsWith("-Xmx"));
+
+                    existingJavaOpts.add("-Xmx" + xmx + "g");
+                }
+            }
+        }
     }
 }

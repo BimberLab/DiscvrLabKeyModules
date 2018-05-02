@@ -375,6 +375,6 @@ public class SequenceReadsetImpl implements Readset
 
     public String getLegalFileName()
     {
-        return FileUtil.makeLegalName(getName()).replaceAll(" ", "_");
+        return getName().replaceAll("[^a-zA-Z0-9\\.\\-\\+]", "_");
     }
 }

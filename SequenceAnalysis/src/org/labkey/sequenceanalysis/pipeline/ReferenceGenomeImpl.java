@@ -15,16 +15,18 @@ import java.io.File;
  */
 public class ReferenceGenomeImpl implements ReferenceGenome
 {
+    private String _name;
     private File _sourceFasta;
     private File _workingFasta;
     private Integer _genomeId;
     private Integer _expDataId;
 
-    public ReferenceGenomeImpl(@NotNull File sourceFasta, @Nullable ExpData fastaExpData, @Nullable Integer genomeId)
+    public ReferenceGenomeImpl(@NotNull File sourceFasta, @Nullable ExpData fastaExpData, @Nullable Integer genomeId, @Nullable String name)
     {
         _sourceFasta = sourceFasta;
         _expDataId = fastaExpData == null ? null : fastaExpData.getRowId();
         _genomeId = genomeId;
+        _name = name;
     }
 
     @Override
@@ -55,6 +57,12 @@ public class ReferenceGenomeImpl implements ReferenceGenome
     public File getSequenceDictionary()
     {
         return getWorkingFastaFile() == null ? null : new File(FileUtil.getBaseName(getWorkingFastaFile().getPath()) + ".dict");
+    }
+
+    @Override
+    public String getName()
+    {
+        return _name;
     }
 
     @Override

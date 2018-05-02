@@ -6,6 +6,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.run.GeneToNameTranslator;
 import org.labkey.api.util.FileType;
 
 import java.io.BufferedReader;
@@ -27,9 +28,9 @@ public class CombineSubreadGeneCountsHandler extends AbstractCombineGeneCountsHa
     }
 
     @Override
-    protected void processOutputFiles(CountResults results, List<SequenceOutputFile> inputFiles, JSONObject params, Map<String, Map<String, String>> geneMap, PipelineJob job, RecordedAction action) throws PipelineJobException
+    protected void processOutputFiles(CountResults results, List<SequenceOutputFile> inputFiles, JSONObject params, GeneToNameTranslator translator, PipelineJob job, RecordedAction action) throws PipelineJobException
     {
-        results.distinctGenes.addAll(geneMap.keySet());
+        results.distinctGenes.addAll(translator.getGeneMap().keySet());
 
         results.counts = new HashMap<>(inputFiles.size());
         for (SequenceOutputFile so : inputFiles)

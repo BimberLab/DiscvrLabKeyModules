@@ -14,6 +14,7 @@ import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
@@ -31,7 +32,7 @@ import java.util.Map;
 /**
  * Created by bimber on 5/25/2017.
  */
-public class RecalculateSequenceMetricsHandler extends AbstractParameterizedOutputHandler
+public class RecalculateSequenceMetricsHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
     public RecalculateSequenceMetricsHandler()
     {
@@ -63,7 +64,7 @@ public class RecalculateSequenceMetricsHandler extends AbstractParameterizedOutp
     }
 
     @Override
-    public OutputProcessor getProcessor()
+    public SequenceOutputProcessor getProcessor()
     {
         return new Processor();
     }
@@ -74,7 +75,7 @@ public class RecalculateSequenceMetricsHandler extends AbstractParameterizedOutp
         return true;
     }
 
-    public static class Processor implements OutputProcessor
+    public static class Processor implements SequenceOutputProcessor
     {
         @Override
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException

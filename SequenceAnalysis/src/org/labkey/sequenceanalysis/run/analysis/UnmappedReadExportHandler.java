@@ -21,6 +21,7 @@ import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -44,7 +45,7 @@ import java.util.List;
  * Date: 7/3/2014
  * Time: 11:29 AM
  */
-public class UnmappedReadExportHandler extends AbstractParameterizedOutputHandler
+public class UnmappedReadExportHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
     private FileType _fileType = new FileType(".bam", FileType.gzSupportLevel.NO_GZ);
 
@@ -81,12 +82,12 @@ public class UnmappedReadExportHandler extends AbstractParameterizedOutputHandle
     }
 
     @Override
-    public OutputProcessor getProcessor()
+    public SequenceOutputProcessor getProcessor()
     {
         return new Processor();
     }
 
-    public static class Processor implements OutputProcessor
+    public static class Processor implements SequenceOutputProcessor
     {
         @Override
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException

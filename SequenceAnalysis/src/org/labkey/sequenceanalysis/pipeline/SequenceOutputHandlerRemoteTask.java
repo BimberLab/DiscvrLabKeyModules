@@ -46,7 +46,7 @@ public class SequenceOutputHandlerRemoteTask extends WorkDirectoryTask<SequenceO
         public List<String> getProtocolActionNames()
         {
             List<String> allowableNames = new ArrayList<>();
-            for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers())
+            for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers(SequenceOutputHandler.TYPE.OutputFile))
             {
                 allowableNames.add(handler.getName());
 
@@ -95,7 +95,7 @@ public class SequenceOutputHandlerRemoteTask extends WorkDirectoryTask<SequenceO
     {
         TaskFileManagerImpl manager = new TaskFileManagerImpl(getPipelineJob(), _wd.getDir(), _wd);
 
-        SequenceOutputHandler handler = getPipelineJob().getHandler();
+        SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler = getPipelineJob().getHandler();
         JobContextImpl ctx = new JobContextImpl(getPipelineJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), _wd.getDir(), manager, _wd);
 
         getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + handler.getName());

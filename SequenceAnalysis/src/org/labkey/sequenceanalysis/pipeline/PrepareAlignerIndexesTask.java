@@ -84,7 +84,7 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
                     return true;
                 }
 
-                boolean hasIndex = AlignerIndexUtil.hasCachedIndex(alignmentStep.getPipelineCtx(), alignmentStep.getIndexCachedDirName(), referenceGenome);
+                boolean hasIndex = AlignerIndexUtil.hasCachedIndex(alignmentStep.getPipelineCtx(), alignmentStep.getIndexCachedDirName(job), referenceGenome);
                 if (hasIndex)
                 {
                     job.getLogger().info("cached aligner index exists, skipping step");

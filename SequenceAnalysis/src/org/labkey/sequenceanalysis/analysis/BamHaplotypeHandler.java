@@ -24,7 +24,7 @@ import java.util.List;
 /**
  * Created by bimber on 2/3/2016.
  */
-public class BamHaplotypeHandler implements SequenceOutputHandler
+public class BamHaplotypeHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
     private FileType _bamFileType = new FileType("bam", false);
 
@@ -100,7 +100,7 @@ public class BamHaplotypeHandler implements SequenceOutputHandler
     }
 
     @Override
-    public OutputProcessor getProcessor()
+    public SequenceOutputProcessor getProcessor()
     {
         return new Processor();
     }
@@ -111,7 +111,7 @@ public class BamHaplotypeHandler implements SequenceOutputHandler
         return false;
     }
 
-    public class Processor implements OutputProcessor
+    public class Processor implements SequenceOutputProcessor
     {
         @Override
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException

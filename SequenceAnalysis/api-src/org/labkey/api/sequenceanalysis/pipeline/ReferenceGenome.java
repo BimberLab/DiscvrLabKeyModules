@@ -54,7 +54,12 @@ public interface ReferenceGenome extends Serializable
     public File getFastaIndex();
 
     /**
-     * @return The rowId of the corresponding record from
+     * @return The name assigned to this genome
+     */
+    public String getName();
+
+    /**
+     * @return The rowId of the corresponding record
      */
     public Integer getGenomeId();
 

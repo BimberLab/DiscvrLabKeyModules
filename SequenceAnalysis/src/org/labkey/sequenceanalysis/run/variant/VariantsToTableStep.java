@@ -152,7 +152,6 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
         output.addOutput(outputFile, "Variant Table");
 
         boolean createOutputFile = getProvider().getParameterByName("createOutputFile").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
-        getPipelineCtx().getLogger().debug("output file: [" + createOutputFile + "]");
         if (createOutputFile)
         {
             String description = getProvider().getParameterByName("outputFileDescription").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
@@ -160,7 +159,7 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
         }
         else
         {
-            getPipelineCtx().getLogger().debug("no output file will be created");
+            getPipelineCtx().getLogger().debug("no output file will be created from VariantsToTable");
         }
 
         return output;

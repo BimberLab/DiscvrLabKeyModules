@@ -96,14 +96,14 @@ public class BismarkWrapper extends AbstractCommandWrapper
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
 
-            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, CONVERTED_GENOME_NAME, getIndexCachedDirName() + "/" + CONVERTED_GENOME_NAME, referenceGenome);
+            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, CONVERTED_GENOME_NAME, getIndexCachedDirName(getPipelineCtx().getJob()) + "/" + CONVERTED_GENOME_NAME, referenceGenome);
             BismarkWrapper wrapper = getWrapper();
 
             List<String> args = new ArrayList<>();
             args.add(wrapper.getExe().getPath());
             
             //NOTE: bismark requires both the index dir and FASTA to be in the same directory.  to sidestep this, make a local dir and create symlinks
-            File existingIndexDir = referenceGenome.getAlignerIndexDir(getIndexCachedDirName());
+            File existingIndexDir = referenceGenome.getAlignerIndexDir(getIndexCachedDirName(getPipelineCtx().getJob()));
             getPipelineCtx().getLogger().debug("using index from: " + existingIndexDir.getPath());
 
             try
@@ -216,7 +216,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
             File localFasta = new File(outputDir, referenceGenome.getWorkingFastaFile().getName());
             File indexOutputDir = localFasta.getParentFile();
 
-            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(), referenceGenome);
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(getPipelineCtx().getJob()), referenceGenome);
             if (!hasCachedIndex)
             {
                 if (!localFasta.exists())
@@ -274,7 +274,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
                     throw new PipelineJobException("Unable to find file, expected: " + bowtieTestFile.getPath());
                 }
 
-                File indexBaseDir = new File(localFasta.getParentFile(), getIndexCachedDirName());
+                File indexBaseDir = new File(localFasta.getParentFile(), getIndexCachedDirName(getPipelineCtx().getJob()));
                 if (!indexBaseDir.exists())
                 {
                     indexBaseDir.mkdirs();
@@ -292,7 +292,7 @@ public class BismarkWrapper extends AbstractCommandWrapper
                 }
 
                 //recache if not already
-                AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexBaseDir, getIndexCachedDirName(), referenceGenome);
+                AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexBaseDir, getIndexCachedDirName(getPipelineCtx().getJob()), referenceGenome);
             }
 
             return output;

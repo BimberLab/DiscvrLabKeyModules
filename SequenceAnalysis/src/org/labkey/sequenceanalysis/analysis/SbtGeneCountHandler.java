@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 
-public class SbtGeneCountHandler implements SequenceOutputHandler
+public class SbtGeneCountHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
     private final FileType _txtType = new FileType(Arrays.asList(".txt"), ".txt", false, FileType.gzSupportLevel.NO_GZ);
 
@@ -82,7 +82,7 @@ public class SbtGeneCountHandler implements SequenceOutputHandler
     @Override
     public boolean canProcess(SequenceOutputFile f)
     {
-        return f.getCategory().startsWith("Gene Count Table") && (_txtType.isType(f.getFile()));
+        return f.getCategory() != null && f.getCategory().startsWith("Gene Count Table") && (_txtType.isType(f.getFile()));
     }
 
     @Override
@@ -98,7 +98,7 @@ public class SbtGeneCountHandler implements SequenceOutputHandler
     }
 
     @Override
-    public OutputProcessor getProcessor()
+    public SequenceOutputProcessor getProcessor()
     {
         return new Processor();
     }
@@ -109,7 +109,7 @@ public class SbtGeneCountHandler implements SequenceOutputHandler
         return false;
     }
 
-    private static class Processor implements OutputProcessor
+    private static class Processor implements SequenceOutputProcessor
     {
         @Override
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException

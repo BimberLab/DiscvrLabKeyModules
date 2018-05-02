@@ -13,7 +13,9 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.sequenceanalysis.run.GeneToNameTranslator;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
@@ -38,7 +40,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-abstract public class AbstractCombineGeneCountsHandler extends AbstractParameterizedOutputHandler
+abstract public class AbstractCombineGeneCountsHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
     protected static final String STRAND1 = "Strand1";
     protected static final String STRAND2 = "Strand2";
@@ -119,7 +121,7 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
     }
 
     @Override
-    public OutputProcessor getProcessor()
+    public SequenceOutputProcessor getProcessor()
     {
         return new CombineStarGeneCountsHandler.Processor();
     }
@@ -130,7 +132,7 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
         return false;
     }
 
-    public class Processor implements OutputProcessor
+    public class Processor implements SequenceOutputProcessor
     {
         @Override
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
@@ -248,93 +250,17 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
         {
             throw new PipelineJobException("Unable to find GTF/GFF file: " + gtfFile);
         }
-        boolean isGTF = "gtf".equalsIgnoreCase(FileUtil.getExtension(gtfFile));
 
         action.addInput(gtfFile, "GTF/GFF file");
         job.getLogger().info("using GTF/GFF file: " + gtfFile.getPath());
 
         //first build a map of all geneIDs and other attributes
         job.getLogger().info("reading GTF/GFF file");
-        Map<String, Map<String, String>> geneMap = new HashMap<>(5000);
-        int noGeneId = 0;
-        try (BufferedReader gtfReader = Readers.getReader(gtfFile))
-        {
-            Pattern geneIdPattern = isGTF ? Pattern.compile("((gene_id) \")([^\"]+)\"(.*)", Pattern.CASE_INSENSITIVE) : Pattern.compile("((gene_id|geneID)=)([^;]+)(.*)", Pattern.CASE_INSENSITIVE);
-
-            Map<String, Pattern> patternMap = new HashMap<>();
-            if (isGTF)
-            {
-                patternMap.put("transcript_id", Pattern.compile("((transcript_id \"))([^\"]+)\"(.*)", Pattern.CASE_INSENSITIVE));
-                patternMap.put("gene_name", Pattern.compile("((gene_name \"))([^\"]+)\"(.*)", Pattern.CASE_INSENSITIVE));
-                patternMap.put("gene_description", Pattern.compile("((gene_description \"))([^\"]+)\"(.*)", Pattern.CASE_INSENSITIVE));
-            }
-            else
-            {
-                //GFF
-                patternMap.put("transcript_id", Pattern.compile("((transcript_id=))([^;]+)(.*)", Pattern.CASE_INSENSITIVE));
-                patternMap.put("gene_name", Pattern.compile("((gene_name|gene)[=:])([^;]+)(.*)", Pattern.CASE_INSENSITIVE));
-                patternMap.put("gene_description", Pattern.compile("((product|description)=)([^;]+)(.*)", Pattern.CASE_INSENSITIVE));
-            }
-
-            String line;
-            while ((line = gtfReader.readLine()) != null)
-            {
-                if (line.startsWith("#"))
-                {
-                    continue;
-                }
-
-                Matcher m1 = geneIdPattern.matcher(line);
-                if (m1.find())
-                {
-                    Map<String, String> map = new HashMap<>();
-                    for (String field : patternMap.keySet())
-                    {
-                        Pattern pattern = patternMap.get(field);
-                        Matcher m2 = pattern.matcher(line);
-                        if (m2.find())
-                        {
-                            String val = m2.group(3);
-                            map.put(field, val);
-                        }
-                    }
-
-                    String geneId = m1.group(3);
-                    geneMap.put(geneId, map);
-                }
-                else
-                {
-                    if (noGeneId < 10)
-                    {
-                        job.getLogger().warn("skipping GTF/GFF line because it lacks a gene Id: ");
-                        job.getLogger().warn(line);
-
-                        if (noGeneId == 9)
-                        {
-                            job.getLogger().warn("future warnings will be skipped");
-                        }
-                    }
-
-                    noGeneId++;
-                }
-
-            }
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
-
-        if (noGeneId > 0)
-        {
-            job.getLogger().warn("total lines lacking a gene id: " + noGeneId);
-        }
+        GeneToNameTranslator translator = new GeneToNameTranslator(gtfFile, job.getLogger());
 
         CountResults results = new CountResults(inputFiles.size());
 
-        processOutputFiles(results, inputFiles, params, geneMap, job, action);
-
-
+        processOutputFiles(results, inputFiles, params, translator, job, action);
 
         job.getLogger().info("writing output.  total genes: " + results.distinctGenes.size());
 
@@ -389,13 +315,13 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
             for (String geneId : results.distinctGenes)
             {
                 List<String> row = new ArrayList<>(inputFiles.size() + 3);
-                if (geneMap.containsKey(geneId))
+                if (translator.getGeneMap().containsKey(geneId))
                 {
-                    if (geneMap.containsKey(geneId))
+                    if (translator.getGeneMap().containsKey(geneId))
                     {
                         row.add(geneId);
-                        row.add(geneMap.get(geneId).get("gene_name"));
-                        row.add(geneMap.get(geneId).get("gene_description"));
+                        row.add(translator.getGeneMap().get(geneId).get("gene_name"));
+                        row.add(translator.getGeneMap().get(geneId).get("gene_description"));
                     }
                     else
                     {
@@ -444,7 +370,7 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
                     errWriter.write("GeneId\tGeneName\tGeneDescription\n");
                     for (String geneId : genesWithoutData)
                     {
-                        errWriter.write(geneId + "\t" + (geneMap.get(geneId).get("gene_name") == null ? "" : geneMap.get(geneId).get("gene_name")) + "\t" + (geneMap.get(geneId).get("gene_description") == null ? "" : geneMap.get(geneId).get("gene_description")) + "\n");
+                        errWriter.write(geneId + "\t" + (translator.getGeneMap().get(geneId).get("gene_name") == null ? "" : translator.getGeneMap().get(geneId).get("gene_name")) + "\t" + (translator.getGeneMap().get(geneId).get("gene_description") == null ? "" : translator.getGeneMap().get(geneId).get("gene_description")) + "\n");
                     }
                 }
                 catch (IOException e)
@@ -521,5 +447,5 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
 
     }
 
-    abstract protected void processOutputFiles(CountResults results, List<SequenceOutputFile> inputFiles, JSONObject params, Map<String, Map<String, String>> geneMap, PipelineJob job, RecordedAction action) throws PipelineJobException;
+    abstract protected void processOutputFiles(CountResults results, List<SequenceOutputFile> inputFiles, JSONObject params, GeneToNameTranslator translator, PipelineJob job, RecordedAction action) throws PipelineJobException;
 }

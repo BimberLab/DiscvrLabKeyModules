@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.analysis;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -11,9 +12,11 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandl
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.run.alignment.BWAWrapper;
 import org.labkey.sequenceanalysis.run.util.RnaSeQCWrapper;
 
 import java.io.File;
@@ -27,13 +30,13 @@ import java.util.List;
 /**
  * Created by bimber on 9/8/2014.
  */
-public class RnaSeqcHandler extends AbstractParameterizedOutputHandler
+public class RnaSeqcHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
     private FileType _bamFileType = new FileType("bam", false);
 
     public RnaSeqcHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "RNA-SeQC", "This will run RNA-SeQC on the selected BAMs, which produces quality metric reports.", new LinkedHashSet<>(Arrays.asList("sequenceanalysis/field/GenomeFileSelectorField.js")), Arrays.asList(
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "RNA-SeQC", "This will run RNA-SeQC on the selected BAMs, which produces quality metric reports.", new LinkedHashSet<>(Arrays.asList("sequenceanalysis/field/GenomeFileSelectorField.js", "ldk/field/ExpDataField.js")), Arrays.asList(
                 ToolParameterDescriptor.create("name", "Output Name", "This is the name that will be used to describe the output.", "textfield", new JSONObject(){{
                     put("allowBlank", false);
                 }}, null),
@@ -45,7 +48,8 @@ public class RnaSeqcHandler extends AbstractParameterizedOutputHandler
                         put("width", 400);
                         put("allowBlank", false);
                     }}, null),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-ttype"), "ttype", "Transcript Column", "The column in GTF to use to look for rRNA transcript type. Mainly used for running on Ensembl GTF (specify '-ttype 2'). Otherwise, for spec-conforming GTF files, disregard.", "ldk-integerfield", null, 2)
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-ttype"), "ttype", "Transcript Column", "The column in GTF to use to look for rRNA transcript type. Mainly used for running on Ensembl GTF (specify '-ttype 2'). Otherwise, for spec-conforming GTF files, disregard.", "ldk-integerfield", null, 2),
+                ToolParameterDescriptor.createExpDataParam("BWArRNA", "rRNA FASTA", "The dataId of a file representing rRNA sequence.  Use an on the fly BWA alignment for estimating rRNA content. The value should be the rRNA reference fasta. If this flag is absent, rRNA estimation will be based upon the rRNA transcript intervals provided in the GTF (a faster but less robust method).", "ldk-expdatafield", null, null)
         ));
     }
 
@@ -74,7 +78,7 @@ public class RnaSeqcHandler extends AbstractParameterizedOutputHandler
     }
 
     @Override
-    public OutputProcessor getProcessor()
+    public SequenceOutputProcessor getProcessor()
     {
         return new Processor();
     }
@@ -85,7 +89,7 @@ public class RnaSeqcHandler extends AbstractParameterizedOutputHandler
         return false;
     }
 
-    public class Processor implements OutputProcessor
+    public class Processor implements SequenceOutputProcessor
     {
         @Override
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
@@ -145,6 +149,16 @@ public class RnaSeqcHandler extends AbstractParameterizedOutputHandler
                 throw new PipelineJobException("Unable to find GTF file: " + gtfFile);
             }
 
+            File rnaFasta = null;
+            if (!StringUtils.isEmpty(params.optString("BWArRNA")))
+            {
+                rnaFasta = ctx.getSequenceSupport().getCachedData(params.getInt("BWArRNA"));
+                if (!rnaFasta.exists())
+                {
+                    throw new PipelineJobException("Unable to find fasta file: " + rnaFasta.getPath());
+                }
+            }
+
             RecordedAction action = new RecordedAction(getName());
             action.setStartTime(new Date());
 
@@ -171,7 +185,13 @@ public class RnaSeqcHandler extends AbstractParameterizedOutputHandler
 
             RnaSeQCWrapper wrapper = new RnaSeQCWrapper(job.getLogger());
             ReferenceGenome g = ctx.getSequenceSupport().getCachedGenome(inputFiles.get(0).getLibrary_id());
-            File outputReport = wrapper.execute(bams, sampleIds, notes, g.getWorkingFastaFile(), gtfFile, ctx.getOutputDir(), name, extraParams);
+            File outputReport = wrapper.execute(bams, sampleIds, notes, g.getWorkingFastaFile(), gtfFile, ctx.getOutputDir(), name, extraParams, rnaFasta);
+
+            File localBwaDir =new File(ctx.getOutputDir(), "bwaIndex");
+            if (localBwaDir.exists())
+            {
+                ctx.getFileManager().addIntermediateFile(localBwaDir);
+            }
 
             File indexHtml = new File(outputReport, "index.html");
             SequenceOutputFile so = new SequenceOutputFile();

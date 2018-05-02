@@ -99,6 +99,18 @@
                 <bean class="org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerFinalTask$Factory">
 
                 </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerInitTask$Factory">
+
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerWebserverTask$Factory">
+
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerRemoteTask$Factory">
+
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerFinalTask$Factory">
+
+                </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.ImportGenomeTrackTask$Factory">
                     <property name="location" value="webserver" />
                 </bean>
@@ -156,6 +168,18 @@
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerWebserverTask</value>
                             <ref bean="xarGeneratorJoin"/>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerFinalTask</value>
+                        </list>
+                    </property>
+                </bean>
+                <bean class="org.labkey.api.pipeline.TaskPipelineSettings">
+                    <constructor-arg type="java.lang.Class" value="org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerJob" />
+                    <property name="taskProgressionSpec">
+                        <list>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerInitTask</value>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerRemoteTask</value>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerWebserverTask</value>
+                            <ref bean="xarGeneratorJoin"/>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerFinalTask</value>
                         </list>
                     </property>
                 </bean>

@@ -260,7 +260,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             getHelper().getFileManager().deleteIntermediateFiles();
             getHelper().getFileManager().deleteDeferredIntermediateFiles();
             getHelper().getFileManager().cleanup(_resumer.getRecordedActions());
-            _resumer.markComplete();
+            _resumer.markComplete(false);
         }
         catch (IOException e)
         {
@@ -486,7 +486,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             while (!steps.isEmpty())
             {
                 PipelineStepCtx<PreprocessingStep> previous = combinedSteps.get(combinedSteps.size() - 1);
-                PipelineStepProvider<PreprocessingStep> combinedStepProvider = previous.getProvider().combineSteps(steps.get(0).getProvider());
+                PipelineStepProvider<PreprocessingStep> combinedStepProvider = previous.getProvider().combineSteps(previous.getStepIdx(), steps.get(0));
                 if (combinedStepProvider != null && previous.getStepIdx() == 0 && steps.get(0).getStepIdx() == 0)
                 {
                     //add this combined step to replace the previous
@@ -1346,7 +1346,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             return ret;
         }
 
-        private static String XML_NAME = "alignmentCheckpoint.xml";
+        protected static String XML_NAME = "alignmentCheckpoint.xml";
 
         @Override
         protected String getXmlName()

@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.run.util;
 
 import au.com.bytecode.opencsv.CSVWriter;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -11,10 +12,10 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.writer.PrintWriters;
+import org.labkey.sequenceanalysis.run.alignment.BWAWrapper;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ public class RnaSeQCWrapper extends AbstractCommandWrapper
         super(logger);
     }
 
-    public File execute(List<File> inputBams, List<String> sampleIds, @Nullable List<String> notes, File referenceFasta, File gtfFile, File outputDir, String name, @Nullable List<String> extraParams) throws PipelineJobException
+    public File execute(List<File> inputBams, List<String> sampleIds, @Nullable List<String> notes, File referenceFasta, File gtfFile, File outputDir, String name, @Nullable List<String> extraParams, @Nullable File rnaFasta) throws PipelineJobException
     {
         getLogger().info("Running RNA-SeQC on BAM: ");
         for (File f : inputBams)
@@ -50,6 +51,22 @@ public class RnaSeQCWrapper extends AbstractCommandWrapper
         if (extraParams != null)
         {
             params.addAll(extraParams);
+        }
+
+        File localRnaFasta = null;
+        if (rnaFasta != null)
+        {
+            localRnaFasta = prepareBwaIndex(rnaFasta, outputDir);
+
+            params.add("-BWArRNA");
+            params.add(localRnaFasta.getPath());
+
+            File bwaExe = new BWAWrapper(getLogger()).getExe();
+            if (bwaExe != null)
+            {
+                params.add("-bwa");
+                params.add(bwaExe.getPath());
+            }
         }
 
         //write sample file
@@ -152,6 +169,19 @@ public class RnaSeQCWrapper extends AbstractCommandWrapper
             filteredGtf.delete();
         }
 
+        if (localRnaFasta != null)
+        {
+            try
+            {
+                getLogger().info("deleting local copy of rRNA FASTA: " + localRnaFasta.getParentFile().getPath());
+                FileUtils.deleteDirectory(localRnaFasta.getParentFile());
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+
         return output;
     }
 
@@ -180,5 +210,41 @@ public class RnaSeQCWrapper extends AbstractCommandWrapper
         }
 
         return "java";
+    }
+
+    private File prepareBwaIndex(File fasta, File outdir) throws PipelineJobException
+    {
+        try
+        {
+            getLogger().info("Copying/preparing rRNA FASTA");
+            File subdir = new File(outdir, "bwaIndex");
+            if (!subdir.exists())
+            {
+                subdir.mkdirs();
+            }
+
+            File copy = new File(subdir, fasta.getName());
+            if (copy.exists())
+            {
+                copy.delete();
+            }
+
+            FileUtils.copyFile(fasta, copy);
+
+            BWAWrapper wrapper = new BWAWrapper(getLogger());
+
+            List<String> args = new ArrayList<>();
+            args.add(wrapper.getExe().getPath());
+            args.add("index");
+
+            args.add(copy.getPath());
+            wrapper.execute(args);
+
+            return copy;
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
     }
 }

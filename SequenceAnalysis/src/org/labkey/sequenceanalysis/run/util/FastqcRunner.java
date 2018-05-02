@@ -181,14 +181,14 @@ public class FastqcRunner
         return basename;
     }
 
-    private File getExpectedZipFile(File f)
+    public File getExpectedZipFile(File f)
     {
         File expectedHtml = getExpectedHtmlFile(f);
 
         return new File(expectedHtml.getParentFile(), FileUtil.getBaseName(FileUtil.getBaseName(expectedHtml)) + ".zip");
     }
 
-    private File getExpectedHtmlFile(File f)
+    public File getExpectedHtmlFile(File f)
     {
         File uncompressed = new File(f.getParentFile().getAbsolutePath(), getExpectedBasename(f) + "_fastqc.html");
 

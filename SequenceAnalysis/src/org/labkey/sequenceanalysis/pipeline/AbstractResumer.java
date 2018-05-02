@@ -96,11 +96,19 @@ abstract public class AbstractResumer implements Serializable
 
     public void markComplete()
     {
+        markComplete(true);
+    }
+
+    public void markComplete(boolean deleteXml)
+    {
         File xml = getSerializedXml(_localWorkDir, getXmlName());
         if (xml.exists())
         {
             _log.info("closing job resumer");
-            xml.delete();
+            if (deleteXml)
+                xml.delete();
+            else
+                _log.debug("delete of XML will be deferred");
         }
     }
 

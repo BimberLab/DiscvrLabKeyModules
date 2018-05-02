@@ -7,11 +7,12 @@ Ext4.namespace('Laboratory.buttonHandlers');
 
 Laboratory.buttonHandlers = new function(){
     return {
-        importDataHandler: function(dataregionName, target, schema, query, keyField, bulkUpload){
-            if (LABKEY.Security.currentContainer.type == 'workbook'){
-                window.location = LABKEY.ActionURL.buildURL('query', 'importData', null, {schemaName: schema, queryName: query, keyField: keyField, bulkUpload: !!bulkUpload})
+        importDataHandler: function(dataRegionName, schema, query, keyField, bulkImport){
+            if (LABKEY.Security.currentContainer.type === 'workbook'){
+                window.location = LABKEY.ActionURL.buildURL('query', 'importData', null, {schemaName: schema, queryName: query, keyField: keyField, bulkImport: !!bulkImport})
             }
             else {
+                var dataRegion = LABKEY.DataRegions[dataRegionName];
                 Ext4.create('Laboratory.window.WorkbookCreationWindow', {
                     controller: 'query',
                     action: 'importData',
@@ -19,10 +20,10 @@ Laboratory.buttonHandlers = new function(){
                         schemaName: schema,
                         queryName: query,
                         keyField: keyField,
-                        bulkUpload: !!bulkUpload
+                        bulkImport: !!bulkImport
                     },
                     title: 'Import Data'
-                }).show(target);
+                }).show(dataRegionName && dataRegion.domId ? Ext4.get(dataRegion.domId) : null);
             }
         },
 
@@ -125,10 +126,11 @@ Laboratory.buttonHandlers = new function(){
                                 btn.up('window').hide();
                             }
                         }]
-                    }).show();
+                    }).show(dataRegion.domId ? Ext4.get(dataRegion.domId) : null);
                 }
             });
         },
+
         appendCommentToSamples: function(dataRegionName){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
@@ -182,7 +184,6 @@ Laboratory.buttonHandlers = new function(){
                         buttons: [{
                             xtype: 'button',
                             text: 'Submit',
-                            scope: this,
                             handler: function(btn){
                                 var win = btn.up('window');
                                 var textarea = win.down('textarea');
@@ -228,11 +229,12 @@ Laboratory.buttonHandlers = new function(){
                                 btn.up('window').hide();
                             }
                         }]
-                    }).show();
+                    }).show(dataRegion.domId ? Ext4.get(dataRegion.domId) : null);
                 }
             });
         },
-        deriveSamples: function(dataRegionName, btn){
+
+        deriveSamples: function(dataRegionName){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
             if(!checked || !checked.length){
@@ -336,15 +338,17 @@ Laboratory.buttonHandlers = new function(){
                                     return;
                                 }
 
-                                var exportType = this.down('#exportType').getValue().exportType
+                                var exportType = this.down('#exportType').getValue().exportType;
                                 //var columns = LDK.StoreUtils.getExcelTemplateColumns(store);
                                 var header = [];
                                 var fieldMap = LDK.StoreUtils.getFieldMap(store);
                                 Ext4.each(columns, function(name){
+                                    if (name == 'rowid' || name == 'freezerid')
+                                        return;
+
                                     header.push(fieldMap[name].caption);
                                 }, this);
                                 var data = [header];
-                                var parentFieldIdx = header.indexOf('parentsample');
 
                                 store.each(function(sourceRec){
                                     var newRow = [];
@@ -353,14 +357,17 @@ Laboratory.buttonHandlers = new function(){
                                             return;
 
                                         //if the user selected
-                                        if(exportType == 'derive'){
-                                            if (colName == 'parentsample')
-                                                newRow.push(sourceRec.get('freezerid'));
-                                            else
-                                                newRow.push(sourceRec.get(colName));
+                                        if (exportType == 'derive' && colName == 'parentsample'){
+                                            newRow.push(sourceRec.get('freezerid'));
                                         }
                                         else {
-                                            newRow.push(sourceRec.get(colName));
+                                            var val = sourceRec.get(colName);
+                                            if (val instanceof Date) {
+                                                if (fieldMap[colName].extFormat) {
+                                                    val = Ext4.Date.format(val, fieldMap[colName].extFormat);
+                                                }
+                                            }
+                                            newRow.push(val);
                                         }
                                     }, this);
 
@@ -376,101 +383,10 @@ Laboratory.buttonHandlers = new function(){
                                     }]
                                 });
                             }
-                        }).show(btn);
+                        }).show(dataRegion.domId ? Ext4.get(dataRegion.domId) : null);
                     }
                 }
             });
-        },
-
-        publishSamples: function(dataRegionName, btn){
-            var dr = LABKEY.DataRegions[dataRegionName];
-            var checked = dr.getChecked();
-
-            Ext4.create('Ext.window.Window', {
-                dataRegionName: dataRegionName,
-                model: true,
-                closeAction: 'destroy',
-                checkedRecords: checked,
-                width: 400,
-                items: [{
-                    style: 'padding: 5px;',
-                    border: false,
-                    items: [{
-                        html: 'The selected records will either be marked as public or hidden, depending on your selection below.  All records will be changed to the same state.  To mark these records as private, uncheck the box and hit submit.  Note: marking a record as public is simply a flag and does not inherently share it with other users outside of those who already have read access to the table.  In certain applications, this flag it used to denote records to be shared; however, it is unlikely this is occurring if you are not explicitly aware of it.<br>',
-                        style: 'margin-bottom: 10px;',
-                        border: false
-                    },{
-                        fieldLabel: 'Set Records as Public',
-                        labelWidth: 160,
-                        xtype: 'checkbox',
-                        itemId: 'public',
-                        checked: false
-                    },{
-                        height: 10,
-                        border: false
-                    }]
-                }],
-                buttons: [{
-                    text: 'Submit',
-                    scope: this,
-                    handler: function(btn){
-                        Ext4.Msg.wait('Saving...');
-
-                        //b/c these records might be of different containers, we select to get containerId, then update
-                        LABKEY.Query.selectRows({
-                            containerPath: LABKEY.DataRegions[dataRegionName].containerPath,
-                            schemaName: 'laboratory',
-                            queryName: 'samples',
-                            columns: 'rowid,container',
-                            ignoreFilter: 1,
-                            filterArray: [LABKEY.Filter.create('rowid', checked.join(';'), LABKEY.Filter.Types.IN)],
-                            scope: this,
-                            failure: LDK.Utils.getErrorCallback(),
-                            success: function(results){
-                                if (results && results.rows.length){
-                                    var win = btn.up('window');
-                                    var state = win.down('#public').getValue();
-
-                                    var rows = [];
-                                    Ext4.each(results.rows, function(rec){
-                                        rows.push({
-                                            rowid: rec.rowid,
-                                            container: rec.container,
-                                            makePublic: state
-                                        });
-                                    }, this);
-
-                                    if (rows.length){
-                                        LABKEY.Query.updateRows({
-                                            containerPath: LABKEY.DataRegions[dataRegionName].containerPath,
-                                            schemaName: 'laboratory',
-                                            queryName: 'samples',
-                                            rows: rows,
-                                            scope: this,
-                                            failure: LDK.Utils.getErrorCallback(),
-                                            success: function(results){
-                                                Ext4.Msg.hide();
-                                                win.close();
-                                                Ext4.Msg.alert('Success', 'Records updated', function(){
-                                                    LABKEY.DataRegions[dataRegionName].refresh();
-                                                }, this);
-                                            }
-                                        });
-                                    }
-                                }
-                                else {
-                                    Ext4.Msg.hide();
-                                }
-                            }
-                        });
-                    }
-                },{
-                    text: 'Cancel',
-                    handler: function(btn){
-                        btn.up('window').close();
-                    }
-                }]
-            }).show(btn);
         }
     }
 }

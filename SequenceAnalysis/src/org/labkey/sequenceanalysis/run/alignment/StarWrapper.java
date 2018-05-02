@@ -304,7 +304,7 @@ public class StarWrapper extends AbstractCommandWrapper
             IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
             File indexDir = new File(outputDir, getProvider().getName());
-            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(), referenceGenome);
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(getPipelineCtx().getJob()), referenceGenome);
             if (!hasCachedIndex)
             {
                 if (!indexDir.exists())
@@ -401,7 +401,7 @@ public class StarWrapper extends AbstractCommandWrapper
                 }}, 10)
             ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "https://github.com/alexdobin/STAR/", true, true, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
 
-            setAlwaysCacheIndex(true);;
+            setAlwaysCacheIndex(true);
         }
 
         public StarAlignmentStep create(PipelineContext context)

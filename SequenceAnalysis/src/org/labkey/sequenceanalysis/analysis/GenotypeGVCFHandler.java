@@ -40,7 +40,7 @@ import java.util.Set;
 /**
  * Created by bimber on 8/26/2014.
  */
-public class GenotypeGVCFHandler implements SequenceOutputHandler, SequenceOutputHandler.HasActionNames
+public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, SequenceOutputHandler.HasActionNames
 {
     private FileType _gvcfFileType = new FileType(Arrays.asList(".g.vcf"), ".g.vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
 
@@ -140,12 +140,12 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler, SequenceOutpu
     }
 
     @Override
-    public OutputProcessor getProcessor()
+    public SequenceOutputProcessor getProcessor()
     {
         return new Processor();
     }
 
-    public class Processor implements OutputProcessor
+    public class Processor implements SequenceOutputProcessor
     {
         @Override
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException

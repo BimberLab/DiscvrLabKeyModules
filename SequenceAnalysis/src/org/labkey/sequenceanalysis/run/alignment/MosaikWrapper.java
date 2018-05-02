@@ -77,7 +77,7 @@ public class MosaikWrapper extends AbstractCommandWrapper
 
             File indexDir = new File(outputDir, getProvider().getName());
             File outputFile = getWrapper().getExpectedMosaikRefFile(indexDir, referenceGenome.getWorkingFastaFile());
-            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(), referenceGenome);
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(getPipelineCtx().getJob()), referenceGenome);
             if (!hasCachedIndex)
             {
                 if (!indexDir.exists())
@@ -323,7 +323,7 @@ public class MosaikWrapper extends AbstractCommandWrapper
                             mergedRecords++;
 
                             String key = r1.getReadName() + "<>" + r1.getContig() + "<>" + r1.getCigarString();
-                            if (!r1.getProperPairFlag() || r1.getFirstOfPairFlag())
+                            if (!r1.getReadPairedFlag() || r1.getFirstOfPairFlag())
                             {
                                 forwardKeys.add(key);
                             }
@@ -339,7 +339,7 @@ public class MosaikWrapper extends AbstractCommandWrapper
                             multipleRecords++;
 
                             String key = r1.getReadName() + "<>" + r1.getContig() + "<>" + r1.getCigarString();
-                            if (!r1.getProperPairFlag() || r1.getFirstOfPairFlag())
+                            if (!r1.getReadPairedFlag() || r1.getFirstOfPairFlag())
                             {
                                 if (!forwardKeys.contains(key))
                                 {

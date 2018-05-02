@@ -383,7 +383,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
 
                     writer.write("#SBATCH --workdir=" + getConfig().getClusterPath(job.getLogFile().getParentFile()) + "\n");
 
-                    String args = StringUtils.join(getConfig().getJobArgs(outDir, serializedJobFile), " ");
+                    String args = StringUtils.join(getConfig().getJobArgs(outDir, serializedJobFile, job, this), " ");
                     writer.write("srun " + getConfig().getRemoteExecutable() + " " + args);
                 }
             }

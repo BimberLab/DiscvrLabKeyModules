@@ -330,7 +330,7 @@
             <item text="Grid Views">
                 <originalText>Grid Views</originalText>
             </item>
-            <item text="Delete" permission="ADMIN" requiresSelection="true" iconCls="trash">
+            <item text="Delete" permission="DELETE" requiresSelection="true" insertBefore="Export" iconCls="trash">
                 <onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</onClick>
             </item>
             <item text="Export">
@@ -484,7 +484,7 @@
             <item text="Grid Views">
                 <originalText>Grid Views</originalText>
             </item>
-            <item text="Delete" permission="DELETE" requiresSelection="true" iconCls="trash">
+            <item text="Delete" permission="DELETE" requiresSelection="true" insertBefore="Export" iconCls="trash">
                 <onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</onClick>
             </item>
             <item text="Export">
@@ -879,7 +879,7 @@
             <item hidden="true">
                 <originalText>Charts</originalText>
             </item>
-            <item text="Delete" permission="ADMIN" requiresSelection="true" iconCls="trash">
+            <item text="Delete" permission="DELETE" requiresSelection="true" insertBefore="Export" iconCls="trash">
                 <onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</onClick>
             </item>
             <item insertPosition="end" text="More Actions" iconCls="ellipsis-h">
@@ -1175,7 +1175,7 @@
             <item text="Grid Views">
                 <originalText>Grid Views</originalText>
             </item>
-            <item text="Delete" permission="DELETE" requiresSelection="true" iconCls="trash">
+            <item text="Delete" permission="DELETE" requiresSelection="true" insertBefore="Export" iconCls="trash">
                 <onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</onClick>
             </item>
             <item text="Export">
@@ -2079,7 +2079,7 @@
         <updateUrl></updateUrl>
         <insertUrl></insertUrl>
         <importUrl></importUrl>
-        <!--<deleteUrl></deleteUrl>-->
+        <deleteUrl></deleteUrl>
         <tableTitle>Reference Genomes</tableTitle>
         <columns>
             <column columnName="rowid">
@@ -2140,6 +2140,10 @@
             <item hidden="true">
                 <originalText>Charts</originalText>
             </item>
+            <item text="Delete" permission="DELETE" requiresSelection="true" insertBefore="Export" iconCls="trash">
+                <onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</onClick>
+            </item>
+
             <item insertPosition="end" text="More Actions" iconCls="ellipsis-h">
                 <item text="Import From FASTA">
                     <onClick>SequenceAnalysis.window.ImportSequencesFromFastaWindow.buttonHandler(dataRegionName, true)</onClick>
@@ -2486,7 +2490,7 @@
             <includeScript>sequenceanalysis/field/ReadsetField.js</includeScript>
             <includeScript>sequenceanalysis/window/ImportOutputFileWindow.js</includeScript>
             <includeScript>sequenceanalysis/window/VisualizeDataWindow.js</includeScript>
-            <item text="Import Files" insertPosition="beginning">
+            <item text="Import Files" insertPosition="beginning" iconCls="plus">
                 <onClick>SequenceAnalysis.window.ImportOutputFileWindow.buttonHandler(dataRegionName);</onClick>
             </item>
             <item text="Delete" permission="DELETE" requiresSelection="true" insertBefore="Export" iconCls="trash">

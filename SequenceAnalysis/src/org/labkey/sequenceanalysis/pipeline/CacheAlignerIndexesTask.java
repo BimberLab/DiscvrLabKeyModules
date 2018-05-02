@@ -124,8 +124,8 @@ public class CacheAlignerIndexesTask extends WorkDirectoryTask<CacheAlignerIndex
                     getJob().getLogger().info("preparing index for: " + provider.getName());
                     AlignmentStep alignmentStep = provider.create(ctx);
 
-                    boolean hasIndex = AlignerIndexUtil.hasCachedIndex(alignmentStep.getPipelineCtx(), alignmentStep.getIndexCachedDirName(), referenceGenome);
-                    File outDir = new File(_wd.getDir(), alignmentStep.getIndexCachedDirName());
+                    boolean hasIndex = AlignerIndexUtil.hasCachedIndex(alignmentStep.getPipelineCtx(), alignmentStep.getIndexCachedDirName(getJob()), referenceGenome);
+                    File outDir = new File(_wd.getDir(), alignmentStep.getIndexCachedDirName(getJob()));
                     if (!hasIndex)
                     {
                         //create locally first

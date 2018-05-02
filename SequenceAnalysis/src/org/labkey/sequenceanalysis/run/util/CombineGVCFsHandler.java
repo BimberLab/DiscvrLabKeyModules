@@ -12,6 +12,7 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
@@ -28,7 +29,7 @@ import java.util.Set;
 /**
  * Created by bimber on 4/2/2017.
  */
-public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler
+public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
     public static final String NAME = "Combine GVCFs";
     private FileType _gvcfFileType = new FileType(Arrays.asList(".g.vcf"), ".g.vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
@@ -68,12 +69,12 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler
     }
 
     @Override
-    public OutputProcessor getProcessor()
+    public SequenceOutputProcessor getProcessor()
     {
         return new Processor();
     }
 
-    public class Processor implements OutputProcessor
+    public class Processor implements SequenceOutputProcessor
     {
         @Override
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
@@ -116,22 +117,34 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler
                 throw new PipelineJobException("Unable to find cached genome for Id: " + genomeId);
             }
 
+            //NOTE: because this is an especially long single-step task, build in local 'resume'
+            boolean isResume = false;
+            String basename = ctx.getParams().getString("fileBaseName");
+            File outputFile = new File(ctx.getOutputDir(), basename + (basename.endsWith(".") ? "" : ".") + "g.vcf.gz");
+            File outputFileIdx = new File(outputFile.getPath() + ".tbi");
+            if (outputFileIdx.exists())
+            {
+                ctx.getLogger().info("expected output already exists, will attempt to resume using this output");
+                isResume = true;
+            }
+
             Set<File> toDelete = new HashSet<>();
             List<File> vcfsToProcess = new ArrayList<>();
             if (doCopyLocal)
             {
                 ctx.getLogger().info("making local copies of gVCFs");
-                vcfsToProcess.addAll(GenotypeGVCFsWrapper.copyVcfsLocally(inputVcfs, toDelete, ctx.getOutputDir(), ctx.getLogger()));
+                vcfsToProcess.addAll(GenotypeGVCFsWrapper.copyVcfsLocally(inputVcfs, toDelete, ctx.getOutputDir(), ctx.getLogger(), isResume));
             }
             else
             {
                 vcfsToProcess.addAll(inputVcfs);
             }
 
-            String basename = ctx.getParams().getString("fileBaseName");
-            File outputFile = new File(ctx.getOutputDir(), basename + (basename.endsWith(".") ? "" : ".") + "g.vcf.gz");
             CombineGVCFsWrapper wrapper = new CombineGVCFsWrapper(ctx.getLogger());
-            wrapper.execute(genome.getWorkingFastaFile(), outputFile, null, vcfsToProcess.toArray(new File[vcfsToProcess.size()]));
+            if (!isResume)
+            {
+                wrapper.execute(genome.getWorkingFastaFile(), outputFile, null, vcfsToProcess.toArray(new File[vcfsToProcess.size()]));
+            }
 
             if (!outputFile.exists())
             {

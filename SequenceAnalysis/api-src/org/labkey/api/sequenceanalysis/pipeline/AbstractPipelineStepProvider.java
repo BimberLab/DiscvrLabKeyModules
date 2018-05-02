@@ -166,7 +166,7 @@ abstract public class AbstractPipelineStepProvider<StepType extends PipelineStep
     }
 
     @Override
-    public PipelineStepProvider<StepType> combineSteps(PipelineStepProvider provider)
+    public PipelineStepProvider<StepType> combineSteps(int existingStepIdx, PipelineStepCtx toCombine)
     {
         return null;
     }

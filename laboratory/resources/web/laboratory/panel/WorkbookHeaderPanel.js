@@ -4,7 +4,7 @@
  * @param methods
  * @param results
  */
-Ext4.define('Laboratory.panel.WebpartHeaderPanel', {
+Ext4.define('Laboratory.panel.WorkbookHeaderPanel', {
     extend: 'LDK.panel.WebpartPanel',
     initComponent: function(){
         Ext4.apply(this, {

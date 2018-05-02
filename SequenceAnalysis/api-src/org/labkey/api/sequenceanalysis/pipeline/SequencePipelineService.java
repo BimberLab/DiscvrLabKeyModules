@@ -69,12 +69,16 @@ abstract public class SequencePipelineService
 
     abstract public String getJavaFilepath();
 
+    abstract public String getJavaTempDir();
+
     abstract public List<String> getJavaOpts();
 
     @Nullable
     abstract public File getRemoteGenomeCacheDirectory();
 
     abstract public Integer getMaxThreads(Logger log);
+
+    abstract public Integer getMaxRam();
 
     abstract public CommandWrapper getCommandWrapper(Logger log);
 

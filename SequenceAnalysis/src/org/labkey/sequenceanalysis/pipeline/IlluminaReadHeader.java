@@ -37,7 +37,8 @@ public class IlluminaReadHeader
     private String _indexSequenceString;
 
     private static final int NO_SAMPLE_NUMBER_FOUND = -1;
-    private static final Pattern INDEX_PATTERN = Pattern.compile("^[ATGCN]+\\+[ATGCN]+$");
+    private static final Pattern INDEX_PATTERN_DOUBLE = Pattern.compile("^[ATGCN]+\\+[ATGCN]+$");
+    private static final Pattern INDEX_PATTERN_SINGLE = Pattern.compile("^[ATGCN]+$");
 
     public IlluminaReadHeader(String header) throws IllegalArgumentException
     {
@@ -72,6 +73,8 @@ public class IlluminaReadHeader
             //@<instrument>:<run number>:<flowcell ID>:<lane>:<tile>:<x-pos>:<y-pos> <read>:<is filtered>:<control number>:<index sequence>
             //example: @M00370:191:000000000-B2CPR:1:1101:15020:1351 2:N:0:AAGAGGCA+ACTGCATA
 
+            // another alternate:
+            // D00735:242:CBNW7ANXX:2:2201:1228:1813 1:N:0:GTCCGC
             _instrument = h[0];
             _runId = Integer.parseInt(h[1]);
             _flowCellId = h[2];
@@ -92,7 +95,7 @@ public class IlluminaReadHeader
             if (h.length > 10)
             {
                 //Note: if this read was not demultiplexed by illumina, the index sequence may appear in this position
-                if (INDEX_PATTERN.matcher(h[10]).find())
+                if (INDEX_PATTERN_DOUBLE.matcher(h[10]).find() || INDEX_PATTERN_SINGLE.matcher(h[10]).find())
                 {
                     _indexSequenceString = h[10];
                 }

@@ -106,7 +106,7 @@ public class CustomReferenceLibraryStep extends AbstractPipelineStep implements 
         }
 
 
-        ReferenceLibraryOutputImpl output = new ReferenceLibraryOutputImpl(new ReferenceGenomeImpl(refFasta, null, null));
+        ReferenceLibraryOutputImpl output = new ReferenceLibraryOutputImpl(new ReferenceGenomeImpl(refFasta, null, null, null));
         output.addOutput(refFasta, IndexOutputImpl.REFERENCE_DB_FASTA);
         output.addOutput(outputDirectory, "Reference Genome Folder");
 

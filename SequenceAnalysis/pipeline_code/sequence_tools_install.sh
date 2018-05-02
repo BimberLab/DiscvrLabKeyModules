@@ -44,7 +44,9 @@ LK_USER=
 MAVEN_OPTS="-Xss10m"
 
 #NOTE: java/javac not automatically picked up
-PATH=${JAVA_HOME}/bin:$PATH
+if [ ! -z $JAVA_HOME ]; then
+    PATH=${JAVA_HOME}/bin:$PATH
+fi
 
 while getopts "d:u:fpc" arg;
 do
@@ -128,7 +130,7 @@ if [ ! -z $SKIP_PACKAGE_MANAGER ]; then
     echo "Skipping package install"
 elif [ $(which yum) ]; then
     echo "Using Yum"
-    yum -y install zip unzip gcc bzip2-devel gcc-c++ libstdc++ libstdc++-devel glibc-devel boost-devel ncurses-devel libgtextutils libgtextutils-devel python-devel openssl-devel glibc-static expat expat-devel subversion cpan git cmake liblzf-devel apache-maven R perl-devel perl-CPAN perl-PerlIO-gzip
+    yum -y install zip unzip gcc bzip2-devel gcc-c++ libstdc++ libstdc++-devel glibc-devel boost-devel ncurses-devel libgtextutils libgtextutils-devel python-devel openssl-devel glibc-static expat expat-devel subversion cpan git cmake liblzf-devel apache-maven R perl-devel perl-CPAN perl-PerlIO-gzip python-pip
 elif [ $(which apt-get) ]; then
     echo "Using apt-get"
 
@@ -145,7 +147,7 @@ elif [ $(which apt-get) ]; then
     #update-alternatives --config java
     #update-alternatives --config javac
 
-    apt-get -q -y install bzip2 libbz2-dev libc6 libc6-dev libncurses5-dev libgtextutils-dev python-dev unzip zip ncftp gcc make perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc git cmake maven r-base r-cran-rcpp
+    apt-get -q -y install bzip2 libbz2-dev libc6 libc6-dev libncurses5-dev libgtextutils-dev python-dev unzip zip ncftp gcc make perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc git cmake maven r-base r-cran-rcpp python-pip
 else
     echo "No known package manager present, aborting"
     exit 1
@@ -365,8 +367,8 @@ then
     rm -Rf DISCVRSeq*
     rm -Rf ${LKTOOLS_DIR}/DISCVRSeq.jar
 
-    wget $WGET_OPTS https://github.com/DISCVRSeq/DISCVRSeq/releases/download/0.01/DISCVRSeq-0.01.jar
-    cp DISCVRSeq-0.01.jar ${LKTOOLS_DIR}/DISCVRSeq.jar
+    wget $WGET_OPTS https://github.com/DISCVRSeq/DISCVRSeq/releases/download/0.06/DISCVRSeq-0.06.jar
+    cp DISCVRSeq-0.06.jar ${LKTOOLS_DIR}/DISCVRSeq.jar
 fi
 
 if [[ ! -e ${LKTOOLS_DIR}/GenomeAnalysisTK-discvr.jar || ! -z $FORCE_REINSTALL ]];
@@ -561,6 +563,30 @@ then
     cp -R ./MOSAIK-2.2.3-source/networkFile/*.ann $LKTOOLS_DIR/mosaikNetworkFile/
 else
     echo "Mosaik network files already downloaded"
+fi
+
+
+#
+#MultiQC
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install MultiQC"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/multiqc || ! -z $FORCE_REINSTALL ]];
+then
+    rm -Rf MultiQC*
+    rm -Rf $LKTOOLS_DIR/multiqc
+
+    git clone https://github.com/ewels/MultiQC.git
+    cd MultiQC
+    python setup.py install --user
+    cp ./build/scripts-2.7/multiqc $LKTOOLS_DIR
+else
+    echo "MultiQC already installed"
 fi
 
 
@@ -855,7 +881,7 @@ then
     rm -Rf $LKTOOLS_DIR/htsjdk-*
     rm -Rf $LKTOOLS_DIR/libIntelDeflater.so
 
-    wget $WGET_OPTS https://github.com/broadinstitute/picard/releases/download/2.17.1/picard.jar
+    wget $WGET_OPTS https://github.com/broadinstitute/picard/releases/download/2.17.11/picard.jar
 
     cp -R ./picard.jar $LKTOOLS_DIR/
 else
@@ -1148,19 +1174,19 @@ echo "Installing jbrowse"
 echo ""
 cd $LKSRC_DIR
 
-if [[ ! -e ${LKTOOLS_DIR}/JBrowse-1.12.1 || ! -z $FORCE_REINSTALL ]];
+if [[ ! -e ${LKTOOLS_DIR}/JBrowse-1.12.4 || ! -z $FORCE_REINSTALL ]];
 then
     rm -Rf JBrowse-*
     rm -Rf $LKTOOLS_DIR/JBrowse-*
 
-    wget $WGET_OPTS https://jbrowse.org/releases/JBrowse-1.12.1.zip
-    unzip JBrowse-1.12.1.zip
-    rm JBrowse-1.12.1.zip
-    cd JBrowse-1.12.1
+    wget $WGET_OPTS https://github.com/GMOD/jbrowse/releases/download/1.12.4-release/JBrowse-1.12.4.zip
+    unzip JBrowse-1.12.4.zip
+    rm JBrowse-1.12.4.zip
+    cd JBrowse-1.12.4
     ./setup.sh
     cd ../
 
-    cp -R ./JBrowse-1.12.1 $LKTOOLS_DIR/JBrowse-1.12.1
+    cp -R ./JBrowse-1.12.4 $LKTOOLS_DIR/JBrowse-1.12.4
 else
     echo "Already installed"
 fi
@@ -1184,14 +1210,14 @@ then
     rm -Rf $LKTOOLS_DIR/blast_formatter
     rm -Rf $LKTOOLS_DIR/makeblastdb
 
-    wget $WGET_OPTS ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.2.30/ncbi-blast-2.2.30+-x64-linux.tar.gz
-    gunzip ncbi-blast-2.2.30+-x64-linux.tar.gz
-    tar -xf ncbi-blast-2.2.30+-x64-linux.tar
-    gzip ncbi-blast-2.2.30+-x64-linux.tar
+    wget $WGET_OPTS ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.2.31/ncbi-blast-2.2.31+-x64-linux.tar.gz
+    gunzip ncbi-blast-2.2.31+-x64-linux.tar.gz
+    tar -xf ncbi-blast-2.2.31+-x64-linux.tar
+    gzip ncbi-blast-2.2.31+-x64-linux.tar
 
-    install ./ncbi-blast-2.2.30+/bin/blastn $LKTOOLS_DIR/blastn
-    install ./ncbi-blast-2.2.30+/bin/blast_formatter $LKTOOLS_DIR/blast_formatter
-    install ./ncbi-blast-2.2.30+/bin/makeblastdb $LKTOOLS_DIR/makeblastdb
+    install ./ncbi-blast-2.2.31+/bin/blastn $LKTOOLS_DIR/blastn
+    install ./ncbi-blast-2.2.31+/bin/blast_formatter $LKTOOLS_DIR/blast_formatter
+    install ./ncbi-blast-2.2.31+/bin/makeblastdb $LKTOOLS_DIR/makeblastdb
 else
     echo "Already installed"
 fi

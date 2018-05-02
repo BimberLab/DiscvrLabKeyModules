@@ -58,6 +58,7 @@ Ext4.define('SequenceAnalysis.window.ImportOutputFileWindow', {
                     xtype: 'ldk-simplelabkeycombo',
                     fieldLabel: 'Category',
                     name: 'category',
+                    allowBlank: false,
                     containerPath: Laboratory.Utils.getQueryContainerPath(),
                     schemaName: 'sequenceanalysis',
                     queryName: 'outputfile_categories',

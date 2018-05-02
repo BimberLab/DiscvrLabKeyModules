@@ -92,7 +92,7 @@ public class BWAWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public String getIndexCachedDirName()
+        public String getIndexCachedDirName(PipelineJob job)
         {
             return "bwa";
         }
@@ -103,8 +103,8 @@ public class BWAWrapper extends AbstractCommandWrapper
             getPipelineCtx().getLogger().info("Creating BWA index");
             IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
-            File indexDir = new File(outputDir, getIndexCachedDirName());
-            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(), referenceGenome);
+            File indexDir = new File(outputDir, getIndexCachedDirName(getPipelineCtx().getJob()));
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(getPipelineCtx().getJob()), referenceGenome);
             if (!hasCachedIndex)
             {
                 List<String> args = new ArrayList<>();

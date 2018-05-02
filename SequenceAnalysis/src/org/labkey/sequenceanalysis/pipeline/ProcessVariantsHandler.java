@@ -53,7 +53,7 @@ import java.util.TreeMap;
 /**
  * Created by bimber on 8/26/2014.
  */
-public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOutputHandler.HasActionNames
+public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, SequenceOutputHandler.HasActionNames
 {
     private FileType _vcfFileType = new FileType(Arrays.asList(".vcf"), ".vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
     private ProcessVariantsHandler.Resumer _resumer;
@@ -136,7 +136,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
     }
 
     @Override
-    public OutputProcessor getProcessor()
+    public SequenceOutputProcessor getProcessor()
     {
         return new Processor();
     }
@@ -298,19 +298,19 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
                 ctx.getJob().getLogger().info("total variants: " + getVCFLineCount(currentVCF, ctx.getJob().getLogger(), false));
                 ctx.getJob().getLogger().info("passing variants: " + getVCFLineCount(currentVCF, ctx.getJob().getLogger(), true));
                 ctx.getJob().getLogger().debug("index exists: " + (new File(currentVCF.getPath() + ".tbi")).exists());
+
+                try
+                {
+                    SequenceAnalysisService.get().ensureVcfIndex(currentVCF, ctx.getJob().getLogger(), true);
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
             }
             else
             {
                 ctx.getLogger().info("no output VCF produced");
-            }
-
-            try
-            {
-                SequenceAnalysisService.get().ensureVcfIndex(currentVCF, ctx.getJob().getLogger(), true);
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
             }
 
             Date end = new Date();
@@ -357,7 +357,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler, SequenceOu
         return ret;
     }
 
-    public class Processor implements OutputProcessor
+    public class Processor implements SequenceOutputProcessor
     {
         @Override
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException

@@ -1,5 +1,6 @@
 package org.labkey.api.cluster;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.RemoteExecutionEngine;
@@ -49,4 +50,13 @@ public interface ClusterResourceAllocator
      */
     @Nullable
     public void addExtraSubmitScriptLines(PipelineJob job, RemoteExecutionEngine engine, List<String> existingExtraLines);
+
+    /**
+     * The memory, in GB, to use as -xmx for the LabKey java remote process
+     */
+    @Nullable
+    default void processJavaOpts(PipelineJob job, RemoteExecutionEngine engine, @NotNull List<String> existingJavaOpts)
+    {
+
+    }
 }

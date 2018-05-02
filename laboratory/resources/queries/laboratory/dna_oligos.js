@@ -15,11 +15,12 @@ function beforeBoth(row, errors) {
     if(row.sequence){
         //remove whitespace
         row.sequence = row.sequence.replace(/\s/g, '');
-        row.sequence = row.sequence.toUpperCase();
 
-        if(!row.sequence.match(/^[ATGCNRYSWKMBDHVN]+$/)){
-            errors.sequence = ('Sequence can only contain valid bases: ATGCN or IUPAC bases: RYSWKMBDHV');
-        }
+
+        //NOTE: removed this validation since oligo modifications are important to capture
+        //if(!row.modifications && !row.sequence.match(/^[ATGCNRYSWKMBDHVN]+$/)){
+        //    errors.sequence = ('Sequence can only contain valid bases: ATGCN or IUPAC bases: RYSWKMBDHV');
+        //}
     }
 }
 

@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import htsjdk.samtools.util.IOUtil;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
@@ -55,11 +56,20 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
         saveFiles(files);
     }
 
-    protected void saveFiles(List<SequenceOutputFile> files) throws IOException
+    protected void saveFiles(List<SequenceOutputFile> files)
     {
         if (files != null && !files.isEmpty())
         {
-            try (XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(getSerializedOutputFilesFile()))))
+            File xml = getSerializedOutputFilesFile();
+
+            //remove legacy non-gz file if exists.  remove code eventually
+            File legacyXml = new File(FileUtil.getBaseName(xml));
+            if (legacyXml.exists())
+            {
+                legacyXml.delete();
+            }
+
+            try (XMLEncoder encoder = new XMLEncoder(IOUtil.maybeBufferOutputStream(IOUtil.openFileForWriting(xml))))
             {
                 getLogger().info("writing SequenceOutputFiles to XML: " + files.size());
                 encoder.writeObject(new ArrayList<>(files));
@@ -74,9 +84,16 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
     protected List<SequenceOutputFile> readOutputFilesFromFile() throws PipelineJobException, IOException
     {
         File xml = getSerializedOutputFilesFile();
+
+        //legacy support for non-gz version.  remove eventually
+        if (!xml.exists())
+        {
+            xml = new File(FileUtil.getBaseName(xml));
+        }
+
         if (xml.exists() && SequenceUtil.hasLineCount(xml))
         {
-            try (XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(xml))))
+            try (XMLDecoder decoder = new XMLDecoder(IOUtil.maybeBufferInputStream(IOUtil.openFileForReading(xml))))
             {
                 List<SequenceOutputFile> ret = (List<SequenceOutputFile>) decoder.readObject();
                 getLogger().debug("read SequenceOutputFiles from file: " + ret.size());
@@ -121,7 +138,7 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
 
     public File getSerializedOutputFilesFile()
     {
-        return new File(getDataDirectory(), FileUtil.getBaseName(getLogFile()) + ".outputs.xml");
+        return new File(getDataDirectory(), FileUtil.getBaseName(getLogFile()) + ".outputs.xml.gz");
     }
 
     @Override
@@ -130,9 +147,9 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
         return  PipelineJobService.get().getTaskPipeline(new TaskId(SequenceOutputHandlerJob.class));
     }
 
-    public SequenceOutputHandler getHandler()
+    public SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> getHandler()
     {
-        SequenceOutputHandler handler = SequenceAnalysisManager.get().getFileHandler(_handlerClassName);
+        SequenceOutputHandler handler = SequenceAnalysisManager.get().getFileHandler(_handlerClassName, SequenceOutputHandler.TYPE.OutputFile);
         if (handler == null)
         {
             throw new IllegalArgumentException("Unable to find handler: " + _handlerClassName);
@@ -151,7 +168,7 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
         }
         catch (IOException e)
         {
-            throw new PipelineJobException("Unable to file: " + getSerializedOutputFilesFile().getPath(), e);
+            throw new PipelineJobException("Unable to find file: " + getSerializedOutputFilesFile().getPath(), e);
         }
     }
 

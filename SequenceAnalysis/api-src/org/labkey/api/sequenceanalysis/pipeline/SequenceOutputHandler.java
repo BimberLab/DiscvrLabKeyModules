@@ -24,6 +24,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.view.ActionURL;
 
 import java.io.File;
@@ -41,8 +42,26 @@ import java.util.List;
  *
  * Created by bimber on 8/25/2014.
  */
-public interface SequenceOutputHandler
+public interface SequenceOutputHandler<T>
 {
+    public static enum TYPE
+    {
+        OutputFile(SequenceOutputProcessor.class),
+        Readset(SequenceReadsetProcessor.class);
+
+        private Class processorClass;
+
+        TYPE(Class processorClass)
+        {
+            this.processorClass = processorClass;
+        }
+
+        public Class getProcessorClass()
+        {
+            return processorClass;
+        }
+    }
+
     public String getName();
 
     public String getDescription();
@@ -97,14 +116,19 @@ public interface SequenceOutputHandler
      */
     public boolean doRunLocal();
 
-    public OutputProcessor getProcessor();
+    public T getProcessor();
 
     /**
      * If true, a separate job will be queued per file.  If not, a single job will run for all files.
      */
     public boolean doSplitJobs();
 
-    public interface OutputProcessor
+    public interface SequenceProcessor
+    {
+
+    }
+
+    public interface SequenceOutputProcessor extends SequenceProcessor
     {
         /**
          * Allows handlers to perform setup on the webserver prior to remote running.  This will be run in the background as a pipeline job.
@@ -115,7 +139,6 @@ public interface SequenceOutputHandler
          * @param outputDir
          * @param actions
          * @param outputsToCreate
-         * @return A list of new SequenceOutputFile records to create
          */
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException;
 
@@ -130,13 +153,45 @@ public interface SequenceOutputHandler
          * @param outputDir
          * @param actions
          * @param outputsToCreate
-         * @return A list of new SequenceOutputFile records to create
          */
         public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException;
 
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException;
 
         default void complete(PipelineJob job, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated) throws PipelineJobException
+        {
+
+        }
+    }
+
+    public interface SequenceReadsetProcessor extends SequenceProcessor
+    {
+        /**
+         * Allows handlers to perform setup on the webserver prior to remote running.  This will be run in the background as a pipeline job.
+         * @param job             The pipeline job running this task
+         * @param support Provides context about the active pipeline job
+         * @param readsets      The list of readsets to process
+         * @param params
+         * @param outputDir
+         * @param actions
+         * @param outputsToCreate
+         */
+        public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<Readset> readsets, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException;
+
+        /**
+         *
+         * @param support Provides context about the active pipeline job
+         * @param readsets The list of readsets to process
+         * @param params
+         * @param outputDir
+         * @param actions
+         * @param outputsToCreate
+         */
+        public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<Readset> readsets, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException;
+
+        public void processFilesRemote(List<Readset> readsets, JobContext ctx) throws UnsupportedOperationException, PipelineJobException;
+
+        default void complete(PipelineJob job, List<Readset> readsets, List<SequenceOutputFile> outputsCreated) throws PipelineJobException
         {
 
         }

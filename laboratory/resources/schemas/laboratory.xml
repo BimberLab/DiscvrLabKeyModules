@@ -374,10 +374,10 @@
             </item>
             <item text="Insert" iconCls="plus">
                 <item text="Insert New">
-                    <onClick>Laboratory.buttonHandlers.importDataHandler(dataRegionName, arguments[0] ? arguments[0].ownerCt : null, 'laboratory', 'samples', 'rowid', false)</onClick>
+                    <onClick>Laboratory.buttonHandlers.importDataHandler(dataRegionName, 'laboratory', 'samples', 'rowid', false)</onClick>
                 </item>
                 <item text="Import Bulk Data">
-                    <onClick>Laboratory.buttonHandlers.importDataHandler(dataRegionName, arguments[0] ? arguments[0].ownerCt : null, 'laboratory', 'samples', 'rowid', true)</onClick>
+                    <onClick>Laboratory.buttonHandlers.importDataHandler(dataRegionName, 'laboratory', 'samples', 'rowid', true)</onClick>
                 </item>
             </item>
             <item text="Delete">

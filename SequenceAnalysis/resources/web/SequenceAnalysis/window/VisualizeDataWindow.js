@@ -14,6 +14,7 @@ Ext4.define('SequenceAnalysis.window.VisualizeDataWindow', {
                 method: 'POST',
                 url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'getAvailableHandlers', null),
                 params: {
+                    handlerType: 'OutputFile',
                     outputFileIds: checked
                 },
                 scope: this,

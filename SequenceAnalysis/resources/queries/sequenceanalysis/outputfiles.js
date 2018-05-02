@@ -10,5 +10,7 @@ var LABKEY = require("labkey");
 var triggerHelper = new org.labkey.sequenceanalysis.query.SequenceTriggerHelper(LABKEY.Security.currentUser.id, LABKEY.Security.currentContainer.id);
 
 function beforeDelete(row, errors){
-    errors._form = 'You cannot directly delete analyses.  To delete these records, use the delete button above the analysis grid.'
+    if (!this.extraContext.deleteFromServer) {
+        errors._form = 'You cannot directly delete analyses.  To delete these records, use the delete button above the analysis grid.';
+    }
 }

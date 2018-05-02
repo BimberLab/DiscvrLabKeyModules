@@ -44,7 +44,7 @@ public class SequenceAnalysisUpgradeCode implements UpgradeCode
                 TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid"));
                 List<Integer> rowIds = ts.getArrayList(Integer.class);
 
-                SequenceAnalysisManager.get().deleteRefNtSequence(rowIds);
+                SequenceAnalysisManager.get().deleteRefNtSequenceWithoutUserSchema(rowIds);
                 return;
             }
 

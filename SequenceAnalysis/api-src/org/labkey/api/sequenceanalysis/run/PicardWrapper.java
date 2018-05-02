@@ -32,7 +32,7 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
         List<String> params = new LinkedList<>();
         params.add(SequencePipelineService.get().getJavaFilepath());
         params.add("-jar");
-        params.add(getPicardJar().getPath());
+        params.add(getJar().getPath());
         params.add(getToolName());
         params.add("--version");
 
@@ -67,6 +67,11 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
         return new File(baseDir, "picard.jar");
     }
 
+    protected File getJar()
+    {
+        return getPicardJar();
+    }
+
     public ValidationStringency getStringency()
     {
         return _stringency;
@@ -85,7 +90,7 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
         params.add(SequencePipelineService.get().getJavaFilepath());
         params.addAll(SequencePipelineService.get().getJavaOpts());
         params.add("-jar");
-        params.add(getPicardJar().getPath());
+        params.add(getJar().getPath());
         params.add(getToolName());
         params.add("VALIDATION_STRINGENCY=" + getStringency().name());
         params.add("COMPRESSION_LEVEL=" + getCompressionLevel());

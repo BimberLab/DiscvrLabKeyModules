@@ -1,8 +1,11 @@
 package org.labkey.cluster.pipeline;
 
 import org.jetbrains.annotations.NotNull;
+import org.labkey.api.cluster.ClusterResourceAllocator;
 import org.labkey.api.data.Container;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobService;
+import org.labkey.api.pipeline.RemoteExecutionEngine;
 import org.labkey.api.pipeline.file.PathMapper;
 import org.labkey.api.pipeline.file.PathMapperImpl;
 import org.labkey.api.util.StringExpression;
@@ -85,13 +88,29 @@ abstract class AbstractClusterEngineConfig implements PipelineJobService.RemoteE
         return _remoteExecutable;
     }
 
-    public List<String> getJobArgs(File localPipelineDir, File localSerializedJobXmlFile)
+    protected List<String> getFinalJavaOpts(PipelineJob job, RemoteExecutionEngine engine)
     {
-        List<String> ret = new ArrayList<>();
+        List<String> javaOpts = new ArrayList<>();
         if (_javaOpts != null)
         {
-            ret.addAll(_javaOpts);
+            javaOpts.addAll(_javaOpts);
         }
+
+        List<ClusterResourceAllocator.Factory> allocatorFactories = ClusterServiceImpl.get().getAllocators(job.getActiveTaskId());
+        for (ClusterResourceAllocator.Factory allocatorFact : allocatorFactories)
+        {
+            ClusterResourceAllocator allocator = allocatorFact.getAllocator();
+            job.getLogger().debug("using resource allocator: " + allocator.getClass().getName());
+            allocator.processJavaOpts(job, engine, javaOpts);
+        }
+
+        return javaOpts;
+    }
+
+    public List<String> getJobArgs(File localPipelineDir, File localSerializedJobXmlFile, PipelineJob job, RemoteExecutionEngine engine)
+    {
+        List<String> ret = new ArrayList<>();
+        ret.addAll(getFinalJavaOpts(job, engine));
 
         //TODO: support a _debug flag
         //"-Xdebug",

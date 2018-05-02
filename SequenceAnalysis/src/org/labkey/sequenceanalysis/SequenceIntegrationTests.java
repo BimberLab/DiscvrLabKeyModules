@@ -80,6 +80,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -505,7 +506,9 @@ public class SequenceIntegrationTests
 
             _isExternalPipelineEnabled = Boolean.parseBoolean(System.getProperty(PIPELINE_PROP_NAME));
             if (!_isExternalPipelineEnabled)
-                _log.info("Sequence pipeline is not enabled on this server, so some tests will be skipped");
+                _log.warn("Sequence pipeline is not enabled on this server, so some tests will be skipped");
+            else
+                _log.info("Sequence pipeline enabled on this server, so all tests will run");
 
             return _isExternalPipelineEnabled;
         }
@@ -800,7 +803,6 @@ public class SequenceIntegrationTests
 
         private void runMergePipelineJob(String jobName, boolean deleteIntermediates, String prefix) throws Exception
         {
-            String[] fileNames = new String[]{PAIRED_FILENAME_L1a, PAIRED_FILENAME2_L1a, PAIRED_FILENAME_L1b, PAIRED_FILENAME2_L1b, PAIRED_FILENAME_L2, PAIRED_FILENAME2_L2, PAIRED_FILENAME1, PAIRED_FILENAME2, UNPAIRED_FILENAME};
             JSONObject config = substituteParams(new File(_sampleData, READSET_JOB), jobName);
 
             FileGroup g = new FileGroup();
@@ -849,15 +851,25 @@ public class SequenceIntegrationTests
             config.put("inputfile.runFastqc", true);
             appendSamplesForImport(config, Arrays.asList(g, g2, g3));
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport);
-            waitForJobs(jobs);
+            Set<PipelineJob> jobsUnsorted = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport);
+            waitForJobs(jobsUnsorted);
 
+            List<PipelineJob> jobs = new ArrayList<>(jobsUnsorted);
+            Collections.sort(jobs, new Comparator<PipelineJob>()
+            {
+                @Override
+                public int compare(PipelineJob o1, PipelineJob o2)
+                {
+                    JSONObject j1 = new JSONObject(o1.getParameters().get("fileGroup_1"));
+                    JSONObject j2 = new JSONObject(o2.getParameters().get("fileGroup_1"));
+
+                    return j1.getString("name").compareTo(j2.getString("name"));
+                }
+            });
+
+            //job1: g1
             Set<File> expectedOutputs = new HashSet<>();
-            File basedir = getBaseDir(jobs.iterator().next());
-            expectedOutputs.add(new File(basedir, jobName + ".log"));
-            expectedOutputs.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
-            expectedOutputs.add(new File(basedir, "sequenceImport.json"));
-
+            File basedir = getBaseDir(jobs.get(0));
             File normalizeDir = new File(basedir, "Normalization");
             expectedOutputs.add(normalizeDir);
 
@@ -870,13 +882,12 @@ public class SequenceIntegrationTests
             expectedOutputs.add(new File(normalizeDir, FileUtil.getBaseName(FileUtil.getBaseName(merge2)) + "_fastqc.html.gz"));
             expectedOutputs.add(new File(merge2.getParentFile(), FileUtil.getBaseName(FileUtil.getBaseName(merge2)) + "_fastqc.zip"));
 
-            expectedOutputs.add(new File(basedir, prefix + PAIRED_FILENAME1));
-            expectedOutputs.add(new File(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME1)) + "_fastqc.html.gz"));
-            expectedOutputs.add(new File(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME1)) + "_fastqc.zip"));
-
-            expectedOutputs.add(new File(basedir, prefix + PAIRED_FILENAME2));
-            expectedOutputs.add(new File(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME2)) + "_fastqc.html.gz"));
-            expectedOutputs.add(new File(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME2)) + "_fastqc.zip"));
+            expectedOutputs.add(new File(basedir, prefix + PAIRED_FILENAME_L2));
+            expectedOutputs.add(new File(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME_L2)) + "_fastqc.html.gz"));
+            expectedOutputs.add(new File(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME_L2)) + "_fastqc.zip"));
+            expectedOutputs.add(new File(basedir, prefix + PAIRED_FILENAME2_L2));
+            expectedOutputs.add(new File(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME2_L2)) + "_fastqc.html.gz"));
+            expectedOutputs.add(new File(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME2_L2)) + "_fastqc.zip"));
 
             //these will be merged
             if (!deleteIntermediates)
@@ -887,22 +898,44 @@ public class SequenceIntegrationTests
                 expectedOutputs.add(new File(basedir, prefix + PAIRED_FILENAME2_L1b));
             }
 
-            expectedOutputs.add(new File(basedir, prefix + PAIRED_FILENAME_L2));
-            expectedOutputs.add(new File(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME_L2)) + "_fastqc.html.gz"));
-            expectedOutputs.add(new File(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME_L2)) + "_fastqc.zip"));
-            expectedOutputs.add(new File(basedir, prefix + PAIRED_FILENAME2_L2));
-            expectedOutputs.add(new File(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME2_L2)) + "_fastqc.html.gz"));
-            expectedOutputs.add(new File(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME2_L2)) + "_fastqc.zip"));
+            verifyJob(basedir, jobName, expectedOutputs, new String[]{PAIRED_FILENAME_L1a, PAIRED_FILENAME2_L1a, PAIRED_FILENAME_L1b, PAIRED_FILENAME2_L1b, PAIRED_FILENAME_L2, PAIRED_FILENAME2_L2}, prefix, config);
+
+            Assert.assertEquals("Incorrect read number", 633L, FastqUtils.getSequenceCount(merge1));
+            Assert.assertEquals("Incorrect read number", 633L, FastqUtils.getSequenceCount(merge2));
+
+            //job2: g2
+            expectedOutputs = new HashSet<>();
+            basedir = getBaseDir(jobs.get(1));
+
+            expectedOutputs.add(new File(basedir, prefix + PAIRED_FILENAME1));
+            expectedOutputs.add(new File(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME1)) + "_fastqc.html.gz"));
+            expectedOutputs.add(new File(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME1)) + "_fastqc.zip"));
+
+            expectedOutputs.add(new File(basedir, prefix + PAIRED_FILENAME2));
+            expectedOutputs.add(new File(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME2)) + "_fastqc.html.gz"));
+            expectedOutputs.add(new File(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME2)) + "_fastqc.zip"));
+
+            verifyJob(basedir, jobName, expectedOutputs, new String[]{PAIRED_FILENAME1, PAIRED_FILENAME2}, prefix, config);
+
+            //job3: g3
+            expectedOutputs = new HashSet<>();
+            basedir = getBaseDir(jobs.get(2));
             expectedOutputs.add(new File(basedir, prefix + UNPAIRED_FILENAME));
             expectedOutputs.add(new File(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(UNPAIRED_FILENAME)) + "_fastqc.html.gz"));
             expectedOutputs.add(new File(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(UNPAIRED_FILENAME)) + "_fastqc.zip"));
 
+            verifyJob(basedir, jobName, expectedOutputs, new String[]{UNPAIRED_FILENAME}, prefix, config);
+            validateReadsets(jobs, config, 1);  //we expect one per job, total of 3
+        }
+        
+        private void verifyJob(File basedir, String jobName, Set<File> expectedOutputs, String[] fileNames, String prefix, JSONObject config)
+        {
+            expectedOutputs.add(new File(basedir, jobName + ".log"));
+            expectedOutputs.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
+            expectedOutputs.add(new File(basedir, "sequenceImport.json"));
+
             verifyFileOutputs(basedir, expectedOutputs);
             verifyFileInputs(basedir, fileNames, config, prefix);
-            validateReadsets(jobs, config);
-
-            Assert.assertEquals("Incorrect read number", 633L, FastqUtils.getSequenceCount(merge1));
-            Assert.assertEquals("Incorrect read number", 633L, FastqUtils.getSequenceCount(merge2));
         }
 
         /**
@@ -3068,9 +3101,9 @@ public class SequenceIntegrationTests
             rowIds.remove(0); //preserve the lowest (first inserted)
             try
             {
-                SequenceAnalysisManager.get().deleteRefNtSequence(rowIds);
+                SequenceAnalysisManager.get().deleteRefNtSequence(TestContext.get().getUser(), c, rowIds);
             }
-            catch (SQLException e)
+            catch (Exception e)
             {
                 throw new RuntimeException(e);
             }

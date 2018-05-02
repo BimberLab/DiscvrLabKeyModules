@@ -64,7 +64,7 @@
             //elem.style.display = 'table';
         }
 
-        Ext4.create('Laboratory.panel.WebpartHeaderPanel', {
+        Ext4.create('Laboratory.panel.WorkbookHeaderPanel', {
             description: <%=q(getViewContext().getContainer().getDescription())%>,
             materials: <%=q(model.getMaterials())%>,
             methods: <%=q(model.getMethods())%>,

@@ -11,6 +11,7 @@ import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
 import htsjdk.tribble.bed.FullBEDFeature;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.exp.api.ExpData;
@@ -27,7 +28,7 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
-import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.run.SelectVariantsWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
@@ -48,7 +49,7 @@ import java.util.List;
 /**
  * Created by bimber on 8/26/2014.
  */
-public class LiftoverHandler implements SequenceOutputHandler
+public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
     private FileType _bedFileType = new FileType(".bed", false);
     //private FileType _gffFileType = new FileType("gff", false);
@@ -128,7 +129,7 @@ public class LiftoverHandler implements SequenceOutputHandler
     }
 
     @Override
-    public OutputProcessor getProcessor()
+    public SequenceOutputProcessor getProcessor()
     {
         return new Processor();
     }
@@ -139,7 +140,7 @@ public class LiftoverHandler implements SequenceOutputHandler
         return false;
     }
 
-    public class Processor implements OutputProcessor
+    public class Processor implements SequenceOutputProcessor
     {
         @Override
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
@@ -170,6 +171,8 @@ public class LiftoverHandler implements SequenceOutputHandler
         {
             PipelineJob job = ctx.getJob();
             JSONObject params = ctx.getParams();
+
+            boolean dropGenotypes = params.optBoolean("dropGenotypes", false);
 
             Integer chainFileId = params.getInt("chainFileId");
             File chainFile = ctx.getSequenceSupport().getCachedData(chainFileId);
@@ -207,8 +210,9 @@ public class LiftoverHandler implements SequenceOutputHandler
                     throw new UnsupportedOperationException("Unsupported file type: " + f.getFile().getName());
                 }
 
+                boolean discardRejected = params.optBoolean("discardRejected", false);
                 File lifted = new File(outDir, baseName + ".lifted-" + targetGenomeId + ext);
-                File unmappedOutput = new File(outDir, baseName + ".unmapped-" + targetGenomeId + ext);
+                File unmappedOutput = discardRejected ? null : new File(outDir, baseName + ".unmapped-" + targetGenomeId + ext);
 
                 try
                 {
@@ -219,7 +223,8 @@ public class LiftoverHandler implements SequenceOutputHandler
                     else if (_vcfFileType.isType(f.getFile()))
                     {
                         ReferenceGenome targetGenome = ctx.getSequenceSupport().getCachedGenome(targetGenomeId);
-                        liftOverVcf(targetGenome, chainFile, f.getFile(), lifted, unmappedOutput, job, pct);
+                        ReferenceGenome sourceGenome = ctx.getSequenceSupport().getCachedGenome(f.getLibrary_id());
+                        liftOverVcf(ctx, targetGenome, sourceGenome, chainFile, f.getFile(), lifted, unmappedOutput, job, pct, dropGenotypes);
                     }
                 }
                 catch (Exception e)
@@ -253,7 +258,11 @@ public class LiftoverHandler implements SequenceOutputHandler
                     ctx.addSequenceOutput(so1);
                 }
 
-                if (!unmappedOutput.exists())
+                if (discardRejected)
+                {
+                    job.getLogger().info("unmapped sites will not be saved");
+                }
+                else if (!unmappedOutput.exists())
                 {
                     job.getLogger().info("no unmapped intervals");
                 }
@@ -295,10 +304,30 @@ public class LiftoverHandler implements SequenceOutputHandler
         }
     }
 
-    public void liftOverVcf(ReferenceGenome targetGenome, File chain, File input, File output, File unmappedOutput, PipelineJob job, double pct) throws IOException, PipelineJobException
+    public void liftOverVcf(JobContext ctx, ReferenceGenome targetGenome, ReferenceGenome sourceGenome, File chain, File input, File output, @Nullable File unmappedOutput, PipelineJob job, double pct, boolean dropGenotypes) throws IOException, PipelineJobException
     {
+        File currentVCF = input;
+        if (dropGenotypes)
+        {
+            ctx.getLogger().info("creating VCF wihtout genotypes");
+            File outputFile = new File(output.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(currentVCF.getName()) + ".noGenotypes.vcf.gz");
+            if (new File(outputFile.getPath() + ".tbi").exists())
+            {
+                ctx.getLogger().info("resuming from file: " + outputFile.getPath());
+            }
+            else
+            {
+                SelectVariantsWrapper wrapper = new SelectVariantsWrapper(job.getLogger());
+                wrapper.execute(sourceGenome.getWorkingFastaFile(), currentVCF, outputFile, Arrays.asList("--sites_only"));
+            }
+            currentVCF = outputFile;
+
+            ctx.getFileManager().addIntermediateFile(outputFile);
+            ctx.getFileManager().addIntermediateFile(new File(outputFile.getPath() + ".tbi"));
+        }
+
         LiftoverVcfWrapper wrapper = new LiftoverVcfWrapper(job.getLogger());
-        wrapper.doLiftover(input, chain, targetGenome.getWorkingFastaFile(), unmappedOutput, output, pct);
+        wrapper.doLiftover(currentVCF, chain, targetGenome.getWorkingFastaFile(), unmappedOutput, output, pct);
 
         Long mapped = null;
         if (output.exists())
@@ -307,15 +336,17 @@ public class LiftoverHandler implements SequenceOutputHandler
             mapped = StringUtils.trimToNull(mappedStr) == null ? 0L : Long.parseLong(mappedStr);
             job.getLogger().info("total variants mapped: " + mappedStr);
             job.getLogger().info("passing variants mapped: " + ProcessVariantsHandler.getVCFLineCount(output, job.getLogger(), true));
+            SequenceAnalysisService.get().ensureVcfIndex(output, job.getLogger());
         }
 
         Long unmapped = 0L;
-        if (unmappedOutput.exists())
+        if (unmappedOutput != null && unmappedOutput.exists())
         {
             String unmappedStr = ProcessVariantsHandler.getVCFLineCount(output, job.getLogger(), false);
             unmapped = StringUtils.trimToNull(unmappedStr) == null ? 0L : Long.parseLong(unmappedStr);
-            job.getLogger().info("total variants: " + unmappedStr);
-            job.getLogger().info("passing variants: " + ProcessVariantsHandler.getVCFLineCount(output, job.getLogger(), true));
+            job.getLogger().info("total unmapped variants: " + unmappedStr);
+            job.getLogger().info("passing unmapped variants: " + ProcessVariantsHandler.getVCFLineCount(output, job.getLogger(), true));
+            SequenceAnalysisService.get().ensureVcfIndex(unmappedOutput, job.getLogger());
         }
 
         if (mapped != null)
@@ -325,10 +356,10 @@ public class LiftoverHandler implements SequenceOutputHandler
         }
     }
 
-    public void liftOverBed(File chain, File input, File output, File unmappedOutput, PipelineJob job, double pct) throws IOException, PipelineJobException
+    public void liftOverBed(File chain, File input, File output, @Nullable File unmappedOutput, PipelineJob job, double pct) throws IOException, PipelineJobException
     {
         LiftOver lo = new LiftOver(chain);
-        try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(output), '\t', CSVWriter.NO_QUOTE_CHARACTER);CSVWriter unmappedWriter = new CSVWriter(PrintWriters.getPrintWriter(unmappedOutput), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+        try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(output), '\t', CSVWriter.NO_QUOTE_CHARACTER);CSVWriter unmappedWriter = unmappedOutput == null ? null : new CSVWriter(PrintWriters.getPrintWriter(unmappedOutput), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
             try (FeatureReader<BEDFeature> reader = AbstractFeatureReader.getFeatureReader(input.getAbsolutePath(), new BEDCodec(), false))
             {
@@ -351,7 +382,8 @@ public class LiftoverHandler implements SequenceOutputHandler
                         }
                         else
                         {
-                            unmappedWriter.writeNext(new String[]{f.getContig(), String.valueOf(f.getStart() - 1), String.valueOf(f.getEnd()), f.getName(), score, (f.getStrand() == Strand.NEGATIVE ? "-" : f.getStrand() == Strand.POSITIVE ? "+" : null)});
+                            if (unmappedWriter != null)
+                                unmappedWriter.writeNext(new String[]{f.getContig(), String.valueOf(f.getStart() - 1), String.valueOf(f.getEnd()), f.getName(), score, (f.getStrand() == Strand.NEGATIVE ? "-" : f.getStrand() == Strand.POSITIVE ? "+" : null)});
                             unmapped++;
                         }
                     }

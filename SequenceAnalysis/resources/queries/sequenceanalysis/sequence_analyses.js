@@ -5,5 +5,7 @@
  */
 
 function beforeDelete(row, errors){
-    errors._form = 'You cannot directly delete analyses.  To delete these records, use the delete button above the analysis grid.'
+    if (!this.extraContext.deleteFromServer) {
+        errors._form = 'You cannot directly delete analyses.  To delete these records, use the delete button above the analysis grid.';
+    }
 }

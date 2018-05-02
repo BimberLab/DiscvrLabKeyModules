@@ -45,6 +45,7 @@ import org.labkey.sequenceanalysis.analysis.CombineSubreadGeneCountsHandler;
 import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
 import org.labkey.sequenceanalysis.analysis.HaplotypeCallerHandler;
 import org.labkey.sequenceanalysis.analysis.LiftoverHandler;
+import org.labkey.sequenceanalysis.analysis.MultiQCHandler;
 import org.labkey.sequenceanalysis.analysis.PicardAlignmentMetricsHandler;
 import org.labkey.sequenceanalysis.analysis.RecalculateSequenceMetricsHandler;
 import org.labkey.sequenceanalysis.analysis.RnaSeqcHandler;
@@ -52,6 +53,7 @@ import org.labkey.sequenceanalysis.analysis.SbtGeneCountHandler;
 import org.labkey.sequenceanalysis.analysis.UnmappedSequenceBasedGenotypeHandler;
 import org.labkey.sequenceanalysis.button.AddSraRunButton;
 import org.labkey.sequenceanalysis.button.ReprocessLibraryButton;
+import org.labkey.sequenceanalysis.button.RunMultiQCButton;
 import org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisJob;
 import org.labkey.sequenceanalysis.pipeline.AlignmentImportJob;
 import org.labkey.sequenceanalysis.pipeline.IlluminaImportJob;
@@ -65,12 +67,14 @@ import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentTask;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.SequencePipelineProvider;
+import org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerPipelineProvider;
 import org.labkey.sequenceanalysis.query.SequenceAnalysisUserSchema;
 import org.labkey.sequenceanalysis.run.alignment.BWAMemWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWASWWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWAWrapper;
 import org.labkey.sequenceanalysis.run.alignment.Bowtie2Wrapper;
 import org.labkey.sequenceanalysis.run.alignment.BowtieWrapper;
+import org.labkey.sequenceanalysis.run.alignment.CellRangerWrapper;
 import org.labkey.sequenceanalysis.run.alignment.GSnapWrapper;
 import org.labkey.sequenceanalysis.run.alignment.MosaikWrapper;
 import org.labkey.sequenceanalysis.run.alignment.StarWrapper;
@@ -99,6 +103,7 @@ import org.labkey.sequenceanalysis.run.bampostprocessing.SortSamStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SplitNCigarReadsStep;
 import org.labkey.sequenceanalysis.run.preprocessing.CutadaptWrapper;
 import org.labkey.sequenceanalysis.run.preprocessing.DownsampleFastqWrapper;
+import org.labkey.sequenceanalysis.run.preprocessing.FastqcProcessingStep;
 import org.labkey.sequenceanalysis.run.preprocessing.TrimmomaticWrapper;
 import org.labkey.sequenceanalysis.run.reference.CustomReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.DNAReferenceLibraryStep;
@@ -212,6 +217,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.AdapterTrimmingProvider());
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.AvgQualProvider());
         SequencePipelineService.get().registerPipelineStep(new CutadaptWrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new FastqcProcessingStep.Provider());
         //SequencePipelineService.get().registerPipelineStep(new BlastFilterPipelineStep.Provider());
 
         //ref library
@@ -231,6 +237,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new MosaikWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new GSnapWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new StarWrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new CellRangerWrapper.Provider());
 
         //de novo assembly
         SequencePipelineService.get().registerPipelineStep(new TrinityRunner.Provider());
@@ -298,6 +305,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new DepthOfCoverageHandler());
         SequenceAnalysisService.get().registerFileHandler(new MultiAllelicPositionsHandler());
         SequenceAnalysisService.get().registerFileHandler(new RecalculateSequenceMetricsHandler());
+        SequenceAnalysisService.get().registerReadsetHandler(new MultiQCHandler());
 
         //ObjectFactory.Registry.register(AnalysisModelImpl.class, new UnderscoreBeanObjectFactory(AnalysisModelImpl.class));
         //ObjectFactory.Registry.register(SequenceReadsetImpl.class, new UnderscoreBeanObjectFactory(SequenceReadsetImpl.class));
@@ -335,6 +343,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         LDKService.get().registerQueryButton(new ShowEditUIButton(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES, UpdatePermission.class), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
         LDKService.get().registerQueryButton(new ShowEditUIButton(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES, UpdatePermission.class), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
         LDKService.get().registerQueryButton(new AddSraRunButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS);
+        LDKService.get().registerQueryButton(new RunMultiQCButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS);
 
         ExperimentService.get().registerExperimentRunTypeSource(new ExperimentRunTypeSource()
         {
@@ -352,6 +361,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         PipelineService.get().registerPipelineProvider(new ReferenceLibraryPipelineProvider(this));
         PipelineService.get().registerPipelineProvider(new NcbiGenomeImportPipelineProvider(this));
         PipelineService.get().registerPipelineProvider(new SequenceOutputHandlerPipelineProvider(this));
+        PipelineService.get().registerPipelineProvider(new SequenceReadsetHandlerPipelineProvider(this));
         PipelineService.get().registerPipelineProvider(new ImportFastaSequencesPipelineJob.Provider(this));
         PipelineService.get().registerPipelineProvider(new ImportGenomeTrackPipelineJob.Provider(this));
         PipelineService.get().registerPipelineProvider(new SequencePipelineProvider(this));

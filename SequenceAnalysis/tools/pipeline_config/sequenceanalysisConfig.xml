@@ -21,6 +21,9 @@
                 <bean class="org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerRemoteTask$Factory">
                     <property name="location" value="sequenceAnalysis" />
                 </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerRemoteTask$Factory">
+                    <property name="location" value="sequenceAnalysis" />
+                </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.AlignmentNormalizationTask$Factory">
                     <property name="location" value="sequenceAnalysis" />
                 </bean>

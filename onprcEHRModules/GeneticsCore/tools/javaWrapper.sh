@@ -171,6 +171,10 @@ mkdir -p $LABKEY_HOME
     sed -i 's/<!--<entry key="JAVA_TMP_DIR" value=""\/>-->/<entry key="JAVA_TMP_DIR" value="'$ESCAPE'"\/>/g' ${LABKEY_HOME}/config/pipelineConfig.xml
     $JAVA -Djava.io.tmpdir=${TEMP_DIR} ${updatedArgs[@]}
 
+    if [ ! -z $SLURM_JOBID ];then
+        sacct -o reqmem,maxrss,averss,elapsed,cputime,alloccpus -j $SLURM_JOBID
+    fi
+
 } || {
     echo "ERROR RUNNING JOB"
 }

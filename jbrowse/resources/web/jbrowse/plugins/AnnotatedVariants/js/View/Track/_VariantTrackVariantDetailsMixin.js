@@ -346,7 +346,7 @@ define([
                     },
                     regulatory: {
                         title: 'Regulatory Data',
-                        description: 'Annotations related to overlap with know or predicted regulatory elements.',
+                        description: 'Annotations related to overlap with known or predicted regulatory elements.',
                         tags: ['ENC', 'ENN', 'ENCDNA_SC', 'ENCTFBS_SC', 'ENCTFBS_TF', 'ENCSEG_NM', 'RDB_WS', 'RDB_MF', 'FS_EN', 'FS_WS', 'FS_NS', 'FS_SN', 'FS_TG', 'FS_US', 'FS_SC']
                     },
                     comparative: {
@@ -499,13 +499,13 @@ define([
                     var thisB = this;
                     // js port of perl parsing of all sample data; work in progress
                     // get AC field and coerce into an array (to match array of alt below)
-                    var acField = f.get('AC');
+                    var acField = f.get('AC') || [];
                     if( acField &&  typeof acField == 'object' && 'values' in acField )
                         acField = acField.values;
                     if( acField && ! lang.isArray( acField ) )
                         acField = [acField];
 
-                    var anField = f.get('AN');
+                    var anField = f.get('AN') || [];
                     var hasAF = new Boolean('AF' in f.data && typeof f.get('AF') == 'object');
                     var afField;
                     if (hasAF) {

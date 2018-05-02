@@ -26,7 +26,6 @@ import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
-import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbSchemaType;
@@ -43,7 +42,6 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
-import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.iterator.CloseableIterator;
 import org.labkey.api.module.ModuleLoader;
@@ -64,20 +62,23 @@ import org.labkey.api.resource.Resource;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
 import org.labkey.api.security.permissions.DeletePermission;
+import org.labkey.api.sequenceanalysis.GenomeTrigger;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.Job;
+import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
 import org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisJob;
 import org.labkey.sequenceanalysis.pipeline.ReadsetImportJob;
+import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerJob;
-import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -89,6 +90,7 @@ import java.net.URISyntaxException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -180,10 +182,29 @@ public class SequenceAnalysisManager
         return _platforms;
     }
 
-    public void deleteReadset(List<Integer> rowIds, User user, Container c) throws SQLException
+    private int cascadeDeleteWithQUS(UserSchema us, String tableName, SimpleFilter filter, String pkName) throws Exception
+    {
+        //first find list of PKs
+        List<Integer> pks = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(tableName), PageFlowUtil.set(pkName), filter, null).getArrayList(Integer.class);
+        List<Map<String, Object>> toDelete = new ArrayList<>();
+        pks.forEach(x -> {
+            Map<String, Object> map = new CaseInsensitiveHashMap<>();
+            map.put(pkName, x);
+            toDelete.add(map);
+        });
+
+        Map<String, Object> scriptContext = new HashMap<>();
+        scriptContext.put("deleteFromServer", true);  //a flag to make the trigger script accept this
+        List<Map<String, Object>> deleted = us.getTable(tableName).getUpdateService().deleteRows(us.getUser(), us.getContainer(), toDelete, null, scriptContext);
+
+        return deleted.size();
+    }
+
+    public void deleteReadset(List<Integer> rowIds, User user, Container c) throws Exception
     {
         SequenceAnalysisSchema s = SequenceAnalysisSchema.getInstance();
-        TableInfo readsets = QueryService.get().getUserSchema(user, c, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_READSETS);
+        UserSchema us = QueryService.get().getUserSchema(user, c, SequenceAnalysisSchema.SCHEMA_NAME);
+        TableInfo readsets = us.getTable(SequenceAnalysisSchema.TABLE_READSETS);
 
         try (DbScope.Transaction transaction = s.getSchema().getScope().ensureTransaction())
         {
@@ -198,11 +219,12 @@ public class SequenceAnalysisManager
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON + " WHERE " + subselect, rowId));
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS + " WHERE " + subselect, rowId));
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_COVERAGE + " WHERE " + subselect, rowId));
-                new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " WHERE readset = ?", rowId));
-                new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " WHERE readset = ?", rowId));
+                cascadeDeleteWithQUS(us, SequenceAnalysisSchema.TABLE_OUTPUTFILES, new SimpleFilter(FieldKey.fromString("readset"), rowId), "rowid");
+                cascadeDeleteWithQUS(us, SequenceAnalysisSchema.TABLE_ANALYSES, new SimpleFilter(FieldKey.fromString("readset"), rowId), "rowid");
+
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_QUALITY_METRICS + " WHERE readset = ?", rowId));
 
-                new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " WHERE readset = ?", rowId));
+                cascadeDeleteWithQUS(us, SequenceAnalysisSchema.TABLE_READ_DATA, new SimpleFilter(FieldKey.fromString("readset"), rowId), "rowid");
 
                 //then the readsets themselves
                 List<Map<String, Object>> keysToDelete = new ArrayList<>();
@@ -220,9 +242,15 @@ public class SequenceAnalysisManager
         }
     }
 
-    public void deleteAnalysis(List<Integer> rowIds) throws SQLException
+    public void deleteAnalysis(User user, Container container, List<Integer> rowIds) throws Exception
     {
         SequenceAnalysisSchema s = SequenceAnalysisSchema.getInstance();
+
+        UserSchema us = QueryService.get().getUserSchema(user, container, SequenceAnalysisSchema.SCHEMA_NAME);
+        if (us == null)
+        {
+            throw new IllegalArgumentException("Unable to find sequenceanalysis user schema");
+        }
 
         try (DbScope.Transaction transaction = s.getSchema().getScope().ensureTransaction())
         {
@@ -231,25 +259,36 @@ public class SequenceAnalysisManager
 
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY_JUNCTION + " WHERE analysis_id = ?", rowId));
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY + " WHERE analysis_id = ?", rowId));
-                new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " WHERE analysis_id = ?", rowId));
+                cascadeDeleteWithQUS(us, SequenceAnalysisSchema.TABLE_OUTPUTFILES, new SimpleFilter(FieldKey.fromString("analysis_id"), rowId), "rowid");
 
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON + " WHERE analysis_id = ?", rowId));
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS + " WHERE analysis_id = ?", rowId));
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_COVERAGE + " WHERE analysis_id = ?", rowId));
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_QUALITY_METRICS + " WHERE analysis_id = ?", rowId));
 
-                new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " WHERE rowid = ?", rowId));
+                List<Map<String, Object>> keysToDelete = new ArrayList<>();
+                keysToDelete.add(new CaseInsensitiveHashMap<Object>(){{put("rowId", rowId);}});
+
+                Map<String, Object> scriptContext = new HashMap<>();
+                scriptContext.put("deleteFromServer", true);  //a flag to make the trigger script accept this
+                us.getTable(SequenceAnalysisSchema.TABLE_ANALYSES).getUpdateService().deleteRows(user, container, keysToDelete, null, scriptContext);
             }
             transaction.commit();
         }
     }
 
-    public List<Integer> deleteOutputFiles(List<Integer> rowIds, User user, Container container, boolean doDelete) throws SQLException
+    public List<Integer> deleteOutputFiles(List<Integer> rowIds, User user, Container container, boolean doDelete) throws Exception
     {
         SequenceAnalysisSchema s = SequenceAnalysisSchema.getInstance();
 
         try (DbScope.Transaction transaction = s.getSchema().getScope().ensureTransaction())
         {
+            UserSchema us = QueryService.get().getUserSchema(user, container, SequenceAnalysisSchema.SCHEMA_NAME);
+            if (us == null)
+            {
+                throw new IllegalArgumentException("Unable to find sequenceanalysis user schema");
+            }
+
             Set<Integer> notDeleted = new HashSet<>();
             List<SequenceOutputFile> files = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), new SimpleFilter(FieldKey.fromString("rowid"), rowIds, CompareType.IN), null).getArrayList(SequenceOutputFile.class);
             for (SequenceOutputFile so : files)
@@ -268,12 +307,6 @@ public class SequenceAnalysisManager
                     if (container.isWorkbook())
                     {
                         container = container.getParent();
-                    }
-
-                    UserSchema us = QueryService.get().getUserSchema(user, container, SequenceAnalysisSchema.SCHEMA_NAME);
-                    if (us == null)
-                    {
-                        throw new IllegalArgumentException("Unable to find sequenceanalysis user schema");
                     }
 
                     if (new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), filter, null).exists())
@@ -297,13 +330,22 @@ public class SequenceAnalysisManager
 
             if (doDelete)
             {
-                new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " WHERE rowid IN (" + StringUtils.join(rowIds, ",") + ")"));
+                final List<Map<String, Object>> toDelete = new ArrayList<>();
+                rowIds.forEach(x -> {
+                    Map<String, Object> map = new CaseInsensitiveHashMap<>();
+                    map.put("rowid", x);
+                    toDelete.add(map);
+                });
+
+                Map<String, Object> scriptContext = new HashMap<>();
+                scriptContext.put("deleteFromServer", true);  //a flag to make the trigger script accept this
+                us.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES).getUpdateService().deleteRows(user, container, toDelete, null, scriptContext);
 
                 if (!additionalAnalysisIds.isEmpty())
-                    SequenceAnalysisManager.get().deleteAnalysis(additionalAnalysisIds);
-            }
+                    SequenceAnalysisManager.get().deleteAnalysis(user, container, additionalAnalysisIds);
 
-            transaction.commit();
+                transaction.commit();
+            }
 
             return additionalAnalysisIds;
         }
@@ -314,9 +356,29 @@ public class SequenceAnalysisManager
         return keys.isEmpty() ? Collections.emptyList() : new SqlSelector(SequenceAnalysisSchema.getInstance().getSchema(), new SQLFragment("SELECT distinct a.rowid FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " o JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " a ON (o.dataId = a.alignmentFile) WHERE o.rowid IN (" + StringUtils.join(keys, ",") + ")")).getArrayList(Integer.class);
     }
 
-    public void deleteRefNtSequence(List<Integer> rowIds) throws SQLException
+    public void deleteRefNtSequence(User user, Container container, List<Integer> rowIds) throws Exception
+    {
+        deleteRefNtSequence(user, container, rowIds, false);
+    }
+
+    //Used by upgrade code only
+    protected void deleteRefNtSequenceWithoutUserSchema(List<Integer> rowIds) throws Exception
+    {
+        deleteRefNtSequence(null, null, rowIds, true);
+    }
+
+    private void deleteRefNtSequence(User user, Container container, List<Integer> rowIds, boolean useDbLayer) throws Exception
     {
         SequenceAnalysisSchema s = SequenceAnalysisSchema.getInstance();
+        UserSchema us = null;
+        if (!useDbLayer)
+        {
+            us = QueryService.get().getUserSchema(user, container, SequenceAnalysisSchema.SCHEMA_NAME);
+            if (us == null)
+            {
+                throw new IllegalArgumentException("Unable to find sequenceanalysis user schema");
+            }
+        }
 
         try (DbScope.Transaction transaction = s.getSchema().getScope().ensureTransaction())
         {
@@ -351,7 +413,20 @@ public class SequenceAnalysisManager
                 }
 
                 //finally the sequence itself
-                new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES + " WHERE rowid = ?", rowId));
+                if (useDbLayer)
+                {
+                    new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES + " WHERE rowid = ?", rowId));
+                }
+                else
+                {
+                    Map<String, Object> map = new CaseInsensitiveHashMap<>();
+                    map.put("rowid", rowId);
+                    List<Map<String, Object>> toDelete = Arrays.asList(map);
+
+                    Map<String, Object> scriptContext = new HashMap<>();
+                    scriptContext.put("deleteFromServer", true);  //a flag to make the trigger script accept this
+                    us.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES).getUpdateService().deleteRows(user, container, toDelete, null, scriptContext);
+                }
             }
             transaction.commit();
         }
@@ -379,7 +454,7 @@ public class SequenceAnalysisManager
         }
     }
 
-    private static final String htsjdkVersion = "2.13.1";
+    private static final String htsjdkVersion = "2.14.3";
 
     public static File getHtsJdkJar()
     {
@@ -439,29 +514,66 @@ public class SequenceAnalysisManager
         Table.delete(table, filter);
     }
 
-    public static void deleteReferenceLibrary(int userId, String containerId, Integer rowId) throws SQLException, IOException
+    public static void deleteReferenceLibraries(User u, List<Integer> rowIds) throws Exception
     {
-        Container c = ContainerManager.getForId(containerId);
-        if (c == null)
+        for (Integer rowId : rowIds)
         {
-            return;
+            ReferenceGenomeImpl genome = SequenceAnalysisServiceImpl.get().getReferenceGenome(rowId, u);
+            if (genome == null)
+            {
+                throw new IllegalArgumentException("Unable to find genome: " + rowId);
+            }
 
+            String containerId = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("container")).getObject(rowId, String.class);
+            Container c = ContainerManager.getForId(containerId);
+            if (!c.hasPermission(u, DeletePermission.class))
+            {
+                throw new UnauthorizedException("User does not have delete permission in folder: " + c.getPath());
+            }
+
+            deleteReferenceLibrary(u, c, rowId);
         }
+    }
 
-        cascadeDelete(userId, containerId, "sequenceanalysis", "reference_library_members", "library_id", rowId);
-        cascadeDelete(userId, containerId, "sequenceanalysis", "reference_library_tracks", "library_id", rowId);
+    private static void deleteReferenceLibrary(User user, Container c, Integer rowId) throws SQLException, IOException
+    {
+        cascadeDelete(user.getUserId(), c.getId(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS, "library_id", rowId);
+        cascadeDelete(user.getUserId(), c.getId(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_LIBRARY_TRACKS, "library_id", rowId);
+        cascadeDelete(user.getUserId(), c.getId(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_CHAIN_FILES, "genomeId1", rowId);
+        cascadeDelete(user.getUserId(), c.getId(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_CHAIN_FILES, "genomeId2", rowId);
 
         //then delete files
         File dir = SequenceAnalysisManager.get().getReferenceLibraryDir(c);
         if (dir != null && dir.exists())
         {
             File libraryDir = new File(dir, rowId.toString());
-            if (libraryDir != null && libraryDir.exists())
+            if (libraryDir.exists())
             {
                 _log.info("deleting reference library dir: " + libraryDir.getPath());
                 FileUtils.deleteDirectory(libraryDir);
             }
         }
+
+        JobRunner jr = JobRunner.getDefault();
+        Set<GenomeTrigger> triggers = SequenceAnalysisServiceImpl.get().getGenomeTriggers();
+        for (final GenomeTrigger t : triggers)
+        {
+            if (t.isAvailable(c))
+            {
+                _log.info("running genome delete trigger: " + t.getName());
+                final int libraryId = rowId;
+                jr.execute(new Job()
+                {
+                    @Override
+                    public void run()
+                    {
+                        t.onDelete(c, user, _log, libraryId);
+                    }
+                });
+            }
+        }
+
+        jr.waitForCompletion();
     }
 
     public String getNTRefForAARef(Integer refId)
@@ -629,14 +741,14 @@ public class SequenceAnalysisManager
         Table.insert(u, chainTable, map);
     }
 
-    public SequenceOutputHandler getFileHandler(String handlerClass)
+    public SequenceOutputHandler getFileHandler(String handlerClass, SequenceOutputHandler.TYPE type)
     {
         if (StringUtils.isEmpty(handlerClass))
         {
             return null;
         }
 
-        for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers())
+        for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers(type))
         {
             if (handler.getClass().getName().equals(handlerClass))
             {
@@ -980,7 +1092,7 @@ public class SequenceAnalysisManager
     {
         TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
 
-        TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("seqLength"), null, CompareType.ISBLANK), null);
+        TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid", "sequenceFile"), new SimpleFilter(FieldKey.fromString("seqLength"), null, CompareType.ISBLANK), null);
 
         log.info(ts.getRowCount() + " total sequences to migrate");
         ts.forEach(new Selector.ForEachBlock<RefNtSequenceModel>()
@@ -996,8 +1108,10 @@ public class SequenceAnalysisManager
                         return;
                     }
 
-                    nt.setSeqLength(StringUtil.bytesToString(IOUtils.toByteArray(is)).length());
-                    Table.update(u, ti, nt, nt.getRowid());
+                    Map<String, Object> toUpdate = new CaseInsensitiveHashMap<>();
+                    toUpdate.put("rowid", nt.getRowid());
+                    toUpdate.put("seqLength", StringUtil.bytesToString(IOUtils.toByteArray(is)).length());
+                    Table.update(u, ti, toUpdate, nt.getRowid());
                 }
                 catch (IOException e)
                 {

@@ -18,6 +18,8 @@ import org.labkey.jbrowse.model.JsonFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -94,11 +96,40 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                     //or library reference sequences
                     " (SELECT count(rowid) FROM sequenceanalysis.reference_library_members d WHERE d.ref_nt_id = " + JBrowseSchema.TABLE_JSONFILES + ".sequenceid) = 0 AND " +
                     //or library tracks
-                    " (SELECT count(rowid) FROM sequenceanalysis.reference_library_tracks d WHERE d.rowid = " + JBrowseSchema.TABLE_JSONFILES + ".trackid) = 0 "
+                    " (SELECT count(rowid) FROM sequenceanalysis.reference_library_tracks d WHERE d.rowid = " + JBrowseSchema.TABLE_JSONFILES + ".trackid) = 0 AND " +
+                    //or outputfiles
+                    " (SELECT count(rowid) FROM sequenceanalysis.outputfiles d WHERE d.rowid = " + JBrowseSchema.TABLE_JSONFILES + ".outputfile) = 0 "
             ));
 
             if (deleted2 > 0)
                 log.info("deleted " + deleted2 + " JSON files because they are not used by any sessions");
+
+            //second pass at orphan JSONFiles.  Note: these might be referenced by a database_member record still.
+            List<String> toDelete = new SqlSelector(JBrowseSchema.getInstance().getSchema(), new SQLFragment("SELECT objectid FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_JSONFILES +
+                    " WHERE " +
+                    //reference NT sequences
+                    " (" + JBrowseSchema.TABLE_JSONFILES + ".sequenceid IS NOT NULL AND (SELECT count(rowid) FROM sequenceanalysis.ref_nt_sequences d WHERE d.rowid = " + JBrowseSchema.TABLE_JSONFILES + ".sequenceid) = 0) OR " +
+                    //library tracks
+                    " ( " + JBrowseSchema.TABLE_JSONFILES + ".trackid IS NOT NULL AND (SELECT count(rowid) FROM sequenceanalysis.reference_library_tracks d WHERE d.rowid = " + JBrowseSchema.TABLE_JSONFILES + ".trackid) = 0) OR " +
+                    //outputfiles
+                    " (" + JBrowseSchema.TABLE_JSONFILES + ".outputfile IS NOT NULL AND (SELECT count(rowid) FROM sequenceanalysis.outputfiles d WHERE d.rowid = " + JBrowseSchema.TABLE_JSONFILES + ".outputfile) = 0)"
+            )).getArrayList(String.class);
+
+            if (!toDelete.isEmpty())
+            {
+                log.info("deleting " + toDelete.size() + " JSON files because they reference non-existent tracks, sequences or outputfiles");
+                TableInfo jsonFiles = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
+                for (String key : toDelete)
+                {
+                    Table.delete(jsonFiles, key);
+
+                    int d = new SqlExecutor(JBrowseSchema.getInstance().getSchema()).execute(new SQLFragment("DELETE FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_DATABASE_MEMBERS + " WHERE jsonfile = ?", key));
+                    if (d > 0)
+                    {
+                        log.info("also deleted " + d + " orphan database member record(s) for: " + key);
+                    }
+                }
+            }
 
             //now iterate every container and find orphan files
             processContainer(ContainerManager.getRoot(), log);
@@ -143,6 +174,8 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                         {
                             log.info("deleting track dir: " + childDir.getPath());
                             FileUtils.deleteDirectory(childDir);
+
+                            //TODO: determine databases that might use this and delete symlinks
                         }
                     }
                 }
@@ -181,6 +214,18 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                             log.info("deleting jbrowse database dir: " + childDir.getPath());
                             FileUtils.deleteDirectory(childDir);
                         }
+
+                        for (String dirName : Arrays.asList("tracks"))
+                        {
+                            File subdir = new File(childDir, dirName);
+                            if (subdir.exists())
+                            {
+                                for (File child : subdir.listFiles())
+                                {
+                                    detectBrokenSymlink(log, child);
+                                }
+                            }
+                        }
                     }
                 }
                 else if (!expectedDatabases.isEmpty() && !databaseDir.exists())
@@ -197,6 +242,14 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
         for (Container child : c.getChildren())
         {
             processContainer(child, log);
+        }
+    }
+
+    private void detectBrokenSymlink(Logger log, File dir)
+    {
+        if (Files.isSymbolicLink(dir.toPath()) && !dir.exists())
+        {
+            log.error("possible broken symlink: " + dir.getPath());
         }
     }
 }

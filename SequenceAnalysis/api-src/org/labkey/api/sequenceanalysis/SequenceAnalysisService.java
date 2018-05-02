@@ -55,7 +55,9 @@ abstract public class SequenceAnalysisService
 
     abstract public void registerGenomeTrigger(GenomeTrigger trigger);
 
-    abstract public void registerFileHandler(SequenceOutputHandler handler);
+    abstract public void registerFileHandler(SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler);
+
+    abstract public void registerReadsetHandler(SequenceOutputHandler<SequenceOutputHandler.SequenceReadsetProcessor> handler);
 
     //abstract public File createTabixIndex(File input, @Nullable Logger log) throws PipelineJobException;
 

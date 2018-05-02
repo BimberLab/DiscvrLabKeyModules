@@ -120,7 +120,15 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         }
 
         scriptIncludes.add("sequenceanalysis/sequenceanalysisButtons.js");
-        for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers())
+        for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers(SequenceOutputHandler.TYPE.OutputFile))
+        {
+            if (handler.getOwningModule() != null && getContainer().getActiveModules().contains(handler.getOwningModule()) && handler.getClientDependencies() != null)
+            {
+                scriptIncludes.addAll(handler.getClientDependencies());
+            }
+        }
+
+        for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers(SequenceOutputHandler.TYPE.Readset))
         {
             if (handler.getOwningModule() != null && getContainer().getActiveModules().contains(handler.getOwningModule()) && handler.getClientDependencies() != null)
             {

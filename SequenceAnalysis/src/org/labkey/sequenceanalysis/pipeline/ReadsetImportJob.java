@@ -1,7 +1,14 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.apache.commons.beanutils.ConversionException;
+import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.ConvertHelper;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineActionConfig;
@@ -13,6 +20,7 @@ import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.pipeline.file.FileAnalysisTaskPipeline;
 import org.labkey.api.pipeline.file.FileAnalysisTaskPipelineSettings;
 import org.labkey.api.security.User;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
@@ -23,7 +31,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * User: bimber
@@ -41,15 +53,173 @@ public class ReadsetImportJob extends SequenceJob
 
     public static List<ReadsetImportJob> create(Container c, User u, String jobName, String description, JSONObject params, List<File> inputFiles) throws PipelineJobException, IOException, PipelineValidationException
     {
-        PipeRoot pr = PipelineService.get().findPipelineRoot(c);
-        if (pr == null || !pr.isValid())
-            throw new NotFoundException();
+        Map<Container, PipeRoot> containerToPipeRootMap = new HashMap<>();
 
-        ReadsetImportJob job = new ReadsetImportJob(c, u, jobName, pr, params);
-        job.setDescription(description);
-        job.setInputFiles(inputFiles);
+        //NOTE: for simple file import, where the input files will be unaltered and there is no possiblity of overlap between data across readsets, split this into one job per readset.  this allows us to more cleanly delete jobs later, and also open the potential to target by container
+        boolean potentiallySplit = true;
+        if (params.optBoolean("inputfile.merge", false))
+        {
+            potentiallySplit = false;
+        }
+        else if (params.optBoolean("inputfile.barcode", false))
+        {
+            potentiallySplit = false;
+        }
 
-        return Arrays.asList(job);
+
+        if (!potentiallySplit)
+        {
+            PipeRoot pr = getPipeRoot(containerToPipeRootMap, c);
+
+            ReadsetImportJob job = new ReadsetImportJob(c, u, jobName, pr, params);
+            job.setDescription(description);
+            job.setInputFiles(inputFiles);
+
+            return Arrays.asList(job);
+        }
+        else
+        {
+            List<ReadsetImportJob> ret = new ArrayList<>();
+
+            Map<String, JSONObject> readsetKeys = new HashMap<>();
+            Map<String, JSONObject> fileGroupKeys = new HashMap<>();
+            Set<String> keysToRemove = new HashSet<>();
+            keysToRemove.add("inputFiles");
+
+            params.keySet().forEach(x -> {
+                if (x.startsWith("readset_"))
+                {
+                    readsetKeys.put(x.split("_")[1], new JSONObject(params.getString(x)));
+                    keysToRemove.add(x);
+                }
+                else if (x.startsWith("fileGroup_"))
+                {
+                    JSONObject json = new JSONObject(params.getString(x));
+                    fileGroupKeys.put(json.getString("name"), json);
+                    keysToRemove.add(x);
+                }
+            });
+
+            for (JSONObject rs : readsetKeys.values())
+            {
+                JSONObject rsParams = new JSONObject(params.toString());
+                keysToRemove.forEach(rsParams::remove);
+
+                rsParams.put("readset_1", rs.toString());
+
+                JSONObject fileGroup = fileGroupKeys.get(rs.getString("fileGroupId"));
+                if (fileGroup == null)
+                {
+                    throw new IllegalArgumentException("Unable to find file group with ID: " + rs.getString("fileGroupId"));
+                }
+
+                rsParams.put("fileGroup_1", fileGroup.toString());
+
+                Container targetContainer = c;
+                boolean usedAlternateFolder = false;
+                if (rs.get("readset") != null && StringUtils.trimToNull(rs.get("readset").toString()) != null)
+                {
+                    int readsetId = ConvertHelper.convert(rs.getInt("readset"), Integer.class);
+                    Readset readset = SequenceAnalysisService.get().getReadset(readsetId, u);
+                    targetContainer = ContainerManager.getForId(readset.getContainer());
+                    usedAlternateFolder = true;
+                }
+
+                PipeRoot pr = getPipeRoot(containerToPipeRootMap, targetContainer);
+                ReadsetImportJob job = new ReadsetImportJob(targetContainer, u, jobName, pr, rsParams);
+                job.setDescription(description);
+                if (usedAlternateFolder)
+                {
+                    job.getLogger().debug("job was submitted to an alternate folder: " + targetContainer.getPath());
+                }
+
+                List<File> inputFilesSubset = new ArrayList<>();
+                JSONObject[] files = new JSONArray(fileGroup.getString("files")).toJSONObjectArray();
+                for (int i = 0; i < files.length; i++)
+                {
+                    JSONObject file1 = files[i].getJSONObject("file1");
+                    inputFilesSubset.add(findFile(file1, inputFiles));
+
+                    if (files[i].get("file2") != null)
+                    {
+                        JSONObject file2 = files[i].getJSONObject("file2");
+                        inputFilesSubset.add(findFile(file2, inputFiles));
+                    }
+
+                }
+
+                if (inputFilesSubset.isEmpty())
+                {
+                    throw new IllegalArgumentException("Unable to find input files");
+                }
+
+                job.setInputFiles(inputFilesSubset);
+
+                ret.add(job);
+            }
+
+            return ret;
+        }
+    }
+
+    private static File findFile(JSONObject file, List<File> inputFiles)
+    {
+        if (file.get("dataId") != null && StringUtils.trimToNull(file.getString("dataId")) != null)
+        {
+            try
+            {
+                int dataId = ConvertHelper.convert(file.get("dataId"), Integer.class);
+                ExpData d = ExperimentService.get().getExpData(dataId);
+                if (d == null)
+                {
+                    throw new IllegalArgumentException("Unable to find file with ID: " + file.getInt("dataId"));
+                }
+
+                return d.getFile();
+            }
+            catch (ConversionException e)
+            {
+                throw new IllegalArgumentException("dataId is not an integer: " + file.get("dataId"));
+            }
+        }
+        else if (file.get("fileName") != null && StringUtils.trimToNull(file.getString("fileName")) != null)
+        {
+            List<File> hits = new ArrayList<>();
+            inputFiles.forEach(x -> {
+                if (x.getName().equals(file.getString("fileName")))
+                {
+                    hits.add(x);
+                }
+            });
+
+            if (hits.size() > 1)
+            {
+                throw new IllegalArgumentException("Ambiguous filename: " + file.get("fileName"));
+            }
+            else if (hits.isEmpty())
+            {
+                throw new IllegalArgumentException("No matching files: " + file.get("fileName"));
+            }
+
+            return hits.get(0);
+        }
+
+        throw new IllegalArgumentException("Unable to find file");
+    }
+
+    public static PipeRoot getPipeRoot(Map<Container, PipeRoot> containerToPipeRootMap, Container targetContainer)
+    {
+        PipeRoot pr = containerToPipeRootMap.get(targetContainer);
+        if (pr == null)
+        {
+            pr = PipelineService.get().findPipelineRoot(targetContainer);
+            if (pr == null || !pr.isValid())
+                throw new NotFoundException();
+
+            containerToPipeRootMap.put(targetContainer, pr);
+        }
+
+        return pr;
     }
 
     public static final String NAME = "sequenceImportPipeline";

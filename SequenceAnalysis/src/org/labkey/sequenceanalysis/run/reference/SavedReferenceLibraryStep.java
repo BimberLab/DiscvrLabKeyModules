@@ -18,17 +18,15 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.IndexOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceLibraryStep;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -79,44 +77,12 @@ public class SavedReferenceLibraryStep extends AbstractPipelineStep implements R
         }
     }
 
-    private File getExpectedFastaFile(File outputDirectory) throws PipelineJobException
-    {
-        if (PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
-        {
-            File originalFasta = getOriginalFastaFile();
-
-            return new File(outputDirectory, originalFasta.getName());
-        }
-        else
-        {
-            //when not on the local server, we have to infer the filename
-            Integer libraryId = ConvertHelper.convert(getProvider().getParameterByName(LIBRARY_ID).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()), Integer.class);
-            List<File> matches = new ArrayList<>();
-            FileType ft = new FileType("fasta");
-            for (File f : outputDirectory.listFiles())
-            {
-                if (ft.isType(f) && f.getName().startsWith(libraryId.toString() + "_"))
-                {
-                    matches.add(f);
-                }
-            }
-
-            if (matches.size() > 1)
-            {
-                throw new PipelineJobException("More than one matching FASTA file found");
-            }
-            else if (matches.size() == 0)
-            {
-                throw new PipelineJobException("No matching FASTA files found");
-            }
-
-            return matches.get(0);
-        }
-    }
-
     private ExpData getLibraryExpData() throws PipelineJobException
     {
-        assert PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer : "This method can only be run on the webserver";
+        if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
+        {
+            throw new PipelineJobException("This method can only be run on the webserver", new Exception());
+        }
 
         Integer libraryId = ConvertHelper.convert(getProvider().getParameterByName(LIBRARY_ID).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()), Integer.class);
         if (libraryId == null)
@@ -157,7 +123,9 @@ public class SavedReferenceLibraryStep extends AbstractPipelineStep implements R
     public Output createReferenceFasta(File outputDirectory) throws PipelineJobException
     {
         File originalFasta = getOriginalFastaFile();
-        ReferenceLibraryOutputImpl output = new ReferenceLibraryOutputImpl(new ReferenceGenomeImpl(originalFasta, getLibraryExpData(), getLibraryId()));
+        ReferenceGenome genome = getReferenceGenome();
+        String name = genome == null ? null : genome.getName();
+        ReferenceLibraryOutputImpl output = new ReferenceLibraryOutputImpl(new ReferenceGenomeImpl(originalFasta, getLibraryExpData(), getLibraryId(), name));
         output.addOutput(outputDirectory, "Reference Genome Folder");
         output.addInput(originalFasta, IndexOutputImpl.REFERENCE_DB_FASTA);
 
@@ -167,5 +135,11 @@ public class SavedReferenceLibraryStep extends AbstractPipelineStep implements R
     public Integer getLibraryId() throws PipelineJobException
     {
         return ConvertHelper.convert(getProvider().getParameterByName(LIBRARY_ID).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()), Integer.class);
+    }
+
+    private ReferenceGenome getReferenceGenome() throws PipelineJobException
+    {
+        Integer libraryId = Integer.parseInt(getProvider().getParameterByName(LIBRARY_ID).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()));
+        return libraryId == null ? null : getPipelineCtx().getSequenceSupport().getCachedGenome(libraryId);
     }
 }

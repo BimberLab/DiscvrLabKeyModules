@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * Created by bimber on 8/26/2014.
  */
-public class CompareVariantsHandler implements SequenceOutputHandler
+public class CompareVariantsHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
     public CompareVariantsHandler()
     {
@@ -101,7 +101,7 @@ public class CompareVariantsHandler implements SequenceOutputHandler
     }
 
     @Override
-    public OutputProcessor getProcessor()
+    public SequenceOutputProcessor getProcessor()
     {
         return new Processor();
     }
@@ -112,7 +112,7 @@ public class CompareVariantsHandler implements SequenceOutputHandler
         return false;
     }
 
-    public class Processor implements OutputProcessor
+    public class Processor implements SequenceOutputProcessor
     {
         @Override
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException

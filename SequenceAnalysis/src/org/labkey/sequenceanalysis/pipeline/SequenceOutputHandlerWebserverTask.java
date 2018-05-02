@@ -48,7 +48,7 @@ public class SequenceOutputHandlerWebserverTask extends PipelineJob.Task<Sequenc
         public List<String> getProtocolActionNames()
         {
             List<String> allowableNames = new ArrayList<>();
-            for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers())
+            for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers(SequenceOutputHandler.TYPE.OutputFile))
             {
                 allowableNames.add(handler.getName());
             }
@@ -92,7 +92,7 @@ public class SequenceOutputHandlerWebserverTask extends PipelineJob.Task<Sequenc
     {
         List<RecordedAction> actions = new ArrayList<>();
 
-        SequenceOutputHandler handler = getPipelineJob().getHandler();
+        SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler = getPipelineJob().getHandler();
         List<SequenceOutputFile> outputsToCreate = new ArrayList<>();
 
         if (getPipelineJob().getFiles().isEmpty())

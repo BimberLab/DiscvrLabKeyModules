@@ -658,6 +658,7 @@ labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/Abstract
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/AbstractGatkWrapper.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/CommandWrapper.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/CreateSequenceDictionaryWrapper.java -text
+labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/GeneToNameTranslator.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/PicardWrapper.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/RCommandWrapper.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/SelectVariantsWrapper.java -text
@@ -1215,6 +1216,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CompareVari
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/GenotypeGVCFHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/HaplotypeCallerHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/LiftoverHandler.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/MultiQCHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/PicardAlignmentMetricsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/RecalculateSequenceMetricsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/RnaSeqcHandler.java -text
@@ -1224,6 +1226,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/picard/CigarPosi
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/AddSraRunButton.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/GenomeLoadButton.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/ReprocessLibraryButton.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/RunMultiQCButton.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/AdapterModel.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/AnalysisModelImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/BarcodeModel.java -text
@@ -1284,6 +1287,12 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceOut
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceOutputHandlerWebserverTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequencePipelineProvider.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequencePipelineSettings.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceReadsetHandlerFinalTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceReadsetHandlerInitTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceReadsetHandlerJob.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceReadsetHandlerPipelineProvider.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceReadsetHandlerRemoteTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceReadsetHandlerWebserverTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/SequenceTaskHelper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/TaskFileManagerImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/AnalysesTableCustomizer.java -text
@@ -1295,11 +1304,13 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/SequenceAnalys
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/SequenceAnalysisUserSchema.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/query/SequenceTriggerHelper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/BamHaplotyper.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/MultiQcRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/BWAMemWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/BWASWWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/BWAWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/Bowtie2Wrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/BowtieWrapper.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/CellRangerWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/FastaToTwoBitRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/FastqCollapser.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/alignment/GSnapWrapper.java -text
@@ -1343,6 +1354,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/bampostprocessin
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/BlastFilterPipelineStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/CutadaptWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/DownsampleFastqWrapper.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/FastqcProcessingStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/PreprocessingOutputImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/SeqtkRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/Sff2FastqRunner.java -text

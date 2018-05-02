@@ -29,7 +29,7 @@ import java.util.List;
 /**
  * Created by bimber on 2/10/2015.
  */
-abstract public class AbstractParameterizedOutputHandler implements ParameterizedOutputHandler
+abstract public class AbstractParameterizedOutputHandler<T> implements ParameterizedOutputHandler<T>
 {
     private Module _owner;
     private String _name;

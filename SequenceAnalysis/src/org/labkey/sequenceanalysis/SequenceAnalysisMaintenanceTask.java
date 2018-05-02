@@ -66,6 +66,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
 
     private void verifySequenceDataPresent(Logger log)
     {
+        log.info("verifying sequence data files present");
         TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
         TableSelector ts = new TableSelector(ti);
         List<ReadDataImpl> readDatas = ts.getArrayList(ReadDataImpl.class);
@@ -127,6 +128,9 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
         if (root != null && !root.isCloudRoot())
         {
+            if (!c.isWorkbook())
+                log.info("processing container: " + c.getPath());
+
             //first sequences
             File sequenceDir = new File(root.getRootPath(), ".sequences");
             TableInfo tableRefNtSequences = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
@@ -303,27 +307,37 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             }
 
             //finally outputfiles
-            File sequenceOutputsDir = new File(root.getRootPath(), "sequenceOutputs");
-            if (sequenceOutputsDir.exists())
+            TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
+            TableSelector ts = new TableSelector(ti, Collections.singleton("dataid"), new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
+            Set<String> expectedFileNames = new HashSet<>();
+            for (Integer dataId : ts.getArrayList(Integer.class))
             {
-                TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
-                TableSelector ts = new TableSelector(ti, Collections.singleton("dataid"), new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
-                Set<String> expectedFileNames = new HashSet<>();
-                for (Integer dataId : ts.getArrayList(Integer.class))
+                ExpData d = ExperimentService.get().getExpData(dataId);
+                if (d != null)
                 {
-                    ExpData d = ExperimentService.get().getExpData(dataId);
-                    if (d != null)
-                    {
-                        expectedFileNames.add(d.getFile().getName());
-                        expectedFileNames.addAll(getAssociatedFiles(d.getFile(), true));
+                    expectedFileNames.add(d.getFile().getName());
+                    expectedFileNames.addAll(getAssociatedFiles(d.getFile(), true));
 
-                        if (!d.getFile().exists())
+                    if (!d.getFile().exists())
+                    {
+                        log.error("expected output file does not exist: " + d.getFile().getPath());
+                    }
+
+                    //also verify indexes
+                    if (_vcfFileType.isType(d.getFile()) && d.getFile().getPath().endsWith(".gz"))
+                    {
+                        File idx = new File(d.getFile().getPath() + ".tbi");
+                        if (!idx.exists())
                         {
-                            log.error("expected output file does not exist: " + d.getFile().getPath());
+                            log.error("unable to find index for file: " + d.getFile().getPath());
                         }
                     }
                 }
+            }
 
+            File sequenceOutputsDir = new File(root.getRootPath(), "sequenceOutputs");
+            if (sequenceOutputsDir.exists())
+            {
                 for (File child : sequenceOutputsDir.listFiles())
                 {
                     if (!expectedFileNames.contains(child.getName()))

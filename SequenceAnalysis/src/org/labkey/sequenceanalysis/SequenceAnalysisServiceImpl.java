@@ -64,7 +64,8 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
 
     private final Logger _log = Logger.getLogger(SequenceAnalysisServiceImpl.class);
     private Set<GenomeTrigger> _genomeTriggers = new HashSet<>();
-    private Set<SequenceOutputHandler> _fileHandlers = new HashSet<>();
+    private Set<SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>> _fileHandlers = new HashSet<>();
+    private Set<SequenceOutputHandler<SequenceOutputHandler.SequenceReadsetProcessor>> _readsetHandlers = new HashSet<>();
     private Map<String, SequenceDataProvider> _dataProviders = new HashMap<>();
 
     private SequenceAnalysisServiceImpl()
@@ -95,9 +96,15 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     }
 
     @Override
-    public void registerFileHandler(SequenceOutputHandler handler)
+    public void registerFileHandler(SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler)
     {
         _fileHandlers.add(handler);
+    }
+
+    @Override
+    public void registerReadsetHandler(SequenceOutputHandler<SequenceOutputHandler.SequenceReadsetProcessor> handler)
+    {
+        _readsetHandlers.add(handler);
     }
 
 //    @Override
@@ -106,10 +113,10 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
 //        return new TabixRunner(log).execute(input);
 //    }
 
-    public Set<SequenceOutputHandler> getFileHandlers(Container c)
+    public Set<SequenceOutputHandler> getFileHandlers(Container c, SequenceOutputHandler.TYPE type)
     {
         Set<SequenceOutputHandler> ret = new HashSet<>();
-        for (SequenceOutputHandler h : _fileHandlers)
+        for (SequenceOutputHandler h : getFileHandlers(type))
         {
             if (c.getActiveModules().contains(h.getOwningModule()))
             {
@@ -119,9 +126,9 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         return Collections.unmodifiableSet(ret);
     }
 
-    public Set<SequenceOutputHandler> getFileHandlers()
+    public Set<SequenceOutputHandler> getFileHandlers(SequenceOutputHandler.TYPE type)
     {
-        return Collections.unmodifiableSet(_fileHandlers);
+        return Collections.unmodifiableSet(type == SequenceOutputHandler.TYPE.OutputFile ? _fileHandlers : _readsetHandlers);
     }
 
     @Override
@@ -192,7 +199,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), genomeId);
 
-        Map<String, Object> map = new TableSelector(ti, PageFlowUtil.set("rowid", "fasta_file", "container"), filter, null).getMap();
+        Map<String, Object> map = new TableSelector(ti, PageFlowUtil.set("rowid", "fasta_file", "container", "name"), filter, null).getMap();
         if (map == null)
         {
             return null;
@@ -210,7 +217,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
             throw new PipelineJobException("No FASTA file found for genome: " + genomeId);
         }
 
-        return new ReferenceGenomeImpl(d.getFile(), d, genomeId);
+        return new ReferenceGenomeImpl(d.getFile(), d, genomeId, (String)map.get("name"));
     }
 
     @Override

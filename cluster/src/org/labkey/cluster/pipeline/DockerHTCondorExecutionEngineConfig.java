@@ -1,5 +1,8 @@
 package org.labkey.cluster.pipeline;
 
+import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.pipeline.RemoteExecutionEngine;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +32,7 @@ public class DockerHTCondorExecutionEngineConfig extends HTCondorExecutionEngine
     }
 
     @Override
-    public List<String> getJobArgs(File localPipelineDir, File localSerializedJobFile)
+    public List<String> getJobArgs(File localPipelineDir, File localSerializedJobFile, PipelineJob job, RemoteExecutionEngine engine)
     {
         List<String> ret = new ArrayList<>();
         ret.add("run");
@@ -49,10 +52,8 @@ public class DockerHTCondorExecutionEngineConfig extends HTCondorExecutionEngine
         //TODO: add -env for CPUs, memory?
         ret.add(_dockerImageName);
         ret.add("java");
-        if (_javaOpts != null)
-        {
-            ret.addAll(_javaOpts);
-        }
+        ret.addAll(getFinalJavaOpts(job, engine));
+
         //TODO: support as config param
         //ret.add("-Xdebug");
         //ret.add("-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005");

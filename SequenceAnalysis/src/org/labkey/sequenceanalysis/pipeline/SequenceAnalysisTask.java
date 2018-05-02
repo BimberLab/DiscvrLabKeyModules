@@ -133,6 +133,13 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         PipelineJob job = getJob();
         SequenceTaskHelper taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
 
+        //we dont delete the resume file during the alignment task, since we've had issues w/ JMS dropping messages and needing to repeat that whole task
+        File xmlFile = SequenceAlignmentTask.Resumer.getSerializedXml(getPipelineJob().getAnalysisDirectory(), SequenceAlignmentTask.Resumer.XML_NAME);
+        if (xmlFile.exists())
+        {
+            xmlFile.delete();
+        }
+
         List<RecordedAction> actions = new ArrayList<>();
 
         job.getLogger().info("Processing Alignments");

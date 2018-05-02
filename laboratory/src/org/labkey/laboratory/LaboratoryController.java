@@ -73,7 +73,6 @@ import org.labkey.api.study.assay.AssayProvider;
 import org.labkey.api.study.assay.AssayService;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.Pair;
-import org.labkey.api.util.Path;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HtmlView;
@@ -1682,7 +1681,7 @@ public class LaboratoryController extends SpringActionController
 
             if (form.getTypes() == null || ArrayUtils.contains(form.getTypes(), LaboratoryService.NavItemCategory.samples.name()))
             {
-                List<JSONObject> json = new ArrayList<JSONObject>();
+                List<JSONObject> json = new ArrayList<>();
                 for (NavItem item : LaboratoryService.get().getSampleItems(getContainer(), getUser()))
                 {
                     ensureModuleActive(item);
@@ -1695,7 +1694,7 @@ public class LaboratoryController extends SpringActionController
 
             if (form.getTypes() == null || ArrayUtils.contains(form.getTypes(), LaboratoryService.NavItemCategory.data.name()))
             {
-                List<JSONObject> json = new ArrayList<JSONObject>();
+                List<JSONObject> json = new ArrayList<>();
                 for (NavItem item : LaboratoryService.get().getDataItems(getContainer(), getUser()))
                 {
                     ensureModuleActive(item);
@@ -1708,7 +1707,7 @@ public class LaboratoryController extends SpringActionController
 
             if (form.getTypes() == null || ArrayUtils.contains(form.getTypes(), LaboratoryService.NavItemCategory.settings.name()))
             {
-                List<JSONObject> json = new ArrayList<JSONObject>();
+                List<JSONObject> json = new ArrayList<>();
                 for (NavItem item : LaboratoryService.get().getSettingsItems(getContainer(), getUser()))
                 {
                     ensureModuleActive(item);
@@ -1721,7 +1720,7 @@ public class LaboratoryController extends SpringActionController
 
             if (form.getTypes() == null || ArrayUtils.contains(form.getTypes(), LaboratoryService.NavItemCategory.reports.name()))
             {
-                List<JSONObject> json = new ArrayList<JSONObject>();
+                List<JSONObject> json = new ArrayList<>();
                 for (NavItem item : LaboratoryService.get().getReportItems(getContainer(), getUser()))
                 {
                     ensureModuleActive(item);
@@ -1734,7 +1733,7 @@ public class LaboratoryController extends SpringActionController
 
             if (form.getTypes() == null || ArrayUtils.contains(form.getTypes(), LaboratoryService.NavItemCategory.tabbedReports.name()))
             {
-                List<JSONObject> json = new ArrayList<JSONObject>();
+                List<JSONObject> json = new ArrayList<>();
                 for (NavItem item : LaboratoryService.get().getTabbedReportItems(getContainer(), getUser()))
                 {
                     ensureModuleActive(item);
@@ -1747,7 +1746,7 @@ public class LaboratoryController extends SpringActionController
 
             if (form.getTypes() == null || ArrayUtils.contains(form.getTypes(), LaboratoryService.NavItemCategory.misc.name()))
             {
-                List<JSONObject> json = new ArrayList<JSONObject>();
+                List<JSONObject> json = new ArrayList<>();
                 for (NavItem item : LaboratoryService.get().getMiscItems(getContainer(), getUser()))
                 {
                     ensureModuleActive(item);
@@ -1795,7 +1794,7 @@ public class LaboratoryController extends SpringActionController
         {
             Map<String, Object> results = new HashMap<>();
             AssayProvider ap = null;
-            List<ExpProtocol> protocols = new ArrayList<ExpProtocol>();
+            List<ExpProtocol> protocols = new ArrayList<>();
             if (form.getAssayId() != null)
             {
                 protocols.add(ExperimentService.get().getExpProtocol(form.getAssayId()));
@@ -1806,7 +1805,7 @@ public class LaboratoryController extends SpringActionController
                 ap = AssayService.get().getProvider(form.getAssayType());
             }
 
-            List<AssayProvider> providers = new ArrayList<AssayProvider>();
+            List<AssayProvider> providers = new ArrayList<>();
             if (ap == null)
             {
                 providers.addAll(AssayService.get().getAssayProviders());
@@ -1821,7 +1820,7 @@ public class LaboratoryController extends SpringActionController
             {
                 JSONObject json = new JSONObject();
                 AssayDataProvider adp = LaboratoryService.get().getDataProviderForAssay(provider);
-                List<ExpProtocol> protocolsForProvider = new ArrayList<ExpProtocol>();
+                List<ExpProtocol> protocolsForProvider = new ArrayList<>();
                 if (protocols.size() == 0)
                     protocolsForProvider.addAll(adp.getProtocols(getContainer()));
                 else
@@ -1831,7 +1830,7 @@ public class LaboratoryController extends SpringActionController
                 for (ExpProtocol protocol : protocolsForProvider)
                 {
                     JSONObject protocolObj = new JSONObject();
-                    List<JSONObject> methods = new ArrayList<JSONObject>();
+                    List<JSONObject> methods = new ArrayList<>();
                     for (AssayImportMethod m : adp.getImportMethods())
                     {
                         methods.add(m.toJson(getViewContext(), protocol));
@@ -1865,7 +1864,7 @@ public class LaboratoryController extends SpringActionController
         {
             Map<String, Object> results = new HashMap<>();
 
-            Set<DataProvider> providers = new HashSet<DataProvider>();
+            Set<DataProvider> providers = new HashSet<>();
             if (form.getDataProviders() == null)
             {
                 providers.addAll(LaboratoryService.get().getDataProviders());
@@ -1885,18 +1884,18 @@ public class LaboratoryController extends SpringActionController
                 }
             }
 
-            Map<String, List<NavItem>> items = new HashMap<String, List<NavItem>>();
+            Map<String, List<NavItem>> items = new HashMap<>();
             for (DataProvider dp : providers)
             {
                 for (NavItem item : dp.getSummary(getContainer(), getUser()))
                 {
-                    List<NavItem> list = items.get(item.getReportCategory());
+                    List<NavItem> list = items.get(item.getItemType().name());
                     if (list == null)
                         list = new ArrayList<>();
 
                     list.add(item);
 
-                    items.put(item.getReportCategory(), list);
+                    items.put(item.getItemType().name(), list);
                 }
             }
 
@@ -1967,22 +1966,22 @@ public class LaboratoryController extends SpringActionController
                 }
             }
 
-            Map<String, Object> results = new HashMap<String, Object>();
+            Map<String, Object> results = new HashMap<>();
             for (String subjectId : form.getSubjectIds())
             {
-                Map<String, List<NavItem>> items = new HashMap<String, List<NavItem>>();
+                Map<String, List<NavItem>> items = new HashMap<>();
 
                 for (DataProvider dp : providers)
                 {
                     for (NavItem item : dp.getSubjectIdSummary(getContainer(), getUser(), subjectId))
                     {
-                        List<NavItem> list = items.get(item.getReportCategory());
+                        List<NavItem> list = items.get(item.getItemType().name());
                         if (list == null)
                             list = new ArrayList<>();
 
                         list.add(item);
 
-                        items.put(item.getReportCategory(), list);
+                        items.put(item.getItemType().name(), list);
                     }
                 }
 

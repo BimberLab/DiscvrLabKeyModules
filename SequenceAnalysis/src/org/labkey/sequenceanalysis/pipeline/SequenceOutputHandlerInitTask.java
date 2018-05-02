@@ -50,7 +50,7 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
         public List<String> getProtocolActionNames()
         {
             List<String> allowableNames = new ArrayList<>();
-            for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers())
+            for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers(SequenceOutputHandler.TYPE.OutputFile))
             {
                 allowableNames.add(handler.getName());
             }
@@ -79,7 +79,7 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
     {
         List<RecordedAction> actions = new ArrayList<>();
 
-        SequenceOutputHandler handler = getPipelineJob().getHandler();
+        SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler = getPipelineJob().getHandler();
         List<SequenceOutputFile> outputsToCreate = new ArrayList<>();
 
         for (SequenceOutputFile f : getPipelineJob().getFiles())
@@ -107,7 +107,7 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
 
         if (handler instanceof ParameterizedOutputHandler)
         {
-            for (ToolParameterDescriptor pd : ((ParameterizedOutputHandler)handler).getParameters())
+            for (ToolParameterDescriptor pd : ((ParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>)handler).getParameters())
             {
                 if (pd instanceof ToolParameterDescriptor.CachableParam)
                 {

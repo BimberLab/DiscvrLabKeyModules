@@ -66,16 +66,7 @@ public class SequenceAlignmentJob extends SequenceJob
 
             Container targetContainer = submitJobToReadsetContainer ? ContainerManager.getForId(readset.getContainer()) : c;
 
-            PipeRoot pr = containerToPipeRootMap.get(targetContainer);
-            if (pr == null)
-            {
-                pr = PipelineService.get().findPipelineRoot(targetContainer);
-                if (pr == null || !pr.isValid())
-                    throw new NotFoundException();
-
-                containerToPipeRootMap.put(targetContainer, pr);
-            }
-
+            PipeRoot pr = ReadsetImportJob.getPipeRoot(containerToPipeRootMap, targetContainer);
             SequenceAlignmentJob j = new SequenceAlignmentJob(targetContainer, u, jobName, pr, params, readset);
             j.setDescription(description);
 

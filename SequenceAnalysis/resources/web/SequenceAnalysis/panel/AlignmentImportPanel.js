@@ -723,7 +723,10 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                 totalErrors++;
             else {
                 if (!rec.get('fileId'))
-                    fields.inputFiles.push({fileName: rec.get('fileName')});
+                    fields.inputFiles.push({
+                        fileName: rec.get('fileName'),
+                        relPath: rec.get('relPath')
+                    });
                 else
                     fields.inputFiles.push({dataId: rec.get('fileId')});
             }

@@ -89,7 +89,10 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
                     schemaName: 'sequenceanalysis',
                     queryName: 'chain_files',
                     columns: 'rowid,chainFile,genomeId2,genomeId2/name',
-                    filterArray: [LABKEY.Filter.create('genomeId1', this.libraryId, LABKEY.Filter.Types.EQUAL)],
+                    filterArray: [
+                        LABKEY.Filter.create('genomeId1', this.libraryId, LABKEY.Filter.Types.EQUAL),
+                        LABKEY.Filter.create('dateDisabled', null, LABKEY.Filter.Types.ISBLANK)
+                    ],
                     autoLoad: true
                 },
                 displayField: 'genomeId2/name',
@@ -103,6 +106,18 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
                 fieldLabel: 'Min Percent Match',
                 helpPopup: 'In order to lift to the target genome, the feature must have at least this percent match.  Lower this value to be more permissive; however, this risks incorrect liftovers',
                 itemId: 'pctField'
+            },{
+                xtype: 'checkbox',
+                itemId: 'discardRejected',
+                checked: false,
+                helpPopup: 'If checked, the variants unable to liftover will not be saved to a separate file',
+                fieldLabel: 'Do Not Save Failed Liftover'
+            },{
+                xtype: 'checkbox',
+                itemId: 'dropGenotypes',
+                checked: false,
+                helpPopup: 'If checked, no genotypes will be written to the output file (applies to VCFs only).  This can be useful (and necessary) when lifting VCFs with extremely high sample number.',
+                fieldLabel: 'Drop Genotypes'
             }].concat(SequenceAnalysis.window.OutputHandlerWindow.getCfgForToolParameters(this.toolParameters)),
             buttons: [{
                 text: 'Submit',
@@ -137,6 +152,14 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
 
         if (this.down('#pctField').getValue()){
             params.pct = this.down('#pctField').getValue();
+        }
+
+        if (this.down('#discardRejected').getValue()){
+            params.discardRejected = this.down('#discardRejected').getValue();
+        }
+
+        if (this.down('#dropGenotypes').getValue()){
+            params.dropGenotypes = this.down('#dropGenotypes').getValue();
         }
 
         Ext4.Msg.wait('Saving...');

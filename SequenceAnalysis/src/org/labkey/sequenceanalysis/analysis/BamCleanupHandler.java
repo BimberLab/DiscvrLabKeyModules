@@ -12,6 +12,7 @@ import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SamSorter;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -31,7 +32,7 @@ import java.util.Set;
 /**
  * Created by bimber on 2/3/2016.
  */
-public class BamCleanupHandler extends AbstractParameterizedOutputHandler
+public class BamCleanupHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
     private FileType _bamFileType = new FileType("bam", false);
 
@@ -72,7 +73,7 @@ public class BamCleanupHandler extends AbstractParameterizedOutputHandler
     }
 
     @Override
-    public OutputProcessor getProcessor()
+    public SequenceOutputProcessor getProcessor()
     {
         return new Processor();
     }
@@ -83,7 +84,7 @@ public class BamCleanupHandler extends AbstractParameterizedOutputHandler
         return true;
     }
 
-    public class Processor implements OutputProcessor
+    public class Processor implements SequenceOutputProcessor
     {
         @Override
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException

@@ -56,7 +56,7 @@ import java.util.Map;
 /**
  * Created by bimber on 8/26/2014.
  */
-public class MethylationRateComparisonHandler implements SequenceOutputHandler
+public class MethylationRateComparisonHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
     public static final FileType METHYLATION_TYPE = new FileType(".CpG_Site_Summary.gff");
     private static final String METHYLATION_RATE_COMPARISON = "Methylation Rate Comparison";
@@ -141,12 +141,12 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler
     }
 
     @Override
-    public OutputProcessor getProcessor()
+    public SequenceOutputProcessor getProcessor()
     {
         return new Processor();
     }
 
-    public class Processor implements OutputProcessor
+    public class Processor implements SequenceOutputProcessor
     {
         @Override
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException

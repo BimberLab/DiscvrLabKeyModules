@@ -6,6 +6,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.run.GeneToNameTranslator;
 import org.labkey.api.util.FileType;
 
 import java.io.BufferedReader;
@@ -28,7 +29,7 @@ public class CombineStarGeneCountsHandler extends AbstractCombineGeneCountsHandl
     }
 
     @Override
-    protected void processOutputFiles(CountResults results, List<SequenceOutputFile> inputFiles, JSONObject params, Map<String, Map<String, String>> geneMap, PipelineJob job, RecordedAction action) throws PipelineJobException
+    protected void processOutputFiles(CountResults results, List<SequenceOutputFile> inputFiles, JSONObject params, GeneToNameTranslator translator, PipelineJob job, RecordedAction action) throws PipelineJobException
     {
 
         String strandedSelection = params.optString(STRANDED, INFER);
@@ -40,7 +41,7 @@ public class CombineStarGeneCountsHandler extends AbstractCombineGeneCountsHandl
         long totalStrand1 = 0L;
         long totalStrand2 = 0L;
 
-        results.distinctGenes.addAll(geneMap.keySet());
+        results.distinctGenes.addAll(translator.getGeneMap().keySet());
         Map<Integer, Map<String, Double>> unstrandedCounts = new HashMap<>(inputFiles.size());
         Map<Integer, Map<String, Double>> strand1Counts = new HashMap<>(inputFiles.size());
         Map<Integer, Map<String, Double>> strand2Counts = new HashMap<>(inputFiles.size());

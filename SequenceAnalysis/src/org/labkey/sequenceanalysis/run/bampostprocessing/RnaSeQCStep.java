@@ -6,6 +6,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
@@ -14,6 +15,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.sequenceanalysis.run.alignment.BWAWrapper;
 import org.labkey.sequenceanalysis.run.util.RnaSeQCWrapper;
 
 import java.io.File;
@@ -46,8 +48,9 @@ public class RnaSeQCStep extends AbstractCommandPipelineStep<RnaSeQCWrapper> imp
                             put("width", 400);
                             put("allowBlank", false);
                         }}, null),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-ttype"), "ttype", "Transcript Column", "The column in GTF to use to look for rRNA transcript type. Mainly used for running on Ensembl GTF (specify '-ttype 2'). Otherwise, for spec-conforming GTF files, disregard.", "ldk-integerfield", null, 2)
-            ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "https://www.broadinstitute.org/cancer/cga/rna-seqc");
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-ttype"), "ttype", "Transcript Column", "The column in GTF to use to look for rRNA transcript type. Mainly used for running on Ensembl GTF (specify '-ttype 2'). Otherwise, for spec-conforming GTF files, disregard.", "ldk-integerfield", null, 2),
+                    ToolParameterDescriptor.createExpDataParam("BWArRNA", "rRNA FASTA", "The dataId of a file representing rRNA sequence.  Use an on the fly BWA alignment for estimating rRNA content. The value should be the rRNA reference fasta. If this flag is absent, rRNA estimation will be based upon the rRNA transcript intervals provided in the GTF (a faster but less robust method).", "ldk-expdatafield", null, null)
+            ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js", "ldk/field/ExpDataField.js"), "https://www.broadinstitute.org/cancer/cga/rna-seqc");
         }
 
         @Override
@@ -60,6 +63,7 @@ public class RnaSeQCStep extends AbstractCommandPipelineStep<RnaSeQCWrapper> imp
     @Override
     public Output performAnalysisPerSampleRemote(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
     {
+        AnalysisOutputImpl output = new AnalysisOutputImpl();
         List<String> extraParams = new ArrayList<>();
         extraParams.addAll(getClientCommandArgs());
 
@@ -77,9 +81,25 @@ public class RnaSeQCStep extends AbstractCommandPipelineStep<RnaSeQCWrapper> imp
             throw new PipelineJobException("No GTF file provided");
         }
 
-        getWrapper().execute(Arrays.asList(inputBam), Arrays.asList(rs.getRowId() + ":" + rs.getName()), null, referenceGenome.getWorkingFastaFile(), gtf, outputDir, "rna-seqc", extraParams);
+        File rnaFasta = null;
+        if (!StringUtils.isEmpty(getProvider().getParameterByName("BWArRNA").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx())))
+        {
+            rnaFasta = getPipelineCtx().getSequenceSupport().getCachedData(getProvider().getParameterByName("BWArRNA").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class));
+            if (!rnaFasta.exists())
+            {
+                throw new PipelineJobException("Unable to find fasta file: " + rnaFasta.getPath());
+            }
+        }
 
-        return null;
+        getWrapper().execute(Arrays.asList(inputBam), Arrays.asList(rs.getRowId() + ":" + rs.getName()), null, referenceGenome.getWorkingFastaFile(), gtf, outputDir, "rna-seqc", extraParams, rnaFasta);
+
+        File localBwaDir =new File(outputDir, "bwaIndex");
+        if (localBwaDir.exists())
+        {
+            output.addIntermediateFile(localBwaDir);
+        }
+
+        return output;
     }
 
     @Override

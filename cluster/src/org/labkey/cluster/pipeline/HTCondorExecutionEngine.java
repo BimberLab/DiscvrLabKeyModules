@@ -263,7 +263,7 @@ public class HTCondorExecutionEngine extends AbstractClusterExecutionEngine<HTCo
                         writer.write(line + "\n");
                     }
 
-                    writer.write("arguments = \"'" + StringUtils.join(getConfig().getJobArgs(outDir, serializedJobFile), "' '").replaceAll("\"", "\"\"") + "'\"\n");
+                    writer.write("arguments = \"'" + StringUtils.join(getConfig().getJobArgs(outDir, serializedJobFile, job, this), "' '").replaceAll("\"", "\"\"") + "'\"\n");
                     writer.write("queue 1");
                 }
             }

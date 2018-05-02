@@ -13,6 +13,7 @@ import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -52,6 +53,9 @@ import java.util.List;
  */
 public class TrimmomaticWrapper extends AbstractCommandWrapper
 {
+    private Double _threshold = null;
+    private static final String MIN_PCT_RETAINED = "minPctRetained";
+
     public TrimmomaticWrapper(@Nullable Logger logger)
     {
         super(logger);
@@ -72,20 +76,30 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
             List<String> params = new ArrayList<>();
             for (ToolParameterDescriptor desc : getParameters())
             {
+                if (desc.getName().equals(MIN_PCT_RETAINED))
+                {
+                    continue;
+                }
+
                 params.add(desc.extractValue(ctx.getJob(), this, stepIdx));
             }
 
             return Collections.singletonList(_stepName + ":" + StringUtils.join(params, ":"));
         }
 
-        @Override
-        public PipelineStepProvider<StepType> combineSteps(PipelineStepProvider provider)
+        public Double getThreshold(PipelineContext ctx, int stepIdx)
         {
-            if (provider instanceof AbstractTrimmomaticProvider)
+            return getParameterByName(MIN_PCT_RETAINED).extractValue(ctx.getJob(), this, stepIdx, Double.class);
+        }
+
+        @Override
+        public PipelineStepProvider<StepType> combineSteps(int existingStepIdx, PipelineStepCtx toCombine)
+        {
+            if (toCombine.getProvider() instanceof AbstractTrimmomaticProvider)
             {
                 MultiStepTrimmomaticProvider multi = new MultiStepTrimmomaticProvider();
-                multi.addProvider(this);
-                multi.addProvider((AbstractTrimmomaticProvider)provider);
+                multi.addProvider(this, existingStepIdx);
+                multi.addProvider((AbstractTrimmomaticProvider)toCombine.getProvider(), toCombine.getStepIdx());
 
                 return multi;
             }
@@ -103,7 +117,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
     //NOTE: for internal use only, this should not be registered
     public static class MultiStepTrimmomaticProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
     {
-        private List<AbstractTrimmomaticProvider> _providers = new ArrayList<>();
+        private List<Pair<AbstractTrimmomaticProvider, Integer>> _providers = new ArrayList<>();
         public static final String NAME = "Trimmomatic";
 
         public MultiStepTrimmomaticProvider()
@@ -111,9 +125,9 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
             super(NAME, NAME, NAME, "Combined Trimmomatic Steps", null, null);
         }
 
-        public void addProvider(AbstractTrimmomaticProvider provider)
+        public void addProvider(AbstractTrimmomaticProvider provider, int stepIdx)
         {
-            _providers.add(provider);
+            _providers.add(Pair.of(provider, stepIdx));
         }
 
         @Override
@@ -127,20 +141,37 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         {
 
             List<String> additionalParams = new ArrayList<>();
-            for (AbstractTrimmomaticProvider provider : _providers)
+            for (Pair<AbstractTrimmomaticProvider, Integer> provider : _providers)
             {
-                additionalParams.addAll(provider.getAdditionalParams(ctx, output, stepIdx));
+                additionalParams.addAll(provider.first.getAdditionalParams(ctx, output, provider.second));
             }
 
             return additionalParams;
         }
 
+
         @Override
-        public PipelineStepProvider combineSteps(PipelineStepProvider provider)
+        public Double getThreshold(PipelineContext ctx, int stepIdx)
         {
-            if (provider instanceof AbstractTrimmomaticProvider)
+            Double ret = 0.0;
+            for (Pair<AbstractTrimmomaticProvider, Integer> provider : _providers)
             {
-                this.addProvider((AbstractTrimmomaticProvider)provider);
+                Double val = provider.first.getParameterByName(MIN_PCT_RETAINED).extractValue(ctx.getJob(), this, stepIdx, Double.class);
+                if (val != null && val > ret)
+                {
+                    ret = val;
+                }
+            }
+
+            return ret;
+        }
+
+        @Override
+        public PipelineStepProvider combineSteps(int existingStepIdx, PipelineStepCtx toCombine)
+        {
+            if (toCombine.getProvider() instanceof AbstractTrimmomaticProvider)
+            {
+                this.addProvider((AbstractTrimmomaticProvider)toCombine.getProvider(), toCombine.getStepIdx());
 
                 return this;
             }
@@ -169,6 +200,13 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
 
             AbstractTrimmomaticProvider provider = (AbstractTrimmomaticProvider)getProvider();
             List<String> trimmomaticParams = getWrapper().getTrimmomaticParams(input, input2, provider.getName(), provider.getAdditionalParams(getPipelineCtx(), output, getStepIdx()));
+
+            Double threshold = provider.getThreshold(getPipelineCtx(), getStepIdx());
+            if (threshold != null && threshold > 0.0)
+            {
+                getWrapper().setThreshold(threshold);
+            }
+
             getWrapper().doTrim(trimmomaticParams);
             output.addCommandExecuted(StringUtils.join(trimmomaticParams, " "));
 
@@ -242,7 +280,8 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         try
         {
             p = pb.start();
-            generateSummaryText(p);
+            List<Double> results = new ArrayList<>();
+            generateSummaryText(p, results);
             try (BufferedReader procReader = new BufferedReader(new InputStreamReader(p.getErrorStream(), StringUtilsLabKey.DEFAULT_CHARSET)))
             {
                 String line;
@@ -255,6 +294,15 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                 if (lastReturnCode != 0)
                 {
                     throw new PipelineJobException("process exited with non-zero value: " + lastReturnCode);
+                }
+            }
+
+            if (_threshold != null && !results.isEmpty())
+            {
+                Double pctRetained = results.get(0);
+                if (pctRetained < _threshold)
+                {
+                    throw new PipelineJobException("The resulting file had few than " + NumberFormat.getPercentInstance().format(_threshold) + " percent of reads remaining, was: " + NumberFormat.getPercentInstance().format(pctRetained));
                 }
             }
         }
@@ -271,12 +319,18 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         }
     }
 
+    public void setThreshold(Double threshold)
+    {
+        _threshold = threshold;
+    }
+
     public static class ReadLengthFilterProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
     {
         public ReadLengthFilterProvider()
         {
             super("MINLEN", "ReadLengthFilter", "Read Length Filter", "If selected, any reads shorter than this value will be discarded from analysis", Arrays.asList(
-                    ToolParameterDescriptor.create("minLength", "Minimum Read Length", "Reads shorter than this value will be discarded", "ldk-integerfield", null, null)
+                    ToolParameterDescriptor.create("minLength", "Minimum Read Length", "Reads shorter than this value will be discarded", "ldk-integerfield", null, null),
+                    getMinReadsParam()
             ), null);
         }
     }
@@ -301,7 +355,8 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                     ToolParameterDescriptor.create("palindromeClipThreshold", "Palindrome Clip Threshold", "A full description of this parameter can be found on the trimmomatic homepage.  The following is adapted from their documentation: For palindromic matches, the entire read sequence plus (partial) adapter sequences can be used - therefore this threshold can be higher, in the range of 30-40", "ldk-integerfield", new JSONObject()
                     {{
                             put("minValue", 0);
-                        }}, 30)
+                        }}, 30),
+                    getMinReadsParam()
             ), Collections.singleton("SequenceAnalysis/panel/AdapterPanel.js"));
         }
 
@@ -408,9 +463,19 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                     ToolParameterDescriptor.create("avgQual", "Avg Qual", "The average quality score for the window that must be obtained", "ldk-integerfield", new JSONObject()
                     {{
                             put("minValue", 0);
-                        }}, 15)
+                        }}, 15),
+                    getMinReadsParam()
             ), null);
         }
+    }
+
+    private static ToolParameterDescriptor getMinReadsParam()
+    {
+        return ToolParameterDescriptor.create(MIN_PCT_RETAINED, "Min Pct Retained", "If fewer than this fraction of reads remain after trimming, an error will be thrown.", "ldk-numberfield", new JSONObject()
+        {{
+            put("minValue", 0);
+            put("maxValue", 1);
+        }}, 0.75);
     }
 
     public static class MaxInfoTrimmingProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
@@ -426,7 +491,8 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                     {{
                         put("minValue", 0);
                         put("maxValue", 1);
-                    }}, 0.9)
+                    }}, 0.9),
+                    getMinReadsParam()
             ), null);
         }
     }
@@ -453,7 +519,8 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                     ToolParameterDescriptor.create("cropLength", "Crop Length", "Reads will be cropped to this length", "ldk-integerfield", new JSONObject()
                     {{
                             put("minValue", 0);
-                        }}, 250)
+                        }}, 250),
+                    getMinReadsParam()
             ), null);
         }
     }
@@ -466,7 +533,8 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                     ToolParameterDescriptor.create("headcropLength", "5' Cropping", "If provided, this will crop the specified number of bases from the 5' end of each read", "ldk-integerfield", new JSONObject()
                     {{
                             put("minValue", 0);
-                        }}, null)
+                        }}, null),
+                    getMinReadsParam()
             ), null);
         }
     }
@@ -526,13 +594,12 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
 
     private File getJar()
     {
-        String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("PICARDPATH");
-        if (path != null)
+        String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("TRIMMOMATICPATH");
+        if (path == null)
         {
-            return new File(path);
+            path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath(SequencePipelineService.SEQUENCE_TOOLS_PARAM);
         }
 
-        path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath(SequencePipelineService.SEQUENCE_TOOLS_PARAM);
         if (path == null)
         {
             path = PipelineJobService.get().getAppProperties().getToolsDirectory();
@@ -572,7 +639,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         return fileNames;
     }
 
-    private void generateSummaryText(final Process p) throws PipelineJobException
+    private void generateSummaryText(final Process p, final List<Double> results) throws PipelineJobException
     {
         getLogger().debug("generating trimmomatic summary stats based on stdout");
         JobRunner.getDefault().execute(new Runnable()
@@ -703,10 +770,13 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
 
                     Double avgBasesTrimmed = totalReadsTrimmed == 0 ? 0 : (double)totalBasesTrimmed / (double)totalReadsTrimmed;
                     Double avgReadLength = totalReadsTrimmed == 0 ? 0 : (double)totalLength / (double)totalReadsRetained;
+                    Double pctRetained =(double)totalReadsRetained / totalInspected;
+                    results.add(pctRetained);
                     StringBuilder summary = new StringBuilder();
                     summary.append("Trimming summary:\n");
                     summary.append("\tTotal reads inspected: " + NumberFormat.getInstance().format(totalInspected) + "\n");
                     summary.append("\tTotal reads discarded: " + NumberFormat.getInstance().format(totalDiscarded) + "\n");
+                    summary.append("\tPercent reads retained: " + NumberFormat.getPercentInstance().format(pctRetained) + "\n");
                     summary.append("\tTotal reads trimmed (includes discarded): " +  NumberFormat.getInstance().format(totalReadsTrimmed) + "\n");
                     summary.append("\tAvg bases trimmed: " +  avgBasesTrimmed + "\n");
                     summary.append("\tTotal reads remaining: " + NumberFormat.getInstance().format(totalReadsRetained) + "\n");
@@ -720,9 +790,11 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                     {
                         Double avgBasesTrimmedF = totalBasesTrimmedF == 0 ? 0 : (double)totalBasesTrimmedF / (double)totalReadsTrimmedF;
                         Double avgReadLengthF = (double)totalLengthF / (double)totalReadsRetainedF;
+                        Double pctRetainedF =(double)totalReadsRetainedF / totalInspectedF;
                         summary.append("Forward read trimming summary: " + "\n");
                         summary.append("\tTotal forward reads inspected: " + NumberFormat.getInstance().format(totalInspectedF) + "\n");
                         summary.append("\tTotal forward reads discarded: " + NumberFormat.getInstance().format(totalDiscardedF) + "\n");
+                        summary.append("\tPercent reads retained: " + NumberFormat.getPercentInstance().format(pctRetainedF) + "\n");
                         summary.append("\tTotal forward reads trimmed (includes discarded): " +  NumberFormat.getInstance().format(totalReadsTrimmedF) + "\n");
                         summary.append("\tAvg bases trimmed from forward reads: " +  NumberFormat.getInstance().format(avgBasesTrimmedF) + "\n");
                         summary.append("\tTotal forward reads remaining: " + NumberFormat.getInstance().format(totalReadsRetainedF) + "\n");
@@ -733,9 +805,11 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                     {
                         Double avgBasesTrimmedR = totalBasesTrimmedR == 0 ? 0 : (double)totalBasesTrimmedR / (double)totalReadsTrimmedR;
                         Double avgReadLengthR = (double)totalLengthR / (double)totalReadsRetainedR;
+                        Double pctRetainedR =(double)totalReadsRetainedR / totalInspectedR;
                         summary.append("Reverse read trimming summary: " + "\n");
                         summary.append("\tTotal reverse reads inspected: " + NumberFormat.getInstance().format(totalInspectedR) + "\n");
                         summary.append("\tTotal reverse reads discarded: " + NumberFormat.getInstance().format(totalDiscardedR) + "\n");
+                        summary.append("\tPercent reads retained: " + NumberFormat.getPercentInstance().format(pctRetainedR) + "\n");
                         summary.append("\tTotal reverse reads trimmed (includes discarded): " +  NumberFormat.getInstance().format(totalReadsTrimmedR) + "\n");
                         summary.append("\tAvg bases trimmed from reverse reads: " +  NumberFormat.getInstance().format(avgBasesTrimmedR) + "\n");
                         summary.append("\tTotal reverse reads remaining: " + NumberFormat.getInstance().format(totalReadsRetainedR) + "\n");

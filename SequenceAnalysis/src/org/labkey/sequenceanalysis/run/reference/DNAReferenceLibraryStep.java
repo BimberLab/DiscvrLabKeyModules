@@ -20,6 +20,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceLibraryStep;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.pipeline.AlignmentInitTask;
@@ -177,7 +178,7 @@ public class DNAReferenceLibraryStep extends AbstractPipelineStep implements Ref
             throw new PipelineJobException(e);
         }
 
-        ReferenceLibraryOutputImpl output = new ReferenceLibraryOutputImpl(new ReferenceGenomeImpl(refFasta, null, null));
+        ReferenceLibraryOutputImpl output = new ReferenceLibraryOutputImpl(new ReferenceGenomeImpl(refFasta, null, null, null));
         output.addOutput(refFasta, IndexOutputImpl.REFERENCE_DB_FASTA);
         output.addOutput(idKey, AlignmentInitTask.ID_KEY_FILE);
         output.addOutput(outputDirectory, "Reference Genome Folder");
