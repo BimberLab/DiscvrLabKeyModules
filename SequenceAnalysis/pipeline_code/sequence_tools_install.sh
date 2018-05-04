@@ -1184,6 +1184,10 @@ then
     rm JBrowse-1.12.4.zip
     cd JBrowse-1.12.4
     ./setup.sh
+
+    #this seems to cause issues on TeamCity and is not needed
+    rm -Rf ./sample_data
+
     cd ../
 
     cp -R ./JBrowse-1.12.4 $LKTOOLS_DIR/JBrowse-1.12.4
