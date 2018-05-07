@@ -1,20 +1,38 @@
 package org.labkey.sequenceanalysis.query;
 
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.AbstractTableInfo;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.DataColumn;
+import org.labkey.api.data.DisplayColumn;
+import org.labkey.api.data.DisplayColumnFactory;
+import org.labkey.api.data.JdbcType;
+import org.labkey.api.data.RenderContext;
+import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.LDKService;
 import org.labkey.api.query.DetailsURL;
+import org.labkey.api.query.ExprColumn;
+import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryAction;
 import org.labkey.api.query.QueryForeignKey;
+import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.view.ActionURL;
+import org.labkey.api.view.template.ClientDependency;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * Created by bimber on 1/4/2015.
@@ -39,14 +57,32 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
             }
             else if (tableInfo.getName().equalsIgnoreCase(SequenceAnalysisSchema.TABLE_OUTPUTFILES))
             {
+                LaboratoryService.get().getLaboratoryTableCustomizer().customize(tableInfo);
+
                 //behaves slowly on postgres
                 if (tableInfo.getSqlDialect().isSqlServer())
                 {
                     LDKService.get().applyNaturalSort(ti, "name");
                 }
+
+                addFileSetCol(ti);
             }
 
             customizeSharedCols(ti);
+        }
+    }
+
+    private void addFileSetCol(AbstractTableInfo ti)
+    {
+        String name = "fileSets";
+        if (ti.getColumn(name) == null)
+        {
+            SQLFragment sql = new SQLFragment("(SELECT ").append(ti.getSqlDialect().getGroupConcat(new SQLFragment("s.name"), true, true, "','")).append(" FROM sequenceanalysis.analysisSetMembers m JOIN sequenceanalysis.analysisSets s ON (s.rowid = m.analysisSet) WHERE m.outputFileId = " + ExprColumn.STR_TABLE_ALIAS + ".rowId)");
+            ExprColumn newCol = new ExprColumn(ti, name, sql, JdbcType.VARCHAR, ti.getColumn("rowId"));
+            newCol.setLabel("File Sets");
+            newCol.setDisplayColumnFactory(new FileSetDisplayColumnFactory());
+
+            ti.addColumn(newCol);
         }
     }
 
@@ -169,6 +205,64 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
                     break;
                 }
             }
+        }
+    }
+
+    public static class FileSetDisplayColumnFactory implements DisplayColumnFactory
+    {
+        @Override
+        public DisplayColumn createRenderer(ColumnInfo colInfo)
+        {
+            return new DataColumn(colInfo)
+            {
+                @Override
+                public @NotNull Set<ClientDependency> getClientDependencies()
+                {
+                    Set<ClientDependency> ret = super.getClientDependencies();
+                    ret.add(ClientDependency.fromPath("/sequenceanalysis/window/ManageFileSetsWindow.js"));
+                    ret.add(ClientDependency.fromPath("/sequenceanalysis/window/AddFileSetsWindow.js"));
+
+                    return ret;
+                }
+
+                @Override
+                public void addQueryFieldKeys(Set<FieldKey> keys)
+                {
+                    super.addQueryFieldKeys(keys);
+                    keys.add(getBoundKey("rowId"));
+                }
+
+                private FieldKey getBoundKey(String colName)
+                {
+                    return new FieldKey(getBoundColumn().getFieldKey().getParent(), colName);
+                }
+
+                @Override
+                public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
+                {
+                    Integer rowId = ctx.get(getBoundKey("rowId"), Integer.class);
+                    if (rowId != null)
+                    {
+                        String value = StringUtils.trimToNull(ctx.get(getBoundKey("fileSets"), String.class));
+                        if (value != null)
+                        {
+                            String[] tokens = value.split(",");
+                            String delim = "";
+                            for (String token : tokens)
+                            {
+                                ActionURL url = QueryService.get().urlFor(ctx.getViewContext().getUser(), ctx.getContainer(), QueryAction.executeQuery, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES);
+                                url.addParameter("query.fileSets~contains", token);
+
+                                out.write(delim + "<a href=\"" + url.getURIString() + "\"" + ">" + token + "</a>");
+                                delim = ",<br>";
+                            }
+                        }
+
+                        String onclick = "onclick=\"SequenceAnalysis.window.ManageFileSetsWindow.buttonHandlerForOutputFiles(" + PageFlowUtil.jsString(rowId.toString()) + ", " + PageFlowUtil.jsString(ctx.getCurrentRegion().getName()) + ");\"";
+                        out.write("<a class=\"fa fa-pencil lk-dr-action-icon\" data-tt=\"tooltip\" data-original-title=\"add/edit\" " + onclick + "></a>");
+                    }
+                }
+            };
         }
     }
 }

@@ -337,6 +337,8 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
         // iterate existing submissions to catch completed tasks and errors
         // regenerate this list in case status has otherwise changed
         jobs = getJobsToCheck(false, extraJobIds);
+        _log.info("found " + jobs.size() + " additional cluster jobs to check");
+
         for (ClusterJob j : jobs)
         {
             if (jobsUpdated.contains(j.getClusterId()))
@@ -353,6 +355,7 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
             Pair<String, String> jobStatus = getStatusForJob(j, ContainerManager.getForId(j.getContainer()));
             if (jobStatus != null)
             {
+                _log.info("updating job status: " + j.getClusterId() + " / " + jobStatus.first);
                 updateJobStatus(jobStatus.first, j, jobStatus.second);
             }
             else
@@ -473,6 +476,7 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
         try
         {
             PipelineStatusFile sf = PipelineService.get().getStatusFile(j.getStatusFileId());
+            PipelineJob pj = null;
             if (sf != null && status != null)
             {
                 File xml = getSerializedJobFile(new File(sf.getFilePath()));
@@ -482,7 +486,7 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
                 }
 
                 //NOTE: this should read from serialized XML file, not rely on the DB
-                PipelineJob pj = PipelineJob.readFromFile(xml);
+                pj = PipelineJob.readFromFile(xml);
                 if (pj == null)
                 {
                     _log.error("unable to create PipelineJob from xml file: " + sf.getRowId());
@@ -533,7 +537,7 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
                         }
                     }
 
-                    pj.getLogger().debug("setting active task status for job: " + j.getClusterId() + " to: " + taskStatus.name() + ". status was: " + pj.getActiveTaskStatus() + " (PipelineJob) /" + sf.getStatus() + " (StatusFile) / activeTaskId: " + (pj.getActiveTaskId() != null ? pj.getActiveTaskId().toString() : "no active task") + ", hostname: " + sf.getActiveHostName());
+                    pj.getLogger().debug("setting active task status for job: " + j.getClusterId() + " to: " + taskStatus.name() + ". status was: " + pj.getActiveTaskStatus() + " (PipelineJob) /" + sf.getStatus() + " (StatusFile) / activeTaskId (job): " + (pj.getActiveTaskId() != null ? pj.getActiveTaskId().toString() : "no active task") + ", hostname: " + sf.getActiveHostName() + ", rowid: " + j.getRowId());
                     try
                     {
                         //NOTE: PipelineService.setPipelineJobStatus() is needed to requeue a job upon completion, but in all other cases go through JMS
@@ -566,6 +570,10 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
             }
 
             Table.update(null, ClusterSchema.getInstance().getSchema().getTable(ClusterSchema.CLUSTER_JOBS), j, j.getRowId());
+            if (pj != null)
+            {
+                pj.getLogger().debug("updated submission record status to: " + status);
+            }
         }
         catch (IOException e)
         {

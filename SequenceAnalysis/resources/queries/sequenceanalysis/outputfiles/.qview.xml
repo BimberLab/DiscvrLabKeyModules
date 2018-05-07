@@ -16,6 +16,7 @@
        </column>
        <column name="runid" />
        <column name="runid/jobid" />
+       <column name="fileSets" />
        <column name="workbook" />
        <column name="dataid/ViewOrDownload"/>
    </columns>

@@ -1,8 +1,10 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
@@ -11,6 +13,7 @@ import org.labkey.api.pipeline.AbstractTaskFactorySettings;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedActionSet;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
@@ -148,6 +151,19 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
         for (SequenceOutputFile o : job.getOutputsToCreate())
         {
             updateOutputFile(o, job, runId, analysisId);
+
+            // this is a check added to debug the intermittent situation where outputs are double-created.  I think it happens
+            // in a rare case where a job was waiting to run during a server restart, and the task is double-started.
+            if (o.getRunId() != null)
+            {
+                SimpleFilter filter = new SimpleFilter(FieldKey.fromString("runId"), o.getRunId());
+                filter.addCondition(FieldKey.fromString("dataId"), o.getDataId());
+                if (new TableSelector(ti, filter, null).exists())
+                {
+                    job.getLogger().error("Possible double creation of output file: " + o.getName());
+                }
+            }
+
             created.add(Table.insert(job.getUser(), ti, o));
         }
 

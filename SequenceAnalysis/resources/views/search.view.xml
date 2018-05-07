@@ -2,6 +2,8 @@
     <dependencies>
         <dependency path="laboratory.context"/>
         <dependency path="SequenceAnalysis/sequenceAnalysis"/>
+        <dependency path="ux/CheckCombo/CheckCombo.js"/>
+        <dependency path="ux/CheckCombo/CheckCombo.css"/>
         <dependency path="/extWidgets/SearchPanel.js"/>
     </dependencies>
 </view>

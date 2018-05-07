@@ -82,9 +82,7 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         _sourceContainerId = databaseGuid == null ? getContainerId() : getSourceContainerId(databaseGuid);
         _mode = mode;
 
-        AssayFileWriter writer = new AssayFileWriter();
-        JBrowseRoot root = new JBrowseRoot(null);
-        setLogFile(writer.findUniqueFileName("jbrowse-" + (new GUID().toString()) + ".log", root.getBaseDir(c)));
+        setLogFile(AssayFileWriter.findUniqueFileName("jbrowse-" + (new GUID().toString()) + ".log", JBrowseRoot.getBaseDir(c)));
     }
 
     private JBrowseSessionPipelineJob(Container c, User user, PipeRoot pipeRoot, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> outputFileIds, @Nullable String existingDatabaseGuid, boolean isPrimaryDb, boolean shouldCreateOwnIndex, boolean isTemporarySession)
@@ -103,9 +101,7 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         _primaryDb = isPrimaryDb;
         _isTemporarySession = isTemporarySession;
 
-        AssayFileWriter writer = new AssayFileWriter();
-        JBrowseRoot root = new JBrowseRoot(getLogger());
-        setLogFile(writer.findUniqueFileName("jbrowse-" + _databaseGuid + ".log", root.getBaseDir(c)));
+        setLogFile(AssayFileWriter.findUniqueFileName("jbrowse-" + _databaseGuid + ".log", JBrowseRoot.getBaseDir(c)));
     }
 
     private String getSourceContainerId(String databaseGuid)

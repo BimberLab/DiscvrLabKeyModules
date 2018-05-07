@@ -55,7 +55,11 @@
             delete window.require;
         }
     </script>
-    <script type="text/javascript" src="<%=h(base)%>src/dojo/dojo.js" data-dojo-config="async: 1, baseUrl: '<%=h(base)%>src'"></script>
+
+    <%--Load LK context, primarily to support client error reporting, but might be useful for plugins--%>
+    <%=PageFlowUtil.getLabkeyJS(getViewContext(), null)%>
+
+    <script type="text/javascript" src="<%=h(base)%>src/dojo/dojo.js" data-dojo-config="async: 1, cacheBust: '<%=h(PageFlowUtil.getServerSessionHash())%>>', baseUrl: '<%=h(base)%>src'"></script>
     <script type="text/javascript" src="<%=h(base)%>src/JBrowse/init.js"></script>
 
     <script type="text/javascript">

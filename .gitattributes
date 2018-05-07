@@ -944,6 +944,7 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnaly
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.312-12.313.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.313-12.314.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.314-12.315.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.315-12.316.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.00-0.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.11-11.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-11.10-11.11.sql -text
@@ -1035,6 +1036,7 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalys
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.312-12.313.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.313-12.314.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.314-12.315.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.315-12.316.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.23-11.24.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.24-11.25.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.25-11.26.sql -text
@@ -1164,6 +1166,7 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/sequenceAnalysis.css 
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/sequenceAnalysis.lib.xml -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/sequenceanalysisButtons.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/snp_haplotype.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/AddFileSetsWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/AddSraRunWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/CompareSequencesWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ConcatenatedSequenceWindow.js -text
@@ -1178,6 +1181,7 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ImportOutputFi
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ImportSequencesFromFastaWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ImportTrackWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/LiftoverWindow.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ManageFileSetsWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/MarkDisabledWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/OutputHandlerWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ReprocessLibraryWindow.js -text

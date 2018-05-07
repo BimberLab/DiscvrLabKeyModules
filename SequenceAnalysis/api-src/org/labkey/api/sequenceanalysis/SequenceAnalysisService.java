@@ -84,4 +84,6 @@ abstract public class SequenceAnalysisService
     abstract public Integer getExpRunIdForJob(PipelineJob job, boolean throwUnlessFound) throws PipelineJobException;
 
     abstract public List<PedigreeRecord> generatePedigree(Collection<String> sampleNames, Container c, User u);
+
+    abstract public String getVCFLineCount(File vcf, Logger log, boolean passOnly) throws PipelineJobException;
 }

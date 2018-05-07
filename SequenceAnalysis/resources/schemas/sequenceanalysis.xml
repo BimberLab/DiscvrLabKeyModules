@@ -2373,7 +2373,7 @@
         </buttonBarOptions>
     </table>
     <table tableName="outputfiles" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer class="org.labkey.laboratory.query.LaboratoryEditingTableCustomizer" />
+        <javaCustomizer class="org.labkey.sequenceanalysis.query.SequenceAnalysisCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableUrl></tableUrl>
         <insertUrl></insertUrl>
@@ -2490,6 +2490,7 @@
             <includeScript>sequenceanalysis/field/ReadsetField.js</includeScript>
             <includeScript>sequenceanalysis/window/ImportOutputFileWindow.js</includeScript>
             <includeScript>sequenceanalysis/window/VisualizeDataWindow.js</includeScript>
+            <includeScript>sequenceanalysis/window/AddFileSetsWindow.js</includeScript>
             <item text="Import Files" insertPosition="beginning" iconCls="plus">
                 <onClick>SequenceAnalysis.window.ImportOutputFileWindow.buttonHandler(dataRegionName);</onClick>
             </item>
@@ -2501,6 +2502,9 @@
             </item>
             <item text="Visualize/Analyze Data" insertPosition="end">
                 <onClick>SequenceAnalysis.window.VisualizeDataWindow.buttonHandler(dataRegionName);</onClick>
+            </item>
+            <item text="Add To Fileset" requiresSelection="true" insertPosition="end">
+                <onClick>SequenceAnalysis.window.AddFileSetsWindow.buttonHandlerForOutputFiles(dataRegionName);</onClick>
             </item>
         </buttonBarOptions>
     </table>
@@ -2750,12 +2754,25 @@
             <column columnName="dataid">
                 <nullable>true</nullable>
                 <columnTitle>File</columnTitle>
+                <isHidden>true</isHidden>
                 <isUserEditable>false</isUserEditable>
                 <shownInInsertView>false</shownInInsertView>
                 <shownInUpdateView>false</shownInUpdateView>
                 <fk>
                     <fkDbSchema>exp</fkDbSchema>
                     <fkTable>data</fkTable>
+                    <fkColumnName>RowId</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="outputFileId">
+                <nullable>true</nullable>
+                <columnTitle>Output File</columnTitle>
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <fk>
+                    <fkDbSchema>sequenceanalysis</fkDbSchema>
+                    <fkTable>outputfiles</fkTable>
                     <fkColumnName>RowId</fkColumnName>
                 </fk>
             </column>

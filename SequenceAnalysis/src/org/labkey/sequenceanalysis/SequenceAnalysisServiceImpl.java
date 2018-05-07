@@ -33,6 +33,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.UnauthorizedException;
+import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.BgzipRunner;
@@ -414,5 +415,10 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
             distinctSubjects.add(p.getMother());
             appendParents(distinctSubjects, pr, newRecords);
         }
+    }
+
+    public String getVCFLineCount(File vcf, Logger log, boolean passOnly) throws PipelineJobException
+    {
+        return ProcessVariantsHandler.getVCFLineCount(vcf, log, passOnly);
     }
 }

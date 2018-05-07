@@ -265,7 +265,7 @@ public class SequenceIntegrationTests
                 _log.info("sequence junit tests will look for tools in: [" + path + "]");
                 if (!dir.exists())
                 {
-                    _log.error("directory does not exist");
+                    _log.error("directory does not exist: " + path);
                 }
             }
             else

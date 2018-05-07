@@ -83,12 +83,13 @@ public class JBrowseRoot
         return _customLogger == null ? _log : _customLogger;
     }
 
-    public File getBaseDir(Container c)
+    public static File getBaseDir(Container c)
     {
         return getBaseDir(c, true);
     }
 
-    public @Nullable File getBaseDir(Container c, boolean doCreate)
+    @Nullable
+    public static File getBaseDir(Container c, boolean doCreate)
     {
         FileContentService fileService = FileContentService.get();
         File fileRoot = fileService == null ? null : fileService.getFileRoot(c, FileContentService.ContentType.files);
@@ -233,7 +234,7 @@ public class JBrowseRoot
                 throw new IOException("Unable to find container with Id: " + containerId);
             }
 
-            Map<String, Object> jsonRecord = new CaseInsensitiveHashMap();
+            Map<String, Object> jsonRecord = new CaseInsensitiveHashMap<>();
             jsonRecord.put("outputfile", outputFileId);
             File outDir = new File(getTracksDir(fileContainer), "track-" + outputFileId.toString());
             jsonRecord.put("relPath", FileUtil.relativePath(getBaseDir(fileContainer).getPath(), outDir.getPath()));
@@ -291,7 +292,7 @@ public class JBrowseRoot
         //else create
         if (jsonFile == null)
         {
-            Map<String, Object> jsonRecord = new CaseInsensitiveHashMap();
+            Map<String, Object> jsonRecord = new CaseInsensitiveHashMap<>();
             jsonRecord.put("sequenceid", ntId);
             jsonRecord.put("relPath", FileUtil.relativePath(getBaseDir(ContainerManager.getForId(model.getContainer())).getPath(), outDir.getPath()));
             jsonRecord.put("container", model.getContainer());
@@ -1216,6 +1217,8 @@ public class JBrowseRoot
             throw new IllegalArgumentException("File does not exist: " + data.getFile().getPath());
         }
 
+        //Note: it is possible for this to be a non-supported filetype
+
         //find existing resource
         TableInfo jsonFiles = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
         TableSelector ts1 = new TableSelector(jsonFiles, new SimpleFilter(FieldKey.fromString("trackid"), trackId), null);
@@ -1239,7 +1242,7 @@ public class JBrowseRoot
         //else create
         if (jsonFile == null)
         {
-            Map<String, Object> jsonRecord = new CaseInsensitiveHashMap();
+            Map<String, Object> jsonRecord = new CaseInsensitiveHashMap<>();
             jsonRecord.put("trackid", trackId);
             jsonRecord.put("relPath", FileUtil.relativePath(getBaseDir(data.getContainer()).getPath(), outDir.getPath()));
             jsonRecord.put("container", data.getContainer().getId());
@@ -1350,7 +1353,7 @@ public class JBrowseRoot
         }
         else
         {
-            getLogger().error("Unknown extension, skipping: " + ext);
+            getLogger().warn("Unknown extension, skipping: " + ext);
             return null;
         }
     }
