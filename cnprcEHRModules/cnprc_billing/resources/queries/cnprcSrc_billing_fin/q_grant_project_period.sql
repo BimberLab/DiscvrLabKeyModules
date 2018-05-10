@@ -33,6 +33,8 @@ select
 ,Gpp_special_funding_type    AS Special_funding_type
 ,Gpp_last_reported_date      AS Last_reported_date
 ,Gpp_base_grant_indicator_yn AS Base_grant_indicator_yn
+,GPP_CNPRC_BUDGET            AS cnprc_budget
+,GPP_CNPRC_DIRECT_COSTS      AS cnprc_direct_cost
 ,Objectid
 ,Date_time
 from cnprcSrc_billing_fin.zgrant_project_period

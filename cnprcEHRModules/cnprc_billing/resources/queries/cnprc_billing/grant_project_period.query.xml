@@ -37,6 +37,8 @@
                     <column columnName="Special_funding_type"/>
                     <column columnName="Last_reported_date"/>
                     <column columnName="Base_grant_indicator_yn"/>
+                    <column columnName="cnprc_budget"/>
+                    <column columnName="cnprc_direct_cost"/>
                     <column columnName="Objectid"/>
                 </columns>
             </table>

@@ -40,7 +40,7 @@ public class CNPRC_BillingModule extends ExtendedSimpleModule
     @Override
     public double getVersion()
     {
-        return 17.12;
+        return 18.11;
     }
 
     @Override
