@@ -33,7 +33,8 @@
                             }).show(arguments[0].srcElement);
                         </onClick>
                     </item>
-                    <item hidden="true">
+                    <!-- Suppress warning about missing button since users who don't have permission don't see it in the list of options -->
+                    <item hidden="true" suppressWarning="true">
                         <originalText>Create Workbook</originalText>
                     </item>
                     <item hidden="true">
