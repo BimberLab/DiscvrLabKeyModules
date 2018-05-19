@@ -24,6 +24,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
+import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.ValidationException;
 import org.labkey.api.security.User;
@@ -139,7 +140,14 @@ public class ExpRunCreator
         run.setProtocol(parentProtocol);
         run.setComments(description);
         run.setJobId(PipelineService.get().getJobId(u, c, new GUID().toString()));
-        run.save(u);
+        try
+        {
+            run.save(u);
+        }
+        catch (BatchValidationException e)
+        {
+            throw new PipelineJobException(e);
+        }
 
         Map<String, ExpProtocolAction> expActionMap = new HashMap<>();
         List<? extends ExpProtocolAction> expActions = parentProtocol.getSteps();
