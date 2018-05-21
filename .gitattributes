@@ -1266,6 +1266,8 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/JobContextI
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/NcbiGenomeImportPipelineJob.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/NcbiGenomeImportPipelineProvider.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/NcbiGenomeImportTask.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/OrphanFilePipelineJob.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/OrphanFilePipelineProvider.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/PicardMetricsUtil.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/PipelineStepCtxImpl.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/PrepareAlignerIndexesTask.java -text

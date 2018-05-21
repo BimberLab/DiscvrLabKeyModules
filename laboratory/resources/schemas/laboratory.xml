@@ -1323,7 +1323,7 @@
         </columns>
         <buttonBarOptions position="top" includeStandardButtons="true">
             <includeScript>laboratory.context</includeScript>
-            <item text="Create New Workbook" permission="INSERT" iconCls="plus">
+            <item text="Create New Workbook" permission="INSERT" iconCls="plus" insertAfter="Grid Views">
                 <onClick>Ext4.create('Laboratory.window.WorkbookCreationWindow', {
                     canAddToExistingExperiment: false,
                     controller: 'project',

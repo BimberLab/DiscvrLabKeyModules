@@ -114,6 +114,9 @@
                 <bean class="org.labkey.sequenceanalysis.pipeline.ImportGenomeTrackTask$Factory">
                     <property name="location" value="webserver" />
                 </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.OrphanFilePipelineJob.Task$Factory">
+                    <property name="location" value="webserver" />
+                </bean>
             </list>
         </property>
         <property name="pipelines">
@@ -194,6 +197,14 @@
                     <property name="taskProgressionSpec">
                         <list>
 
+                        </list>
+                    </property>
+                </bean>
+                <bean class="org.labkey.api.pipeline.TaskPipelineSettings">
+                    <constructor-arg type="java.lang.Class" value="org.labkey.sequenceanalysis.pipeline.OrphanFilePipelineJob"/>
+                    <property name="taskProgressionSpec">
+                        <list>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.OrphanFilePipelineJob.Task</value>
                         </list>
                     </property>
                 </bean>

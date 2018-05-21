@@ -518,7 +518,7 @@ public class SequenceIntegrationTests
             try
             {
                 long start = System.currentTimeMillis();
-                long timeout = 60 * 1000 * 3; //3 mins
+                long timeout = 60 * 1000 * 4; //4 mins
 
                 Thread.sleep(1000);
 
@@ -528,7 +528,16 @@ public class SequenceIntegrationTests
 
                     long duration = System.currentTimeMillis() - start;
                     if (duration > timeout)
-                        throw new RuntimeException("Timed out waiting for pipeline job");
+                    {
+                        //this will iterate jobs, inspecting for errors
+                        for (PipelineJob job : jobs)
+                        {
+                            isJobDone(job);
+                        }
+
+                        throw new RuntimeException("Timed out waiting for pipeline jobs: " + jobs.size());
+
+                    }
                 }
 
                 Thread.sleep(10000);

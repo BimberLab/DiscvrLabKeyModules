@@ -60,6 +60,7 @@ import org.labkey.sequenceanalysis.pipeline.IlluminaImportJob;
 import org.labkey.sequenceanalysis.pipeline.ImportFastaSequencesPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.ImportGenomeTrackPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineProvider;
+import org.labkey.sequenceanalysis.pipeline.OrphanFilePipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.ReadsetImportJob;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineProvider;
@@ -238,6 +239,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new GSnapWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new StarWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new CellRangerWrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new CellRangerWrapper.DeNovoProvider());
 
         //de novo assembly
         SequencePipelineService.get().registerPipelineStep(new TrinityRunner.Provider());
@@ -364,6 +366,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         PipelineService.get().registerPipelineProvider(new SequenceReadsetHandlerPipelineProvider(this));
         PipelineService.get().registerPipelineProvider(new ImportFastaSequencesPipelineJob.Provider(this));
         PipelineService.get().registerPipelineProvider(new ImportGenomeTrackPipelineJob.Provider(this));
+        PipelineService.get().registerPipelineProvider(new OrphanFilePipelineProvider(this));
         PipelineService.get().registerPipelineProvider(new SequencePipelineProvider(this));
 
         LDKService.get().registerQueryButton(new ReprocessLibraryButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);

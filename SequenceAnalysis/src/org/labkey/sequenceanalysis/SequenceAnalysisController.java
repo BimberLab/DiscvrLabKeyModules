@@ -137,6 +137,7 @@ import org.labkey.sequenceanalysis.pipeline.ImportFastaSequencesPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.ImportGenomeTrackPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineProvider;
+import org.labkey.sequenceanalysis.pipeline.OrphanFilePipelineJob;
 import org.labkey.sequenceanalysis.pipeline.ReadsetImportJob;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentJob;
@@ -486,90 +487,37 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class FindOrphanFilesAction extends SimpleViewAction<Object>
+    public class FindOrphanFilesAction extends ConfirmAction<Object>
     {
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public ModelAndView getConfirmView(Object o, BindException errors) throws Exception
         {
-            return root.addChild("Orphan Sequence Files");
+            setTitle("Find Orphan Sequence Files");
+
+            HtmlView view = new HtmlView("This will start a pipeline job that will inspect all files in this folder to identify potential orphan or otherwise unnecessary files.  Do you want to continue?");
+            return view;
         }
 
         @Override
-        public ModelAndView getView(Object o, BindException errors) throws Exception
+        public boolean handlePost(Object o, BindException errors) throws Exception
         {
-            StringBuilder html = new StringBuilder();
-            html.append("## The following sections list any files or pipeline jobs that appear to be orphans, not connected to any imported readsets or sequence outputs:<p>");
+            PipeRoot pipelineRoot = PipelineService.get().findPipelineRoot(getContainer());
+            PipelineService.get().queueJob(new OrphanFilePipelineJob(getContainer(), getUser(), getViewContext().getActionURL(), pipelineRoot));
 
-            Set<File> orphanFiles = new HashSet<>();
-            Set<File> orphanIndexes = new HashSet<>();
-            Set<File> probableDeletes = new HashSet<>();
-            Set<PipelineStatusFile> orphanJobs = new HashSet<>();
-            List<String> messages = new ArrayList<>();
-            SequenceAnalysisManager.get().getOrphanFilesForContainer(getContainer(), getUser(), orphanFiles, orphanIndexes, orphanJobs, messages, probableDeletes);
-            probableDeletes.addAll(orphanIndexes);
+            return true;
+        }
 
-            if (!orphanFiles.isEmpty())
-            {
-                html.append("## The following sequence files are not referenced by readsets, analyses or output files:<br>");
-                for (File f : orphanFiles)
-                {
-                    html.append(f.getPath() + "<br>");
-                }
-                html.append("<p>");
-            }
+        @Override
+        public void validateCommand(Object o, Errors errors)
+        {
 
-            if (!orphanIndexes.isEmpty())
-            {
-                html.append("## The following index files appear to be orphans:<br>");
-                for (File f : orphanIndexes)
-                {
-                    html.append(f.getPath() + "<br>");
-                }
-                html.append("<p>");
-            }
+        }
 
-            if (!orphanJobs.isEmpty())
-            {
-                html.append("## The following sequence jobs are not referenced by readsets, analyses or output files.<br>");
-                html.append("## The best action would be to view the pipeline job list, 'Sequence Jobs' view, and filter for jobs without sequence outputs.  Deleting any unwanted jobs through the UI should also delete files.<br>");
-                for (PipelineStatusFile sf : orphanJobs)
-                {
-                    File f = new File(sf.getFilePath()).getParentFile();
-                    if (f.exists())
-                    {
-                        long size = FileUtils.sizeOfDirectory(f);
-                        //ignore if less than 1mb
-                        if (size > 1e6)
-                        {
-                            html.append("## size: " + FileUtils.byteCountToDisplaySize(size) + "<br>");
-                            html.append(f.getPath() + "<br>");
-                        }
-                    }
-                    else
-                    {
-                        messages.add("## Pipeline job folder does not exist: " + sf.getRowId());
-                        messages.add(f.getPath());
-                    }
-                }
-            }
-
-            if (!messages.isEmpty())
-            {
-                html.append("## The following messages were generated:<br>");
-                html.append(StringUtils.join(messages, "<br>"));
-            }
-
-            if (!probableDeletes.isEmpty())
-            {
-                html.append("<hr>");
-                html.append("## The following files can almost certainly be deleted; however, please exercise caution:<br>");
-                for (File f : probableDeletes)
-                {
-                    html.append(f.getPath() + "<br>");
-                }
-            }
-
-            return new HtmlView(html.toString());
+        @NotNull
+        @Override
+        public URLHelper getSuccessURL(Object o)
+        {
+            return PageFlowUtil.urlProvider(PipelineUrls.class).urlBegin(getContainer());
         }
     }
 

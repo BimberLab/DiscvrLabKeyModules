@@ -15,6 +15,7 @@
  */
 package org.labkey.sequenceanalysis.run.util;
 
+import org.apache.log4j.Logger;
 import org.biojava3.core.sequence.DNASequence;
 import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
 import org.biojava3.core.sequence.compound.AmbiguityRNACompoundSet;
@@ -30,6 +31,8 @@ import java.util.List;
  */
 public class AASnp
 {
+    private static final Logger _log = Logger.getLogger(AASnp.class);
+
     private NTSnp _ntSnp;
     private SequenceModel _aaRef;
     private int _aaPosInProtein;
@@ -84,7 +87,15 @@ public class AASnp
             else
             {
                 DNASequence dna = new DNASequence(_codon, AmbiguityDNACompoundSet.getDNACompoundSet());
-                _residueString = _engine.getRnaAminoAcidTranslator().createSequence(_engine.getDnaRnaTranslator().createSequence(dna)).getSequenceAsString();
+                try
+                {
+                    _residueString = _engine.getRnaAminoAcidTranslator().createSequence(_engine.getDnaRnaTranslator().createSequence(dna)).getSequenceAsString();
+                }
+                catch (Exception e)
+                {
+                    _log.error("unable to translate string: " + _codon, e);
+                }
+
                 if (_residueString == null || "".equals(_residueString))
                 {
                     _residueString = "*";

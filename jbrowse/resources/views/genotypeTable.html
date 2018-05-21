@@ -18,7 +18,7 @@
                     var start = row.start;
 
                     $.each(row.genotypes, function(idx, gt){
-                        dataSet.push([contig, start, gt.sample, gt.gt]);
+                        dataSet.push([contig, start, gt.sample, (gt.gt === './.' ? 'No Data' : gt.gt)]);
                     });
                 });
 

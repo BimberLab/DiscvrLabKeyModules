@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.lang.management.ManagementFactory;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -836,6 +837,11 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         {
             _job.getLogger().debug("copying input: " + input.getPath());
             _job.getLogger().debug("to: " + dest.getPath());
+            if (Files.isSymbolicLink(input.toPath()) && !input.exists())
+            {
+                _job.getLogger().info("found broken symlink: " + input.getPath());
+                Files.delete(input.toPath());
+            }
 
             dest = _wd.outputFile(input, dest);
             processCopiedFile(input, dest, actions);
