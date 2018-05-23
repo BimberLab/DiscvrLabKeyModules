@@ -295,7 +295,6 @@ DISCVR/su2c/src/org/labkey/su2c/Su2cCustomizer.java -text
 DISCVR/su2c/src/org/labkey/su2c/Su2cManager.java -text
 DISCVR/su2c/src/org/labkey/su2c/Su2cModule.java -text
 DISCVR/su2c/src/org/labkey/su2c/Su2cSchema.java -text
-DISCVR/su2c/tools/installLabKey.sh -text
 cnprcEHRModules/build.gradle -text
 cnprcEHRModules/cnprc_billing/build.gradle -text
 cnprcEHRModules/cnprc_billing/module.properties -text

@@ -12,7 +12,7 @@ LK_HOME=/usr/local/labkey
 
 cd /usr/local/src
 
-#extra module first
+#extra modules first
 wget -r --trust-server-names --no-check-certificate http://teamcity.labkey.org/guestAuth/repository/download/LabKey_${BRANCH}/.lastSuccessful/${MODULE_DIST_NAME}/${PROJECT_NAME}-{build.number}-ExtraModules.zip
 mv ./teamcity.labkey.org/guestAuth/repository/download/${BRANCH}/.lastSuccessful/${MODULE_DIST_NAME}/*.zip ./
 rm -Rf ./teamcity.labkey.org
