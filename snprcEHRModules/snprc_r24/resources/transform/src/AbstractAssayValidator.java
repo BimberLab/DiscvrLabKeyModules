@@ -70,16 +70,16 @@ public abstract class AbstractAssayValidator
         return _errors;
     }
 
-    public void setEmail(String _email) {
-        this._email = _email;
+    public void setEmail(String email) {
+        _email = email;
     }
 
-    public void setPassword(String _password) {
-        this._password = _password;
+    public void setPassword(String password) {
+        _password = password;
     }
 
-    public void setHost(String _host) {
-        this._host = _host;
+    public void setHost(String host) {
+        _host = host;
     }
 
     public String getHost() {
