@@ -21,6 +21,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.ehr.EHRService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.security.User;
 import org.labkey.api.view.WebPartFactory;
 
 import java.util.Collection;
@@ -62,7 +63,7 @@ public class ONPRC_ReportsModule extends ExtendedSimpleModule
 
     @Override
     @NotNull
-    public Collection<String> getSummary(Container c)
+    public Collection<String> getSummary(Container c, User user)
     {
         return Collections.emptyList();
     }

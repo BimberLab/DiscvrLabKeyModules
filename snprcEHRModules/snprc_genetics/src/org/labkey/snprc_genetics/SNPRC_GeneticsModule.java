@@ -21,6 +21,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.module.CodeOnlyModule;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.security.User;
 import org.labkey.api.view.WebPartFactory;
 
 import java.util.Collection;
@@ -56,9 +57,9 @@ public class SNPRC_GeneticsModule extends CodeOnlyModule
         ContainerManager.addContainerListener(new SNPRC_GeneticsContainerListener());
     }
 
-    @Override
     @NotNull
-    public Collection<String> getSummary(Container c)
+    @Override
+    public Collection<String> getSummary(Container c, User user)
     {
         return Collections.emptyList();
     }

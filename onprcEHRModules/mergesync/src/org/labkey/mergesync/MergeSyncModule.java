@@ -24,6 +24,7 @@ import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.resource.Resource;
+import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.view.WebPartFactory;
@@ -83,7 +84,7 @@ public class MergeSyncModule extends ExtendedSimpleModule
 
     @NotNull
     @Override
-    public Collection<String> getSummary(Container c)
+    public Collection<String> getSummary(Container c, User user)
     {
         return Collections.emptyList();
     }
