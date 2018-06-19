@@ -77,7 +77,7 @@ Ext4.define('SequenceAnalysis.window.DownloadSequencesWindow', {
                         target.removeAll();
                         if (val.format == 'advanced') {
                             target.add([{
-                                html: 'This option allows you to enter an advanced expression to create the FASTA header line.  These expressions use the same syntax as <a href="https://www.labkey.org/Documentation/wiki-page.view?name=urlEncoding" target="_blank">LabKey\'s column URL expressions</a>.  These allow you to substitute the value of any field into the header by enclosing it with ${}, such as: "${rowid}_${name}_${species}".',
+                                html: 'This option allows you to enter an advanced expression to create the FASTA header line.  These expressions use the same syntax as <a href="' + LABKEY.Utils.getHelpTopicHref('urlEncoding') + '" target="_blank">LabKey\'s column URL expressions</a>.  These allow you to substitute the value of any field into the header by enclosing it with ${}, such as: "${rowid}_${name}_${species}".',
                                 style: 'padding-top: 10px;padding-bottom: 10px;',
                                 border: false
                             },{
