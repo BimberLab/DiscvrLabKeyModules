@@ -32,7 +32,6 @@ import org.labkey.api.ldk.buttons.ShowEditUIButton;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.search.SearchService;
-import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -175,7 +174,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     @NotNull
     @Override
-    public Collection<String> getSummary(Container c, User user)
+    public Collection<String> getSummary(Container c)
     {
         SequenceAnalysisManager sm = SequenceAnalysisManager.get();
         Collection<String> list = new LinkedList<>();

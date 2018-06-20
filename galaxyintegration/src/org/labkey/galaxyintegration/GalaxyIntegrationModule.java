@@ -20,7 +20,6 @@ import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.module.ModuleContext;
-import org.labkey.api.security.User;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.galaxyintegration.api.GalaxyService;
 
@@ -73,7 +72,7 @@ public class GalaxyIntegrationModule extends ExtendedSimpleModule
 
     @Override
     @NotNull
-    public Collection<String> getSummary(Container c, User user)
+    public Collection<String> getSummary(Container c)
     {
         return Collections.emptyList();
     }

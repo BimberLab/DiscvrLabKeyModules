@@ -27,7 +27,6 @@ import org.labkey.api.module.ModuleContext;
 import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QueryService;
-import org.labkey.api.security.User;
 import org.labkey.api.view.WebPartFactory;
 
 import java.util.Collection;
@@ -91,9 +90,9 @@ public class snprc_r24Module extends DefaultModule
     }
 
 
-    @NotNull
     @Override
-    public Collection<String> getSummary(Container c, User user)
+    @NotNull
+    public Collection<String> getSummary(Container c)
     {
         return Collections.emptyList();
     }
