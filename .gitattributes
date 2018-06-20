@@ -2489,13 +2489,13 @@ snprcEHRModules/snprc_r24/resources/queries/snprc_r24/LookupAnalytes.sql -text
 snprcEHRModules/snprc_r24/resources/queries/snprc_r24/LookupDataTypes.sql -text
 snprcEHRModules/snprc_r24/resources/queries/snprc_r24/LookupLabs.sql -text
 snprcEHRModules/snprc_r24/resources/queries/snprc_r24/LookupSampleTypes.sql -text
-snprcEHRModules/snprc_r24/resources/queries/snprc_r24/LookupSets.query.xml -text
 snprcEHRModules/snprc_r24/resources/queries/snprc_r24/LookupSets/.qview.xml -text
 snprcEHRModules/snprc_r24/resources/queries/snprc_r24/Lookups.query.xml -text
 snprcEHRModules/snprc_r24/resources/queries/snprc_r24/Lookups/.qview.xml -text
 snprcEHRModules/snprc_r24/resources/queries/snprc_r24/SampleInventory.query.xml -text
 snprcEHRModules/snprc_r24/resources/queries/snprc_r24/SampleInventory/.qview.xml -text
 snprcEHRModules/snprc_r24/resources/queries/snprc_r24/biomarkersPivot.sql -text
+snprcEHRModules/snprc_r24/resources/queries/snprc_r24/lookup_sets.query.xml -text
 snprcEHRModules/snprc_r24/resources/queries/study/Demographics.query.xml -text
 snprcEHRModules/snprc_r24/resources/queries/study/Demographics/.qview.xml -text
 snprcEHRModules/snprc_r24/resources/queries/study/InVivoResults.query.xml -text
