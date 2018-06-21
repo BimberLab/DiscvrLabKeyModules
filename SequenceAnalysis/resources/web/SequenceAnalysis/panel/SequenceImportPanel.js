@@ -1636,7 +1636,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         listeners: {
                             beforeedit: function(cell, object){
                                 var useReadset = this.getCmp().up('sequenceanalysis-sequenceimportpanel').down('#importReadsetIds').getValue();
-                                if (useReadset && object.field != 'readset' && object.field != 'fileGroupId'){
+                                if (useReadset && object.field !== 'readset' && object.field !== 'fileGroupId'){
                                     //alert('This sample is using a readset that was created previously.  You cannot edit ' + object.column.text + ' for this readset.  If you wish to update that readset, click the View/Edit Readsets link above.');
                                     return false;
                                 }
@@ -2038,6 +2038,26 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         Ext4.create('LDK.window.GridBulkEditWindow', {
                             targetGrid: grid
                         }).show(btn);
+                    }
+                },{
+                    text: 'Assign To Instrument Run',
+                    tooltip: 'Click to assign the selected rows to an existing or new instrument run',
+                    scope: this,
+                    handler : function(btn) {
+                        var grid = btn.up('grid');
+                        grid.getPlugin('cellediting').completeEdit();
+                        var s = grid.getSelectionModel().getSelection();
+
+                        //select all
+                        if (!s.length) {
+                            grid.getSelectionModel().selectAll();
+                            s = grid.getSelectionModel().getSelection();
+                        }
+
+                        Ext4.create('SequenceAnalysis.window.InstrumentRunWindow', {
+                            targetGrid: grid,
+                            selectedRows: s
+                        }).show();
                     }
                 }]
             }]

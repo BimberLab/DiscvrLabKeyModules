@@ -125,7 +125,18 @@ Ext4.define('Laboratory.panel.WorkbookCreationPanel', {
         var action = this.action;
         var urlParams = this.urlParams || {};
 
-        window.location = LABKEY.ActionURL.buildURL(controller, action, containerPath, urlParams);
+        var url = LABKEY.ActionURL.buildURL(controller, action, containerPath, urlParams);
+        if (url.length > 1200){
+            Ext4.create('Ext.form.Panel', {
+                url: LABKEY.ActionURL.buildURL(controller, action, containerPath),
+                method: 'POST',
+                baseParams: urlParams,
+                standardSubmit: true
+            }).submit();
+        }
+        else {
+            window.location = url;
+        }
     },
 
     renderWorkbookForm: function(){

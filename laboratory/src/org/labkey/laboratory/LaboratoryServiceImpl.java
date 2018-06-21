@@ -193,6 +193,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
         }
         catch (ExperimentException e)
         {
+            _log.error(e);
             throw new ValidationException(e.getMessage());
         }
     }
@@ -205,6 +206,7 @@ public class LaboratoryServiceImpl extends LaboratoryService
         }
         catch (ExperimentException e)
         {
+            _log.error(e);
             throw new ValidationException(e.getMessage());
         }
     }

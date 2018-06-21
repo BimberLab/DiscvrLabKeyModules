@@ -10,5 +10,6 @@
         <dependency path="SequenceAnalysis/panel/AlignmentImportPanel.js"/>
 
         <dependency path="SequenceAnalysis/window/SaveAnalysisAsTemplateWindow.js"/>
+        <dependency path="SequenceAnalysis/window/InstrumentRunWindow.js"/>
     </dependencies>
 </view>

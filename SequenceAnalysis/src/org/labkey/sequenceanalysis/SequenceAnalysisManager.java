@@ -535,7 +535,7 @@ public class SequenceAnalysisManager
         }
     }
 
-    private static void deleteReferenceLibrary(User user, Container c, Integer rowId) throws SQLException, IOException
+    private static void deleteReferenceLibrary(User user, Container c, Integer rowId) throws Exception
     {
         cascadeDelete(user.getUserId(), c.getId(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS, "library_id", rowId);
         cascadeDelete(user.getUserId(), c.getId(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_LIBRARY_TRACKS, "library_id", rowId);
@@ -574,6 +574,16 @@ public class SequenceAnalysisManager
         }
 
         jr.waitForCompletion();
+
+        //finally the record itself
+        Map<String, Object> map = new CaseInsensitiveHashMap<>();
+        map.put("rowid", rowId);
+        List<Map<String, Object>> toDelete = Arrays.asList(map);
+
+        Map<String, Object> scriptContext = new HashMap<>();
+        scriptContext.put("deleteFromServer", true);  //a flag to make the trigger script accept this
+        UserSchema us = QueryService.get().getUserSchema(user, c, SequenceAnalysisSchema.SCHEMA_NAME);
+        us.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES).getUpdateService().deleteRows(user, c, toDelete, null, scriptContext);
     }
 
     public String getNTRefForAARef(Integer refId)

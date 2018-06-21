@@ -156,6 +156,15 @@ public class DNAReferenceLibraryStep extends AbstractPipelineStep implements Ref
         File idKey = getExpectedIdKeyFile(outputDirectory);
         getPipelineCtx().getLogger().debug("writing FASTA to: " + refFasta.getPath());
 
+        long totalBases = 0;
+        for (RefNtSequenceModel row : rows)
+        {
+            totalBases += row.getSeqLength();
+            if (totalBases > 1e9){
+                throw new PipelineJobException("The DNA filters you selected returned a large amount of data.  It would be better to first create a reference genome using selected sequence and then run this alignment against that");
+            }
+        }
+
         try (PrintWriter writer = PrintWriters.getPrintWriter(refFasta); PrintWriter idWriter = PrintWriters.getPrintWriter(idKey))
         {
             if (!refFasta.exists())
@@ -171,6 +180,7 @@ public class DNAReferenceLibraryStep extends AbstractPipelineStep implements Ref
                 writer.write(row.getSequence() + System.getProperty("line.separator"));
 
                 idWriter.write(row.getRowid() + "\t" + row.getName() + System.getProperty("line.separator"));
+                row.clearCachedSequence();
             }
         }
         catch (IOException e)

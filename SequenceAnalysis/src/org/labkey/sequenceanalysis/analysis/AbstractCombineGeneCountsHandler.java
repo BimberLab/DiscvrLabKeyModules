@@ -279,10 +279,10 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
             long totalNonZero = results.nonZeroCounts.get(so.getRowid());
             double ratio = (double)totalNonZero / avgNonZero;
 
-            job.getLogger().info(so.getRowid() + "/" + so.getName() + ": " + totalNonZero + " (" + ratio + ")");
+            job.getLogger().info(so.getRowid() + "/" + so.getName() + ": " + totalNonZero + " (" + ratio + " of avg)");
             if (ratio > 2 || ratio < 0.5)
             {
-                job.getLogger().warn("total non zero more than 2-fold different than average");
+                job.getLogger().warn("total non zero was more than 2-fold different than the average");
             }
 
             //TODO: consider a warn threshold based on total features?

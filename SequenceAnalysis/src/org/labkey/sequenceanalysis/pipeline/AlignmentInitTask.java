@@ -5,6 +5,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
+import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceLibraryStep;
@@ -137,13 +138,25 @@ public class AlignmentInitTask extends WorkDirectoryTask<AlignmentInitTask.Facto
                 getHelper().getFileManager().addStepOutputs(action, output);
                 getHelper().getFileManager().cleanup(Collections.singleton(action));
 
+                List<PipelineStepCtx<AlignmentStep>> alignmentSteps = SequencePipelineService.get().getSteps(getJob(), AlignmentStep.class);
+                if (!alignmentSteps.isEmpty())
+                {
+                    getJob().getLogger().info("Preparing for alignment");
+                    SequenceTaskHelper taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
+                    for (PipelineStepCtx<AlignmentStep> stepCtx : alignmentSteps)
+                    {
+                        AlignmentStep aStep = stepCtx.getProvider().create(taskHelper);
+                        aStep.init(taskHelper.getSequenceSupport());
+                    }
+                }
+
                 List<PipelineStepCtx<AnalysisStep>> analysisSteps = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);
                 if (!analysisSteps.isEmpty())
                 {
                     getJob().getLogger().info("Preparing for analysis");
+                    SequenceTaskHelper taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
                     for (PipelineStepCtx<AnalysisStep> stepCtx : analysisSteps)
                     {
-                        SequenceTaskHelper taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
                         AnalysisStep aStep = stepCtx.getProvider().create(taskHelper);
                         aStep.init(taskHelper.getSequenceSupport());
                     }

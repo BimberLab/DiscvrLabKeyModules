@@ -263,7 +263,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         if (ret.getColumn("distinctGenomes") == null)
         {
             String chr = ret.getSqlDialect().isPostgreSQL() ? "chr" : "char";
-            SQLFragment sql = new SQLFragment("(SELECT ").append(ret.getSqlDialect().getGroupConcat(new SQLFragment("l.name"), true, true, (chr + "(20)"))).append(new SQLFragment(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " a JOIN " + SequenceAnalysisSchema.SCHEMA_NAME  + "." + SequenceAnalysisSchema.TABLE_REF_LIBRARIES + " l ON (a.library_id = l.rowid) WHERE a.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)"));
+            SQLFragment sql = new SQLFragment("(SELECT ").append(ret.getSqlDialect().getGroupConcat(new SQLFragment("l.name"), true, true, (chr + "(10)"))).append(new SQLFragment(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " a JOIN " + SequenceAnalysisSchema.SCHEMA_NAME  + "." + SequenceAnalysisSchema.TABLE_REF_LIBRARIES + " l ON (a.library_id = l.rowid) WHERE a.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)"));
             ExprColumn newCol = new ExprColumn(ret, "distinctGenomes", sql, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
             newCol.setLabel("Genomes With Alignments For Readset");
             newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=sequence_analyses&query.readset~eq=${rowid}&query.library_id~isnonblank", ret.getContainer().isWorkbook() ? ret.getContainer().getParent() : ret.getContainer()));

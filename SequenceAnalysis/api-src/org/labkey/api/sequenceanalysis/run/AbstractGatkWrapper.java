@@ -108,7 +108,7 @@ abstract public class AbstractGatkWrapper extends AbstractCommandWrapper
         Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
         if (maxThreads != null)
         {
-            if (_minRamPerQueueJob != null)
+            if (_minRamPerQueueJob != null && _minRamPerQueueJob > 0)
             {
                 String maxRamSetting = StringUtils.trimToNull(System.getenv("SEQUENCEANALYSIS_MAX_RAM"));
                 if (maxRamSetting != null)

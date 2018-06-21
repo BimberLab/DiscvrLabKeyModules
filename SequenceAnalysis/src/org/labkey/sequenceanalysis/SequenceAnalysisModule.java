@@ -153,7 +153,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.316;
+        return 12.317;
     }
 
     public boolean hasScripts()
@@ -239,7 +239,6 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new GSnapWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new StarWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new CellRangerWrapper.Provider());
-        SequencePipelineService.get().registerPipelineStep(new CellRangerWrapper.DeNovoProvider());
 
         //de novo assembly
         SequencePipelineService.get().registerPipelineStep(new TrinityRunner.Provider());

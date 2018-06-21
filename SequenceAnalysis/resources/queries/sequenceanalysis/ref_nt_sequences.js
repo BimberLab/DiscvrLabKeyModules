@@ -58,5 +58,7 @@ function addError(errors, field, msg) {
 }
 
 function beforeDelete(row, errors){
-    errors._form = 'You cannot directly delete reference sequences.  To delete these records, use the delete button above the sequences grid.';
+    if (!this.extraContext.deleteFromServer) {
+        errors._form = 'You cannot directly delete reference sequences.  To delete these records, use the delete button above the sequences grid.';
+    }
 }
