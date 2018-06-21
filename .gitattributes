@@ -1038,6 +1038,7 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalys
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.313-12.314.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.314-12.315.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.315-12.316.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.316-12.317.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.23-11.24.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.24-11.25.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.25-11.26.sql -text
@@ -1181,6 +1182,7 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ImportChainFil
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ImportOutputFileWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ImportSequencesFromFastaWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ImportTrackWindow.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/InstrumentRunWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/LiftoverWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ManageFileSetsWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/MarkDisabledWindow.js -text

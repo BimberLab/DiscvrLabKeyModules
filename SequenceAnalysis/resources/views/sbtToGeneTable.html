@@ -46,6 +46,7 @@
 
             loadTable: function(){
                 LABKEY.Query.selectRows({
+                    method: 'POST',
                     containerPath: Laboratory.Utils.getQueryContainerPath(),
                     schemaName: 'sequenceanalysis',
                     queryName: 'outputfiles',
@@ -104,6 +105,7 @@
                 }
 
                 LABKEY.Query.selectRows({
+                    method: 'POST',
                     containerPath: Laboratory.Utils.getQueryContainerPath(),
                     schemaName: 'sequenceanalysis',
                     queryName: queryName,
@@ -145,6 +147,7 @@
 
             queryAnalyses: function(readsets){
                 LABKEY.Query.executeSql({
+                    method: 'POST',
                     containerPath: Laboratory.Utils.getQueryContainerPath(),
                     schemaName: 'sequenceanalysis',
                     sql: 'SELECT distinct a.analysis_id, a.analysis_id.readset, a.analysis_id.library_id, a.analysis_id.library_id.name FROM sequenceanalysis.alignment_summary a WHERE a.analysis_id.readset IN (' + readsets.join(',') + ')',
@@ -171,7 +174,11 @@
                         });
 
                         toAdd.push({
-                            html: 'Readsets '
+                            html: 'Readsets'
+                        });
+
+                        toAdd.push({
+                            html: ''
                         });
 
                         toAdd.push({
@@ -205,6 +212,21 @@
                             toAdd.push({
                                 html: Ext4.Object.getKeys(genomeMap[genomeId].readsets).length  + ' / ' + this.headerValues.length
                             });
+
+                            var missing = Ext4.Array.difference(this.headerValues, Ext4.Object.getKeys(genomeMap[genomeId].readsets));
+                            if (missing.length) {
+                                toAdd.push({
+                                    xtype: 'ldk-linkbutton',
+                                    text: missing.length ? missing.length + ' missing' : '',
+                                    linkTarget: '_blank',
+                                    href: LABKEY.ActionURL.buildURL('query', 'executeQuery', Laboratory.Utils.getQueryContainerPath(), {schemaName: 'sequenceanalysis', 'query.queryName': 'sequence_readsets', 'query.rowid~in': missing.join(';')})
+                                });
+                            }
+                            else {
+                                toAdd.push({
+                                    html: ''
+                                });
+                            }
 
                             toAdd.push({
                                 xtype: 'checkbox',
@@ -243,7 +265,7 @@
                             },
                             layout: {
                                 type: 'table',
-                                columns: 6
+                                columns: 7
                             },
                             items: toAdd,
                             buttonAlign: 'left',
@@ -280,6 +302,7 @@
                     var multi = new LABKEY.MultiRequest();
 
                     multi.add(LABKEY.Query.selectRows, {
+                        method: 'POST',
                         containerPath: Laboratory.Utils.getQueryContainerPath(),
                         schemaName: 'sequenceanalysis',
                         queryName: 'alignment_summary_by_lineage',
@@ -307,6 +330,7 @@
                     });
 
                     multi.add(LABKEY.Query.selectRows, {
+                        method: 'POST',
                         containerPath: Laboratory.Utils.getQueryContainerPath(),
                         schemaName: 'sequenceanalysis',
                         queryName: 'alignment_summary_grouped',

@@ -1629,19 +1629,26 @@
                 <isUserEditable>false</isUserEditable>
                 <columnTitle>Run Id</columnTitle>
             </column>
-            <column columnName="rundate">
-                <columnTitle>Run Date</columnTitle>
-            </column>
             <column columnName="name">
-                <columnTitle>Run Name</columnTitle>
+                <columnTitle>Run Name/Id</columnTitle>
             </column>
-            <column columnName="instrumentid">
-                <columnTitle>Instrument</columnTitle>
+            <column columnName="instrumentType">
+                <columnTitle>Instrument Type</columnTitle>
                 <fk>
                     <fkDbSchema>sequenceanalysis</fkDbSchema>
                     <fkTable>instruments</fkTable>
-                    <fkColumnName>rowid</fkColumnName>
+                    <fkColumnName>displayname</fkColumnName>
+                    <fkDisplayColumnName useRawValue="true"/>
                 </fk>
+            </column>
+            <column columnName="facility">
+                <columnTitle>Facility/Core</columnTitle>
+            </column>
+            <column columnName="rundate">
+                <columnTitle>Run Date</columnTitle>
+            </column>
+            <column columnName="lane">
+                <columnTitle>Lane(s)</columnTitle>
             </column>
             <column columnName="comment"/>
             <column columnName="container">
@@ -2135,6 +2142,7 @@
             </column>
         </columns>
         <buttonBarOptions includeStandardButtons="true">
+            <includeScript>sequenceanalysis/sequenceAnalysis</includeScript>
             <includeScript>SequenceAnalysis/panel/ImportSequencesFromFastaPanel.js</includeScript>
             <includeScript>SequenceAnalysis/window/ImportSequencesFromFastaWindow.js</includeScript>
             <item hidden="true">

@@ -972,16 +972,50 @@ then
     #old version
     rm -Rf v2.1.1*
     rm -Rf trinityrnaseq-*
+    rm -Rf Trinityrnaseq-*
     rm -Rf $LKTOOLS_DIR/Trinity
+    rm -Rf $LKTOOLS_DIR/trinity
 
-    wget $WGET_OPTS https://github.com/trinityrnaseq/trinityrnaseq/archive/Trinity-v2.5.1.zip
-    unzip  Trinity-v2.5.1.zip
+    wget $WGET_OPTS https://github.com/trinityrnaseq/trinityrnaseq/releases/download/Trinity-v2.6.6/Trinityrnaseq-v2.6.6.wExtSampleData.tar.gz
+    tar -xf Trinityrnaseq-v2.6.6.wExtSampleData.tar.gz
 
-    cd trinityrnaseq-Trinity-v2.5.1
+    cd Trinityrnaseq-v2.6.6
     make
 
     cd ../
-    cp -R trinityrnaseq-Trinity-v2.5.1 $LKTOOLS_DIR/trinity
+    cp -R Trinityrnaseq-v2.6.6 $LKTOOLS_DIR/trinity
+else
+    echo "Already installed"
+fi
+
+
+#
+#jellyfish
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install jellyfish"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/jellyfish || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+
+    #old version
+    rm -Rf jellyfish*
+    rm -Rf $LKTOOLS_DIR/jellyfish*
+
+    wget $WGET_OPTS https://github.com/gmarcais/Jellyfish/releases/download/v2.2.10/jellyfish-linux
+    chmod +x jellyfish-linux
+    mv jellyfish-linux $LKTOOLS_DIR/jellyfish
+
+    wget $WGET_OPTS https://github.com/COMBINE-lab/salmon/releases/download/v0.9.1/Salmon-0.9.1_linux_x86_64.tar.gz
+    tar xvf Salmon-0.9.1_linux_x86_64.tar.gz
+    cp Salmon-latest_linux_x86_64/bin/salmon $LKTOOLS_DIR/
+
+
 else
     echo "Already installed"
 fi

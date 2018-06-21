@@ -79,6 +79,8 @@ Ext4.define('SequenceAnalysis.panel.AlignmentAnalysisPanel', {
                     }
 
                     this.libraryIds = Ext4.unique(libraryIds);
+
+                    this.down('#alignmentCount').update('Alignments to be analyzed: ' + store.getCount());
                 }
             }
         });
@@ -97,6 +99,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentAnalysisPanel', {
             },
             items: [{
                 html: 'Below are the alignments that will be analyzed.',
+                itemId: 'alignmentCount',
                 style: 'padding-bottom: 10px;'
             },{
                 xtype: 'dataview',

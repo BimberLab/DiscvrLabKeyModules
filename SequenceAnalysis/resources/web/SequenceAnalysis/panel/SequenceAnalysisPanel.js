@@ -186,6 +186,9 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                     }, this);
 
                     this.onStoreLoad(errorNames);
+
+                    var target = this.down('#readsetCount');
+                    target.update(target.initialConfig.html + '  Total to align: ' + this.readsetStore.getCount());
                 }
             }
         });
@@ -200,7 +203,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
             this.errorNames = this.errorNames.concat(errorNames);
             this.errorNames = Ext4.unique(this.errorNames);
         }
-        if (this.storesLoaded == 2){
+        if (this.storesLoaded === 2){
             var dv = this.down('dataview');
             LDK.Assert.assertNotEmpty('Dataview Not Found In SequenceAnalaysisPanel', dv);
             if (dv){
@@ -323,7 +326,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
             },
             items: [{
                 html: 'Below are the readsets that will be analyzed.  It is recommended that you view the FASTQC report (link on the right) for these samples prior to analysis.  This report provides a variety of useful information that informs how to preprocess the reads, including per-cycle quality scores (informs trimming), and overrepresented sequences (which may identify adapters not yet clipped).',
-                style: 'padding-bottom: 10px;'
+                style: 'padding-bottom: 10px;',
+                itemId: 'readsetCount'
             },{
                 xtype: 'dataview',
                 width: '100%',
