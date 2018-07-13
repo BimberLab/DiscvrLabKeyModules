@@ -2,6 +2,11 @@ import org.labkey.gradle.util.BuildUtils;
 
 dependencies
 {
-   external 'com.github.jmchilton.blend4j:blend4j:0.2.0-SNAPSHOT'
-   BuildUtils.addLabKeyDependency(project: project, config: "compile", depProjectPath: ":externalModules:labModules:LDK", depProjectConfig: "apiCompile")
+    external('com.github.jmchilton.blend4j:blend4j:0.2.0-SNAPSHOT')
+    {
+        // we now copy activation.jar into the tomcat/lib directory
+        // including here causes version compatibility problems
+        exclude group: "javax.activation", module: "activation"
+    }
+    BuildUtils.addLabKeyDependency(project: project, config: "compile", depProjectPath: ":externalModules:labModules:LDK", depProjectConfig: "apiCompile")
 }
