@@ -1,1 +1,0 @@
-require("su2c/triggers").initScript(this);
