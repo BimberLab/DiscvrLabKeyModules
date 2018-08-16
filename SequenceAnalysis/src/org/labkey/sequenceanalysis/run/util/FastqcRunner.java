@@ -15,7 +15,6 @@
  */
 package org.labkey.sequenceanalysis.run.util;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -24,7 +23,7 @@ import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.resource.FileResource;
-import org.labkey.api.resource.MergedDirectoryResource;
+import org.labkey.api.resource.DirectoryResource;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.settings.AppProps;
@@ -313,7 +312,7 @@ public class FastqcRunner
     private File lookupFile(String path) throws FileNotFoundException
     {
         Module module = ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class);
-        MergedDirectoryResource resource = (MergedDirectoryResource)module.getModuleResolver().lookup(Path.parse(path));
+        DirectoryResource resource = (DirectoryResource)module.getModuleResolver().lookup(Path.parse(path));
         assert resource != null : "Unable to find resource with path: " + path;
 
         File file = null;

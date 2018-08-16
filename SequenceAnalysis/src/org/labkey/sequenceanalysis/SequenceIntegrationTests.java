@@ -43,7 +43,7 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.resource.FileResource;
-import org.labkey.api.resource.MergedDirectoryResource;
+import org.labkey.api.resource.DirectoryResource;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.model.ReadData;
@@ -74,7 +74,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -277,7 +276,7 @@ public class SequenceIntegrationTests
         private File getSampleDataDir()
         {
             Module module = ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class);
-            MergedDirectoryResource resource = (MergedDirectoryResource)module.getModuleResolver().lookup(Path.parse("sampledata"));
+            DirectoryResource resource = (DirectoryResource)module.getModuleResolver().lookup(Path.parse("sampledata"));
             File file = null;
             for (Resource r : resource.list())
             {

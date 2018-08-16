@@ -48,7 +48,7 @@ import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.resource.FileResource;
-import org.labkey.api.resource.MergedDirectoryResource;
+import org.labkey.api.resource.DirectoryResource;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
@@ -420,7 +420,7 @@ public class BamIterator
         private static File getSampleDataDir()
         {
             Module module = ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class);
-            MergedDirectoryResource resource = (MergedDirectoryResource)module.getModuleResolver().lookup(Path.parse("sampledata"));
+            DirectoryResource resource = (DirectoryResource)module.getModuleResolver().lookup(Path.parse("sampledata"));
             File file = null;
             for (Resource r : resource.list())
             {

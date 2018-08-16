@@ -47,7 +47,7 @@ import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.query.ValidationException;
 import org.labkey.api.resource.FileResource;
-import org.labkey.api.resource.MergedDirectoryResource;
+import org.labkey.api.resource.DirectoryResource;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
@@ -950,9 +950,9 @@ public class ETLRunnable implements Runnable
         return map;
     }
 
-    private MergedDirectoryResource getResource(String path)
+    private DirectoryResource getResource(String path)
     {
-        return ((MergedDirectoryResource)ModuleLoader.getInstance().getModule(SLAModule.class).getModuleResource("/etl/" + path));
+        return ((DirectoryResource)ModuleLoader.getInstance().getModule(SLAModule.class).getModuleResource("/etl/" + path));
     }
 
     private static void close(Closeable o)
