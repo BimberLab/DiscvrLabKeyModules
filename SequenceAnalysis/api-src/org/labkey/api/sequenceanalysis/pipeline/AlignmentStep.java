@@ -18,6 +18,7 @@ package org.labkey.api.sequenceanalysis.pipeline;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 
 import java.io.File;
@@ -53,6 +54,11 @@ public interface AlignmentStep extends PipelineStep
 
     public boolean doSortIndexBam();
 
+    default boolean supportsMetrics()
+    {
+        return true;
+    }
+
     public boolean alwaysCopyIndexToWorkingDir();
 
     public boolean supportsGzipFastqs();
@@ -73,6 +79,14 @@ public interface AlignmentStep extends PipelineStep
      * @throws PipelineJobException
      */
     default void init(SequenceAnalysisJobSupport support) throws PipelineJobException
+    {
+
+    }
+
+    /**
+     * Optional.  Allows steps to be run on the webserver upon completion.
+     */
+    default void complete(SequenceAnalysisJobSupport support, AnalysisModel model) throws PipelineJobException
     {
 
     }

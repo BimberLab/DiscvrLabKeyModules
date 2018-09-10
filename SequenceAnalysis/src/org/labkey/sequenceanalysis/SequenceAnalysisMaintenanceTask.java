@@ -13,6 +13,7 @@ import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
@@ -329,7 +330,8 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                         File idx = new File(d.getFile().getPath() + ".tbi");
                         if (!idx.exists())
                         {
-                            log.error("unable to find index for file: " + d.getFile().getPath());
+                            log.warn("unable to find index for file: " + d.getFile().getPath() + ", creating");
+                            SequenceAnalysisService.get().ensureVcfIndex(d.getFile(), log);
                         }
                     }
                 }

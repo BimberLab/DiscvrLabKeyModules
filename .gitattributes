@@ -99,6 +99,7 @@ DISCVR/jbrowse/resources/schemas/dbscripts/postgresql/jbrowse-13.34-13.35.sql -t
 DISCVR/jbrowse/resources/schemas/dbscripts/postgresql/jbrowse-13.35-13.36.sql -text
 DISCVR/jbrowse/resources/schemas/dbscripts/postgresql/jbrowse-13.36-13.37.sql -text
 DISCVR/jbrowse/resources/schemas/dbscripts/postgresql/jbrowse-13.37-13.38.sql -text
+DISCVR/jbrowse/resources/schemas/dbscripts/postgresql/jbrowse-13.38-13.39.sql -text
 DISCVR/jbrowse/resources/schemas/dbscripts/sqlserver/jbrowse-13.30-13.31.sql -text
 DISCVR/jbrowse/resources/schemas/dbscripts/sqlserver/jbrowse-13.31-13.32.sql -text
 DISCVR/jbrowse/resources/schemas/dbscripts/sqlserver/jbrowse-13.32-13.33.sql -text
@@ -107,6 +108,7 @@ DISCVR/jbrowse/resources/schemas/dbscripts/sqlserver/jbrowse-13.34-13.35.sql -te
 DISCVR/jbrowse/resources/schemas/dbscripts/sqlserver/jbrowse-13.35-13.36.sql -text
 DISCVR/jbrowse/resources/schemas/dbscripts/sqlserver/jbrowse-13.36-13.37.sql -text
 DISCVR/jbrowse/resources/schemas/dbscripts/sqlserver/jbrowse-13.37-13.38.sql -text
+DISCVR/jbrowse/resources/schemas/dbscripts/sqlserver/jbrowse-13.38-13.39.sql -text
 DISCVR/jbrowse/resources/schemas/jbrowse.xml -text
 DISCVR/jbrowse/resources/views/begin.html -text
 DISCVR/jbrowse/resources/views/begin.view.xml -text
@@ -1027,6 +1029,7 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/docs/import6.jpg -tex
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/docs/import7.jpg -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/docs/import8.jpg -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/fastqc.css -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/field/CellRangerAggrTextarea.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/field/GenomeFileSelectorField.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/field/IntervalField.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/field/ReadsetField.js -text
@@ -1069,6 +1072,7 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/CompareSequenc
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ConcatenatedSequenceWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/CreateAnalysisSetWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/CreateReferenceLibraryWindow.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/DownloadOutputsWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/DownloadSequencesWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/GenomeLoadWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/IlluminaApplicationWindow.js -text
@@ -1086,6 +1090,7 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ReprocessLibra
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/RunExportWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/SaveAnalysisAsTemplateWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/SnpDetailsWindow.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/VcfSampleWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/VisualizeDataWindow.js -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/FileGroup.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/HtmlExpDataHandler.java -text
@@ -1112,12 +1117,15 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/AbstractCom
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/AlignmentMetricsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/BamCleanupHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/BamHaplotypeHandler.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CellRangerAggrHandler.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CellRangerReanalysisHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CombineStarGeneCountsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CombineSubreadGeneCountsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CompareVariantsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/GenotypeGVCFHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/HaplotypeCallerHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/LiftoverHandler.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/ListVcfSamplesHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/MultiQCHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/PicardAlignmentMetricsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/RecalculateSequenceMetricsHandler.java -text
@@ -1523,6 +1531,7 @@ labModules/laboratory/resources/schemas/dbscripts/sqlserver/laboratory-12.299-12
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/laboratory-12.300-12.301.sql -text
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/laboratory-12.301-12.302.sql -text
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/laboratory-12.302-12.303.sql -text
+labModules/laboratory/resources/schemas/dbscripts/sqlserver/laboratory-12.303-12.304.sql -text
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/obsolete/laboratory-0.00-11.12.sql -text
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/obsolete/laboratory-11.12-11.14.sql -text
 labModules/laboratory/resources/schemas/dbscripts/sqlserver/obsolete/laboratory-11.14-11.15.sql -text

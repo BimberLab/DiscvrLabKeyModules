@@ -415,12 +415,16 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
     //This should also allow simple pairs, like: file1_1.fq.gz and file1_2.fq.gz
     ILLUMINA_REGEX_NO_LANE: /^(.+)_(R){0,1}([0-9])(_[0-9]+){0,1}(\.f(ast){0,1}q)(\.gz)?$/i,
 
+    //example: 214-3-6-GEX_1_S29_L002_R1_001.fastq.gz
+    //<sample name>_<barcode sequence>_L<lane (0-padded to 3 digits)>_R<read number>_<set number (0-padded to 3 digits>.fastq.gz
+    TENX_REGEX: /^(.+?)(_[0-9]+){0,1}_S(.+)_L(.+)_(R){0,1}([0-9])(_[0-9]+){0,1}(\.f(ast){0,1}q)(\.gz)?$/i,
+
     populateSamples: function(orderType, isPaired){
         this.fileNameStore.sort('displayName', 'ASC');
         this.readDataStore.removeAll();
         var errorMsgs = [];
 
-        if (!orderType || orderType == 'illumina'){
+        if (!orderType || orderType === 'illumina' || orderType === '10x'){
             var map = {};
             this.fileNameStore.each(function(rec, i) {
                 if (rec.get('readgroup'))
@@ -433,6 +437,15 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
                     map[rec.get('readgroup').sample] = map[rec.get('readgroup').sample] || [];
                     map[rec.get('readgroup').sample].push(m);
+                }
+                else if (orderType === '10x' && this.TENX_REGEX.test(rec.get('fileName'))){
+                    var match = this.TENX_REGEX.exec(rec.get('fileName'));
+                    var sample = match[1];
+                    var platformUnit = match[1];  //force concat
+                    var setNo = match[7];
+                    var setId = platformUnit + '_' + setNo;
+                    var direction = match[6];
+                    this.processIlluminaMatch(sample, platformUnit, setNo, setId, direction, rec, map, errorMsgs);
                 }
                 else if (this.ILLUMINA_REGEX.test(rec.get('fileName'))){
                     var match = this.ILLUMINA_REGEX.exec(rec.get('fileName'));
@@ -1229,6 +1242,13 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         handler: function (btn) {
                             btn.up('sequenceanalysis-sequenceimportpanel').populateSamples('illumina', true);
                         }
+                    },{
+                        text: 'Infer Based on 10x Naming',
+                        style: 'margin-right: 5px;',
+                        border: true,
+                        handler: function (btn) {
+                            btn.up('sequenceanalysis-sequenceimportpanel').populateSamples('10x', true);
+                        }
                     }]
                 },{
                     text: 'Add',
@@ -1365,6 +1385,13 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         }
                     }
                 }]
+            },{
+                text: 'Force Refresh',
+                handler : function(c){
+                    var grid = c.up('grid');
+                    grid.getView().refresh();
+                    grid.doLayout();
+                }
             }]
         }
     },
@@ -1604,6 +1631,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         }
                     }, this);
                     grid.reconfigure();
+
+                    grid.down('#inferFromName').setVisible(btn.checked);
                 }
             },{
                 xtype: 'fieldset',
@@ -2039,11 +2068,11 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                             targetGrid: grid
                         }).show(btn);
                     }
-                },{
+                }, {
                     text: 'Assign To Instrument Run',
                     tooltip: 'Click to assign the selected rows to an existing or new instrument run',
                     scope: this,
-                    handler : function(btn) {
+                    handler: function (btn) {
                         var grid = btn.up('grid');
                         grid.getPlugin('cellediting').completeEdit();
                         var s = grid.getSelectionModel().getSelection();
@@ -2057,6 +2086,63 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         Ext4.create('SequenceAnalysis.window.InstrumentRunWindow', {
                             targetGrid: grid,
                             selectedRows: s
+                        }).show();
+                    }
+                },{
+                    text: 'Infer Readset From File Name',
+                    tooltip: 'If the file groups contain the ID of an existing readset, this can help automatically infer it',
+                    scope: this,
+                    itemId: 'inferFromName',
+                    hidden: true,
+                    scope: this,
+                    handler: function(btn){
+                        Ext4.create('Ext.window.Window', {
+                            sequencePanel: this,
+                            readsetStore: this.readsetStore,
+                            title: 'Infer Readset Id',
+                            bodyStyle: 'padding: 5px;',
+                            width: 500,
+                            items: [{
+                                html: 'If the file groups contain the readset ID within them, this can be parsed to automatically connect these to existing records.  Currently this only supports file groups beginning with readset ID.  You can enter a delimiter below and all text from the beginning through this delimiter will be used as the readset ID.',
+                                style: 'padding-bottom: 10px;',
+                                border: false
+                            },{
+                                xtype: 'textfield',
+                                fieldLabel: 'Delimiter',
+                                value: '_',
+                                itemId: 'delimiter'
+                            }],
+                            buttons: [{
+                                text: 'Submit',
+                                handler: function (btn) {
+                                    var delim = btn.up('window').down('#delimiter').getValue();
+                                    if (!delim){
+                                        Ext4.Msg.alert('Error', 'Must enter a delimiter');
+                                        return;
+                                    }
+
+                                    var readsetsToUpdate = [];
+                                    btn.up('window').readsetStore.each(function(r){
+                                        var fg = r.get('fileGroupId').split(delim);
+                                        if (fg.length > 1){
+                                            var id = fg[0];
+                                            r.set('readset', id);
+                                            readsetsToUpdate.push(id);
+                                        }
+                                    }, this);
+
+                                    if (readsetsToUpdate.length) {
+                                        btn.up('window').sequencePanel.updateForReadsetIds(readsetsToUpdate);
+                                    }
+
+                                    btn.up('window').close();
+                                }
+                            },{
+                                text: 'Cancel',
+                                handler: function(btn){
+                                    btn.up('window').close();
+                                }
+                            }]
                         }).show();
                     }
                 }]
@@ -2213,7 +2299,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                             var editor = Ext4.ComponentManager.create(col.editor);
 
                             if (editor.store && !Ext4.isEmpty(value)){
-                                var recIdx = editor.store.find(editor.valueField, value, null, false, false);
+                                var recIdx = editor.store.find(editor.valueField, value, null, false, false, true);
                                 if (recIdx == -1){
                                     errors.push('Invalid value for field ' + col.text + ': ' + value);
                                 }

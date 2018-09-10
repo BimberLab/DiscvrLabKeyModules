@@ -1,12 +1,21 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
+import au.com.bytecode.opencsv.CSVReader;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
+import org.labkey.api.collections.CaseInsensitiveHashMap;
+import org.labkey.api.data.ConvertHelper;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
+import org.labkey.api.data.Table;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.reader.Readers;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
@@ -18,6 +27,7 @@ import org.labkey.api.sequenceanalysis.pipeline.IndexOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
@@ -31,8 +41,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -240,7 +252,6 @@ public class CellRangerWrapper extends AbstractCommandWrapper
 
             deleteSymlinks(localFqDir);
 
-            //TODO: capture metrics re: number of cells, UMIs, etc.
             try
             {
                 String prefix = FileUtil.makeLegalName(rs.getName() + "_");
@@ -286,6 +297,29 @@ public class CellRangerWrapper extends AbstractCommandWrapper
             return output;
         }
 
+        private String getSymlinkFileName(String fileName)
+        {
+            //NOTE: cellranger is very picky about file name formatting
+            Matcher m = FILE_PATTERN.matcher(fileName);
+            if (m.matches())
+            {
+                if (!StringUtils.isEmpty(m.group(6)))
+                {
+                    return m.group(1) + "_L" + m.group(2) + "_" + m.group(3) + m.group(4) + m.group(5) + ".fastq.gz";
+                }
+                else
+                {
+                    getPipelineCtx().getLogger().info("no additional characters found");
+                }
+            }
+            else
+            {
+                getPipelineCtx().getLogger().warn("filename does not match Illumina formatting: " + fileName);
+            }
+
+            return fileName;
+        }
+
         public Set<String> prepareFastqSymlinks(Readset rs, File localFqDir) throws PipelineJobException
         {
             Set<String> ret = new HashSet<>();
@@ -298,7 +332,9 @@ public class CellRangerWrapper extends AbstractCommandWrapper
             {
                 try
                 {
-                    File target1 = new File(localFqDir, rd.getFile1().getName());
+                    File target1 = new File(localFqDir, getSymlinkFileName(rd.getFile1().getName()));
+                    getPipelineCtx().getLogger().debug("file: " + rd.getFile1().getPath());
+                    getPipelineCtx().getLogger().debug("target: " + target1.getPath());
                     if (target1.exists())
                     {
                         getPipelineCtx().getLogger().debug("deleting existing symlink: " + target1.getName());
@@ -310,7 +346,9 @@ public class CellRangerWrapper extends AbstractCommandWrapper
 
                     if (rd.getFile2() != null)
                     {
-                        File target2 = new File(localFqDir, rd.getFile2().getName());
+                        File target2 = new File(localFqDir, getSymlinkFileName(rd.getFile2().getName()));
+                        getPipelineCtx().getLogger().debug("file: " + rd.getFile2().getPath());
+                        getPipelineCtx().getLogger().debug("target: " + target2.getPath());
                         if (target2.exists())
                         {
                             getPipelineCtx().getLogger().debug("deleting existing symlink: " + target2.getName());
@@ -329,7 +367,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
             return ret;
         }
 
-        private static Pattern FILE_PATTERN = Pattern.compile("^(.+)_L(.+)_(R){0,1}([0-9])(_[0-9]+){0,1}(\\.f(ast){0,1}q)(\\.gz)?$");
+        private static Pattern FILE_PATTERN = Pattern.compile("^(.+)_L(.+?)_(R){0,1}([0-9])(_[0-9]+){0,1}(.*?)(\\.f(ast){0,1}q)(\\.gz)?$");
         private static Pattern SAMPLE_PATTERN = Pattern.compile("^(.+)_S[0-9]+(.*)$");
 
         private String getSampleName(String fn)
@@ -389,7 +427,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
         @Override
         public boolean doSortIndexBam()
         {
-            return false;
+            return true;
         }
 
         @Override
@@ -397,6 +435,130 @@ public class CellRangerWrapper extends AbstractCommandWrapper
         {
             return false;
         }
+
+        @Override
+        public void complete(SequenceAnalysisJobSupport support, AnalysisModel model) throws PipelineJobException
+        {
+            File metrics = new File(model.getAlignmentFileObject().getParentFile(), "metrics_summary.csv");
+            if (metrics.exists())
+            {
+                getPipelineCtx().getLogger().debug("adding 10x metrics");
+                try (CSVReader reader = new CSVReader(Readers.getReader(metrics)))
+                {
+                    String[] line;
+                    String[] header = null;
+                    String[] metricValues = null;
+
+                    int i = 0;
+                    while ((line = reader.readNext()) != null)
+                    {
+                        if (i == 0)
+                        {
+                            header = line;
+                        }
+                        else
+                        {
+                            metricValues = line;
+                            break;
+                        }
+
+                        i++;
+                    }
+
+                    TableInfo ti = DbSchema.get("sequenceanalysis", DbSchemaType.Module).getTable("quality_metrics");
+                    for (int j = 0; j < header.length; j++)
+                    {
+                        Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
+                        toInsert.put("container", getPipelineCtx().getJob().getContainer().getId());
+                        toInsert.put("createdby", getPipelineCtx().getJob().getUser().getUserId());
+                        toInsert.put("created", new Date());
+                        toInsert.put("readset", model.getReadset());
+                        toInsert.put("analysis_id", model.getRowId());
+                        toInsert.put("dataid", model.getAlignmentFile());
+
+                        toInsert.put("category", "Cell Ranger");
+                        toInsert.put("metricname", header[j]);
+
+                        metricValues[j] = metricValues[j].replaceAll(",", "");
+                        Object val = metricValues[j];
+                        if (metricValues[j].contains("%"))
+                        {
+                            metricValues[j] = metricValues[j].replaceAll("%", "");
+                            Double d = ConvertHelper.convert(metricValues[j], Double.class);
+                            d = d / 100.0;
+                            val = d;
+                        }
+
+                        toInsert.put("metricvalue", val);
+
+                        Table.insert(getPipelineCtx().getJob().getUser(), ti, toInsert);
+                    }
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
+            else
+            {
+                getPipelineCtx().getLogger().warn("unable to find metrics file: " + metrics.getPath());
+            }
+        }
+    }
+
+    public File runAggr(String id, File csvFile, List<String> extraArgs) throws PipelineJobException
+    {
+        List<String> args = new ArrayList<>();
+        args.add(getExe().getPath());
+        args.add("aggr");
+
+        id = id.replaceAll("[^a-zA-z0-9_\\-]", "_");
+        args.add("--id=" + id);
+        args.add("--csv=" + csvFile.getPath());
+
+        if (extraArgs != null)
+        {
+            args.addAll(extraArgs);
+        }
+
+        execute(args);
+
+        File expectedOutput = new File(getOutputDir(csvFile), id + "/outs/cloupe.cloupe");
+        if (!expectedOutput.exists())
+        {
+            throw new PipelineJobException("Unable to find output: " + expectedOutput.getPath());
+        }
+
+        return expectedOutput;
+    }
+
+
+    public File runReanalyze(File matrix, File outDir, String id, List<String> extraParams) throws PipelineJobException
+    {
+        List<String> args = new ArrayList<>();
+        args.add(getExe().getPath());
+        args.add("reanalyze");
+
+        id = id.replaceAll("[^a-zA-z0-9_\\-]", "_");
+        args.add("--id=" + id);
+
+        args.add("--matrix=" + matrix.getPath());
+
+        if (!extraParams.isEmpty())
+        {
+            args.addAll(extraParams);
+        }
+
+        setWorkingDir(outDir);
+        execute(args);
+
+        File output = new File(outDir, id);
+        if (!output.exists())
+        {
+            throw new PipelineJobException("Unable to find output: " + output.getPath());
+        }
+
+        return output;
     }
 
     protected File getExe()

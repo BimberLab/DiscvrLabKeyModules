@@ -7,13 +7,13 @@ import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.Results;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
@@ -34,7 +34,6 @@ import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
-import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -787,6 +786,19 @@ public class JBrowseRoot
         {
             trackList.put("alwaysOnTracks", StringUtils.join(defaultTrackLabels, ","));
         }
+
+        if (database.getJsonConfig() != null)
+        {
+            try
+            {
+                trackList.putAll(new JSONObject(database.getJsonConfig()));
+            }
+            catch (JSONException e)
+            {
+                _log.error("error parsing jsonConfig", e);
+            }
+        }
+
         writeJsonToFile(new File(seqDir, "refSeqs.json"), refSeq.toString(1));
         writeJsonToFile(new File(outDir, "trackList.json"), trackList.toString(1));
         writeJsonToFile(new File(outDir, "tracks.json"), tracks.toString(1));

@@ -861,78 +861,88 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         {
             //generate alignment metrics
             RecordedAction metricsAction = null;
-            if (alignmentStep.doSortIndexBam())
+            boolean supportsMetrics = alignmentStep.supportsMetrics();
+            if (!supportsMetrics)
             {
-                metricsAction = new RecordedAction(ALIGNMENT_METRICS_ACTIONNAME);
-
-                Date start = new Date();
-                metricsAction.setStartTime(start);
-                getJob().getLogger().info("calculating alignment metrics");
-                getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING ALIGNMENT SUMMARY METRICS");
-                File metricsFile = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".summary.metrics");
-                AlignmentSummaryMetricsWrapper wrapper = new AlignmentSummaryMetricsWrapper(getJob().getLogger());
-                wrapper.executeCommand(renamedBam, referenceGenome.getWorkingFastaFile(), metricsFile);
-                getHelper().getFileManager().addInput(metricsAction, "BAM File", renamedBam);
-                getHelper().getFileManager().addOutput(metricsAction, "Summary Metrics File", metricsFile);
-                getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile, renamedBam, rs.getRowId())));
-                getHelper().getFileManager().addCommandsToAction(wrapper.getCommandsExecuted(), metricsAction);
-
-                //wgs metrics
-                ToolParameterDescriptor wgsParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.COLLECT_WGS_METRICS);
-                boolean doCollectWgsMetrics = wgsParam == null ? false : wgsParam.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
-
-                if (doCollectWgsMetrics)
-                {
-                    getJob().getLogger().info("calculating wgs metrics");
-                    getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING WGS METRICS");
-                    File wgsMetricsFile = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".wgs.metrics");
-                    CollectWgsMetricsWrapper wgsWrapper = new CollectWgsMetricsWrapper(getJob().getLogger());
-                    wgsWrapper.executeCommand(renamedBam, wgsMetricsFile, referenceGenome.getWorkingFastaFile());
-                    getHelper().getFileManager().addOutput(metricsAction, "WGS Metrics File", wgsMetricsFile);
-                    getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(wgsMetricsFile, renamedBam, rs.getRowId())));
-                    getHelper().getFileManager().addCommandsToAction(wgsWrapper.getCommandsExecuted(), metricsAction);
-                }
-
-                //non-zero wgs metrics
-                ToolParameterDescriptor wgsParamNonZero = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.COLLECT_WGS_METRICS_NON_ZERO);
-                boolean doCollectWgsMetricsNonZero = wgsParamNonZero == null ? false : wgsParamNonZero.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
-
-                if (doCollectWgsMetricsNonZero)
-                {
-                    getJob().getLogger().info("calculating wgs metrics over non-zero coverage");
-                    getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING WGS METRICS OVER NON-ZERO COVERAGE");
-                    File wgsMetricsFile = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".wgsNonZero.metrics");
-                    CollectWgsMetricsWithNonZeroCoverageWrapper wgsWrapper = new CollectWgsMetricsWithNonZeroCoverageWrapper(getJob().getLogger());
-                    wgsWrapper.executeCommand(renamedBam, wgsMetricsFile, referenceGenome.getWorkingFastaFile());
-                    getHelper().getFileManager().addOutput(metricsAction, "WGS Non-Zero Coverage Metrics File", wgsMetricsFile);
-                    getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(wgsMetricsFile, renamedBam, rs.getRowId())));
-                    getHelper().getFileManager().addCommandsToAction(wgsWrapper.getCommandsExecuted(), metricsAction);
-                }
-
-                //and insert size metrics
-                if (rs.hasPairedData())
-                {
-                    getJob().getLogger().info("calculating insert size metrics");
-                    getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING INSERT SIZE METRICS");
-                    File metricsFile2 = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".insertsize.metrics");
-                    File metricsHistogram = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".insertsize.metrics.pdf");
-                    CollectInsertSizeMetricsWrapper collectInsertSizeMetricsWrapper = new CollectInsertSizeMetricsWrapper(getJob().getLogger());
-                    if (collectInsertSizeMetricsWrapper.executeCommand(renamedBam, metricsFile2, metricsHistogram) != null)
-                    {
-                        getHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics File", metricsFile2);
-                        getHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics Histogram", metricsHistogram);
-                        getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile2, renamedBam, rs.getRowId())));
-                        getHelper().getFileManager().addCommandsToAction(collectInsertSizeMetricsWrapper.getCommandsExecuted(), metricsAction);
-                    }
-                }
-
-                Date end = new Date();
-                metricsAction.setEndTime(end);
-                getJob().getLogger().info("Alignment Summary Metrics Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+                getPipelineJob().getLogger().debug("this aligner does not support collection of alignment metrics");
             }
             else
             {
-                getJob().getLogger().info("BAM was not coordinate sorted, skipping capture of alignment metrics");
+                SAMFileHeader.SortOrder so = SequencePipelineService.get().getBamSortOrder(renamedBam);
+                File index = new File(renamedBam.getPath() + ".bai");
+                if (so == SAMFileHeader.SortOrder.coordinate && index.exists())
+                {
+                    metricsAction = new RecordedAction(ALIGNMENT_METRICS_ACTIONNAME);
+
+                    Date start = new Date();
+                    metricsAction.setStartTime(start);
+                    getJob().getLogger().info("calculating alignment metrics");
+                    getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING ALIGNMENT SUMMARY METRICS");
+                    File metricsFile = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".summary.metrics");
+                    AlignmentSummaryMetricsWrapper wrapper = new AlignmentSummaryMetricsWrapper(getJob().getLogger());
+                    wrapper.executeCommand(renamedBam, referenceGenome.getWorkingFastaFile(), metricsFile);
+                    getHelper().getFileManager().addInput(metricsAction, "BAM File", renamedBam);
+                    getHelper().getFileManager().addOutput(metricsAction, "Summary Metrics File", metricsFile);
+                    getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile, renamedBam, rs.getRowId())));
+                    getHelper().getFileManager().addCommandsToAction(wrapper.getCommandsExecuted(), metricsAction);
+
+                    //wgs metrics
+                    ToolParameterDescriptor wgsParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.COLLECT_WGS_METRICS);
+                    boolean doCollectWgsMetrics = wgsParam == null ? false : wgsParam.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
+
+                    if (doCollectWgsMetrics)
+                    {
+                        getJob().getLogger().info("calculating wgs metrics");
+                        getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING WGS METRICS");
+                        File wgsMetricsFile = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".wgs.metrics");
+                        CollectWgsMetricsWrapper wgsWrapper = new CollectWgsMetricsWrapper(getJob().getLogger());
+                        wgsWrapper.executeCommand(renamedBam, wgsMetricsFile, referenceGenome.getWorkingFastaFile());
+                        getHelper().getFileManager().addOutput(metricsAction, "WGS Metrics File", wgsMetricsFile);
+                        getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(wgsMetricsFile, renamedBam, rs.getRowId())));
+                        getHelper().getFileManager().addCommandsToAction(wgsWrapper.getCommandsExecuted(), metricsAction);
+                    }
+
+                    //non-zero wgs metrics
+                    ToolParameterDescriptor wgsParamNonZero = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.COLLECT_WGS_METRICS_NON_ZERO);
+                    boolean doCollectWgsMetricsNonZero = wgsParamNonZero == null ? false : wgsParamNonZero.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
+
+                    if (doCollectWgsMetricsNonZero)
+                    {
+                        getJob().getLogger().info("calculating wgs metrics over non-zero coverage");
+                        getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING WGS METRICS OVER NON-ZERO COVERAGE");
+                        File wgsMetricsFile = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".wgsNonZero.metrics");
+                        CollectWgsMetricsWithNonZeroCoverageWrapper wgsWrapper = new CollectWgsMetricsWithNonZeroCoverageWrapper(getJob().getLogger());
+                        wgsWrapper.executeCommand(renamedBam, wgsMetricsFile, referenceGenome.getWorkingFastaFile());
+                        getHelper().getFileManager().addOutput(metricsAction, "WGS Non-Zero Coverage Metrics File", wgsMetricsFile);
+                        getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(wgsMetricsFile, renamedBam, rs.getRowId())));
+                        getHelper().getFileManager().addCommandsToAction(wgsWrapper.getCommandsExecuted(), metricsAction);
+                    }
+
+                    //and insert size metrics
+                    if (rs.hasPairedData())
+                    {
+                        getJob().getLogger().info("calculating insert size metrics");
+                        getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING INSERT SIZE METRICS");
+                        File metricsFile2 = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".insertsize.metrics");
+                        File metricsHistogram = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".insertsize.metrics.pdf");
+                        CollectInsertSizeMetricsWrapper collectInsertSizeMetricsWrapper = new CollectInsertSizeMetricsWrapper(getJob().getLogger());
+                        if (collectInsertSizeMetricsWrapper.executeCommand(renamedBam, metricsFile2, metricsHistogram) != null)
+                        {
+                            getHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics File", metricsFile2);
+                            getHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics Histogram", metricsHistogram);
+                            getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile2, renamedBam, rs.getRowId())));
+                            getHelper().getFileManager().addCommandsToAction(collectInsertSizeMetricsWrapper.getCommandsExecuted(), metricsAction);
+                        }
+                    }
+
+                    Date end = new Date();
+                    metricsAction.setEndTime(end);
+                    getJob().getLogger().info("Alignment Summary Metrics Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+                }
+                else
+                {
+                    getJob().getLogger().info("BAM was not coordinate sorted or index was missing, skipping capture of alignment metrics");
+                }
             }
 
             _resumer.setAlignmentMetricsDone(true, metricsAction);

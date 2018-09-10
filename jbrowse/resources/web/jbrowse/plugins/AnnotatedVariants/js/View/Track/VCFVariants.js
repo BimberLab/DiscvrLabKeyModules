@@ -20,7 +20,7 @@ define([
                 _isPassing: function(feat){
                     var f = feat.get('filter');
                     try {
-                        return f.values.join('').toUpperCase() == 'PASS';
+                        return f === null || f === undefined || f.values.join('').toUpperCase() == 'PASS';
                     } catch(e) {
                         return f.toUpperCase() == 'PASS';
                     }
@@ -123,7 +123,7 @@ define([
                                             thisB.addFeatureFilter(function(f) {
                                                 var f = f.get('filter');
                                                 try {
-                                                    return f.values.join('').toUpperCase() == 'PASS';
+                                                    return f === null || f === undefined || f.values.join('').toUpperCase() == 'PASS';
                                                 } catch(e) {
                                                     return f.toUpperCase() == 'PASS';
                                                 }

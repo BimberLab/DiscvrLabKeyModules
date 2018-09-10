@@ -145,9 +145,11 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
         JBrowseRoot root = new JBrowseRoot(log);
         if (root != null)
         {
-            File jbrowseRoot = root.getBaseDir(c, false);
+            File jbrowseRoot = JBrowseRoot.getBaseDir(c, false);
             if (jbrowseRoot != null && jbrowseRoot.exists())
             {
+                log.info("processing container: " + c.getPath());
+
                 //find jsonfiles we expect to exist
                 TableInfo tableJsonFiles = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
                 final Set<File> expectedDirs = new HashSet<>();

@@ -272,9 +272,11 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             processAnalyses(analysisModel, runId, actions, taskHelper, discardBam);
         }
 
-
         if (SequenceTaskHelper.isAlignmentUsed(getJob()))
         {
+            AlignmentStep alignmentStep = taskHelper.getSingleStep(AlignmentStep.class).create(taskHelper);
+            alignmentStep.complete(taskHelper.getSequenceSupport(), analysisModel);
+
             //build map used next to import metrics
             Map<Integer, Integer> readsetToAnalysisMap = new HashMap<>();
             Map<Integer, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap = new HashMap<>();
@@ -300,12 +302,16 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                     }
 
                     analysisModel.setAlignmentFile(null);
-                    getJob().getLogger().info("creating analysis record for BAM: " + bam.getName());
+                    getJob().getLogger().info("updating analysis record for BAM: " + bam.getName());
                     TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
 
                     Table.update(getJob().getUser(), ti, analysisModel, analysisModel.getRowId());
                 }
             }
+        }
+        else
+        {
+            getPipelineJob().getLogger().debug("alignment was not used by this job");
         }
 
         return new RecordedActionSet();
@@ -319,8 +325,6 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         {
             getJob().getLogger().info("no analyses were selected");
         }
-
-        getJob().getLogger().info("processing analysis: " + analysisModel.getRowId());
 
         File bam = ExperimentService.get().getExpData(analysisModel.getAlignmentFile()).getFile();
         if (bam == null)
@@ -339,6 +343,8 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         getJob().getLogger().info("creating analysis record for BAM: " + bam.getName());
         TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
         analysisModel = Table.insert(getJob().getUser(), ti, analysisModel);
+
+        getJob().getLogger().info("created analysis: " + analysisModel.getRowId());
 
         if (!discardBam)
         {

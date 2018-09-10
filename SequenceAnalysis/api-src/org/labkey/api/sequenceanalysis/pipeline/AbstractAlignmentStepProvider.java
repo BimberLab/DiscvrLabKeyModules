@@ -35,6 +35,7 @@ abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentSt
     public static String COLLECT_WGS_METRICS = "collectWgsMetrics";
     public static String COLLECT_WGS_METRICS_NON_ZERO = "collectWgsMetricsNonZero";
     public static String DISCARD_BAM = "discardBam";
+    public static String SUPPORT_ALIGNMENT_METRICS = "supportAlignmentMetrics";
 
     public static enum ALIGNMENT_MODE
     {
@@ -53,7 +54,12 @@ abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentSt
 
     public AbstractAlignmentStepProvider(String name, String description, @Nullable List<ToolParameterDescriptor> parameters, @Nullable Collection<String> clientDependencyPaths, @Nullable String websiteURL, boolean supportsPairedEnd, boolean supportsMergeUnaligned, ALIGNMENT_MODE alignmentMode)
     {
-        super(name, name, name, description, getParamList(parameters, supportsMergeUnaligned, alignmentMode), getDependencies(clientDependencyPaths), websiteURL);
+        this(name, description, parameters, clientDependencyPaths, websiteURL, supportsPairedEnd, supportsMergeUnaligned, true, alignmentMode);
+    }
+
+    public AbstractAlignmentStepProvider(String name, String description, @Nullable List<ToolParameterDescriptor> parameters, @Nullable Collection<String> clientDependencyPaths, @Nullable String websiteURL, boolean supportsPairedEnd, boolean supportsMergeUnaligned, boolean supportAlignmentMetrics, ALIGNMENT_MODE alignmentMode)
+    {
+        super(name, name, name, description, getParamList(parameters, supportsMergeUnaligned, supportAlignmentMetrics, alignmentMode), getDependencies(clientDependencyPaths), websiteURL);
 
         _supportsPairedEnd = supportsPairedEnd;
         _supportsMergeUnaligned = supportsMergeUnaligned;
@@ -70,7 +76,7 @@ abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentSt
         _alwaysCacheIndex = alwaysCacheIndex;
     }
 
-    private static List<ToolParameterDescriptor> getParamList(List<ToolParameterDescriptor> list, boolean supportsMergeUnaligned, ALIGNMENT_MODE alignmentMode)
+    private static List<ToolParameterDescriptor> getParamList(List<ToolParameterDescriptor> list, boolean supportsMergeUnaligned, boolean supportAlignmentMetrics, ALIGNMENT_MODE alignmentMode)
     {
         List<ToolParameterDescriptor> parameters = new ArrayList<>();
         if (list != null)
@@ -89,13 +95,18 @@ abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentSt
             parameters.add(ToolParameterDescriptor.create(SUPPORT_MERGED_UNALIGNED, "Merge Unaligned Reads", "If checked, the pipeline will attempt to merge unaligned reads into the final BAM file.  This is generally a good idea since it ensures information is not lost; however, in some situations you may know upfront that you do not need these reads.", "hidden", null, false));
         }
 
-        parameters.add(ToolParameterDescriptor.create(COLLECT_WGS_METRICS, "Collect WGS Metrics", "If checked, the pipeline will run Picard tool CollectWgsMetrics, which gathers various metrics including coverage depth.", "checkbox", new JSONObject(){{
-            put("checked", true);
-        }}, true));
+        if (supportAlignmentMetrics)
+        {
+            parameters.add(ToolParameterDescriptor.create(COLLECT_WGS_METRICS, "Collect WGS Metrics", "If checked, the pipeline will run Picard tool CollectWgsMetrics, which gathers various metrics including coverage depth.", "checkbox", new JSONObject()
+            {{
+                put("checked", true);
+            }}, true));
 
-        parameters.add(ToolParameterDescriptor.create(COLLECT_WGS_METRICS_NON_ZERO, "Collect WGS Metrics Over Non-Zero Coverage", "If checked, the pipeline will run Picard tool CollectWgsMetrics, which gathers various metrics including coverage depth over positions of non-zero coverage.", "checkbox", new JSONObject(){{
-            put("checked", false);
-        }}, true));
+            parameters.add(ToolParameterDescriptor.create(COLLECT_WGS_METRICS_NON_ZERO, "Collect WGS Metrics Over Non-Zero Coverage", "If checked, the pipeline will run Picard tool CollectWgsMetrics, which gathers various metrics including coverage depth over positions of non-zero coverage.", "checkbox", new JSONObject()
+            {{
+                put("checked", false);
+            }}, true));
+        }
 
         parameters.add(ToolParameterDescriptor.create(DISCARD_BAM, "Discard BAM", "If checked, the pipeline will discard the alignment (BAM file) at the end of this pipeline.  This is primarily used if your pipeline calculates some data from this BAM and you do not need to keep the BAM itself for disk space reasons.", "checkbox", new JSONObject(){{
             put("checked", false);

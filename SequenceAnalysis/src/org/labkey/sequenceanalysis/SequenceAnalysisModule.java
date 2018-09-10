@@ -40,11 +40,14 @@ import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.sequenceanalysis.analysis.BamCleanupHandler;
 import org.labkey.sequenceanalysis.analysis.BamHaplotypeHandler;
+import org.labkey.sequenceanalysis.analysis.CellRangerAggrHandler;
+import org.labkey.sequenceanalysis.analysis.CellRangerReanalysisHandler;
 import org.labkey.sequenceanalysis.analysis.CombineStarGeneCountsHandler;
 import org.labkey.sequenceanalysis.analysis.CombineSubreadGeneCountsHandler;
 import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
 import org.labkey.sequenceanalysis.analysis.HaplotypeCallerHandler;
 import org.labkey.sequenceanalysis.analysis.LiftoverHandler;
+import org.labkey.sequenceanalysis.analysis.ListVcfSamplesHandler;
 import org.labkey.sequenceanalysis.analysis.MultiQCHandler;
 import org.labkey.sequenceanalysis.analysis.PicardAlignmentMetricsHandler;
 import org.labkey.sequenceanalysis.analysis.RecalculateSequenceMetricsHandler;
@@ -306,6 +309,10 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new DepthOfCoverageHandler());
         SequenceAnalysisService.get().registerFileHandler(new MultiAllelicPositionsHandler());
         SequenceAnalysisService.get().registerFileHandler(new RecalculateSequenceMetricsHandler());
+        SequenceAnalysisService.get().registerFileHandler(new CellRangerReanalysisHandler());
+        SequenceAnalysisService.get().registerFileHandler(new CellRangerAggrHandler());
+        SequenceAnalysisService.get().registerFileHandler(new ListVcfSamplesHandler());
+
         SequenceAnalysisService.get().registerReadsetHandler(new MultiQCHandler());
 
         //ObjectFactory.Registry.register(AnalysisModelImpl.class, new UnderscoreBeanObjectFactory(AnalysisModelImpl.class));

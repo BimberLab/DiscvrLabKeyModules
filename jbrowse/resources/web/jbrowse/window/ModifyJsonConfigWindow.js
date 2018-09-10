@@ -144,7 +144,15 @@ Ext4.define('JBrowse.window.ModifyJsonConfigWindow', {
                 return false;
             }
 
-            ret[r.data.attribute] = JSON.parse(r.data.value);
+            if (Ext4.isString(r.data.value)){
+                if (r.data.value.toLowerCase() === 'true'){
+                    r.data.value = true;
+                }
+                else if (r.data.value.toLowerCase() === 'false'){
+                    r.data.value = false;
+                }
+            }
+            ret[r.data.attribute] = r.data.value;
         }, this);
 
         if (hasError){

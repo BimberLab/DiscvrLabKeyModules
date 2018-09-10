@@ -66,6 +66,7 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
                                         handlerType: 'OutputFile',
                                         handlerClass: handlerClass,
                                         outputFileIds: checked,
+                                        outputFileMap: results.outputFiles,
                                         title: results.name,
                                         handlerConfig: results,
                                         toolParameters: results.toolParameters,

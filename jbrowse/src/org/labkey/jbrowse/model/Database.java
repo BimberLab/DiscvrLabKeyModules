@@ -11,7 +11,6 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.files.FileContentService;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.JobRunner;
 import org.labkey.jbrowse.JBrowseSchema;
 
@@ -33,6 +32,7 @@ public class Database
     private String _description;
     private String _jobid;
     private Integer _libraryId;
+    private String _jsonConfig;
     private String _objectId;
     private String _container;
     private List<DatabaseMember> _members = null;
@@ -117,6 +117,16 @@ public class Database
         _libraryId = libraryId;
     }
 
+    public String getJsonConfig()
+    {
+        return _jsonConfig;
+    }
+
+    public void setJsonConfig(String jsonConfig)
+    {
+        _jsonConfig = jsonConfig;
+    }
+
     public List<DatabaseMember> getMembers()
     {
         if (_members == null)
@@ -174,6 +184,7 @@ public class Database
                     {
                         try
                         {
+                            _log.info("deleting jbrowse database dir async: " + databaseDir2.getPath());
                             FileUtils.deleteDirectory(databaseDir2);
                         }
                         catch (IOException e)

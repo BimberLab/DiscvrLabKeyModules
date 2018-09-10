@@ -140,20 +140,16 @@ public class OrphanFilePipelineJob extends PipelineJob
 
             if (!orphanFiles.isEmpty())
             {
-                getJob().getLogger().info("## The following sequence files are not referenced by readsets, analyses or output files:");
-                for (File f : orphanFiles)
-                {
-                    getJob().getLogger().info("\n" + f.getPath());
-                }
+                StringBuilder sb = new StringBuilder();
+                orphanFiles.forEach(f -> sb.append("\n").append(f.getPath()));
+                getJob().getLogger().info("## The following sequence files are not referenced by readsets, analyses or output files:" + sb.toString());
             }
 
             if (!orphanIndexes.isEmpty())
             {
-                getJob().getLogger().info("## The following index files appear to be orphans:");
-                for (File f : orphanIndexes)
-                {
-                    getJob().getLogger().info("\n" + f.getPath());
-                }
+                StringBuilder sb = new StringBuilder();
+                orphanIndexes.forEach(f -> sb.append("\n").append(f.getPath()));
+                getJob().getLogger().info("## The following index files appear to be orphans:" + sb.toString());
             }
 
             if (!orphanJobs.isEmpty())
@@ -184,16 +180,14 @@ public class OrphanFilePipelineJob extends PipelineJob
             if (!messages.isEmpty())
             {
                 getJob().getLogger().info("## The following messages were generated:");
-                messages.forEach(m -> getJob().getLogger().info(m));
+                getJob().getLogger().info(StringUtils.join(messages, "\n"));
             }
 
             if (!probableDeletes.isEmpty())
             {
-                getJob().getLogger().info("## The following files can almost certainly be deleted; however, please exercise caution:");
-                for (File f : probableDeletes)
-                {
-                    getJob().getLogger().info("\n" + f.getPath());
-                }
+                StringBuilder sb = new StringBuilder();
+                probableDeletes.forEach(f -> sb.append("\n").append(f.getPath()));
+                getJob().getLogger().info("## The following files can almost certainly be deleted; however, please exercise caution:" + sb.toString());
             }
 
             return new RecordedActionSet();

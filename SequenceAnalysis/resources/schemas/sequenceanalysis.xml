@@ -2499,20 +2499,26 @@
             <includeScript>sequenceanalysis/window/ImportOutputFileWindow.js</includeScript>
             <includeScript>sequenceanalysis/window/VisualizeDataWindow.js</includeScript>
             <includeScript>sequenceanalysis/window/AddFileSetsWindow.js</includeScript>
+            <includeScript>sequenceanalysis/window/DownloadOutputsWindow.js</includeScript>
             <item text="Import Files" insertPosition="beginning" iconCls="plus">
                 <onClick>SequenceAnalysis.window.ImportOutputFileWindow.buttonHandler(dataRegionName);</onClick>
             </item>
             <item text="Delete" permission="DELETE" requiresSelection="true" insertBefore="Export" iconCls="trash">
                 <onClick>SequenceAnalysis.Buttons.deleteTable(dataRegionName);</onClick>
             </item>
-            <item text="View Quality Metrics" insertPosition="end">
-                <onClick>SequenceAnalysis.Buttons.viewQualityMetricsForOutputFiles(dataRegionName, 'analysis_id');</onClick>
-            </item>
-            <item text="Visualize/Analyze Data" insertPosition="end">
+            <item text="Visualize/Analyze Data" insertBefore="More Actions">
                 <onClick>SequenceAnalysis.window.VisualizeDataWindow.buttonHandler(dataRegionName);</onClick>
             </item>
-            <item text="Add To Fileset" requiresSelection="true" insertPosition="end">
-                <onClick>SequenceAnalysis.window.AddFileSetsWindow.buttonHandlerForOutputFiles(dataRegionName);</onClick>
+            <item text="More Actions" insertPosition="end" iconCls="ellipsis-h">
+                <item text="View Quality Metrics">
+                    <onClick>SequenceAnalysis.Buttons.viewQualityMetricsForOutputFiles(dataRegionName, 'analysis_id');</onClick>
+                </item>
+                <item text="Add To Fileset" requiresSelection="true">
+                    <onClick>SequenceAnalysis.window.AddFileSetsWindow.buttonHandlerForOutputFiles(dataRegionName);</onClick>
+                </item>
+                <item text="Download Selected">
+                    <onClick>SequenceAnalysis.window.DownloadOutputsWindow.buttonHandler(dataRegionName);</onClick>
+                </item>
             </item>
         </buttonBarOptions>
     </table>

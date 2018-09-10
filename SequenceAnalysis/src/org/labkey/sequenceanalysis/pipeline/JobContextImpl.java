@@ -83,7 +83,7 @@ public class JobContextImpl implements SequenceOutputHandler.JobContext
     @Override
     public void addSequenceOutput(SequenceOutputFile o)
     {
-        _job.addOutputToCreate(o);
+        _fileManager.addSequenceOutput(o);
     }
 
     @Override

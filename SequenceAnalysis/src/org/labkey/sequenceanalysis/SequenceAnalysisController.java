@@ -16,6 +16,11 @@
 package org.labkey.sequenceanalysis;
 
 import htsjdk.samtools.SAMException;
+import htsjdk.tribble.AbstractFeatureReader;
+import htsjdk.tribble.FeatureReader;
+import htsjdk.tribble.TribbleException;
+import htsjdk.variant.vcf.VCFCodec;
+import htsjdk.variant.vcf.VCFHeader;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -109,7 +114,6 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.FileType;
@@ -191,6 +195,8 @@ import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import static org.labkey.sequenceanalysis.SequenceIntegrationTests.PIPELINE_PROP_NAME;
 
 public class SequenceAnalysisController extends SpringActionController
 {
@@ -861,6 +867,21 @@ public class SequenceAnalysisController extends SpringActionController
         {
             URLHelper url = form.getReturnURLHelper();
             return url != null ? url : _table.getGridURL(getContainer()) != null ? _table.getGridURL(getContainer()) : getContainer().getStartURL(getUser());
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    @CSRF
+    public class GetSequencePipelineEnabledAction extends ApiAction<Object>
+    {
+        @Override
+        public Object execute(Object o, BindException errors)
+        {
+            boolean isExternalPipelineEnabled = Boolean.parseBoolean(System.getProperty(PIPELINE_PROP_NAME));
+            JSONObject ret = new JSONObject();
+            ret.put("isPipelineEnabled", isExternalPipelineEnabled);
+
+            return new ApiSimpleResponse(ret);
         }
     }
 
@@ -3266,11 +3287,15 @@ public class SequenceAnalysisController extends SpringActionController
                 }
             }
 
+            JSONObject outputFiles = new JSONObject();
             if (form.getOutputFileIds() != null)
             {
                 TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
                 for (int outputFileId : form.getOutputFileIds())
                 {
+                    SequenceOutputFile so = SequenceOutputFile.getForId(outputFileId);
+                    outputFiles.put(so.getRowid().toString(), so.toJSON());
+
                     Map rowMap = new TableSelector(ti, PageFlowUtil.set("dataId", "library_id"), new SimpleFilter(FieldKey.fromString("rowid"), outputFileId), null).getMap();
                     if (rowMap == null || rowMap.get("dataid") == null)
                     {
@@ -3300,6 +3325,8 @@ public class SequenceAnalysisController extends SpringActionController
                     o.put("libraryId", libraryId);
                     arr.put(o);
                 }
+
+                ret.put("outputFiles", outputFiles);
             }
 
             if (form.getReadsetIds() != null)
@@ -4924,6 +4951,74 @@ public class SequenceAnalysisController extends SpringActionController
         public void setInputFileTreatment(String inputFileTreatment)
         {
             _inputFileTreatment = inputFileTreatment;
+        }
+    }
+
+    @RequiresPermission(InsertPermission.class)
+    @CSRF
+    public class GetSamplesFromVcfAction extends ApiAction<GetSamplesFromVcfForm>
+    {
+        public ApiResponse execute(GetSamplesFromVcfForm form, BindException errors) throws Exception
+        {
+            Map<String, Object> resp = new HashMap<>();
+
+            Map<Integer, JSONObject> fileMap = new HashMap<>();
+            for (Integer rowId : form.getOutputFileIds())
+            {
+                SequenceOutputFile f = SequenceOutputFile.getForId(rowId);
+                if (f != null)
+                {
+                    fileMap.put(f.getRowid(), f.toJSON());
+
+                    try
+                    {
+                        List<String> samples = getSamplesForVcf(f.getFile());
+                        resp.put(f.getRowid().toString(), samples);
+                    }
+                    catch (TribbleException e)
+                    {
+                        _log.error(e.getMessage(), e);
+                        errors.reject(ERROR_MSG, e.getMessage());
+                    }
+                }
+                else
+                {
+                    errors.reject(ERROR_MSG, "Unable to find output file with ID: " + rowId);
+                    return null;
+                }
+            }
+
+            Map<String, Object> ret = new HashMap<>();
+            ret.put("success", true);
+            ret.put("samples", resp);
+            ret.put("outputFileMap", fileMap);
+
+            return new ApiSimpleResponse(ret);
+        }
+
+        public List<String> getSamplesForVcf(File vcf) throws IOException
+        {
+            try (FeatureReader reader = AbstractFeatureReader.getFeatureReader(vcf.getPath(), new VCFCodec(), false))
+            {
+                VCFHeader header = (VCFHeader)reader.getHeader();
+
+                return header.getSampleNamesInOrder();
+            }
+        }
+    }
+
+    public static class GetSamplesFromVcfForm
+    {
+        Integer[] _outputFileIds;
+
+        public Integer[] getOutputFileIds()
+        {
+            return _outputFileIds;
+        }
+
+        public void setOutputFileIds(Integer[] outputFileIds)
+        {
+            _outputFileIds = outputFileIds;
         }
     }
 }

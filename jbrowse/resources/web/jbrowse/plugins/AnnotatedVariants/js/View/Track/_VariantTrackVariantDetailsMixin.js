@@ -310,6 +310,97 @@ define([
                     return this.inherited(arguments) || {description:1, reference_allele: 1, alternative_alleles: 1, seq_id: 1, filter:1}[t.toLowerCase()];
                 },
 
+                parseOmimd: function(val){
+                    var ret = [];
+                    var tokens = val.split(/\),{0,1}/);
+
+                    for (var i=0;i<tokens.length;i++){
+                        var token = tokens[i];
+                        if (!token) {
+                            continue;
+                        }
+
+                        var split = token.split(/(_){0,1}\([0-9]+$/);
+                        if (!split.length) {
+                            continue;
+                        }
+
+                        token = split[0];
+
+                        var id = '';
+                        var name = token;
+                        var lastDigits = token.search(/\d+$/);
+                        if (lastDigits > 0) {
+                            id = token.substring(lastDigits);
+                            name = name.substring(0, lastDigits);
+                        }
+
+                        if (name) {
+                            name = name.replace(/[\{\}]/g, '');
+                            name = name.replace(/_/g, ' ');
+                            name = name.replace(/[, ]+$/g, '');
+                            name = name.replace(/^[ ]+/g, '');
+                            if (name) {
+                                ret.push(name + (id ? ' (' + id + ')' : ''));
+                            }
+                        }
+                    }
+
+                    console.log(ret);
+                    return ret;
+                },
+
+                fmtDetailOMIMDValue: function(parent, title, val, f, class_) {
+                    //example:
+                    //this.parseOmimd("Spinal_muscular_atrophy,_distal,_autosomal_recessive,_4,_611067_(3),Charcot-Marie-Tooth_disease,_recessive_intermediate_C,_615376_(3)");
+                    //this.parseOmimd("Charcot-Marie-Tooth_disease,_type_2A1,_118210_(3),_Pheochromocytoma,171300_(3),_{Neuroblastoma,_susceptibility_to,_1},_256700_(3)");
+                    //this.parseOmimd("Obesity,_morbid,_due_to_leptin_receptor_deficiency,_614963_(3)");
+                    //this.parseOmimd("Severe_combined_immunodeficiency_due_to_ADA_deficiency,_102700_(3),Adenosine_deaminase_deficiency,_partial,_102700_(3)");
+                    //this.parseOmimd("{Malaria,_cerebral,_susceptibility_to},_611162_(3),_{Septic_shock,susceptibility_to}_(3),_{Asthma,_susceptibility_to},_600807_(3),_{Dementia,_vascular,_susceptibility_to}_(3),_{Migraine_without_aura,_susceptibility_to},157300_(3)_157300_(3)");
+
+                    val = val || '';
+                    if (val && lang.isArray(val)) {
+                        val = val.join(',');
+                    }
+
+                    var owner = domConstruct.create('div', { className: 'value_container ' + class_ + ' multi_value'}, parent );
+
+                    var parsed = this.parseOmimd(val) || [];
+                    array.forEach(parsed, function(val){
+                        domConstruct.create('div', { className: 'value ' + class_, innerHTML: val }, owner );
+                    }, this);
+
+                    return parsed.length;
+                },
+
+                //Adapted from: https://stackoverflow.com/questions/8493195/how-can-i-parse-a-csv-string-with-javascript-which-contains-comma-in-data
+                // Return array of string values, or NULL if CSV string not well formed.
+                CSVtoArray: function (text) {
+                    text = text || '';
+                    text = text.replace(/{/g, '\'');
+                    text = text.replace(/}/g, '\'');
+                    text = text.replace(/_,/g, ',');
+                    text = text.replace(/,_/g, ',');
+
+                    var re_valid = /^\s*(?:'[^'\\]*(?:\\[\S\s][^'\\]*)*'|"[^"\\]*(?:\\[\S\s][^"\\]*)*"|[^,'"\s\\]*(?:\s+[^,'"\s\\]+)*)\s*(?:,\s*(?:'[^'\\]*(?:\\[\S\s][^'\\]*)*'|"[^"\\]*(?:\\[\S\s][^"\\]*)*"|[^,'"\s\\]*(?:\s+[^,'"\s\\]+)*)\s*)*$/;
+                    var re_value = /(?!\s*$)\s*(?:'([^'\\]*(?:\\[\S\s][^'\\]*)*)'|"([^"\\]*(?:\\[\S\s][^"\\]*)*)"|([^,'"\s\\]*(?:\s+[^,'"\s\\]+)*))\s*(?:,|$)/g;
+                    // Return NULL if input string is not well formed CSV string.
+                    if (!re_valid.test(text)) return null;
+                    var a = [];                     // Initialize array to receive values.
+                    text.replace(re_value, // "Walk" the string using replace with callback.
+                            function(m0, m1, m2, m3) {
+                                // Remove backslash from \' in single quoted values.
+                                if      (m1 !== undefined) a.push(m1.replace(/\\'/g, "'"));
+                                // Remove backslash from \" in double quoted values.
+                                else if (m2 !== undefined) a.push(m2.replace(/\\"/g, '"'));
+                                else if (m3 !== undefined) a.push(m3);
+                                return ''; // Return empty string.
+                            });
+                    // Handle special case of empty last value.
+                    if (/,\s*$/.test(text)) a.push('');
+                    return a;
+                },
+
                 fmtDetailANNValue: function(parent, title, val, f, class_){
                     if (val && val.length){
                         var scrollableElement = dojo.create('div', { style: "overflow-y: scroll;" }, parent);
