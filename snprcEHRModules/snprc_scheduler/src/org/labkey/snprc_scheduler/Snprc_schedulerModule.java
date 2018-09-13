@@ -21,7 +21,10 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.module.DefaultModule;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.view.WebPartFactory;
+import org.labkey.snprc_scheduler.security.snprc_schedulerEditorsRole;
+import org.labkey.snprc_scheduler.security.snprc_schedulerReadersRole;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -59,7 +62,12 @@ public class Snprc_schedulerModule extends DefaultModule
     @Override
     protected void init()
     {
+
         addController(Snprc_schedulerController.NAME, Snprc_schedulerController.class);
+
+        // Security Roles
+        RoleManager.registerRole(new snprc_schedulerReadersRole(), false);
+        RoleManager.registerRole(new snprc_schedulerEditorsRole(), false);
     }
 
     @Override
