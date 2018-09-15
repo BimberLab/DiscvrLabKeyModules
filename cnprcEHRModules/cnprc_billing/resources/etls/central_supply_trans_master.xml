@@ -17,7 +17,7 @@
         <deletedRowsSource schemaName="cnprcSrc_billing_aud" queryName="q_central_supply_trans_master_delete" timestampColumnName="date_time" deletedSourceKeyColumnName="objectid" targetKeyColumnName="objectid"/>
     </incrementalFilter>
     <schedule>
-        <!-- run at 1 am everyday -->
-        <cron expression="0 0 1 * * ? *"/> <!--seconds, minutes, hours, day-of-month, month, day-of-week, year(optional) -->
+        <!-- run at 1:30 am everyday -->
+        <cron expression="0 30 1 * * ? *"/> <!--seconds, minutes, hours, day-of-month, month, day-of-week, year(optional) -->
     </schedule>
 </etl>

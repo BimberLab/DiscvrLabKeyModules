@@ -19,6 +19,6 @@
                            deletedSourceKeyColumnName="objectid" targetKeyColumnName="objectid"/>
     </incrementalFilter>
     <schedule>
-        <poll interval="60m"/>
+        <cron expression="0 30 * ? * *"/> <!-- Every hour at 30 mins, ex. 8:30, 9:30, etc. -->
     </schedule>
 </etl>

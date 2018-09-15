@@ -17,6 +17,6 @@
         <deletedRowsSource schemaName="cnprcSrc_billing_aud" queryName="q_wo_line_item_delete" timestampColumnName="date_time" deletedSourceKeyColumnName="objectid" targetKeyColumnName="objectid"/>
     </incrementalFilter>
     <schedule>
-        <poll interval="60m" />
+        <cron expression="0 15 * ? * *"/> <!-- Every hour at 15 mins, ex. 8:15, 9:15, etc. -->
     </schedule>
 </etl>
