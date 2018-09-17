@@ -2437,6 +2437,7 @@ snprcEHRModules/snprc_r24/src/org/labkey/snprc_r24/snprc_r24Manager.java -text
 snprcEHRModules/snprc_r24/src/org/labkey/snprc_r24/snprc_r24Module.java -text
 snprcEHRModules/snprc_r24/src/org/labkey/snprc_r24/snprc_r24Schema.java -text
 snprcEHRModules/snprc_r24/src/org/labkey/snprc_r24/view/hello.jsp -text
+snprcEHRModules/snprc_scheduler/build.gradle -text
 snprcEHRModules/snprc_scheduler/module.properties -text
 snprcEHRModules/snprc_scheduler/resources/schemas/dbscripts/postgresql/snprc_scheduler-0.00-18.21.sql -text
 snprcEHRModules/snprc_scheduler/resources/schemas/dbscripts/sqlserver/snprc_scheduler-0.00-18.21.sql -text
