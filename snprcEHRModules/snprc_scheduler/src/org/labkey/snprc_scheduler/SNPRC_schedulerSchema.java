@@ -18,23 +18,27 @@ package org.labkey.snprc_scheduler;
 
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbSchemaType;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.dialect.SqlDialect;
 
-public class Snprc_schedulerSchema
+public class SNPRC_schedulerSchema
 {
-    private static final Snprc_schedulerSchema _instance = new Snprc_schedulerSchema();
-    public static final String NAME = "snprc_scheduler";
 
-    public static Snprc_schedulerSchema getInstance()
+    public static final SNPRC_schedulerSchema _instance = new SNPRC_schedulerSchema();
+    public static final String NAME = "snprc_scheduler";
+    public static final String TABLE_NAME_TIMELINE = "TimelineTable";
+    public static final String TABLE_NAME_TIMELINE_ITEM = "TimelineItem";
+
+    public static SNPRC_schedulerSchema getInstance()
     {
         return _instance;
     }
 
-    private Snprc_schedulerSchema()
+    private SNPRC_schedulerSchema()
     {
         // private constructor to prevent instantiation from
         // outside this class: this singleton should only be
-        // accessed via org.labkey.snprc_scheduler.Snprc_schedulerSchema.getInstance()
+        // accessed via org.labkey.snprc_scheduler.SNPRC_schedulerSchema.getInstance()
     }
 
     public DbSchema getSchema()
@@ -45,5 +49,14 @@ public class Snprc_schedulerSchema
     public SqlDialect getSqlDialect()
     {
         return getSchema().getSqlDialect();
+    }
+
+    public TableInfo getTableInfoTimeline()
+    {
+        return getSchema().getTable(TABLE_NAME_TIMELINE);
+    }
+    public TableInfo getTableInfoTimelineItem()
+    {
+        return getSchema().getTable(TABLE_NAME_TIMELINE_ITEM);
     }
 }

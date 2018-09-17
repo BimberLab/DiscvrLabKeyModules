@@ -19,20 +19,26 @@ package org.labkey.snprc_scheduler;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.module.DefaultModule;
+import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.query.DefaultSchema;
+import org.labkey.api.query.QuerySchema;
+import org.labkey.api.query.QueryService;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.view.WebPartFactory;
-import org.labkey.snprc_scheduler.security.snprc_schedulerEditorsRole;
-import org.labkey.snprc_scheduler.security.snprc_schedulerReadersRole;
+import org.labkey.snprc_scheduler.security.SNPRC_schedulerEditorsRole;
+import org.labkey.snprc_scheduler.security.SNPRC_schedulerReadersRole;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-public class Snprc_schedulerModule extends DefaultModule
+public class SNPRC_schedulerModule extends DefaultModule
 {
-    public static final String NAME = "Snprc_scheduler";
+    public static final String NAME = "SNPRC_scheduler";
 
     @Override
     public String getName()
@@ -63,18 +69,31 @@ public class Snprc_schedulerModule extends DefaultModule
     protected void init()
     {
 
-        addController(Snprc_schedulerController.NAME, Snprc_schedulerController.class);
+        addController(SNPRC_schedulerController.NAME, SNPRC_schedulerController.class);
 
         // Security Roles
-        RoleManager.registerRole(new snprc_schedulerReadersRole(), false);
-        RoleManager.registerRole(new snprc_schedulerEditorsRole(), false);
+        RoleManager.registerRole(new SNPRC_schedulerReadersRole(), false);
+        RoleManager.registerRole(new SNPRC_schedulerEditorsRole(), false);
     }
 
     @Override
     public void doStartup(ModuleContext moduleContext)
     {
         // add a container listener so we'll know when our container is deleted:
-        ContainerManager.addContainerListener(new Snprc_schedulerContainerListener());
+        ContainerManager.addContainerListener(new SNPRC_schedulerContainerListener());
+        
+        for (final String schemaName : getSchemaNames())
+        {
+            final DbSchema dbSchema = DbSchema.get(schemaName, DbSchemaType.Module);
+            DefaultSchema.registerProvider(dbSchema.getQuerySchemaName(), new DefaultSchema.SchemaProvider(this)
+            {
+                public QuerySchema createSchema(final DefaultSchema schema, Module module)
+                {
+                    DbSchema dbSchema = DbSchema.get(schemaName, DbSchemaType.Module);
+                    return QueryService.get().createSimpleUserSchema(dbSchema.getQuerySchemaName(), null, schema.getUser(), schema.getContainer(), dbSchema);
+                }
+            });
+        }
     }
 
     @Override
@@ -88,6 +107,6 @@ public class Snprc_schedulerModule extends DefaultModule
     @NotNull
     public Set<String> getSchemaNames()
     {
-        return Collections.singleton(Snprc_schedulerSchema.NAME);
+        return Collections.singleton(SNPRC_schedulerSchema.NAME);
     }
 }

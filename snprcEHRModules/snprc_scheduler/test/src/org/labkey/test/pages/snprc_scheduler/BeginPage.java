@@ -16,9 +16,8 @@
 
 package org.labkey.test.pages.snprc_scheduler;
 
-import org.labkey.test.BaseWebDriverTest;
-import org.labkey.test.WebDriverWrapper;
 import org.labkey.test.Locator;
+import org.labkey.test.WebDriverWrapper;
 import org.labkey.test.WebTestHelper;
 import org.labkey.test.pages.LabKeyPage;
 import org.openqa.selenium.WebElement;
