@@ -21,24 +21,24 @@ import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.dialect.SqlDialect;
 
-public class SNPRC_schedulerSchema
+public class Snprc_schedulerSchemaZ
 {
 
-    public static final SNPRC_schedulerSchema _instance = new SNPRC_schedulerSchema();
+    public static final Snprc_schedulerSchemaZ _instance = new Snprc_schedulerSchemaZ();
     public static final String NAME = "snprc_scheduler";
     public static final String TABLE_NAME_TIMELINE = "TimelineTable";
     public static final String TABLE_NAME_TIMELINE_ITEM = "TimelineItem";
 
-    public static SNPRC_schedulerSchema getInstance()
+    public static Snprc_schedulerSchemaZ getInstance()
     {
         return _instance;
     }
 
-    private SNPRC_schedulerSchema()
+    private Snprc_schedulerSchemaZ()
     {
         // private constructor to prevent instantiation from
         // outside this class: this singleton should only be
-        // accessed via org.labkey.snprc_scheduler.SNPRC_schedulerSchema.getInstance()
+        // accessed via org.labkey.snprc_scheduler.Snprc_schedulerSchemaZ.getInstance()
     }
 
     public DbSchema getSchema()

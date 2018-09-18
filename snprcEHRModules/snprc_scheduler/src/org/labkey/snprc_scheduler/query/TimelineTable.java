@@ -17,8 +17,8 @@ import org.labkey.api.query.SimpleQueryUpdateService;
 import org.labkey.api.query.SimpleUserSchema;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
-import org.labkey.snprc_scheduler.SNPRC_schedulerSchema;
-import org.labkey.snprc_scheduler.SNPRC_schedulerUserSchema;
+import org.labkey.snprc_scheduler.Snprc_schedulerSchemaZ;
+import org.labkey.snprc_scheduler.Snprc_schedulerUserSchemaZ;
 import org.labkey.snprc_scheduler.domains.Timeline;
 
 import java.sql.SQLException;
@@ -26,7 +26,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class TimelineTable extends SimpleUserSchema.SimpleTable<SNPRC_schedulerUserSchema>
+public class TimelineTable extends SimpleUserSchema.SimpleTable<Snprc_schedulerUserSchemaZ>
 {
 
     /**
@@ -38,7 +38,7 @@ public class TimelineTable extends SimpleUserSchema.SimpleTable<SNPRC_schedulerU
      * @param table
      */
 
-    public TimelineTable(SNPRC_schedulerUserSchema schema, TableInfo table)
+    public TimelineTable(Snprc_schedulerUserSchemaZ schema, TableInfo table)
     {
         super(schema, table);
     }
@@ -52,9 +52,9 @@ public class TimelineTable extends SimpleUserSchema.SimpleTable<SNPRC_schedulerU
         // HasItems = true if the timeline has timeline items assigned
         SQLFragment hasItemsSql = new SQLFragment();
         hasItemsSql.append("(CASE WHEN EXISTS (SELECT pr.TimelineId FROM ");
-        hasItemsSql.append(SNPRC_schedulerSchema.getInstance().getTableInfoTimeline(), "t");
+        hasItemsSql.append(Snprc_schedulerSchemaZ.getInstance().getTableInfoTimeline(), "t");
         hasItemsSql.append(" JOIN ");
-        hasItemsSql.append(SNPRC_schedulerSchema.getInstance().getTableInfoTimelineItem(), "tl");
+        hasItemsSql.append(Snprc_schedulerSchemaZ.getInstance().getTableInfoTimelineItem(), "tl");
         hasItemsSql.append(" ON t.TimelineId = tl.TimelineId )");
         hasItemsSql.append(" THEN 'true' ELSE 'false' END)");
         ExprColumn hasItemsCol = new ExprColumn(this, "HasItems", hasItemsSql, JdbcType.BOOLEAN);

@@ -25,7 +25,7 @@ import java.util.Collection;
 
 import java.beans.PropertyChangeEvent;
 
-public class SNPRC_schedulerContainerListener implements ContainerListener
+public class Snprc_schedulerContainerListenerZ implements ContainerListener
 {
     @Override
     public void containerCreated(Container c, User user)

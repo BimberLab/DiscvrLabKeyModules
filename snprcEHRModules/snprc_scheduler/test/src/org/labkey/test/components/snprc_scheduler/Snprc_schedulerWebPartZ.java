@@ -29,19 +29,19 @@ import static org.labkey.test.components.html.Input.Input;
  * TODO: Component for a hypothetical webpart containing an input and a save button
  * Component classes should handle all timing and functionality for a component
  */
-public class SNPRC_schedulerWebPart extends BodyWebPart<SNPRC_schedulerWebPart.ElementCache>
+public class Snprc_schedulerWebPartZ extends BodyWebPart<Snprc_schedulerWebPartZ.ElementCache>
 {
-    public SNPRC_schedulerWebPart(WebDriver driver)
+    public Snprc_schedulerWebPartZ(WebDriver driver)
     {
         this(driver, 0);
     }
 
-    public SNPRC_schedulerWebPart(WebDriver driver, int index)
+    public Snprc_schedulerWebPartZ(WebDriver driver, int index)
     {
         super(driver, "Snprc_scheduler", index);
     }
 
-    public SNPRC_schedulerWebPart setInput(String value)
+    public Snprc_schedulerWebPartZ setInput(String value)
     {
         elementCache().input.set(value);
         // TODO: Methods that don't navigate should return this object

@@ -31,7 +31,7 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 @Category({InDevelopment.class})
-public class SNPRC_schedulerTest extends BaseWebDriverTest
+public class Snprc_schedulerTestZ extends BaseWebDriverTest
 {
     @Override
     protected void doCleanup(boolean afterTest) throws TestTimeoutException
@@ -42,7 +42,7 @@ public class SNPRC_schedulerTest extends BaseWebDriverTest
     @BeforeClass
     public static void setupProject()
     {
-        SNPRC_schedulerTest init = (SNPRC_schedulerTest)getCurrentTest();
+        Snprc_schedulerTestZ init = (Snprc_schedulerTestZ)getCurrentTest();
 
         init.doSetup();
     }
@@ -77,7 +77,7 @@ public class SNPRC_schedulerTest extends BaseWebDriverTest
     @Override
     protected String getProjectName()
     {
-        return "SNPRC_schedulerTest Project";
+        return "Snprc_schedulerTestZ Project";
     }
 
     @Override

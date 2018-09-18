@@ -28,21 +28,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class SNPRC_schedulerManager
+public class Snprc_schedulerManagerZ
 {
-    private static final SNPRC_schedulerManager _instance = new SNPRC_schedulerManager();
+    private static final Snprc_schedulerManagerZ _instance = new Snprc_schedulerManagerZ();
 
-    private SNPRC_schedulerManager()
+    private Snprc_schedulerManagerZ()
     {
         // prevent external construction with a private default constructor
     }
 
     public static UserSchema getSNPRC_schedulerUserSchema(Container c, User u)
     {
-        return new SNPRC_schedulerUserSchema( u, c );
+        return new Snprc_schedulerUserSchemaZ( u, c );
     }
 
-    public static SNPRC_schedulerManager get()
+    public static Snprc_schedulerManagerZ get()
     {
         return _instance;
     }
@@ -55,7 +55,7 @@ public class SNPRC_schedulerManager
         UserSchema schema = getSNPRC_schedulerUserSchema(c, u);
 
         SQLFragment sql = new SQLFragment("SELECT timelineId FROM ");
-        sql.append(schema.getTable(SNPRC_schedulerSchema.TABLE_NAME_TIMELINE), "t");
+        sql.append(schema.getTable(Snprc_schedulerSchemaZ.TABLE_NAME_TIMELINE), "t");
         sql.append(" WHERE t.HasItems = 'true'");
         SqlSelector selector = new SqlSelector(schema.getDbSchema(), sql);
         List<Map<String, Object>> timelines = new ArrayList<>();
