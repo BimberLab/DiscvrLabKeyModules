@@ -6,12 +6,12 @@ import org.labkey.api.security.roles.AbstractRole;
 /**
  * Created by thawkins on 9/12/2018.
  */
-public class Snprc_schedulerEditorsRoleZ extends AbstractRole
+public class SNPRC_schedulerEditorsRole extends AbstractRole
 {
-    public Snprc_schedulerEditorsRoleZ()
+    public SNPRC_schedulerEditorsRole()
     {
         super("SNPRC Schedule editors", "This role is required tp edit SNPRC Timelines and Schedules.",
-                Snprc_schedulerEditorsPermissionZ.class
+                SNPRC_schedulerEditorsPermission.class
         );
 
 

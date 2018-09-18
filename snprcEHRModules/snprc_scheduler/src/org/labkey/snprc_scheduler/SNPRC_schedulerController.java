@@ -33,12 +33,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class Snprc_schedulerControllerZ extends SpringActionController
+public class SNPRC_schedulerController extends SpringActionController
 {
-    private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(Snprc_schedulerControllerZ.class);
+    private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(SNPRC_schedulerController.class);
     public static final String NAME = "snprc_scheduler";
 
-    public Snprc_schedulerControllerZ()
+    public SNPRC_schedulerController()
     {
         setActionResolver(_actionResolver);
     }

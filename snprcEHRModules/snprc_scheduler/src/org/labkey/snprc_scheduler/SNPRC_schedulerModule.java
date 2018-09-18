@@ -29,14 +29,14 @@ import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.view.WebPartFactory;
-import org.labkey.snprc_scheduler.security.Snprc_schedulerEditorsRoleZ;
-import org.labkey.snprc_scheduler.security.Snprc_schedulerReadersRoleZ;
+import org.labkey.snprc_scheduler.security.SNPRC_schedulerEditorsRole;
+import org.labkey.snprc_scheduler.security.SNPRC_schedulerReadersRole;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-public class Snprc_schedulerModuleZ extends DefaultModule
+public class SNPRC_schedulerModule extends DefaultModule
 {
     public static final String NAME = "SNPRC_scheduler";
 
@@ -69,18 +69,18 @@ public class Snprc_schedulerModuleZ extends DefaultModule
     protected void init()
     {
 
-        addController(Snprc_schedulerControllerZ.NAME, Snprc_schedulerControllerZ.class);
+        addController(SNPRC_schedulerController.NAME, SNPRC_schedulerController.class);
 
         // Security Roles
-        RoleManager.registerRole(new Snprc_schedulerReadersRoleZ(), false);
-        RoleManager.registerRole(new Snprc_schedulerEditorsRoleZ(), false);
+        RoleManager.registerRole(new SNPRC_schedulerReadersRole(), false);
+        RoleManager.registerRole(new SNPRC_schedulerEditorsRole(), false);
     }
 
     @Override
     public void doStartup(ModuleContext moduleContext)
     {
         // add a container listener so we'll know when our container is deleted:
-        ContainerManager.addContainerListener(new Snprc_schedulerContainerListenerZ());
+        ContainerManager.addContainerListener(new SNPRC_schedulerContainerListener());
         
         for (final String schemaName : getSchemaNames())
         {
@@ -107,6 +107,6 @@ public class Snprc_schedulerModuleZ extends DefaultModule
     @NotNull
     public Set<String> getSchemaNames()
     {
-        return Collections.singleton(Snprc_schedulerSchemaZ.NAME);
+        return Collections.singleton(SNPRC_schedulerSchema.NAME);
     }
 }

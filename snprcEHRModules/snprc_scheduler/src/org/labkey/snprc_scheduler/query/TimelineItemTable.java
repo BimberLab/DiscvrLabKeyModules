@@ -10,12 +10,12 @@ import org.labkey.api.query.SimpleQueryUpdateService;
 import org.labkey.api.query.SimpleUserSchema;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
-import org.labkey.snprc_scheduler.Snprc_schedulerUserSchemaZ;
+import org.labkey.snprc_scheduler.SNPRC_schedulerUserSchema;
 
 import java.sql.SQLException;
 import java.util.Map;
 
-public class TimelineItemTable extends SimpleUserSchema.SimpleTable<Snprc_schedulerUserSchemaZ>
+public class TimelineItemTable extends SimpleUserSchema.SimpleTable<SNPRC_schedulerUserSchema>
 {
 
     /**
@@ -26,7 +26,7 @@ public class TimelineItemTable extends SimpleUserSchema.SimpleTable<Snprc_schedu
      * @param table
      */
 
-    public TimelineItemTable(Snprc_schedulerUserSchemaZ schema, TableInfo table)
+    public TimelineItemTable(SNPRC_schedulerUserSchema schema, TableInfo table)
     {
         super(schema, table);
     }

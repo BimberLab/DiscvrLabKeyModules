@@ -10,27 +10,27 @@ import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.Permission;
 import org.labkey.api.security.permissions.UpdatePermission;
-import org.labkey.snprc_scheduler.security.Snprc_schedulerEditorsPermissionZ;
+import org.labkey.snprc_scheduler.security.SNPRC_schedulerEditorsPermission;
 
 
 /**
  * Created by thawkins on 19/14/2018.
  */
 
-public class Snprc_schedulerUserSchemaZ extends SimpleUserSchema
+public class SNPRC_schedulerUserSchema extends SimpleUserSchema
 {
-    public Snprc_schedulerUserSchemaZ(User user, Container container)
+    public SNPRC_schedulerUserSchema(User user, Container container)
     {
-        super(Snprc_schedulerSchemaZ.NAME, null, user, container, Snprc_schedulerSchemaZ.getInstance().getSchema());
+        super(SNPRC_schedulerSchema.NAME, null, user, container, SNPRC_schedulerSchema.getInstance().getSchema());
     }
 
     protected TableInfo createWrappedTable(String name, @NotNull TableInfo schemaTable)
     {
         String nameLowercased = name.toLowerCase();
         switch(nameLowercased){
-            case Snprc_schedulerSchemaZ.TABLE_NAME_TIMELINE:
-            case Snprc_schedulerSchemaZ.TABLE_NAME_TIMELINE_ITEM:
-                return getCustomPermissionTable(createSourceTable(nameLowercased), Snprc_schedulerEditorsPermissionZ.class);
+            case SNPRC_schedulerSchema.TABLE_NAME_TIMELINE:
+            case SNPRC_schedulerSchema.TABLE_NAME_TIMELINE_ITEM:
+                return getCustomPermissionTable(createSourceTable(nameLowercased), SNPRC_schedulerEditorsPermission.class);
         }
 
         return super.createWrappedTable(name, schemaTable);
