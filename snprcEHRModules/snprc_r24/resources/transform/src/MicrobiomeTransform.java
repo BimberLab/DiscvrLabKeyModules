@@ -45,12 +45,12 @@ public class MicrobiomeTransform extends AbstractAssayValidator
 
         if(null != cell)
         {
-            switch (cell.getCellType())
+            switch (cell.getCellTypeEnum())
             {
-                case Cell.CELL_TYPE_STRING:
+                case STRING:
                     value.append(cell.getStringCellValue());
                     break;
-                case Cell.CELL_TYPE_NUMERIC:
+                case NUMERIC:
                     if (DateUtil.isCellDateFormatted(cell))
                     {
                         value.append(cell.getDateCellValue());
@@ -60,7 +60,7 @@ public class MicrobiomeTransform extends AbstractAssayValidator
                         value.append(((Double)cell.getNumericCellValue()).intValue());
                     }
                     break;
-                case Cell.CELL_TYPE_BOOLEAN:
+                case BOOLEAN:
                     value.append(cell.getBooleanCellValue());
                     break;
             }
