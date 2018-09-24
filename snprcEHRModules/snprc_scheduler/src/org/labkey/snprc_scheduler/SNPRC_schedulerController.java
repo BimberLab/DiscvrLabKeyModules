@@ -54,7 +54,7 @@ public class SNPRC_schedulerController extends SpringActionController
 
         }
 
-
+        //http://deepthought:8080/labkey/snprc_scheduler/snprc/getBla.view?
         @Override
         public ModelAndView getView(Object bla, BindException errors)
         {
