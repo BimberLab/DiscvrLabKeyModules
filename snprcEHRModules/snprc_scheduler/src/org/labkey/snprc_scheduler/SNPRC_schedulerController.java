@@ -54,7 +54,6 @@ public class SNPRC_schedulerController extends SpringActionController
 
         }
 
-        //http://deepthought:8080/labkey/snprc_scheduler/snprc/getBla.view?
         @Override
         public ModelAndView getView(Object bla, BindException errors)
         {
@@ -65,6 +64,7 @@ public class SNPRC_schedulerController extends SpringActionController
 
     }
 
+    //http://deepthought:8080/labkey/snprc_scheduler/snprc/getBla.view?
     @RequiresPermission(ReadPermission.class)
     public class GetBlaAction extends ApiAction<Timeline>
     {
