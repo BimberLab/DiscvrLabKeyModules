@@ -109,7 +109,7 @@ public class GenotypeGVCFsWrapper extends AbstractGatkWrapper
             File origIdx = new File(f.getPath() + ".tbi");
             if (!origIdx.exists())
             {
-                throw new PipelineJobException("expected index doesnt exist: " + origIdx.getPath());
+                throw new PipelineJobException("expected index doesn't exist: " + origIdx.getPath());
             }
 
             File movedIdx = new File(localWorkDir, f.getName() + ".tbi");

@@ -652,7 +652,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
 
                 if (!f.exists())
                 {
-                    _job.getLogger().debug("\tfile doesnt exist, skipping");
+                    _job.getLogger().debug("\tfile doesn't exist, skipping");
                     continue;
                 }
 

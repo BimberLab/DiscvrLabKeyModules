@@ -148,7 +148,7 @@ public class CombineStarGeneCountsHandler extends AbstractCombineGeneCountsHandl
 
             if (!STRAND1.equals(inferredStrandedness))
             {
-                job.getLogger().warn("The inferred strandedness doesnt match strand 1.  inferred: " + inferredStrandedness);
+                job.getLogger().warn("The inferred strandedness doesn't match strand 1.  inferred: " + inferredStrandedness);
             }
         }
         else if (STRAND2.equalsIgnoreCase(strandedSelection))
@@ -158,7 +158,7 @@ public class CombineStarGeneCountsHandler extends AbstractCombineGeneCountsHandl
 
             if (!STRAND2.equals(inferredStrandedness))
             {
-                job.getLogger().warn("The inferred strandedness doesnt match strand 2.  inferred: " + inferredStrandedness);
+                job.getLogger().warn("The inferred strandedness doesn't match strand 2.  inferred: " + inferredStrandedness);
             }
         }
         else if (UNSTRANDED.equalsIgnoreCase(strandedSelection))
@@ -168,7 +168,7 @@ public class CombineStarGeneCountsHandler extends AbstractCombineGeneCountsHandl
 
             if (!UNSTRANDED.equals(inferredStrandedness))
             {
-                job.getLogger().warn("The inferred strandedness doesnt match unstranded.  inferred: " + inferredStrandedness);
+                job.getLogger().warn("The inferred strandedness doesn't match unstranded.  inferred: " + inferredStrandedness);
             }
         }
         else if (INFER.equalsIgnoreCase(strandedSelection))

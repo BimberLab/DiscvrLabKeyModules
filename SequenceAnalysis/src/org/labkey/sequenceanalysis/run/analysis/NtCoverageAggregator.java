@@ -414,14 +414,14 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
                             int totalWithoutN = total - n_total;
                             if (totalWithoutN != savedHCDepth)
                             {
-                                getLogger().error("High quality coverage total doesnt match at position " + position + ": " + totalWithoutN + " / " + savedHCDepth);
+                                getLogger().error("High quality coverage total doesn't match at position " + position + ": " + totalWithoutN + " / " + savedHCDepth);
                             }
                             //assert totalWithoutN == savedHCDepth;
                         }
 
                         if (total != savedDepth)
                         {
-                            getLogger().error("Coverage doesnt match " + position + ": " + total + " / " + savedDepth);
+                            getLogger().error("Coverage doesn't match " + position + ": " + total + " / " + savedDepth);
                         }
                         //assert total == savedDepth;
 

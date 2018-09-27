@@ -245,7 +245,7 @@ public class BWAWrapper extends AbstractCommandWrapper
         execute(args, sam);
         if (!sam.exists() || !SequenceUtil.hasMinLineCount(sam, 2))
         {
-            throw new PipelineJobException("SAM file doesnt exist or has too few lines: " + sam.getPath());
+            throw new PipelineJobException("SAM file doesn't exist or has too few lines: " + sam.getPath());
         }
 
         //convert to BAM

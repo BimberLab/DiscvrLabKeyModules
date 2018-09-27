@@ -258,7 +258,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                 catch (OptimisticConflictException e)
                 {
                     //row doesnt exist..
-                    getJob().getLogger().error("readset doesnt exist: " + readsetId);
+                    getJob().getLogger().error("readset doesn't exist: " + readsetId);
                 }
 
                 actions.add(action);
