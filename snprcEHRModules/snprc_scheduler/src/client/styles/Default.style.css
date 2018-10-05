@@ -1,0 +1,34 @@
+
+.spacer-row {
+    min-height: 60px;
+  }
+  
+  .no-border {
+    border: none;
+    border-color: #fff;
+    box-shadow: none !important;
+  }
+  
+  .search-input {
+    
+    color: #444;
+    height: 30px !important;
+  }
+  
+  .input-group-addon-buffer {
+    width: 36px;
+  }
+
+  .bottom-padding-8 {
+    padding-bottom: 8px;
+  }
+  
+  .App {
+
+    
+  }
+
+  .input-wide {
+    width: 100% !important;
+    height: 28px !important;
+  }

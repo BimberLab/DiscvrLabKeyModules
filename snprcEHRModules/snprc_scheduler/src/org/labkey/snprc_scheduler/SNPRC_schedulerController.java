@@ -58,7 +58,7 @@ public class SNPRC_schedulerController extends SpringActionController
         public ModelAndView getView(Object bla, BindException errors)
         {
 
-            return new JspView<>("/org/labkey/snprc_scheduler/view/hello.jsp");
+            return new JspView<>("/org/labkey/snprc_scheduler/view/schedule.jsp");
         }
 
 
