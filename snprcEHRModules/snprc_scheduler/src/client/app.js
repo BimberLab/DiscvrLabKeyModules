@@ -17,6 +17,9 @@ import ReactDOM from 'react-dom'
 import { Provider } from 'react-redux';
 import initializeStore from './store/initializeStore'
 
+// import the application styles
+import './styles/Default.style.css'
+
 // import routing
 import UIRouter from './routers/UIRouter';
 
