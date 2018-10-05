@@ -15,7 +15,7 @@ import ReactDOM from 'react-dom'
 
 // import Redux
 import { Provider } from 'react-redux';
-import { createStore, combineReducers, applyMiddleware } from 'redux';
+import { createStore, combineReducers, applyMiddleware, compose } from 'redux';
 import ReduxThunk from 'redux-thunk';
 
 // import reducers
