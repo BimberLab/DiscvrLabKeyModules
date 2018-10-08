@@ -17,16 +17,8 @@
 package org.labkey.snprc_scheduler;
 
 import org.labkey.api.data.Container;
-import org.labkey.api.data.SQLFragment;
-import org.labkey.api.data.SqlSelector;
-import org.labkey.api.data.TableResultSet;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
-
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 public class SNPRC_schedulerManager
 {
@@ -47,29 +39,5 @@ public class SNPRC_schedulerManager
         return _instance;
     }
 
-    /**
-     * returns a list of active timelines
-     */
-    public List<Map<String, Object>> getActiveTimelines(Container c, User u)
-    {
-        UserSchema schema = getSNPRC_schedulerUserSchema(c, u);
 
-        SQLFragment sql = new SQLFragment("SELECT timelineId FROM ");
-        sql.append(schema.getTable(SNPRC_schedulerSchema.TABLE_NAME_TIMELINE), "t");
-        sql.append(" WHERE t.HasItems = 'true'");
-        SqlSelector selector = new SqlSelector(schema.getDbSchema(), sql);
-        List<Map<String, Object>> timelines = new ArrayList<>();
-        try (TableResultSet rs = selector.getResultSet())
-        {
-            for (Map<String, Object> row : rs)
-            {
-                timelines.add(row);
-            }
-        }
-        catch (SQLException e)
-        {
-        }
-
-        return timelines;
-    }
 }

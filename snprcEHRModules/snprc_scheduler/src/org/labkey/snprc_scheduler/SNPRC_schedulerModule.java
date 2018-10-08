@@ -28,10 +28,18 @@ import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.security.roles.RoleManager;
+import org.labkey.api.services.ServiceRegistry;
+import org.labkey.api.snprc_scheduler.SNPRC_schedulerService;
+import org.labkey.api.view.BaseWebPartFactory;
+import org.labkey.api.view.Portal;
+import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.WebPartFactory;
+import org.labkey.api.view.WebPartView;
 import org.labkey.snprc_scheduler.security.SNPRC_schedulerEditorsRole;
 import org.labkey.snprc_scheduler.security.SNPRC_schedulerReadersRole;
+import org.labkey.snprc_scheduler.view.SchedulerWebPart;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
@@ -62,14 +70,26 @@ public class SNPRC_schedulerModule extends DefaultModule
     @NotNull
     protected Collection<WebPartFactory> createWebPartFactories()
     {
-        return Collections.emptyList();
+        Collection<WebPartFactory> webPartFactories = new ArrayList<WebPartFactory>();
+        webPartFactories.add(new BaseWebPartFactory("SNPRC Scheduler", WebPartFactory.LOCATION_BODY, WebPartFactory.LOCATION_RIGHT)
+        {
+            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+            {
+                return new SchedulerWebPart();
+            }
+        });
+
+        return webPartFactories;
     }
+
 
     @Override
     protected void init()
     {
 
         addController(SNPRC_schedulerController.NAME, SNPRC_schedulerController.class);
+
+        ServiceRegistry.get().registerService(SNPRC_schedulerService.class, SNPRC_schedulerServiceImpl.INSTANCE);
 
         // Security Roles
         RoleManager.registerRole(new SNPRC_schedulerReadersRole(), false);

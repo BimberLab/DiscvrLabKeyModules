@@ -2438,6 +2438,7 @@ snprcEHRModules/snprc_r24/src/org/labkey/snprc_r24/snprc_r24Module.java -text
 snprcEHRModules/snprc_r24/src/org/labkey/snprc_r24/snprc_r24Schema.java -text
 snprcEHRModules/snprc_r24/src/org/labkey/snprc_r24/view/hello.jsp -text
 snprcEHRModules/snprc_scheduler/.babelrc -text
+snprcEHRModules/snprc_scheduler/api-src/org/labkey/api/snprc_scheduler/SNPRC_schedulerService.java -text
 snprcEHRModules/snprc_scheduler/build.gradle -text
 snprcEHRModules/snprc_scheduler/module.properties -text
 snprcEHRModules/snprc_scheduler/package-lock.json -text
@@ -2463,6 +2464,7 @@ snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/SNPRC_schedulerCo
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/SNPRC_schedulerManager.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/SNPRC_schedulerModule.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/SNPRC_schedulerSchema.java -text
+snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/SNPRC_schedulerServiceImpl.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/SNPRC_schedulerUserSchema.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/domains/Timeline.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/domains/TimelineItem.java -text
@@ -2472,6 +2474,7 @@ snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/security/SNPRC_sc
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/security/SNPRC_schedulerEditorsRole.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/security/SNPRC_schedulerReadersPermission.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/security/SNPRC_schedulerReadersRole.java -text
+snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/view/SchedulerWebPart.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/view/schedule.jsp -text
 snprcEHRModules/snprc_scheduler/test/src/org/labkey/test/components/snprc_scheduler/SNPRC_schedulerWebPart.java -text
 snprcEHRModules/snprc_scheduler/test/src/org/labkey/test/pages/snprc_scheduler/BeginPage.java -text
