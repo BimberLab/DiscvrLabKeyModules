@@ -5,7 +5,6 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.collections.ArrayListMap;
 import org.labkey.api.data.Container;
-import org.labkey.api.security.User;
 import org.labkey.api.snd.Project;
 import org.labkey.api.util.DateUtil;
 
@@ -16,7 +15,7 @@ import java.util.Map;
 /**
  * Created by thawkins on 9/13/2018.
  * <p>
- * Class for TimelineTable data. Used when saving, updating, deleting and getting a TimelineTable
+ * Class for Timeline table data. Used when saving, updating, deleting and getting a Timeline table
  */
 
 public class Timeline
@@ -28,7 +27,6 @@ public class Timeline
     private Date _endDate;
     private String _leadTechs; // comma separated list of technicians
     private String _objectId;
-    private String _container;
     private List<TimelineItem> _timelineItems = new ArrayList<>();
     private Project _project;
 
@@ -41,14 +39,13 @@ public class Timeline
     public static final String TIMELINE_CONTAINER = "Container";
 
 
-    public Timeline(@Nullable Integer timelineId, @NotNull String projectObjectId, String description, Date startDate, @Nullable Date endDate, @NotNull String container)
+    public Timeline(@Nullable Integer timelineId, @NotNull String projectObjectId, String description, Date startDate, @Nullable Date endDate)
     {
         _timelineId = timelineId;
         _projectObjectId = projectObjectId;
         _description = description;
         _startDate = startDate;
         _endDate = endDate;
-        _container = container;
     }
 
     public Timeline()
@@ -129,15 +126,6 @@ public class Timeline
         _objectId = objectId;
     }
 
-    public String getContainer()
-    {
-        return _container;
-    }
-
-    public void setContainer(String container)
-    {
-        _container = container;
-    }
 
     public Project getProject()
     {
@@ -150,7 +138,7 @@ public class Timeline
     }
 
     @NotNull
-    public Map<String, Object> getTimelineData(Container c)
+    public Map<String, Object> getTimelineRow(Container c)
     {
         Map<String, Object> timelineValues = new ArrayListMap<>();
         timelineValues.put(TIMELINE_ID, getTimelineId());
@@ -159,7 +147,7 @@ public class Timeline
         timelineValues.put(TIMELINE_STARTDATE, getStartDate());
         timelineValues.put(TIMELINE_ENDDATE, getEndDate());
         timelineValues.put(TIMELINE_OBJECTID, getObjectId());
-        timelineValues.put(TIMELINE_CONTAINER, getContainer());
+        timelineValues.put(TIMELINE_CONTAINER, c.getId());
 
 
         if (TIMELINE_PROJECT_OBJECT_ID != null)
@@ -174,14 +162,14 @@ public class Timeline
     }
 
     @NotNull
-    public JSONObject toJSON(Container c, User u)
+    public JSONObject toJSON(Container c)
     {
         JSONObject json = new JSONObject();
         json.put(TIMELINE_ID, getTimelineId());
         json.put(TIMELINE_PROJECT_OBJECT_ID, getProjectObjectId());
         json.put(TIMELINE_DESCRIPTION, getDescription());
         json.put(TIMELINE_STARTDATE, getStartDate());
-        json.put(TIMELINE_CONTAINER, getContainer());
+        json.put(TIMELINE_CONTAINER, c.getId());
         if (getTimelineId() != null) {
             json.put(TIMELINE_ID, getTimelineId());
         }

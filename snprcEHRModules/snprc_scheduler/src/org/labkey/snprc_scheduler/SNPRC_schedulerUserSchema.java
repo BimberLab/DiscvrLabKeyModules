@@ -14,7 +14,7 @@ import org.labkey.snprc_scheduler.security.SNPRC_schedulerEditorsPermission;
 
 
 /**
- * Created by thawkins on 19/14/2018.
+ * Created by thawkins on 9/14/2018.
  */
 
 public class SNPRC_schedulerUserSchema extends SimpleUserSchema

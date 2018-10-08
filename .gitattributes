@@ -2470,7 +2470,9 @@ snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/SNPRC_schedulerSc
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/SNPRC_schedulerServiceImpl.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/SNPRC_schedulerUserSchema.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/domains/Timeline.java -text
+snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/domains/TimelineAnimalJunction.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/domains/TimelineItem.java -text
+snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/domains/TimelineProjectItem.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/query/TimelineItemTable.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/query/TimelineTable.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/security/SNPRC_schedulerEditorsPermission.java -text

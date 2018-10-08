@@ -6,7 +6,6 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.collections.ArrayListMap;
 import org.labkey.api.data.Container;
-import org.labkey.api.security.User;
 import org.labkey.api.snd.ProjectItem;
 
 import java.util.Map;
@@ -23,7 +22,6 @@ public class TimelineItem
     private Integer _projectItemId;
     private int _studyDay;
     private String _objectId;
-    private String _container;
     private ProjectItem _projectItem;
 
     //private List<TimelineItem> _timelineItems = new ArrayList<>();
@@ -37,14 +35,13 @@ public class TimelineItem
     public static final String TIMELINEITEM_PROJECT_ITEM = "ProjectItem";
 
 
-    public TimelineItem(@Nullable Integer timelineItemId, @NotNull Integer timelineId, @NotNull Integer projectItemId, @NotNull int studyDay, String objectId, @NotNull String container)
+    public TimelineItem(@Nullable Integer timelineItemId, @NotNull Integer timelineId, @NotNull Integer projectItemId, @NotNull int studyDay, String objectId)
     {
         _timelineItemId = timelineItemId;
         _timelineId = timelineId;
         _projectItemId = projectItemId;
         _studyDay = studyDay;
         _objectId = objectId;
-        _container = container;
 
         // TODO: get _projectItem from snd.project/snd.projectItems tables
     }
@@ -99,16 +96,6 @@ public class TimelineItem
         _objectId = objectId;
     }
 
-    public String getContainer()
-    {
-        return _container;
-    }
-
-    public void setContainer(String container)
-    {
-        _container = container;
-    }
-
     public ProjectItem getProjectItem()
     {
         return _projectItem;
@@ -128,7 +115,7 @@ public class TimelineItem
         timelineValues.put(TIMELINEITEM_PROJECT_ITEM_ID, getProjectItemId());
         timelineValues.put(TIMELINEITEM_STUDY_DAY, getStudyDay());
         timelineValues.put(TIMELINEITEM_OBJECTID, getObjectId());
-        timelineValues.put(TIMELINEITEM_CONTAINER, getContainer());
+        timelineValues.put(TIMELINEITEM_CONTAINER, c.getId());
 
 
 //        if (TIMELINE_PROJECT_OBJECT_ID != null)
@@ -142,13 +129,13 @@ public class TimelineItem
         return timelineValues;
     }
     @NotNull
-    public JSONObject toJSON(Container c, User u)
+    public JSONObject toJSON(Container c)
     {
         JSONObject json = new JSONObject();
         json.put(TIMELINEITEM_TIMELINE_ID, getTimelineId());
         json.put(TIMELINEITEM_PROJECT_ITEM_ID, getProjectItemId());
         json.put(TIMELINEITEM_STUDY_DAY, getStudyDay());
-        json.put(TIMELINEITEM_CONTAINER, getContainer());
+        json.put(TIMELINEITEM_CONTAINER, c.getId());
         if (getTimelineItemId() != null) {
             json.put(TIMELINEITEM_TIMELINE_ITEM_ID, getTimelineItemId());
         }
@@ -158,6 +145,4 @@ public class TimelineItem
 
         return json;
     }
-
-
 }
