@@ -6,5 +6,4 @@
     User user = getUser();
 %>
 <div id="app" class='App'></div>
-Welcome to the SNPRC Scheduler page
-<script src="../app/app.js" type="application/javascript"></script>
+<script src="/labkey/snprc_scheduler/app/app.js" type="application/javascript"></script>
