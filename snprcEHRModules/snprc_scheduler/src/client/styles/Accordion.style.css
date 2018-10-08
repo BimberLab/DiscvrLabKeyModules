@@ -33,7 +33,6 @@
     width: 100%;
     text-align: left;
     border: none;
-
 }
 
 .accordion__title__text {
@@ -110,6 +109,11 @@
 .accordion__arrow::before,
 .accordion__arrow::after {
     transition: transform 0.25s ease, -webkit-transform 0.25s ease;
+}
+
+.accordion__style__primary {
+    width: 450px !important;
+    margin-left: 30px;
 }
 
 /* -------------------------------------------------- */

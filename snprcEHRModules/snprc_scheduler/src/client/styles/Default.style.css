@@ -10,7 +10,6 @@
   }
   
   .search-input {
-    
     color: #444;
     height: 30px !important;
   }
@@ -21,14 +20,16 @@
 
   .bottom-padding-8 {
     padding-bottom: 8px;
+    padding-top: 8px;
   }
   
-  .App {
-
-    
-  }
+  .App { }
 
   .input-wide {
     width: 100% !important;
     height: 28px !important;
+  }
+
+  .input-row {
+    padding-bottom: 10px;
   }

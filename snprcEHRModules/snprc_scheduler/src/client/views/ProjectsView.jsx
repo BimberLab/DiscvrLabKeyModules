@@ -1,33 +1,30 @@
 import React from 'react';
 import ReactDataGrid from 'react-data-grid';
+import ReactDataGridPlugins from 'react-data-grid-addons';
 import Glyphicon from 'react-bootstrap/lib/Glyphicon'
 import { Accordion, AccordionItem, AccordionItemTitle, AccordionItemBody } from 'react-accessible-accordion';
-import '../styles/Accordion.style.css'
 import ProjectDetails from '../components/ProjectDetails';
-import '../styles/Default.style.css'
+import '../styles/Accordion.style.css'
 
 class ProjectsView extends React.Component {
         constructor(props) {
         super(props);
         this.state = { 
             animals: [], 
-            animalCols: [
-                { key: 'id', name: 'ID' },
-                { key: 'location', name: 'Location' }
-            ],
+            animalCols: [],
             selectedAnimals: [],
             projects: [],
             projectCols: [
-                { key: 'ProjectId', name: 'ProjectId' },
-                { key: 'Description', name: 'Description'}
+                { key: 'ProjectId', name: 'ID', width: 40 },
+                { key: 'Description', name: 'Description', width: 330 }
             ],
             selectedProjects: []
         };
     }
 
     // project grid methods & handlers
-    projectRowGetter = (i) => {
-        return this.state.projects[i];
+    projectRowGetter = (index) => {
+        return this.state.projects[index];
     }
 
     onProjectRowsSelected = (rows) => {
@@ -52,8 +49,8 @@ class ProjectsView extends React.Component {
     }
 
     // animal grid methods & handlers
-    animalRowGetter = (i) => {
-        return this.state.animals[i];
+    animalRowGetter = (index) => {
+        return this.state.animals[index];
     }
 
     onAnimalRowsSelected = (rows) => {
@@ -77,7 +74,7 @@ class ProjectsView extends React.Component {
         }
     }
 
-    fetchProjects= () => {
+    fetchProjects = () => {
         // LABKEY query API call
         LABKEY.Query.selectRows({
             requiredVersion: 9.1,
@@ -88,8 +85,22 @@ class ProjectsView extends React.Component {
             sort: 'ProjectId,RevisionNum',
             success: (results) => {
                 if (this.ignoreLastFetch) return;
-                console.log(results.rows.length + ' projects received.');
-                //this.setState({ projects: results.rows })
+                console.log(results.rows[0]);
+
+                var projects = [];
+                results.rows.forEach((row) => {
+                    projects.push({
+                        ProjectId: row.ProjectId.value.toString(),
+                        Description: row.Description.value.toString(),
+                        StartDate: row.StartDate.value.toString(),
+                        EndDate: row.EndDate.value.toString()
+                    });
+                })
+                //console.log(projects.length + ' projects received.');
+                console.log(projects[0]);
+                this.setState({ 
+                    projects: projects
+                })
             },
             failure: (error) => {
                 alert(errorInfo.exception);
@@ -97,10 +108,21 @@ class ProjectsView extends React.Component {
         });
     }
 
+    handleTimelineSearchChange = (event) => {
+        let value = event.target.value;
+        this.setState({
+            animalSearchValue: value
+        });
+        if (value.length > 1) {
+            console.log('searching animals for "' + value + '"');
+        } else {
+            console.log('animal search criteria too short.');
+        }
+    }
+
     // component methods & handlers
-    componentDidMount() {
+    componentDidMount = () => {
         console.log('ProjectsView didMount()');
-        console.log('fetching projects...');
         this.fetchProjects();
     }  
 
@@ -109,8 +131,8 @@ class ProjectsView extends React.Component {
     }
 
     componentWillUnmount = () => {
-        this.ignoreLastFetch = true
-        console.log('componentWillUnmount()');
+        console.log('componentWillUnmount()');        
+        this.ignoreLastFetch = true;
     }
 
     fetchAnimals = () => {
@@ -139,7 +161,7 @@ class ProjectsView extends React.Component {
             <div className='row spacer-row'></div>
             <div className='row'>
                 <div className='col-sm-4'>
-                    <Accordion>
+                    <Accordion className="accordion__style__primary">
 
                         <AccordionItem>
                             <AccordionItemTitle><label className="accordion__title__text">Projects</label></AccordionItemTitle>
@@ -162,7 +184,7 @@ class ProjectsView extends React.Component {
                                         rowsCount={this.state.projects.length}
                                         minHeight={300}
                                         rowSelection={{
-                                            showCheckbox: false,
+                                            showCheckbox: true,
                                             enableShiftSelect: false,
                                             onRowsSelected: this.onProjectRowsSelected,
                                             onRowsDeselected: this.onProjectRowsDeselected,
@@ -175,7 +197,13 @@ class ProjectsView extends React.Component {
                         <AccordionItem>
                             <AccordionItemTitle><label className="accordion__title__text">Timelines</label></AccordionItemTitle>
                             <AccordionItemBody>
-                                <p>Body content</p>
+                                <div className="input-group bottom-padding-8">
+                                    <span className="input-group-addon input-group-addon-buffer"><Glyphicon glyph="plus"/></span>
+                                    <span className="input-group-addon input-group-addon-buffer"><Glyphicon glyph="trash"/></span>
+                                </div>
+                                <div>
+                                  
+                                </div>
                             </AccordionItemBody>
                         </AccordionItem>
 
@@ -222,7 +250,7 @@ class ProjectsView extends React.Component {
                     </Accordion>                
                 </div>
                 <div className='col-sm-8'>
-                    <ProjectDetails />
+                    <ProjectDetails project={this.selectedProjects} />
                 </div>
             </div>
         </div>
