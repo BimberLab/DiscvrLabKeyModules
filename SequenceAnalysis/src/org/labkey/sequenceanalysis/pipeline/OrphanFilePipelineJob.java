@@ -68,6 +68,12 @@ public class OrphanFilePipelineJob extends PipelineJob
     }
 
     @Override
+    public boolean hasJacksonSerialization()
+    {
+        return false;
+    }
+
+    @Override
     public ActionURL getStatusHref()
     {
         return PageFlowUtil.urlProvider(FileUrls.class).urlBegin(getContainer());

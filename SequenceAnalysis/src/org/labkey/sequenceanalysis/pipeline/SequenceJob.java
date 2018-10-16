@@ -76,6 +76,12 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         setLogFile(_getLogFile());
     }
 
+    @Override
+    public boolean hasJacksonSerialization()
+    {
+        return false;
+    }
+
     private File _getLogFile() throws IOException
     {
         return AssayFileWriter.findUniqueFileName((FileUtil.makeLegalName(_jobName) + ".log"), getDataDirectory());
