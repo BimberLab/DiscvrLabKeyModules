@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
@@ -154,6 +155,7 @@ public class ReferenceLibraryMember implements Serializable
         _modified = modified;
     }
 
+    @JsonIgnore
     public RefNtSequenceModel getSequenceModel()
     {
         if (_ref_nt_id == null)

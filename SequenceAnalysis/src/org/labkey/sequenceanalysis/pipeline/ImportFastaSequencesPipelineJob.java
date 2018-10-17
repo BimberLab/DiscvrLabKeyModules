@@ -41,6 +41,11 @@ public class ImportFastaSequencesPipelineJob extends PipelineJob
     private Map<String, Object> _libraryParams;
     private File _outDir;
 
+    // Default constructor for serialization
+    protected ImportFastaSequencesPipelineJob()
+    {
+    }
+
     public ImportFastaSequencesPipelineJob(Container c, User user, ActionURL url, PipeRoot pipeRoot, List<File> fastas, Map<String, String> params, boolean splitWhitespace, boolean createLibrary, Map<String, Object> libraryParams) throws IOException
     {
         super(Provider.NAME, new ViewBackgroundInfo(c, user, url), pipeRoot);

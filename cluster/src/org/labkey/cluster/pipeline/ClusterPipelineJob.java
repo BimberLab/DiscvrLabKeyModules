@@ -38,6 +38,11 @@ public class ClusterPipelineJob extends PipelineJob
     private ClusterService.ClusterRemoteTask _runnable;
     private String _description;
 
+    // Default constructor for serialization
+    protected ClusterPipelineJob()
+    {
+    }
+
     private ClusterPipelineJob(Container c, User user, PipeRoot pipeRoot, String description, TaskId taskPipelineId, ClusterService.ClusterRemoteTask runnable, File logFile, String location) throws PipelineValidationException
     {
         super(ClusterPipelineProvider.NAME, new ViewBackgroundInfo(c, user, null), pipeRoot);

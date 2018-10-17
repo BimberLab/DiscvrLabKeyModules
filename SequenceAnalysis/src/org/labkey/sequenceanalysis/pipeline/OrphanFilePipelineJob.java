@@ -54,6 +54,11 @@ import java.util.Set;
 
 public class OrphanFilePipelineJob extends PipelineJob
 {
+    // Default constructor for serialization
+    protected OrphanFilePipelineJob()
+    {
+    }
+
     public OrphanFilePipelineJob(Container c, User user, ActionURL url, PipeRoot pipeRoot)
     {
         super(OrphanFilePipelineProvider.NAME, new ViewBackgroundInfo(c, user, url), pipeRoot);
@@ -70,7 +75,7 @@ public class OrphanFilePipelineJob extends PipelineJob
     @Override
     public boolean hasJacksonSerialization()
     {
-        return false;
+        return true;
     }
 
     @Override

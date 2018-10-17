@@ -33,6 +33,11 @@ public class BlastDatabasePipelineJob extends PipelineJob
     private Integer _libraryId;
     private String _databaseGuid;
 
+    // Default constructor for serialization
+    protected BlastDatabasePipelineJob()
+    {
+    }
+
     public BlastDatabasePipelineJob(Container c, User user, ActionURL url, PipeRoot pipeRoot, Integer libraryId)
     {
         super(BlastDatabasePipelineProvider.NAME, new ViewBackgroundInfo(c, user, url), pipeRoot);

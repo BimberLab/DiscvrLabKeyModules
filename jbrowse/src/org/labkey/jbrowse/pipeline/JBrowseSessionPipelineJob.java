@@ -46,6 +46,11 @@ public class JBrowseSessionPipelineJob extends PipelineJob
     private boolean _isTemporarySession;
     private String _sourceContainerId = null;
 
+    // Default constructor for serialization
+    protected JBrowseSessionPipelineJob()
+    {
+    }
+
     public static JBrowseSessionPipelineJob addMembers(Container c, User user, PipeRoot pipeRoot, String databaseGuid, List<Integer> trackIds, List<Integer> outputFileIds)
     {
         //find existing record

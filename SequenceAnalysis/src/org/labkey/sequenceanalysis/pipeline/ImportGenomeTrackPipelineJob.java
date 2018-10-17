@@ -38,6 +38,11 @@ public class ImportGenomeTrackPipelineJob extends PipelineJob
     private boolean _doChrTranslation;
     private File _outDir;
 
+    // Default constructor for serialization
+    protected ImportGenomeTrackPipelineJob()
+    {
+    }
+
     public ImportGenomeTrackPipelineJob(Container c, User user, ActionURL url, PipeRoot pipeRoot, int libraryId, String trackName, File track, String fileName, String trackDescription, boolean doChrTranslation) throws IOException
     {
         super(Provider.NAME, new ViewBackgroundInfo(c, user, url), pipeRoot);

@@ -25,6 +25,11 @@ public class BlastPipelineJob extends PipelineJob
     private File _dbDir;
     private File _binDir;
 
+    // Default constructor for serialization
+    protected BlastPipelineJob()
+    {
+    }
+
     public BlastPipelineJob(Container c, User user, ActionURL url, PipeRoot pipeRoot, BlastJob blastJob, File dbDir, File binDir)
     {
         super(BlastPipelineProvider.NAME, new ViewBackgroundInfo(c, user, url), pipeRoot);
