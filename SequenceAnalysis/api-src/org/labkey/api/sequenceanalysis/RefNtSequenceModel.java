@@ -40,6 +40,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.Date;
@@ -50,7 +51,7 @@ import java.util.zip.GZIPOutputStream;
  * Represents a record in sequenceanalysis.ref_nt_sequences.  Contains methods to assist with accessing/saving the sequence data,
  * which is stored in a gzipped text file on the filesystem.
  */
-public class RefNtSequenceModel
+public class RefNtSequenceModel implements Serializable
 {
     private static final Logger _log = Logger.getLogger(RefNtSequenceModel.class);
 
