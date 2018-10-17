@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom';
 import FullCalendar from 'fullcalendar';
 import $ from 'jquery'; 
 import Glyphicon from 'react-bootstrap/lib/Glyphicon'
+import {connect} from "react-redux";
 
 class AnimalList extends React.Component {
     constructor(props) {
@@ -44,32 +45,26 @@ class AnimalList extends React.Component {
 
     fetchAnimals = () => {
         // LABKEY query API call
-        return;
-        LABKEY.Query.selectRows({
-            requiredVersion: 9.1,
-            schemaName: 'snd',
-            queryName: 'Projects',
-            columns: 'ProjectId,RevisionNum,ReferenceId,StartDate,EndDate,Description,HasEvent',
-            filterArray: null,
-            sort: 'ProjectId,RevisionNum',
-            success: (results) => {
-                if (this.ignoreLastFetch) return;
-                var projects = [];
-                if (results.rows.length > 0) {
-                    console.log("Processing " + results.rows.length + " projects...");
-                    results.rows.forEach((row) => {
-                        projects.push({
-                            ProjectId: row.ProjectId.value.toString(),
-                            Description: row.Description.value.toString() + " , Revision " + row.RevisionNum.value.toString(),
-                            StartDate: row.StartDate.value.toString(),
-                            EndDate: row.EndDate.value.toString()
-                        });
-                    })                    
-                }
-                this.setState({ projects: projects })
-            },
-            failure: (error) => console.log(error.exception)
-        });
+        if (this.state.selectedProject != null) {
+            let id = this.state.selectedProject.ProjectId;
+            LABKEY.Query.selectRows({
+                requiredVersion: 9.1,
+                schemaName: 'snd',
+                queryName: 'AnimalsByProject',
+                columns: 'Id,ProjectId,RevisionNum,StartDate,EndDate,Gender,ChargeId,Iacuc,AssignmentStatus',
+                filterArray: [ 
+                    LABKEY.Filter.create('ProjectId', id, LABKEY.Filter.Types.EQUAL),
+                    LABKEY.Filter.create('RevisionNum', '0', LABKEY.Filter.Types.EQUAL)
+                ],
+                success: (results) => {
+                    if (this.ignoreLastFetch) return;
+                    this.setState({ animals: results.rows })
+                },
+                failure: (error) => console.log(error.exception)
+            });            
+        }
+        
+
     }
 
     componentDidMount = () => {
@@ -86,7 +81,7 @@ class AnimalList extends React.Component {
         if (this.state.debugUI) console.log('ProjectList componentWillUnmount()');
     }
 
-    render = () => { return <div>
+    render = () => { return (<div>
         <div className="input-group bottom-padding-8">
             <span className="input-group-addon input-group-addon-buffer"><Glyphicon glyph="search"/></span>
             <input
@@ -115,7 +110,7 @@ class AnimalList extends React.Component {
                 }} />                                    
         </div>
     </div>
-    }
+    )};
 
   }
 

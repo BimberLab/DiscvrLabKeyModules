@@ -9,9 +9,12 @@
     ==================================================================================
 */
 
+const verboseOutput = false;
+
 export default (state = {}, action) => {
-    switch (action.type) { 
-        default: 
-            return state;
+    if (verboseOutput) console.log('rootReducer -> ' + action.type);
+    switch (action.type) {
+
+        default: return { ...state, payload: { }} ;
     };
 };
