@@ -1,5 +1,7 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import htsjdk.samtools.util.IOUtil;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -18,16 +20,11 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
-import java.beans.XMLDecoder;
-import java.beans.XMLEncoder;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,6 +37,11 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
     public static final String FOLDER_NAME = "sequenceOutput";
 
     private String _handlerClassName;
+
+    // Default constructor for serialization
+    protected SequenceOutputHandlerJob()
+    {
+    }
 
     public SequenceOutputHandlerJob(Container c, User user, @Nullable String jobName, PipeRoot pipeRoot, SequenceOutputHandler handler, List<SequenceOutputFile> files, JSONObject jsonParams) throws IOException
     {
@@ -56,7 +58,7 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
         saveFiles(files);
     }
 
-    protected void saveFiles(List<SequenceOutputFile> files)
+    protected void saveFiles(List<SequenceOutputFile> files) throws IOException
     {
         if (files != null && !files.isEmpty())
         {
@@ -69,10 +71,11 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
                 legacyXml.delete();
             }
 
-            try (XMLEncoder encoder = new XMLEncoder(IOUtil.maybeBufferOutputStream(IOUtil.openFileForWriting(xml))))
+            try (OutputStream output = IOUtil.maybeBufferOutputStream(IOUtil.openFileForWriting(xml)))
             {
                 getLogger().info("writing SequenceOutputFiles to XML: " + files.size());
-                encoder.writeObject(new ArrayList<>(files));
+                ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.writeValue(output, new ArrayList<>(files));
             }
         }
         else
@@ -93,9 +96,10 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
 
         if (xml.exists() && SequenceUtil.hasLineCount(xml))
         {
-            try (XMLDecoder decoder = new XMLDecoder(IOUtil.maybeBufferInputStream(IOUtil.openFileForReading(xml))))
+            try (InputStream is = IOUtil.maybeBufferInputStream(IOUtil.openFileForReading(xml)))
             {
-                List<SequenceOutputFile> ret = (List<SequenceOutputFile>) decoder.readObject();
+                ObjectMapper objectMapper = new ObjectMapper();
+                List<SequenceOutputFile> ret = objectMapper.readValue(is, new TypeReference<List<SequenceOutputFile>>(){});
                 getLogger().debug("read SequenceOutputFiles from file: " + ret.size());
 
                 for (SequenceOutputFile so : ret)

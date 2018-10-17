@@ -17,6 +17,11 @@ public class SequenceConcatPipelineJob extends SequenceJob
 {
     public static final String FOLDER_NAME = "sequenceImport";
 
+    // Default constructor for serialization
+    protected SequenceConcatPipelineJob()
+    {
+    }
+
     public SequenceConcatPipelineJob(Container c, User user, PipeRoot pipeRoot, String sequenceName, String sequenceDescription, @Nullable List<Integer> sequenceIds) throws IOException
     {
         super(SequencePipelineProvider.NAME, c, user, "Concatenate Sequences", pipeRoot, new JSONObject(){{

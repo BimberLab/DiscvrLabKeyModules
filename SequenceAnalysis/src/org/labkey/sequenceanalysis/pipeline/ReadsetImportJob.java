@@ -51,6 +51,11 @@ public class ReadsetImportJob extends SequenceJob
         super(SequencePipelineProvider.NAME, c, u, jobName, root, params, new TaskId(FileAnalysisTaskPipeline.class, NAME), FOLDER_NAME);
     }
 
+    // Default constructor for serialization
+    protected ReadsetImportJob()
+    {
+    }
+
     public static List<ReadsetImportJob> create(Container c, User u, String jobName, String description, JSONObject params, List<File> inputFiles) throws PipelineJobException, IOException, PipelineValidationException
     {
         Map<Container, PipeRoot> containerToPipeRootMap = new HashMap<>();

@@ -27,6 +27,11 @@ public class SequenceReadsetHandlerJob extends SequenceJob implements HasJobPara
 {
     private String _handlerClassName;
 
+    // Default constructor for serialization
+    protected SequenceReadsetHandlerJob()
+    {
+    }
+
     public SequenceReadsetHandlerJob(Container c, User user, @Nullable String jobName, PipeRoot pipeRoot, SequenceOutputHandler handler, List<SequenceReadsetImpl> readsets, JSONObject jsonParams) throws IOException
     {
         super(SequenceReadsetHandlerPipelineProvider.NAME, c, user, jobName, pipeRoot, jsonParams, null, SequenceOutputHandlerJob.FOLDER_NAME);

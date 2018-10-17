@@ -1,5 +1,7 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
@@ -20,13 +22,7 @@ import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
 
-import java.beans.XMLDecoder;
-import java.beans.XMLEncoder;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +46,11 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
     private String _libraryName;
     private List<String> _unplacedContigPrefixes;
 
+    // Default constructor for serialization
+    protected ReferenceLibraryPipelineJob()
+    {
+    }
+
     public ReferenceLibraryPipelineJob(Container c, User user, PipeRoot pipeRoot, String libraryName, String assemblyId, String description, @Nullable List<ReferenceLibraryMember> libraryMembers, @Nullable Integer libraryId, boolean skipCacheIndexes, boolean skipTriggers, @Nullable List<String> unplacedContigPrefixes) throws IOException
     {
         super(ReferenceLibraryPipelineProvider.NAME, c, user, "referenceLibrary_" + FileUtil.getTimestamp(), pipeRoot, new JSONObject(), new TaskId(ReferenceLibraryPipelineJob.class), FOLDER_NAME);
@@ -69,11 +70,9 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
     {
         if (libraryMembers != null)
         {
-            try (XMLEncoder encoder = new XMLEncoder(new BufferedOutputStream(new FileOutputStream(getSerializedLibraryMembersFile()))))
-            {
-                getLogger().info("writing libraryMembers to XML: " + libraryMembers.size());
-                encoder.writeObject(libraryMembers);
-            }
+            ObjectMapper objectMapper = new ObjectMapper();
+            getLogger().info("writing libraryMembers to XML: " + libraryMembers.size());
+            objectMapper.writeValue(getSerializedLibraryMembersFile(), libraryMembers);
         }
     }
 
@@ -82,13 +81,11 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
         File xml = getSerializedLibraryMembersFile();
         if (xml.exists())
         {
-            try (XMLDecoder decoder = new XMLDecoder(new BufferedInputStream(new FileInputStream(xml))))
-            {
-                List<ReferenceLibraryMember> ret = (List<ReferenceLibraryMember>) decoder.readObject();
-                getLogger().debug("read libraryMembers from file: " + ret.size());
+            ObjectMapper objectMapper = new ObjectMapper();
+            List<ReferenceLibraryMember> ret = objectMapper.readValue(xml, new TypeReference<List<ReferenceLibraryMember>>(){});
+            getLogger().debug("read libraryMembers from file: " + ret.size());
 
-                return ret;
-            }
+            return ret;
         }
 
         return null;

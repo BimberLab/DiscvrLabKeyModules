@@ -21,6 +21,11 @@ public class ReferenceGenomeImpl implements ReferenceGenome
     private Integer _genomeId;
     private Integer _expDataId;
 
+    // Default constructor for serialization
+    protected ReferenceGenomeImpl()
+    {
+    }
+
     public ReferenceGenomeImpl(@NotNull File sourceFasta, @Nullable ExpData fastaExpData, @Nullable Integer genomeId, @Nullable String name)
     {
         _sourceFasta = sourceFasta;

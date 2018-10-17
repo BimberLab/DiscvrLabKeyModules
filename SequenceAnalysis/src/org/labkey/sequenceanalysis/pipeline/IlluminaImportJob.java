@@ -32,6 +32,11 @@ public class IlluminaImportJob extends SequenceJob
 {
     public static final String FOLDER_NAME = "sequenceImport";
 
+    // Default constructor for serialization
+    protected IlluminaImportJob()
+    {
+    }
+
     private IlluminaImportJob(Container c, User u, String jobName, PipeRoot root, JSONObject params) throws IOException
     {
         super(SequencePipelineProvider.NAME, c, u, jobName, root, params, new TaskId(FileAnalysisTaskPipeline.class, NAME), FOLDER_NAME);

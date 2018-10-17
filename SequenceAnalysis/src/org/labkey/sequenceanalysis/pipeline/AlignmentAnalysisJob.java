@@ -40,6 +40,11 @@ public class AlignmentAnalysisJob extends SequenceJob
     private int _analyisId;
     private int _readsetId;
 
+    // Default constructor for serialization
+    protected AlignmentAnalysisJob()
+    {
+    }
+
     private AlignmentAnalysisJob(Container c, User u, String jobName, PipeRoot root, JSONObject params, AnalysisModelImpl model) throws IOException
     {
         super(SequencePipelineProvider.NAME, c, u, jobName, root, params, new TaskId(FileAnalysisTaskPipeline.class, NAME), FOLDER_NAME);

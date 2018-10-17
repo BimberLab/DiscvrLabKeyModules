@@ -60,6 +60,11 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
 
     transient private JSONObject _params;
 
+    // Default constructor for serialization
+    protected SequenceJob()
+    {
+    }
+
     public SequenceJob(String providerName, Container c, User u, @Nullable String jobName, PipeRoot pipeRoot, JSONObject params, TaskId taskPipelineId, String folderPrefix) throws IOException
     {
         super(providerName, new ViewBackgroundInfo(c, u, null), pipeRoot);
@@ -79,7 +84,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     @Override
     public boolean hasJacksonSerialization()
     {
-        return false;
+        return true;
     }
 
     private File _getLogFile() throws IOException

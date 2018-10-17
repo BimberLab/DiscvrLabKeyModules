@@ -42,6 +42,11 @@ public class SequenceAlignmentJob extends SequenceJob
 
     private int _readsetId;
 
+    // Default constructor for serialization
+    protected SequenceAlignmentJob()
+    {
+    }
+
     private SequenceAlignmentJob(Container c, User u, String jobName, PipeRoot root, JSONObject params, SequenceReadsetImpl readset) throws IOException
     {
         super(SequencePipelineProvider.NAME, c, u, jobName, root, params, new TaskId(FileAnalysisTaskPipeline.class, NAME), FOLDER_NAME);
