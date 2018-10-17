@@ -171,6 +171,7 @@ public class ReferenceLibraryMember implements Serializable
         return _model;
     }
 
+    @JsonIgnore
     public String getHeaderName()
     {
         if (getSequenceModel() == null)

@@ -76,6 +76,26 @@ public class ReferenceGenomeImpl implements ReferenceGenome
         return _genomeId;
     }
 
+    public void setName(String name)
+    {
+        _name = name;
+    }
+
+    public void setSourceFasta(File sourceFasta)
+    {
+        _sourceFasta = sourceFasta;
+    }
+
+    public void setGenomeId(Integer genomeId)
+    {
+        _genomeId = genomeId;
+    }
+
+    public void setExpDataId(Integer expDataId)
+    {
+        _expDataId = expDataId;
+    }
+
     @Override
     public Integer getFastaExpDataId()
     {
