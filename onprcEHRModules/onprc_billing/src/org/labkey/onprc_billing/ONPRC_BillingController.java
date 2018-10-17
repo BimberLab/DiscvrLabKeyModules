@@ -35,12 +35,10 @@ import org.labkey.api.query.QueryForm;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.security.CSRF;
 import org.labkey.api.security.RequiresPermission;
-import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.HtmlView;
-import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
 import org.labkey.onprc_billing.notification.BillingValidationNotification;
 import org.labkey.onprc_billing.pipeline.BillingPipelineJob;
@@ -50,7 +48,6 @@ import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -99,6 +96,11 @@ public class ONPRC_BillingController extends SpringActionController
         private Date _startDate;
         private Date _endDate;
         private String _comment;
+
+        // For deserialization
+        public BillingPipelineForm()
+        {
+        }
 
         public String getProtocolName()
         {

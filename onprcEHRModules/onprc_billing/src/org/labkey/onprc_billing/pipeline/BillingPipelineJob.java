@@ -45,6 +45,11 @@ public class BillingPipelineJob extends PipelineJob implements BillingPipelineJo
     private File _analysisDir;
     private ONPRC_BillingController.BillingPipelineForm _form;
 
+    // For deserialization
+    public BillingPipelineJob()
+    {
+    }
+
     public BillingPipelineJob(Container c, User user, ActionURL url, PipeRoot pipeRoot, File analysisDir, ONPRC_BillingController.BillingPipelineForm form)
     {
         super(null, new ViewBackgroundInfo(c, user, url), pipeRoot);
