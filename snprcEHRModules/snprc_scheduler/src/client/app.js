@@ -22,26 +22,20 @@ import './styles/Default.style.css'
 
 // import routing
 import UIRouter from './routers/UIRouter';
-import { createAction, fetchProjects } from './actions/dataActions';
 
-// build the store and container
+// build the store container
 const store = initializeStore();
-const appContainer = (<Provider store={store}><UIRouter store={store} /></Provider>);
+const appContainer = (<Provider store={store}><UIRouter /></Provider>);
 
 let hasRendered = false;
-let debugUI = false;
-
 const render = () => {
     if (!hasRendered) {
-        if (debugUI) console.log("React application rendering...");
+        console.log("app rendering...");
         ReactDOM.render(appContainer, document.getElementById('app'));
         hasRendered = true;
-        if (debugUI) console.log("Application render complete!");
+        console.log("app render complete!");
     }
 };
 
-
-store.dispatch(fetchProjects());
 render();
-
 

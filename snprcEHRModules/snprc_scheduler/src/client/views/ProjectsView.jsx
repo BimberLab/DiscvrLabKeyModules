@@ -1,4 +1,7 @@
 import React from 'react';
+import ReactDataGrid from 'react-data-grid';
+//import ReactDataGridPlugins from 'react-data-grid-addons';
+import Glyphicon from 'react-bootstrap/lib/Glyphicon'
 import { Accordion, AccordionItem, AccordionItemTitle, AccordionItemBody } from 'react-accessible-accordion';
 import '../styles/Accordion.style.css'
 import ProjectList from '../components/ProjectList';
@@ -6,24 +9,28 @@ import AnimalList from '../components/AnimalList';
 import ProjectDetails from '../components/ProjectDetails';
 import TimelineList from '../components/TimelineList';
 
-const verboseOutput = false;
 
 class ProjectsView extends React.Component {
         constructor(props) {
         super(props);
-        this.state = { };
+        this.state = { 
+            animals: [], 
+            animalCols: [],
+            selectedAnimals: []
+        };
     }
 
+    // component methods & handlers
     componentDidMount = () => {
-        if (verboseOutput) console.log('ProjectsView didMount()');
+        console.log('ProjectsView didMount()');
     }  
 
     componentDidUpdate = (prevProps) => { 
-        if (verboseOutput) console.log('ProjectsView componentDidUpdate()');
+        console.log('ProjectsView componentDidUpdate()');
     }
 
     componentWillUnmount = () => {
-        if (verboseOutput) console.log('ProjectsView componentWillUnmount()');        
+        console.log('ProjectsView componentWillUnmount()');        
         this.ignoreLastFetch = true;
     }
 
@@ -33,26 +40,31 @@ class ProjectsView extends React.Component {
             <div className='row'>
                 <div className='col-sm-4'>
                     <Accordion className="accordion__style__primary">
+
                         <AccordionItem>
                             <AccordionItemTitle><label className="accordion__title__text">Projects</label></AccordionItemTitle>
-                            <AccordionItemBody><ProjectList store={this.props.store} /></AccordionItemBody>
+                            <AccordionItemBody><ProjectList /></AccordionItemBody>
                         </AccordionItem>
+
                         <AccordionItem>
                             <AccordionItemTitle><label className="accordion__title__text">Timelines</label></AccordionItemTitle>
-                            <AccordionItemBody><TimelineList store={this.props.store} /></AccordionItemBody>
+                            <AccordionItemBody><TimelineList /></AccordionItemBody>
                         </AccordionItem>
+
                         <AccordionItem>
                             <AccordionItemTitle><label className="accordion__title__text">Animals</label></AccordionItemTitle>
-                            <AccordionItemBody><AnimalList store={this.props.store} /></AccordionItemBody>
+                            <AccordionItemBody><AnimalList /></AccordionItemBody>
                         </AccordionItem>
+
                         <AccordionItem>
                             <AccordionItemTitle><label className="accordion__title__text">Calendar / Schedule</label></AccordionItemTitle>
                             <AccordionItemBody><p>Body content</p></AccordionItemBody>
                         </AccordionItem>
+
                     </Accordion>                
                 </div>
                 <div className='col-sm-8'>
-                    <ProjectDetails store={this.props.store} project={this.selectedProject} />
+                    <ProjectDetails project={this.selectedProjects} />
                 </div>
             </div>
         </div>

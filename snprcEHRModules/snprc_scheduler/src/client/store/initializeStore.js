@@ -14,26 +14,23 @@ import * as React from 'react';
 import ReactDOM from 'react-dom'
 
 // import Redux
+import { Provider } from 'react-redux';
 import { createStore, combineReducers, applyMiddleware, compose } from 'redux';
 import ReduxThunk from 'redux-thunk';
 
 // import reducers
 import rootReducer from '../reducers/rootReducer';
-import projectReducer from '../reducers/projectReducer';
 
-// enable redux developer tools  
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
 export default () => {
     // Store creation
     const store = createStore(
         combineReducers({
-            project: projectReducer,
             root: rootReducer
         }),
         composeEnhancers(applyMiddleware(ReduxThunk))
         //,window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
     );
-    
     return store;
 };
