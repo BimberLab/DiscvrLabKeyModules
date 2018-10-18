@@ -5,16 +5,17 @@
     name:               snprc_scheduler
     description:        Animal procedure scheduling system     
     copyright:          Texas Biomedical Research Institute
-    created:            October 3 2018      
+    created:            October 11 2018      
     ==================================================================================
 */
 
-const verboseOutput = false;
 
-export default (state = {}, action) => {
-    if (verboseOutput) console.log('rootReducer -> ' + action.type);
-    switch (action.type) {
+const _LABKEY = {
+    Query: {
+        selectRows: (a1,a2,a3,a4,a5,a6) => {
 
-        default: return { ...state, payload: { }} ;
-    };
-};
+        }
+    }
+}
+
+export default _LABKEY;

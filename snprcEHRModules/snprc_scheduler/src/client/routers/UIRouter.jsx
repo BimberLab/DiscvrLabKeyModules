@@ -18,8 +18,8 @@ class UIRouter extends React.Component {
         return <HashRouter>
             <div>
                 <Switch>
-                    <Route path='/projects' component={ProjectsView} exact />
-                    <Route path='/project/:id' component={ProjectsView} exact />
+                    <Route path='/projects' exact render={(p) => (<ProjectsView store={this.props.store} />)} />
+                    <Route path='/project/:id' exact render={(p) => (<ProjectsView store={this.props.store} />)} />
                     <Route path="/calendar" component={CalendarPage} exact />
                     <Redirect from="/" to="/projects" />
                     <Route component={NotFoundPage} />
@@ -28,9 +28,7 @@ class UIRouter extends React.Component {
         </HashRouter> 
     }
     
-    componentDidMount() { console.log('UIRouter componentDidMount()') }  
-
-    filterPath() {
+    filterPath = () => {
         let path = window.location.toString();
         var bypass = true;
         if (path.indexOf(baseFilters[0]) > -1) {

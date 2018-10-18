@@ -2464,6 +2464,7 @@ snprcEHRModules/snprc_scheduler/src/client/views/CalendarView.jsx -text
 snprcEHRModules/snprc_scheduler/src/client/views/NotFoundPage.jsx -text
 snprcEHRModules/snprc_scheduler/src/client/views/ProjectView.jsx -text
 snprcEHRModules/snprc_scheduler/src/client/views/ProjectsView.jsx -text
+snprcEHRModules/snprc_scheduler/src/client/wrappers/LABKEY_Promise.js -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/SNPRC_schedulerContainerListener.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/SNPRC_schedulerController.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/SNPRC_schedulerManager.java -text
