@@ -15,6 +15,7 @@
  */
 package org.labkey.api.sequenceanalysis;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.json.JSONObject;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.TableSelector;
@@ -213,6 +214,7 @@ public class SequenceOutputFile implements Serializable
         return new TableSelector(DbSchema.get("sequenceanalysis").getTable("outputfiles")).getObject(rowId, SequenceOutputFile.class);
     }
 
+    @JsonIgnore
     public ExpData getExpData()
     {
         if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)

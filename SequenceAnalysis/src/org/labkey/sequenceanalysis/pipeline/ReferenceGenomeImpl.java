@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.exp.api.ExpData;
@@ -30,7 +31,7 @@ public class ReferenceGenomeImpl implements ReferenceGenome
     {
         _sourceFasta = sourceFasta;
         _expDataId = fastaExpData == null ? null : fastaExpData.getRowId();
-        _genomeId = genomeId;
+        _genomeId = genomeId == null ? -1 : genomeId;
         _name = name;
     }
 
@@ -52,12 +53,14 @@ public class ReferenceGenomeImpl implements ReferenceGenome
         _workingFasta = workingFasta;
     }
 
+    @JsonIgnore
     @Override
     public File getFastaIndex()
     {
         return getWorkingFastaFile() == null ? null : new File(getWorkingFastaFile().getPath() + ".fai");
     }
 
+    @JsonIgnore
     @Override
     public File getSequenceDictionary()
     {
@@ -102,6 +105,7 @@ public class ReferenceGenomeImpl implements ReferenceGenome
         return _expDataId;
     }
 
+    @JsonIgnore
     public File getAlignerIndexDir(String name)
     {
         //if genomeId is null, we are using an ad hoc genome

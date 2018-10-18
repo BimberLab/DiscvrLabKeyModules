@@ -117,6 +117,11 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     @Override
     public void cacheGenome(ReferenceGenome m)
     {
+        if (m.getGenomeId() == null)
+        {
+            throw new IllegalArgumentException("Genome ID is null for genome: " + m.getName());
+        }
+
         _cachedGenomes.put(m.getGenomeId(), m);
     }
 
