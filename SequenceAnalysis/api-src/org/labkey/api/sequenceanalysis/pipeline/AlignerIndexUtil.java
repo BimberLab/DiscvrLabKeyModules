@@ -50,7 +50,7 @@ public class AlignerIndexUtil
 
     public static File getWebserverIndexDir(ReferenceGenome genome, String name)
     {
-        return new File(genome.getSourceFastaFile().getParentFile(), (genome.getGenomeId() == null ? "" : INDEX_DIR + "/") + name);
+        return new File(genome.getSourceFastaFile().getParentFile(), (genome.isTemporaryGenome() ? "" : INDEX_DIR + "/") + name);
     }
 
     /**
@@ -168,7 +168,7 @@ public class AlignerIndexUtil
     public static void cacheGenomeLocally(ReferenceGenome genome, File localCacheDir, Logger log) throws PipelineJobException
     {
         log.info("attempting to rsync genome to local disks: " + localCacheDir.getPath());
-        if (genome.getGenomeId() == null)
+        if (genome.isTemporaryGenome())
         {
             log.info("cannot cache custom genomes, skipping");
             return;

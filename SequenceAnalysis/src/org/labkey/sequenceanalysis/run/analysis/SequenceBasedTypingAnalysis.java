@@ -151,7 +151,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
         log.debug("preparing lineage map files");
         for (ReferenceGenome genome : support.getCachedGenomes())
         {
-            if (genome.getGenomeId() == null)
+            if (genome.isTemporaryGenome())
             {
                 continue;
             }

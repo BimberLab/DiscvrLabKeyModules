@@ -28,7 +28,7 @@ public class FastaToTwoBitRunner extends AbstractCommandWrapper
 
     public File getCachedIndex(ReferenceGenome referenceGenome)
     {
-        File baseDir = new File(referenceGenome.getSourceFastaFile().getParentFile(), (referenceGenome.getGenomeId() == null ? "" : AlignerIndexUtil.INDEX_DIR + "/") + TWO_BIT);
+        File baseDir = new File(referenceGenome.getSourceFastaFile().getParentFile(), (referenceGenome.isTemporaryGenome() ? "" : AlignerIndexUtil.INDEX_DIR + "/") + TWO_BIT);
         return new File(baseDir, FileUtil.getBaseName(referenceGenome.getSourceFastaFile()) + ".2bit");
     }
 

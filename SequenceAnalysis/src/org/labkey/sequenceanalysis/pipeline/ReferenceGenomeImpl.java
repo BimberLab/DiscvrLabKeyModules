@@ -22,6 +22,8 @@ public class ReferenceGenomeImpl implements ReferenceGenome
     private Integer _genomeId;
     private Integer _expDataId;
 
+    private static final int TEMPORARY_GENOME = -1;
+
     // Default constructor for serialization
     protected ReferenceGenomeImpl()
     {
@@ -31,8 +33,12 @@ public class ReferenceGenomeImpl implements ReferenceGenome
     {
         _sourceFasta = sourceFasta;
         _expDataId = fastaExpData == null ? null : fastaExpData.getRowId();
-        _genomeId = genomeId == null ? -1 : genomeId;
+        _genomeId = genomeId == null ? TEMPORARY_GENOME : genomeId;
         _name = name;
+    }
+
+    public boolean isTemporaryGenome() {
+        return TEMPORARY_GENOME == getGenomeId();
     }
 
     @Override
