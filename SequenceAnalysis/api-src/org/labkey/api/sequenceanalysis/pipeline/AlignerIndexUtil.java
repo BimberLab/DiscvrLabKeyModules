@@ -124,7 +124,7 @@ public class AlignerIndexUtil
 
     public static void saveCachedIndex(boolean hasCachedIndex, PipelineContext ctx, File indexDir, String name, ReferenceGenome genome) throws PipelineJobException
     {
-        if (!hasCachedIndex && genome != null && genome.getGenomeId() != null)
+        if (!hasCachedIndex && genome != null && !genome.isTemporaryGenome())
         {
             File cachingDir = new File(genome.getSourceFastaFile().getParentFile(), INDEX_DIR + "/" + name);
             ctx.getLogger().info("caching index files for future use");

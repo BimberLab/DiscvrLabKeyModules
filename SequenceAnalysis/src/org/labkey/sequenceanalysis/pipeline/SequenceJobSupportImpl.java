@@ -34,6 +34,8 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     private Map<Integer, ReferenceGenome> _cachedGenomes = new HashMap<>();
     private Map<String, Serializable> _cachedObjects = new HashMap<>();
 
+    private static final int TEMPORARY_GENOME = -1;
+
     public SequenceJobSupportImpl()
     {
 
@@ -117,12 +119,13 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     @Override
     public void cacheGenome(ReferenceGenome m)
     {
-        if (m.getGenomeId() == null)
+        Integer key = m.getGenomeId();
+        if (m.isTemporaryGenome())
         {
-            throw new IllegalArgumentException("Genome ID is null for genome: " + m.getName());
+            key = TEMPORARY_GENOME;
         }
 
-        _cachedGenomes.put(m.getGenomeId(), m);
+        _cachedGenomes.put(key, m);
     }
 
     @Override
