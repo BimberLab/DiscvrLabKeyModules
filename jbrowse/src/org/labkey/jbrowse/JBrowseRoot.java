@@ -1,6 +1,7 @@
 package org.labkey.jbrowse;
 
 import htsjdk.samtools.util.BlockCompressedOutputStream;
+import htsjdk.samtools.util.SequenceUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
@@ -668,6 +669,15 @@ public class JBrowseRoot
                         continue;
                     }
                 }
+                else
+                {
+                    //double check that VCF index exists
+                    File input = d.getFile();
+                    if (input.exists() && vcfType.isType(input))
+                    {
+                        SequenceAnalysisService.get().ensureVcfIndex(input, getLogger());
+                    }
+                }
 
                 JSONArray existingTracks = trackList.containsKey("tracks") ? trackList.getJSONArray("tracks") : new JSONArray();
                 JSONObject json = readFileToJson(getTrackListForOutputFile(f));
@@ -1303,10 +1313,11 @@ public class JBrowseRoot
         return null;
     }
 
+    private final FileType bamType = new FileType("bam", FileType.gzSupportLevel.NO_GZ);
+    private final FileType vcfType = new FileType("vcf", FileType.gzSupportLevel.SUPPORT_GZ);
+
     private List<JSONObject> processFile(ExpData data, File outDir, String featureName, String featureLabel, Map<String, Object> metadata, String category, @Nullable ExpData refGenomeData) throws IOException
     {
-        FileType bamType = new FileType("bam", FileType.gzSupportLevel.NO_GZ);
-        FileType vcfType = new FileType("vcf", FileType.gzSupportLevel.SUPPORT_GZ);
         File input = data.getFile();
 
         String ext = FileUtil.getExtension(data.getFile());

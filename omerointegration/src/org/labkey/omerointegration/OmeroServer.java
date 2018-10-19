@@ -1,51 +1,28 @@
 package org.labkey.omerointegration;
 
-import omero.api.IContainerPrx;
-import omero.api.ServiceFactoryPrx;
 import omero.api.ThumbnailStorePrx;
-import omero.client;
-import omero.model.Image;
+import omero.gateway.Gateway;
+import omero.gateway.LoginCredentials;
+import omero.gateway.SecurityContext;
+import omero.gateway.facility.BrowseFacility;
+import omero.gateway.model.ExperimenterData;
+import omero.gateway.model.ImageData;
+import omero.gateway.model.PixelsData;
+import omero.log.LogMessage;
 import omero.sys.ParametersI;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.AuthenticationException;
-import org.apache.http.auth.Credentials;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.HttpClientConnectionManager;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLContextBuilder;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.util.Path;
-import pojos.ImageData;
-import pojos.PixelsData;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Created by bimber on 10/21/2015.
@@ -154,60 +131,21 @@ public class OmeroServer
         return map == null ? null : map.get(name);
     }
 
-    private CloseableHttpResponse getResponse(String urlString)
+    private ExperimenterData connect(Gateway gateway, URL url) throws Exception
     {
-        try
-        {
-            HttpClientContext httpClientContext = HttpClientContext.create();
-            httpClientContext.setCookieStore(new BasicCookieStore());
-            HttpRequestBase request = new HttpGet(urlString);
-            URL url = new URL(urlString);
-
-            //if a user name was specified, set the credentials
-            if (getOmeroPassword() != null)
-            {
-                AuthScope scope = new AuthScope(url.getHost(), AuthScope.ANY_PORT, AuthScope.ANY_REALM);
-                BasicCredentialsProvider provider = new BasicCredentialsProvider();
-                Credentials credentials = new UsernamePasswordCredentials(getOmeroUser(), getOmeroPassword());
-                provider.setCredentials(scope, credentials);
-
-                httpClientContext.setCredentialsProvider(provider);
-                request.addHeader(new BasicScheme().authenticate(credentials, request, httpClientContext));
-            }
-            else
-            {
-                httpClientContext.setCredentialsProvider(null);
-                request.removeHeaders("Authenticate");
-            }
-
-            HttpClientBuilder builder = HttpClientBuilder.create()
-                    .setConnectionManager(new PoolingHttpClientConnectionManager())
-                    .setDefaultRequestConfig(RequestConfig.custom().setSocketTimeout(60000).build())
-                    .setDefaultCookieStore(httpClientContext.getCookieStore());
-            try
-            {
-                SSLContextBuilder sslContextBuilder = new SSLContextBuilder();
-                sslContextBuilder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
-                SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslContextBuilder.build());
-                builder.setSSLSocketFactory(sslConnectionSocketFactory);
-            }
-            catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e)
-            {
-                throw new RuntimeException(e);
-            }
-
-            try (CloseableHttpClient client = builder.build())
-            {
-                return client.execute(request, httpClientContext);
-            }
+        LoginCredentials cred = new LoginCredentials();
+        cred.getServer().setHostname(url.getHost());
+        if (url.getPort() > 0) {
+            cred.getServer().setPort(url.getPort());
         }
-        catch (AuthenticationException | IOException e)
-        {
-            throw new RuntimeException(e);
-        }
+        cred.getUser().setUsername(getOmeroUser());
+        cred.getUser().setPassword(getOmeroPassword());
+        ExperimenterData user = gateway.connect(cred);
+
+        return user;
     }
 
-    public void getThumbnail(String omeroId, HttpServletResponse response) throws Exception
+    public void getThumbnail(String omeroId, HttpServletResponse response)
     {
         Long imageId = Long.parseLong(omeroId);
 
@@ -215,29 +153,36 @@ public class OmeroServer
         if (url == null)
             return;
 
-        client client = null;
-        //client unsecureClient = null;
+        Gateway gateway = null;
         try
         {
-            client = new client(url.getHost());
-            ServiceFactoryPrx entry = client.createSession(getOmeroUser(), getOmeroPassword());
+            gateway = new Gateway(new OmeroLogger(_log));
+            ExperimenterData user = connect(gateway, url);
+            SecurityContext ctx = new SecurityContext(user.getGroupId());
 
-            //unsecureClient = client.createClient(false);
-            IContainerPrx proxy = entry.getContainerService();
+            ParametersI params = new ParametersI();
+            params.acquisitionData();
+            BrowseFacility browse = gateway.getFacility(BrowseFacility.class);
+            ImageData image;
+            try
+            {
+                image = browse.getImage(ctx, imageId, params);
+            }
+            catch (Exception e)
+            {
+                image = browse.findObject(ctx, ImageData.class, imageId, true);
+                Long groupId = image.getGroupId();
+                if (groupId > 0 && groupId != ctx.getGroupID())
+                {
+                    ctx = new SecurityContext(groupId);
+                    image = browse.getImage(ctx, imageId, params);
+                }
+            }
 
-            List<Image> results = proxy.getImages(Image.class.getName(), Arrays.asList(imageId), new ParametersI());
-
-            if (results.size() == 0)
-                return;
-
-            //You can directly interact with the IObject or the Pojos object.
-            //Follow interaction with the Pojos.
-            ImageData image = new ImageData(results.get(0));
-
-            //See above how to load the image.
             PixelsData pixels = image.getDefaultPixels();
-            ThumbnailStorePrx store = entry.createThumbnailStore();
+            ThumbnailStorePrx store = gateway.getThumbnailService(ctx);
             store.setPixelsId(pixels.getId());
+
             try
             {
                 byte[] bytes = store.getThumbnail(omero.rtypes.rint(96), omero.rtypes.rint(96));
@@ -245,15 +190,6 @@ public class OmeroServer
                 {
                     IOUtils.copy(stream, response.getOutputStream());
                 }
-            }
-            catch (ome.conditions.SecurityViolation | omero.SecurityViolation e)
-            {
-                //            "/internal/webapp/gxt/images/gray/window/icon-error.gif";
-                //            Resource r =
-                //            //TODO: consider streaming error icon??
-
-
-                throw new IOException("unable to download omero image: " + omeroId, e);
             }
             finally
             {
@@ -263,12 +199,96 @@ public class OmeroServer
                 }
             }
         }
+        catch (Exception e)
+        {
+            //            //TODO: consider streaming error icon??
+            //            "/internal/webapp/gxt/images/gray/window/icon-error.gif";
+            //            Resource r =
+
+            _log.error("Unable to download thumbnail: " + omeroId, e);
+        }
         finally
         {
-            if (client != null)
+            if (gateway != null)
             {
-                client.closeSession();
+                gateway.disconnect();
             }
+        }
+    }
+
+    private static class OmeroLogger implements omero.log.Logger
+    {
+        private final Logger _log;
+
+        public OmeroLogger(Logger log)
+        {
+            _log = log;
+        }
+
+        @Override
+        public void debug(Object originator, String logMsg)
+        {
+            _log.debug(logMsg);
+        }
+
+        @Override
+        public void debug(Object originator, LogMessage msg)
+        {
+            _log.debug(msg.toString());
+        }
+
+        @Override
+        public void info(Object originator, String logMsg)
+        {
+            _log.info(logMsg);
+        }
+
+        @Override
+        public void info(Object originator, LogMessage msg)
+        {
+            _log.info(msg.toString());
+        }
+
+        @Override
+        public void warn(Object originator, String logMsg)
+        {
+            _log.warn(logMsg);
+        }
+
+        @Override
+        public void warn(Object originator, LogMessage msg)
+        {
+            _log.warn(msg.toString());
+        }
+
+        @Override
+        public void error(Object originator, String logMsg)
+        {
+            _log.error(logMsg);
+        }
+
+        @Override
+        public void error(Object originator, LogMessage msg)
+        {
+            _log.error(msg.toString());
+        }
+
+        @Override
+        public void fatal(Object originator, String logMsg)
+        {
+            _log.fatal(logMsg);
+        }
+
+        @Override
+        public void fatal(Object originator, LogMessage msg)
+        {
+            _log.fatal(msg.toString());
+        }
+
+        @Override
+        public String getLogFile()
+        {
+            return null;
         }
     }
 }

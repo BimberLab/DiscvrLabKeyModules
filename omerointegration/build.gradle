@@ -1,7 +1,81 @@
 import org.labkey.gradle.util.BuildUtils;
 
-dependencies
-{
-   external 'ome:omero_client:5.1.4'
+repositories {
+   mavenLocal()
+   mavenCentral()
+   maven {
+      name 'Unidata'
+      url 'https://artifacts.unidata.ucar.edu/content/repositories/unidata-releases'
+   }
+   maven {
+      url 'http://artifacts.openmicroscopy.org/artifactory/maven/'
+   }
+}
+
+//excludes based on: https://github.com/glencoesoftware/omero-ms-core/blob/master/build.gradle
+dependencies {
+   external (group: 'omero', name: 'blitz', version: '5.2.8-ice35-b57') {
+      exclude group: 'OME'
+      exclude group: 'antlr'
+      exclude group: 'asm'
+      exclude group: 'backport-util-concurrent'
+      exclude group: 'batik'
+      exclude group: 'cglib'
+      exclude group: 'com.codahale.metrics'
+      exclude group: 'com.drewnoakes'
+      exclude group: 'com.esotericsoftware.kryo'
+      exclude group: 'com.google.guava'
+      exclude group: 'com.jamonapi'
+      exclude group: 'com.mortennobel'
+      exclude group: 'com.zeroc', module: 'freeze'
+      exclude group: 'com.zeroc', module: 'icefreeze'
+      exclude group: 'com.zeroc', module: 'icegrid'
+      exclude group: 'com.zeroc', module: 'icestorm'
+      exclude group: 'commons-beanutils'
+      exclude group: 'commons-codec'
+      exclude group: 'commons-collections'
+      exclude group: 'commons-io'
+      exclude group: 'commons-pool'
+      exclude group: 'dom4j'
+      exclude group: 'edu.ucar'
+      exclude group: 'freemarker'
+      exclude group: 'geronimo-spec'
+      exclude group: 'gnu.getopt'
+      exclude group: 'javassist'
+      exclude group: 'javax.jts'
+      exclude group: 'joda-time'
+      exclude group: 'net.sf.ehcache'
+      exclude group: 'ome', module: 'formats-gpl'
+      exclude group: 'ome', module: 'jai_imageio'
+      exclude group: 'ome', module: 'lwf-stubs'
+      exclude group: 'ome', module: 'turbojpeg'
+      exclude group: 'omero', module: 'dsl'
+      exclude group: 'omero', module: 'omero-shares'
+      exclude group: 'org.apache.lucene'
+      exclude group: 'org.apache.httpcomponents'
+      exclude group: 'org.codehaus.btm'
+      exclude group: 'org.hibernate'
+      exclude group: 'org.hibernate.javax.persistence'
+      exclude group: 'org.ini4j'
+      exclude group: 'org.postgresql'
+      exclude group: 'org.scijava'
+      exclude group: 'org.subethamail'
+      exclude group: 'pdfbox'
+      exclude group: 'quartz'
+      exclude group: 'xerces'
+      exclude group: 'xalan'
+      exclude group: 'xml-apis'
+      exclude group: 'zeroc', module: 'ice-db'
+
+      exclude group: 'org.springframework', module: 'spring-aop'
+      exclude group: 'org.springframework', module: 'spring-context'
+      exclude group: 'org.springframework', module: 'spring-expression'
+      exclude group: 'org.springframework', module: 'spring-core'
+      exclude group: 'org.springframework', module: 'spring-beans'
+      exclude group: 'org.springframework', module: 'spring-jdbc'
+      exclude group: 'org.springframework', module: 'spring-tx'
+
+   }
+
    BuildUtils.addLabKeyDependency(project: project, config: "compile", depProjectPath: ":externalModules:labModules:LDK", depProjectConfig: "apiCompile")
 }

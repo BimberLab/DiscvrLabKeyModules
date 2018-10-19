@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.util;
 
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFormatException;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
@@ -300,6 +301,11 @@ public class SequenceUtil
 
                     log.info("Total second mate primary alignments: " + totalSecondMatePrimaryAlignments);
                 }
+            }
+            catch (SAMFormatException e)
+            {
+                //allow for malformed BAM problems, which upstream code should handle
+                log.error(e.getMessage(), e);
             }
         }
     }

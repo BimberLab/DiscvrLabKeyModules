@@ -11,14 +11,16 @@ Next, you will need to configure specific columns to render as OMERO data.  The 
 On that column, you will need to specify a custom DisplayColumnFactory.  You can do this in the query XML, along the lines of:
 
 <pre><code>
-    &lt;table tableName="" tableDbType="NOT_IN_DB"&gt;
-        &lt;columns&gt;
-            &lt;column columnName="omeroId"&gt;
-                &lt;!--This is the property that is required to render as OMERO data--&gt;
-                &lt;displayColumnFactory&gt;
-                    &lt;className&gt;org.labkey.omerointegration.OmeroDisplayColumFactory&lt;/className&gt;
-                &lt;/displayColumnFactory&gt;
-            &lt;/column&gt;
-        &lt;/columns&gt;
-    &lt;/table&gt;
+    &lt;tables xmlns="http://labkey.org/data/xml"&gt;
+        &lt;table tableName="" tableDbType="NOT_IN_DB"&gt;
+            &lt;columns&gt;
+                &lt;column columnName="omeroId"&gt;
+                    &lt;!--This is the property that is required to render as OMERO data--&gt;
+                    &lt;displayColumnFactory&gt;
+                        &lt;className&gt;org.labkey.omerointegration.OmeroDisplayColumFactory&lt;/className&gt;
+                    &lt;/displayColumnFactory&gt;
+                &lt;/column&gt;
+            &lt;/columns&gt;
+        &lt;/table&gt;
+    &lt;/tables&gt;
 </code></pre>

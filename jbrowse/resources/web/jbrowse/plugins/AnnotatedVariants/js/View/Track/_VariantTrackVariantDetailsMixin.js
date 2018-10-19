@@ -312,11 +312,11 @@ define([
 
                 parseOmimd: function(val){
                     var ret = [];
-                    var tokens = val.split(/\),{0,1}/);
 
+                    var tokens = val.split(/\)(,(?!_[0-9]+)|$)/);
                     for (var i=0;i<tokens.length;i++){
                         var token = tokens[i];
-                        if (!token) {
+                        if (!token || token === ',') {
                             continue;
                         }
 

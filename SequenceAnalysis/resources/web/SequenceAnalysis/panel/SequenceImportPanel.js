@@ -212,7 +212,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 html: 'The purpose of this import process is to normalize the sequence data into a common format (FASTQ), create one file per sample, and capture sample metadata (name, sample type, subject name, etc).  Reads are organized into readsets.  ' +
                         'Each readset is roughly equals to one input file (or 2 for pair-end data), and it connects the sequences in this file with sample attributes, such as subject name, sample type, platform, etc.'
             },{
-                html: '<h4><a href="https://github.com/bbimber/discvr-seq/wiki/Sequence-Management" target="_blank">Click here for more detailed instructions</a></h4>'
+                html: '<h4><a href="https://github.com/BimberLab/discvr-seq/wiki/Sequence-Management" target="_blank">Click here for more detailed instructions</a></h4>'
             }]
         }, this.getRunInfoCfg(), this.getFilePanelCfg(),{
             xtype:'panel',
@@ -292,7 +292,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 border: false,
                 width: '100%',
                 style: 'text-align: center',
-                html: 'Powered By DISCVR-Seq.  <a href="https://github.com/bbimber/discvr-seq/wiki">Click here to learn more.</a>'
+                html: 'Powered By DISCVR-Seq.  <a href="https://github.com/BimberLab/discvr-seq/wiki">Click here to learn more.</a>'
             }]
         }]);
 

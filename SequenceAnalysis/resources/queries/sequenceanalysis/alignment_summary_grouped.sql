@@ -25,7 +25,7 @@ select
   sum(a.total_forward) as total_forward,
   sum(a.total_reverse) as total_reverse,
   sum(a.valid_pairs) as valid_pairs,
-  max(a.total_reads) as total_reads_in_analysis,
+  max(cast(a.total_reads as integer)) as total_reads_in_analysis,
   --max(a.loci_total_reads) as total_reads_in_analysis_from_locus,
   CASE WHEN max(a.total_reads) = 0 THEN 0 ELSE round(100 * (cast(sum(a.total) as float) / cast(max(a.total_reads) as float)), 2) END as percent,
 --   case
@@ -36,10 +36,10 @@ select
   group_concat(a.rowid) as rowids,
   group_concat(distinct a.haplotypesWithAllele) as haplotypesWithAllele,
 
-  (select sum(s.total) as total FROM sequenceanalysis.alignment_summary s WHERE s.analysis_id = a.analysis_id AND s.rowid IN (
+  CAST((select sum(s.total) as total FROM sequenceanalysis.alignment_summary s WHERE s.analysis_id = a.analysis_id AND s.rowid IN (
       SELECT distinct asj.alignment_id from sequenceanalysis.alignment_summary_junction asj WHERE asj.ref_nt_id.locus = a.loci and asj.status = true
     )
-  ) as total_reads_from_locus,
+  ) as INTEGER) as total_reads_from_locus,
 
   round(100 * (cast(sum(a.total) as float) / CASE WHEN count(a.lineages) = 0 THEN max(a.total_reads) ELSE cast((select sum(s.total) as total FROM sequenceanalysis.alignment_summary s WHERE s.analysis_id = a.analysis_id AND s.rowid IN (
       SELECT distinct asj.alignment_id from sequenceanalysis.alignment_summary_junction asj WHERE asj.ref_nt_id.locus = a.loci and asj.status = true
