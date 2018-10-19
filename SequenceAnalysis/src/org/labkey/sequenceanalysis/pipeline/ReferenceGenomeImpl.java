@@ -115,7 +115,7 @@ public class ReferenceGenomeImpl implements ReferenceGenome
     public File getAlignerIndexDir(String name)
     {
         //if genomeId is null, we are using an ad hoc genome
-        if (_genomeId == null)
+        if (isTemporaryGenome())
         {
             return new File(getWorkingFastaFile().getParentFile(), name);
         }
