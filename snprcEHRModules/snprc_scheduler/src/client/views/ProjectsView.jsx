@@ -33,7 +33,7 @@ class ProjectsView extends React.Component {
             <div className='row'>
                 <div className='col-sm-4'>
                     <Accordion className="accordion__style__primary">
-                        <AccordionItem>
+                        <AccordionItem expanded={true}>
                             <AccordionItemTitle><label className="accordion__title__text">Projects</label></AccordionItemTitle>
                             <AccordionItemBody><ProjectList store={this.props.store} /></AccordionItemBody>
                         </AccordionItem>

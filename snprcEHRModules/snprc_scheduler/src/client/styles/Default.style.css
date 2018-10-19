@@ -33,3 +33,12 @@
   .input-row {
     padding-bottom: 10px;
   }
+
+  /* React data grid styles */
+  .react-grid-Header {
+    display:none !important;
+  }
+
+  .react-grid-Viewport {
+    top: 0px !important;
+  }

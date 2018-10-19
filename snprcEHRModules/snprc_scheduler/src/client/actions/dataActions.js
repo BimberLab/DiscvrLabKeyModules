@@ -61,10 +61,8 @@ export function fetchAnimalsByProject(projectId, revision = 0) {
 }
 
 export function filterProjects(pattern) {
-    return (dispatch, getState) => {
-        let state = getState();
-        console.log(state);
-        dispatch(createAction(PROJECT_LIST_FILTERED, []));
+    return (dispatch) => {
+        dispatch(createAction(PROJECT_LIST_FILTERED, pattern));
     }
 }
 

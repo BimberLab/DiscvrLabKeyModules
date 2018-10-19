@@ -12,7 +12,7 @@ import React from 'react';
 import ReactDataGrid from 'react-data-grid';
 import Glyphicon from 'react-bootstrap/lib/Glyphicon'
 import {connect} from "react-redux";
-import { selectProject } from '../actions/dataActions';
+import { selectProject, filterProjects } from '../actions/dataActions';
 
 const verboseOutput = false;
 
@@ -49,15 +49,7 @@ class ProjectList extends React.Component {
         this.setState({ selectedProjects: this.state.selectedProjects.filter(i => rowIndexes.indexOf(i) === -1) });       
     }
     
-    handleProjectSearchChange = (event) => {
-        /*
-        let value = event.target.value;
-        this.setState({ 
-            projects: projects,
-            projectSearchValue: value
-        });
-        */
-    }
+    handleProjectSearchChange = (event) => this.props.store.dispatch(filterProjects(event.target.value));
 
     handleStoreUpdate = () => {
         if (verboseOutput) console.log('handeling store update...');
@@ -65,7 +57,7 @@ class ProjectList extends React.Component {
         let projectCount = projects.length;
         var newProjects = [];
         projects.forEach((p) => {
-            newProjects.push({
+            let data = {
                 ProjectId: p.ProjectId.value,
                 Description: p.Description.value.toString(),
                 ChargeId: p.ChargeId.value,
@@ -75,11 +67,11 @@ class ProjectList extends React.Component {
                 RevisionNum: p.RevisionNum.value,
                 vet1: p.veterinarian.value,
                 vet2: null
-            })
+            }
+            newProjects.push(data);
         })
         this.setState({
             projects: newProjects,
-            originalProjects: projects,
             projectCount: projectCount
         });    
     }
@@ -108,6 +100,7 @@ class ProjectList extends React.Component {
                     columns={this.state.projectCols}
                     rowGetter={this.projectRowGetter}
                     rowsCount={this.state.projectCount}
+                    minHeight={284}
                     rowSelection={{
                         showCheckbox: true,
                         enableShiftSelect: false,
