@@ -21,6 +21,7 @@ dependencies {
       exclude group: 'backport-util-concurrent'
       exclude group: 'batik'
       exclude group: 'cglib'
+      exclude group: 'ch.qos.logback', module: 'logback-classic'  // added to prevent excessively verbose global logging
       exclude group: 'com.codahale.metrics'
       exclude group: 'com.drewnoakes'
       exclude group: 'com.esotericsoftware.kryo'
