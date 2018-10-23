@@ -29,7 +29,7 @@ import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.services.ServiceRegistry;
-import org.labkey.api.snprc_scheduler.SNPRC_schedulerService;
+import org.labkey.snprc_scheduler.services.SNPRC_schedulerService;
 import org.labkey.api.view.BaseWebPartFactory;
 import org.labkey.api.view.Portal;
 import org.labkey.api.view.ViewContext;
@@ -37,6 +37,7 @@ import org.labkey.api.view.WebPartFactory;
 import org.labkey.api.view.WebPartView;
 import org.labkey.snprc_scheduler.security.SNPRC_schedulerEditorsRole;
 import org.labkey.snprc_scheduler.security.SNPRC_schedulerReadersRole;
+import org.labkey.snprc_scheduler.services.SNPRC_schedulerServiceImpl;
 import org.labkey.snprc_scheduler.view.SchedulerWebPart;
 
 import java.util.ArrayList;

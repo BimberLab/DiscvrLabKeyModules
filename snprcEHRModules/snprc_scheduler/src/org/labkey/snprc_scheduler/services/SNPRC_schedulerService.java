@@ -1,7 +1,10 @@
-package org.labkey.api.snprc_scheduler;
+package org.labkey.snprc_scheduler.services;
 
+
+import org.labkey.snprc_scheduler.domains.Timeline;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
+import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.security.User;
 import org.labkey.api.services.ServiceRegistry;
 
@@ -20,7 +23,7 @@ public interface SNPRC_schedulerService
         return ServiceRegistry.get(SNPRC_schedulerService.class);
     }
 
-    List<Map<String, Object>> getActiveTimelines(Container c, User u);
+    List<Map<String, Timeline>> getActiveTimelines(Container c, User u, int projectId, int revNum, BatchValidationException errors);
 
 }
 
