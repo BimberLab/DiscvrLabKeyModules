@@ -51,13 +51,13 @@ import org.labkey.api.reader.TabLoader;
 import org.labkey.api.security.User;
 import org.labkey.api.study.assay.AssayProvider;
 import org.labkey.api.study.assay.AssayService;
+import org.labkey.api.util.FileType;
 import org.labkey.api.util.Pair;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.ViewContext;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -68,7 +68,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -620,35 +619,38 @@ public class DefaultAssayParser implements AssayParser
             return rowIdx;
     }
 
+    private static FileType EXCEL_TYPE = new FileType(Arrays.asList(".xlsx", ".xls"), ".xlsx", false);
+
     /**
      * Parses either an excel or text file
      */
     public List<List<String>> getFileLines(File file) throws IOException
     {
-        try
+        if (EXCEL_TYPE.isType(file))
         {
-            JSONArray arr = ExcelFactory.convertExcelToJSON(file, true);
-            List<List<String>> ret = new ArrayList<>();
-            if (arr.length() == 0)
-                return ret;
-
-            JSONObject sheet = arr.getJSONObject(0);
-            for (Object cells : sheet.getJSONArray("data").toArray())
+            try
             {
-                List<String> line = new ArrayList<>();
-                for (JSONObject o : ((JSONArray) cells).toJSONObjectArray())
-                {
-                    Object val = o.containsKey("formattedValue") ? o.getString("formattedValue") : o.get("value");
-                    line.add(ConvertHelper.convert(val, String.class));
-                }
-                ret.add(line);
-            }
+                JSONArray arr = ExcelFactory.convertExcelToJSON(file, true);
+                List<List<String>> ret = new ArrayList<>();
+                if (arr.length() == 0)
+                    return ret;
 
-            return ret;
-        }
-        catch (InvalidFormatException e)
-        {
-            //non-excel file, ignore
+                JSONObject sheet = arr.getJSONObject(0);
+                for (Object cells : sheet.getJSONArray("data").toArray())
+                {
+                    List<String> line = new ArrayList<>();
+                    for (JSONObject o : ((JSONArray) cells).toJSONObjectArray())
+                    {
+                        Object val = o.containsKey("formattedValue") ? o.getString("formattedValue") : o.get("value");
+                        line.add(ConvertHelper.convert(val, String.class));
+                    }
+                    ret.add(line);
+                }
+            }
+            catch (InvalidFormatException | IOException e)
+            {
+                //non-excel file, ignore
+            }
         }
 
         return parseTextFile(file);
