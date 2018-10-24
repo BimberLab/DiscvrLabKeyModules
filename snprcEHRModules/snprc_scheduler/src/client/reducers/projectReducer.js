@@ -16,11 +16,13 @@ import { ANIMAL_LIST_RECEIVED,
          PROJECT_LIST_RECEIVED, 
          PROJECT_LIST_REQUEST_FAILED,
          PROJECT_SELECTED,
-         PROJECT_LIST_FILTERED
+         PROJECT_LIST_FILTERED,
+         ANIMAL_LIST_FILTERED
        } from "../actions/dataActions";
 
 export default (state = { }, action) => {  
     let nextState = Object.assign({ }, state);
+    let value = '';
     nextState.errors = [];
     switch (action.type) { 
         case PROJECT_LIST_RECEIVED:
@@ -30,6 +32,7 @@ export default (state = { }, action) => {
             break;
         case ANIMAL_LIST_RECEIVED:
             // action payload is the animal array
+            nextState.allAnimals = action.payload;
             nextState.animals = action.payload;
             break;
         case PROJECT_LIST_REQUEST_FAILED:
@@ -50,20 +53,34 @@ export default (state = { }, action) => {
             break;
         case PROJECT_LIST_FILTERED:
             // action payload is the filter value
-            let value = (action.payload + '').toUpperCase();
+            value = (action.payload + '').toUpperCase();
             if (value != '') {
                 nextState.projects = [];
                 nextState.allProjects.forEach((p) => {
-                    if (p.Description.value.toString().toUpperCase().indexOf(value) > 0 || 
-                        p.ProjectId.value.toString().toUpperCase().indexOf(value) > 0  ||    
-                        p.ChargeId.value.toString().toUpperCase().indexOf(value) > 0  ||
-                        p.Iacuc.value.toString().toUpperCase().indexOf(value) > 0  ||
-                        p.RevisionNum.value.toString().toUpperCase().indexOf(value) > 0  ||
-                        p.StartDate.value.toString().toUpperCase().indexOf(value) > 0  ||
-                        p.EndDate.value.toString().toUpperCase().indexOf(value) > 0) 
+                    if (p.Description.value.toString().toUpperCase().indexOf(value) > -1 || 
+                        p.ProjectId.value.toString().toUpperCase().indexOf(value) > -1  ||    
+                        p.ChargeId.value.toString().toUpperCase().indexOf(value) > -1  ||
+                        p.Iacuc.value.toString().toUpperCase().indexOf(value) > -1  ||
+                        p.RevisionNum.value.toString().toUpperCase().indexOf(value) > -1  ||
+                        p.StartDate.value.toString().toUpperCase().indexOf(value) > -1  ||
+                        p.EndDate.value.toString().toUpperCase().indexOf(value) > -1) 
                     { nextState.projects.push(p); }
                 });               
             } else nextState.projects = nextState.allProjects;
+            break;
+        case ANIMAL_LIST_FILTERED:
+            // action payload is the filter value
+            value = (action.payload + '').toUpperCase();
+            if (value != '') {
+                nextState.animals = [];
+                nextState.allAnimals.forEach((a) => {
+                    if (a.Id.value.toString().toUpperCase().indexOf(value) > -1 || 
+                        a.Age.value.toString().toUpperCase().indexOf(value) > -1 || 
+                        a.Gender.displayValue.toString().toUpperCase().indexOf(value) > -1) {
+                        nextState.animals.push(a);
+                    }
+                })
+            } else nextState.animals = nextState.allAnimals;
             break;
     };
     if (verboseOutput) {

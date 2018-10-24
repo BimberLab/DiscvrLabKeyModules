@@ -36,12 +36,12 @@
 
   /* React data grid styles */
 
-  /*
-  .react-grid-Header {
+  
+  .hide-react-grid-header {
     display:none !important;
   }
 
-  .react-grid-Viewport {
+  .maximize-react-grid-viewport {
     top: 0px !important;
   }
-  */
+  

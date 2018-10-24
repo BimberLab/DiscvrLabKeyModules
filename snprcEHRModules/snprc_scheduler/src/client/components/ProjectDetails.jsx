@@ -4,28 +4,24 @@ class ProjectDetails extends React.Component {
 
     constructor(props) {
         super(props);
+        let selectedProject = this.props.store.getState().project.selectedProject || null;
         this.state = { 
             value: '',
-            selectedProject: null
+            selectedProject: selectedProject
         };
-        this.props.store.subscribe(this.handleStoreUpdate);
+        this.disconnect = this.props.store.subscribe(this.handleStoreUpdate);
     }
 
+    componentWillUnmount = () => this.disconnect();
+    
     handleStoreUpdate = () => {
         let selectedProject = this.props.store.getState().project.selectedProject || null;
         this.setState({ selectedProject: selectedProject });
     }
 
     render() {
-
-        let textLeft = {
-            textAlign: 'left'
-        }
-
-        
-
         if (this.state.selectedProject != null) {
-            return (<div className='container' style={textLeft}>
+            return (<div className='container' style={{textAlign: 'left'}}>
                 <div className='row input-row'>
                     <div className='col-sm-2'><label>Cost Account</label></div>
                     <div className='col-sm-4'><input type='text' className='input-wide' readOnly /></div>

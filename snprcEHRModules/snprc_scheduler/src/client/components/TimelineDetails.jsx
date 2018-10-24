@@ -1,6 +1,6 @@
 import React from 'react';
 
-class ProjectDetails extends React.Component {
+class TimelineDetails extends React.Component {
 
     constructor(props) {
         super(props);
@@ -60,10 +60,10 @@ class ProjectDetails extends React.Component {
                 </div>
             </div>)
         } else {
-            return <div>Please select a project to view it's details</div>
+            return <div>Please select a timeline to view it's details</div>
         }
 
     }
 }
 
-export default ProjectDetails;
+export default TimelineDetails;

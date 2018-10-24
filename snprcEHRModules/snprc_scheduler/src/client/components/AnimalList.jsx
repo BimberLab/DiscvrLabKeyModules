@@ -1,36 +1,38 @@
+/* 
+    ==================================================================================
+    author:             David P. Smith
+    email:              dsmith@txbiomed.org
+    name:               snprc_scheduler
+    description:        Animal procedure scheduling system     
+    copyright:          Texas Biomedical Research Institute
+    created:            October 4 2018      
+    ==================================================================================
+*/
 import React from 'react';
 import ReactDataGrid from 'react-data-grid';
-import ReactDOM from 'react-dom';
-import FullCalendar from 'fullcalendar';
-import $ from 'jquery'; 
 import Glyphicon from 'react-bootstrap/lib/Glyphicon'
 import {connect} from "react-redux";
-
-const verboseOutput = false;
-
-class EmptyAnimalRowsView extends React.Component { render() {return (<div> No animals available.</div>);} }
+import { filterAnimals } from '../actions/dataActions';
 
 class AnimalList extends React.Component {
+    
     constructor(props) {
         super(props);
         this.state = {
             animals: [], 
             animalCols: [
-                { key: 'Id', name: 'ID', width: 60 },
+                { key: 'Id', name: 'ID', width: 70 },
                 { key: 'Gender', name: 'Gender', width: 80 },
                 { key: 'Weight', name: 'Weight', width: 90 },
-                { key: 'Age', name: 'Age', width: 140 },
+                { key: 'Age', name: 'Age', width: 130 },
             ],
             selectedAnimals: []
         };
         this.props.store.subscribe(this.handleStoreUpdate); 
     }
     
-    // animal grid methods & handlers
-    animalRowGetter = (index) => {
-        return this.state.animals[index];
-    }
-
+    animalRowGetter = (index) => this.state.animals[index];
+    
     onAnimalRowsSelected = (rows) => {
         this.setState({ selectedAnimals: this.state.selectedAnimals.concat(rows.map(r => r.rowIdx)) });
     }
@@ -40,10 +42,7 @@ class AnimalList extends React.Component {
         this.setState({ selectedAnimals: this.state.selectedAnimals.filter(i => rowIndexes.indexOf(i) === -1) });       
     }
 
-    handleAnimalSearchChange = (event) => {
-        let value = event.target.value;
-
-    }
+    handleAnimalSearchChange = (event) => this.props.store.dispatch(filterAnimals(event.target.value));
 
     handleStoreUpdate = () => {
         let animals = this.props.store.getState().project.animals || null;
@@ -53,7 +52,7 @@ class AnimalList extends React.Component {
                 formattedAnimals.push({
                     Id: a.Id.value,
                     Gender: a.Gender.displayValue,
-                    Weight: a.Weight.value + ' kg',
+                    Weight: a.Weight.value ? a.Weight.value + ' kg' : 'unknown',
                     Age: a.Age.value
                 })
             });
@@ -61,22 +60,10 @@ class AnimalList extends React.Component {
         } else this.setState({animals: []});
     }
 
-    componentDidMount = () => {
-        if (verboseOutput) console.log('AnimalList didMount()');
-    }  
-
-    componentDidUpdate = (prevProps) => {
-        if (verboseOutput) console.log('AnimalList componentDidUpdate()');
-    }
-
-    componentWillUnmount = () => {
-        if (verboseOutput) console.log('AnimalList componentWillUnmount()');
-    }
-
     render = () => { 
         let animalCount = this.state.animals ? this.state.animals.length : 0;
-        return (<div>
-        <div className="input-group bottom-padding-8">
+        let searchJSX = (                    
+            <div className="input-group bottom-padding-8">
             <span className="input-group-addon input-group-addon-buffer"><Glyphicon glyph="search"/></span>
             <input
                 id="animalSearch"
@@ -84,28 +71,35 @@ class AnimalList extends React.Component {
                 onChange={this.handleAnimalSearchChange}
                 className="form-control search-input"
                 name="animalSearch"
-                placeholder="Search" />
-            <span className="input-group-addon input-group-addon-buffer"><Glyphicon glyph="save"/></span>
-            <span className="input-group-addon input-group-addon-buffer"><Glyphicon glyph="open"/></span>
-        </div>
-        <div>
-            <ReactDataGrid
-                rowKey="id1"
-                columns={this.state.animalCols}
-                rowGetter={this.animalRowGetter}
-                rowsCount={animalCount}
-                minHeight={300}
-                rowSelection={{
-                    showCheckbox: true,
-                    enableShiftSelect: true,
-                    onRowsSelected: this.onAnimalRowsSelected,
-                    onRowsDeselected: this.onAnimalRowsDeselected,
-                    selectBy: { indexes: this.state.selectedAnimals }
-                }}
-                emptyRowsView={EmptyAnimalRowsView} />                                    
-        </div>
-    </div>
-    )};
+                placeholder="Search animals" />
+            <span className="input-group-addon input-group-addon-buffer" title="Import animal list"><Glyphicon glyph="save"/></span>
+            <span className="input-group-addon input-group-addon-buffer" title="Export animal list"><Glyphicon glyph="open"/></span>
+            </div>
+        );
+        if (animalCount > 0) {
+            return (
+                <div>
+                    {searchJSX}
+                    <div>
+                        <ReactDataGrid
+                            rowKey="Id"
+                            columns={this.state.animalCols}
+                            rowGetter={this.animalRowGetter}
+                            rowsCount={animalCount}
+                            minHeight={300}
+                            rowSelection={{
+                                showCheckbox: true,
+                                enableShiftSelect: true,
+                                onRowsSelected: this.onAnimalRowsSelected,
+                                onRowsDeselected: this.onAnimalRowsDeselected,
+                                selectBy: { indexes: this.state.selectedAnimals }
+                            }}
+                        />                                    
+                    </div>
+                </div>
+            )
+        } else return <div style={{ minHeight: 346 }}>{searchJSX}<div> No assignable animals found. </div></div>
+    }
 
   }
 

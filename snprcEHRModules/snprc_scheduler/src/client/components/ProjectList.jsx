@@ -19,6 +19,7 @@ const verboseOutput = false;
 class EmptyProjectRowsView extends React.Component { render() {return (<div> Loading projects...</div>);} }
 
 class ProjectList extends React.Component {
+    
     constructor(props) {
         super(props);
         this.state = {
@@ -87,7 +88,7 @@ class ProjectList extends React.Component {
                 onChange={this.handleProjectSearchChange}
                 className="form-control search-input" 
                 name="projectSearch" 
-                placeholder="Search" />
+                placeholder="Search projects" />
             </div>
             <div className="bottom-padding-8">
                 <ReactDataGrid
@@ -111,4 +112,5 @@ class ProjectList extends React.Component {
 
 }
 
-export default connect()(ProjectList);
+export default ProjectList;
+//export default connect()(ProjectList);
