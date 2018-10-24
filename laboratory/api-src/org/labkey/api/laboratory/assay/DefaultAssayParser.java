@@ -646,6 +646,8 @@ public class DefaultAssayParser implements AssayParser
                     }
                     ret.add(line);
                 }
+
+                return ret;
             }
             catch (InvalidFormatException | IOException e)
             {
