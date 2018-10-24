@@ -6,15 +6,24 @@ import $ from 'jquery';
 import Glyphicon from 'react-bootstrap/lib/Glyphicon'
 import {connect} from "react-redux";
 
+const verboseOutput = false;
+
+class EmptyAnimalRowsView extends React.Component { render() {return (<div> No animals available.</div>);} }
+
 class AnimalList extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            debugUI: false,
             animals: [], 
-            animalCols: [],
+            animalCols: [
+                { key: 'Id', name: 'ID', width: 60 },
+                { key: 'Gender', name: 'Gender', width: 80 },
+                { key: 'Weight', name: 'Weight', width: 90 },
+                { key: 'Age', name: 'Age', width: 140 },
+            ],
             selectedAnimals: []
         };
+        this.props.store.subscribe(this.handleStoreUpdate); 
     }
     
     // animal grid methods & handlers
@@ -33,63 +42,48 @@ class AnimalList extends React.Component {
 
     handleAnimalSearchChange = (event) => {
         let value = event.target.value;
-        this.setState({
-            animalSearchValue: value
-        });
-        if (value.length > 1) {
-            console.log('searching animals for "' + value + '"');
-        } else {
-            console.log('animal search criteria too short.');
-        }
+
     }
 
-    fetchAnimals = () => {
-        // LABKEY query API call
-        if (this.state.selectedProject != null) {
-            let id = this.state.selectedProject.ProjectId;
-            LABKEY.Query.selectRows({
-                requiredVersion: 9.1,
-                schemaName: 'snd',
-                queryName: 'AnimalsByProject',
-                columns: 'Id,ProjectId,RevisionNum,StartDate,EndDate,Gender,ChargeId,Iacuc,AssignmentStatus',
-                filterArray: [ 
-                    LABKEY.Filter.create('ProjectId', id, LABKEY.Filter.Types.EQUAL),
-                    LABKEY.Filter.create('RevisionNum', '0', LABKEY.Filter.Types.EQUAL)
-                ],
-                success: (results) => {
-                    if (this.ignoreLastFetch) return;
-                    this.setState({ animals: results.rows })
-                },
-                failure: (error) => console.log(error.exception)
-            });            
-        }
-        
-
+    handleStoreUpdate = () => {
+        let animals = this.props.store.getState().project.animals || null;
+        let formattedAnimals = [];
+        if (animals != null) {
+            animals.forEach((a) => {               
+                formattedAnimals.push({
+                    Id: a.Id.value,
+                    Gender: a.Gender.displayValue,
+                    Weight: a.Weight.value + ' kg',
+                    Age: a.Age.value
+                })
+            });
+            this.setState({animals: formattedAnimals});
+        } else this.setState({animals: []});
     }
 
     componentDidMount = () => {
-        if (this.state.debugUI) console.log('ProjectList didMount()');
-        this.fetchAnimals();
+        if (verboseOutput) console.log('AnimalList didMount()');
     }  
 
     componentDidUpdate = (prevProps) => {
-        if (this.state.debugUI) console.log('ProjectList componentDidUpdate()');
+        if (verboseOutput) console.log('AnimalList componentDidUpdate()');
     }
 
     componentWillUnmount = () => {
-        this.ignoreLastFetch = true;
-        if (this.state.debugUI) console.log('ProjectList componentWillUnmount()');
+        if (verboseOutput) console.log('AnimalList componentWillUnmount()');
     }
 
-    render = () => { return (<div>
+    render = () => { 
+        let animalCount = this.state.animals ? this.state.animals.length : 0;
+        return (<div>
         <div className="input-group bottom-padding-8">
             <span className="input-group-addon input-group-addon-buffer"><Glyphicon glyph="search"/></span>
             <input
-                id="projectSearch"
+                id="animalSearch"
                 type="text"
                 onChange={this.handleAnimalSearchChange}
                 className="form-control search-input"
-                name="projectSearch"
+                name="animalSearch"
                 placeholder="Search" />
             <span className="input-group-addon input-group-addon-buffer"><Glyphicon glyph="save"/></span>
             <span className="input-group-addon input-group-addon-buffer"><Glyphicon glyph="open"/></span>
@@ -99,7 +93,7 @@ class AnimalList extends React.Component {
                 rowKey="id1"
                 columns={this.state.animalCols}
                 rowGetter={this.animalRowGetter}
-                rowsCount={this.state.animals.length}
+                rowsCount={animalCount}
                 minHeight={300}
                 rowSelection={{
                     showCheckbox: true,
@@ -107,7 +101,8 @@ class AnimalList extends React.Component {
                     onRowsSelected: this.onAnimalRowsSelected,
                     onRowsDeselected: this.onAnimalRowsDeselected,
                     selectBy: { indexes: this.state.selectedAnimals }
-                }} />                                    
+                }}
+                emptyRowsView={EmptyAnimalRowsView} />                                    
         </div>
     </div>
     )};

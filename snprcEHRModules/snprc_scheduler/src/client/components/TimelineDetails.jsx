@@ -13,7 +13,7 @@ class ProjectDetails extends React.Component {
 
     handleStoreUpdate = () => {
         let selectedProject = this.props.store.getState().project.selectedProject || null;
-        this.setState({ selectedProject: selectedProject });
+        //this.setState({ selectedProject: selectedProject });
     }
 
     render() {

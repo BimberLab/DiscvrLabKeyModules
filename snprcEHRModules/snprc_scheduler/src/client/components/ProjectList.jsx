@@ -16,23 +16,22 @@ import { selectProject, filterProjects } from '../actions/dataActions';
 
 const verboseOutput = false;
 
-class EmptyRowsView extends React.Component { render() {return (<div> No projects to show</div>);} }
+class EmptyProjectRowsView extends React.Component { render() {return (<div> Loading projects...</div>);} }
 
 class ProjectList extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
             projectCols: [
-                { key: 'ProjectId', name: 'ID', width: 40 },
-                { key: 'Description', name: 'Description', width: 330 }
+                { key: 'Iacuc', name: 'IACUC', width: 75 },
+                { key: 'Description', name: 'Description', width: 255 },
+                { key: 'Revision', name: 'Rev', width: 42 }
             ],
             selectedProjects: [],
         };
         // handle store changes
         this.props.store.subscribe(this.handleStoreUpdate); 
     }
-    
-    projectRowGetter = (index) => this.state.projects[index];
     
     onProjectRowsSelected = (rows) => {;
         let selectedProject = rows[0].row;
@@ -48,6 +47,8 @@ class ProjectList extends React.Component {
         let rowIndexes = rows.map(r => r.rowIdx);
         this.setState({ selectedProjects: this.state.selectedProjects.filter(i => rowIndexes.indexOf(i) === -1) });       
     }
+
+    projectRowGetter = (index) => this.state.projects[index];   
     
     handleProjectSearchChange = (event) => this.props.store.dispatch(filterProjects(event.target.value));
 
@@ -64,7 +65,7 @@ class ProjectList extends React.Component {
                 StartDate: p.StartDate.value,
                 EndDate: p.EndDate.value,
                 Iacuc: p.Iacuc.value,
-                RevisionNum: p.RevisionNum.value,
+                Revision: p.RevisionNum.value,
                 vet1: p.veterinarian.value,
                 vet2: null
             }
@@ -75,12 +76,6 @@ class ProjectList extends React.Component {
             projectCount: projectCount
         });    
     }
-
-    componentDidMount = () => { }  
-
-    componentDidUpdate = (prevProps) => { };
-
-    componentWillUnmount = () => { };
 
     render = () => { 
         return (<div>
@@ -108,7 +103,7 @@ class ProjectList extends React.Component {
                         onRowsDeselected: this.onProjectRowsDeselected,
                         selectBy: { indexes: this.state.selectedProjects}
                     }}
-                    emptyRowsView={EmptyRowsView}  
+                    emptyRowsView={EmptyProjectRowsView}  
                 />               
             </div>
         </div>)             

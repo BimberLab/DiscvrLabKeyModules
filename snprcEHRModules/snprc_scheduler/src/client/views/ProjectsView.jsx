@@ -24,7 +24,6 @@ class ProjectsView extends React.Component {
 
     componentWillUnmount = () => {
         if (verboseOutput) console.log('ProjectsView componentWillUnmount()');        
-        this.ignoreLastFetch = true;
     }
 
     render() {
