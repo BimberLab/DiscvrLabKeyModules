@@ -10,6 +10,7 @@
         <propertyDescriptor name="PreventClusterInteraction">
             <description>If set to 'true', new jobs to the cluster and all polling of active jobs on the cluster will be halted.</description>
             <canSetPerContainer>false</canSetPerContainer>
+            <inputType>checkbox</inputType>
             <defaultValue>false</defaultValue>
             <editPermissions>
                 <permission>ADMIN</permission>

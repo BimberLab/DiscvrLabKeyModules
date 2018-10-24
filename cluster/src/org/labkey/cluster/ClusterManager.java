@@ -151,7 +151,7 @@ public class ClusterManager
         Module m = ModuleLoader.getInstance().getModule(ClusterModule.NAME);
         ModuleProperty mp = m.getModuleProperties().get(PREVENT_CLUSTER_INTERACTION);
         String val = StringUtils.trimToNull(mp.getValueContainerSpecific(ContainerManager.getRoot()));
-        return (val != null && "true".equalsIgnoreCase(val));
+        return ("true".equalsIgnoreCase(val));
     }
 
     public String getClusterUser(Container c)
