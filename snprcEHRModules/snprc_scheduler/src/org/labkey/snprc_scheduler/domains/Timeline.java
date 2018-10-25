@@ -34,6 +34,7 @@ public class Timeline
     private String _createdBy;
     private String _modifiedBy;
     private String _schedulerNotes;
+    private boolean _isDraft;
 
     public static final String TIMELINE_ID = "TimelineId";
     public static final String TIMELINE_DESCRIPTION = "Description";
@@ -49,25 +50,7 @@ public class Timeline
     public static final String TIMELINE_DATE_MODIFIED = "DateModified";
     public static final String TIMELINE_CREATED_BY = "CreatedBy";
     public static final String TIMELINE_MODIFIED_BY = "ModifiedBy";
-
-
-    public Timeline( Container c, User u,
-                    @Nullable Integer timelineId,
-                    @Nullable Integer projectId,
-                    @Nullable Integer revNum,
-                    String description,
-                    Date startDate,
-                    @Nullable Date endDate)
-    {
-        _timelineId = timelineId;
-        _description = description;
-        _startDate = startDate;
-        _endDate = endDate;
-
-//        if (projectId != null && revNum != null)  {
-//            setProject(c, u, projectId, revNum);
-//        }
-    }
+    public static final String TIMELINE_IS_DRAFT = "IsDraft";
 
     public Timeline()
     {
@@ -135,6 +118,16 @@ public class Timeline
     public void setObjectId(String objectId)
     {
         _objectId = objectId;
+    }
+
+    public boolean getIsDraft()
+    {
+        return _isDraft;
+    }
+
+    public void setIsDraft(boolean isDraft)
+    {
+        _isDraft = isDraft;
     }
 
 
@@ -252,6 +245,7 @@ public class Timeline
         timelineValues.put(TIMELINE_DATE_MODIFIED, getDateModified());
         timelineValues.put(TIMELINE_CREATED_BY, getCreatedBy());
         timelineValues.put(TIMELINE_MODIFIED_BY, getModifiedBy());
+        timelineValues.put(TIMELINE_IS_DRAFT, getIsDraft());
 
 //
 //        if (_project != null)
@@ -290,6 +284,8 @@ public class Timeline
         json.put(TIMELINE_DATE_MODIFIED, getDateModified());
         json.put(TIMELINE_CREATED_BY, getCreatedBy());
         json.put(TIMELINE_MODIFIED_BY, getModifiedBy());
+        json.put(TIMELINE_IS_DRAFT, getIsDraft());
+
 
         // add timeline items to json object
 

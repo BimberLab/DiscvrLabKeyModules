@@ -71,12 +71,13 @@ public class SNPRC_schedulerServiceImpl implements SNPRC_schedulerService
             timeline1.setEndDate(formatString.parse("12/31/2018"));
             timeline1.setLeadTechs("John Wayne, Clint Eastwood");
             timeline1.setObjectId(GUID.makeGUID());
-            timeline1.setProjectId(20);
-            timeline1.setRevisionNum(0);
+            timeline1.setProjectId(projectId);
+            timeline1.setRevisionNum(revisionNum);
             timeline1.setDateCreated(formatString.parse("10/1/2018"));
             timeline1.setDateModified(formatString.parse("10/4/2018"));
             timeline1.setCreatedBy("thawkins");
             timeline1.setModifiedBy("dsmith");
+            timeline1.setIsDraft(false);
 
 
             timelines.add(timeline1.toJSON(c, u));
@@ -88,12 +89,14 @@ public class SNPRC_schedulerServiceImpl implements SNPRC_schedulerService
             timeline2.setEndDate(formatString.parse("12/30/2018"));
             timeline2.setLeadTechs("Zaphod Beeblebrox, Trisha McMillian");
             timeline2.setObjectId(GUID.makeGUID());
-            timeline2.setProjectId(20);
-            timeline2.setRevisionNum(0);
+            timeline2.setProjectId(projectId);
+            timeline2.setRevisionNum(revisionNum);
             timeline2.setDateCreated(formatString.parse("09/20/2018"));
             timeline2.setDateModified(formatString.parse("10/1/2018"));
             timeline2.setCreatedBy("srouse");
             timeline2.setModifiedBy("charlesp");
+            timeline2.setSchedulerNotes("The ships hung in the sky in much the same way that bricks don’t.");
+            timeline2.setIsDraft(false);
 
 
 
