@@ -1,18 +1,17 @@
 package org.labkey.snprc_scheduler.services;
 
+import org.json.JSONObject;
+import org.labkey.api.action.ApiUsageException;
 import org.labkey.api.data.Container;
 import org.labkey.api.query.BatchValidationException;
-import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
-import org.labkey.api.snd.Project;
-import org.labkey.api.snd.SNDService;
+import org.labkey.api.util.GUID;
 import org.labkey.snprc_scheduler.domains.Timeline;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
-import static org.labkey.snprc_scheduler.SNPRC_schedulerManager.getSNPRC_schedulerUserSchema;
 
 /**
  * Created by thawkins on 10/21/2018
@@ -26,47 +25,86 @@ public class SNPRC_schedulerServiceImpl implements SNPRC_schedulerService
     }
 
     /**
-     * returns a list of active timelines
+     * returns a list of active timelines for a projectId/RevisionNum
      */
-    public List<Map<String, Timeline>> getActiveTimelines(Container c, User u, int projectId, int revNum, BatchValidationException errors)
+    public List<JSONObject> getActiveTimelines(Container c, User u, int projectId, int revisionNum, BatchValidationException errors) throws ApiUsageException
     {
 
 
-            UserSchema schema = getSNPRC_schedulerUserSchema(c, u);
-
-            //TableInfo projectsTable = getTableInfo(schema, SNDSchema.PROJECTS_TABLE_NAME);
-
-            // Get from projects table
-//            SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("ProjectId"), projectId, CompareType.EQUAL);
-//            filter.addCondition(FieldKey.fromParts("RevisionNum"), revNum, CompareType.EQUAL);
-//            TableSelector ts = new TableSelector(projectsTable, filter, null);
-
-            // Unique constraint enforces only one project for projectId/revisionNum
-            SNDService sndService = SNDService.get();
-            Project project = sndService.getProject(c, u, projectId, revNum);
-
         //TODO: uncomment after datasets are created
-        List<Map<String, Timeline>> timelines = new ArrayList<>();
+//        List<Map<String, Timeline>> timelines = new ArrayList<>();
+//        UserSchema schema = SNPRC_schedulerManager.getSNPRC_schedulerUserSchema(c, u);
+//        TableInfo timelineTable =  SNPRC_schedulerSchema.getInstance().getTableInfoTimeline();
+//        SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("ProjectId"), projectId, CompareType.EQUAL);
+//        filter.addCondition(FieldKey.fromParts("RevisionNum"), revNum, CompareType.EQUAL);
+//        TableSelector ts = new TableSelector(timelineTable, filter, null);
+//
+//        List<Timeline> timelines = new TableSelector(table, filter, null).getArrayList(Timeline.class);
 
-        /*UserSchema schema = SNPRC_schedulerManager.getSNPRC_schedulerUserSchema(c, u);
+//        try (TableResultSet rs = ts.getResultSet())
+//        {
+//            Timeline timeline = new Timeline();
+//
+//            for (Map<String, Object> row : rs)
+//            {
+//
+//                //timelines.add();
+//            }
+//        }
+//        catch (SQLException e)
+//        {
+//        }
 
-        SQLFragment sql = new SQLFragment("SELECT timelineId FROM ");
-        sql.append(schema.getTable(SNPRC_schedulerSchema.TABLE_NAME_TIMELINE), "t");
-        sql.append(" WHERE t.HasItems = 'true'");
-        SqlSelector selector = new SqlSelector(schema.getDbSchema(), sql);
+            DateFormat formatString = new SimpleDateFormat("MM/dd/yyyy");
+            List<JSONObject> timelines = new ArrayList<>();
+            //List<Map<String, Timeline>> timelines = new ArrayList<>();
+            //List<Timeline> timelines = new ArrayList<>();
 
-        try (TableResultSet rs = selector.getResultSet())
+
+
+        try
         {
-            for (Map<String, Object> row : rs)
-            {
-                timelines.add(row);
-            }
+            Timeline timeline1 = new Timeline();
+            timeline1.setTimelineId(1);
+            timeline1.setDescription("Timeline #1");
+            timeline1.setStartDate(formatString.parse("01/01/2018"));
+            timeline1.setEndDate(formatString.parse("12/31/2018"));
+            timeline1.setLeadTechs("John Wayne, Clint Eastwood");
+            timeline1.setObjectId(GUID.makeGUID());
+            timeline1.setProjectId(1);
+            timeline1.setRevisionNum(0);
+            timeline1.setDateCreated(formatString.parse("10/1/2018"));
+            timeline1.setDateModified(formatString.parse("10/4/2018"));
+            timeline1.setCreatedBy("thawkins");
+            timeline1.setModifiedBy("dsmith");
+
+
+            timelines.add(timeline1.toJSON(c, u));
+
+            Timeline timeline2 = new Timeline();
+            timeline2.setTimelineId(2);
+            timeline2.setDescription("Timeline #2");
+            timeline2.setStartDate(formatString.parse("02/1/2018"));
+            timeline2.setEndDate(formatString.parse("12/30/2018"));
+            timeline2.setLeadTechs("Zaphod Beeblebrox, Trisha McMillian");
+            timeline2.setObjectId(GUID.makeGUID());
+            timeline2.setProjectId(1);
+            timeline2.setRevisionNum(0);
+            timeline2.setDateCreated(formatString.parse("09/20/2018"));
+            timeline2.setDateModified(formatString.parse("10/1/2018"));
+            timeline2.setCreatedBy("srouse");
+            timeline2.setModifiedBy("charlesp");
+
+
+
+            timelines.add(timeline2.toJSON(c, u));
         }
-        catch (SQLException e)
-        {
-        }*/
 
+        catch (Exception e)
+
+        {
+            throw new ApiUsageException(e);
+        }
         return timelines;
     }
-
 }

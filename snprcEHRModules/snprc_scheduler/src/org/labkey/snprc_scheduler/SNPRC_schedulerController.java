@@ -16,20 +16,26 @@
 
 package org.labkey.snprc_scheduler;
 
+import org.json.JSONObject;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
+import org.labkey.api.action.ApiUsageException;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
+import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
 import org.labkey.snprc_scheduler.domains.Timeline;
+import org.labkey.snprc_scheduler.services.SNPRC_schedulerService;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -43,6 +49,7 @@ public class SNPRC_schedulerController extends SpringActionController
         setActionResolver(_actionResolver);
     }
 
+    //http://deepthought:8080/labkey/snprc_scheduler/snprc/Begin.view?
     @RequiresPermission(ReadPermission.class)
     public class BeginAction extends SimpleViewAction
     {
@@ -50,51 +57,47 @@ public class SNPRC_schedulerController extends SpringActionController
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
+            root.addChild("Procedure scheduling", new ActionURL(BeginAction.class, getContainer()));
             return root;
-
         }
 
         @Override
         public ModelAndView getView(Object bla, BindException errors)
         {
-
             return new JspView<>("/org/labkey/snprc_scheduler/view/schedule.jsp");
         }
-
-
     }
 
-    //http://deepthought:8080/labkey/snprc_scheduler/snprc/getBla.view?
+    // http://deepthought:8080/labkey/snprc_scheduler/snprc/getActiveTimelines.view?ProjectId=1&RevisionNum=1
     @RequiresPermission(ReadPermission.class)
-    public class GetBlaAction extends ApiAction<Timeline>
+    public class getActiveTimelines extends ApiAction<Timeline>
     {
         @Override
-        public ApiResponse execute(Timeline o, BindException errors)
+        public ApiResponse execute(Timeline timeline, BindException errors)
         {
+            Map<String, Object> props = new HashMap<>();
 
-            Map<String, Object> props = new HashMap<String, Object>();
+            if (timeline.getProjectId() != null && timeline.getRevisionNum() != null )
+            {
+                try
+                {
+                    List<JSONObject> timelines = SNPRC_schedulerService.get().getActiveTimelines(getContainer(), getUser(),
+                            timeline.getProjectId(), timeline.getRevisionNum(), new BatchValidationException());
 
-            props.put("rows", "This is a test");
-
+                    props.put("success", true);
+                    props.put("rows", timelines);
+                }
+                catch (ApiUsageException e)
+                {
+                    props.put("success", false);
+                    props.put("message", e.getMessage());
+                }
+            }
+            else {
+                props.put("success", false);
+                props.put("message", "ProjectId and RevisionNum are required");
+            }
             return new ApiSimpleResponse(props);
         }
     }
-
-
-
-//    @RequiresPermission(ReadPermission.class)
-//    public class BeginAction extends SimpleViewAction
-//    {
-//        public ModelAndView getView(Object o, BindException errors)
-//        {
-//            return new JspView("/org/labkey/snprc_scheduler/view/hello.jsp");
-//        }
-//
-//        public NavTree appendNavTrail(NavTree root)
-//        {
-//            return root;
-//        }
-//    }
-
-
 }
