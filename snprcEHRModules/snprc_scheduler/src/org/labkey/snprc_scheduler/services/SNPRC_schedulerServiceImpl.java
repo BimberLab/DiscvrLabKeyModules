@@ -71,7 +71,7 @@ public class SNPRC_schedulerServiceImpl implements SNPRC_schedulerService
             timeline1.setEndDate(formatString.parse("12/31/2018"));
             timeline1.setLeadTechs("John Wayne, Clint Eastwood");
             timeline1.setObjectId(GUID.makeGUID());
-            timeline1.setProjectId(1);
+            timeline1.setProjectId(20);
             timeline1.setRevisionNum(0);
             timeline1.setDateCreated(formatString.parse("10/1/2018"));
             timeline1.setDateModified(formatString.parse("10/4/2018"));
@@ -88,7 +88,7 @@ public class SNPRC_schedulerServiceImpl implements SNPRC_schedulerService
             timeline2.setEndDate(formatString.parse("12/30/2018"));
             timeline2.setLeadTechs("Zaphod Beeblebrox, Trisha McMillian");
             timeline2.setObjectId(GUID.makeGUID());
-            timeline2.setProjectId(1);
+            timeline2.setProjectId(20);
             timeline2.setRevisionNum(0);
             timeline2.setDateCreated(formatString.parse("09/20/2018"));
             timeline2.setDateModified(formatString.parse("10/1/2018"));
