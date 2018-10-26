@@ -17,7 +17,8 @@ import { ANIMAL_LIST_RECEIVED,
          PROJECT_LIST_REQUEST_FAILED,
          PROJECT_SELECTED,
          PROJECT_LIST_FILTERED,
-         ANIMAL_LIST_FILTERED
+         ANIMAL_LIST_FILTERED,
+         TIMELINE_LIST_RECEIVED
        } from "../actions/dataActions";
 
 export default (state = { }, action) => {  
@@ -81,6 +82,11 @@ export default (state = { }, action) => {
                     }
                 })
             } else nextState.animals = nextState.allAnimals;
+            break;
+        case TIMELINE_LIST_RECEIVED:
+            // action payload is the timeline array
+            nextState.allTimelines = action.payload;
+            nextState.timelines = action.payload;
             break;
     };
     if (verboseOutput) {

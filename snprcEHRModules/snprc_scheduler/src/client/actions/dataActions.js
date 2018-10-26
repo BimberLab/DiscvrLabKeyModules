@@ -50,19 +50,19 @@ export function createAction(type, payload) {
 }
 
 export function fetchProjects() {
-    return (dispatch, getState) => {
+    return (dispatch) => {
         dispatch(createAction(PROJECT_LIST_REQUESTED));
         LABKEY.Query.selectRows({
             queryName: 'ProjectDetails', requiredVersion: 9.1, schemaName: 'snd', filterArray: [], sort: 'ProjectId,RevisionNum',
             columns: 'ProjectId,RevisionNum,ChargeId,Description,StartDate,EndDate,ProjectType,VsNumber,Active,ObjectId,iacuc,veterinarian',
             success: (results) => { dispatch(createAction(PROJECT_LIST_RECEIVED, results.rows)); },
-            failure: (error) => { dispatch(createAction(PROJECT_LIST_REQUEST_FAILED, error)) }
+            failure: (error) => { dispatch(createAction(PROJECT_LIST_REQUEST_FAILED, error)); }
         });
     };
 }
 
 export function fetchAnimalsByProject(projectId, revision = 0) {
-    return (dispatch, getState) => {
+    return (dispatch) => {
         dispatch(createAction(ANIMAL_LIST_REQUESTED));
         LABKEY.Query.selectRows({
             queryName: 'AnimalsByProject', requiredVersion: 9.1, schemaName: 'snd', filterArray: [ 
@@ -89,14 +89,21 @@ export function filterAnimals(pattern) {
 }
 
 export function selectProject(projectId, revision = 0) {
-    return (dispatch, getState) => {
+    return (dispatch) => {
         dispatch(createAction(PROJECT_SELECTED, projectId));
         dispatch(fetchAnimalsByProject(projectId, revision));
+        dispatch(fetchTimelinesByProject(projectId, revision));
     }
 }
 
-export function fetchTimelines(projectId, revision = 0) {
-    return (dispatch, getState) => {
+export function fetchTimelinesByProject(projectId, revision = 0) {
+    let API_ENDPOINT = 'http://localhost:8080/labkey/snprc_scheduler/snprc/getActiveTimelines.view?ProjectId=' + projectId + '&RevisionNum=' + revision
+    return (dispatch) => {
         dispatch(createAction(TIMELINE_LIST_REQUESTED, {projectId, revision} ));
+        fetch(API_ENDPOINT)
+        .then(response => response.json())
+        .then(data => { if (data.success) dispatch(createAction(TIMELINE_LIST_RECEIVED, data.rows)); })
+        .catch((error) => { dispatch(createAction(TIMELINE_LIST_REQUEST_FAILED, error)) });
+
     }    
 }

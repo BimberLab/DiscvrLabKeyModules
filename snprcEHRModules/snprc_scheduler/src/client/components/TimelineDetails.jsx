@@ -1,63 +1,51 @@
 import React from 'react';
 
+const FORCE_RENDER = true;
+
 class TimelineDetails extends React.Component {
 
     constructor(props) {
         super(props);
         this.state = { 
             value: '',
-            selectedProject: null
+            selectedTimeline: (this.props.store.getState().project.selectedTimeline || null)
         };
-        this.props.store.subscribe(this.handleStoreUpdate);
+        this.disconnect = this.props.store.subscribe(this.handleStoreUpdate);
     }
 
+    componentWillUnmount = () => this.disconnect();
+
     handleStoreUpdate = () => {
-        let selectedProject = this.props.store.getState().project.selectedProject || null;
-        //this.setState({ selectedProject: selectedProject });
+        let selectedTimeline = this.props.store.getState().project.selectedTimeline || null;
+        this.setState({ selectedTimeline: selectedTimeline });
     }
 
     render() {
-
-        let textLeft = {
-            textAlign: 'left'
-        }
-
-        
-
-        if (this.state.selectedProject != null) {
-            return (<div className='container' style={textLeft}>
+        if (this.state.selectedTimeline != null || FORCE_RENDER) {
+            return (
+            <div className='container' style={{textAlign: 'left'}}>
                 <div className='row input-row'>
-                    <div className='col-sm-2'><label>Cost Account</label></div>
+                    <div className='col-sm-2'><label>Project</label></div>
+                    <div className='col-sm-4'><input type='text' className='input-wide' readOnly /></div>
+                    <div className='col-sm-2'><label>Study Notes</label></div>
+                    <div className='col-sm-4'><input type='textarea' className='input-wide study-notes' readOnly /></div>
+                </div>
+                <div className='row input-row'>
+                    <div className='col-sm-2'><label>Research Coordinator</label></div>
                     <div className='col-sm-4'><input type='text' className='input-wide' readOnly /></div>
                 </div>
                 <div className='row input-row'>
-                    <div className='col-sm-2'><label>Charge ID</label></div>
-                    <div className='col-sm-4'><input type='text' className='input-wide' readOnly value={this.state.selectedProject.ChargeId.value || ''} /></div>
-                </div>
-                <div className='row input-row'>
-                    <div className='col-sm-2'><label>IACUC</label></div>
-                    <div className='col-sm-4'><input type='text' className='input-wide' readOnly value={this.state.selectedProject.Iacuc.value || ''} /></div>
-                </div>
-                <div className='row input-row'>
-                    <div className='col-sm-2'><label>Primary Vet</label></div>
-                    <div className='col-sm-4'><input type='text' className='input-wide' readOnly value={this.state.selectedProject.veterinarian.value || ''}/></div>
-                </div>
-                <div className='row input-row'>
-                    <div className='col-sm-2'><label>Secondary Vet</label></div>
+                    <div className='col-sm-2'><label>Lead Technitian</label></div>
                     <div className='col-sm-4'><input type='text' className='input-wide' readOnly /></div>
                 </div>
+
                 <div className='row input-row'>
-                    <div className='col-sm-2'><label>VS Number</label></div>
-                    <div className='col-sm-4'><input type='text' className='input-wide' readOnly value={this.state.selectedProject.VsNumber.value || ''}/></div>
+                    <div className='col-sm-2'><label>Date Created</label></div>
+                    <div className='col-sm-2'><input type='text' className='input-wide' readOnly /></div>
+                    <div className='col-sm-2'><label>Date Modified</label></div>
+                    <div className='col-sm-2'><input type='text' className='input-wide' readOnly /></div>
                 </div>
-                <div className='row input-row'>
-                    <div className='col-sm-2'><label>Start Date</label></div>
-                    <div className='col-sm-4'><input type='text' className='input-wide' readOnly value={this.state.selectedProject.StartDate.value || ''} /></div>
-                </div>
-                <div className='row input-row'>
-                    <div className='col-sm-2'><label>End Date</label></div>
-                    <div className='col-sm-4'><input type='text' className='input-wide' readOnly value={this.state.selectedProject.EndDate.value || ''}/></div>
-                </div>
+
             </div>)
         } else {
             return <div>Please select a timeline to view it's details</div>

@@ -1,6 +1,6 @@
 
 .spacer-row {
-    min-height: 60px;
+    min-height: 30px;
   }
   
   .no-border {
@@ -15,7 +15,18 @@
   }
   
   .input-group-addon-buffer {
-    width: 36px;
+    width: 36px; 
+
+  }
+
+  .smooth-border {
+    border: 1px solid;
+    border-color: rgb(165, 165, 165);
+    border-radius: 3px;    
+  }
+
+  .input-group-left-margin {
+    margin-left: 20px;
   }
 
   .bottom-padding-8 {
@@ -45,3 +56,9 @@
     top: 0px !important;
   }
   
+  .study-notes {
+    height: 104px !important;
+    position: fixed;
+    margin-left: -85px;
+    width: 380px !important;
+  }

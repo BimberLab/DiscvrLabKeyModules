@@ -101,6 +101,29 @@ public class SNPRC_schedulerServiceImpl implements SNPRC_schedulerService
 
 
             timelines.add(timeline2.toJSON(c, u));
+
+
+            Timeline timeline3 = new Timeline();
+            timeline3.setTimelineId(3);
+            timeline3.setDescription("Timeline #3");
+            timeline3.setStartDate(formatString.parse("02/1/2018"));
+            timeline3.setEndDate(formatString.parse("12/30/2018"));
+            timeline3.setLeadTechs("Henry Ford, Nicoli Tesla");
+            timeline3.setObjectId(GUID.makeGUID());
+            timeline3.setProjectId(projectId);
+            timeline3.setRevisionNum(revisionNum);
+            timeline3.setDateCreated(formatString.parse("09/20/2018"));
+            timeline3.setDateModified(formatString.parse("10/1/2018"));
+            timeline3.setCreatedBy("dsmith");
+            timeline3.setModifiedBy("charlesp");
+            timeline3.setSchedulerNotes("Of all the things i've lost in life, i miss my mind the most");
+            timeline3.setIsDraft(false);
+
+
+
+            timelines.add(timeline3.toJSON(c, u));
+
+
         }
 
         catch (Exception e)

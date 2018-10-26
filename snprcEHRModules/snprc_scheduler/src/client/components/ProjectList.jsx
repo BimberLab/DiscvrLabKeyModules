@@ -11,7 +11,6 @@
 import React from 'react';
 import ReactDataGrid from 'react-data-grid';
 import Glyphicon from 'react-bootstrap/lib/Glyphicon'
-import {connect} from "react-redux";
 import { selectProject, filterProjects } from '../actions/dataActions';
 
 const verboseOutput = false;
@@ -31,8 +30,10 @@ class ProjectList extends React.Component {
             selectedProjects: [],
         };
         // handle store changes
-        this.props.store.subscribe(this.handleStoreUpdate); 
+        this.disconnect = this.props.store.subscribe(this.handleStoreUpdate); 
     }
+    
+    componentWillUnmount = () => this.disconnect();
     
     onProjectRowsSelected = (rows) => {;
         let selectedProject = rows[0].row;
@@ -113,4 +114,3 @@ class ProjectList extends React.Component {
 }
 
 export default ProjectList;
-//export default connect()(ProjectList);
