@@ -228,7 +228,7 @@ public class Timeline
     }
 
     @NotNull
-    public Map<String, Object> getTimelineRow(Container c)
+    public Map<String, Object> toMap(Container c)
     {
         Map<String, Object> timelineValues = new ArrayListMap<>();
         timelineValues.put(TIMELINE_ID, getTimelineId());

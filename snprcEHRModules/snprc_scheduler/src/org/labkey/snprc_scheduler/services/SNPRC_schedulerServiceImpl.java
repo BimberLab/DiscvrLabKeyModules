@@ -3,8 +3,11 @@ package org.labkey.snprc_scheduler.services;
 import org.json.JSONObject;
 import org.labkey.api.action.ApiUsageException;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.security.User;
+import org.labkey.api.snd.SNDService;
+import org.labkey.api.snprc_scheduler.SNPRC_schedulerService;
 import org.labkey.api.util.GUID;
 import org.labkey.snprc_scheduler.domains.Timeline;
 
@@ -23,6 +26,14 @@ public class SNPRC_schedulerServiceImpl implements SNPRC_schedulerService
     private SNPRC_schedulerServiceImpl()
     {
     }
+
+    public List<JSONObject> getActiveProjects(Container c, User u, SimpleFilter[] filters) {
+
+       return  SNDService.get().getActiveProjects(c,u, filters);
+
+    }
+
+
 
     /**
      * returns a list of active timelines for a projectId/RevisionNum
