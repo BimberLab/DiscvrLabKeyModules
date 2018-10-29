@@ -51,6 +51,7 @@ import org.labkey.api.util.Pair;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.laboratory.assay.AssayHelper;
+import org.labkey.laboratory.query.DefaultAssayCustomizer;
 import org.labkey.laboratory.query.LaboratoryTableCustomizer;
 
 import java.io.File;
@@ -368,6 +369,11 @@ public class LaboratoryServiceImpl extends LaboratoryService
     public TableCustomizer getLaboratoryTableCustomizer()
     {
         return new LaboratoryTableCustomizer();
+    }
+
+    public TableCustomizer getAssayTableCustomizer()
+    {
+        return new DefaultAssayCustomizer();
     }
 
     public Set<DemographicsSource> getDemographicsSources(Container c, User u) throws IllegalArgumentException

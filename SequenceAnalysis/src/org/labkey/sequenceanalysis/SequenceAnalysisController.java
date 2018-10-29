@@ -4827,8 +4827,7 @@ public class SequenceAnalysisController extends SpringActionController
     {
         public ApiResponse execute(ImportTracksForm form, BindException errors) throws Exception
         {
-            Container target = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
-            PipeRoot root = PipelineService.get().getPipelineRootSetting(target);
+            PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());
             if (root == null || !root.isValid())
             {
                 throw new NotFoundException();
@@ -4876,6 +4875,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                 try
                 {
+                    Container target = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
                     ImportGenomeTrackPipelineJob job = new ImportGenomeTrackPipelineJob(target, getUser(), null, root, o.getInt("libraryId"), o.getString("name"), file, file.getName(), o.getString("description"), form.getDoChrTranslation() == null ? true : form.getDoChrTranslation());
                     toCreate.add(job);
                 }
