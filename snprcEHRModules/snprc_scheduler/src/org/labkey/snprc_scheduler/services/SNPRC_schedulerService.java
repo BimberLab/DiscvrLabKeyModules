@@ -1,10 +1,9 @@
-package org.labkey.api.snprc_scheduler;
+package org.labkey.snprc_scheduler.services;
 
 
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
-import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.security.User;
 import org.labkey.api.services.ServiceRegistry;
@@ -24,8 +23,6 @@ public interface SNPRC_schedulerService
     }
 
     List<JSONObject> getActiveTimelines(Container c, User u, int projectId, int revisionNum, BatchValidationException errors);
-
-    List<JSONObject> getActiveProjects(Container c, User u, SimpleFilter[] filters);
 
 }
 

@@ -2438,7 +2438,6 @@ snprcEHRModules/snprc_r24/src/org/labkey/snprc_r24/snprc_r24Module.java -text
 snprcEHRModules/snprc_r24/src/org/labkey/snprc_r24/snprc_r24Schema.java -text
 snprcEHRModules/snprc_r24/src/org/labkey/snprc_r24/view/hello.jsp -text
 snprcEHRModules/snprc_scheduler/.babelrc -text
-snprcEHRModules/snprc_scheduler/api-src/org/labkey/api/snprc_scheduler/SNPRC_schedulerService.java -text
 snprcEHRModules/snprc_scheduler/build.gradle -text
 snprcEHRModules/snprc_scheduler/module.properties -text
 snprcEHRModules/snprc_scheduler/package-lock.json -text
@@ -2482,6 +2481,7 @@ snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/security/SNPRC_sc
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/security/SNPRC_schedulerEditorsRole.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/security/SNPRC_schedulerReadersPermission.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/security/SNPRC_schedulerReadersRole.java -text
+snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/services/SNPRC_schedulerService.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/services/SNPRC_schedulerServiceImpl.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/view/SchedulerWebPart.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/view/schedule.jsp -text
