@@ -2,7 +2,6 @@ package org.labkey.snprc_scheduler.domains;
 
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.collections.ArrayListMap;
 import org.labkey.api.data.Container;
@@ -35,15 +34,8 @@ public class TimelineItem
     public static final String TIMELINEITEM_PROJECT_ITEM = "ProjectItem";
 
 
-    public TimelineItem(@Nullable Integer timelineItemId, @NotNull Integer timelineId, @NotNull Integer projectItemId, @NotNull int studyDay, String objectId)
+    public TimelineItem()
     {
-        _timelineItemId = timelineItemId;
-        _timelineId = timelineId;
-        _projectItemId = projectItemId;
-        _studyDay = studyDay;
-        _objectId = objectId;
-
-        // TODO: get _projectItem from snd.project/snd.projectItems tables
     }
 
     public Integer getTimelineItemId()
@@ -107,7 +99,7 @@ public class TimelineItem
     }
 
     @NotNull
-    public Map<String, Object> getTimelineItemRow(Container c)
+    public Map<String, Object> toMap(Container c)
     {
         Map<String, Object> timelineValues = new ArrayListMap<>();
         timelineValues.put(TIMELINEITEM_TIMELINE_ITEM_ID, getTimelineItemId());

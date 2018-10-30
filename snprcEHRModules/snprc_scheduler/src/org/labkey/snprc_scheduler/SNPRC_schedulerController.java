@@ -21,19 +21,29 @@ import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ApiUsageException;
+import org.labkey.api.action.SimpleApiJsonForm;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
+import org.labkey.api.data.CompareType;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.BatchValidationException;
+import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryService;
+import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.snd.SNDService;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
 import org.labkey.snprc_scheduler.domains.Timeline;
-import org.labkey.snprc_scheduler.services.SNPRC_schedulerService;
+import org.labkey.api.snprc_scheduler.SNPRC_schedulerService;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,6 +107,62 @@ public class SNPRC_schedulerController extends SpringActionController
                 props.put("success", false);
                 props.put("message", "ProjectId and RevisionNum are required");
             }
+            return new ApiSimpleResponse(props);
+        }
+    }
+    // http://deepthought:8080/labkey/snprc_scheduler/snprc/getActiveProjects.view?
+    @RequiresPermission(ReadPermission.class)
+    public class getActiveProjects extends ApiAction<SimpleApiJsonForm>
+    {
+        @Override
+        public ApiResponse execute(SimpleApiJsonForm simpleApiJsonForm, BindException errors)
+        {
+            Map<String, Object> props = new HashMap<>();
+            List<JSONObject> jsonProjects = new ArrayList<>();
+
+            // add filters to remove colony maintenance, behavior, clinical, and legacy projects
+            SimpleFilter[] filters = new SimpleFilter[2];
+            filters[0] = new SimpleFilter(FieldKey.fromParts("ReferenceId"), 4000, CompareType.LT);
+            filters[1] = new SimpleFilter(FieldKey.fromParts("ReferenceId"), 0, CompareType.GT);
+
+            List<Map<String, Object>> projects = SNDService.get().getActiveProjects(getContainer(), getUser(), filters);
+
+            if (projects.size() > 0)
+            {
+                props.put("success", true);
+
+                //   SND returned the project table data, need to add Iacuc and CostAccount fields from ehr.project table
+                UserSchema schema = QueryService.get().getUserSchema(getUser(), getContainer(), "ehr");
+                TableInfo ti = schema.getTable("project");
+
+                // one project at a time
+                for (Map<String, Object> project: projects)
+
+                 {
+                     JSONObject jsonProject = new JSONObject(project);
+
+                     SimpleFilter filter = new SimpleFilter();
+                     filter.addCondition(FieldKey.fromString("project"), project.get("referenceId"), CompareType.EQUAL);
+
+                     //project (AKA chargeId) is the PK - should only get one row back
+                     Map<String, Object> ehrProject = new TableSelector(ti, filter, null).getObject(Map.class);
+
+                     if (ehrProject != null)
+                     {
+                         jsonProject.put("Iacuc", ehrProject.get("protocol"));
+                         jsonProject.put("CostAccount", ehrProject.get("account"));
+                     }
+                     jsonProjects.add(jsonProject);
+                }
+                props.put("rows", jsonProjects);
+            }
+            else
+            {
+                props.put("success", false);
+                props.put("message", "No Active Projects");
+            }
+
+
             return new ApiSimpleResponse(props);
         }
     }

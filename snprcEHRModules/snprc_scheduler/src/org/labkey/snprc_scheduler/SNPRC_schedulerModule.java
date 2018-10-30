@@ -29,7 +29,7 @@ import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.services.ServiceRegistry;
-import org.labkey.snprc_scheduler.services.SNPRC_schedulerService;
+import org.labkey.api.snprc_scheduler.SNPRC_schedulerService;
 import org.labkey.api.view.BaseWebPartFactory;
 import org.labkey.api.view.Portal;
 import org.labkey.api.view.ViewContext;
