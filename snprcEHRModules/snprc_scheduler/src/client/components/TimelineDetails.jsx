@@ -42,8 +42,10 @@ class TimelineDetails extends React.Component {
                 <div className='row input-row'>
                     <div className='col-sm-2'><label>Date Created</label></div>
                     <div className='col-sm-2'><input type='text' className='input-wide' readOnly /></div>
+                </div>
+                <div className='row input-row'>
                     <div className='col-sm-2'><label>Date Modified</label></div>
-                    <div className='col-sm-2'><input type='text' className='input-wide' readOnly /></div>
+                    <div className='col-sm-2'><input type='text' className='input-wide' readOnly /></div>                    
                 </div>
 
             </div>)

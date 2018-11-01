@@ -40,8 +40,10 @@ const render = () => {
     }
 };
 
-
+// ask the store to get the current projects
 store.dispatch(fetchProjects());
+
+// render the application
 render();
 
 

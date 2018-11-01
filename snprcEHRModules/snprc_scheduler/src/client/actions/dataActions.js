@@ -24,12 +24,23 @@ export const TIMELINE_LIST_REQUEST_FAILED = 'TIMELINE_LIST_REQUEST_FAILED';
 export const TIMELINE_CREATED = 'TIMELINE_CREATED';
 export const TIMELINE_SELECTED = 'TIMELINE_SELECTED';
 export const TIMELINE_REMOVED = 'TIMELINE_REMOVED';
+export const TIMELINE_DUPLICATED = 'TIMELINE_DUPLICATED';
 export const TIMELINE_STATE_CHANGED = 'TIMELINE_STATE_CHANGED';
 export const TIMELINE_DROPPED_ON_CALENDAR = 'TIMELINE_DROPPED_ON_CALENDAR';
 export const TIMELINE_ITEM_CREATED = 'TIMELINE_ITEM_CREATED';
 export const TIMELINE_ITEM_SELECTED = 'TIMELINE_ITEM_SELECTED';
 export const TIMELINE_ITEM_REMOVED = 'TIMELINE_ITEM_REMOVED';
 export const NO_OP = 'NO_OP';
+
+export const getBaseURI = () => {
+    let data = (window.location+'').toString().split('//');
+    return data[0]+'//'+data[1].split('/')[0];
+}
+
+export const BASE_URI = getBaseURI();
+export const BASE_API = '/labkey/snprc_scheduler/snprc/';
+
+const verboseOutput = false;
 
 export function createAction(type, payload) {
     switch(type) {
@@ -44,12 +55,13 @@ export function createAction(type, payload) {
         case ANIMAL_LIST_FILTERED: return { type: type, payload: payload };
         case TIMELINE_LIST_REQUESTED: return { type: type };
         case TIMELINE_LIST_RECEIVED: return { type: type, payload: payload };
-        case TIMELINE_LIST_REQUEST_FAILED: return { type: type, payload: payload, error: true }
+        case TIMELINE_LIST_REQUEST_FAILED: return { type: type, payload: payload, error: true };
+        case TIMELINE_SELECTED: return { type: type, payload: payload };
         default: return { type: type }
     }    
 }
 
-export function fetchProjects() {
+function fetchProjects_LABKEY() {
     return (dispatch) => {
         dispatch(createAction(PROJECT_LIST_REQUESTED));
         LABKEY.Query.selectRows({
@@ -61,7 +73,27 @@ export function fetchProjects() {
     };
 }
 
-export function fetchAnimalsByProject(projectId, revision = 0) {
+function fetchProjects_SND() {
+    const API_ENDPOINT = BASE_URI + BASE_API + 'getActiveProjects.view?';
+    return (dispatch) => {
+        dispatch(createAction(PROJECT_LIST_REQUESTED));
+        fetch(API_ENDPOINT)
+        .then(response => response.json())
+        .then(data => { 
+            if (data.success) dispatch(createAction(PROJECT_LIST_RECEIVED, data.rows));
+            else dispatch(createAction(PROJECT_LIST_REQUEST_FAILED, null));
+        })
+        .catch((error) => dispatch(createAction(PROJECT_LIST_REQUEST_FAILED, error)));
+    } 
+}
+
+export function fetchProjects() {
+    if (verboseOutput) console.log('fetchProjects()');
+    return fetchProjects_SND();
+}
+
+export function fetchAnimalsByProject(projectId, revision) {
+    if (verboseOutput) console.log('fetchAnimalsByProject(' + projectId + ',' + revision + ')');
     return (dispatch) => {
         dispatch(createAction(ANIMAL_LIST_REQUESTED));
         LABKEY.Query.selectRows({
@@ -76,19 +108,34 @@ export function fetchAnimalsByProject(projectId, revision = 0) {
     };
 }
 
+export function fetchTimelinesByProject(projectId, revision) {
+    if (verboseOutput) console.log('fetchTimelinesByProject(' + projectId + ',' + revision + ')');
+    const API_ENDPOINT = BASE_URI + BASE_API + 'getActiveTimelines.view?ProjectId=' + projectId + '&RevisionNum=' + revision
+    return (dispatch) => {
+        dispatch(createAction(TIMELINE_LIST_REQUESTED, {projectId, revision} ));
+        fetch(API_ENDPOINT)
+        .then(response => response.json())
+        .then(data => { if (data.success) dispatch(createAction(TIMELINE_LIST_RECEIVED, data.rows)); })
+        .catch((error) => dispatch(createAction(TIMELINE_LIST_REQUEST_FAILED, error)));
+    }    
+}
+
 export function filterProjects(pattern) {
+    if (verboseOutput) console.log('filterProjects(' + pattern + ')');
     return (dispatch) => {
         dispatch(createAction(PROJECT_LIST_FILTERED, pattern));
     }
 }
 
 export function filterAnimals(pattern) {
+    if (verboseOutput) console.log('filterAnimals(' + pattern + ')');
     return (dispatch) => {
         dispatch(createAction(ANIMAL_LIST_FILTERED, pattern));
     }
 }
 
-export function selectProject(projectId, revision = 0) {
+export function selectProject(projectId, revision) {
+    if (verboseOutput) console.log('selectProject(' + projectId + ',' + revision + ')');
     return (dispatch) => {
         dispatch(createAction(PROJECT_SELECTED, projectId));
         dispatch(fetchAnimalsByProject(projectId, revision));
@@ -96,14 +143,13 @@ export function selectProject(projectId, revision = 0) {
     }
 }
 
-export function fetchTimelinesByProject(projectId, revision = 0) {
-    let API_ENDPOINT = 'http://localhost:8080/labkey/snprc_scheduler/snprc/getActiveTimelines.view?ProjectId=' + projectId + '&RevisionNum=' + revision
+export function selectTimeline(timeline) {
+    //if (verboseOutput) console.log('selectTimeline(' + timelineId + ',' + revision + ')');
     return (dispatch) => {
-        dispatch(createAction(TIMELINE_LIST_REQUESTED, {projectId, revision} ));
-        fetch(API_ENDPOINT)
-        .then(response => response.json())
-        .then(data => { if (data.success) dispatch(createAction(TIMELINE_LIST_RECEIVED, data.rows)); })
-        .catch((error) => { dispatch(createAction(TIMELINE_LIST_REQUEST_FAILED, error)) });
-
+        dispatch(createAction(TIMELINE_SELECTED, timeline));
     }    
+}
+
+export function duplicateTimeline(source) {
+
 }

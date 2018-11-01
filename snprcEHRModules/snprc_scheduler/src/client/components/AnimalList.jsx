@@ -11,7 +11,6 @@
 import React from 'react';
 import ReactDataGrid from 'react-data-grid';
 import Glyphicon from 'react-bootstrap/lib/Glyphicon'
-import {connect} from "react-redux";
 import { filterAnimals } from '../actions/dataActions';
 
 class AnimalList extends React.Component {
@@ -22,7 +21,7 @@ class AnimalList extends React.Component {
             animals: [], 
             animalCols: [
                 { key: 'Id', name: 'ID', width: 70 },
-                { key: 'Gender', name: 'Gender', width: 80 },
+                { key: 'Gender', name: 'Gender', width: 82 },
                 { key: 'Weight', name: 'Weight', width: 90 },
                 { key: 'Age', name: 'Age', width: 130 },
             ],
@@ -30,6 +29,8 @@ class AnimalList extends React.Component {
         };
         this.props.store.subscribe(this.handleStoreUpdate); 
     }
+    
+    componentWillUnmount = () => this.disconnect();
     
     animalRowGetter = (index) => this.state.animals[index];
     
@@ -56,8 +57,8 @@ class AnimalList extends React.Component {
                     Age: a.Age.value
                 })
             });
-            this.setState({animals: formattedAnimals});
-        } else this.setState({animals: []});
+        }
+        this.setState({animals: formattedAnimals});
     }
 
     render = () => { 
@@ -82,7 +83,7 @@ class AnimalList extends React.Component {
                     {searchJSX}
                     <div>
                         <ReactDataGrid
-                            rowKey="Id"
+                            rowKey="Id4"
                             columns={this.state.animalCols}
                             rowGetter={this.animalRowGetter}
                             rowsCount={animalCount}

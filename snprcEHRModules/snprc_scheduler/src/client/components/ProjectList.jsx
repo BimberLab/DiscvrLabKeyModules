@@ -13,9 +13,9 @@ import ReactDataGrid from 'react-data-grid';
 import Glyphicon from 'react-bootstrap/lib/Glyphicon'
 import { selectProject, filterProjects } from '../actions/dataActions';
 
-const verboseOutput = false;
+const verboseOutput = true;
 
-class EmptyProjectRowsView extends React.Component { render() {return (<div> Loading projects...</div>);} }
+class EmptyProjectRowsView extends React.Component { render() {return (<div> Loading active projects...</div>);} }
 
 class ProjectList extends React.Component {
     
@@ -24,25 +24,32 @@ class ProjectList extends React.Component {
         this.state = {
             projectCols: [
                 { key: 'Iacuc', name: 'IACUC', width: 75 },
-                { key: 'Description', name: 'Description', width: 255 },
-                { key: 'Revision', name: 'Rev', width: 42 }
+                { key: 'description', name: 'Description', width: 255 },
+                { key: 'revisionNum', name: 'Rev', width: 42 }
             ],
             selectedProjects: [],
         };
-        // handle store changes
+        // wire into redux store updates
         this.disconnect = this.props.store.subscribe(this.handleStoreUpdate); 
     }
-    
+
     componentWillUnmount = () => this.disconnect();
     
-    onProjectRowsSelected = (rows) => {;
-        let selectedProject = rows[0].row;
+    onProjectRowsSelected = (rows) => {
+        let selectedProject = null;
+        if (rows.length == 1) selectedProject = rows[0].row;
+        else rows = [];
         this.setState({ 
             selectedProjects: rows.map(r => r.rowIdx),
             selectedProject: selectedProject
         });
-        if (verboseOutput) console.log("Project [" + selectedProject.ProjectId + "] selected.");
-        this.props.store.dispatch(selectProject(selectedProject.ProjectId));
+        if (selectedProject != null) {
+            if (rows.length > 0) this.props.store.dispatch(selectProject(selectedProject.projectId, selectedProject.revisionNum));
+            if (verboseOutput) {
+                console.log("ProjectID " + selectedProject.projectId + " selected.");
+                console.log(selectedProject);
+            }             
+        }
     }
 
     onProjectRowsDeselected = (rows) => {
@@ -55,28 +62,12 @@ class ProjectList extends React.Component {
     handleProjectSearchChange = (event) => this.props.store.dispatch(filterProjects(event.target.value));
 
     handleStoreUpdate = () => {
-        if (verboseOutput) console.log('handeling store update...');
+        //if (verboseOutput) console.log('ProjectList() -> handling store update...');
         let projects = this.props.store.getState().project.projects || [];
-        let projectCount = projects.length;
-        var newProjects = [];
-        projects.forEach((p) => {
-            let data = {
-                ProjectId: p.ProjectId.value,
-                Description: p.Description.value.toString(),
-                ChargeId: p.ChargeId.value,
-                StartDate: p.StartDate.value,
-                EndDate: p.EndDate.value,
-                Iacuc: p.Iacuc.value,
-                Revision: p.RevisionNum.value,
-                vet1: p.veterinarian.value,
-                vet2: null
-            }
-            newProjects.push(data);
-        })
         this.setState({
-            projects: newProjects,
-            projectCount: projectCount
-        });    
+            projects: projects,
+            projectCount: projects.length
+        });
     }
 
     render = () => { 
