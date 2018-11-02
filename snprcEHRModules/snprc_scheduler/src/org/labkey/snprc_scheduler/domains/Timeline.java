@@ -8,9 +8,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.security.User;
 import org.labkey.api.util.DateUtil;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 /**
  * Created by thawkins on 9/13/2018.
@@ -21,36 +19,41 @@ import java.util.Map;
 public class Timeline
 {
     private Integer _timelineId;
+    private Integer _revisionNum;
     private String _description;
     private Date _startDate;
     private Date _endDate;
     private String _leadTechs; // comma separated list of technicians
+    private String _notes;
+    private String _schedulerNotes;
     private String _objectId;
-    private List<TimelineItem> _timelineItems = new ArrayList<>();
     private Integer _projectId;
-    private Integer _revisionNum;
+    private Integer _projectRevNum;
     private Date _dateCreated;
     private Date _dateModified;
     private String _createdBy;
     private String _modifiedBy;
-    private String _schedulerNotes;
     private boolean _isDraft;
+    private Integer _qcState;
 
     public static final String TIMELINE_ID = "TimelineId";
+    public static final String TIMELINE_REVISION_NUM = "RevisionNum";
     public static final String TIMELINE_DESCRIPTION = "Description";
     public static final String TIMELINE_STARTDATE = "StartDate";
     public static final String TIMELINE_ENDDATE = "EndDate";
     public static final String TIMELINE_OBJECTID = "ObjectId";
     public static final String TIMELINE_CONTAINER = "Container";
     public static final String TIMELINE_LEAD_TECHS = "LeadTechs";
+    public static final String TIMELINE_NOTES = "Notes";
     public static final String TIMELINE_SCHEDULER_NOTES = "SchedulerNotes";
     public static final String TIMELINE_PROJECT_ID = "ProjectId";
-    public static final String TIMELINE_REVISION_NUM = "RevisionNum";
+    public static final String TIMELINE_PROJECT_REV_NUM = "ProjectRevNum";
     public static final String TIMELINE_DATE_CREATED = "DateCreated";
     public static final String TIMELINE_DATE_MODIFIED = "DateModified";
     public static final String TIMELINE_CREATED_BY = "CreatedBy";
     public static final String TIMELINE_MODIFIED_BY = "ModifiedBy";
     public static final String TIMELINE_IS_DRAFT = "IsDraft";
+    public static final String TIMELINE_QCSTATE = "qcState";
 
     public Timeline()
     {
@@ -129,23 +132,6 @@ public class Timeline
     {
         _isDraft = isDraft;
     }
-
-
-//    public Project getProject()
-//    {
-//        return _project;
-//    }
-//
-//    public void setProject(Container c, User u, Integer projectId, Integer revNum)
-//    {
-//        if (projectId != null && revNum != null)  {
-//            _project = SNDService.get().getProject(c, u, projectId, revNum);
-//        }
-//    }
-//    public void setProject(Project project)
-//    {
-//        _project = project;
-//    }
 
     public Integer getProjectId()
     {
@@ -227,36 +213,69 @@ public class Timeline
         _schedulerNotes = schedulerNotes;
     }
 
+    public Integer getProjectRevNum()
+    {
+        return _projectRevNum;
+    }
+
+    public void setProjectRevNum(Integer projectRevNum)
+    {
+        _projectRevNum = projectRevNum;
+    }
+
+    public boolean isDraft()
+    {
+        return _isDraft;
+    }
+
+    public void setDraft(boolean draft)
+    {
+        _isDraft = draft;
+    }
+
+    public Integer getQcState()
+    {
+        return _qcState;
+    }
+
+    public void setQcState(Integer qcState)
+    {
+        _qcState = qcState;
+    }
+
+    public String getNotes()
+    {
+        return _notes;
+    }
+
+    public void setNotes(String notes)
+    {
+        _notes = notes;
+    }
+
     @NotNull
     public Map<String, Object> getTimelineRow(Container c)
     {
         Map<String, Object> timelineValues = new ArrayListMap<>();
         timelineValues.put(TIMELINE_ID, getTimelineId());
+        timelineValues.put(TIMELINE_REVISION_NUM, getRevisionNum());
         timelineValues.put(TIMELINE_DESCRIPTION, getDescription());
         timelineValues.put(TIMELINE_STARTDATE, getStartDate());
         timelineValues.put(TIMELINE_ENDDATE, getEndDate());
         timelineValues.put(TIMELINE_OBJECTID, getObjectId());
         timelineValues.put(TIMELINE_CONTAINER, c.getId());
         timelineValues.put(TIMELINE_LEAD_TECHS, getLeadTechs());
+        timelineValues.put(TIMELINE_NOTES, getNotes());
         timelineValues.put(TIMELINE_SCHEDULER_NOTES,getSchedulerNotes());
         timelineValues.put(TIMELINE_PROJECT_ID, getProjectId());
-        timelineValues.put(TIMELINE_REVISION_NUM, getRevisionNum());
+        timelineValues.put(TIMELINE_PROJECT_REV_NUM, getProjectRevNum());
         timelineValues.put(TIMELINE_DATE_CREATED, getDateCreated());
         timelineValues.put(TIMELINE_DATE_MODIFIED, getDateModified());
         timelineValues.put(TIMELINE_CREATED_BY, getCreatedBy());
         timelineValues.put(TIMELINE_MODIFIED_BY, getModifiedBy());
         timelineValues.put(TIMELINE_IS_DRAFT, getIsDraft());
+        timelineValues.put(TIMELINE_QCSTATE, getQcState());
 
-//
-//        if (_project != null)
-//        {
-//
-//            Map<String, Object> project = getProject().getProjectRow(c);
-//            for (String key : project.keySet())
-//            {
-//                timelineValues.put(key, project.get(key));
-//            }
-//        }
         return timelineValues;
     }
 
@@ -268,6 +287,8 @@ public class Timeline
 
         if (getTimelineId() != null)
             json.put(TIMELINE_ID, getTimelineId());
+        if (getRevisionNum() != null)
+            json.put(TIMELINE_REVISION_NUM, getRevisionNum());
         json.put(TIMELINE_DESCRIPTION, getDescription());
         json.put(TIMELINE_STARTDATE, getStartDate());
         if (getEndDate() != null)
@@ -277,29 +298,16 @@ public class Timeline
 
         json.put(TIMELINE_CONTAINER, c.getId());
         json.put(TIMELINE_LEAD_TECHS, getLeadTechs());
+        json.put(TIMELINE_NOTES, getNotes());
         json.put(TIMELINE_SCHEDULER_NOTES,getSchedulerNotes());
         json.put(TIMELINE_PROJECT_ID, getProjectId());
-        json.put(TIMELINE_REVISION_NUM, getRevisionNum());
+        json.put(TIMELINE_PROJECT_REV_NUM, getProjectRevNum());
         json.put(TIMELINE_DATE_CREATED, getDateCreated());
         json.put(TIMELINE_DATE_MODIFIED, getDateModified());
         json.put(TIMELINE_CREATED_BY, getCreatedBy());
         json.put(TIMELINE_MODIFIED_BY, getModifiedBy());
         json.put(TIMELINE_IS_DRAFT, getIsDraft());
-
-
-        // add timeline items to json object
-
-//        if (getTimelineItems(getTimelineId()).size() > 0)
-//        {
-//            JSONArray jsonTimelineItems = new JSONArray();
-//            for (TimelineItem tiemlineItem : getTimelineItems())
-//            {
-//                jsonTimelineItems.put(timelineItem.toJSON(c, u));
-//            }
-//            json.put(TIMELINE_ITEMS, jsonTimelineItems);
-//        }
-//        if (getProject() != null)
-//            json.put(TIMELINE_PROJECT, getProject().toJSON(c, u));
+        json.put(TIMELINE_QCSTATE, getQcState());
 
         return json;
     }
