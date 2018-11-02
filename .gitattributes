@@ -222,7 +222,6 @@ cnprcEHRModules/cnprc_billing/resources/etls/perdiem.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/perdiem_month.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/perdiem_rate_names.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/perdiem_rates.xml -text
-cnprcEHRModules/cnprc_billing/resources/etls/project_charge.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/resource_center.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/resource_item_costing.xml -text
 cnprcEHRModules/cnprc_billing/resources/etls/resource_item_costing_supply.xml -text
@@ -248,7 +247,6 @@ cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_account.sql -
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_billing_control.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_billing_cost_code.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_cost_code.sql -text
-cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_project_charge.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_resource_center.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_resource_item_costing.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing/q_resource_item_costing_supply.sql -text
@@ -291,7 +289,6 @@ cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_pdl_billi
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_pdl_charge_id_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_perdiem_month_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_perdiem_rates_delete.sql -text
-cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_project_charge_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_resource_center_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_resource_item_costing_delete.sql -text
 cnprcEHRModules/cnprc_billing/resources/queries/cnprcSrc_billing_aud/q_resource_item_costing_supply_delete.sql -text
@@ -399,6 +396,7 @@ cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billin
 cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-17.10-17.11.sql -text
 cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-17.11-17.12.sql -text
 cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-18.10-18.11.sql -text
+cnprcEHRModules/cnprc_billing/resources/schemas/dbscripts/sqlserver/cnprc_billing-18.30-18.31.sql -text
 cnprcEHRModules/cnprc_billing/src/org/labkey/cnprc_billing/CNPRC_BillingController.java -text
 cnprcEHRModules/cnprc_billing/src/org/labkey/cnprc_billing/CNPRC_BillingModule.java -text
 cnprcEHRModules/cnprc_billing/src/org/labkey/cnprc_billing/CNPRC_BillingSchema.java -text
