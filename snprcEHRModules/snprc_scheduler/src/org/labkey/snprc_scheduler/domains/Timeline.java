@@ -2,13 +2,16 @@ package org.labkey.snprc_scheduler.domains;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.collections.ArrayListMap;
 import org.labkey.api.data.Container;
 import org.labkey.api.security.User;
 import org.labkey.api.util.DateUtil;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 /**
  * Created by thawkins on 9/13/2018.
@@ -28,13 +31,13 @@ public class Timeline
     private String _schedulerNotes;
     private String _objectId;
     private Integer _projectId;
-    private Integer _projectRevNum;
+    private Integer _projectRevisionNum;
     private Date _dateCreated;
     private Date _dateModified;
     private String _createdBy;
     private String _modifiedBy;
-    private boolean _isDraft;
     private Integer _qcState;
+    private List<TimelineItem> _timelineItems = new ArrayList<>(); // list of TimelineItem objects associated with the timeline
 
     public static final String TIMELINE_ID = "TimelineId";
     public static final String TIMELINE_REVISION_NUM = "RevisionNum";
@@ -47,13 +50,13 @@ public class Timeline
     public static final String TIMELINE_NOTES = "Notes";
     public static final String TIMELINE_SCHEDULER_NOTES = "SchedulerNotes";
     public static final String TIMELINE_PROJECT_ID = "ProjectId";
-    public static final String TIMELINE_PROJECT_REV_NUM = "ProjectRevNum";
+    public static final String TIMELINE_PROJECT_REVISION_NUM = "ProjectRevisionNum";
     public static final String TIMELINE_DATE_CREATED = "DateCreated";
     public static final String TIMELINE_DATE_MODIFIED = "DateModified";
     public static final String TIMELINE_CREATED_BY = "CreatedBy";
     public static final String TIMELINE_MODIFIED_BY = "ModifiedBy";
-    public static final String TIMELINE_IS_DRAFT = "IsDraft";
     public static final String TIMELINE_QCSTATE = "qcState";
+    public static final String TIMELINE_TIMELINE_ITEMS = "TimelineItems";
 
     public Timeline()
     {
@@ -121,16 +124,6 @@ public class Timeline
     public void setObjectId(String objectId)
     {
         _objectId = objectId;
-    }
-
-    public boolean getIsDraft()
-    {
-        return _isDraft;
-    }
-
-    public void setIsDraft(boolean isDraft)
-    {
-        _isDraft = isDraft;
     }
 
     public Integer getProjectId()
@@ -213,24 +206,14 @@ public class Timeline
         _schedulerNotes = schedulerNotes;
     }
 
-    public Integer getProjectRevNum()
+    public Integer getProjectRevisionNum()
     {
-        return _projectRevNum;
+        return _projectRevisionNum;
     }
 
-    public void setProjectRevNum(Integer projectRevNum)
+    public void setProjectRevisionNum(Integer projectRevisionNum)
     {
-        _projectRevNum = projectRevNum;
-    }
-
-    public boolean isDraft()
-    {
-        return _isDraft;
-    }
-
-    public void setDraft(boolean draft)
-    {
-        _isDraft = draft;
+        _projectRevisionNum = projectRevisionNum;
     }
 
     public Integer getQcState()
@@ -253,8 +236,18 @@ public class Timeline
         _notes = notes;
     }
 
+    public List<TimelineItem> getTimelineItems()
+    {
+        return _timelineItems;
+    }
+
+    public void setTimelineItems(List<TimelineItem> timelineItems)
+    {
+        _timelineItems = timelineItems;
+    }
+
     @NotNull
-    public Map<String, Object> getTimelineRow(Container c)
+    public Map<String, Object> toMap(Container c)
     {
         Map<String, Object> timelineValues = new ArrayListMap<>();
         timelineValues.put(TIMELINE_ID, getTimelineId());
@@ -268,12 +261,11 @@ public class Timeline
         timelineValues.put(TIMELINE_NOTES, getNotes());
         timelineValues.put(TIMELINE_SCHEDULER_NOTES,getSchedulerNotes());
         timelineValues.put(TIMELINE_PROJECT_ID, getProjectId());
-        timelineValues.put(TIMELINE_PROJECT_REV_NUM, getProjectRevNum());
+        timelineValues.put(TIMELINE_PROJECT_REVISION_NUM, getProjectRevisionNum());
         timelineValues.put(TIMELINE_DATE_CREATED, getDateCreated());
         timelineValues.put(TIMELINE_DATE_MODIFIED, getDateModified());
         timelineValues.put(TIMELINE_CREATED_BY, getCreatedBy());
         timelineValues.put(TIMELINE_MODIFIED_BY, getModifiedBy());
-        timelineValues.put(TIMELINE_IS_DRAFT, getIsDraft());
         timelineValues.put(TIMELINE_QCSTATE, getQcState());
 
         return timelineValues;
@@ -301,15 +293,39 @@ public class Timeline
         json.put(TIMELINE_NOTES, getNotes());
         json.put(TIMELINE_SCHEDULER_NOTES,getSchedulerNotes());
         json.put(TIMELINE_PROJECT_ID, getProjectId());
-        json.put(TIMELINE_PROJECT_REV_NUM, getProjectRevNum());
+        json.put(TIMELINE_PROJECT_REVISION_NUM, getProjectRevisionNum());
         json.put(TIMELINE_DATE_CREATED, getDateCreated());
         json.put(TIMELINE_DATE_MODIFIED, getDateModified());
         json.put(TIMELINE_CREATED_BY, getCreatedBy());
         json.put(TIMELINE_MODIFIED_BY, getModifiedBy());
-        json.put(TIMELINE_IS_DRAFT, getIsDraft());
         json.put(TIMELINE_QCSTATE, getQcState());
+
+        if (getTimelineItems().size() > 0)
+        {
+            JSONArray jsonTimelineItems = new JSONArray();
+            for (TimelineItem timelineItem : getTimelineItems())
+            {
+                jsonTimelineItems.put(timelineItem.toJSON(c));
+            }
+            json.put(TIMELINE_TIMELINE_ITEMS, jsonTimelineItems);
+        }
+
 
         return json;
     }
+
+    @NotNull
+    public List<Map<String, Object>> getTimelineItemList(Container c)
+    {
+        List<Map<String, Object>> list = new ArrayList<>();
+
+        for (TimelineItem timelineItem : getTimelineItems())
+        {
+            list.add(timelineItem.toMap(c));
+        }
+
+        return list;
+    }
+
 
 }

@@ -5,6 +5,8 @@ import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.labkey.api.collections.ArrayListMap;
 import org.labkey.api.data.Container;
+import org.labkey.api.security.User;
+import org.labkey.api.util.GUID;
 
 import java.util.Date;
 import java.util.Map;
@@ -18,11 +20,10 @@ public class TimelineItem
 {
     private Integer _timelineItemId;    //PK
     private Integer _timelineId;        // FK - timeline
-    private Integer _revisionNum;       // FK - timeline
+    private Integer _timelineRevisionNum;       // FK - timeline
     private Integer _projectItemId;     // FK - timelineProjectItem
     private Integer _studyDay;
     private Integer _scheduledDay;
-    private Integer _qcState;
     private Date _dateCreated;
     private Date _dateModified;
     private String _createdBy;
@@ -32,7 +33,7 @@ public class TimelineItem
 
     public static final String TIMELINEITEM_TIMELINE_ITEM_ID = "TimelineItemId";
     public static final String TIMELINEITEM_TIMELINE_ID = "TimelineId";
-    public static final String TIMELINEITEM_REVISION_NUM = "RevisionNum";
+    public static final String TIMELINEITEM_REVISION_NUM = "TimelineRevisionNum";
     public static final String TIMELINEITEM_PROJECT_ITEM_ID = "ProjectItemId";
     public static final String TIMELINEITEM_STUDY_DAY = "StudyDay";
     public static final String TIMELINEITEM_SCHEDULED_DAY = "ScheduledDay";
@@ -40,13 +41,26 @@ public class TimelineItem
     public static final String TIMELINEITEM_DATE_MODIFIED = "DateModified";
     public static final String TIMELINEITEM_CREATED_BY = "CreatedBy";
     public static final String TIMELINEITEM_MODIFIED_BY = "ModifiedBy";
-    public static final String TIMELINEITEM_QCSTATE = "qcState";
     public static final String TIMELINEITEM_OBJECTID = "ObjectId";
     public static final String TIMELINEITEM_PROJECT_ITEM = "ProjectItem";
 
 
     public TimelineItem()
     {
+    }
+
+    public TimelineItem(Integer timelineItemId, Integer timelineId, Integer timelineRevisionNum, Integer projectItemId, Integer studyDay, User u)
+    {
+        _timelineItemId = timelineItemId;
+        _timelineId = timelineId;
+        _timelineRevisionNum = timelineRevisionNum;
+        _projectItemId = projectItemId;
+        _studyDay = studyDay;
+        _createdBy = u.getFriendlyName();
+        _modifiedBy = u.getFriendlyName();
+        _dateCreated = new Date();
+        _dateModified = new Date();
+        _objectId = GUID.makeGUID();
     }
 
     public Integer getTimelineItemId()
@@ -119,16 +133,6 @@ public class TimelineItem
         _scheduledDay = scheduledDay;
     }
 
-    public Integer getQcState()
-    {
-        return _qcState;
-    }
-
-    public void setQcState(Integer qcState)
-    {
-        _qcState = qcState;
-    }
-
     public Date getDateCreated()
     {
         return _dateCreated;
@@ -159,14 +163,14 @@ public class TimelineItem
         _createdBy = createdBy;
     }
 
-    public Integer getRevisionNum()
+    public Integer getTimelineRevisionNum()
     {
-        return _revisionNum;
+        return _timelineRevisionNum;
     }
 
-    public void setRevisionNum(Integer revisionNum)
+    public void setTimelineRevisionNum(Integer timelineRevisionNum)
     {
-        _revisionNum = revisionNum;
+        _timelineRevisionNum = timelineRevisionNum;
     }
 
     @NotNull
@@ -175,25 +179,16 @@ public class TimelineItem
         Map<String, Object> timelineItemValues = new ArrayListMap<>();
         timelineItemValues.put(TIMELINEITEM_TIMELINE_ITEM_ID, getTimelineItemId());
         timelineItemValues.put(TIMELINEITEM_TIMELINE_ID, getTimelineId());
-        timelineItemValues.put(TIMELINEITEM_REVISION_NUM, getRevisionNum());
+        timelineItemValues.put(TIMELINEITEM_REVISION_NUM, getTimelineRevisionNum());
         timelineItemValues.put(TIMELINEITEM_PROJECT_ITEM_ID, getProjectItemId());
         timelineItemValues.put(TIMELINEITEM_STUDY_DAY, getStudyDay());
-        timelineItemValues.put(TIMELINEITEM_STUDY_DAY, getScheduledDay());
+        timelineItemValues.put(TIMELINEITEM_SCHEDULED_DAY, getScheduledDay());
         timelineItemValues.put(TIMELINEITEM_DATE_CREATED, getDateCreated());
         timelineItemValues.put(TIMELINEITEM_DATE_MODIFIED, getDateModified());
         timelineItemValues.put(TIMELINEITEM_CREATED_BY, getCreatedBy());
         timelineItemValues.put(TIMELINEITEM_MODIFIED_BY, getModifiedBy());
-        timelineItemValues.put(TIMELINEITEM_QCSTATE, getQcState());
         timelineItemValues.put(TIMELINEITEM_OBJECTID, getObjectId());
 
-//        if (TIMELINE_PROJECT_OBJECT_ID != null)
-//        {
-//            Map<String, Object> project = getProject().getProjectRow(c);
-//            for (String key : project.keySet())
-//            {
-//                timelineValues.put(key, project.get(key));
-//            }
-//        }
         return timelineItemValues;
     }
     @NotNull
@@ -207,15 +202,14 @@ public class TimelineItem
             json.put(TIMELINEITEM_OBJECTID, getObjectId());
 
         json.put(TIMELINEITEM_TIMELINE_ID, getTimelineId());
-        json.put(TIMELINEITEM_REVISION_NUM, getRevisionNum());
+        json.put(TIMELINEITEM_REVISION_NUM, getTimelineRevisionNum());
         json.put(TIMELINEITEM_PROJECT_ITEM_ID, getProjectItemId());
         json.put(TIMELINEITEM_STUDY_DAY, getStudyDay());
-        json.put(TIMELINEITEM_STUDY_DAY, getScheduledDay());
+        json.put(TIMELINEITEM_SCHEDULED_DAY, getScheduledDay());
         json.put(TIMELINEITEM_DATE_CREATED, getDateCreated());
         json.put(TIMELINEITEM_DATE_MODIFIED, getDateModified());
         json.put(TIMELINEITEM_CREATED_BY, getCreatedBy());
         json.put(TIMELINEITEM_MODIFIED_BY, getModifiedBy());
-        json.put(TIMELINEITEM_QCSTATE, getQcState());
         json.put(TIMELINEITEM_OBJECTID, getObjectId());
         return json;
     }
