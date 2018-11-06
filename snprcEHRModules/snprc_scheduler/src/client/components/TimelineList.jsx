@@ -11,8 +11,9 @@
 import React from 'react';
 import ReactDataGrid from 'react-data-grid';
 import Glyphicon from 'react-bootstrap/lib/Glyphicon'
+import { selectTimeline, duplicateTimeline } from '../actions/dataActions';
 
-const verboseOutput = true;
+const verboseOutput = false;
 
 class TimelineList extends React.Component {
     
@@ -23,7 +24,7 @@ class TimelineList extends React.Component {
             debugUI: false,
             timelines: (redux_state.timelines || null), 
             timelineCols: [
-                { key: 'Description', name: 'Description', width: 373 }
+                { key: 'Description', name: 'Description', width: 373, editable: true }
             ],
             selectedTimelines: [],
             selectedTimeline: (redux_state.selectedTimeline || null)
@@ -35,7 +36,10 @@ class TimelineList extends React.Component {
 
     handleStoreUpdate = () => {
         let redux_state = this.props.store.getState().project;
-        this.setState({ timelines: redux_state.timelines });
+        this.setState({ 
+            timelines: redux_state.timelines
+        });
+        //if (redux_state.newTimeline != null)
         /*
         if (redux_state.timelines && redux_state.timelines.length > 0) {
             console.log(redux_state.timelines[0]);
@@ -48,7 +52,7 @@ class TimelineList extends React.Component {
     }
 
     handleTimelineDuplicate = () => {
-        console.log('handleTimelineDuplicate()');
+        this.props.store.dispatch(duplicateTimeline(this.state.selectedTimeline));
     }
 
     handleTimelineDestroy = () => {
@@ -58,23 +62,25 @@ class TimelineList extends React.Component {
     timelineRowGetter = (index) => this.state.timelines[index];
     
     onTimelineRowsSelected = (rows) => {
-        console.log(rows);
+        let timelines = this.props.store.getState().project.timelines;
+        if (rows.length == timelines.length || rows.length > 1) rows = [];
         let selectedTimeline = rows.length > 0 ? rows[0].row : null;
-        if (rows.length > 0) rows = [rows[0]];
-        else rows = [];
-        this.setState({ selectedTimelines: rows.map(r => r.rowIdx) });
-        if (verboseOutput) {
-            console.log('selectedTimeline:');
-            console.log(selectedTimeline); 
-        }
-
-        
+        this.setState({
+            selectedTimelines: rows.map(r => r.rowIdx) ,
+            selectedTimeline: selectedTimeline
+        });
+        if (selectedTimeline != null) this.props.store.dispatch(selectTimeline(selectedTimeline));
+        if (verboseOutput) console.log(selectedTimeline);
     }
 
     onTimelineRowsDeselected = (rows) => {
         let rowIndexes = rows.map(r => r.rowIdx);
         this.setState({ selectedTimelines: this.state.selectedTimelines.filter(i => rowIndexes.indexOf(i) === -1) });       
     }
+
+    onTimelineRowsUpdated = ({ fromRow, toRow, updated }) => {
+
+    } 
 
     render = () => { 
         let projectCount = this.state.timelines ? this.state.timelines.length : 0;
@@ -87,10 +93,12 @@ class TimelineList extends React.Component {
         <div>
             <ReactDataGrid
                 rowKey="id3"
+                enableCellSelect={true}
                 columns={this.state.timelineCols}
                 rowGetter={this.timelineRowGetter}
                 rowsCount={projectCount}
                 minHeight={300}
+                onGridRowsUpdated={this.onTimelineRowsUpdated}
                 rowSelection={{
                     showCheckbox: true,
                     enableShiftSelect: true,

@@ -11,7 +11,7 @@
 import React from 'react';
 import ReactDataGrid from 'react-data-grid';
 import Glyphicon from 'react-bootstrap/lib/Glyphicon'
-import { selectProject, filterProjects } from '../actions/dataActions';
+import { selectProject, filterProjects, sortProjects } from '../actions/dataActions';
 
 const verboseOutput = true;
 
@@ -19,15 +19,18 @@ class EmptyProjectRowsView extends React.Component { render() {return (<div> Loa
 
 class ProjectList extends React.Component {
     
-    constructor(props) {
-        super(props);
+    constructor(props, context) {
+        super(props, context);
         this.state = {
             projectCols: [
-                { key: 'Iacuc', name: 'IACUC', width: 75 },
-                { key: 'description', name: 'Description', width: 255 },
-                { key: 'revisionNum', name: 'Rev', width: 42 }
+                { key: 'Iacuc', name: 'IACUC', width: 75, sortable: true },
+                { key: 'description', name: 'Description', width: 255, sortable: true },
+                { key: 'revisionNum', name: 'Rev', width: 42, sortable: true }
             ],
             selectedProjects: [],
+            sortColumn: null, 
+            sortDirection: null,
+            filters: {}
         };
         // wire into redux store updates
         this.disconnect = this.props.store.subscribe(this.handleStoreUpdate); 
@@ -62,13 +65,18 @@ class ProjectList extends React.Component {
     handleProjectSearchChange = (event) => this.props.store.dispatch(filterProjects(event.target.value));
 
     handleStoreUpdate = () => {
-        //if (verboseOutput) console.log('ProjectList() -> handling store update...');
+        // get all projects from redux
         let projects = this.props.store.getState().project.projects || [];
-        this.setState({
-            projects: projects,
-            projectCount: projects.length
-        });
+        // manage project list in local state for rendering
+        this.setState({ projects: projects, projectCount: projects.length });
     }
+
+    handleGridSort = (sortColumn, sortDirection) => {
+        // de-select any currently selected projects
+        this.setState({ selectedProjects: [], selectedProject: null });
+        // dispatch our filter request
+        this.props.store.dispatch(sortProjects(sortColumn, sortDirection));
+    };
 
     render = () => { 
         return (<div>
@@ -88,6 +96,8 @@ class ProjectList extends React.Component {
                     columns={this.state.projectCols}
                     rowGetter={this.projectRowGetter}
                     rowsCount={this.state.projectCount}
+                    onGridSort={this.handleGridSort}
+                    enableCellSelect={true}
                     minHeight={284}
                     rowSelection={{
                         showCheckbox: true,

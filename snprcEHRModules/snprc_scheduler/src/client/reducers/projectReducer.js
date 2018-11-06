@@ -9,6 +9,8 @@
     ==================================================================================
 */
 
+import _ from 'lodash';
+
 const verboseOutput = false;
 const SEARCH_MODE_LABKEY = 1;
 const SEARCH_MODE_SND = 2;
@@ -23,7 +25,10 @@ import { ANIMAL_LIST_RECEIVED,
          PROJECT_LIST_FILTERED,
          ANIMAL_LIST_FILTERED,
          TIMELINE_LIST_RECEIVED,
-         TIMELINE_DUPLICATED
+         TIMELINE_DUPLICATED,
+         TIMELINE_SELECTED,
+         TIMELINE_LIST_SORTED,
+         PROJECT_LIST_SORTED
        } from "../actions/dataActions";
 
 function hasValue (source, value)  {
@@ -35,8 +40,19 @@ function hasValue (source, value)  {
 };
 
 function cloneTimeline(source) {
-    let nt = Object.assign({ timelineId: -1 }, source);
+    let nt = Object.assign({ }, source);
+    nt = Object.assign(nt, { TimelineId: -1, revisionNum: -1, IsDraft: true });
+    
+    
+    
+    //console.log('source object:');
+    //console.log(source);
+    //nt.TimelineId = -1;
+    //nt.RevisionNum = -1;
+    //nt.IsDraft = true;
+    console.log('cloned object:');
     console.log(nt);
+    return nt;
 }
 
 export default (state = { }, action) => {  
@@ -85,24 +101,17 @@ export default (state = { }, action) => {
                 nextState.allProjects.forEach((p) => {
                     switch(SEARCH_MODE) {
                         case SEARCH_MODE_LABKEY:
-                            if (p.Description.value.toString().toUpperCase().indexOf(value) > -1 || 
-                                p.ProjectId.value.toString().toUpperCase().indexOf(value) > -1  ||    
-                                p.ChargeId.value.toString().toUpperCase().indexOf(value) > -1  ||
-                                p.Iacuc.value.toString().toUpperCase().indexOf(value) > -1  ||
-                                p.RevisionNum.value.toString().toUpperCase().indexOf(value) > -1  ||
-                                p.StartDate.value.toString().toUpperCase().indexOf(value) > -1  ||
-                                p.EndDate.value.toString().toUpperCase().indexOf(value) > -1) 
+                            if (hasValue(p.Description, value) || hasValue(p.ProjectId, value) ||
+                                hasValue(p.ChargeId, value) || hasValue(p.Iacuc, value) ||
+                                hasValue(p.RevisionNum, value) || hasValue(p.StartDate, value) ||
+                                hasValue(p.EndDate, value))
                             { nextState.projects.push(p); }
                             break;
                         case SEARCH_MODE_SND:
-                            if (hasValue(p.description, value) ||
-                                hasValue(p.Iacuc, value) ||
-                                hasValue(p.CostAccount, value) ||
-                                hasValue(p.referenceId, value) ||
-                                hasValue(p.Veterinarian1, value) ||
-                                hasValue(p.Veterinarian2, value) ||
-                                hasValue(p.VsNumber, value) ||
-                                hasValue(p.startDate, value) ||
+                            if (hasValue(p.description, value) || hasValue(p.Iacuc, value) ||
+                                hasValue(p.CostAccount, value) || hasValue(p.referenceId, value) ||
+                                hasValue(p.Veterinarian1, value) || hasValue(p.Veterinarian2, value) ||
+                                hasValue(p.VsNumber, value) || hasValue(p.startDate, value) ||
                                 hasValue(p.endDate, value)) 
                             { nextState.projects.push(p); }
                             break;
@@ -116,9 +125,8 @@ export default (state = { }, action) => {
             if (value != '') {
                 nextState.animals = [];
                 nextState.allAnimals.forEach((a) => {
-                    if (hasValue(a.Id, value) ||
-                        hasValue(a.Age, value) ||
-                        hasValue(a.Gender, value))
+                    if (hasValue(a.Id, value) || hasValue(a.Age, value) || 
+                        hasValue(a.Gender, value) || hasValue(a.Weight, value))
                     { nextState.animals.push(a); }
                 })
             } else nextState.animals = nextState.allAnimals;
@@ -129,11 +137,29 @@ export default (state = { }, action) => {
             nextState.timelines = action.payload;
             break;
         case TIMELINE_DUPLICATED:
-
+            // action payload is the timeline object
+            let clone = cloneTimeline(action.payload);
+            nextState.timelines.push(clone);
+            //nextState.allTimelines.push(clone);
             break;
+        case TIMELINE_SELECTED:
+            // action payload is the timeline object
+            nextState.selectedTimeline = action.payload;
+            break;
+        case PROJECT_LIST_SORTED:
+            // action payload is an object containing the sort parameters { field: ?, direction: ? }
+            if (action.payload.direction == "NONE") nextState.projects = nextState.allProjects;
+            else {
+                nextState.projects = _.sortBy(nextState.allProjects, action.payload.field);
+                if (action.payload.direction == 'DESC') nextState.projects = nextState.projects.reverse();
+            }
+            break;
+        case TIMELINE_LIST_SORTED:
+
+            break;            
     };
     if (verboseOutput) {
-        console.log('projectReducer() -> ' + action.type);
+        console.log('projectReducer() -> ' + action.type + '\nnext state:');
         console.log(nextState);  
     }     
     return nextState;

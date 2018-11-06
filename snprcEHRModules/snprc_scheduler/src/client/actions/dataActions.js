@@ -30,6 +30,8 @@ export const TIMELINE_DROPPED_ON_CALENDAR = 'TIMELINE_DROPPED_ON_CALENDAR';
 export const TIMELINE_ITEM_CREATED = 'TIMELINE_ITEM_CREATED';
 export const TIMELINE_ITEM_SELECTED = 'TIMELINE_ITEM_SELECTED';
 export const TIMELINE_ITEM_REMOVED = 'TIMELINE_ITEM_REMOVED';
+export const PROJECT_LIST_SORTED = 'PROJECT_LIST_SORTED';
+export const TIMELINE_LIST_SORTED = 'TIMELINE_LIST_SORTED';
 export const NO_OP = 'NO_OP';
 
 export const getBaseURI = () => {
@@ -57,6 +59,12 @@ export function createAction(type, payload) {
         case TIMELINE_LIST_RECEIVED: return { type: type, payload: payload };
         case TIMELINE_LIST_REQUEST_FAILED: return { type: type, payload: payload, error: true };
         case TIMELINE_SELECTED: return { type: type, payload: payload };
+        case TIMELINE_DUPLICATED: return { type: type, payload: payload };
+        case TIMELINE_ITEM_CREATED: return { type: type, payload: payload };
+        case TIMELINE_ITEM_REMOVED: return { type: type, payload: payload };
+        case TIMELINE_ITEM_SELECTED: return { type: type, payload: payload };
+        case TIMELINE_LIST_SORTED: return { type: type, payload: payload };
+        case PROJECT_LIST_SORTED: return { type: type, payload: payload };
         default: return { type: type }
     }    
 }
@@ -127,6 +135,13 @@ export function filterProjects(pattern) {
     }
 }
 
+export function sortProjects(field, direction) {
+    if (verboseOutput) console.log('sortProjects(' + field + ',' + direction + ')');
+    return (dispatch) => {
+        dispatch(createAction(PROJECT_LIST_SORTED, { field: field, direction: direction }));
+    }
+}
+
 export function filterAnimals(pattern) {
     if (verboseOutput) console.log('filterAnimals(' + pattern + ')');
     return (dispatch) => {
@@ -144,12 +159,15 @@ export function selectProject(projectId, revision) {
 }
 
 export function selectTimeline(timeline) {
-    //if (verboseOutput) console.log('selectTimeline(' + timelineId + ',' + revision + ')');
+    if (verboseOutput) console.log('selectTimeline(' + timeline.TimelineId + ',' + timeline.RevisionNum + ')');
     return (dispatch) => {
         dispatch(createAction(TIMELINE_SELECTED, timeline));
     }    
 }
 
-export function duplicateTimeline(source) {
-
+export function duplicateTimeline(timeline) {
+    if (verboseOutput) console.log('duplicateTimeline(' + timeline.TimelineId + ',' + timeline.RevisionNum + ')');
+    return (dispatch) => {
+        dispatch(createAction(TIMELINE_DUPLICATED, timeline));
+    }   
 }
