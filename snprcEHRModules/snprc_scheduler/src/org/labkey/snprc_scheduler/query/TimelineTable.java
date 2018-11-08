@@ -54,14 +54,14 @@ public class TimelineTable extends SimpleUserSchema.SimpleTable<SNPRC_schedulerU
         hasItemsSql.append("(CASE WHEN EXISTS (SELECT t.TimelineId FROM ");
         hasItemsSql.append(SNPRC_schedulerSchema.getInstance().getTableInfoTimeline(), "t");
         hasItemsSql.append(" JOIN ");
-        hasItemsSql.append(SNPRC_schedulerSchema.getInstance().getTableInfoTimelineItem(), "tl");
-        hasItemsSql.append(" ON t.TimelineId = tl.TimelineId )");
+        hasItemsSql.append(SNPRC_schedulerSchema.getInstance().getTableInfoTimelineItem(), "ti");
+        hasItemsSql.append(" ON t.ObjectId = ti.TimelineObjectId )");
         hasItemsSql.append(" THEN 'true' ELSE 'false' END)");
         ExprColumn hasItemsCol = new ExprColumn(this, "HasItems", hasItemsSql, JdbcType.BOOLEAN);
         addColumn(hasItemsCol);
 
         SQLFragment projectIdSql = new SQLFragment();
-        projectIdSql.append("SELECT pr.ProjectId FROM snd.Projects as pr");
+        projectIdSql.append("(SELECT pr.ProjectId FROM snd.Projects as pr");
         projectIdSql.append(" JOIN ");
         projectIdSql.append(SNPRC_schedulerSchema.getInstance().getTableInfoTimeline(), "t");
         projectIdSql.append(" ON t.ProjectObjectId = pr.ObjectId )");
@@ -69,7 +69,7 @@ public class TimelineTable extends SimpleUserSchema.SimpleTable<SNPRC_schedulerU
         addColumn(projectIdCol);
 
         SQLFragment revisionNumSql = new SQLFragment();
-        revisionNumSql.append("SELECT pr.RevisionNum FROM snd.Projects as pr");
+        revisionNumSql.append("(SELECT pr.RevisionNum FROM snd.Projects as pr");
         revisionNumSql.append(" JOIN ");
         revisionNumSql.append(SNPRC_schedulerSchema.getInstance().getTableInfoTimeline(), "t");
         revisionNumSql.append(" ON t.ProjectObjectId = pr.ObjectId )");
