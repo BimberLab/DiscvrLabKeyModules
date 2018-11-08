@@ -2442,6 +2442,7 @@ snprcEHRModules/snprc_scheduler/module.properties -text
 snprcEHRModules/snprc_scheduler/package-lock.json -text
 snprcEHRModules/snprc_scheduler/package.json -text
 snprcEHRModules/snprc_scheduler/resources/schemas/dbscripts/sqlserver/snprc_scheduler-0.00-18.21.sql -text
+snprcEHRModules/snprc_scheduler/resources/schemas/dbscripts/sqlserver/snprc_scheduler-18.21-18.22.sql -text
 snprcEHRModules/snprc_scheduler/resources/schemas/snprc_scheduler.xml -text
 snprcEHRModules/snprc_scheduler/resources/web/snprc_scheduler/app/app.js -text
 snprcEHRModules/snprc_scheduler/src/client/actions/dataActions.js -text
