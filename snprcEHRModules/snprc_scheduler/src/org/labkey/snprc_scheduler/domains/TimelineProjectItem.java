@@ -5,7 +5,10 @@ import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.labkey.api.collections.ArrayListMap;
 import org.labkey.api.data.Container;
+import org.labkey.api.security.User;
+import org.labkey.api.util.GUID;
 
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -14,40 +17,60 @@ import java.util.Map;
 
 public class TimelineProjectItem
 {
-    private Integer _timelineId;    // FK to snprc_scheduler.Timeline
-    private Integer _timelineRevisionNum;   // FK to snprc_scheduler.Timeline
-    private String _projectItemId;  // FK to snd.ProjectItems
+    private String _timelineObjectId;    // FK to snprc_scheduler.Timeline
+    private Integer _projectItemId;  // FK to snd.ProjectItems
     private String _timelineFootNotes;
     private Integer _sortOrder;
     private String _objectId;
+    private Date _dateCreated;
+    private Date _dateModified;
+    private String _createdBy;
+    private String _modifiedBy;
 
-    public static final String TIMELINE_PROJECT_ITEMS_TIMELINE_ID = "TimelineId";
-    public static final String TIMELINE_PROJECT_ITEMS_REVISION_NUM = "TimelineRevisionNum";
+    public static final String TIMELINE_PROJECT_ITEMS_TIMELINE_OBJECT_ID = "TimelineObjectId";
     public static final String TIMELINE_PROJECT_ITEMS_PROJECT_ITEM_ID = "PorjectItemId";
     public static final String TIMELINE_PROJECT_ITEMS_TIMELINE_FOOT_NOTES = "TimelineFootNotes";
     public static final String  TIMELINE_PROJECT_ITEMS_SORT_ORDER = "SortOrder";
-    public static final String TIMELINE_PROJECT_ITEMS_OBJECTID = "ObjectId";
+    public static final String TIMELINE_PROJECT_ITEMS_OBJECT_ID = "ObjectId";
+    public static final String TIMELINE_PROJECT_ITEMS_DATE_CREATED = "DateCreated";
+    public static final String TIMELINE_PROJECT_ITEMS_DATE_MODIFIED = "DateModified";
+    public static final String TIMELINE_PROJECT_ITEMS_CREATED_BY = "CreatedBy";
+    public static final String TIMELINE_PROJECT_ITEMS_MODIFIED_BY = "ModifiedBy";
+
 
     public TimelineProjectItem()
     {
     }
 
-    public Integer getTimelineId()
+    public TimelineProjectItem(String timelineObjectId, Integer projectItemId, String timelineFootNotes, Integer sortOrder, User u)
     {
-        return _timelineId;
+        _timelineObjectId = timelineObjectId;
+        _projectItemId = projectItemId;
+        _timelineFootNotes = timelineFootNotes;
+        _sortOrder = sortOrder;
+        _objectId = GUID.makeGUID();
+        _createdBy = u.getFriendlyName();
+        _modifiedBy = u.getFriendlyName();
+        _dateCreated = new Date();
+        _dateModified = new Date();
     }
 
-    public void setTimelineId(Integer timelineId)
+    public String getTimelineObjectId()
     {
-        _timelineId = timelineId;
+        return _timelineObjectId;
     }
 
-    public String getProjectItemId()
+    public void setTimelineObjectId(String timelineObjectId)
+    {
+        _timelineObjectId = timelineObjectId;
+    }
+
+    public Integer getProjectItemId()
     {
         return _projectItemId;
     }
 
-    public void setProjectItemId(String projectItemId)
+    public void setProjectItemId(Integer projectItemId)
     {
         _projectItemId = projectItemId;
     }
@@ -72,16 +95,6 @@ public class TimelineProjectItem
         _objectId = objectId;
     }
 
-    public Integer getTimelineRevisionNum()
-    {
-        return _timelineRevisionNum;
-    }
-
-    public void setTimelineRevisionNum(Integer timelineRevisionNum)
-    {
-        _timelineRevisionNum = timelineRevisionNum;
-    }
-
     public String getTimelineFootNotes()
     {
         return _timelineFootNotes;
@@ -92,16 +105,59 @@ public class TimelineProjectItem
         _timelineFootNotes = timelineFootNotes;
     }
 
+    public Date getDateCreated()
+    {
+        return _dateCreated;
+    }
+
+    public void setDateCreated(Date dateCreated)
+    {
+        _dateCreated = dateCreated;
+    }
+
+    public Date getDateModified()
+    {
+        return _dateModified;
+    }
+
+    public void setDateModified(Date dateModified)
+    {
+        _dateModified = dateModified;
+    }
+
+    public String getCreatedBy()
+    {
+        return _createdBy;
+    }
+
+    public void setCreatedBy(String createdBy)
+    {
+        _createdBy = createdBy;
+    }
+
+    public String getModifiedBy()
+    {
+        return _modifiedBy;
+    }
+
+    public void setModifiedBy(String modifiedBy)
+    {
+        _modifiedBy = modifiedBy;
+    }
+
     @NotNull
-    public Map<String, Object> getTimelineProjectItemRow(Container c)
+    public Map<String, Object> toMap(Container c)
     {
         Map<String, Object> values = new ArrayListMap<>();
-        values.put(TIMELINE_PROJECT_ITEMS_TIMELINE_ID, getTimelineId());
-        values.put(TIMELINE_PROJECT_ITEMS_REVISION_NUM, getTimelineRevisionNum());
+        values.put(TIMELINE_PROJECT_ITEMS_TIMELINE_OBJECT_ID, getTimelineObjectId());
         values.put(TIMELINE_PROJECT_ITEMS_PROJECT_ITEM_ID, getProjectItemId());
         values.put(TIMELINE_PROJECT_ITEMS_TIMELINE_FOOT_NOTES, getTimelineFootNotes());
         values.put(TIMELINE_PROJECT_ITEMS_SORT_ORDER, getSortOrder());
-        values.put(TIMELINE_PROJECT_ITEMS_OBJECTID, getObjectId());
+        values.put(TIMELINE_PROJECT_ITEMS_OBJECT_ID, getObjectId());
+        values.put(TIMELINE_PROJECT_ITEMS_DATE_CREATED, getDateCreated());
+        values.put(TIMELINE_PROJECT_ITEMS_DATE_MODIFIED, getDateModified());
+        values.put(TIMELINE_PROJECT_ITEMS_CREATED_BY, getCreatedBy());
+        values.put(TIMELINE_PROJECT_ITEMS_MODIFIED_BY, getModifiedBy());
 
         return values;
     }
@@ -109,12 +165,15 @@ public class TimelineProjectItem
     public JSONObject toJSON(Container c)
     {
         JSONObject json = new JSONObject();
-        json.put(TIMELINE_PROJECT_ITEMS_TIMELINE_ID, getTimelineId());
-        json.put(TIMELINE_PROJECT_ITEMS_REVISION_NUM, getTimelineRevisionNum());
+        json.put(TIMELINE_PROJECT_ITEMS_TIMELINE_OBJECT_ID, getTimelineObjectId());
         json.put(TIMELINE_PROJECT_ITEMS_PROJECT_ITEM_ID, getProjectItemId());
         json.put(TIMELINE_PROJECT_ITEMS_TIMELINE_FOOT_NOTES, getTimelineFootNotes());
         json.put(TIMELINE_PROJECT_ITEMS_SORT_ORDER, getSortOrder());
-        json.put(TIMELINE_PROJECT_ITEMS_OBJECTID, getObjectId());
+        json.put(TIMELINE_PROJECT_ITEMS_OBJECT_ID, getObjectId());
+        json.put(TIMELINE_PROJECT_ITEMS_DATE_CREATED, getDateCreated());
+        json.put(TIMELINE_PROJECT_ITEMS_DATE_MODIFIED, getDateModified());
+        json.put(TIMELINE_PROJECT_ITEMS_CREATED_BY, getCreatedBy());
+        json.put(TIMELINE_PROJECT_ITEMS_MODIFIED_BY, getModifiedBy());
 
         return json;
     }

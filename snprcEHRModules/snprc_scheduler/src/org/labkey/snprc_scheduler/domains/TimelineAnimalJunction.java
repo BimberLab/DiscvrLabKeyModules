@@ -16,8 +16,7 @@ public class TimelineAnimalJunction
 {
 
     private Integer _rowId;         //PK
-    private Integer _timelineId;    // FK to snprc_scheduler.Timeline
-    private Integer _timelineRevisionNum;   // FK to snprc_scheduler.Timeline
+    private String _timelineObjectId;    // FK to snprc_scheduler.Timeline
     private String _animalId;       // FK to study.assignment
     private Date _startDate;
     private Date _endDate;
@@ -27,7 +26,7 @@ public class TimelineAnimalJunction
     private String _modifiedBy;
     private String _objectId;
 
-    public static final String TIMELINE_ANIMAL_JUNCTION_TIMELINE_ID = "TimelineId";
+    public static final String TIMELINE_ANIMAL_JUNCTION_TIMELINE_OBJECT_ID = "TimelineObjectId";
     public static final String TIMELINE_ANIMAL_JUNCTION_TIMELINE_REVISION_NUM = "TimelineRevisionNum";
     public static final String TIMELINE_ANIMAL_JUNCTION_ANIMAL_ID = "AnimalId";
     public static final String TIMELINE_ANIMAL_JUNCTION_START_DATE = "StartDate";
@@ -36,20 +35,21 @@ public class TimelineAnimalJunction
     public static final String TIMELINE_ANIMAL_JUNCTION_DATE_MODIFIED = "DateModified";
     public static final String TIMELINE_ANIMAL_JUNCTION_CREATED_BY = "CreatedBy";
     public static final String TIMELINE_ANIMAL_JUNCTION_MODIFIED_BY = "ModifiedBy";
-    public static final String TIMELINE_ANIMAL_JUNCTION_OBJECTID = "ObjectId";
+    public static final String TIMELINE_ANIMAL_JUNCTION_OBJECT_ID = "ObjectId";
 
     public TimelineAnimalJunction()
     {
     }
 
-    public Integer getTimelineId()
+
+    public String getTimelineObjectId()
     {
-        return _timelineId;
+        return _timelineObjectId;
     }
 
-    public void setTimelineId(Integer timelineId)
+    public void setTimelineObjectId(String timelineObjectId)
     {
-        _timelineId = timelineId;
+        _timelineObjectId = timelineObjectId;
     }
 
     public String getAnimalId()
@@ -80,16 +80,6 @@ public class TimelineAnimalJunction
     public void setRowId(Integer rowId)
     {
         _rowId = rowId;
-    }
-
-    public Integer getTimelineRevisionNum()
-    {
-        return _timelineRevisionNum;
-    }
-
-    public void setTimelineRevisionNum(Integer timelineRevisionNum)
-    {
-        _timelineRevisionNum = timelineRevisionNum;
     }
 
     public Date getStartDate()
@@ -156,8 +146,7 @@ public class TimelineAnimalJunction
     public Map<String, Object> getTimelineAnimalJunctionRow(Container c)
     {
         Map<String, Object> values = new ArrayListMap<>();
-        values.put(TIMELINE_ANIMAL_JUNCTION_TIMELINE_ID, getTimelineId());
-        values.put(TIMELINE_ANIMAL_JUNCTION_TIMELINE_REVISION_NUM, getTimelineRevisionNum());
+        values.put(TIMELINE_ANIMAL_JUNCTION_TIMELINE_OBJECT_ID, getTimelineObjectId());
         values.put(TIMELINE_ANIMAL_JUNCTION_ANIMAL_ID, getAnimalId());
         values.put(TIMELINE_ANIMAL_JUNCTION_START_DATE, getStartDate());
         values.put(TIMELINE_ANIMAL_JUNCTION_END_DATE, getEndDate());
@@ -165,7 +154,7 @@ public class TimelineAnimalJunction
         values.put(TIMELINE_ANIMAL_JUNCTION_DATE_MODIFIED, getDateModified());
         values.put(TIMELINE_ANIMAL_JUNCTION_CREATED_BY, getCreatedBy());
         values.put(TIMELINE_ANIMAL_JUNCTION_MODIFIED_BY, getModifiedBy());
-        values.put(TIMELINE_ANIMAL_JUNCTION_OBJECTID, getObjectId());
+        values.put(TIMELINE_ANIMAL_JUNCTION_OBJECT_ID, getObjectId());
 
         return values;
     }
@@ -174,8 +163,7 @@ public class TimelineAnimalJunction
     public JSONObject toJSON(Container c)
     {
         JSONObject json = new JSONObject();
-        json.put(TIMELINE_ANIMAL_JUNCTION_TIMELINE_ID, getTimelineId());
-        json.put(TIMELINE_ANIMAL_JUNCTION_TIMELINE_REVISION_NUM, getTimelineRevisionNum());
+        json.put(TIMELINE_ANIMAL_JUNCTION_TIMELINE_OBJECT_ID, getTimelineObjectId());
         json.put(TIMELINE_ANIMAL_JUNCTION_ANIMAL_ID, getAnimalId());
         json.put(TIMELINE_ANIMAL_JUNCTION_START_DATE, getStartDate());
         json.put(TIMELINE_ANIMAL_JUNCTION_END_DATE, getEndDate());
@@ -183,7 +171,7 @@ public class TimelineAnimalJunction
         json.put(TIMELINE_ANIMAL_JUNCTION_DATE_MODIFIED, getDateModified());
         json.put(TIMELINE_ANIMAL_JUNCTION_CREATED_BY, getCreatedBy());
         json.put(TIMELINE_ANIMAL_JUNCTION_MODIFIED_BY, getModifiedBy());
-        json.put(TIMELINE_ANIMAL_JUNCTION_OBJECTID, getObjectId());
+        json.put(TIMELINE_ANIMAL_JUNCTION_OBJECT_ID, getObjectId());
 
         return json;
     }

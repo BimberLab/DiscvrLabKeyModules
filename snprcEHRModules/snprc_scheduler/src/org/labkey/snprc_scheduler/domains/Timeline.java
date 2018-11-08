@@ -32,12 +32,14 @@ public class Timeline
     private String _objectId;
     private Integer _projectId;
     private Integer _projectRevisionNum;
+    private String _projectObjectId;
     private Date _dateCreated;
     private Date _dateModified;
     private String _createdBy;
     private String _modifiedBy;
     private Integer _qcState;
     private List<TimelineItem> _timelineItems = new ArrayList<>(); // list of TimelineItem objects associated with the timeline
+    private List<TimelineProjectItem> _timelineProjectItems = new ArrayList<>(); // list of TimelineProjectItem objects associated with the timeline
 
     public static final String TIMELINE_ID = "TimelineId";
     public static final String TIMELINE_REVISION_NUM = "RevisionNum";
@@ -57,6 +59,8 @@ public class Timeline
     public static final String TIMELINE_MODIFIED_BY = "ModifiedBy";
     public static final String TIMELINE_QCSTATE = "qcState";
     public static final String TIMELINE_TIMELINE_ITEMS = "TimelineItems";
+    public static final String TIMELINE_TIMELINE_PROJECT_ITEMS = "TimelineProjectItems";
+    public static final String TIMELINE_PROJECT_OBJECT_ID = "ProjectObjectId";
 
     public Timeline()
     {
@@ -246,29 +250,69 @@ public class Timeline
         _timelineItems = timelineItems;
     }
 
+    public List<TimelineProjectItem> getTimelineProjectItems()
+    {
+        return _timelineProjectItems;
+    }
+
+    public void setTimelineProjectItems(List<TimelineProjectItem> timelineProjectItems)
+    {
+        _timelineProjectItems = timelineProjectItems;
+    }
+
+    public String getProjectObjectId()
+    {
+        return _projectObjectId;
+    }
+
+    public void setProjectObjectId(String projectObjectId)
+    {
+        _projectObjectId = projectObjectId;
+    }
+
     @NotNull
     public Map<String, Object> toMap(Container c)
     {
-        Map<String, Object> timelineValues = new ArrayListMap<>();
-        timelineValues.put(TIMELINE_ID, getTimelineId());
-        timelineValues.put(TIMELINE_REVISION_NUM, getRevisionNum());
-        timelineValues.put(TIMELINE_DESCRIPTION, getDescription());
-        timelineValues.put(TIMELINE_STARTDATE, getStartDate());
-        timelineValues.put(TIMELINE_ENDDATE, getEndDate());
-        timelineValues.put(TIMELINE_OBJECTID, getObjectId());
-        timelineValues.put(TIMELINE_CONTAINER, c.getId());
-        timelineValues.put(TIMELINE_LEAD_TECHS, getLeadTechs());
-        timelineValues.put(TIMELINE_NOTES, getNotes());
-        timelineValues.put(TIMELINE_SCHEDULER_NOTES,getSchedulerNotes());
-        timelineValues.put(TIMELINE_PROJECT_ID, getProjectId());
-        timelineValues.put(TIMELINE_PROJECT_REVISION_NUM, getProjectRevisionNum());
-        timelineValues.put(TIMELINE_DATE_CREATED, getDateCreated());
-        timelineValues.put(TIMELINE_DATE_MODIFIED, getDateModified());
-        timelineValues.put(TIMELINE_CREATED_BY, getCreatedBy());
-        timelineValues.put(TIMELINE_MODIFIED_BY, getModifiedBy());
-        timelineValues.put(TIMELINE_QCSTATE, getQcState());
+        Map<String, Object> values = new ArrayListMap<>();
+        values.put(TIMELINE_ID, getTimelineId());
+        values.put(TIMELINE_REVISION_NUM, getRevisionNum());
+        values.put(TIMELINE_DESCRIPTION, getDescription());
+        values.put(TIMELINE_STARTDATE, getStartDate());
+        values.put(TIMELINE_ENDDATE, getEndDate());
+        values.put(TIMELINE_OBJECTID, getObjectId());
+        values.put(TIMELINE_CONTAINER, c.getId());
+        values.put(TIMELINE_LEAD_TECHS, getLeadTechs());
+        values.put(TIMELINE_NOTES, getNotes());
+        values.put(TIMELINE_SCHEDULER_NOTES,getSchedulerNotes());
+        values.put(TIMELINE_PROJECT_ID, getProjectId());
+        values.put(TIMELINE_PROJECT_REVISION_NUM, getProjectRevisionNum());
+        values.put(TIMELINE_DATE_CREATED, getDateCreated());
+        values.put(TIMELINE_DATE_MODIFIED, getDateModified());
+        values.put(TIMELINE_CREATED_BY, getCreatedBy());
+        values.put(TIMELINE_MODIFIED_BY, getModifiedBy());
+        values.put(TIMELINE_QCSTATE, getQcState());
+        values.put(TIMELINE_PROJECT_OBJECT_ID, getProjectObjectId());
 
-        return timelineValues;
+        if (getTimelineItems().size() > 0)
+        {
+            List<Map<String, Object>> listTimelineItems = new ArrayList<>();
+            for (TimelineItem timelineItem : getTimelineItems())
+            {
+                listTimelineItems.add(timelineItem.toMap(c));
+            }
+            values.put(TIMELINE_TIMELINE_ITEMS, listTimelineItems);
+        }
+        if (getTimelineProjectItems().size() > 0)
+        {
+            List<Map<String, Object>> listTimelineProjectItems = new ArrayList<>();
+            for (TimelineProjectItem timelineProjectItem : getTimelineProjectItems())
+            {
+                listTimelineProjectItems.add(timelineProjectItem.toMap(c));
+            }
+            values.put(TIMELINE_TIMELINE_PROJECT_ITEMS, listTimelineProjectItems);
+        }
+
+        return values;
     }
 
     @NotNull
@@ -299,6 +343,7 @@ public class Timeline
         json.put(TIMELINE_CREATED_BY, getCreatedBy());
         json.put(TIMELINE_MODIFIED_BY, getModifiedBy());
         json.put(TIMELINE_QCSTATE, getQcState());
+        json.put(TIMELINE_PROJECT_OBJECT_ID, getProjectObjectId());
 
         if (getTimelineItems().size() > 0)
         {
@@ -309,7 +354,15 @@ public class Timeline
             }
             json.put(TIMELINE_TIMELINE_ITEMS, jsonTimelineItems);
         }
-
+        if (getTimelineProjectItems().size() > 0)
+        {
+            JSONArray jsonTimelineProjectItems = new JSONArray();
+            for (TimelineProjectItem timelineProjectItem : getTimelineProjectItems())
+            {
+                jsonTimelineProjectItems.put(timelineProjectItem.toJSON(c));
+            }
+            json.put(TIMELINE_TIMELINE_PROJECT_ITEMS, jsonTimelineProjectItems);
+        }
 
         return json;
     }

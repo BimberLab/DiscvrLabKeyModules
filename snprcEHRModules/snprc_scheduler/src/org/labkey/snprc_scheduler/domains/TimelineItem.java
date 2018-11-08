@@ -19,8 +19,7 @@ import java.util.Map;
 public class TimelineItem
 {
     private Integer _timelineItemId;    //PK
-    private Integer _timelineId;        // FK - timeline
-    private Integer _timelineRevisionNum;       // FK - timeline
+    private String _timelineObjectId;        // FK - timeline
     private Integer _projectItemId;     // FK - timelineProjectItem
     private Integer _studyDay;
     private Integer _scheduledDay;
@@ -32,8 +31,7 @@ public class TimelineItem
 
 
     public static final String TIMELINEITEM_TIMELINE_ITEM_ID = "TimelineItemId";
-    public static final String TIMELINEITEM_TIMELINE_ID = "TimelineId";
-    public static final String TIMELINEITEM_REVISION_NUM = "TimelineRevisionNum";
+    public static final String TIMELINEITEM_TIMELINE_OBJECT_ID = "TimelineObjectId";
     public static final String TIMELINEITEM_PROJECT_ITEM_ID = "ProjectItemId";
     public static final String TIMELINEITEM_STUDY_DAY = "StudyDay";
     public static final String TIMELINEITEM_SCHEDULED_DAY = "ScheduledDay";
@@ -49,11 +47,10 @@ public class TimelineItem
     {
     }
 
-    public TimelineItem(Integer timelineItemId, Integer timelineId, Integer timelineRevisionNum, Integer projectItemId, Integer studyDay, User u)
+    public TimelineItem(Integer timelineItemId, String timelineObjectId, Integer projectItemId, Integer studyDay, User u)
     {
         _timelineItemId = timelineItemId;
-        _timelineId = timelineId;
-        _timelineRevisionNum = timelineRevisionNum;
+        _timelineObjectId = timelineObjectId;
         _projectItemId = projectItemId;
         _studyDay = studyDay;
         _createdBy = u.getFriendlyName();
@@ -73,14 +70,14 @@ public class TimelineItem
         _timelineItemId = timelineItemId;
     }
 
-    public Integer getTimelineId()
+    public String getTimelineObjectId()
     {
-        return _timelineId;
+        return _timelineObjectId;
     }
 
-    public void setTimelineId(Integer timelineId)
+    public void setTimelineObjectId(String timelineObjectId)
     {
-        _timelineId = timelineId;
+        _timelineObjectId = timelineObjectId;
     }
 
     public Integer getProjectItemId()
@@ -163,23 +160,13 @@ public class TimelineItem
         _createdBy = createdBy;
     }
 
-    public Integer getTimelineRevisionNum()
-    {
-        return _timelineRevisionNum;
-    }
-
-    public void setTimelineRevisionNum(Integer timelineRevisionNum)
-    {
-        _timelineRevisionNum = timelineRevisionNum;
-    }
 
     @NotNull
     public Map<String, Object> toMap(Container c)
     {
         Map<String, Object> timelineItemValues = new ArrayListMap<>();
         timelineItemValues.put(TIMELINEITEM_TIMELINE_ITEM_ID, getTimelineItemId());
-        timelineItemValues.put(TIMELINEITEM_TIMELINE_ID, getTimelineId());
-        timelineItemValues.put(TIMELINEITEM_REVISION_NUM, getTimelineRevisionNum());
+        timelineItemValues.put(TIMELINEITEM_TIMELINE_OBJECT_ID, getTimelineObjectId());
         timelineItemValues.put(TIMELINEITEM_PROJECT_ITEM_ID, getProjectItemId());
         timelineItemValues.put(TIMELINEITEM_STUDY_DAY, getStudyDay());
         timelineItemValues.put(TIMELINEITEM_SCHEDULED_DAY, getScheduledDay());
@@ -201,8 +188,7 @@ public class TimelineItem
         if (getObjectId() != null)
             json.put(TIMELINEITEM_OBJECTID, getObjectId());
 
-        json.put(TIMELINEITEM_TIMELINE_ID, getTimelineId());
-        json.put(TIMELINEITEM_REVISION_NUM, getTimelineRevisionNum());
+        json.put(TIMELINEITEM_TIMELINE_OBJECT_ID, getTimelineObjectId());
         json.put(TIMELINEITEM_PROJECT_ITEM_ID, getProjectItemId());
         json.put(TIMELINEITEM_STUDY_DAY, getStudyDay());
         json.put(TIMELINEITEM_SCHEDULED_DAY, getScheduledDay());

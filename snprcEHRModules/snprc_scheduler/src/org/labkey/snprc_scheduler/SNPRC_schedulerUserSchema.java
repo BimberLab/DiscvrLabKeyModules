@@ -1,7 +1,8 @@
 package org.labkey.snprc_scheduler;
 
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.ldk.table.CustomPermissionsTable;
 import org.labkey.api.query.SimpleUserSchema;
@@ -10,7 +11,8 @@ import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.Permission;
 import org.labkey.api.security.permissions.UpdatePermission;
-import org.labkey.snprc_scheduler.security.SNPRC_schedulerEditorsPermission;
+import org.labkey.snprc_scheduler.query.TimelineItemTable;
+import org.labkey.snprc_scheduler.query.TimelineTable;
 
 
 /**
@@ -19,22 +21,70 @@ import org.labkey.snprc_scheduler.security.SNPRC_schedulerEditorsPermission;
 
 public class SNPRC_schedulerUserSchema extends SimpleUserSchema
 {
+
+    private boolean _permissionCheck = true;
+
     public SNPRC_schedulerUserSchema(User user, Container container)
     {
         super(SNPRC_schedulerSchema.NAME, null, user, container, SNPRC_schedulerSchema.getInstance().getSchema());
     }
-
-    protected TableInfo createWrappedTable(String name, @NotNull TableInfo schemaTable)
+    public SNPRC_schedulerUserSchema(String name, @Nullable String description, User user, Container container, DbSchema dbschema)
     {
-        String nameLowercased = name.toLowerCase();
-        switch(nameLowercased){
-            case SNPRC_schedulerSchema.TABLE_NAME_TIMELINE:
-            case SNPRC_schedulerSchema.TABLE_NAME_TIMELINE_ITEM:
-                return getCustomPermissionTable(createSourceTable(nameLowercased), SNPRC_schedulerEditorsPermission.class);
-        }
-
-        return super.createWrappedTable(name, schemaTable);
+        super(name, description, user, container, dbschema);
     }
+
+    public boolean getPermissionCheck()
+    {
+        return _permissionCheck;
+    }
+
+    public enum TableType
+    {
+        Timeline
+                {
+                    @Override
+                    public TableInfo createTable(SNPRC_schedulerUserSchema schema)
+                    {
+                        return new TimelineTable(schema, SNPRC_schedulerSchema.getInstance().getTableInfoTimeline()).init();
+                    }
+                },
+        TimelineAnimalJunction
+            {
+                @Override
+                public TableInfo createTable(SNPRC_schedulerUserSchema schema)
+                {
+                    return new TimelineTable(schema, SNPRC_schedulerSchema.getInstance().getTableInfoTimelineAnimalJunction()).init();
+                }
+            },
+        TimelineProjectItem
+                {
+                    @Override
+                    public TableInfo createTable(SNPRC_schedulerUserSchema schema)
+                    {
+                        return new TimelineTable(schema, SNPRC_schedulerSchema.getInstance().getTableInfoTimelineProjectItem()).init();
+                    }
+                },
+        TimelineItem
+                {
+                    @Override
+                    public TableInfo createTable(SNPRC_schedulerUserSchema schema)
+                    {
+                        return new TimelineItemTable(schema, SNPRC_schedulerSchema.getInstance().getTableInfoTimelineItem()).init();
+                    }
+                },
+        Schedule
+                {
+                    @Override
+                    public TableInfo createTable(SNPRC_schedulerUserSchema schema)
+                    {
+                        return new TimelineTable(schema, SNPRC_schedulerSchema.getInstance().getTableInfoSchedule()).init();
+                    }
+                };
+
+
+        // pass through tables not in the enum
+        public abstract TableInfo createTable(SNPRC_schedulerUserSchema schema);
+        }
 
 
     private TableInfo getCustomPermissionTable(TableInfo schemaTable, Class<? extends Permission> perm)
@@ -47,4 +97,29 @@ public class SNPRC_schedulerUserSchema extends SimpleUserSchema
         return result.init();
     }
 
+
+    @Override
+    @Nullable
+    public TableInfo createTable(String name)
+    {
+        if (name != null)
+        {
+            TableType tableType = null;
+            for (TableType t : TableType.values())
+            {
+                // Make the enum name lookup case insensitive
+                if (t.name().equalsIgnoreCase(name.toLowerCase()))
+                {
+                    tableType = t;
+                    break;
+                }
+            }
+            if (tableType != null)
+            {
+                return tableType.createTable(this);
+            }
+
+        }
+        return null;
+    }
 }

@@ -16,6 +16,7 @@ import org.labkey.api.snprc_scheduler.SNPRC_schedulerService;
 import org.labkey.api.util.GUID;
 import org.labkey.snprc_scheduler.domains.Timeline;
 import org.labkey.snprc_scheduler.domains.TimelineItem;
+import org.labkey.snprc_scheduler.domains.TimelineProjectItem;
 import org.labkey.snprc_scheduler.security.QCStateEnum;
 
 import java.text.DateFormat;
@@ -102,7 +103,8 @@ public class SNPRC_schedulerServiceImpl implements SNPRC_schedulerService
             timeline1.setQcState(QCStateEnum.getValueByName("COmpleted"));
 
 
-            timeline1.setTimelineItems(getTimelineItemTestData(c, u, timeline1.getTimelineId(), timeline1.getRevisionNum(), timeline1.getProjectId(), timeline1.getProjectRevisionNum()));
+            timeline1.setTimelineItems(getTimelineItemTestData(c, u, timeline1.getObjectId(), timeline1.getProjectId(), timeline1.getProjectRevisionNum()));
+            timeline1.setTimelineProjectItems(getTimelineProjectItemTestData(c, u, timeline1.getObjectId(), timeline1.getProjectId(), timeline1.getProjectRevisionNum()));
             timelines.add(timeline1.toJSON(c, u));
 
             Timeline timeline2 = new Timeline();
@@ -123,7 +125,8 @@ public class SNPRC_schedulerServiceImpl implements SNPRC_schedulerService
             timeline2.setSchedulerNotes("The ships hung in the sky in much the same way that bricks don’t.");
             timeline2.setQcState(QCStateEnum.getValueByName("In Progress"));
 
-            timeline2.setTimelineItems(getTimelineItemTestData(c, u, timeline2.getTimelineId(), timeline2.getRevisionNum(), timeline2.getProjectId(), timeline2.getProjectRevisionNum()));
+            timeline2.setTimelineItems(getTimelineItemTestData(c, u, timeline2.getObjectId(), timeline2.getProjectId(), timeline2.getProjectRevisionNum()));
+            timeline2.setTimelineProjectItems(getTimelineProjectItemTestData(c, u, timeline2.getObjectId(), timeline2.getProjectId(), timeline2.getProjectRevisionNum()));
             timelines.add(timeline2.toJSON(c, u));
 
             Timeline timeline3 = new Timeline();
@@ -144,7 +147,8 @@ public class SNPRC_schedulerServiceImpl implements SNPRC_schedulerService
             timeline3.setQcState(QCStateEnum.getValueByName("Completed"));
 
 
-            timeline3.setTimelineItems(getTimelineItemTestData(c, u, timeline3.getTimelineId(), timeline3.getRevisionNum(), timeline3.getProjectId(), timeline3.getProjectRevisionNum()));
+            timeline3.setTimelineItems(getTimelineItemTestData(c, u, timeline3.getObjectId(), timeline3.getProjectId(), timeline3.getProjectRevisionNum()));
+            timeline3.setTimelineProjectItems(getTimelineProjectItemTestData(c, u, timeline3.getObjectId(), timeline3.getProjectId(), timeline3.getProjectRevisionNum()));
             timelines.add(timeline3.toJSON(c, u));
         }
 
@@ -156,10 +160,9 @@ public class SNPRC_schedulerServiceImpl implements SNPRC_schedulerService
         return timelines;
     }
 
-    List<TimelineItem> getTimelineItemTestData(Container c, User u, Integer timelineId, Integer timelineRevisionNum, Integer ProjectId, Integer RevisionNum)
+    List<TimelineItem> getTimelineItemTestData(Container c, User u, String timelineObjectId, Integer ProjectId, Integer RevisionNum)
     {
         // get project Items test data
-        // Adding project items for project 20 rev 0
         UserSchema schema = QueryService.get().getUserSchema(u, c, "snd");
         SQLFragment sql = new SQLFragment("SELECT * FROM snd.ProjectItems as pi");
                 sql.append(" JOIN snd.Projects as p on pi.ParentObjectId = p.ObjectId ");
@@ -172,16 +175,41 @@ public class SNPRC_schedulerServiceImpl implements SNPRC_schedulerService
 
         int studyDay = 0;
         int timelineItemId = 0;
-                for( ProjectItem projectItem :selector.getArrayList(ProjectItem .class))
 
+        for( ProjectItem projectItem :selector.getArrayList(ProjectItem .class))
         {
-
-            TimelineItem timelineItems1 = new TimelineItem(timelineItemId, timelineId, timelineRevisionNum, projectItem.getProjectItemId(), studyDay, u);
+            TimelineItem timelineItems1 = new TimelineItem(timelineItemId, timelineObjectId, projectItem.getProjectItemId(), studyDay, u);
             timelineItemId++;
             if (timelineItemId % 2 == 0) studyDay++;
             tItems.add(timelineItems1);
         }
 
         return tItems;
+    }
+
+    List<TimelineProjectItem> getTimelineProjectItemTestData(Container c, User u, String timelineObjectId, Integer ProjectId, Integer RevisionNum) {
+        List<TimelineProjectItem> tpItems = new ArrayList<>();
+
+        // get project Items test data
+        UserSchema schema = QueryService.get().getUserSchema(u, c, "snd");
+        SQLFragment sql = new SQLFragment("SELECT * FROM snd.ProjectItems as pi");
+        sql.append(" JOIN snd.Projects as p on pi.ParentObjectId = p.ObjectId ");
+        sql.append(" JOIN snd.superPkgs as sp on pi.SuperPkgId = sp.SuperPkgId and sp.ParentSuperPkgId is NULL");
+        sql.append(" WHERE  p.ProjectId = " + ProjectId.toString());
+        sql.append(" AND p.RevisionNum = " + RevisionNum.toString());
+        SqlSelector selector = new SqlSelector(schema.getDbSchema(), sql);
+
+        int sortOrder = 0;
+        String footNote = "";
+        for( ProjectItem projectItem :selector.getArrayList(ProjectItem .class))
+        {
+            TimelineProjectItem timelineProjectItems = new TimelineProjectItem(timelineObjectId, projectItem.getProjectItemId(), footNote, sortOrder, u);
+            sortOrder++;
+
+            tpItems.add(timelineProjectItems);
+        }
+
+        return tpItems;
+
     }
 }

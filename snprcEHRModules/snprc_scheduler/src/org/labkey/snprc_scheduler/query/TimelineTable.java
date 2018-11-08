@@ -30,10 +30,10 @@ public class TimelineTable extends SimpleUserSchema.SimpleTable<SNPRC_schedulerU
 {
 
     /**
-     *
      * Created by thawkins on 9/13/2018.
      * <p>
      * Create the simple table.
+     *
      * @param schema
      * @param table
      */
@@ -51,7 +51,7 @@ public class TimelineTable extends SimpleUserSchema.SimpleTable<SNPRC_schedulerU
         // initialize virtual columns here
         // HasItems = true if the timeline has timeline items assigned
         SQLFragment hasItemsSql = new SQLFragment();
-        hasItemsSql.append("(CASE WHEN EXISTS (SELECT pr.TimelineId FROM ");
+        hasItemsSql.append("(CASE WHEN EXISTS (SELECT t.TimelineId FROM ");
         hasItemsSql.append(SNPRC_schedulerSchema.getInstance().getTableInfoTimeline(), "t");
         hasItemsSql.append(" JOIN ");
         hasItemsSql.append(SNPRC_schedulerSchema.getInstance().getTableInfoTimelineItem(), "tl");
@@ -59,6 +59,22 @@ public class TimelineTable extends SimpleUserSchema.SimpleTable<SNPRC_schedulerU
         hasItemsSql.append(" THEN 'true' ELSE 'false' END)");
         ExprColumn hasItemsCol = new ExprColumn(this, "HasItems", hasItemsSql, JdbcType.BOOLEAN);
         addColumn(hasItemsCol);
+
+        SQLFragment projectIdSql = new SQLFragment();
+        projectIdSql.append("SELECT pr.ProjectId FROM snd.Projects as pr");
+        projectIdSql.append(" JOIN ");
+        projectIdSql.append(SNPRC_schedulerSchema.getInstance().getTableInfoTimeline(), "t");
+        projectIdSql.append(" ON t.ProjectObjectId = pr.ObjectId )");
+        ExprColumn projectIdCol = new ExprColumn(this, "ProjectId", projectIdSql, JdbcType.INTEGER);
+        addColumn(projectIdCol);
+
+        SQLFragment revisionNumSql = new SQLFragment();
+        revisionNumSql.append("SELECT pr.RevisionNum FROM snd.Projects as pr");
+        revisionNumSql.append(" JOIN ");
+        revisionNumSql.append(SNPRC_schedulerSchema.getInstance().getTableInfoTimeline(), "t");
+        revisionNumSql.append(" ON t.ProjectObjectId = pr.ObjectId )");
+        ExprColumn revisionNumCol = new ExprColumn(this, "ProjectRevisionNum", revisionNumSql, JdbcType.INTEGER);
+        addColumn(revisionNumCol);
 
         return this;
     }

@@ -2476,7 +2476,10 @@ snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/domains/Timeline.
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/domains/TimelineAnimalJunction.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/domains/TimelineItem.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/domains/TimelineProjectItem.java -text
+snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/query/ScheduleTable.java -text
+snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/query/TimelineAnimalJunctionTable.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/query/TimelineItemTable.java -text
+snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/query/TimelineProjectItemTable.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/query/TimelineTable.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/security/QCStateEnum.java -text
 snprcEHRModules/snprc_scheduler/src/org/labkey/snprc_scheduler/security/SNPRC_schedulerEditorsPermission.java -text
