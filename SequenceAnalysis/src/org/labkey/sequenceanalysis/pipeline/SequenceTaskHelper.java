@@ -267,7 +267,7 @@ public class SequenceTaskHelper implements PipelineContext
 
         //read environment
         String threads = StringUtils.trimToNull(System.getenv(THREAD_PROP_NAME));
-        if (threads != null && NumberUtils.isNumber(threads))
+        if (threads != null && NumberUtils.isCreatable(threads))
         {
             try
             {
@@ -280,7 +280,7 @@ public class SequenceTaskHelper implements PipelineContext
         }
 
         threads = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath(THREAD_PROP_NAME);
-        if (StringUtils.trimToNull(threads) != null && NumberUtils.isNumber(threads))
+        if (StringUtils.trimToNull(threads) != null && NumberUtils.isCreatable(threads))
         {
             try
             {
