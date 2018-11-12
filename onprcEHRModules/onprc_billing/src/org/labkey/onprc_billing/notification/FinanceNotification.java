@@ -287,9 +287,14 @@ public class FinanceNotification extends AbstractNotification
     private void getProjectSummary(Container c, User u, final Calendar start, Calendar endDate, final String categoryName, Map<String, String> categoryToQuery, final Map<String, Map<String, Map<String, Map<String, Integer>>>> dataMap, final Map<String, Map<String, Double>> totalsByCategory)
     {
         UserSchema us = QueryService.get().getUserSchema(u, c, ONPRC_BillingSchema.NAME);
-        QueryDefinition qd = us.getQueryDefForTable(categoryToQuery.get(categoryName));
+        String queryName = categoryToQuery.get(categoryName);
+        QueryDefinition qd = us.getQueryDefForTable(queryName);
         List<QueryException> errors = new ArrayList<>();
         TableInfo ti = qd.getTable(us, errors, true);
+        if (ti == null)
+        {
+            throw new IllegalArgumentException("Could not find query '" + queryName + "' for category '" + categoryName + "'");
+        }
 
         Map<String, Object> params = new HashMap<>();
         Long numDays = ((DateUtils.truncate(new Date(), Calendar.DATE).getTime() - start.getTimeInMillis()) / DateUtils.MILLIS_PER_DAY) + 1;
