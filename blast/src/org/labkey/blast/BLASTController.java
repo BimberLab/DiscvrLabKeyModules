@@ -30,7 +30,6 @@ import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
@@ -40,7 +39,6 @@ import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.security.CSRF;
 import org.labkey.api.security.IgnoresTermsOfUse;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.RequiresSiteAdmin;
@@ -83,7 +81,7 @@ public class BLASTController extends SpringActionController
         setActionResolver(_actionResolver);
     }
 
-    @RequiresPermission(AdminPermission.class) @CSRF
+    @RequiresPermission(AdminPermission.class)
     public class GetSettingsAction extends ApiAction<Object>
     {
         public ApiResponse execute(Object form, BindException errors)
@@ -98,7 +96,7 @@ public class BLASTController extends SpringActionController
         }
     }
 
-    @RequiresSiteAdmin @CSRF
+    @RequiresSiteAdmin
     public class SetSettingsAction extends ApiAction<SettingsForm>
     {
         public ApiResponse execute(SettingsForm form, BindException errors)
@@ -143,7 +141,7 @@ public class BLASTController extends SpringActionController
         }
     }
 
-    @RequiresPermission(InsertPermission.class) @CSRF
+    @RequiresPermission(InsertPermission.class)
     public class CreateDatabaseAction extends ApiAction<DatabaseForm>
     {
         public ApiResponse execute(DatabaseForm form, BindException errors)
@@ -467,7 +465,7 @@ public class BLASTController extends SpringActionController
         }
     }
 
-    @RequiresPermission(AdminPermission.class) @CSRF
+    @RequiresPermission(AdminPermission.class)
     public class RecreateDatabaseAction extends ApiAction<RecreateDatabaseForm>
     {
         public ApiResponse execute(RecreateDatabaseForm form, BindException errors)

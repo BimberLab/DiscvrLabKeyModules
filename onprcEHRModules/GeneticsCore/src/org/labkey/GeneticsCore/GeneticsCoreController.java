@@ -11,7 +11,6 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.api.ExperimentService;
-import org.labkey.api.security.CSRF;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
@@ -19,10 +18,7 @@ import org.labkey.api.util.Pair;
 import org.labkey.api.view.ActionURL;
 import org.springframework.validation.BindException;
 
-import java.lang.String;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +39,6 @@ public class GeneticsCoreController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class GetNavItemsAction extends ApiAction<Object>
     {
         public ApiResponse execute(Object form, BindException errors)
@@ -128,7 +123,6 @@ public class GeneticsCoreController extends SpringActionController
     }
 
     @RequiresPermission(UpdatePermission.class)
-    @CSRF
     public class CacheAnalysesAction extends ApiAction<CacheAnalysesForm>
     {
         public ApiResponse execute(CacheAnalysesForm form, BindException errors)
@@ -208,7 +202,6 @@ public class GeneticsCoreController extends SpringActionController
 
 
     @RequiresPermission(UpdatePermission.class)
-    @CSRF
     public class CacheHaplotypesAction extends ApiAction<CacheAnalysesForm>
     {
         public ApiResponse execute(CacheAnalysesForm form, BindException errors)

@@ -23,7 +23,6 @@ import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ExportAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.PropertyManager;
-import org.labkey.api.security.CSRF;
 import org.labkey.api.security.IgnoresTermsOfUse;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.RequiresSiteAdmin;
@@ -46,7 +45,7 @@ public class OmeroIntegrationController extends SpringActionController
         setActionResolver(_actionResolver);
     }
 
-    @RequiresPermission(AdminPermission.class) @CSRF
+    @RequiresPermission(AdminPermission.class)
     public class GetSettingsAction extends ApiAction<Object>
     {
         public ApiResponse execute(Object form, BindException errors)
@@ -59,7 +58,6 @@ public class OmeroIntegrationController extends SpringActionController
     }
 
     @RequiresSiteAdmin
-    @CSRF
     public class SetSettingsAction extends ApiAction<SettingsForm>
     {
         public ApiResponse execute(SettingsForm form, BindException errors)

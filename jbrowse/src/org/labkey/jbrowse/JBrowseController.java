@@ -50,7 +50,6 @@ import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
-import org.labkey.api.security.CSRF;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.AdminOperationsPermission;
 import org.labkey.api.security.permissions.AdminPermission;
@@ -63,7 +62,6 @@ import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.api.view.WebPartView;
-import org.labkey.api.view.template.ClientDependency;
 import org.labkey.api.view.template.PageConfig;
 import org.labkey.jbrowse.model.Database;
 import org.labkey.jbrowse.model.JsonFile;
@@ -94,7 +92,6 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    @CSRF
     public class GetSettingsAction extends ApiAction<Object>
     {
         public ApiResponse execute(Object form, BindException errors)
@@ -110,7 +107,6 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(AdminOperationsPermission.class)
-    @CSRF
     public class SetSettingsAction extends ApiAction<SettingsForm>
     {
         public ApiResponse execute(SettingsForm form, BindException errors)
@@ -155,7 +151,6 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    @CSRF
     public class CreateDataBaseAction extends ApiAction<DatabaseForm>
     {
         public ApiResponse execute(DatabaseForm form, BindException errors)
@@ -181,7 +176,6 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    @CSRF
     public class AddDatabaseMemberAction extends ApiAction<DatabaseForm>
     {
         public ApiResponse execute(DatabaseForm form, BindException errors)
@@ -336,7 +330,6 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    @CSRF
     public class ReprocessResourcesAction extends ApiAction<ReprocessResourcesForm>
     {
         public ApiResponse execute(ReprocessResourcesForm form, BindException errors)
@@ -454,7 +447,6 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    @CSRF
     public class ModifyAttributesAction extends ApiAction<SimpleApiJsonForm>
     {
         public ApiResponse execute(SimpleApiJsonForm form, BindException errors)
@@ -536,7 +528,6 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class GetGenotypes extends ApiAction<GetGenotypesForm>
     {
         private List<JsonFile> getJsonFiles(GetGenotypesForm form)

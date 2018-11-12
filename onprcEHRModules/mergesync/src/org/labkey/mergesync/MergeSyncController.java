@@ -26,7 +26,6 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.query.DetailsURL;
-import org.labkey.api.security.CSRF;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.ValidEmail;
 import org.labkey.api.security.permissions.AdminPermission;
@@ -51,7 +50,6 @@ public class MergeSyncController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    @CSRF
     public class SetEtlDetailsAction extends ApiAction<EtlAdminForm>
     {
         public ApiResponse execute(EtlAdminForm form, BindException errors)
@@ -240,7 +238,6 @@ public class MergeSyncController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    @CSRF
     public class GetEtlDetailsAction extends ApiAction<Object>
     {
         public ApiResponse execute(Object form, BindException errors)
@@ -303,7 +300,6 @@ public class MergeSyncController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    @CSRF
     public class ResyncRunsAction extends ApiAction<ResyncRunsForm>
     {
         public ApiResponse execute(ResyncRunsForm form, BindException errors)

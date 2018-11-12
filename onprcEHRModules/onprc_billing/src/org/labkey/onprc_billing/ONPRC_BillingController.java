@@ -33,7 +33,6 @@ import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.QueryAction;
 import org.labkey.api.query.QueryForm;
 import org.labkey.api.query.QueryService;
-import org.labkey.api.security.CSRF;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
@@ -65,7 +64,6 @@ public class ONPRC_BillingController extends SpringActionController
     }
 
     @RequiresPermission(UpdatePermission.class)
-    @CSRF
     public class RunBillingPipelineAction extends ApiAction<BillingPipelineForm>
     {
         public ApiResponse execute(BillingPipelineForm form, BindException errors) throws PipelineJobException

@@ -91,7 +91,6 @@ import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryForm;
 import org.labkey.api.query.QueryService;
-import org.labkey.api.security.CSRF;
 import org.labkey.api.security.IgnoresTermsOfUse;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.RequiresSiteAdmin;
@@ -420,7 +419,6 @@ public class SequenceAnalysisController extends SpringActionController
 
     @RequiresPermission(ReadPermission.class)
     @IgnoresTermsOfUse
-    @CSRF
     public class DownloadTempImageAction extends ExportAction<TempImageAction>
     {
         public void export(TempImageAction form, HttpServletResponse response, BindException errors) throws Exception
@@ -467,7 +465,6 @@ public class SequenceAnalysisController extends SpringActionController
 
     @RequiresPermission(ReadPermission.class)
     @IgnoresTermsOfUse
-    @CSRF
     public class ConvertTextToFileAction extends ExportAction<ConvertTextToFileForm>
     {
         public void export(ConvertTextToFileForm form, HttpServletResponse response, BindException errors) throws Exception
@@ -871,7 +868,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class GetSequencePipelineEnabledAction extends ApiAction<Object>
     {
         @Override
@@ -886,10 +882,9 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class GetAnalysisToolDetailsAction extends ApiAction<Object>
     {
-        public ApiResponse execute(Object form, BindException errors) throws Exception
+        public ApiResponse execute(Object form, BindException errors)
         {
             Map<String, Object> ret = new HashMap<>();
 
@@ -917,7 +912,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(UpdatePermission.class)
-    @CSRF
     public class SaveAnalysisAsTemplateAction extends ApiAction<SaveAnalysisAsTemplateForm>
     {
         public ApiResponse execute(SaveAnalysisAsTemplateForm form, BindException errors) throws Exception
@@ -1011,7 +1005,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class ValidateReadsetFilesAction extends ApiAction<ValidateReadsetImportForm>
     {
         public ApiResponse execute(ValidateReadsetImportForm form, BindException errors) throws Exception
@@ -1179,7 +1172,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class AnalyzeBamAction extends ApiAction<AnalyzeBamForm>
     {
         public ApiResponse execute(AnalyzeBamForm form, BindException errors) throws Exception
@@ -1413,7 +1405,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class GetAASnps extends ApiAction<AASNPForm>
     {
         public ApiResponse execute(AASNPForm form, BindException errors) throws Exception
@@ -1472,7 +1463,6 @@ public class SequenceAnalysisController extends SpringActionController
 
     @RequiresPermission(ReadPermission.class)
     @IgnoresTermsOfUse
-    @CSRF
     public class MergeFastqFilesAction extends ExportAction<MergeFastqFilesForm>
     {
         public void export(MergeFastqFilesForm form, HttpServletResponse response, BindException errors) throws Exception
@@ -1777,7 +1767,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class GenerateChartAction extends ApiAction<GenerateChartForm>
     {
         public ApiResponse execute(GenerateChartForm form, BindException errors) throws Exception
@@ -1803,7 +1792,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class DownloadChartAction extends ExportAction<GenerateChartForm>
     {
         @Override
@@ -1903,7 +1891,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    @CSRF
     public class StartPipelineJobAction extends ApiAction<AnalyzeForm>
     {
         public ApiResponse execute(AnalyzeForm form, BindException errors) throws Exception
@@ -2106,7 +2093,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    @CSRF
     public class CreateReferenceLibraryAction extends ApiAction<CreateReferenceLibraryForm>
     {
         public ApiResponse execute(CreateReferenceLibraryForm form, BindException errors) throws Exception
@@ -2272,7 +2258,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    @CSRF
     public class ImportFastaSequencesAction extends AbstractFileUploadAction<ImportFastaSequencesForm>
     {
         @Override
@@ -2337,7 +2322,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    @CSRF
     public class ImportReferenceSequencesAction extends ApiAction<ImportFastaSequencesForm>
     {
         @Override
@@ -2566,7 +2550,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    @CSRF
     public class ImportOutputFileAction extends AbstractFileUploadAction<ImportOutputFileForm>
     {
         @Override
@@ -2701,7 +2684,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    @CSRF
     public class ImportTrackAction extends AbstractFileUploadAction<ImportTrackForm>
     {
         @Override
@@ -2844,7 +2826,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    @CSRF
     public class ImportChainFileAction extends AbstractFileUploadAction<ImportChainFileForm>
     {
         @Override
@@ -2956,7 +2937,6 @@ public class SequenceAnalysisController extends SpringActionController
 
     @RequiresPermission(ReadPermission.class)
     @IgnoresTermsOfUse
-    @CSRF
     public class DownloadReferencesAction extends ExportAction<DownloadReferencesForm>
     {
         public void export(DownloadReferencesForm form, final HttpServletResponse response, final BindException errors) throws Exception
@@ -3143,7 +3123,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    @CSRF
     public class RecreateReferenceLibraryAction extends ApiAction<RecreateReferenceLibraryForm>
     {
         public ApiResponse execute(RecreateReferenceLibraryForm form, BindException errors)
@@ -3217,7 +3196,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    @CSRF
     public class CheckFileStatusForHandlerAction extends ApiAction<CheckFileStatusForm>
     {
         public ApiResponse execute(CheckFileStatusForm form, BindException errors)
@@ -3522,7 +3500,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class ExportSequenceFilesAction extends ExportAction<ExportSequenceFilesForm>
     {
         public void export(ExportSequenceFilesForm form, HttpServletResponse response, BindException errors) throws Exception
@@ -3666,7 +3643,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class GetDataItemsAction extends ApiAction<GetDataItemsForm>
     {
         public ApiResponse execute(GetDataItemsForm form, BindException errors)
@@ -3741,7 +3717,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    @CSRF
     public class LoadNcbiGenomeAction extends ApiAction<LoadNcbiGenomeForm>
     {
         public ApiResponse execute(LoadNcbiGenomeForm form, BindException errors) throws Exception
@@ -3828,7 +3803,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    @CSRF
     public class RunSequenceHandlerAction extends ApiAction<RunSequenceHandlerForm>
     {
         public ApiResponse execute(RunSequenceHandlerForm form, BindException errors) throws Exception
@@ -4021,7 +3995,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    @CSRF
     public class ImportOutputFilesAction extends ApiAction<ImportOutputFilesForm>
     {
         public ApiResponse execute(ImportOutputFilesForm form, BindException errors) throws Exception
@@ -4215,7 +4188,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    @CSRF
     public class GetAvailableHandlersAction extends ApiAction<GetAvailableHandlersForm>
     {
         public ApiResponse execute(GetAvailableHandlersForm form, BindException errors) throws Exception
@@ -4343,7 +4315,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class CompareFastaSequencesAction extends ApiAction<CompareFastaSequencesForm>
     {
         public ApiResponse execute(CompareFastaSequencesForm form, BindException errors) throws Exception
@@ -4650,7 +4621,6 @@ public class SequenceAnalysisController extends SpringActionController
 //    }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class GetBamHaplotypesAction extends ApiAction<GetBamHaplotypesForm>
     {
         public ApiResponse execute(GetBamHaplotypesForm form, BindException errors) throws Exception
@@ -4822,7 +4792,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    @CSRF
     public class ImportSequenceTracksAction extends ApiAction<ImportTracksForm>
     {
         public ApiResponse execute(ImportTracksForm form, BindException errors) throws Exception
@@ -4908,7 +4877,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class GetSequenceImportDefaultsAction extends ApiAction<Object>
     {
         public ApiResponse execute(Object form, BindException errors) throws Exception
@@ -4922,7 +4890,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    @CSRF
     public class SetSequenceImportDefaultsAction extends ApiAction<SetSequenceImportDefaultsForm>
     {
         public static final String INPUT_FILE_TREATMENT = "inputFileTreatment";
@@ -4955,7 +4922,6 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    @CSRF
     public class GetSamplesFromVcfAction extends ApiAction<GetSamplesFromVcfForm>
     {
         public ApiResponse execute(GetSamplesFromVcfForm form, BindException errors) throws Exception

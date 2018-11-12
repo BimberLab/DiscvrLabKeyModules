@@ -60,7 +60,6 @@ import org.labkey.api.query.QueryAction;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.query.ValidationException;
-import org.labkey.api.security.CSRF;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminOperationsPermission;
@@ -582,7 +581,6 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    @CSRF
     public class ProcessAssayDataAction extends AbstractFileUploadAction<ProcessAssayForm>
     {
         @Override
@@ -676,7 +674,6 @@ public class LaboratoryController extends SpringActionController
 
 
     @RequiresPermission(AdminPermission.class)
-    @CSRF
     public class PopulateDefaultsAction extends ApiAction<PopulateDefaultsForm>
     {
         public ApiResponse execute(PopulateDefaultsForm form, BindException errors) throws Exception
@@ -715,7 +712,6 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(UpdatePermission.class)
-    @CSRF
     public class UpdateWorkbookAction extends ApiAction<UpdateWorkbookForm>
     {
         public ApiResponse execute(UpdateWorkbookForm form, BindException errors) throws Exception
@@ -754,7 +750,6 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(UpdatePermission.class)
-    @CSRF
     public class UpdateWorkbookTagsAction extends ApiAction<UpdateWorkbookForm>
     {
         public ApiResponse execute(UpdateWorkbookForm form, BindException errors) throws Exception
@@ -869,7 +864,6 @@ public class LaboratoryController extends SpringActionController
 
 
     @RequiresPermission(UpdatePermission.class)
-    @CSRF
     public class SaveTemplateAction extends ApiAction<SaveTemplateForm>
     {
         public ApiResponse execute(SaveTemplateForm form, BindException errors) throws Exception
@@ -987,7 +981,6 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class CreateTemplateAction extends ExportAction<ProcessAssayForm>
     {
         @Override
@@ -1055,7 +1048,6 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class GetDemographicsSourcesAction extends ApiAction<DataSourcesForm>
     {
         public ApiResponse execute(DataSourcesForm form, BindException errors)
@@ -1132,7 +1124,6 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class GetAdditionalDataSourcesAction extends ApiAction<DataSourcesForm>
     {
         public ApiResponse execute(DataSourcesForm form, BindException errors)
@@ -1251,7 +1242,6 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(LaboratoryAdminPermission.class)
-    @CSRF
     public class SetDemographicsSourcesAction extends ApiAction<SetDataSourcesForm>
     {
         public ApiResponse execute(SetDataSourcesForm form, BindException errors)
@@ -1310,7 +1300,6 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(LaboratoryAdminPermission.class)
-    @CSRF
     public class SetAdditionalDataSourcesAction extends ApiAction<SetDataSourcesForm>
     {
         public ApiResponse execute(SetDataSourcesForm form, BindException errors)
@@ -1392,7 +1381,6 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(LaboratoryAdminPermission.class)
-    @CSRF
     public class SetUrlDataSourcesAction extends ApiAction<SetUrlDataSourcesForm>
     {
         public ApiResponse execute(SetUrlDataSourcesForm form, BindException errors)
@@ -1448,7 +1436,6 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class GetAssayImportHeadersAction extends ApiAction<AssayImportHeadersForm>
     {
         public ApiResponse execute(AssayImportHeadersForm form, BindException errors)
@@ -1490,7 +1477,6 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(LaboratoryAdminPermission.class)
-    @CSRF
     public class SetItemVisibilityAction extends ApiAction<JsonDataForm>
     {
         public ApiResponse execute(JsonDataForm form, BindException errors)
@@ -1544,7 +1530,6 @@ public class LaboratoryController extends SpringActionController
 
 
     @RequiresPermission(LaboratoryAdminPermission.class)
-    @CSRF
     public class SetItemDefaultViewAction extends ApiAction<JsonDataForm>
     {
         public ApiResponse execute(JsonDataForm form, BindException errors)
@@ -1578,7 +1563,6 @@ public class LaboratoryController extends SpringActionController
 
 
     @RequiresPermission(LaboratoryAdminPermission.class)
-    @CSRF
     public class SetDataBrowserSettingsAction extends ApiAction<JsonDataForm>
     {
         public ApiResponse execute(JsonDataForm form, BindException errors)
@@ -1639,7 +1623,6 @@ public class LaboratoryController extends SpringActionController
 
 
     @RequiresPermission(LaboratoryAdminPermission.class)
-    @CSRF
     public class SaveAssayDefaultsAction extends ApiAction<JsonDataForm>
     {
         public ApiResponse execute(JsonDataForm form, BindException errors)
@@ -1672,7 +1655,6 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class GetDataItemsAction extends ApiAction<GetDataItemsForm>
     {
         public ApiResponse execute(GetDataItemsForm form, BindException errors)
@@ -1787,7 +1769,6 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class GetImportMethodsAction extends ApiAction<ImportMethodsForm>
     {
         public ApiResponse execute(ImportMethodsForm form, BindException errors)
@@ -1857,7 +1838,6 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class GetDataSummaryAction extends ApiAction<DataSummaryForm>
     {
         public ApiResponse execute(DataSummaryForm form, BindException errors)
@@ -1934,7 +1914,6 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    @CSRF
     public class GetSubjectIdSummaryAction extends ApiAction<SubjectSummaryForm>
     {
         public ApiResponse execute(SubjectSummaryForm form, BindException errors)
@@ -2277,7 +2256,6 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    @CSRF
     public class MigrateWorkbooksAction extends ApiAction<MigrateWorkbooksForm>
     {
         public ApiResponse execute(MigrateWorkbooksForm form, BindException errors) throws Exception
