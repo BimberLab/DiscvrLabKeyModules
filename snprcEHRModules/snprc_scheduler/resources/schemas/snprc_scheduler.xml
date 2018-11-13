@@ -24,7 +24,7 @@ FK for table Timeline is set via SNPRC_EHRCustomizer.java
         xmlns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 <table tableName="Timeline" tableDbType="TABLE">
     <columns>
-        <column columnName="TimelineID">
+        <column columnName="TimelineId">
             <nullable>false</nullable>
         </column>
         <column columnName="RevisionNum">
