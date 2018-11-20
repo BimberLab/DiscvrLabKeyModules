@@ -1,4 +1,0 @@
-SELECT
-TS_SKILL AS RequirementName
-FROM cnprcSrc_complianceAndTraining.ZTRAIN_SKILLS
-WHERE TS_SKILL IS NOT NULL;
