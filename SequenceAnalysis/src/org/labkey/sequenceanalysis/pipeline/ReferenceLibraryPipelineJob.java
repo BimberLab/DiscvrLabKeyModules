@@ -70,7 +70,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
     {
         if (libraryMembers != null)
         {
-            ObjectMapper objectMapper = new ObjectMapper();
+            ObjectMapper objectMapper = createObjectMapper();
             getLogger().info("writing libraryMembers to XML: " + libraryMembers.size());
             objectMapper.writeValue(getSerializedLibraryMembersFile(), libraryMembers);
         }
@@ -81,7 +81,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
         File xml = getSerializedLibraryMembersFile();
         if (xml.exists())
         {
-            ObjectMapper objectMapper = new ObjectMapper();
+            ObjectMapper objectMapper = createObjectMapper();
             List<ReferenceLibraryMember> ret = objectMapper.readValue(xml, new TypeReference<List<ReferenceLibraryMember>>(){});
             getLogger().debug("read libraryMembers from file: " + ret.size());
 

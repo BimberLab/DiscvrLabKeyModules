@@ -15,6 +15,9 @@
  */
 package org.labkey.sequenceanalysis.pipeline;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
@@ -26,6 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.data.ConvertHelper;
+import org.labkey.api.pipeline.ObjectKeySerialization;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
@@ -1255,6 +1259,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
     public static class Resumer extends AbstractResumer
     {
         private File _workingFasta = null;
+        @JsonSerialize(keyUsing = ObjectKeySerialization.Serializer.class)
+        @JsonDeserialize(keyUsing = ObjectKeySerialization.Deserializer.class)
         private Map<ReadData, Pair<File, File>> _filesToAlign = null;
         private File _mergedBamFile = null;
         private File _postProcessedBamFile = null;
@@ -1618,6 +1624,25 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
     public static class TestCase extends Assert
     {
         private static final Logger _log = Logger.getLogger(TestCase.class);
+
+        @Test
+        public void serializeRecordedActionTest() throws Exception
+        {
+            RecordedAction action1 = new RecordedAction();
+            action1.setName("Action1");
+            action1.setDescription("Description");
+            action1.addInput(new File("/input"), "Input");
+            action1.addOutput(new File("/output"), "Output", false);
+
+            File tmp = new File(System.getProperty("java.io.tmpdir"));
+            File xml = new File(tmp, Resumer.XML_NAME);
+
+            ObjectMapper objectMapper = PipelineJob.createObjectMapper();
+            objectMapper.writeValue(xml, action1);
+
+            RecordedAction action = objectMapper.readValue(xml, RecordedAction.class);
+            assertEquals("Action1", action.getName());
+        }
 
         @Test
         public void serializeTest() throws Exception

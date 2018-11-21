@@ -74,7 +74,7 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
             try (OutputStream output = IOUtil.maybeBufferOutputStream(IOUtil.openFileForWriting(xml)))
             {
                 getLogger().info("writing SequenceOutputFiles to XML: " + files.size());
-                ObjectMapper objectMapper = new ObjectMapper();
+                ObjectMapper objectMapper = createObjectMapper();
                 objectMapper.writeValue(output, new ArrayList<>(files));
             }
         }
@@ -98,7 +98,7 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
         {
             try (InputStream is = IOUtil.maybeBufferInputStream(IOUtil.openFileForReading(xml)))
             {
-                ObjectMapper objectMapper = new ObjectMapper();
+                ObjectMapper objectMapper = createObjectMapper();
                 List<SequenceOutputFile> ret = objectMapper.readValue(is, new TypeReference<List<SequenceOutputFile>>(){});
                 getLogger().debug("read SequenceOutputFiles from file: " + ret.size());
 

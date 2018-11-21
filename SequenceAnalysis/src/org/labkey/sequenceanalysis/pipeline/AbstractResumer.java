@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 
@@ -50,7 +51,7 @@ abstract public class AbstractResumer implements Serializable
     {
         try (BufferedInputStream bus = new BufferedInputStream(new FileInputStream(xml)))
         {
-            ObjectMapper objectMapper = new ObjectMapper();
+            ObjectMapper objectMapper = PipelineJob.createObjectMapper();
             return objectMapper.readValue(bus, clazz);
         }
         catch (IOException e)
@@ -79,7 +80,7 @@ abstract public class AbstractResumer implements Serializable
         _log.debug("using file: " + output.getPath());
         try
         {
-            ObjectMapper objectMapper = new ObjectMapper();
+            ObjectMapper objectMapper = PipelineJob.createObjectMapper();
             objectMapper.writeValue(output, this);
         }
         catch (Throwable e)
