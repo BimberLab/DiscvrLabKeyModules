@@ -12,7 +12,6 @@ dependencies {
    external "com.github.samtools:htsjdk:${htsjdkVersion}"
    BuildUtils.addLabKeyDependency(project: project, config: "compile", depProjectPath: ":externalModules:labModules:laboratory", depProjectConfig: "apiCompile")
    BuildUtils.addLabKeyDependency(project: project, config: "compile", depProjectPath: ":externalModules:labModules:LDK", depProjectConfig: "apiCompile")
-   external 'com.thoughtworks.xstream:xstream:1.2.2'
    external 'org.biojava:biojava3-core:3.0.7'
    external 'org.biojava:biojava3-genome:3.0.7'
    external 'org.itadaki:bzip2:0.9.1'

@@ -1,20 +1,15 @@
 package org.labkey.sequenceanalysis.pipeline;
 
-import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.io.xml.XppDriver;
-import org.apache.commons.lang3.time.DurationFormatUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
-import org.labkey.api.writer.PrintWriters;
 
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Serializable;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -25,7 +20,6 @@ import java.util.Map;
 abstract public class AbstractResumer implements Serializable
 {
     transient Logger _log;
-    transient static final XStream _xstream = new XStream(new XppDriver());
     transient File _localWorkDir;
 
     protected TaskFileManagerImpl _fileManager;
@@ -56,7 +50,8 @@ abstract public class AbstractResumer implements Serializable
     {
         try (BufferedInputStream bus = new BufferedInputStream(new FileInputStream(xml)))
         {
-            return (RESUMER) _xstream.fromXML(bus);
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(bus, clazz);
         }
         catch (IOException e)
         {
@@ -82,11 +77,10 @@ abstract public class AbstractResumer implements Serializable
 
         File output = getSerializedXml(outDir, getXmlName());
         _log.debug("using file: " + output.getPath());
-        try (PrintWriter writer = PrintWriters.getPrintWriter(output))
+        try
         {
-            String xml = _xstream.toXML(this);
-            _log.debug("xml length: " + xml.length());
-            writer.write(xml);
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.writeValue(output, this);
         }
         catch (Throwable e)
         {
