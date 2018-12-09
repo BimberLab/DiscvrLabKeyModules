@@ -232,11 +232,11 @@ public class IlluminaFastqSplitter<SampleIdType>
         else
         {
             String suffix;
-            if (new Integer(0).equals(sampleId))
+            if (Integer.valueOf(0).equals(sampleId))
             {
                 suffix = "Control";
             }
-            else if (sampleId == null || new Integer(-1).equals(sampleId))
+            else if (sampleId == null || Integer.valueOf(-1).equals(sampleId))
             {
                 suffix = "Undetermined";
             }

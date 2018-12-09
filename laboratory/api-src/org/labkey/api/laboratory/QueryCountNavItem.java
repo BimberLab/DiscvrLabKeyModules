@@ -45,7 +45,7 @@ public class QueryCountNavItem extends AbstractQueryNavItem implements SummaryNa
     {
         TableInfo ti = getTableInfo(c, u);
         if (ti == null)
-            return new Long(0);
+            return Long.valueOf(0);
 
         SimpleFilter filter = getFilter(c, ti);
         TableSelector ts = new TableSelector(ti, ti.getPkColumns(), filter, null);

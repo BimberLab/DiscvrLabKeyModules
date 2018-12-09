@@ -847,7 +847,7 @@ public class ETLRunnable implements Runnable
             rs = ps.executeQuery();
             if (rs.next())
             {
-                ts = new Long(rs.getTimestamp(1).getTime());
+                ts = Long.valueOf(rs.getTimestamp(1).getTime());
             }
         }
         finally
