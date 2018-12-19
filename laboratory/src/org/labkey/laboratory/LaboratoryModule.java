@@ -98,7 +98,7 @@ public class LaboratoryModule extends ExtendedSimpleModule
                 }
 
                 @Override
-                public boolean isAvailable(Container c, String location)
+                public boolean isAvailable(Container c, String scope, String location)
                 {
                     return false;
                 }
@@ -129,7 +129,7 @@ public class LaboratoryModule extends ExtendedSimpleModule
                 }
 
                 @Override
-                public boolean isAvailable(Container c, String location)
+                public boolean isAvailable(Container c, String scope, String location)
                 {
                     return WebPartFactory.LOCATION_BODY.equals(location);
                 }
