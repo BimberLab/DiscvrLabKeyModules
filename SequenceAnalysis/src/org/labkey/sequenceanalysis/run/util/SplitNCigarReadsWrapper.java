@@ -30,11 +30,7 @@ public class SplitNCigarReadsWrapper extends AbstractGatkWrapper
         ensureDictionary(referenceFasta);
         SequencePipelineService.get().ensureBamIndex(inputBam, getLogger(), false);
 
-        List<String> args = new ArrayList<>();
-        args.add(SequencePipelineService.get().getJavaFilepath());
-        args.addAll(SequencePipelineService.get().getJavaOpts());
-        args.add("-jar");
-        args.add(getJAR().getPath());
+        List<String> args = new ArrayList<>(getBaseArgs());
         args.add("-T");
         args.add("SplitNCigarReads");
         args.add("-R");

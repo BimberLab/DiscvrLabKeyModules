@@ -2,8 +2,6 @@ package org.labkey.api.sequenceanalysis.run;
 
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.pipeline.PipelineJobService;
-import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -25,11 +23,7 @@ public class VariantFiltrationWrapper extends AbstractGatkWrapper
 
         ensureDictionary(referenceFasta);
 
-        List<String> args = new ArrayList<>();
-        args.add(SequencePipelineService.get().getJavaFilepath());
-        args.addAll(SequencePipelineService.get().getJavaOpts());
-        args.add("-jar");
-        args.add(getJAR().getPath());
+        List<String> args = new ArrayList<>(getBaseArgs());
         args.add("-T");
         args.add("VariantFiltration");
         args.add("-R");

@@ -10,7 +10,6 @@ import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
-import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
@@ -178,11 +177,7 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
 
             ensureDictionary(referenceFasta);
 
-            List<String> args = new ArrayList<>();
-            args.add(SequencePipelineService.get().getJavaFilepath());
-            args.addAll(SequencePipelineService.get().getJavaOpts());
-            args.add("-jar");
-            args.add(getJAR().getPath());
+            List<String> args = new ArrayList<>(getBaseArgs());
             args.add("-T");
             args.add("VariantsToTable");
             args.add("-R");

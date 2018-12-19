@@ -2,7 +2,6 @@ package org.labkey.sequenceanalysis.run.util;
 
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
 
 import java.io.File;
@@ -27,11 +26,7 @@ public class ImmunoGenotypingWrapper extends AbstractGatkWrapper
 
     public File execute(File inputBam, File referenceFasta, File outputPrefix, List<String> options) throws PipelineJobException
     {
-        List<String> args = new ArrayList<>();
-        args.add(SequencePipelineService.get().getJavaFilepath());
-        args.addAll(SequencePipelineService.get().getJavaOpts());
-        args.add("-jar");
-        args.add(getJAR().getPath());
+        List<String> args = new ArrayList<>(getBaseArgs());
         args.add("ImmunoGenotyper");
         args.add("-R");
         args.add(referenceFasta.getPath());

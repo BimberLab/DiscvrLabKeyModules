@@ -78,7 +78,7 @@ abstract public class AbstractGatkWrapper extends AbstractCommandWrapper
         new CreateSequenceDictionaryWrapper(getLogger()).execute(referenceFasta, false);
     }
 
-    private String getJava8FilePath()
+    protected String getJava8FilePath()
     {
         //This should be defined at on TeamCity, and can be used on other servers if needed
         String java8Home = StringUtils.trimToNull(System.getenv("JDK_18"));
@@ -153,5 +153,16 @@ abstract public class AbstractGatkWrapper extends AbstractCommandWrapper
         }
 
         return maxThreads;
+    }
+
+    protected List<String> getBaseArgs()
+    {
+        List<String> args = new ArrayList<>();
+        args.add(getJava8FilePath());
+        args.addAll(SequencePipelineService.get().getJavaOpts());
+        args.add("-jar");
+        args.add(getJAR().getPath());
+
+        return args;
     }
 }

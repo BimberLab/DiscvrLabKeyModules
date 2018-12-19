@@ -58,11 +58,7 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
 
         //then run realigner
         getLogger().info("\trunning IndelRealigner");
-        List<String> realignerArgs = new ArrayList<>();
-        realignerArgs.add(SequencePipelineService.get().getJavaFilepath());
-        realignerArgs.addAll(SequencePipelineService.get().getJavaOpts());
-        realignerArgs.add("-jar");
-        realignerArgs.add(getJAR().getPath());
+        List<String> realignerArgs = new ArrayList<>(getBaseArgs());
         realignerArgs.add("-T");
         realignerArgs.add("IndelRealigner");
         realignerArgs.add("-R");
@@ -123,7 +119,7 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
                 throw new FileNotFoundException("Not found: " + scalaScript.getPath());
 
             List<String> args = new ArrayList<>();
-            args.add(SequencePipelineService.get().getJavaFilepath());
+            args.add(getJava8FilePath());
             //for now, ignore java opts since queue's scatter/gather causes issues
             //args.addAll(SequencePipelineService.get().getJavaOpts());
             args.add("-classpath");
@@ -217,11 +213,7 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
     private File buildTargetIntervals(File referenceFasta, File inputBam, File knownIndelsVcf, File intervalsFile) throws PipelineJobException
     {
         getLogger().info("building target intervals");
-        List<String> args = new ArrayList<>();
-        args.add(SequencePipelineService.get().getJavaFilepath());
-        args.addAll(SequencePipelineService.get().getJavaOpts());
-        args.add("-jar");
-        args.add(getJAR().getPath());
+        List<String> args = new ArrayList<>(getBaseArgs());
         args.add("-T");
         args.add("RealignerTargetCreator");
         args.add("-R");
