@@ -78,10 +78,24 @@ abstract public class AbstractGatkWrapper extends AbstractCommandWrapper
         new CreateSequenceDictionaryWrapper(getLogger()).execute(referenceFasta, false);
     }
 
+    private String getJava8FilePath()
+    {
+        //This should be defined at on TeamCity, and can be used on other servers if needed
+        String java8Home = StringUtils.trimToNull(System.getenv("JDK_18"));
+        if (java8Home != null)
+        {
+            File ret = new File(java8Home, "bin");
+            ret = new File(ret, "java");
+            return ret.getPath();
+        }
+
+        return SequencePipelineService.get().getJavaFilepath();
+    }
+
     public String getVersionString() throws PipelineJobException
     {
         List<String> args = new ArrayList<>();
-        args.add(SequencePipelineService.get().getJavaFilepath());
+        args.add(getJava8FilePath());
         args.addAll(SequencePipelineService.get().getJavaOpts());
         args.add("-jar");
         args.add(getJAR().getPath());
