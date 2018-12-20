@@ -250,6 +250,10 @@ Laboratory.Utils = new function(){
                     ret.domains.Run = results[0].domains[results[0].name + ' Run Fields'];
                     ret.domains.Results = results[0].domains[results[0].name + ' Result Fields'];
 
+                    LDK.Assert.assertNotEmpty('LABKEY.Assay.getById did not return information for the Batch domain for ' + results[0].name + '.  Keys were: ' + (results[0].domains ? Ext4.Object.getKeys(results[0].domains) : 'none'), ret.domains.Batch);
+                    LDK.Assert.assertNotEmpty('LABKEY.Assay.getById did not return information for the Run domain for ' + results[0].name + '.  Keys were: ' + (results[0].domains ? Ext4.Object.getKeys(results[0].domains) : 'none'), ret.domains.Run);
+                    LDK.Assert.assertNotEmpty('LABKEY.Assay.getById did not return information for the Results domain for ' + results[0].name + '.  Keys were: ' + (results[0].domains ? Ext4.Object.getKeys(results[0].domains) : 'none'), ret.domains.Results);
+
                     //unfortunately the assay def doesnt include Run or Comments in the field list.  presumably this is b/c they're not part of the domain?
                     //we add them back here:
                     ret.domains.Run.unshift({
