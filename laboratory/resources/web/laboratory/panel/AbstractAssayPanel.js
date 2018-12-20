@@ -23,14 +23,20 @@ Ext4.define('Laboratory.panel.AbstractAssayPanel', {
                 break;
             default:
                 for (var prop in meta){
-                    domainFields.push(meta[prop]);
+                    if (meta[prop].name) {
+                        domainFields.push(meta[prop]);
+                    }
+                    else {
+                        console.error('unknown property: ' + prop);
+                        console.error(meta[prop]);
+                    }
                 }
         }
 
         var toAdd = [];
         for (var i=0; i < domainFields.length; i++){
-            if (domain == 'Other' && !domainFields[i].domain){
-                alert('Error: Must supply the domain for field: '+domainFields[i].name);
+            if (domain === 'Other' && !domainFields[i].domain){
+                alert('Error: Must supply the domain for field: ' + domainFields[i].name);
                 return
             }
 
