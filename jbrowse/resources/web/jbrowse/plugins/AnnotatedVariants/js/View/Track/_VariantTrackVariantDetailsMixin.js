@@ -92,7 +92,7 @@ define([
                     },
                     FS_SC: {
                         title: 'Funseq Non-coding Score',
-                        range: [0.6]
+                        range: [0,6]
                     },
                     SF: {
                         title: 'Swiss Prot Protein Function'
