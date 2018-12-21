@@ -1,0 +1,9 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="ldapSyncDiscrepancies" tableDbType="NOT_IN_DB">
+                <tableTitle>LDAP Sync Discrepancies</tableTitle>
+            </table>
+        </tables>
+    </metadata>
+</query>

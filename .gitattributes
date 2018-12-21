@@ -1,4 +1,24 @@
 * text=auto !eol
+DISCVR/OpenLdapSync/build.gradle -text
+DISCVR/OpenLdapSync/module.properties -text
+DISCVR/OpenLdapSync/resources/credits/jars.txt -text
+DISCVR/OpenLdapSync/resources/queries/openldapsync/ldapSyncDiscrepancies.query.xml -text
+DISCVR/OpenLdapSync/resources/queries/openldapsync/ldapSyncDiscrepancies.sql -text
+DISCVR/OpenLdapSync/resources/schemas/dbscripts/postgresql/openldapsync-0.00-18.21.sql -text
+DISCVR/OpenLdapSync/resources/schemas/dbscripts/sqlserver/openldapsync-0.00-18.21.sql -text
+DISCVR/OpenLdapSync/resources/schemas/openldapsync.xml -text
+DISCVR/OpenLdapSync/resources/views/ldapSettings.html -text
+DISCVR/OpenLdapSync/resources/views/ldapSettings.view.xml -text
+DISCVR/OpenLdapSync/resources/web/OpenLdapSync/panel/LdapSettingsPanel.js -text
+DISCVR/OpenLdapSync/src/org/labkey/openldapsync/OpenLdapSyncController.java -text
+DISCVR/OpenLdapSync/src/org/labkey/openldapsync/OpenLdapSyncModule.java -text
+DISCVR/OpenLdapSync/src/org/labkey/openldapsync/OpenLdapSyncSchema.java -text
+DISCVR/OpenLdapSync/src/org/labkey/openldapsync/ldap/LdapConnectionWrapper.java -text
+DISCVR/OpenLdapSync/src/org/labkey/openldapsync/ldap/LdapEntry.java -text
+DISCVR/OpenLdapSync/src/org/labkey/openldapsync/ldap/LdapScheduler.java -text
+DISCVR/OpenLdapSync/src/org/labkey/openldapsync/ldap/LdapSettings.java -text
+DISCVR/OpenLdapSync/src/org/labkey/openldapsync/ldap/LdapSyncAuditProvider.java -text
+DISCVR/OpenLdapSync/src/org/labkey/openldapsync/ldap/LdapSyncRunner.java -text
 DISCVR/blast/build.gradle -text
 DISCVR/blast/module.properties -text
 DISCVR/blast/resources/schemas/blast.xml -text

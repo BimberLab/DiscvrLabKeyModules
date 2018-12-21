@@ -1,0 +1,5 @@
+{table}
+Filename|Component|Version|Source|License|LabKey Dev|Purpose
+api-all-1.0.0-M14.jar|Apache LDAP API|1.0.0-M14|{link:Apache Directory|http://directory.apache.org/}|{link:Apache 2.0|http://www.apache.org/licenses/LICENSE-2.0}|bbimber|Used by LDAP Sync
+mina-core-2.0.7.jar|Apache MINA|2.0.7|{link:mina|http://mina.apache.org/}|{link:Apache 2.0|http://www.apache.org/licenses/LICENSE-2.0}|bbimber|Required by Apache LDAP API, which is used by LDAP Sync
+{table}
