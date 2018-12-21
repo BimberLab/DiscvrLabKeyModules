@@ -1,5 +1,6 @@
 package org.labkey.openldapsync.ldap;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.directory.api.ldap.model.exception.LdapException;
 import org.apache.log4j.Logger;
 import org.junit.Test;
@@ -304,20 +305,33 @@ public class LdapSyncRunner implements Job
             _usersSynced.put(ldapEntry.getDn().getName(), existing.getUserId());
     }
 
+    private String getNameForGroup(LdapEntry group) throws LdapException
+    {
+        String groupName = group.getDisplayName();
+        if (groupName == null)
+        {
+            throw new LdapException("Unable to find displayname for group: " + group.getDn().getName());
+        }
+
+        //concatenate to the group name if the field is not empty
+        String suffix = StringUtils.trimToNull(_settings.getGroupNameSuffix());
+        if (suffix != null)
+        {
+            groupName = groupName.concat(suffix);
+        }
+
+        return groupName;
+    }
+
     private void syncGroupAndMembers(LdapEntry group) throws LdapException
     {
-        //verify whether the group has been synced before
-        String name = group.getDisplayName();
-        if (name == null)
-        {
-            throw new LdapException("Unable to find name for group: " + group.getDn().getName());
-        }
+        String groupName = getNameForGroup(group);
 
         Group existingGroup = null;
         Integer groupId = null;
         try
         {
-            groupId = SecurityManager.getGroupId(ContainerManager.getRoot(), name);
+            groupId = SecurityManager.getGroupId(ContainerManager.getRoot(), groupName);
         }
         catch (NotFoundException e)
         {
@@ -334,7 +348,7 @@ public class LdapSyncRunner implements Job
         }
         else if (existingGroup == null)
         {
-            existingGroup = createGroup(group);
+            existingGroup = createGroup(groupName);
         }
         else
         {
@@ -631,15 +645,15 @@ public class LdapSyncRunner implements Job
         }
     }
 
-    private Group createGroup(LdapEntry group)
+    private Group createGroup(String groupName)
     {
         //need to create group.  deal with membership later
-        log("Creating group from from LDAP: " + group.getDisplayName());
+        log("Creating group from from LDAP: " + groupName);
         _groupsAdded++;
 
         if (!_previewOnly)
         {
-            return SecurityManager.createGroup(ContainerManager.getRoot(), group.getDisplayName());
+            return SecurityManager.createGroup(ContainerManager.getRoot(), groupName);
         }
         else
         {

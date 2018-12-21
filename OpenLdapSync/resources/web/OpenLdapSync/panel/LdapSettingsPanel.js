@@ -184,6 +184,23 @@ Ext4.define('OpenLdapSync.panel.LdapSettingsPanel', {
                     value: this.ldapSettings.groupFilterString
                 },{
                     xtype: 'textfield',
+                    fieldLabel: 'Group Object Class String',
+                    helpPopup: 'The LDAP object class that marks group entries. The default value is group',
+                    itemId: 'groupObjectClass',
+                    name: 'groupObjectClass',
+                    value: this.ldapSettings.groupObjectClass
+                },{
+                    xtype: 'textfield',
+                    labelWidth: 180,
+                    width: 400,
+                    fieldLabel: 'Group Name Suffix',
+                    itemId: 'groupSyncNameSuffix',
+                    name: 'groupSyncNameSuffix',
+                    style: 'padding-bottom: 10px;',
+                    helpPopup: 'If provided, this string will be appended to any LDAP groups created in LabKey.  For example, if you set this to \' (LDAP\'), the LDAP group MyGroup would get synced as \'MyGroup (LDAP)\'',
+                    value: this.ldapSettings.groupSyncNameSuffix
+                },{
+                    xtype: 'textfield',
                     fieldLabel: 'User Search String',
                     itemId: 'userSearchString',
                     helpPopup: 'If you selected to sync \'All Users\', this is the search string applied.',
@@ -196,6 +213,13 @@ Ext4.define('OpenLdapSync.panel.LdapSettingsPanel', {
                     itemId: 'userFilterString',
                     name: 'userFilterString',
                     value: this.ldapSettings.userFilterString
+                },{
+                    xtype: 'textfield',
+                    fieldLabel: 'User Object Class String',
+                    helpPopup: 'This LDAP object class that marks user entires.  The default is user.',
+                    itemId: 'userObjectClass',
+                    name: 'userObjectClass',
+                    value: this.ldapSettings.userObjectClass
                 }]
             },{
                 html: 'The following values are the complete search/filter strings that will be sent to the LDAP server, based on your selections above.  If you encounter problems, you can input these directly into an LDAP utility and inspect the results:',

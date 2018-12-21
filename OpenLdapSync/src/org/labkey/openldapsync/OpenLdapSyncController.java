@@ -140,6 +140,9 @@ public class OpenLdapSyncController extends SpringActionController
         private String _groupSearchString;
         private String _userFilterString;
         private String _groupFilterString;
+        private String _groupObjectClass;
+        private String _userObjectClass;
+        private String _groupSyncNameSuffix;
 
         private String _emailFieldMapping;
         private String _displayNameFieldMapping;
@@ -269,6 +272,36 @@ public class OpenLdapSyncController extends SpringActionController
         public void setGroupFilterString(String groupFilterString)
         {
             _groupFilterString = groupFilterString;
+        }
+
+        public String getGroupObjectClass()
+        {
+            return _groupObjectClass;
+        }
+
+        public void setGroupObjectClass(String groupObjectClass)
+        {
+            _groupObjectClass = groupObjectClass;
+        }
+
+        public String getUserObjectClass()
+        {
+            return _userObjectClass;
+        }
+
+        public void setUserObjectClass(String userObjectClass)
+        {
+            _userObjectClass = userObjectClass;
+        }
+
+        public String getGroupSyncNameSuffix()
+        {
+            return _groupSyncNameSuffix;
+        }
+
+        public void setGroupSyncNameSuffix(String groupSyncNameSuffix)
+        {
+            _groupSyncNameSuffix = groupSyncNameSuffix;
         }
 
         public String getEmailFieldMapping()
@@ -542,8 +575,17 @@ public class OpenLdapSyncController extends SpringActionController
             if (form.getGroupFilterString() != null)
                 props.put(LdapSettings.GROUP_FILTER_PROP, form.getGroupFilterString());
 
+            if (form.getGroupObjectClass() != null)
+                props.put(LdapSettings.GROUP_OBJECTCLASS_PROP, form.getGroupObjectClass());
+
             if (form.getUserFilterString() != null)
                 props.put(LdapSettings.USER_FILTER_PROP, form.getUserFilterString());
+
+            if (form.getUserObjectClass() != null)
+                props.put(LdapSettings.USER_OBJECTCLASS_PROP, form.getUserObjectClass());
+
+            if (form.getGroupSyncNameSuffix() != null)
+                props.put(LdapSettings.GROUP_NAME_SUFFIX_PROP, form.getGroupSyncNameSuffix());
 
             //behaviors
             if (form.getUserDeleteBehavior() != null)

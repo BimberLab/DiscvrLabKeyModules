@@ -45,6 +45,10 @@ public class LdapSettings
     public static final String USER_INFO_CHANGED_PROP = "userInfoChangedBehavior";
     public static final String USERACCOUNTCONTROL_PROP = "userAccountControlBehavior";
 
+    public static final String GROUP_OBJECTCLASS_PROP = "groupObjectClass";
+    public static final String USER_OBJECTCLASS_PROP = "userObjectClass";
+    public static final String GROUP_NAME_SUFFIX_PROP = "groupSyncNameSuffix";
+
     public static final String MEMBER_SYNC_PROP = "memberSyncMode";
 
     public static final String ENABLED_PROP = "enabled";
@@ -147,6 +151,12 @@ public class LdapSettings
         Map<String, String> encryptedMap = PropertyManager.getEncryptedStore().getProperties(PROPERTY_CATEGORY_ENCRYPTED);
         ret.putAll(encryptedMap);
 
+        if (!ret.containsKey(GROUP_OBJECTCLASS_PROP))
+            ret.put(GROUP_OBJECTCLASS_PROP, "group");
+
+        if (!ret.containsKey(USER_OBJECTCLASS_PROP))
+            ret.put(USER_OBJECTCLASS_PROP, "user");
+
         if (!ret.containsKey(EMAIL_FIELD_PROP))
             ret.put(EMAIL_FIELD_PROP, "mail");
 
@@ -192,6 +202,16 @@ public class LdapSettings
         return (String)_settings.get(USER_FILTER_PROP);
     }
 
+    public String getUserObjectClass()
+    {
+        return (String)_settings.get(USER_OBJECTCLASS_PROP);
+    }
+
+    public String getGroupObjectClass()
+    {
+        return (String)_settings.get(GROUP_OBJECTCLASS_PROP);
+    }
+
     public String getGroupFilterString()
     {
         return (String)_settings.get(GROUP_FILTER_PROP);
@@ -200,7 +220,7 @@ public class LdapSettings
     public String getCompleteUserFilterString()
     {
         String userFilter = getUserFilterString() == null ? "" : getUserFilterString();
-        return "(&(objectclass=user)" + userFilter + ")";
+        return "(&(objectclass=" + getUserObjectClass() + ")" + userFilter + ")";
     }
 
     public String getCompleteGroupMemberFilterString(String dn)
@@ -212,7 +232,7 @@ public class LdapSettings
     public String getCompleteGroupFilterString()
     {
         String groupFilter = getGroupFilterString();
-        String filter = "(objectclass=group)";
+        String filter = "(objectclass=" + getGroupObjectClass() + ")";
         if (groupFilter != null)
         {
             filter = "(&" + filter + groupFilter + ")";
@@ -269,6 +289,11 @@ public class LdapSettings
             return null;
 
         return MemberSyncMode.valueOf((String)_settings.get(MEMBER_SYNC_PROP));
+    }
+
+    public String getGroupNameSuffix()
+    {
+        return (String)_settings.get(GROUP_NAME_SUFFIX_PROP);
     }
 
     public boolean overwriteUserInfoIfChanged()
