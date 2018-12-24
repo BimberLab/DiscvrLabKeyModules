@@ -373,7 +373,6 @@ public class SequenceAnalysisController extends SpringActionController
         public BasePipelineStepAction(String htmlFile)
         {
             _htmlFile = htmlFile;
-            getPageConfig().setIncludePostParameters(true);
         }
 
         public void validateCommand(Object form, Errors errors)
@@ -399,6 +398,7 @@ public class SequenceAnalysisController extends SpringActionController
             ModuleHtmlView view = ModuleHtmlView.get(module, Path.parse(_htmlFile));
             assert view != null;
             view.addClientDependencies(cds);
+            getPageConfig().setIncludePostParameters(true);
 
             return view;
         }
