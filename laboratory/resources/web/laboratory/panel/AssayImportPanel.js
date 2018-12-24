@@ -17,6 +17,7 @@
  */
 Ext4.define('Laboratory.panel.AssayImportPanel', {
     extend: 'Laboratory.panel.AbstractAssayPanel',
+    alias: 'widget.laboratory-assayimportpanel',
     initComponent: function(){
         Ext4.QuickTips.init();
 
