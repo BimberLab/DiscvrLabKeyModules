@@ -34,7 +34,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
-import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
@@ -526,6 +525,11 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
                 if (dict != null)
                 {
                     SAMSequenceRecord r = dict.getSequence(line[colChr]);
+                    if (r == null)
+                    {
+                        throw new PipelineJobException("Unable to find sequence in dictionary: " + line[colChr]);
+                    }
+
                     if (Integer.parseInt(line[colEnd]) > r.getSequenceLength())
                     {
                         getJob().getLogger().error("feature extended beyond contig end at line: " + lineNo + ", " + line[colChr] + ": " + line[colStart] + "-" + line[colEnd]);
