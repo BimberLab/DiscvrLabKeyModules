@@ -10,7 +10,6 @@ import org.apache.log4j.Logger;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
@@ -417,8 +416,15 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         }
     }
 
+    @Override
     public String getVCFLineCount(File vcf, Logger log, boolean passOnly) throws PipelineJobException
     {
         return ProcessVariantsHandler.getVCFLineCount(vcf, log, passOnly);
+    }
+
+    @Override
+    public File getPicardJar()
+    {
+        return SequenceAnalysisManager.getPicardJar();
     }
 }

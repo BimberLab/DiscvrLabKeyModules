@@ -16,14 +16,14 @@
 package org.labkey.sequenceanalysis;
 
 import htsjdk.samtools.util.StringUtil;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.junit.Assert;
+import org.junit.Test;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
-import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -47,7 +47,6 @@ import org.labkey.api.iterator.CloseableIterator;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
-import org.labkey.api.pipeline.PipelineStatusFile;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
@@ -67,26 +66,18 @@ import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.study.assay.AssayFileWriter;
-import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Job;
 import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
-import org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisJob;
-import org.labkey.sequenceanalysis.pipeline.ReadsetImportJob;
 import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
-import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerJob;
-import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -455,24 +446,35 @@ public class SequenceAnalysisManager
     }
 
     private static final String htsjdkVersion = "2.14.3";
+    private static final String picardVersion = "2.18.4";
 
     public static File getHtsJdkJar()
     {
-        Resource r = ModuleLoader.getInstance().getResource(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), Path.parse("lib/htsjdk-" + htsjdkVersion + ".jar"));
+        return getJar("htsjdk-" + htsjdkVersion);
+    }
+
+    public static File getPicardJar()
+    {
+        return getJar("picard-" + picardVersion);
+    }
+
+    private static File getJar(String name)
+    {
+        Resource r = ModuleLoader.getInstance().getResource(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), Path.parse("lib/" + name + ".jar"));
         if (r == null)
         {
-            throw new IllegalArgumentException("Unable to find htsjdk JAR file");
+            throw new IllegalArgumentException("Unable to find JAR file: " + name);
         }
         else if (!(r instanceof FileResource))
         {
             throw new IllegalArgumentException("resource not instance of FileResource: " + r.getClass().getName());
         }
 
-        File htsjdkJar = ((FileResource) r).getFile();
-        if (!htsjdkJar.exists())
-            throw new RuntimeException("Not found: " + htsjdkJar.getPath());
+        File jar = ((FileResource) r).getFile();
+        if (!jar.exists())
+            throw new RuntimeException("Not found: " + jar.getPath());
 
-        return htsjdkJar;
+        return jar;
     }
 
     public static void cascadeDelete(int userId, String containerId, String schemaName, String queryName, String keyField, Object keyValue) throws SQLException
@@ -813,5 +815,20 @@ public class SequenceAnalysisManager
                 }
             }
         }, RefNtSequenceModel.class);
+    }
+
+    public static class TestCase extends Assert
+    {
+        @Test
+        public void testJars()
+        {
+            File htsjdkJar = SequenceAnalysisManager.getHtsJdkJar();
+            assertNotNull("Unble to find HTSJDK jar", htsjdkJar);
+            assertTrue("JAR does not exist: " + htsjdkJar.getPath(), htsjdkJar.exists());
+
+            File picardJar = SequenceAnalysisManager.getPicardJar();
+            assertNotNull("Unble to find picard jar", picardJar);
+            assertTrue("JAR does not exist: " + picardJar.getPath(), picardJar.exists());
+        }
     }
 }
