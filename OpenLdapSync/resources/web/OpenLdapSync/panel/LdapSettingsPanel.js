@@ -524,7 +524,7 @@ Ext4.define('OpenLdapSync.panel.LdapSettingsPanel', {
         });
     },
 
-    onError: function(responseObj, exception){
+    onError: function(exception, responseObj){
         console.error(arguments);
 
         var msg = LABKEY.Utils.getMsgFromError(responseObj, exception, {

@@ -18,9 +18,10 @@ package org.labkey.openldapsync;
 
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.audit.AuditLogService;
-import org.labkey.api.data.Container;
-import org.labkey.api.module.DefaultModule;
+import org.labkey.api.data.ContainerManager;
+import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.module.SpringModule;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.security.permissions.AdminOperationsPermission;
 import org.labkey.api.settings.AdminConsole;
@@ -30,9 +31,10 @@ import org.labkey.openldapsync.ldap.LdapSyncAuditProvider;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
-public class OpenLdapSyncModule extends DefaultModule
+public class OpenLdapSyncModule extends SpringModule
 {
     public static final String NAME = "OpenLdapSync";
 
@@ -55,39 +57,39 @@ public class OpenLdapSyncModule extends DefaultModule
     }
 
     @Override
-    @NotNull
-    protected Collection<WebPartFactory> createWebPartFactories()
-    {
-        return Collections.emptyList();
-    }
-
-    @Override
     protected void init()
     {
-        addController(OpenLdapSyncController.NAME, OpenLdapSyncController.class);
+        addController(OpenLdapSyncController.NAME.toLowerCase(), OpenLdapSyncController.class);
     }
 
     @Override
-    public void doStartup(ModuleContext moduleContext)
+    protected void startupAfterSpringConfig(ModuleContext moduleContext)
     {
         AuditLogService.get().registerAuditType(new LdapSyncAuditProvider());
 
         AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "ldap sync admin", DetailsURL.fromString("/openldapsync/ldapSettings.view").getActionURL(), AdminOperationsPermission.class);
 
         LdapScheduler.get().schedule();
+
+        //NOTE: in order to ensure our admin queries are enabled, always turn on in the shared folder
+        Set<Module> modules = ContainerManager.getSharedContainer().getActiveModules();
+        if (!modules.contains(this))
+        {
+            modules = new HashSet<>(modules);
+            modules.add(this);
+            ContainerManager.getSharedContainer().setActiveModules(modules);
+        }
     }
 
     @Override
-    @NotNull
-    public Collection<String> getSummary(Container c)
+    protected @NotNull Collection<? extends WebPartFactory> createWebPartFactories()
     {
         return Collections.emptyList();
     }
 
     @Override
-    @NotNull
-    public Set<String> getSchemaNames()
+    public @NotNull Collection<String> getSchemaNames()
     {
-        return Collections.singleton(OpenLdapSyncSchema.NAME);
+        return Collections.unmodifiableSet(Collections.singleton(OpenLdapSyncSchema.NAME));
     }
 }
