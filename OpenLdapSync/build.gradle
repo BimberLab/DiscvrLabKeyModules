@@ -1,4 +1,4 @@
 dependencies {
-    external 'org.apache.directory.api:api-all:1.0.2'
+    external 'org.apache.directory.api:api-all:${apacheDirectoryVersion}'
     external 'org.apache.mina:mina-core:2.0.19'
 }
