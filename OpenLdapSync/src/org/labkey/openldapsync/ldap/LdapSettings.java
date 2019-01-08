@@ -8,6 +8,7 @@ import org.labkey.api.security.UserManager;
 import org.labkey.api.security.ValidEmail;
 import org.labkey.api.util.ConfigurationException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -151,28 +152,28 @@ public class LdapSettings
         Map<String, String> encryptedMap = PropertyManager.getEncryptedStore().getProperties(PROPERTY_CATEGORY_ENCRYPTED);
         ret.putAll(encryptedMap);
 
-        if (!ret.containsKey(GROUP_OBJECTCLASS_PROP))
+        if (isMissingOrEmpty(ret, GROUP_OBJECTCLASS_PROP))
             ret.put(GROUP_OBJECTCLASS_PROP, "group");
 
-        if (!ret.containsKey(USER_OBJECTCLASS_PROP))
+        if (isMissingOrEmpty(ret, USER_OBJECTCLASS_PROP))
             ret.put(USER_OBJECTCLASS_PROP, "user");
 
-        if (!ret.containsKey(EMAIL_FIELD_PROP))
+        if (isMissingOrEmpty(ret, EMAIL_FIELD_PROP))
             ret.put(EMAIL_FIELD_PROP, "mail");
 
-        if (!ret.containsKey(DISPLAYNAME_FIELD_PROP))
+        if (isMissingOrEmpty(ret, DISPLAYNAME_FIELD_PROP))
             ret.put(DISPLAYNAME_FIELD_PROP, "displayName");
 
-        if (!ret.containsKey(LASTNAME_FIELD_PROP))
+        if (isMissingOrEmpty(ret, LASTNAME_FIELD_PROP))
             ret.put(LASTNAME_FIELD_PROP, "sn");
 
-        if (!ret.containsKey(FIRSTNAME_FIELD_PROP))
+        if (isMissingOrEmpty(ret, FIRSTNAME_FIELD_PROP))
             ret.put(FIRSTNAME_FIELD_PROP, "givenName");
 
-        if (!ret.containsKey(PHONE_FIELD_PROP))
+        if (isMissingOrEmpty(ret, PHONE_FIELD_PROP))
             ret.put(PHONE_FIELD_PROP, "telephoneNumber");
 
-        if (!ret.containsKey(UID_FIELD_PROP))
+        if (isMissingOrEmpty(ret, UID_FIELD_PROP))
             ret.put(UID_FIELD_PROP, "userPrincipalName");
 
         boolean useSSL = ret.containsKey(USE_SSL_PROP) ? (Boolean)ret.get(USE_SSL_PROP) : false;
@@ -180,6 +181,11 @@ public class LdapSettings
             ret.put(PORT_PROP, (useSSL ? 636 : 389));
 
         return ret;
+    }
+
+    private boolean isMissingOrEmpty(Map<String, Object> ret, String prop)
+    {
+        return !ret.containsKey(prop) || ret.get(prop) == null || StringUtils.trimToNull(ret.get(prop).toString()) == null;
     }
 
     public boolean isEnabled()
@@ -217,10 +223,25 @@ public class LdapSettings
         return (String)_settings.get(GROUP_FILTER_PROP);
     }
 
-    public String getCompleteUserFilterString()
+    public String getCompleteUserFilterString(String... extraFilters)
     {
-        String userFilter = getUserFilterString() == null ? "" : getUserFilterString();
-        return "(&(objectclass=" + getUserObjectClass() + ")" + userFilter + ")";
+        List<String> filters = new ArrayList<>();
+        if (getUserObjectClass() != null)
+        {
+            filters.add("(objectclass=" + getUserObjectClass() + ")");
+        }
+
+        if (getUserFilterString() != null)
+        {
+            filters.add(getUserFilterString());
+        }
+
+        if (extraFilters != null)
+        {
+           filters.addAll(Arrays.asList(extraFilters));
+        }
+
+        return "(&" + StringUtils.join(filters, "") + ")";
     }
 
     public String getCompleteGroupMemberFilterString(String dn)

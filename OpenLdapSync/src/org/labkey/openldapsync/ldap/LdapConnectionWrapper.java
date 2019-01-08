@@ -1,10 +1,16 @@
 package org.labkey.openldapsync.ldap;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.directory.api.ldap.model.cursor.EntryCursor;
+import org.apache.directory.api.ldap.model.cursor.SearchCursor;
+import org.apache.directory.api.ldap.model.entry.Attribute;
 import org.apache.directory.api.ldap.model.entry.Entry;
 import org.apache.directory.api.ldap.model.exception.LdapException;
+import org.apache.directory.api.ldap.model.exception.LdapInvalidDnException;
+import org.apache.directory.api.ldap.model.message.SearchRequestImpl;
 import org.apache.directory.api.ldap.model.message.SearchScope;
 import org.apache.directory.api.ldap.model.name.Dn;
+import org.apache.directory.api.ldap.model.name.Rdn;
 import org.apache.directory.ldap.client.api.DefaultPoolableLdapConnectionFactory;
 import org.apache.directory.ldap.client.api.LdapConnection;
 import org.apache.directory.ldap.client.api.LdapConnectionConfig;
@@ -13,7 +19,9 @@ import org.apache.log4j.Logger;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * User: bimber
@@ -111,7 +119,47 @@ public class LdapConnectionWrapper
         }
     }
 
+    Boolean _isMemberOfSupported = null;
+
+    public boolean isMemberOfSupported() throws LdapException
+    {
+        if (_isMemberOfSupported == null)
+        {
+            ensureConnected();
+
+            //if this query returns any records, assume memberOf is supported on this server
+            boolean hasResult = false;
+            SearchRequestImpl sr = new SearchRequestImpl();
+            sr.setBase(new Dn(_settings.getCompleteUserSearchString()));
+            sr.setFilter("(memberOf=*)");
+            sr.setScope(SearchScope.SUBTREE);
+            sr.setSizeLimit(1L);
+            try (SearchCursor cursor = _connection.search(sr))
+            {
+                while (cursor.next())
+                {
+                    hasResult = true;
+                    break;
+                }
+
+            }
+            catch (Exception e)
+            {
+                throw new LdapException(e);
+            }
+
+            _isMemberOfSupported = hasResult;
+        }
+
+        return _isMemberOfSupported;
+    }
+
     public List<LdapEntry> getGroupMembers(String dn) throws LdapException
+    {
+        return isMemberOfSupported() ? getGroupMembersUsingMemberOf(dn) : getGroupMembersWithoutMemberOf(dn);
+    }
+
+    private List<LdapEntry> getGroupMembersUsingMemberOf(String dn) throws LdapException
     {
         ensureConnected();
 
@@ -128,6 +176,85 @@ public class LdapConnectionWrapper
 
                 return users;
             }
+        }
+        catch (Exception e)
+        {
+            throw new LdapException(e);
+        }
+    }
+
+    /**
+     * Gets the group members using the memberUid attribute.
+     * This method is necessary if the LDAP server has no memberOf group overlay, and so instead we need to iterate
+     * through what the LDAP search returns and find the memberUid attribute (which are the users) in each group
+     */
+    public List<LdapEntry> getGroupMembersWithoutMemberOf(String dn) throws LdapException
+    {
+        String filter = "(objectclass=" + _settings.getGroupObjectClass() + ")";
+        try (EntryCursor cursor = _connection.search(new Dn(dn), filter, SearchScope.SUBTREE, "member", "memberUid"))
+        {
+            List<LdapEntry> users = new ArrayList<>();
+            Set<String> userIds = new HashSet<>();
+
+            //iterate through the results from LDAP and gather userIds
+            while (cursor.next())
+            {
+                Entry group = cursor.get();
+                Iterator<Attribute> attributeIterator = group.getAttributes().iterator();
+
+                while (attributeIterator.hasNext())
+                {
+                    Attribute a = attributeIterator.next();
+                    if ("memberUid".equalsIgnoreCase(a.getId()))
+                    {
+                        a.forEach((val) -> {
+                            userIds.add("(uid=" + val + ")");
+                        });
+
+                    }
+                    else if ("member".equalsIgnoreCase(a.getId()))
+                    {
+                        a.forEach((val) -> {
+                            try
+                            {
+                                Rdn rdn = new Dn(val.toString()).getRdn();
+                                if (!"cn".equalsIgnoreCase(rdn.getType()))
+                                {
+                                    _log.error("Member attribute was not CN: " + val + ".  was: " + rdn.getType());
+                                    return;
+                                }
+
+                                userIds.add("(" + rdn.getName() + ")");
+                            }
+                            catch (LdapInvalidDnException e)
+                            {
+                                _log.error("Invalid DN for member attribute: " + val);
+                            }
+
+                        });
+                    }
+                    else
+                    {
+                        _log.error("Unknown attribute: " + a.getId());
+                        continue;
+                    }
+                }
+            }
+
+            if (!userIds.isEmpty())
+            {
+                String filterUsers = "(|".concat(StringUtils.join(userIds, "")).concat(")");
+                String userFilter = _settings.getCompleteUserFilterString(filterUsers);
+                try (EntryCursor LDAPUserEntry = _connection.search(_settings.getCompleteUserSearchString(), userFilter, SearchScope.SUBTREE, "*"))
+                {
+                    while (LDAPUserEntry.next())
+                    {
+                        users.add(new LdapEntry(LDAPUserEntry.get(), _settings));
+                    }
+                }
+            }
+
+            return users;
         }
         catch (Exception e)
         {
@@ -169,7 +296,7 @@ public class LdapConnectionWrapper
     {
         ensureConnected();
 
-        return getChildren(new Dn(_settings.getCompleteGroupSearchString()), _settings.getCompleteGroupFilterString(), OBJECT_CLASS.group);
+        return getChildren(new Dn(_settings.getCompleteGroupSearchString()), _settings.getCompleteGroupFilterString(), _settings.getGroupObjectClass());
     }
 
     /**
@@ -178,12 +305,12 @@ public class LdapConnectionWrapper
     public List<LdapEntry> listAllUsers() throws LdapException
     {
         ensureConnected();
-        return getChildren(new Dn(_settings.getCompleteUserSearchString()), _settings.getCompleteUserFilterString(), OBJECT_CLASS.user);
+        return getChildren(new Dn(_settings.getCompleteUserSearchString()), _settings.getCompleteUserFilterString(), _settings.getUserObjectClass());
     }
 
-    private List<LdapEntry> getChildren(Dn dn, String filter, OBJECT_CLASS objectClass) throws LdapException
+    private List<LdapEntry> getChildren(Dn dn, String filter, String objectClass) throws LdapException
     {
-        return getChildren(dn, filter, objectClass.name(), new HashSet<>());
+        return getChildren(dn, filter, objectClass, new HashSet<>());
     }
 
     private List<LdapEntry> getChildren(Dn dn, String filter, String expectedObjectClass, HashSet<String> encountered) throws LdapException
@@ -255,17 +382,6 @@ public class LdapConnectionWrapper
             cfg.setLdapPort(cfg.isUseSsl() ? LdapConnectionConfig.DEFAULT_LDAPS_PORT : LdapConnectionConfig.DEFAULT_LDAP_PORT);
 
         return cfg;
-    }
-
-    public static enum OBJECT_CLASS
-    {
-        group(),
-        user();
-
-        OBJECT_CLASS()
-        {
-
-        }
     }
 
     public void setDoLog(boolean doLog)

@@ -108,7 +108,12 @@ public class LdapEntry
             Attribute a = _entry.get("userAccountControl");
             if (a == null || a.getString() == null)
             {
-                _log.info("Unable to determine if LDAP user is active, lacked userAccountControl attribute: " + getDisplayName() + " / " + getDn());
+                //only report this error for users.
+                if (_entry.hasObjectClass(_settings.getUserObjectClass()))
+                {
+                    _log.info("Unable to determine if LDAP user is active, lacked userAccountControl attribute: " + getDisplayName() + " / " + getDn());
+                }
+
                 return true;
             }
 
