@@ -37,7 +37,7 @@ Ext4.define('OpenLdapSync.panel.LdapSettingsPanel', {
             url : LABKEY.ActionURL.buildURL('openldapsync', 'getLdapSettings'),
             method : 'GET',
             success: LABKEY.Utils.getCallbackWrapper(this.onLoad, this),
-            failure: LDK.Utils.getErrorCallback()
+            failure: LABKEY.Utils.getCallbackWrapper(this.onError, this)
         });
 
         this.on('render', function(panel){
@@ -132,14 +132,7 @@ Ext4.define('OpenLdapSync.panel.LdapSettingsPanel', {
                                 Ext4.Msg.hide();
                                 Ext4.Msg.alert('Success', 'Authentication was successful');
                             }, this),
-                            failure: function(responseObj, exception){
-                                var msg = LABKEY.Utils.getMsgFromError(responseObj, exception, {
-                                    showExceptionClass: false,
-                                    msgPrefix: 'Unable to connect.  The error message was: '
-                                });
-                                Ext4.Msg.hide();
-                                Ext4.Msg.alert('Failure', msg);
-                            }
+                            failure: LABKEY.Utils.getCallbackWrapper(this.onError, this)
                         });
                     }
                 }]

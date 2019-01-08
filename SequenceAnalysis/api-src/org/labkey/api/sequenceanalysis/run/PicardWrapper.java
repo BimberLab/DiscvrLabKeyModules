@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 
 import java.io.File;
@@ -62,9 +63,16 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
             path = PipelineJobService.get().getAppProperties().getToolsDirectory();
         }
 
-        File baseDir = path == null ? null : new File(path);
+        File ret = path == null ? null : new File(path, "picard.jar");
 
-        return new File(baseDir, "picard.jar");
+        // we only use the provided JAR if there is not one in the pipeline directory.  this allows the admin to update this JAR separate from the LK version
+        // however, if not otherwise provided, use the included one for convenience.
+        if (ret == null || !ret.exists())
+        {
+            return SequenceAnalysisService.get().getPicardJar();
+        }
+
+        return ret;
     }
 
     protected File getJar()
