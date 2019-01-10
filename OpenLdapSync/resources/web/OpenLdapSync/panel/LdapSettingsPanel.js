@@ -184,8 +184,6 @@ Ext4.define('OpenLdapSync.panel.LdapSettingsPanel', {
                     value: this.ldapSettings.groupObjectClass
                 },{
                     xtype: 'textfield',
-                    labelWidth: 180,
-                    width: 400,
                     fieldLabel: 'Group Name Suffix',
                     itemId: 'groupSyncNameSuffix',
                     name: 'groupSyncNameSuffix',

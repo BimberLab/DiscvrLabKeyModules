@@ -530,7 +530,7 @@ public class OpenLdapSyncController extends SpringActionController
 
             result.put("completeGroupFilterString", settings.getCompleteGroupFilterString());
             result.put("completeUserFilterString", settings.getCompleteUserFilterString());
-            result.put("completeGroupMemberFilterString", settings.getCompleteGroupMemberFilterString("{dn}"));
+            result.put("completeGroupMemberFilterString", settings.getCompleteGroupMemberFilterString("{groupDn}"));
 
             return new ApiSimpleResponse(result);
         }

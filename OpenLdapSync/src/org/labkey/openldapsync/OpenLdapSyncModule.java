@@ -19,10 +19,15 @@ package org.labkey.openldapsync;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.module.SpringModule;
+import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.DetailsURL;
+import org.labkey.api.query.QuerySchema;
+import org.labkey.api.query.QueryService;
 import org.labkey.api.security.permissions.AdminOperationsPermission;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.view.WebPartFactory;
@@ -65,6 +70,21 @@ public class OpenLdapSyncModule extends SpringModule
     @Override
     protected void startupAfterSpringConfig(ModuleContext moduleContext)
     {
+        DefaultSchema.registerProvider(OpenLdapSyncSchema.getInstance().getSchema().getQuerySchemaName(), new DefaultSchema.SchemaProvider(this)
+        {
+            public QuerySchema createSchema(final DefaultSchema schema, Module module)
+            {
+                DbSchema dbSchema = DbSchema.get(OpenLdapSyncSchema.NAME, DbSchemaType.Module);
+                return QueryService.get().createSimpleUserSchema(dbSchema.getQuerySchemaName(), null, schema.getUser(), schema.getContainer(), dbSchema);
+            }
+
+            @Override
+            public boolean isAvailable(DefaultSchema schema, Module module)
+            {
+                return super.isAvailable(schema, module) || schema.getContainer().equals(ContainerManager.getSharedContainer());
+            }
+        });
+
         AuditLogService.get().registerAuditType(new LdapSyncAuditProvider());
 
         AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "ldap sync admin", DetailsURL.fromString("/openldapsync/ldapSettings.view").getActionURL(), AdminOperationsPermission.class);
