@@ -2,9 +2,13 @@ package org.labkey.openldapsync.ldap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.directory.api.ldap.model.exception.LdapException;
+import org.apache.directory.api.ldap.model.name.Dn;
 import org.apache.log4j.Logger;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.labkey.api.data.CompareType;
+import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.Selector;
@@ -12,6 +16,8 @@ import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.module.Module;
+import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.Group;
 import org.labkey.api.security.InvalidGroupMembershipException;
@@ -23,7 +29,9 @@ import org.labkey.api.security.UserManager;
 import org.labkey.api.security.UserPrincipal;
 import org.labkey.api.security.ValidEmail;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.TestContext;
 import org.labkey.api.view.NotFoundException;
+import org.labkey.openldapsync.OpenLdapSyncModule;
 import org.labkey.openldapsync.OpenLdapSyncSchema;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -106,6 +114,12 @@ public class LdapSyncRunner implements Job
             _wrapper.setDoLog(true);
         }
 
+        performSync();
+    }
+
+    //This is separated to facilitate testing
+    protected void performSync() throws LdapException
+    {
         try
         {
             _wrapper.connect();
@@ -314,10 +328,10 @@ public class LdapSyncRunner implements Job
         }
 
         //concatenate to the group name if the field is not empty
-        String suffix = StringUtils.trimToNull(_settings.getGroupNameSuffix());
-        if (suffix != null)
+        if (StringUtils.trimToNull(_settings.getGroupNameSuffix()) != null)
         {
-            groupName = groupName.concat(suffix);
+            //Note: do not trim the suffix, as this allows the admin to provide leading whitespace.  for example: the suffix " (LDAP)" would result in "MyGroup (LDAP)"
+            groupName = groupName.concat(_settings.getGroupNameSuffix());
         }
 
         return groupName;
@@ -810,18 +824,75 @@ public class LdapSyncRunner implements Job
 
     public static class TestCase
     {
+        private static final String PROJECT_NAME = "LdapSyncTestProject";
+
+        @BeforeClass
+        public static void doSetup()
+        {
+            cleanup();
+
+            Container project = ContainerManager.getForPath(PROJECT_NAME);
+            if (project == null)
+            {
+                project = ContainerManager.createContainer(ContainerManager.getRoot(), PROJECT_NAME);
+                Set<Module> modules = new HashSet<>();
+                modules.addAll(project.getActiveModules());
+                modules.add(ModuleLoader.getInstance().getModule(OpenLdapSyncModule.NAME));
+                project.setActiveModules(modules);
+            }
+
+            //we might want to create some users/groups here.  if so, we need to track and clean them up in cleanup()
+        }
+
+        @AfterClass
+        public static void cleanup()
+        {
+            Container project = ContainerManager.getForPath(PROJECT_NAME);
+            if (project != null)
+            {
+                ContainerManager.delete(project, TestContext.get().getUser());
+            }
+        }
+
+        private LdapSyncRunner getRunner() throws LdapException
+        {
+            //this can be modified to test behaviors.  We might need to test subclass, so we can mutate it
+            LdapSettings settings = new LdapSettings();
+
+            //this can be modified to return pre-defined sets of LdapEntries
+            DummyConnectionWrapper wrapper = new DummyConnectionWrapper();
+            //wrapper._groupMap.put("myGroup", new MockLdapEntry());
+
+            LdapSyncRunner runner = new LdapSyncRunner();
+            runner._wrapper = wrapper;
+            runner._settings = settings;
+            runner.setPreviewOnly(true);
+
+            return runner;
+        }
+
         @Test
         public void testBasicSync() throws Exception
         {
+            LdapSyncRunner runner = getRunner();
 
+            //can call methods here, and test outcome (inspect tracking variables)
+            //runner.syncAllUsers();
+            //Assert.assertEquals("Incorrect number of memberships added", 1, runner._membershipsAdded);
+
+            //runner.performSync();
         }
 
         // This can be used to return LdapEntry objects to support some degree of automated testing without needing a functional LDAP Server
         private class DummyConnectionWrapper extends LdapConnectionWrapper
         {
+            private List<LdapEntry> _users = new ArrayList<>();
+            private Map<String, LdapEntry> _groupMap = new HashMap<>();
+            private Map<String, List<LdapEntry>> _groupMemberMap = new HashMap<>();
+
             public DummyConnectionWrapper() throws LdapException
             {
-                super();
+
             }
 
             @Override
@@ -833,25 +904,61 @@ public class LdapSyncRunner implements Job
             @Override
             public List<LdapEntry> getGroupMembers(String dn) throws LdapException
             {
-                return super.getGroupMembers(dn);
+                return _groupMemberMap.get(dn);
             }
 
             @Override
             public LdapEntry getGroup(String dn) throws LdapException
             {
-                return super.getGroup(dn);
+                return _groupMap.get(dn);
             }
 
             @Override
             public List<LdapEntry> listAllGroups() throws LdapException
             {
-                return super.listAllGroups();
+                return new ArrayList<>(_groupMap.values());
             }
 
             @Override
             public List<LdapEntry> listAllUsers() throws LdapException
             {
-                return super.listAllUsers();
+                return _users;
+            }
+        }
+
+        private class MockLdapEntry extends LdapEntry
+        {
+            private Dn dn;
+            private String email;
+            private String displayName;
+
+            public MockLdapEntry()
+            {
+
+            }
+
+            @Override
+            public Dn getDn()
+            {
+                return dn;
+            }
+
+            @Override
+            public String getEmail()
+            {
+                return email;
+            }
+
+            @Override
+            public boolean isEnabled()
+            {
+                return true;
+            }
+
+            @Override
+            public String getDisplayName()
+            {
+                return displayName;
             }
         }
     }

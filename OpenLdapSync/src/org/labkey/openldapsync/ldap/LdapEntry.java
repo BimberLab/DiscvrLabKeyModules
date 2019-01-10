@@ -24,7 +24,12 @@ public class LdapEntry
     private Entry _entry;
     private LdapSettings _settings;
     private Map<String, Object> _attributes = new HashMap<>();
-    
+
+    protected LdapEntry()
+    {
+        //testing purposes only
+    }
+
     public LdapEntry(Entry e, LdapSettings settings)
     {
         _entry = e;
