@@ -154,7 +154,7 @@ Ext4.define('OpenLdapSync.panel.LdapSettingsPanel', {
                 itemId: 'settingsForm',
                 style: 'padding-bottom: 10px;',
                 fieldDefaults: {
-                    labelWidth: 160,
+                    labelWidth: 180,
                     width: 600
                 },
                 items: [{
@@ -542,6 +542,7 @@ Ext4.define('OpenLdapSync.panel.LdapSettingsPanel', {
             border: false,
             items: [{
                 xtype: 'itemselector',
+                style: 'padding: 10px;',
                 border: true,
                 height: 250,
                 width: 800,
@@ -555,6 +556,7 @@ Ext4.define('OpenLdapSync.panel.LdapSettingsPanel', {
             },{
                 xtype: 'button',
                 text: 'Reload Group List',
+                style: 'margin-bottom: 10px',
                 handler: function(btn){
                     var panel = btn.up('openldapsync-ldapsettingspanel');
                     panel.groupStore.removeAll();
@@ -665,7 +667,7 @@ Ext4.define('OpenLdapSync.panel.LdapSettingsPanel', {
         LABKEY.Ajax.request({
             url : LABKEY.ActionURL.buildURL('openldapsync', 'setLdapSettings'),
             method : 'POST',
-            params: vals,
+            jsonData: vals,
             success: LABKEY.Utils.getCallbackWrapper(this.afterSaveSettings, this),
             failure: LABKEY.Utils.getCallbackWrapper(this.onError, this)
         });

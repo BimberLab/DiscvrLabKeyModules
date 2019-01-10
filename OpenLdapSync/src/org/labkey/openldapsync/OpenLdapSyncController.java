@@ -16,6 +16,7 @@
 
 package org.labkey.openldapsync;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.directory.api.ldap.model.exception.LdapException;
 import org.apache.directory.api.ldap.model.exception.LdapOperationException;
@@ -24,6 +25,8 @@ import org.json.JSONArray;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
+import org.labkey.api.action.Marshal;
+import org.labkey.api.action.Marshaller;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.AdminOperationsPermission;
@@ -127,6 +130,13 @@ public class OpenLdapSyncController extends SpringActionController
         }
     }
 
+    @JsonIgnoreProperties({
+            "completeUserSearchString",
+            "completeGroupSearchString",
+            "completeGroupFilterString",
+            "completeUserFilterString",
+            "completeGroupMemberFilterString"
+    })
     public static class LdapForm {
         private String _host;
         private Integer _port;
@@ -162,7 +172,7 @@ public class OpenLdapSyncController extends SpringActionController
         private String _syncMode;
         private String _labkeyAdminEmail;
 
-        private String[] _allowedDn;
+        private JSONArray _allowedDn;
 
         public String getHost()
         {
@@ -434,12 +444,12 @@ public class OpenLdapSyncController extends SpringActionController
             _labkeyAdminEmail = labkeyAdminEmail;
         }
 
-        public String[] getAllowedDn()
+        public JSONArray getAllowedDn()
         {
             return _allowedDn;
         }
 
-        public void setAllowedDn(String[] allowedDn)
+        public void setAllowedDn(JSONArray allowedDn)
         {
             _allowedDn = allowedDn;
         }
@@ -536,6 +546,7 @@ public class OpenLdapSyncController extends SpringActionController
         }
     }
 
+    @Marshal(Marshaller.Jackson)
     @RequiresPermission(AdminOperationsPermission.class)
     public class SetLdapSettingsAction extends ApiAction<LdapForm>
     {
@@ -632,9 +643,9 @@ public class OpenLdapSyncController extends SpringActionController
             if (form.getSyncMode() != null)
                 props.put(LdapSettings.SYNC_MODE_PROP, form.getSyncMode());
 
-            if (form.getAllowedDn() != null)
+            if (form.getAllowedDn() != null && form.getAllowedDn().length() > 0)
             {
-                String allowed = StringUtils.join(form.getAllowedDn(), LdapSettings.DELIM);
+                String allowed = StringUtils.join(form.getAllowedDn().toArray(), LdapSettings.DELIM);
                 props.put(LdapSettings.ALLOWED_DN_PROP, allowed);
             }
 
