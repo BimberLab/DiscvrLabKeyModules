@@ -15,6 +15,7 @@
  */
 package org.labkey.api.sequenceanalysis.pipeline;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.module.Module;
@@ -118,7 +119,7 @@ abstract public class AbstractParameterizedOutputHandler<T> implements Parameter
             if (desc.getCommandLineParam() != null)
             {
                 String key = desc.getName();
-                String val = params.optString(key);
+                String val = StringUtils.trimToNull(params.optString(key));
                 if (val != null)
                 {
                     ret.addAll(desc.getCommandLineParam().getArguments(separator, val));

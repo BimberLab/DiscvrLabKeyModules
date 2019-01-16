@@ -40,6 +40,7 @@ import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.sequenceanalysis.analysis.BamCleanupHandler;
 import org.labkey.sequenceanalysis.analysis.BamHaplotypeHandler;
+import org.labkey.sequenceanalysis.analysis.CellHashingHandler;
 import org.labkey.sequenceanalysis.analysis.CellRangerAggrHandler;
 import org.labkey.sequenceanalysis.analysis.CellRangerReanalysisHandler;
 import org.labkey.sequenceanalysis.analysis.CombineStarGeneCountsHandler;
@@ -55,6 +56,7 @@ import org.labkey.sequenceanalysis.analysis.RnaSeqcHandler;
 import org.labkey.sequenceanalysis.analysis.SbtGeneCountHandler;
 import org.labkey.sequenceanalysis.analysis.UnmappedSequenceBasedGenotypeHandler;
 import org.labkey.sequenceanalysis.button.AddSraRunButton;
+import org.labkey.sequenceanalysis.button.CellHashingButton;
 import org.labkey.sequenceanalysis.button.ReprocessLibraryButton;
 import org.labkey.sequenceanalysis.button.RunMultiQCButton;
 import org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisJob;
@@ -62,13 +64,13 @@ import org.labkey.sequenceanalysis.pipeline.AlignmentImportJob;
 import org.labkey.sequenceanalysis.pipeline.IlluminaImportJob;
 import org.labkey.sequenceanalysis.pipeline.ImportFastaSequencesPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.ImportGenomeTrackPipelineJob;
-import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.OrphanFilePipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.ReadsetImportJob;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentTask;
+import org.labkey.sequenceanalysis.pipeline.SequenceJobSupportImpl;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.SequencePipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerPipelineProvider;
@@ -156,7 +158,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
     public double getVersion()
     {
-        return 12.317;
+        return 12.319;
     }
 
     public boolean hasScripts()
@@ -314,6 +316,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new ListVcfSamplesHandler());
 
         SequenceAnalysisService.get().registerReadsetHandler(new MultiQCHandler());
+        SequenceAnalysisService.get().registerReadsetHandler(new CellHashingHandler());
 
         //ObjectFactory.Registry.register(AnalysisModelImpl.class, new UnderscoreBeanObjectFactory(AnalysisModelImpl.class));
         //ObjectFactory.Registry.register(SequenceReadsetImpl.class, new UnderscoreBeanObjectFactory(SequenceReadsetImpl.class));
@@ -352,6 +355,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         LDKService.get().registerQueryButton(new ShowEditUIButton(this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES, UpdatePermission.class), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
         LDKService.get().registerQueryButton(new AddSraRunButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS);
         LDKService.get().registerQueryButton(new RunMultiQCButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS);
+        LDKService.get().registerQueryButton(new CellHashingButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS);
 
         ExperimentService.get().registerExperimentRunTypeSource(new ExperimentRunTypeSource()
         {
@@ -367,7 +371,6 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         });
 
         PipelineService.get().registerPipelineProvider(new ReferenceLibraryPipelineProvider(this));
-        PipelineService.get().registerPipelineProvider(new NcbiGenomeImportPipelineProvider(this));
         PipelineService.get().registerPipelineProvider(new SequenceOutputHandlerPipelineProvider(this));
         PipelineService.get().registerPipelineProvider(new SequenceReadsetHandlerPipelineProvider(this));
         PipelineService.get().registerPipelineProvider(new ImportFastaSequencesPipelineJob.Provider(this));
@@ -376,8 +379,6 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         PipelineService.get().registerPipelineProvider(new SequencePipelineProvider(this));
 
         LDKService.get().registerQueryButton(new ReprocessLibraryButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
-        //TODO: consider improving import based off NCBI assembly ID
-        //LDKService.get().registerQueryButton(new GenomeLoadButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
 
         SystemMaintenance.addTask(new SequenceAnalysisMaintenanceTask());
 
@@ -417,7 +418,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
     @NotNull
     public Set<Class> getUnitTests()
     {
-        return PageFlowUtil.set(SequenceAlignmentTask.TestCase.class, SequenceAnalysisManager.TestCase.class);
+        return PageFlowUtil.set(SequenceAlignmentTask.TestCase.class, SequenceAnalysisManager.TestCase.class, SequenceJobSupportImpl.TestCase.class);
     }
 
     @Override

@@ -201,8 +201,7 @@ public class BlastDatabaseTask extends PipelineJob.Task<BlastDatabaseTask.Factor
                 }
             }
 
-            BLASTWrapper wrapper = new BLASTWrapper();
-            wrapper.setLog(getJob().getLogger());
+            BLASTWrapper wrapper = new BLASTWrapper(getJob().getLogger());
             wrapper.createDatabase(getPipelineJob().getDatabaseGuid(), null, fastaCopy, BLASTManager.get().getDatabaseDir(getJob().getContainer(), true), getJob().getLogger());
             success = true;
         }

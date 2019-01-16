@@ -5,6 +5,7 @@ import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.resource.FileResource;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
 import org.labkey.api.util.Path;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
@@ -56,7 +57,7 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
         List<String> args = new ArrayList<>(getBaseArgs());
         //explicitly set library.path so we pick up libVectorLoglessPairHMM, built in our install script
         //revisit this in GATK3.8
-        args.add("-Djava.library.path=" + getJAR().getParent());
+        args.add(args.indexOf("-jar") - 1, "-Djava.library.path=" + getJAR().getParent());  //add to beginning, before -jar
         args.add("-T");
         args.add("HaplotypeCaller");
         args.add("-R");
@@ -145,7 +146,7 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
                 throw new FileNotFoundException("Not found: " + scalaScript.getPath());
 
             List<String> args = new ArrayList<>();
-            args.add(getJava8FilePath());
+            args.add(SequencePipelineService.get().getJava8FilePath());
             //for now, ignore java opts since queue's scatter/gather causes issues
             //args.addAll(SequencePipelineService.get().getJavaOpts());
             args.add("-classpath");

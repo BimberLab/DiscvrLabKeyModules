@@ -1,5 +1,9 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Assert;
+import org.junit.Test;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
@@ -15,7 +19,10 @@ import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -75,6 +82,10 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
         if (rs != null)
         {
             cacheReadset(rs);
+        }
+        else
+        {
+            throw new IllegalArgumentException("Unable to find readset with rowid: " + readsetId);
         }
     }
 
@@ -180,8 +191,86 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     }
 
     @Override
-    public Object getCachedObject(String key)
+    public <T> T getCachedObject(String key, Class<T> clazz) throws PipelineJobException
     {
-        return _cachedObjects.get(key);
+        if (_cachedObjects.get(key) != null && clazz.isAssignableFrom(_cachedObjects.get(key).getClass()))
+        {
+            return clazz.cast(_cachedObjects.get(key));
+        }
+
+        ObjectMapper mapper = PipelineJob.createObjectMapper();
+
+        return getCachedObject(key, mapper.getTypeFactory().constructType(clazz));
+    }
+
+    @Override
+    public <T> T getCachedObject(String key, JavaType type) throws PipelineJobException
+    {
+        if (_cachedObjects.get(key) == null)
+        {
+            return null;
+        }
+
+        try
+        {
+            ObjectMapper mapper = PipelineJob.createObjectMapper();
+
+            StringWriter writer = new StringWriter();
+            mapper.writeValue(writer, _cachedObjects.get(key));
+            return mapper.readValue(new StringReader(writer.toString()), type);
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+    }
+
+    public static class TestCase extends Assert
+    {
+        @Test
+        public void testSerializeWithMap() throws Exception
+        {
+            SequenceJobSupportImpl js1 = new SequenceJobSupportImpl();
+            js1._cachedAnalyses.put(1, new AnalysisModelImpl());
+            js1._cachedGenomes.put(2, new ReferenceGenomeImpl());
+            SequenceReadsetImpl rs1 = new SequenceReadsetImpl();
+            rs1.setRowId(100);
+
+            js1._cachedReadsets.add(rs1);
+            js1._cachedFilePaths.put(4, new File("/"));
+
+            HashMap<Integer, Integer> map = new HashMap<>();
+            map.put(1, 1);
+            js1._cachedObjects.put("cachedMap", map);
+            js1._cachedObjects.put("cachedInt", 1);
+            js1._cachedObjects.put("cachedString", "foo");
+            js1._cachedObjects.put("cachedLong", 2L);
+
+            ObjectMapper mapper = PipelineJob.createObjectMapper();
+
+            StringWriter writer = new StringWriter();
+            mapper.writeValue(writer, js1);
+
+            SequenceJobSupportImpl deserialized = mapper.readValue(new StringReader(writer.toString()), SequenceJobSupportImpl.class);
+            assertNotNull("Analysis map not serialized properly", deserialized._cachedAnalyses.get(1));
+            assertNotNull("Genome map not serialized properly", deserialized._cachedGenomes.get(2));
+            assertEquals("Readset list not serialized properly", 1, deserialized._cachedReadsets.size());
+            assertEquals("Readset not deserialized with correct rowid", 100, deserialized._cachedReadsets.get(0).getRowId());
+            assertEquals("Readset not deserialized with correct readsetid", 100, deserialized._cachedReadsets.get(0).getReadsetId().intValue());
+
+            assertNotNull("File map not serialized properly", deserialized._cachedFilePaths.get(4));
+            assertNotNull("Cached map not serialized properly", deserialized.getCachedObject("cachedMap",Map.class));
+            assertEquals(" Cached int not serialized properly", Integer.valueOf(1), deserialized.getCachedObject("cachedInt", Integer.class));
+            assertEquals(" Cached string not serialized properly", "foo", deserialized.getCachedObject("cachedString", String.class));
+            assertEquals(" Cached long not serialized properly", 2L, deserialized.getCachedObject("cachedLong", Long.class).longValue());
+
+            //NOTE: this is not serializing properly.  the keys are serialized as Strings
+            Map serializedMap = deserialized.getCachedObject("cachedMap", mapper.getTypeFactory().constructParametricType(Map.class, Integer.class, Integer.class));
+            assertEquals("Map not serialized properly", 1, serializedMap.size());
+
+            //TODO: determine if we can coax jackson into serializing these properly
+            assertEquals("Object not serialized with correct key type", Integer.class, serializedMap.keySet().iterator().next().getClass());
+            assertNotNull("Map keys not serialized properly", serializedMap.get(1));
+        }
     }
 }

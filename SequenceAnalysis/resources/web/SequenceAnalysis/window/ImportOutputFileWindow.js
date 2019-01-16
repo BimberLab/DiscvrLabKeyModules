@@ -117,6 +117,7 @@ Ext4.define('SequenceAnalysis.window.ImportOutputFileWindow', {
             return;
         }
 
+        var category = this.down('field[name=category]').getValue();
         Ext4.Msg.wait('Loading...');
         this.down('form').submit({
             scope: this,
@@ -128,7 +129,7 @@ Ext4.define('SequenceAnalysis.window.ImportOutputFileWindow', {
 
                 Ext4.Msg.alert('Success', 'File Imported!', function(){
                     var dataRegion = LABKEY.DataRegions[this.dataRegionName];
-                    dataRegion.refresh();
+                    dataRegion.replaceFilter(LABKEY.Filter.create('category', category));
                 }, this);
             },
             failure: function(form, action){

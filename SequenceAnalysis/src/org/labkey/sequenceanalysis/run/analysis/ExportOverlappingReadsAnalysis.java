@@ -5,6 +5,7 @@ import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
+import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.fastq.FastqWriter;
 import htsjdk.samtools.fastq.FastqWriterFactory;
@@ -12,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
@@ -93,11 +95,7 @@ public class ExportOverlappingReadsAnalysis extends AbstractPipelineStep impleme
         List<String> segmentSummary = new ArrayList<>();
         int totalAdded = 0;
 
-        File fq1 = new File(outputDir, FileUtil.getBaseName(inputBam) + ".overlapping-R1.fastq.gz");
-        File fq2 = new File(outputDir, FileUtil.getBaseName(inputBam) + ".overlapping-R2.fastq.gz");
-        FastqWriterFactory fact = new FastqWriterFactory();
-        fact.setUseAsyncIo(true);
-        try (FastqWriter writer1 = fact.newWriter(fq1); FastqWriter writer2 = fact.newWriter(fq2))
+        try
         {
             String[] intervals = intervalList.split("\\r?\\n");
             Pattern intervalRe = Pattern.compile("^(.+):([0-9]+)-([0-9]+)$");
@@ -116,13 +114,76 @@ public class ExportOverlappingReadsAnalysis extends AbstractPipelineStep impleme
                 Integer stop = Integer.parseInt(m.group(3));
 
                 getPipelineCtx().getLogger().info("calculating bases over " + refName + ": " + start + "-" + stop);
-                int added = calculateForInterval(writer1, writer2, inputBam, refName, start, stop, distinctReadNames);
+                int added = calculateForInterval(inputBam, refName, start, stop, distinctReadNames);
                 totalAdded += added;
                 if (added > 0)
                 {
                     segmentSummary.add(refName + ":" + start + "-" + stop + ": " + added);
                 }
                 getPipelineCtx().getLogger().info("total read pairs added: " + added);
+            }
+
+            if (distinctReadNames.isEmpty())
+            {
+                getPipelineCtx().getLogger().info("no overlapping reads found");
+                return output;
+            }
+
+            File fq1 = new File(outputDir, FileUtil.getBaseName(inputBam) + ".overlapping-R1.fastq.gz");
+            File fq2 = new File(outputDir, FileUtil.getBaseName(inputBam) + ".overlapping-R2.fastq.gz");
+            FastqWriterFactory fact = new FastqWriterFactory();
+            fact.setUseAsyncIo(true);
+            try (FastqWriter writer1 = fact.newWriter(fq1); FastqWriter writer2 = fact.newWriter(fq2))
+            {
+                getPipelineCtx().getLogger().debug("total file pairs: " + rs.getReadData().size());
+                for (ReadData rd : rs.getReadData())
+                {
+                    try (FastqReader reader1 = new FastqReader(rd.getFile1()); FastqReader reader2 = new FastqReader(rd.getFile2()))
+                    {
+                        getPipelineCtx().getLogger().debug("inspecting fastq: " + rd.getFile1().getPath());
+                        while (reader1.hasNext())
+                        {
+                            FastqRecord rec1 = reader1.next();
+                            FastqRecord rec2 = reader2.next();
+
+                            String name = rec1.getReadName().split(" ")[0];
+                            if (distinctReadNames.contains(name))
+                            {
+                                writer1.write(rec1);
+                                writer2.write(rec2);
+
+                                totalAdded++;
+                            }
+                        }
+                    }
+                }
+            }
+
+            getPipelineCtx().getLogger().info("total alignments found: " + distinctReadNames.size());
+            getPipelineCtx().getLogger().info("total reads written: " + totalAdded);
+
+            if (totalAdded > 0)
+            {
+                //now run Trinity:
+                TrinityRunner tr = new TrinityRunner(getPipelineCtx().getLogger());
+                String commentLine = segmentSummary.size() > 5 ? "" : ". \n" + StringUtils.join(segmentSummary, ". \n");
+                tr.setThrowNonZeroExits(false); //this will occur if no contigs are found
+                File trinityFasta = tr.performAssembly(fq1, fq2, outputDir, FileUtil.getBaseName(inputBam), Arrays.asList("--max_memory", "8G"), true, true);
+                if (trinityFasta != null && trinityFasta.exists())
+                {
+                    long lineCount = SequenceUtil.getLineCount(trinityFasta) / 2;
+                    String description = "Total contigs: " + lineCount + ". \n" + "Total pairs: " + totalAdded + commentLine;
+                    output.addSequenceOutput(trinityFasta, "Assembled Overlapping Reads: " + rs.getName(), "Overlapping Contigs", rs.getRowId(), null, referenceGenome.getGenomeId(), description);
+                }
+            }
+            else
+            {
+                getPipelineCtx().getLogger().error("no matching reads found, despite matching alignments");
+            }
+            if (discardFastq)
+            {
+                output.addIntermediateFile(fq1);
+                output.addIntermediateFile(fq2);
             }
         }
         catch (IOException e)
@@ -133,24 +194,6 @@ public class ExportOverlappingReadsAnalysis extends AbstractPipelineStep impleme
         //output.addSequenceOutput(fq1, "Overlapping Reads - Forward", "Overlapping Reads", rs.getRowId(), null, referenceGenome.getGenomeId(), description);
         //output.addSequenceOutput(fq2, "Overlapping Reads - Reverse", "Overlapping Reads", rs.getRowId(), null, referenceGenome.getGenomeId(), description);
 
-        //now run Trinity:
-        TrinityRunner tr = new TrinityRunner(getPipelineCtx().getLogger());
-        String commentLine = segmentSummary.size() > 5 ? "" : ". \n" + StringUtils.join(segmentSummary, ". \n");
-        tr.setThrowNonZeroExits(false); //this will occur if no contigs are found
-        File trinityFasta = tr.performAssembly(fq1, fq2, outputDir, FileUtil.getBaseName(inputBam), Arrays.asList("--max_memory", "8G"), true, true);
-        if (trinityFasta != null && trinityFasta.exists())
-        {
-            long lineCount = SequenceUtil.getLineCount(trinityFasta) / 2;
-            String description = "Total contigs: " + lineCount + ". \n" + "Total pairs: " + totalAdded + commentLine;
-            output.addSequenceOutput(trinityFasta, "Assembled Overlapping Reads: " + rs.getName(), "Overlapping Contigs", rs.getRowId(), null, referenceGenome.getGenomeId(), description);
-        }
-
-        if (discardFastq)
-        {
-            output.addIntermediateFile(fq1);
-            output.addIntermediateFile(fq2);
-        }
-
         return output;
     }
 
@@ -160,13 +203,13 @@ public class ExportOverlappingReadsAnalysis extends AbstractPipelineStep impleme
         return null;
     }
 
-    private int calculateForInterval(FastqWriter writer1, FastqWriter writer2, File inputBam, String refName, int start, int stop, Set<String> distinctReadNames) throws IOException
+    private int calculateForInterval(File inputBam, String refName, int start, int stop, Set<String> distinctReadNames) throws IOException
     {
         int totalAdded = 0;
         int totalPreviouslyEncountered = 0;
         SamReaderFactory bamFact = SamReaderFactory.makeDefault();
         bamFact.validationStringency(ValidationStringency.SILENT);
-        try (SamReader sam = bamFact.open(inputBam);SamReader mateReader = bamFact.open(inputBam))
+        try (SamReader sam = bamFact.open(inputBam))
         {
             try (SAMRecordIterator it = sam.queryOverlapping(refName, start, stop))
             {
@@ -190,12 +233,6 @@ public class ExportOverlappingReadsAnalysis extends AbstractPipelineStep impleme
                         throw new IOException("This tool only supports paired-end reads");
                     }
 
-                    SAMRecord mate = mateReader.queryMate(r);
-                    if (mate == null)
-                    {
-                        throw new IOException("Unable to find mate for read: " + r.getReadName());
-                    }
-
                     if (distinctReadNames.contains(r.getReadName()))
                     {
                         totalPreviouslyEncountered++;
@@ -203,9 +240,6 @@ public class ExportOverlappingReadsAnalysis extends AbstractPipelineStep impleme
                     else
                     {
                         distinctReadNames.add(r.getReadName());
-                        writer1.write(new FastqRecord(r.getReadName() + "/1", r.getReadBases(), null, r.getBaseQualities()));
-                        writer2.write(new FastqRecord(mate.getReadName() + "/2", mate.getReadBases(), null, mate.getBaseQualities()));
-                        totalAdded++;
                     }
                 }
             }

@@ -21,7 +21,7 @@ Ext4.define('JBrowse.window.ModifyJsonConfigWindow', {
     initComponent: function(){
         Ext4.apply(this, {
             title: 'Modify Track Config',
-            width: 600,
+            width: 700,
             bodyStyle: 'padding: 5px;',
             defaults: {
                 border: false
@@ -32,44 +32,44 @@ Ext4.define('JBrowse.window.ModifyJsonConfigWindow', {
             },{
                 xtype: 'ldk-gridpanel',
                 clicksToEdit: 1,
-                width: 580,
+                width: 680,
                 tbar: [{
                     text: 'Add',
                     menu: [{
                         text: 'Visible By Default',
                         scope: this,
                         handler: function (gridBtn) {
-                            this.addAttribute('visibleByDefault', true);
+                            this.addAttribute('visibleByDefault', true, 'BOOLEAN');
                         }
                     },{
                         text: 'Index Features',
                         scope: this,
                         handler: function (gridBtn) {
-                            this.addAttribute('doIndex', false);
+                            this.addAttribute('doIndex', false, 'BOOLEAN');
                         }
                     },{
                         text: 'Max Score',
                         scope: this,
                         handler: function (gridBtn) {
-                            this.addAttribute('max_score', 1);
+                            this.addAttribute('max_score', 1, 'INT');
                         }
                     },{
                         text: 'Category',
                         scope: this,
                         handler: function (gridBtn) {
-                            this.addAttribute('category', null);
+                            this.addAttribute('category', null, 'STRING');
                         }
                     },{
                         text: 'XY Plot',
                         scope: this,
                         handler: function (gridBtn) {
-                            this.addAttribute('type', 'JBrowse/View/Track/Wiggle/XYPlot');
+                            this.addAttribute('type', 'JBrowse/View/Track/Wiggle/XYPlot', 'STRING');
                         }
                     },{
                         text: 'Omit This Track',
                         scope: this,
                         handler: function (gridBtn) {
-                            this.addAttribute('omitTrack', true);
+                            this.addAttribute('omitTrack', true, 'BOOLEAN');
                         }
                     },{
                         text: 'Other',
@@ -83,7 +83,7 @@ Ext4.define('JBrowse.window.ModifyJsonConfigWindow', {
                 })],
                 store: {
                     type: 'array',
-                    fields: ['attribute', {name: 'value', type: 'object'}]
+                    fields: ['attribute', {name: 'value', type: 'object'}, {name: 'dataType', type: 'object'}]
                 },
                 columns: [{
                     dataIndex: 'attribute',
@@ -103,6 +103,28 @@ Ext4.define('JBrowse.window.ModifyJsonConfigWindow', {
                         allowBlank: true,
                         stripCharsRe: /(^['"]+)|(['"]+$)/g
                     }
+                },{
+                    dataIndex: 'dataType',
+                    width: 150,
+                    header: 'Data Type',
+                    editor: {
+                        xtype: 'combo',
+                        allowBlank: false,
+                        forceSelection: true,
+                        valueField: 'name',
+                        displayField: 'name',
+                        value: 'STRING',
+                        store: {
+                            type: 'array',
+                            fields: ['name'],
+                            data: [
+                                ['STRING'],
+                                ['INT'],
+                                ['FLOAT'],
+                                ['BOOLEAN']
+                            ]
+                        }
+                    }
                 }]
             }],
             buttons: [{
@@ -120,12 +142,13 @@ Ext4.define('JBrowse.window.ModifyJsonConfigWindow', {
         this.callParent(arguments);
     },
 
-    addAttribute: function(attribute, value){
+    addAttribute: function(attribute, value, dataType){
         var grid = this.down('grid');
         var store = grid.store;
         var recs = store.add(store.createModel({
             attribute: attribute,
-            value: value
+            value: value,
+            dataType: dataType || 'STRING'
         }));
 
         var idx = store.indexOf(recs[0]);
@@ -152,7 +175,11 @@ Ext4.define('JBrowse.window.ModifyJsonConfigWindow', {
                     r.data.value = false;
                 }
             }
-            ret[r.data.attribute] = r.data.value;
+
+            var type = Ext4.data.Types[r.data.dataType || 'STRING'];
+            LDK.Assert.assertNotEmpty('Unable to find datatype: ' + r.data.dataType, type);
+
+            ret[r.data.attribute] = type.convert(r.data.value);
         }, this);
 
         if (hasError){

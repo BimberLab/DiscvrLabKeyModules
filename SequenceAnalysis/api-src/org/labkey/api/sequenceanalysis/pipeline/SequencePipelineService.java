@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 
 import java.io.File;
@@ -68,6 +69,8 @@ abstract public class SequencePipelineService
     abstract public String getUnzippedBaseName(String filename);
 
     abstract public String getJavaFilepath();
+
+    abstract public String getJava8FilePath();
 
     abstract public String getJavaTempDir();
 
@@ -117,5 +120,7 @@ abstract public class SequencePipelineService
 
     abstract public void updateOutputFile(SequenceOutputFile o, PipelineJob job, Integer runId, Integer analysisId);
 
-    abstract public PreprocessingStep.Output simpleTrimFastqPair(File fq1, File fq2, List<String> params, Logger log) throws PipelineJobException;
+    abstract public PreprocessingStep.Output simpleTrimFastqPair(File fq1, File fq2, List<String> params, File outDir, Logger log) throws PipelineJobException;
+
+    abstract public File runCiteSeqCount(Readset htoReadset, File htoList, File cellBarcodeList, File outputDir, String basename, Logger log, List<String> extraArgs) throws PipelineJobException;
 }

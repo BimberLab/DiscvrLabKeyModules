@@ -4,53 +4,70 @@
 # usage: ./installLabKey.sh ${distribution}
 #
 
-BRANCH=LabkeyDISCVR153_Installers
-PROJECT_NAME=LabKey15.3DISCVR
-DIST_NAME=discvr
-MODULE_DIST_NAME=prime-seq-modules
-LK_HOME=/usr/local/labkey
+set -x
 
+labkey_home=/usr/local/labkey
 cd /usr/local/src
 
+#NOTE: corresponding changes must be made in javaWrapper.sh
+MAJOR=18
+MINOR=2
+BRANCH=Discvr${MAJOR}${MINOR}_Installers
+ARTIFACT=LabKey${MAJOR}.${MINOR}
+MODULE_DIST_NAME=prime-seq-modules
+PREMIUM=premium-${MAJOR}.${MINOR}.module
+TOMCAT_HOME=/usr/share/tomcat
+
+#first download
+DATE=$(date +"%Y%m%d%H%M")
+MODULE_ZIP=${ARTIFACT}-ExtraModules-${DATE}.zip
+rm -Rf $MODULE_ZIP
+wget --trust-server-names --no-check-certificate -O $MODULE_ZIP http://teamcity.labkey.org/guestAuth/repository/download/LabKey_${BRANCH}/.lastSuccessful/${MODULE_DIST_NAME}/${ARTIFACT}-{build.number}-ExtraModules.zip
+
+GZ=${ARTIFACT}-${DATE}-discvr-bin.tar.gz
+rm -Rf $GZ
+wget --trust-server-names --no-check-certificate -O $GZ http://teamcity.labkey.org/guestAuth/repository/download/Labkey_${BRANCH}/.lastSuccessful/discvr/${ARTIFACT}-{build.number}-discvr-bin.tar.gz
+
+#extract, find name
+tar -xf $GZ
+DIR=$(ls -tr | grep "^${ARTIFACT}*" | grep 'discvr-bin$' | tail -n -1)
+echo "DIR: $DIR"
+BASENAME=$(echo ${DIR} | sed 's/-discvr-bin//')
+mv $GZ ./${BASENAME}-discvr-bin.tar.gz
+mv $MODULE_ZIP ./${BASENAME}-ExtraModules.zip
+GZ=${BASENAME}-discvr-bin.tar.gz
+MODULE_ZIP=${BASENAME}-ExtraModules.zip
+
+systemctl stop labkey.service
+
 #extra modules first
-wget -r --trust-server-names --no-check-certificate http://teamcity.labkey.org/guestAuth/repository/download/LabKey_${BRANCH}/.lastSuccessful/${MODULE_DIST_NAME}/${PROJECT_NAME}-{build.number}-ExtraModules.zip
-mv ./teamcity.labkey.org/guestAuth/repository/download/${BRANCH}/.lastSuccessful/${MODULE_DIST_NAME}/*.zip ./
-rm -Rf ./teamcity.labkey.org
-MODULE_ZIP=$(ls -tr | grep '^LabKey.*\.zip$' | tail -n -1)
-rm -Rf ${LK_HOME}/externalModules
-mkdir -p ${LK_HOME}/externalModules
+rm -Rf ${labkey_home}/externalModules
+mkdir -p ${labkey_home}/externalModules
 rm -Rf modules_unzip
 unzip $MODULE_ZIP -d ./modules_unzip
 MODULE_DIR=$(ls ./modules_unzip | tail -n -1)
-cp ./modules_unzip/${MODULE_DIR}/modules/*.module ${LK_HOME}/externalModules
+echo $MODULE_DIR
+cp ./modules_unzip/${MODULE_DIR}/modules/*.module ${labkey_home}/externalModules
 rm -Rf ./modules_unzip
-rm -Rf $MODULE_ZIP
 
-GZ=$1
-if [ $# -eq 0 ]; then
-    wget -r --trust-server-names --no-check-certificate http://teamcity.labkey.org/guestAuth/repository/download/LabKey_${BRANCH}/.lastSuccessful/${DIST_NAME}/${PROJECT_NAME}-{build.number}-${DIST_NAME}-bin.tar.gz
-    mv ./teamcity.labkey.org/guestAuth/repository/download/${BRANCH}/.lastSuccessful/${DIST_NAME}/*.gz ./
-    rm -Rf ./teamcity.labkey.org
-    GZ=$(ls -tr | grep '^LabKey.*\.gz$' | tail -n -1)
+#premium
+if [ -e $PREMIUM ];then
+        cp $PREMIUM ${labkey_home}/externalModules
 fi
 
+#main server
 echo "Installing LabKey using: $GZ"
-echo "Unzipping $GZ"
-gunzip $GZ
-TAR=`echo $GZ | sed -e "s/.gz$//"`
-echo "TAR: $TAR"
-tar -xf $TAR
-DIR=`echo $TAR | sed -e "s/.tar$//"`
-echo "DIR: $DIR"
 cd $DIR
-./manual-upgrade.sh -u labkey -c /usr/local/tomcat -l $LK_HOME --noPrompt
+./manual-upgrade.sh -u labkey -c /usr/local/tomcat -l $labkey_home --noPrompt
+cd ../
+systemctl start labkey.service
 
 # clean up
-cd ../
 echo "Removing folder: $DIR"
 rm -Rf $DIR
-echo "GZipping distribution"
-gzip $TAR
 
 echo "cleaning up installers, leaving 5 most recent"
-ls -tr | grep '^LabKey.*\.gz$' | head -n -5 | xargs rm
+ls -tr | grep "^${ARTIFACT}.*\.gz$" | head -n -5 | xargs rm
+
+echo "cleaning up ZIP, leaving 5 most recent"
+ls -tr | grep "^${ARTIFACT}.*\.zip$" | head -n -5 | xargs rm

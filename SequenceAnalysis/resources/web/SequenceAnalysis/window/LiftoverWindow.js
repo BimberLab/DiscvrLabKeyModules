@@ -108,12 +108,6 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
                 itemId: 'pctField'
             },{
                 xtype: 'checkbox',
-                itemId: 'discardRejected',
-                checked: false,
-                helpPopup: 'If checked, the variants unable to liftover will not be saved to a separate file',
-                fieldLabel: 'Do Not Save Failed Liftover'
-            },{
-                xtype: 'checkbox',
                 itemId: 'dropGenotypes',
                 checked: false,
                 helpPopup: 'If checked, no genotypes will be written to the output file (applies to VCFs only).  This can be useful (and necessary) when lifting VCFs with extremely high sample number.',
@@ -152,10 +146,6 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
 
         if (this.down('#pctField').getValue()){
             params.pct = this.down('#pctField').getValue();
-        }
-
-        if (this.down('#discardRejected').getValue()){
-            params.discardRejected = this.down('#discardRejected').getValue();
         }
 
         if (this.down('#dropGenotypes').getValue()){

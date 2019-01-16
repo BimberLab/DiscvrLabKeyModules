@@ -27,7 +27,7 @@
                     tpl: [
                         '<tpl for=".">',
                             '<tpl if="publicUrl">',
-                                '<div style="width: 300px;font-weight: bold;" class="thumb-wrap thumb-wrap-side">',
+                                '<div style="width: 300px;font-weight: bold;height: auto;" class="thumb-wrap thumb-wrap-side">',
                                     '<span style="float: left;position: relative;">{title:htmlEncode}:</span>',
                                     '<span style="float: right;position: relative;margin-right: 5px;">',
                                     '<tpl if="!canReadPublic"><span data-qtip="You do not have permission to view this page"> [Public] </a>',
@@ -42,7 +42,7 @@
                             '<tpl else>',
                                 '<div ',
                                 '<tpl if="!canRead">data-qtip="You do not have permission to view this page"</tpl>',
-                                'style="width: 300px;" class="thumb-wrap thumb-wrap-side">',
+                                'style="width: 300px;height: auto;" class="thumb-wrap thumb-wrap-side">',
                                 '<tpl if="url"><a href="{url}"></tpl>',
                                     '<span style="font-weight: bold" class="thumb-label-side">{title:htmlEncode}</span>',
                                 '<tpl if="url"></a></tpl>',

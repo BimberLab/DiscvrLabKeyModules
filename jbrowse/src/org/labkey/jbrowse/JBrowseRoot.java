@@ -33,6 +33,7 @@ import org.labkey.api.reader.Readers;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.study.assay.AssayFileWriter;
@@ -210,9 +211,9 @@ public class JBrowseRoot
         }
 
         //in case we have a cached version, re-create
+        File outDir = new File(getTracksDir(jsonFile.getContainerObj()), "data-" + jsonFile.getOutputFile().toString());
         if (forceRecreateJson && jsonFile != null)
         {
-            File outDir = new File(getTracksDir(jsonFile.getContainerObj()), "data-" + jsonFile.getOutputFile().toString());
             if (outDir.exists())
             {
                 getLogger().debug("deleting existing directory: " + outDir.getPath());
@@ -221,22 +222,25 @@ public class JBrowseRoot
             outDir.mkdirs();
         }
 
+        SequenceOutputFile so = SequenceOutputFile.getForId(outputFileId);
+        if (so == null)
+        {
+            throw new IllegalArgumentException("Unable to find outputfile: " + outputFileId);
+        }
+
+        Container fileContainer = ContainerManager.getForId(so.getContainer());
+        if (fileContainer == null)
+        {
+            throw new IllegalArgumentException("Unable to find container with Id: " + so.getContainer());
+        }
+
         //else create
         if (jsonFile == null)
         {
             getLogger().debug("adding new jsonfile record");
-            TableInfo outputFiles = JBrowseManager.get().getSequenceAnalysisTable("outputfiles");
-            TableSelector ts2 = new TableSelector(outputFiles, PageFlowUtil.set("container"), new SimpleFilter(FieldKey.fromString("rowid"), outputFileId), null);
-            String containerId = ts2.getObject(String.class);
-            Container fileContainer = ContainerManager.getForId(containerId);
-            if (fileContainer == null)
-            {
-                throw new IOException("Unable to find container with Id: " + containerId);
-            }
 
             Map<String, Object> jsonRecord = new CaseInsensitiveHashMap<>();
             jsonRecord.put("outputfile", outputFileId);
-            File outDir = new File(getTracksDir(fileContainer), "track-" + outputFileId.toString());
             jsonRecord.put("relPath", FileUtil.relativePath(getBaseDir(fileContainer).getPath(), outDir.getPath()));
             jsonRecord.put("container", fileContainer.getId());
             jsonRecord.put("created", new Date());
@@ -252,6 +256,16 @@ public class JBrowseRoot
             Table.insert(u, jsonFiles, jsonRecord);
 
             jsonFile = ts1.getObject(JsonFile.class);
+        }
+
+        if (jsonFile != null)
+        {
+            processFile(so.getExpData(), outDir, "data-" + jsonFile.getOutputFile(), jsonFile.getLabel(), additionalConfig, jsonFile.getCategory(), jsonFile.getRefLibraryData());
+            if (getTrackListForOutputFile(jsonFile) == null)
+            {
+                getLogger().error("this outputfile/track lacks a trackList.conf file.  this probably indicates a problem when this resource was originally processed.  you should try to re-process it." + (jsonFile.getTrackRootDir() == null ? "" : "  expected to find file in: " + jsonFile.getTrackRootDir()));
+                return null;
+            }
         }
 
         return jsonFile;

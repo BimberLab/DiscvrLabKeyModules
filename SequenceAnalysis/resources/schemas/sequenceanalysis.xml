@@ -12,6 +12,7 @@
             <column columnName="sequence">
                 <nullable>false</nullable>
                 <inputType>textarea</inputType>
+                <description>This should be the forward orientation of the sequence, as it appears in the adapter sequence</description>
             </column>
             <column columnName="group_name">
                 <nullable>false</nullable>
@@ -1094,6 +1095,14 @@
                     <fkDisplayColumnName useRawValue="true"/>
                 </fk>
             </column>
+            <column columnName="concentration">
+                <nullable>true</nullable>
+                <columnTitle>Library Concentration (ng/uL)</columnTitle>
+            </column>
+            <column columnName="fragmentSize">
+                <nullable>true</nullable>
+                <columnTitle>Fragment Size (bp)</columnTitle>
+            </column>
             <!--<column columnName="platform_unit">-->
                 <!--<columnTitle>Platform Unit</columnTitle>-->
                 <!--<description>This identifies this group of reads within a run.  For Illumina this is the flowcell-barcode-lane</description>-->
@@ -1172,6 +1181,14 @@
         <buttonBarOptions includeStandardButtons="false">
             <includeScript>laboratory.context</includeScript>
             <includeScript>sequenceanalysis/sequenceAnalysis</includeScript>
+            <item text="Insert" permission="INSERT" iconCls="plus">
+                <item text="Prepare/Plan Readset">
+                    <onClick>Laboratory.buttonHandlers.importDataHandler(dataRegionName, 'sequenceanalysis', 'sequence_readsets', 'rowid', false)</onClick>
+                </item>
+                <item text="Import From Files">
+                    <onClick>Laboratory.buttonHandlers.importDataHandlerForView(dataRegionName, 'pipeline', 'browse')</onClick>
+                </item>
+            </item>
             <item text="Grid Views">
                 <originalText>Grid Views</originalText>
             </item>
@@ -1463,6 +1480,14 @@
                     <fkTable>sequence_platforms</fkTable>
                     <fkColumnName>platform</fkColumnName>
                 </fk>
+            </column>
+            <column columnName="i7IndexComplement">
+                <columnTitle>Complement i7 Index?</columnTitle>
+                <nullable>true</nullable>
+            </column>
+            <column columnName="i5IndexComplement">
+                <columnTitle>Complement i5 Index?</columnTitle>
+                <nullable>true</nullable>
             </column>
             <column columnName="location"/>
             <column columnName="createdby">

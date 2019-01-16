@@ -22,7 +22,6 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.util.FileType;
-import org.labkey.blast.BLASTManager;
 import org.labkey.blast.BLASTWrapper;
 
 import java.io.IOException;
@@ -91,8 +90,7 @@ public class BlastWorkTask extends PipelineJob.Task<BlastWorkTask.Factory>
                 throw new PipelineJobException("The BLAST bin directory has not been set.  Please have you site administrator configure this through the admin console.");
             }
 
-            BLASTWrapper wrapper = new BLASTWrapper();
-            wrapper.setLog(getJob().getLogger());
+            BLASTWrapper wrapper = new BLASTWrapper(getJob().getLogger());
             wrapper.runBlastN(getPipelineJob().getBlastJob().getDatabaseId(), getPipelineJob().getBlastJob().getExpectedInputFile(), getPipelineJob().getBlastJob().getExpectedOutputFile(), getPipelineJob().getBlastJob().getParamMap(), getPipelineJob().getBinDir(), getPipelineJob().getDbDir());
 
             return new RecordedActionSet(Collections.singleton(new RecordedAction()));

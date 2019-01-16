@@ -399,6 +399,8 @@ labModules/SequenceAnalysis/resources/external/fastqc/uk/ac/babraham/FastQC/Util
 labModules/SequenceAnalysis/resources/external/fastqc/uk/ac/babraham/FastQC/Utilities/QualityCount.class -text
 labModules/SequenceAnalysis/resources/external/fastqc/uk/ac/babraham/FastQC/Utilities/RGB.class -text
 labModules/SequenceAnalysis/resources/external/jbzip2-0.9.jar -text
+labModules/SequenceAnalysis/resources/external/multiSeqClassifier.R -text
+labModules/SequenceAnalysis/resources/external/multiSeqClassifier.sh -text
 labModules/SequenceAnalysis/resources/external/qscript/GenotypeGVCFsRunner.scala -text
 labModules/SequenceAnalysis/resources/external/qscript/HaplotypeCallerRunner.scala -text
 labModules/SequenceAnalysis/resources/external/qscript/IndelRealignerRunner.scala -text
@@ -561,6 +563,8 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnaly
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.314-12.315.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.315-12.316.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.316-12.317.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.317-12.318.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/SequenceAnalysis-12.318-12.319.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.00-0.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-0.11-11.10.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/postgresql/obsolete/SequenceAnalysis-11.10-11.11.sql -text
@@ -654,6 +658,8 @@ labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalys
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.314-12.315.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.315-12.316.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.316-12.317.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.317-12.318.sql -text
+labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/SequenceAnalysis-12.318-12.319.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.23-11.24.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.24-11.25.sql -text
 labModules/SequenceAnalysis/resources/schemas/dbscripts/sqlserver/obsolete/SequenceAnalysis-11.25-11.26.sql -text
@@ -707,6 +713,7 @@ labModules/SequenceAnalysis/resources/views/populateSequences.view.xml -text
 labModules/SequenceAnalysis/resources/views/readsetDetails.html -text
 labModules/SequenceAnalysis/resources/views/readsetDetails.view.xml -text
 labModules/SequenceAnalysis/resources/views/releaseNotes.html -text
+labModules/SequenceAnalysis/resources/views/sampleSheetExport.html -text
 labModules/SequenceAnalysis/resources/views/sbtToGeneTable.html -text
 labModules/SequenceAnalysis/resources/views/sbtToGeneTable.view.xml -text
 labModules/SequenceAnalysis/resources/views/search.html -text
@@ -835,6 +842,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/AbstractCom
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/AlignmentMetricsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/BamCleanupHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/BamHaplotypeHandler.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CellHashingHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CellRangerAggrHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CellRangerReanalysisHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CombineStarGeneCountsHandler.java -text
@@ -852,7 +860,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/SbtGeneCoun
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/UnmappedSequenceBasedGenotypeHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/picard/CigarPositionIterable.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/AddSraRunButton.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/GenomeLoadButton.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/CellHashingButton.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/ReprocessLibraryButton.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/RunMultiQCButton.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/AdapterModel.java -text
@@ -886,9 +894,6 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ImportFasta
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ImportGenomeTrackPipelineJob.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/ImportGenomeTrackTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/JobContextImpl.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/NcbiGenomeImportPipelineJob.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/NcbiGenomeImportPipelineProvider.java -text
-labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/NcbiGenomeImportTask.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/OrphanFilePipelineJob.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/OrphanFilePipelineProvider.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/pipeline/PicardMetricsUtil.java -text

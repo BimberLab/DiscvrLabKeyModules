@@ -1350,6 +1350,29 @@ else
     echo "Already installed"
 fi
 
+#
+#CITE-seq-count
+#
+
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Installing CITE-seq-count"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/CITE-seq-Count || ! -z $FORCE_REINSTALL ]];
+then
+    rm -Rf ${LKTOOLS_DIR}/CITE-seq*
+    mkdir -p ${LKTOOLS_DIR}/CITE-seq-count-base
+
+    pip install CITE-seq-Count --upgrade --install-option="--prefix=${LKTOOLS_DIR}/CITE-seq-count-base"
+    mv ${LKTOOLS_DIR}/CITE-seq-count-base/bin/* ${LKTOOLS_DIR}
+
+else
+    echo "Already installed"
+fi
+
 if [ ! -z $LK_USER ];
 then
     echo "Setting owner of files to: ${LK_USER}"
@@ -1366,3 +1389,6 @@ echo ""
 echo ""
 echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 echo "Installation is complete"
+
+
+

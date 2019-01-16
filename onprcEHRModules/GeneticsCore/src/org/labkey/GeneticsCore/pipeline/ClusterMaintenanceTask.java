@@ -1,8 +1,11 @@
 package org.labkey.GeneticsCore.pipeline;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.log4j.Logger;
+import org.junit.Assert;
+import org.junit.Test;
 import org.labkey.api.cluster.ClusterService;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.CompareType;
@@ -32,6 +35,8 @@ import org.labkey.api.util.SystemMaintenance;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -132,6 +137,12 @@ public class ClusterMaintenanceTask implements SystemMaintenance.MaintenanceTask
     {
         private Set<String> _jobGuids;
 
+        //for serialization
+        protected RemoteWorkTask()
+        {
+
+        }
+
         public RemoteWorkTask(Set<String> jobGuids)
         {
             _jobGuids = new CaseInsensitiveHashSet(jobGuids);
@@ -202,6 +213,26 @@ public class ClusterMaintenanceTask implements SystemMaintenance.MaintenanceTask
             {
                 log.error(e);
             }
+        }
+    }
+
+    public static class TestCase extends Assert
+    {
+        @Test
+        public void testSerialization() throws Exception
+        {
+            RemoteWorkTask task = new RemoteWorkTask();
+            task._jobGuids = new HashSet<>();
+            task._jobGuids.add("1");
+
+            ObjectMapper mapper = PipelineJob.createObjectMapper();
+
+            StringWriter writer = new StringWriter();
+            mapper.writeValue(writer, task);
+            RemoteWorkTask deserialized = mapper.readValue(new StringReader(writer.toString()), RemoteWorkTask.class);
+
+            assertEquals("Class not serialized properly", 1, deserialized._jobGuids.size());
+            assertEquals("Class not serialized properly", "1", deserialized._jobGuids.iterator().next());
         }
     }
 }

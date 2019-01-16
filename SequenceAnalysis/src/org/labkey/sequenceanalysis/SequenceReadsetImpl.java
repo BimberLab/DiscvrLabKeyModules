@@ -15,13 +15,13 @@
  */
 package org.labkey.sequenceanalysis;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
-import org.labkey.api.util.FileUtil;
 
 import java.util.Collections;
 import java.util.Date;
@@ -47,6 +47,8 @@ public class SequenceReadsetImpl implements Readset
     private String _libraryType;
     private String _application;
     private String _chemistry;
+    private Double _fragmentSize;
+    private Double _concentration;
     private Integer _instrument_run_id;
     private Integer _runId;
     private String _status;
@@ -76,6 +78,7 @@ public class SequenceReadsetImpl implements Readset
     }
 
     @Override
+    @JsonIgnore
     public Integer getReadsetId()
     {
         return _rowId;
@@ -145,6 +148,28 @@ public class SequenceReadsetImpl implements Readset
     public void setBarcode3(String barcode3)
     {
         _barcode3 = barcode3;
+    }
+
+    @Override
+    public Double getFragmentSize()
+    {
+        return _fragmentSize;
+    }
+
+    public void setFragmentSize(Double fragmentSize)
+    {
+        _fragmentSize = fragmentSize;
+    }
+
+    @Override
+    public Double getConcentration()
+    {
+        return _concentration;
+    }
+
+    public void setConcentration(Double concentration)
+    {
+        _concentration = concentration;
     }
 
     @Override

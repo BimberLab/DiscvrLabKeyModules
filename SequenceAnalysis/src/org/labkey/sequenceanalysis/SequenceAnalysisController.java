@@ -138,8 +138,6 @@ import org.labkey.sequenceanalysis.pipeline.AlignmentImportJob;
 import org.labkey.sequenceanalysis.pipeline.IlluminaImportJob;
 import org.labkey.sequenceanalysis.pipeline.ImportFastaSequencesPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.ImportGenomeTrackPipelineJob;
-import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineJob;
-import org.labkey.sequenceanalysis.pipeline.NcbiGenomeImportPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.OrphanFilePipelineJob;
 import org.labkey.sequenceanalysis.pipeline.ReadsetImportJob;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
@@ -176,7 +174,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -3714,92 +3711,6 @@ public class SequenceAnalysisController extends SpringActionController
         public void setIncludeAll(boolean includeAll)
         {
             _includeAll = includeAll;
-        }
-    }
-
-    @RequiresPermission(InsertPermission.class)
-    public class LoadNcbiGenomeAction extends ApiAction<LoadNcbiGenomeForm>
-    {
-        public ApiResponse execute(LoadNcbiGenomeForm form, BindException errors) throws Exception
-        {
-            PipeRoot pr = PipelineService.get().findPipelineRoot(getContainer());
-            if (pr == null || !pr.isValid())
-                throw new NotFoundException();
-
-            if (StringUtils.trimToNull(form.getFolder()) == null)
-            {
-                errors.reject(ERROR_MSG, "Must provide the name of the remote directory");
-                return null;
-            }
-
-            if (StringUtils.trimToNull(form.getGenomeName()) == null)
-            {
-                errors.reject(ERROR_MSG, "Must provide the name for this genome");
-                return null;
-            }
-
-            URL url = new URL(NcbiGenomeImportPipelineProvider.URL_BASE + "/" + form.getFolder() + "/");
-            try (InputStream inputStream = url.openConnection().getInputStream())
-            {
-                //just open to test if file exists
-            }
-            catch (IOException e)
-            {
-                throw new NotFoundException("Unable to find remote file: " + form.getFolder());
-            }
-
-            NcbiGenomeImportPipelineJob job = new NcbiGenomeImportPipelineJob(getContainer(), getUser(), getViewContext().getActionURL(), pr, form.getFolder(), form.getGenomeName(), form.getGenomePrefix(), form.getSpecies());
-            PipelineService.get().queueJob(job);
-
-            return new ApiSimpleResponse("success", true);
-        }
-    }
-
-    public static class LoadNcbiGenomeForm
-    {
-        private String _folder;
-        private String _genomeName;
-        private String _genomePrefix;
-        private String _species;
-
-        public String getFolder()
-        {
-            return _folder;
-        }
-
-        public void setFolder(String folder)
-        {
-            _folder = folder;
-        }
-
-        public String getGenomeName()
-        {
-            return _genomeName;
-        }
-
-        public void setGenomeName(String genomeName)
-        {
-            _genomeName = genomeName;
-        }
-
-        public String getGenomePrefix()
-        {
-            return _genomePrefix;
-        }
-
-        public void setGenomePrefix(String genomePrefix)
-        {
-            _genomePrefix = genomePrefix;
-        }
-
-        public String getSpecies()
-        {
-            return _species;
-        }
-
-        public void setSpecies(String species)
-        {
-            _species = species;
         }
     }
 

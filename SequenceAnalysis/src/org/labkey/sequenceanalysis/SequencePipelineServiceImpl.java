@@ -13,6 +13,8 @@ import org.labkey.api.reports.ExternalScriptEngineDefinition;
 import org.labkey.api.reports.LabkeyScriptEngineManager;
 import org.labkey.api.reports.RScriptEngineFactory;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.model.ReadData;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.HasJobParams;
 import org.labkey.api.sequenceanalysis.pipeline.JobResourceSettings;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
@@ -20,11 +22,13 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.Pair;
+import org.labkey.sequenceanalysis.analysis.CellHashingHandler;
 import org.labkey.sequenceanalysis.pipeline.PipelineStepCtxImpl;
 import org.labkey.sequenceanalysis.pipeline.SequenceJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerFinalTask;
@@ -221,6 +225,25 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         {
             return "java";
         }
+    }
+
+    public String getJava8FilePath()
+    {
+        String java8Home = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_HOME_8");
+        if (java8Home == null)
+        {
+            //This should be defined at on TeamCity, and can be used on other servers if needed
+            java8Home = StringUtils.trimToNull(System.getenv("JDK_18"));
+        }
+
+        if (java8Home != null)
+        {
+            File ret = new File(java8Home, "bin");
+            ret = new File(ret, "java");
+            return ret.getPath();
+        }
+
+        return SequencePipelineService.get().getJavaFilepath();
     }
 
     @Override
@@ -449,9 +472,10 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     }
 
     @Override
-    public PreprocessingStep.Output simpleTrimFastqPair(File fq1, File fq2, List<String> additionalParams, Logger log) throws PipelineJobException
+    public PreprocessingStep.Output simpleTrimFastqPair(File fq1, File fq2, List<String> additionalParams, File outDir, Logger log) throws PipelineJobException
     {
         TrimmomaticWrapper wrapper = new TrimmomaticWrapper(log);
+        wrapper.setOutputDir(outDir);
         wrapper.doTrim(wrapper.getTrimmomaticParams(fq1, fq2, "trim", additionalParams));
 
         PreprocessingOutputImpl output = new PreprocessingOutputImpl(fq1, fq2);
@@ -483,5 +507,59 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         }
 
         return output;
+    }
+
+    public File runCiteSeqCount(Readset htoReadset, File htoList, File cellBarcodeList, File outputDir, String basename, Logger log, List<String> extraArgs) throws PipelineJobException
+    {
+        CellHashingHandler.CiteSeqCountWrapper wrapper = new CellHashingHandler.CiteSeqCountWrapper(log);
+        List<String> params = new ArrayList<>();
+        params.add("-t");
+        params.add(htoList.getPath());
+
+        if (cellBarcodeList != null)
+        {
+            params.add("-wl");
+            params.add(cellBarcodeList.getPath());
+        }
+
+        if (extraArgs != null)
+        {
+            params.addAll(extraArgs);
+        }
+
+        List<? extends ReadData> rd = htoReadset.getReadData();
+        if (rd.size() != 1)
+        {
+            throw new PipelineJobException("Expected HTO readset to have single pair of FASTQs");
+        }
+
+        for (ToolParameterDescriptor param : CellHashingHandler.getDefaultParams())
+        {
+            if (cellBarcodeList != null && param.getName().equals("cells"))
+            {
+                continue;
+            }
+
+            if (param.getCommandLineParam() != null && param.getDefaultValue() != null)
+            {
+                params.addAll(param.getCommandLineParam().getArguments(param.getDefaultValue().toString()));
+            }
+        }
+
+        File citeSeqCountOutput = new File(outputDir, "citeSeqCounts.txt");
+        wrapper.execute(params, rd.get(0).getFile1(), rd.get(0).getFile2(), citeSeqCountOutput);
+
+        CellHashingHandler handler = new CellHashingHandler();
+        handler.generalFinalCalls(citeSeqCountOutput, outputDir, basename, log);
+
+        File outputFile = new File(outputDir, basename + ".txt");
+        if (!outputFile.exists())
+        {
+            throw new PipelineJobException("missing expected file: " + outputFile.getPath());
+        }
+
+        citeSeqCountOutput.delete();
+
+        return outputFile;
     }
 }

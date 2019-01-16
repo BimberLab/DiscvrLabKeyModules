@@ -111,6 +111,11 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
         return pb;
     }
 
+    public void executeWithOutput(List<String> params, StringBuffer output) throws PipelineJobException
+    {
+        execute(params, null, output);
+    }
+
     private void execute(List<String> params, ProcessBuilder.Redirect redirect, @Nullable StringBuffer output) throws PipelineJobException
     {
         getLogger().info("\t" + StringUtils.join(params, " "));

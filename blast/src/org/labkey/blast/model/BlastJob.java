@@ -1,6 +1,7 @@
 package org.labkey.blast.model;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
@@ -40,6 +41,8 @@ import java.util.Scanner;
  */
 public class BlastJob implements Serializable
 {
+    private static final Logger _log = Logger.getLogger(BlastJob.class);
+
     private int _rowid;
     private String _databaseId;
     private String _title;
@@ -302,7 +305,7 @@ public class BlastJob implements Serializable
         Table.update(u, jobs, this, getObjectid());
     }
 
-    public void getResults(BLAST_OUTPUT_FORMAT outputFormat, Writer out) throws IOException
+    public void getResults(BLAST_OUTPUT_FORMAT outputFormat, Writer out) throws IOException, PipelineJobException
     {
         File output = getExpectedOutputFile();
         if (!output.exists())
@@ -371,14 +374,14 @@ public class BlastJob implements Serializable
             private Map<String, Summary> _perfectHitSummary;
 
             @Override
-            public void processResults(File results, Writer out) throws IOException
+            public void processResults(File results, Writer out) throws IOException, PipelineJobException
             {
                 //summary of perfect hits by query seq
                 try (StringWriter writer = new StringWriter())
                 {
                     _perfectHitSummary = new HashMap<>();
 
-                    new BLASTWrapper().runBlastFormatter(results, BLAST_OUTPUT_FORMAT.alignmentSummary, writer);
+                    new BLASTWrapper(_log).runBlastFormatter(results, BLAST_OUTPUT_FORMAT.alignmentSummary, writer);
 
                     Scanner scan = new Scanner(writer.getBuffer().toString());
                     while (scan.hasNextLine())
@@ -488,7 +491,7 @@ public class BlastJob implements Serializable
 
                 out.write("<b>BLAST Output:</b>");
                 out.write("<pre>");
-                new BLASTWrapper().runBlastFormatter(results, BLAST_OUTPUT_FORMAT.flatQueryAnchoredWithIdentities, out);
+                new BLASTWrapper(_log).runBlastFormatter(results, BLAST_OUTPUT_FORMAT.flatQueryAnchoredWithIdentities, out);
                 out.write("</pre>");
             }
 
@@ -537,11 +540,11 @@ public class BlastJob implements Serializable
             return _supportsHTML;
         }
 
-        public void processResults(File results, Writer out) throws IOException
+        public void processResults(File results, Writer out) throws IOException, PipelineJobException
         {
             if (_processor == null)
             {
-                new BLASTWrapper().runBlastFormatter(results, this, out);
+                new BLASTWrapper(_log).runBlastFormatter(results, this, out);
             }
             else
             {
@@ -553,7 +556,7 @@ public class BlastJob implements Serializable
 
     public static interface BlastResultProcessor
     {
-        public void processResults(File results, Writer out) throws IOException;
+        public void processResults(File results, Writer out) throws IOException, PipelineJobException;
     }
 }
 

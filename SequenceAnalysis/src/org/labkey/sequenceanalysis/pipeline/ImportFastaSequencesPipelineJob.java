@@ -179,7 +179,9 @@ public class ImportFastaSequencesPipelineJob extends PipelineJob
             }
 
             String actionId = "SequenceAnalysis.importFastaSequences:ImportReferenceSequences";
-            addAction(actionId, DetailsURL.fromString("sequenceanalysis/importFasta.view", context.getContainer()).getActionURL(), "Import Reference Sequences", directory, directory.listFiles(new UploadFileFilter()), true, true, includeAll);
+            String path = directory.cloneHref().getParameter(Params.path.toString());
+            ActionURL url = DetailsURL.fromString("sequenceanalysis/importFasta.view?" + (path == null ? "" : "path=" + path), context.getContainer()).getActionURL();
+            addAction(actionId, url, "Import Reference Sequences", directory, directory.listFiles(new UploadFileFilter()), true, true, includeAll);
         }
 
         public static class UploadFileFilter extends PipelineProvider.FileEntryFilter

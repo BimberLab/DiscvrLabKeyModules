@@ -88,8 +88,21 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
         am.setContainer(getJob().getContainerId());
         am.setDescription(getPipelineJob().getDescription());
         am.setRunId(runId);
-        //am.setReadset();
-        //am.setLibraryId();
+
+
+        Set<Integer> genomeIds = new HashSet<>();
+        for (SequenceOutputFile o : getPipelineJob().getFiles())
+        {
+            if (o.getLibrary_id() != null)
+            {
+                genomeIds.add(o.getLibrary_id());
+            }
+        }
+
+        if (genomeIds.size() == 1)
+        {
+            am.setLibraryId(genomeIds.iterator().next());
+        }
 
         am.setCreated(new Date());
         am.setModified(new Date());

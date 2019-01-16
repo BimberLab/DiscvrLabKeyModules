@@ -187,6 +187,8 @@ public class SequencePipelineSettings
         model.setPlatform(o.getString("platform"));
         model.setApplication(o.getString("application"));
         model.setChemistry(o.getString("chemistry"));
+        model.setConcentration(o.get("concentration") == null ? null : o.getDouble("concentration"));
+        model.setFragmentSize(o.get("fragmentSize") == null ? null : o.getDouble("fragmentSize"));
         model.setSampleType(o.getString("sampletype"));
         model.setLibraryType(o.getString("librarytype"));
         model.setName(o.getString("readsetname"));

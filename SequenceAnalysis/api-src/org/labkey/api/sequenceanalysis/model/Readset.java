@@ -52,6 +52,10 @@ public interface Readset extends Serializable
 
     public String getBarcode3();
 
+    public Double getFragmentSize();
+
+    public Double getConcentration();
+
     public int getRowId();
 
     public String getContainer();

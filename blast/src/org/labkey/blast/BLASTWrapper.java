@@ -1,15 +1,14 @@
 package org.labkey.blast;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.reader.Readers;
+import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.blast.model.BlastJob;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -24,22 +23,16 @@ import java.util.Map;
  * Date: 7/20/2014
  * Time: 12:18 PM
  */
-public class BLASTWrapper
+public class BLASTWrapper extends AbstractCommandWrapper
 {
     public static FileType DB_TYPE = new FileType(Arrays.asList("nhr", "nin", "nsq", "idx"), "nhr");
-    private Logger _log = null;
 
-    public BLASTWrapper()
+    public BLASTWrapper(Logger log)
     {
-
+        super(log);
     }
 
-    public void setLog(Logger log)
-    {
-        _log = log;
-    }
-
-    public File runBlastN(String blastDbGuid, File input, File outputFile, Map<String, Object> params, File binDir, File dbDir) throws IllegalArgumentException, IOException
+    public File runBlastN(String blastDbGuid, File input, File outputFile, Map<String, Object> params, File binDir, File dbDir) throws PipelineJobException, IOException
     {
         if (binDir == null || !binDir.exists())
         {
@@ -93,16 +86,16 @@ public class BLASTWrapper
             }
         }
 
-        execute(args, null);
+        executeBlast(args, null);
         if (!outputFile.exists())
         {
-            throw new IOException("Expected file not created: " + outputFile.getPath());
+            throw new PipelineJobException("Expected file not created: " + outputFile.getPath());
         }
 
         return outputFile;
     }
 
-    public void runBlastFormatter(File inputFile, BlastJob.BLAST_OUTPUT_FORMAT outputFormat, Writer out) throws IllegalArgumentException, IOException
+    public void runBlastFormatter(File inputFile, BlastJob.BLAST_OUTPUT_FORMAT outputFormat, Writer out) throws PipelineJobException, IOException
     {
         File binDir = BLASTManager.get().getBinDir();
         if (binDir == null || !binDir.exists())
@@ -125,10 +118,10 @@ public class BLASTWrapper
         args.add("-outfmt");
         args.add(outputFormat.getCmd());
 
-        execute(args, out);
+        executeBlast(args, out);
     }
 
-    public File createDatabase(String dbName, String title, File fastaFile, File dbDir, Logger log) throws IllegalArgumentException, IOException
+    public File createDatabase(String dbName, String title, File fastaFile, File dbDir, Logger log) throws PipelineJobException, IOException
     {
         File binDir = BLASTManager.get().getBinDir();
         if (binDir == null)
@@ -189,7 +182,7 @@ public class BLASTWrapper
         args.add("-out");
         args.add(outFile.getPath());
 
-        execute(args, null);
+        executeBlast(args, null);
 
         File[] files = dbDir.listFiles(new FilenameFilter()
         {
@@ -223,10 +216,7 @@ public class BLASTWrapper
         indexArgs.add("-iformat");
         indexArgs.add("blastdb");
 
-        indexArgs.add("-output");
-        indexArgs.add(outFile.getPath());
-
-        execute(indexArgs, null);
+        executeBlast(indexArgs, null);
 
         File[] idxFiles = dbDir.listFiles(new FilenameFilter()
         {
@@ -246,60 +236,30 @@ public class BLASTWrapper
         return outFile;
     }
 
-    private void execute(List<String> args, @Nullable Writer out) throws IOException
+    private void executeBlast(List<String> args, @Nullable Writer writer) throws PipelineJobException, IOException
     {
         StringBuilder output = new StringBuilder();
 
-        if (_log != null)
+        if (getLogger() != null)
         {
-            _log.info("running BLAST program: ");
-            _log.info(StringUtils.join(args, " "));
+            getLogger().info("running BLAST program: ");
+            getLogger().info(StringUtils.join(args, " "));
         }
 
-        ProcessBuilder pb = new ProcessBuilder(args);
-        if (out != null)
+        if (writer == null)
         {
-            pb.redirectErrorStream(true);
+            execute(args);
+        }
+        else
+        {
+            String ret = executeWithOutput(args);
+            writer.write(ret);
         }
 
-        Process p = null;
-        try
-        {
-            p = pb.start();
-            if (out == null)
-            {
-                try (BufferedReader procReader = Readers.getReader(p.getInputStream()))
-                {
-                    String line;
-                    while ((line = procReader.readLine()) != null)
-                    {
-                        output.append(line);
-                        output.append(System.getProperty("line.separator"));
-                    }
-                }
-            }
-            else
-            {
-                IOUtils.copy(p.getInputStream(), out);
-            }
 
-            p.waitFor();
-        }
-        catch (IOException | InterruptedException e)
+        if (getLogger() != null && output.length() > 0)
         {
-            throw new IOException(e);
-        }
-        finally
-        {
-            if (p != null)
-            {
-                p.destroy();
-            }
-        }
-
-        if (_log != null && output.length() > 0)
-        {
-            _log.info(output.toString());
+            getLogger().info(output.toString());
         }
     }
 

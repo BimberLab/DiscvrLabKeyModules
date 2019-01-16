@@ -168,7 +168,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                         List<Map<String, Object>> lines = PicardMetricsUtil.processFile(f, job.getLogger());
                         for (Map<String, Object> row : lines)
                         {
-                            row.put("container", job.getContainer().getId());
+                            row.put("container", o.getContainer());
                             row.put("createdby", job.getUser().getUserId());
                             row.put("created", new Date());
                             row.put("readset", m.getReadset());

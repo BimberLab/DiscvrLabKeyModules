@@ -119,7 +119,7 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
                 throw new FileNotFoundException("Not found: " + scalaScript.getPath());
 
             List<String> args = new ArrayList<>();
-            args.add(getJava8FilePath());
+            args.add(SequencePipelineService.get().getJava8FilePath());
             //for now, ignore java opts since queue's scatter/gather causes issues
             //args.addAll(SequencePipelineService.get().getJavaOpts());
             args.add("-classpath");

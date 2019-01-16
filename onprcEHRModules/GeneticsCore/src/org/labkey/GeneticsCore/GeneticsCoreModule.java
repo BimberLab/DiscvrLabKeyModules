@@ -17,6 +17,7 @@
 package org.labkey.GeneticsCore;
 
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.labkey.GeneticsCore.analysis.CombineMethylationRatesHandler;
 import org.labkey.GeneticsCore.analysis.MethylationRateComparisonHandler;
 import org.labkey.GeneticsCore.button.ChangeReadsetStatusButton;
@@ -41,8 +42,11 @@ import org.labkey.api.ldk.table.SimpleButtonConfigFactory;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.template.ClientDependency;
+
+import java.util.Set;
 
 public class GeneticsCoreModule extends ExtendedSimpleModule
 {
@@ -109,6 +113,12 @@ public class GeneticsCoreModule extends ExtendedSimpleModule
     protected void init()
     {
         addController(CONTROLLER_NAME, GeneticsCoreController.class);
+    }
+
+    @Override
+    public @NotNull Set<Class> getUnitTests()
+    {
+        return PageFlowUtil.set(ClusterMaintenanceTask.TestCase.class);
     }
 
     public static class PipelineStartup

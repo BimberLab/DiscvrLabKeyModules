@@ -1,6 +1,7 @@
 package org.labkey.blast;
 
 import org.apache.log4j.Logger;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -20,6 +21,7 @@ import org.labkey.blast.model.BlastJob;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -202,7 +204,25 @@ public class BLASTMaintenanceTask implements MaintenanceTask
                 if (!allowablePaths.contains(f.getAbsolutePath()))
                 {
                     log.info("deleting BLAST file: " + f.getPath());
-                    f.delete();
+                    if (f.isDirectory())
+                    {
+                        try
+                        {
+                            FileUtils.deleteDirectory(f);
+                        }
+                        catch (IOException e)
+                        {
+                            log.error("Unable to delete directory: " + f.getPath(), e);
+                        }
+                    }
+                    else
+                    {
+                        boolean deleted = f.delete();
+                        if (!deleted)
+                        {
+                            log.error("Unable to delete file: " + f.getPath());
+                        }
+                    }
                 }
             }
         }

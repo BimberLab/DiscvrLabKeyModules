@@ -82,9 +82,11 @@ public class PicardMetricsUtil
         return processWgsMetricsBase(mf, log, "WGS Metrics");
     }
 
+    private static String NON_ZERO = "WGS Metrics, Non-Zero Coverage";
+
     private static List<Map<String, Object>> processWgsNonZeroMetrics(MetricsFile mf, Logger log) throws PipelineJobException
     {
-        return processWgsMetricsBase(mf, log, "WGS Metrics, Non-Zero Coverage");
+        return processWgsMetricsBase(mf, log, NON_ZERO);
     }
 
     private static List<Map<String, Object>> processWgsMetricsBase(MetricsFile mf, Logger log, String category) throws PipelineJobException
@@ -95,6 +97,22 @@ public class PicardMetricsUtil
         for (CollectWgsMetrics.WgsMetrics m : metrics)
         {
             Map<String, Object> metricNames = new HashMap<>();
+
+            if (m instanceof CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverage)
+            {
+                CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverage nzc = (CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverage)m;
+                if (nzc.CATEGORY == CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverage.Category.WHOLE_GENOME)
+                {
+                    log.debug("skipping whole genome line for non-zero coverage");
+                    continue;
+                }
+            }
+            else if (NON_ZERO.equals(category))
+            {
+                throw new PipelineJobException("Unexpected MetricsFile for WgsMetricsWithNonZeroCoverage. Was: " + m.getClass());
+            }
+
+            metricNames.put("Genome Territory", m.GENOME_TERRITORY);
             metricNames.put("Mean Coverage", m.MEAN_COVERAGE);
             metricNames.put("Median Coverage", m.MEDIAN_COVERAGE);
             metricNames.put("Pct 10X", m.PCT_10X);

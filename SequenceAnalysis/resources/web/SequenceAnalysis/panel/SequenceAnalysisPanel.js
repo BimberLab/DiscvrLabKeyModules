@@ -85,7 +85,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 border: false,
                 width: '100%',
                 style: 'text-align: center',
-                html: 'Powered By DISCVR-Seq.  <a href="https://github.com/bbimber/discvr-seq/wiki">Click here to learn more.</a>'
+                html: 'Powered By DISCVR-Seq.  <a href="https://github.com/BimberLab/discvr-seq/wiki">Click here to learn more.</a>'
             }]
         });
 
@@ -188,7 +188,9 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                     this.onStoreLoad(errorNames);
 
                     var target = this.down('#readsetCount');
-                    target.update(target.initialConfig.html + '  Total to align: ' + this.readsetStore.getCount());
+                    if (target) {
+                        target.update(target.initialConfig.html + '  Total to align: ' + this.readsetStore.getCount());
+                    }
                 }
             }
         });

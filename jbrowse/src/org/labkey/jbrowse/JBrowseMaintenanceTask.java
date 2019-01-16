@@ -166,6 +166,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                         }
                     }
                 }
+                log.info("expected jsonfiles: " + expectedDirs.size());
 
                 File trackDir = new File(jbrowseRoot, "tracks");
                 if (trackDir.exists())
@@ -215,6 +216,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                         {
                             log.info("deleting jbrowse database dir: " + childDir.getPath());
                             FileUtils.deleteDirectory(childDir);
+                            continue;
                         }
 
                         for (String dirName : Arrays.asList("tracks"))
@@ -230,13 +232,14 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                         }
                     }
                 }
-                else if (!expectedDatabases.isEmpty() && !databaseDir.exists())
+
+                for (String objectId : expectedDatabases)
                 {
-                    log.error("missing expected database directory: " + databaseDir.getPath());
-                }
-                else if (!expectedDatabases.isEmpty() && databaseDir.list().length == 0)
-                {
-                    log.error("database directory is empty: " + databaseDir.getPath());
+                    File dir = new File(databaseDir, objectId);
+                    if (!dir.exists())
+                    {
+                        log.error("missing expected DB directory: " + dir.getPath());
+                    }
                 }
             }
         }

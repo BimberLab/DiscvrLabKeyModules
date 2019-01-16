@@ -37,13 +37,14 @@ public class CollectWgsMetricsWrapper extends PicardWrapper
         params.add("OUTPUT=" + outputFile.getPath());
         params.add("REFERENCE_SEQUENCE=" + refFasta.getPath());
         params.add("INCLUDE_BQ_HISTOGRAM=true");
-        execute(params);
 
         if ("CollectWgsMetricsWithNonZeroCoverage".equals(getToolName()))
         {
             File pdf = new File(outputFile.getParentFile(), FileUtil.getBaseName(outputFile.getName()) + ".wgsMetrics.pdf");
-            params.add("CHART=" + pdf.getPath());
+            params.add("CHART_OUTPUT=" + pdf.getPath());
         }
+
+        execute(params);
 
         if (!outputFile.exists())
         {

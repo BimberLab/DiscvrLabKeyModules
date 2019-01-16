@@ -15,7 +15,10 @@
  */
 package org.labkey.api.sequenceanalysis.pipeline;
 
+import com.fasterxml.jackson.databind.JavaType;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 
@@ -42,6 +45,8 @@ public interface SequenceAnalysisJobSupport extends Serializable
 
     public List<Readset> getCachedReadsets();
 
+    public void cacheReadset(int readsetId, User u);
+
     public List<AnalysisModel> getCachedAnalyses();
 
     public void cacheGenome(ReferenceGenome m);
@@ -52,7 +57,13 @@ public interface SequenceAnalysisJobSupport extends Serializable
 
     public void cacheObject(String key, Serializable object);
 
-    public Object getCachedObject(String key);
+    public <T> T getCachedObject(String key, Class<T> clazz) throws PipelineJobException;
 
-    //public PipelineJob getJob();
+    /**
+     * Allows deserialization of generics.  For example, a cached Map<Integer, Integer> could be accessed using:
+     *
+     * Map<Integer, Integer> myMap = support.getCachedObject("cachedMap", PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, Integer.class, Integer.class))
+     *
+     */
+    public <T> T getCachedObject(String key, JavaType type) throws PipelineJobException;
 }

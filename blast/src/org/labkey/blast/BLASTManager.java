@@ -35,7 +35,6 @@ import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
-import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.blast.model.BlastJob;
@@ -208,12 +207,11 @@ public class BLASTManager
 
         if (!async)
         {
-            BLASTWrapper wrapper = new BLASTWrapper();
-            wrapper.setLog(Logger.getLogger(BLASTManager.class));
             Container dbContainer = getContainerForDatabase(job.getDatabaseId());
-            wrapper.runBlastN(job.getDatabaseId(), job.getExpectedInputFile(), job.getExpectedOutputFile(), job.getParamMap(), BLASTManager.get().getBinDir(), BLASTManager.get().getDatabaseDir(dbContainer, false));
             try
             {
+                BLASTWrapper wrapper = new BLASTWrapper(Logger.getLogger(BLASTManager.class));
+                wrapper.runBlastN(job.getDatabaseId(), job.getExpectedInputFile(), job.getExpectedOutputFile(), job.getParamMap(), BLASTManager.get().getBinDir(), BLASTManager.get().getDatabaseDir(dbContainer, false));
                 job.setComplete(u, null);
             }
             catch (PipelineJobException e)

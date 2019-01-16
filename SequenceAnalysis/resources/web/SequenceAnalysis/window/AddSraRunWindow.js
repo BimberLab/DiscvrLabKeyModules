@@ -49,6 +49,7 @@ Ext4.define('SequenceAnalysis.window.AddSraRunWindow', {
             return;
         }
 
+        data = Ext4.String.trim(data);
         data = LDK.Utils.CSVToArray(data, '\t');
 
         var distinctReadsets = [];

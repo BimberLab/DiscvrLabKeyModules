@@ -23,7 +23,6 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
@@ -124,7 +123,7 @@ public class BlastFilterPipelineStep extends AbstractPipelineStep implements Pre
 
         BlastDbDescriptor param = (BlastDbDescriptor)getProvider().getParameterByName(BLAST_DB);
         String blastDbId = extractParamValue(BLAST_DB, String.class);
-        File dbDir = (File)getPipelineCtx().getSequenceSupport().getCachedObject(param.getCacheKey(blastDbId));
+        File dbDir = getPipelineCtx().getSequenceSupport().getCachedObject(param.getCacheKey(blastDbId), File.class);
         getPipelineCtx().getLogger().debug("using BLAST DB dir: " + dbDir.getPath());
 
         //convert inputs to single interleaved FASTA

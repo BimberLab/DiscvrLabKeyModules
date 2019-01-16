@@ -41,6 +41,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     {name: 'platform', allowBlank: false},
                     {name: 'application', allowBlank: false},
                     {name: 'chemistry', allowBlank: false},
+                    {name: 'concentration', type: 'float', useNull: true},
+                    {name: 'fragmentSize', type: 'float', useNull: true},
                     {name: 'librarytype', useNull: true},
                     {name: 'sampletype', useNull: true},
                     {name: 'subjectid', useNull: true},
@@ -78,7 +80,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
                     if (this.store){
                         this.store.each(function(r){
-                            if (r !== this && r.getFileId() == id){
+                            if (r !== this && r.getFileId() === id){
                                 var msg = 'Only one readset may use each file group, unless barcoding is used.';
                                 errors.add({
                                     field: 'fileGroupId',
@@ -165,14 +167,14 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
                         otherFiles = Ext4.unique(otherFiles);
 
-                        if (file1 && otherFiles.indexOf(file1) != -1){
+                        if (file1 && otherFiles.indexOf(file1) !== -1){
                             errors.add({
                                 field: 'fileRecord1',
                                 message: 'This file is being used by another group'
                             });
                         }
 
-                        if (file2 && otherFiles.indexOf(file2) != -1){
+                        if (file2 && otherFiles.indexOf(file2) !== -1){
                             errors.add({
                                 field: 'fileRecord2',
                                 message: 'This file is being used by another group'
@@ -334,7 +336,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         var found = [];
         Ext4.Array.forEach(this.fileGroupStore.getRange(), function(fg){
             if (fg.get('fileGroupId')) {
-                if (distinctGroups.indexOf(fg.get('fileGroupId')) == -1) {
+                if (distinctGroups.indexOf(fg.get('fileGroupId')) === -1) {
                     this.fileGroupStore.remove(fg);
                 }
                 else {
@@ -344,7 +346,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         }, this);
 
         Ext4.Array.forEach(distinctGroups, function(name){
-            if (found.indexOf(name) == -1){
+            if (found.indexOf(name) === -1){
                 this.fileGroupStore.add(this.fileGroupStore.createModel({
                     fileGroupId: name
                 }));
@@ -352,7 +354,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         }, this);
 
         this.readsetStore.each(function(r){
-            if (distinctGroups.indexOf(r.get('fileGroupId')) == -1){
+            if (distinctGroups.indexOf(r.get('fileGroupId')) === -1){
                 r.set('fileGroupId', null);
             }
         }, this);
@@ -495,16 +497,16 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 }
             }, this);
         }
-        else if (orderType == 'row'){
+        else if (orderType === 'row'){
             this.fileNameStore.each(function(rec, i) {
                 if (isPaired){
-                    if (i % 2 == 0){
+                    if (i % 2 === 0){
                         var m = Ext4.create('SequenceAnalysis.model.ReadsetDataModel', {});
                         var fileArr = rec.get('fileName').replace(/\.gz$/, '').split('.');
                         fileArr.pop();
                         m.set('fileRecord1', rec.get('id'));
 
-                        var fileGroupId = fileArr.length == 1 ? fileArr[0] : fileArr.join('.');
+                        var fileGroupId = fileArr.length === 1 ? fileArr[0] : fileArr.join('.');
                         m.set('fileGroupId', fileGroupId);
                         this.readDataStore.add(m);
                     }
@@ -519,13 +521,13 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     fileArr.pop();
 
                     m.set('fileRecord1', rec.get('id'));
-                    var fileGroupId = fileArr.length == 1 ? fileArr[0] : fileArr.join('.');
+                    var fileGroupId = fileArr.length === 1 ? fileArr[0] : fileArr.join('.');
                     m.set('fileGroupId', fileGroupId);
                     this.readDataStore.add(m);
                 }
             }, this);
         }
-        else if (orderType == 'column') {
+        else if (orderType === 'column') {
             if (isPaired){
                 var colSize = Math.ceil(this.fileNameStore.getCount() / 2);
                 this.fileNameStore.each(function (rec, i){
@@ -535,7 +537,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         fileArr.pop();
                         m.set('fileRecord1', rec.get('id'));
 
-                        var fileGroupId = fileArr.length == 1 ? fileArr[0] : fileArr.join('.');
+                        var fileGroupId = fileArr.length === 1 ? fileArr[0] : fileArr.join('.');
                         m.set('fileGroupId', fileGroupId);
                         this.readDataStore.add(m);
                     }
@@ -552,7 +554,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     fileArr.pop();
 
                     m.set('fileRecord1', rec.get('id'));
-                    var fileGroupId = fileArr.length == 1 ? fileArr[0] : fileArr.join('.');
+                    var fileGroupId = fileArr.length === 1 ? fileArr[0] : fileArr.join('.');
                     m.set('fileGroupId', fileGroupId);
                     this.readDataStore.add(m);
                 }, this);
@@ -576,7 +578,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         }, this);
 
         Ext4.Array.forEach(distinctNames, function(name){
-            if (this.readsetStore.findExact('fileGroupId', name) == -1) {
+            if (this.readsetStore.findExact('fileGroupId', name) === -1) {
                 this.readsetStore.add(this.readsetStore.createModel({
                     fileGroupId: name
                 }));
@@ -584,12 +586,12 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         }, this);
 
         Ext4.Array.forEach(this.readsetStore.getRange(), function(r){
-            if (distinctNames.indexOf(r.get('fileGroupId')) == -1){
+            if (distinctNames.indexOf(r.get('fileGroupId')) === -1){
                 this.readsetStore.remove(r);
             }
         }, this);
 
-        if (this.readDataStore.getCount() == 0 && this.fileNameStore.getCount() != 0){
+        if (this.readDataStore.getCount() === 0 && this.fileNameStore.getCount() !== 0){
             var msg = 'Possible error parsing file groups on SequenceImportPanel.  Names were:\n';
             this.fileNameStore.each(function(f){
                 msg += '[' + f.get('fileName') + ']\n';
@@ -793,6 +795,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 platform: r.get('platform'),
                 application: r.get('application'),
                 chemistry: r.get('chemistry'),
+                concentration: r.get('concentration'),
+                fragmentSize: r.get('fragmentSize'),
                 librarytype: r.get('librarytype'),
                 sampletype: r.get('sampletype'),
                 subjectid: r.get('subjectid'),
@@ -1105,7 +1109,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
                                 var matches = [];
                                 readsetStore.each(function (rec) {
-                                    if (rec.get('fileGroupId') == val) {
+                                    if (rec.get('fileGroupId') === val) {
                                         matches.push(rec);
                                     }
                                 }, this);
@@ -1301,7 +1305,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
                         var defaultVal = s[0].get('fileGroupId');
                         Ext4.Msg.prompt('Split/Regroup Files', 'This will separate the selected rows into their own group with the following name:', function(btn, val){
-                            if (btn != 'ok'){
+                            if (btn !== 'ok'){
                                 return;
                             }
 
@@ -1316,16 +1320,16 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                             //if there are no remaining records in the store with the original group, update any readsets that belonged to that group
                             originals = Ext4.unique(originals);
                             Ext4.Array.forEach(originals, function(name){
-                                if (this.readDataStore.findExact('fileGroupId', name) == -1){
+                                if (this.readDataStore.findExact('fileGroupId', name) === -1){
                                     this.readsetStore.each(function(rs){
-                                        if (rs.get('fileGroupId') == name) {
+                                        if (rs.get('fileGroupId') === name) {
                                             rs.set('fileGroupId', val);
                                         }
                                     }, this);
 
                                     var matches = [];
                                     this.readsetStore.each(function(rs){
-                                        if (rs.get('fileGroupId') == val) {
+                                        if (rs.get('fileGroupId') === val) {
                                             matches.push(rs);
                                         }
                                     }, this);
@@ -1371,8 +1375,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                             Ext4.Array.remove(fileGroupIds, r.get('fileGroupId'));
                         }, this);
 
-                        console.log(fileGroupIds);
-
                         if (fileGroupIds.length){
                             var toAdd = [];
                             Ext4.Array.forEach(fileGroupIds, function(id){
@@ -1414,7 +1416,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
             schemaName: 'sequenceanalysis',
             queryName: 'sequence_readsets',
             filterArray: [LABKEY.Filter.create('rowid', readsetIds.join(';'), LABKEY.Filter.Types.IN)],
-            columns: 'rowid,name,platform,application,chemistry,librarytype,sampletype,subjectid,sampledate,sampleid,comments,barcode5,barcode3,instrument_run_id,totalFiles',
+            columns: 'rowid,name,platform,application,chemistry,concentration,fragmentSize,librarytype,sampletype,subjectid,sampledate,sampleid,comments,barcode5,barcode3,instrument_run_id,totalFiles',
             scope: this,
             failure: LDK.Utils.getErrorCallback(),
             success: function(results){
@@ -1454,6 +1456,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                                 platform: row.platform,
                                 application: row.application,
                                 chemistry: row.chemistry,
+                                concentration: row.concentration,
+                                fragmentSize: row.fragmentSize,
                                 librarytype: row.librarytype,
                                 sampleid: row.sampleid,
                                 subjectid: row.subjectid,
@@ -1481,6 +1485,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                             platform: null,
                             application: null,
                             chemistry: null,
+                            concentration: null,
+                            fragmentSize: null,
                             librarytype: null,
                             sampleid: null,
                             subjectid: null,
@@ -1626,7 +1632,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
                     var grid = btn.up('panel').down('ldk-gridpanel');
                     Ext4.Array.forEach(grid.columns, function(c){
-                        if (c.dataIndex == 'readset'){
+                        if (c.dataIndex === 'readset'){
                             c.setVisible(val);
                         }
                     }, this);
@@ -1728,6 +1734,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                                                         platform: null,
                                                         application: null,
                                                         chemistry: null,
+                                                        concentration: null,
+                                                        fragmentSize: null,
                                                         librarytype: null,
                                                         sampleid: null,
                                                         subjectid: null,
@@ -1962,6 +1970,32 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         allowBlank: true
                     }
                 },{
+                    text: 'Concentration',
+                    tdCls: 'ldk-wrap-text',
+                    name: 'concentration',
+                    width: 70,
+                    dataIndex: 'concentration',
+                    renderer: SequenceAnalysis.panel.SequenceImportPanel.getRenderer('concentration'),
+                    editor: {
+                        xtype: 'ldk-numberfield',
+                        allowBlank: true,
+                        editable: true,
+                        minValue: 0
+                    }
+                },{
+                    text: 'Fragment Size',
+                    tdCls: 'ldk-wrap-text',
+                    name: 'fragmentSize',
+                    width: 70,
+                    dataIndex: 'fragmentSize',
+                    renderer: SequenceAnalysis.panel.SequenceImportPanel.getRenderer('fragmentSize'),
+                    editor: {
+                        xtype: 'ldk-numberfield',
+                        allowBlank: true,
+                        editable: true,
+                        minValue: 0
+                    }
+                },{
                     text: 'Comments/Description',
                     tdCls: 'ldk-wrap-text',
                     name: 'comments',
@@ -2094,7 +2128,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     scope: this,
                     itemId: 'inferFromName',
                     hidden: true,
-                    scope: this,
                     handler: function(btn){
                         Ext4.create('Ext.window.Window', {
                             sequencePanel: this,
@@ -2186,7 +2219,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         }
                         else {
                             Ext4.each(this.down('#readsetGrid').columns, function (col) {
-                                if (!col.hidden && col.dataIndex != 'readset') {
+                                if (!col.hidden && col.dataIndex !== 'readset') {
                                     header.push(col.text);
                                     dataIndexes.push(col.dataIndex);
                                 }
@@ -2228,7 +2261,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 handler: function(btn){
                     var win = btn.up('window');
                     Ext4.Msg.confirm('Import Rows', 'This will remove all existing rows and replace them with the rows you pasted into the textarea.  Continue?', function(val){
-                        if (val == 'yes'){
+                        if (val === 'yes'){
                             win.processExcel(win);
                         }
                     }, this);
@@ -2265,7 +2298,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
                     var found = false;
                     Ext4.each(cols, function(col, idx){
-                        if (col.name == field || col.text == field || col.dataIndex.toLowerCase() == field.toLowerCase()){
+                        if (col.name === field || col.text === field || col.dataIndex.toLowerCase() === field.toLowerCase()){
                             columns.push(col);
                             found = true;
                             return false;
@@ -2300,7 +2333,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
                             if (editor.store && !Ext4.isEmpty(value)){
                                 var recIdx = editor.store.find(editor.valueField, value, null, false, false, true);
-                                if (recIdx == -1){
+                                if (recIdx === -1){
                                     errors.push('Invalid value for field ' + col.text + ': ' + value);
                                 }
                                 else {
@@ -2313,7 +2346,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         if (!Ext4.isEmpty(value)){
                             //Dates for format YYYY-MM-DD not always parsed properly through Ext4 (assumed to be GMT; resulting in 1 day added for some time zones).
                             var type = this.readsetStore.model.prototype.fields.get(col.dataIndex).type;
-                            if (type == Ext4.data.Types.DATE){
+                            if (type === Ext4.data.Types.DATE){
                                 value = LDK.ConvertUtils.parseDate(value);
                             }
 
@@ -2370,9 +2403,9 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
     onMidChange: function(c, v){
         var changed = false;
         Ext4.each(this.down('#readsetGrid').columns, function(col){
-            if (col.dataIndex == 'barcode5' || col.dataIndex == 'barcode3'){
+            if (col.dataIndex === 'barcode5' || col.dataIndex === 'barcode3'){
                 col.setVisible(v);
-                if (col.isVisible() != v)
+                if (col.isVisible() !== v)
                     changed = true;
             }
         }, this);

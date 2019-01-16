@@ -210,9 +210,8 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
                     throw new UnsupportedOperationException("Unsupported file type: " + f.getFile().getName());
                 }
 
-                boolean discardRejected = params.optBoolean("discardRejected", false);
                 File lifted = new File(outDir, baseName + ".lifted-" + targetGenomeId + ext);
-                File unmappedOutput = discardRejected ? null : new File(outDir, baseName + ".unmapped-" + targetGenomeId + ext);
+                File unmappedOutput = new File(outDir, baseName + ".unmapped-" + targetGenomeId + ext);
 
                 try
                 {
@@ -258,11 +257,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
                     ctx.addSequenceOutput(so1);
                 }
 
-                if (discardRejected)
-                {
-                    job.getLogger().info("unmapped sites will not be saved");
-                }
-                else if (!unmappedOutput.exists())
+                if (!unmappedOutput.exists())
                 {
                     job.getLogger().info("no unmapped intervals");
                 }

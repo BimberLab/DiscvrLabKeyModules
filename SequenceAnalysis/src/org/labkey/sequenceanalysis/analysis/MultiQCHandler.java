@@ -31,7 +31,9 @@ public class MultiQCHandler extends AbstractParameterizedOutputHandler<SequenceO
     public MultiQCHandler()
     {
         super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "MultiQC", "This will run MultiQC to aggregate FASTQC data for these readsets", null, Arrays.asList(
-                ToolParameterDescriptor.create("reportTitle", "Report Name", null, "textfield", null, null)
+                ToolParameterDescriptor.create("reportTitle", "Report Name", null, "textfield", new JSONObject(){{
+                    put("allowBlank", false);
+                }}, null)
         ));
     }
 

@@ -27,6 +27,21 @@ Laboratory.buttonHandlers = new function(){
             }
         },
 
+        importDataHandlerForView: function(dataRegionName, controller, view, urlParams) {
+            if (LABKEY.Security.currentContainer.type === 'workbook'){
+                window.location = LABKEY.ActionURL.buildURL(controller, view, null, urlParams)
+            }
+            else {
+                var dataRegion = LABKEY.DataRegions[dataRegionName];
+                Ext4.create('Laboratory.window.WorkbookCreationWindow', {
+                    controller: controller,
+                    action: view,
+                    urlParams: urlParams,
+                    title: 'Import Data'
+                }).show(dataRegionName && dataRegion.domId ? Ext4.get(dataRegion.domId) : null);
+            }
+        },
+
         markSamplesRemoved: function(dataRegionName){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
