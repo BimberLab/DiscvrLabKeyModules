@@ -12,7 +12,6 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.module.FolderTypeManager;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
@@ -56,7 +55,6 @@ public class TestCase extends Assert
             Set<Module> modules = new HashSet<>();
             modules.addAll(project.getActiveModules());
             modules.add(ModuleLoader.getInstance().getModule(ClusterModule.class));
-            project.setFolderType(FolderTypeManager.get().getFolderType("Laboratory Folder"), TestContext.get().getUser());
             project.setActiveModules(modules);
         }
     }
