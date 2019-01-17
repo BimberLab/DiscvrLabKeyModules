@@ -19,16 +19,14 @@ package org.labkey.ogasync;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
-import org.labkey.api.action.RedirectAction;
+import org.labkey.api.action.MutatingApiAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.PropertyManager;
-import org.labkey.api.query.DetailsURL;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.ValidEmail;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.util.JobRunner;
-import org.labkey.api.view.ActionURL;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 
@@ -45,9 +43,9 @@ public class OGASyncController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class RunEtlAction extends RedirectAction<Object>
+    public class RunEtlAction extends MutatingApiAction<Object>
     {
-        public boolean doAction(Object form, BindException errors)
+        public ApiResponse execute(Object form, BindException errors)
         {
             try
             {
@@ -56,13 +54,14 @@ public class OGASyncController extends SpringActionController
             catch (Exception e)
             {
                 errors.reject(ERROR_MSG, e.getMessage());
-                return false;
+                return null;
             }
 
-            return true;
+            return new ApiSimpleResponse("success", true);
         }
 
-        public void validateCommand(Object form, Errors errors)
+        @Override
+        public void validateForm(Object form, Errors errors)
         {
             try
             {
@@ -72,11 +71,6 @@ public class OGASyncController extends SpringActionController
             {
                 errors.reject(ERROR_MSG, e.getMessage());
             }
-        }
-
-        public ActionURL getSuccessURL(Object form)
-        {
-            return DetailsURL.fromString("/ogaSync/begin.view", getContainer()).getActionURL();
         }
     }
 

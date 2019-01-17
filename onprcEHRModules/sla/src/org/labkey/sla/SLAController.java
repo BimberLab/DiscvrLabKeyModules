@@ -22,7 +22,7 @@ import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ConfirmAction;
 import org.labkey.api.action.ExportAction;
-import org.labkey.api.action.RedirectAction;
+import org.labkey.api.action.MutatingApiAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -31,7 +31,6 @@ import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.AdminConsoleAction;
 import org.labkey.api.security.MemberType;
@@ -85,17 +84,13 @@ public class SLAController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class RunEtlAction extends RedirectAction<Object>
+    public class RunEtlAction extends MutatingApiAction<Object>
     {
-        public boolean doAction(Object form, BindException errors)
+        @Override
+        public ApiResponse execute(Object form, BindException errors)
         {
             ETL.run();
-            return true;
-        }
-
-        public ActionURL getSuccessURL(Object form)
-        {
-            return DetailsURL.fromString("/sla/etlAdmin.view", getContainer()).getActionURL();
+            return new ApiSimpleResponse("success", true);
         }
     }
 
