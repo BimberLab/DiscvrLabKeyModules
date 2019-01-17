@@ -261,16 +261,11 @@ public class MergeSyncController extends SpringActionController
     @RequiresPermission(AdminPermission.class)
     public class PullFromMergeAction extends RedirectAction<Object>
     {
-        public boolean doAction(Object form, BindException errors) throws Exception
+        public boolean doAction(Object form, BindException errors)
         {
             try
             {
-                JobRunner.getDefault().execute(new Runnable(){
-                    public void run()
-                    {
-                        new MergeSyncRunner().pullResultsFromMerge();
-                    }
-                });
+                JobRunner.getDefault().execute(() -> new MergeSyncRunner().pullResultsFromMerge());
             }
             catch (Exception e)
             {
