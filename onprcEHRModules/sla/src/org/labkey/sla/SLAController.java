@@ -87,15 +87,10 @@ public class SLAController extends SpringActionController
     @RequiresPermission(AdminPermission.class)
     public class RunEtlAction extends RedirectAction<Object>
     {
-        public boolean doAction(Object form, BindException errors) throws Exception
+        public boolean doAction(Object form, BindException errors)
         {
             ETL.run();
             return true;
-        }
-
-        public void validateCommand(Object form, Errors errors)
-        {
-
         }
 
         public ActionURL getSuccessURL(Object form)

@@ -47,16 +47,11 @@ public class OGASyncController extends SpringActionController
     @RequiresPermission(AdminPermission.class)
     public class RunEtlAction extends RedirectAction<Object>
     {
-        public boolean doAction(Object form, BindException errors) throws Exception
+        public boolean doAction(Object form, BindException errors)
         {
             try
             {
-                JobRunner.getDefault().execute(new Runnable(){
-                    public void run()
-                    {
-                        new OGASyncRunner().run();
-                    }
-                });
+                JobRunner.getDefault().execute(() -> new OGASyncRunner().run());
             }
             catch (Exception e)
             {
