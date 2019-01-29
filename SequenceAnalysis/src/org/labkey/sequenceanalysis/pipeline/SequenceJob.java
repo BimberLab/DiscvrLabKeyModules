@@ -273,7 +273,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     @Override
     public File getJobInfoFile()
     {
-        return new File(_webserverJobDir, FileUtil.makeLegalName(_jobName) + ".job.xml");
+        return new File(_webserverJobDir, FileUtil.makeLegalName(_jobName) + ".job.json");
     }
 
     @Override

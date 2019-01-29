@@ -71,18 +71,18 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
         if (libraryMembers != null)
         {
             ObjectMapper objectMapper = createObjectMapper();
-            getLogger().info("writing libraryMembers to XML: " + libraryMembers.size());
+            getLogger().info("writing libraryMembers to file: " + libraryMembers.size());
             objectMapper.writeValue(getSerializedLibraryMembersFile(), libraryMembers);
         }
     }
 
     protected List<ReferenceLibraryMember> readLibraryMembersFromFile() throws IOException
     {
-        File xml = getSerializedLibraryMembersFile();
-        if (xml.exists())
+        File file = getSerializedLibraryMembersFile();
+        if (file.exists())
         {
             ObjectMapper objectMapper = createObjectMapper();
-            List<ReferenceLibraryMember> ret = objectMapper.readValue(xml, new TypeReference<List<ReferenceLibraryMember>>(){});
+            List<ReferenceLibraryMember> ret = objectMapper.readValue(file, new TypeReference<List<ReferenceLibraryMember>>(){});
             getLogger().debug("read libraryMembers from file: " + ret.size());
 
             return ret;
@@ -99,7 +99,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
 
     public File getSerializedLibraryMembersFile()
     {
-        return new File(getDataDirectory(), FileUtil.getBaseName(getLogFile()) + ".xml");
+        return new File(getDataDirectory(), FileUtil.getBaseName(getLogFile()) + ".json");
     }
 
     //for recreating an existing library
