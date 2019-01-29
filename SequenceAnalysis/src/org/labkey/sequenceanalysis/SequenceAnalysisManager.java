@@ -96,8 +96,6 @@ public class SequenceAnalysisManager
 
     private static final Logger _log = Logger.getLogger(SequenceAnalysisManager.class);
 
-    public static final String OUTPUT_XML_EXTENSION = ".seqout.xml.gz";
-    public static final String FASTQC_REPORT_EXTENSION = "_fastqc.html";
     private List<String> _platforms = null;
 
     private SequenceAnalysisManager()

@@ -142,7 +142,7 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
 
     public File getSerializedOutputFilesFile()
     {
-        return new File(getDataDirectory(), FileUtil.getBaseName(getLogFile()) + ".outputs.xml.gz");
+        return new File(getDataDirectory(), FileUtil.getBaseName(getLogFile()) + ".outputs.json.gz");
     }
 
     @Override

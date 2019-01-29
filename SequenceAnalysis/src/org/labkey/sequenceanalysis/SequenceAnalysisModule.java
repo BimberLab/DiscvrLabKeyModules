@@ -418,7 +418,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
     @NotNull
     public Set<Class> getUnitTests()
     {
-        return PageFlowUtil.set(SequenceAlignmentTask.TestCase.class, SequenceAnalysisManager.TestCase.class, SequenceJobSupportImpl.TestCase.class);
+        return PageFlowUtil.set(SequenceAlignmentTask.TestCase.class, SequenceAnalysisManager.TestCase.class, SequenceJobSupportImpl.TestCase.class, ProcessVariantsHandler.TestCase.class);
     }
 
     @Override

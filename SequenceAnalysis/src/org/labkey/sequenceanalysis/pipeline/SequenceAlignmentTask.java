@@ -56,9 +56,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.Pair;
-import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SortSamStep;
 import org.labkey.sequenceanalysis.run.preprocessing.TrimmomaticWrapper;
@@ -199,16 +197,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             String baseName = support.getBaseName();
             File dirAnalysis = support.getAnalysisDirectory();
 
-            // job is complete when the output XML file exists
-            return NetworkDrive.exists(getOutputXmlFile(dirAnalysis, baseName));
+            return false;
         }
-    }
-
-    public static File getOutputXmlFile(File dirAnalysis, String baseName)
-    {
-        FileType ft = new FileType(SequenceAnalysisManager.OUTPUT_XML_EXTENSION);
-        String name = ft.getName(dirAnalysis, baseName);
-        return new File(dirAnalysis, name);
     }
 
     @NotNull
@@ -1285,46 +1275,46 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         public static Resumer create(SequenceAlignmentJob job, SequenceAlignmentTask task) throws PipelineJobException
         {
             //NOTE: allow a file in either local working dir or webserver dir.  if both exist, use the file most recently modified
-            File xml = null;
+            File file = null;
             for (File dir : Arrays.asList(job.getAnalysisDirectory(), task._wd.getDir()))
             {
-                File toCheck = getSerializedXml(dir, XML_NAME);
+                File toCheck = getSerializedJson(dir, JSON_NAME);
                 if (toCheck.exists())
                 {
                     job.getLogger().debug("inspecting file: " + toCheck.getPath());
-                    if (xml == null || xml.lastModified() < toCheck.lastModified())
+                    if (file == null || file.lastModified() < toCheck.lastModified())
                     {
-                        if (xml != null)
+                        if (file != null)
                         {
                             job.getLogger().debug("choosing more recently modified file: " + toCheck.getPath());
                         }
 
-                        xml = toCheck;
+                        file = toCheck;
                     }
                 }
             }
 
-            if (xml != null)
+            if (file != null)
             {
-                job.getLogger().debug("using xml file: " + xml.getPath());
+                job.getLogger().debug("using file file: " + file.getPath());
                 try
                 {
-                    return createFromXml(job, task, xml);
+                    return createFromJson(job, task, file);
                 }
                 catch (Exception e)
                 {
-                    //allow for the possibility of a malformed XML file
-                    job.getLogger().error("Error reading XML file: " +  xml.getPath(), e);
-                    xml.delete();
+                    //allow for the possibility of a malformed file
+                    job.getLogger().error("Error reading file: " +  file.getPath(), e);
+                    file.delete();
                 }
             }
 
             return new Resumer(task);
         }
 
-        private static Resumer createFromXml(SequenceAlignmentJob job, SequenceAlignmentTask task, File xml) throws PipelineJobException
+        private static Resumer createFromJson(SequenceAlignmentJob job, SequenceAlignmentTask task, File file) throws PipelineJobException
         {
-            Resumer ret = readFromXml(xml, Resumer.class);
+            Resumer ret = readFromJson(file, Resumer.class);
             ret._isResume = true;
             ret._log = task.getJob().getLogger();
             ret._localWorkDir = task.getPipelineJob().getAnalysisDirectory();
@@ -1348,7 +1338,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             }
 
             //debugging:
-            job.getLogger().debug("loaded from XML.  total recorded actions: " + ret.getRecordedActions().size());
+            job.getLogger().debug("loaded from file.  total recorded actions: " + ret.getRecordedActions().size());
             for (RecordedAction a : ret.getRecordedActions())
             {
                 job.getLogger().debug("action: " + a.getName() + ", inputs: " + a.getInputs().size() + ", outputs: " + a.getOutputs().size());
@@ -1356,18 +1346,18 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
             if (ret._recordedActions == null)
             {
-                throw new PipelineJobException("Job read from XML, but did not have any saved actions.  This indicates a problem w/ serialization.");
+                throw new PipelineJobException("Job read from file, but did not have any saved actions.  This indicates a problem w/ serialization.");
             }
 
             return ret;
         }
 
-        protected static String XML_NAME = "alignmentCheckpoint.xml";
+        protected static String JSON_NAME = "alignmentCheckpoint.json";
 
         @Override
-        protected String getXmlName()
+        protected String getJsonName()
         {
-            return XML_NAME;
+            return JSON_NAME;
         }
 
         public void setHasCopiedResources(File workingFasta, List<RecordedAction> actions, Map<File, File> copiedInputs) throws PipelineJobException
@@ -1635,7 +1625,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             action1.addOutput(new File("/output"), "Output", false);
 
             File tmp = new File(System.getProperty("java.io.tmpdir"));
-            File xml = new File(tmp, Resumer.XML_NAME);
+            File xml = new File(tmp, Resumer.JSON_NAME);
 
             ObjectMapper objectMapper = PipelineJob.createObjectMapper();
             objectMapper.writeValue(xml, action1);
@@ -1658,11 +1648,11 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             r._recordedActions.add(action1);
 
             File tmp = new File(System.getProperty("java.io.tmpdir"));
-            File xml = new File(tmp, Resumer.XML_NAME);
-            r.writeToXml(tmp);
+            File file = new File(tmp, Resumer.JSON_NAME);
+            r.writeToJson(tmp);
 
             //after deserialization the RecordedAction should match the original
-            Resumer r2 = Resumer.readFromXml(xml, Resumer.class);
+            Resumer r2 = Resumer.readFromJson(file, Resumer.class);
             assertEquals(1, r2._recordedActions.size());
             RecordedAction action2 = r2._recordedActions.iterator().next();
             assertEquals("Action1", action2.getName());
@@ -1672,7 +1662,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             assertEquals(1, action2.getOutputs().size());
             assertEquals(new File("/output").toURI(), action2.getOutputs().iterator().next().getURI());
 
-            xml.delete();
+            file.delete();
         }
     }
 }

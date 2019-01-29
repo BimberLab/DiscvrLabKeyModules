@@ -42,14 +42,14 @@ abstract public class AbstractResumer implements Serializable
         _recordedActions = new LinkedHashSet<>();
     }
 
-    protected static File getSerializedXml(File outdir, String xmlName)
+    protected static File getSerializedJson(File outdir, String jsonName)
     {
-        return new File(outdir, xmlName);
+        return new File(outdir, jsonName);
     }
 
-    protected static <RESUMER extends AbstractResumer> RESUMER readFromXml(File xml, Class<RESUMER> clazz) throws PipelineJobException
+    protected static <RESUMER extends AbstractResumer> RESUMER readFromJson(File json, Class<RESUMER> clazz) throws PipelineJobException
     {
-        try (BufferedInputStream bus = new BufferedInputStream(new FileInputStream(xml)))
+        try (BufferedInputStream bus = new BufferedInputStream(new FileInputStream(json)))
         {
             ObjectMapper objectMapper = PipelineJob.createObjectMapper();
             return objectMapper.readValue(bus, clazz);
@@ -60,23 +60,29 @@ abstract public class AbstractResumer implements Serializable
         }
     }
 
-    protected void writeToXml() throws PipelineJobException
+    protected void writeToJson() throws PipelineJobException
     {
-        writeToXml(_localWorkDir);
+        writeToJson(_localWorkDir);
     }
 
-    abstract protected String getXmlName();
+    abstract protected String getJsonName();
 
-    protected void writeToXml(File outDir) throws PipelineJobException
+    protected void logInfoBeforeSave()
+    {
+        _log.debug("total actions: " + _recordedActions.size());
+    }
+
+    protected void writeToJson(File outDir) throws PipelineJobException
     {
         _log.debug("saving job checkpoint to file");
-        _log.debug("total actions: " + _recordedActions.size());
+        logInfoBeforeSave();
+
         if (outDir == null)
         {
             throw new PipelineJobException("output directory was null");
         }
 
-        File output = getSerializedXml(outDir, getXmlName());
+        File output = getSerializedJson(outDir, getJsonName());
         _log.debug("using file: " + output.getPath());
         try
         {
@@ -94,22 +100,22 @@ abstract public class AbstractResumer implements Serializable
         markComplete(true);
     }
 
-    public void markComplete(boolean deleteXml)
+    public void markComplete(boolean deleteFile)
     {
-        File xml = getSerializedXml(_localWorkDir, getXmlName());
-        if (xml.exists())
+        File file = getSerializedJson(_localWorkDir, getJsonName());
+        if (file.exists())
         {
             _log.info("closing job resumer");
-            if (deleteXml)
-                xml.delete();
+            if (deleteFile)
+                file.delete();
             else
-                _log.debug("delete of XML will be deferred");
+                _log.debug("delete of file will be deferred");
         }
     }
 
     public void saveState() throws PipelineJobException
     {
-        writeToXml();
+        writeToJson();
     }
 
     public TaskFileManagerImpl getFileManager()

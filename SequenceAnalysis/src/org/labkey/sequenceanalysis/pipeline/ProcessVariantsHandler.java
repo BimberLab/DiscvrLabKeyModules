@@ -10,6 +10,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
+import org.junit.Assert;
+import org.junit.Test;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.Container;
 import org.labkey.api.module.Module;
@@ -32,6 +34,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
@@ -439,7 +442,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
     public static class Resumer extends AbstractResumer
     {
-        public static final String XML_NAME = "processVariantsCheckpoint.xml";
+        public static final String JSON_NAME = "processVariantsCheckpoint.json";
         private static final String GENOTYPE_GVCFS = "GENOTYPE_GVCFS";
 
         private Map<String, File> _finalVcfs = new HashMap<>();
@@ -458,14 +461,14 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
         public static Resumer create(JobContextImpl ctx) throws PipelineJobException
         {
-            File xml = getSerializedXml(ctx.getSourceDirectory(), XML_NAME);
-            if (!xml.exists())
+            File json = getSerializedJson(ctx.getSourceDirectory(), JSON_NAME);
+            if (!json.exists())
             {
                 return new Resumer(ctx);
             }
             else
             {
-                Resumer ret = readFromXml(xml, Resumer.class);
+                Resumer ret = readFromJson(json, Resumer.class);
                 ret._isResume = true;
                 ret._log = ctx.getLogger();
                 ret._localWorkDir = ctx.getWorkDir().getDir();
@@ -489,7 +492,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 }
 
                 //debugging:
-                ctx.getLogger().debug("loaded from XML.  total recorded actions: " + ret.getRecordedActions().size());
+                ctx.getLogger().debug("loaded from file.  total recorded actions: " + ret.getRecordedActions().size());
                 for (RecordedAction a : ret.getRecordedActions())
                 {
                     ctx.getLogger().debug("action: " + a.getName() + ", inputs: " + a.getInputs().size() + ", outputs: " + a.getOutputs().size());
@@ -497,7 +500,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
                 if (ret._recordedActions == null)
                 {
-                    throw new PipelineJobException("Job read from XML, but did not have any saved actions.  This indicates a problem w/ serialization.");
+                    throw new PipelineJobException("Job read from file, but did not have any saved actions.  This indicates a problem w/ serialization.");
                 }
 
                 return ret;
@@ -522,9 +525,9 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         }
 
         @Override
-        protected String getXmlName()
+        protected String getJsonName()
         {
-            return XML_NAME;
+            return JSON_NAME;
         }
 
         public void setStepComplete(int stepIdx, String inputFilePath, RecordedAction action, File finalVCF) throws PipelineJobException
@@ -532,6 +535,14 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             _finalVcfs.put(getKey(stepIdx, inputFilePath), finalVCF);
             _recordedActions.add(action);
             saveState();
+        }
+
+        @Override
+        protected void logInfoBeforeSave()
+        {
+            super.logInfoBeforeSave();
+
+            _log.debug("total sequence outputs: " + _sequenceOutputFiles.size());
         }
 
         private String getKey(int stepIdx, String inputFilePath)
@@ -588,6 +599,52 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         public File getGenotypeGVCFsFile()
         {
             return _finalVcfs.get(GENOTYPE_GVCFS);
+        }
+    }
+
+    public static class TestCase extends Assert
+    {
+        private static final Logger _log = Logger.getLogger(ProcessVariantsHandler.TestCase.class);
+
+        @Test
+        public void serializeTest() throws Exception
+        {
+            ProcessVariantsHandler.Resumer r = new ProcessVariantsHandler.Resumer();
+            r._log = _log;
+            r._recordedActions = new LinkedHashSet<>();
+            RecordedAction action1 = new RecordedAction();
+            action1.setName("Action1");
+            action1.setDescription("Description");
+            action1.addInput(new File("/input"), "Input");
+            action1.addOutput(new File("/output"), "Output", false);
+            r._recordedActions.add(action1);
+
+            File tmp = new File(System.getProperty("java.io.tmpdir"));
+            File f = FileUtil.getAbsoluteCaseSensitiveFile(new File(tmp, ProcessVariantsHandler.Resumer.JSON_NAME));
+
+            r._sequenceOutputFiles = new HashSet<>();
+            SequenceOutputFile so = new SequenceOutputFile();
+            so.setName("so1");
+            so.setFile(f);
+            r._sequenceOutputFiles.add(so);
+
+            r.writeToJson(tmp);
+
+            //after deserialization the RecordedAction should match the original
+            ProcessVariantsHandler.Resumer r2 = ProcessVariantsHandler.Resumer.readFromJson(f, ProcessVariantsHandler.Resumer.class);
+            assertEquals(1, r2._recordedActions.size());
+            RecordedAction action2 = r2._recordedActions.iterator().next();
+            assertEquals("Action1", action2.getName());
+            assertEquals("Description", action2.getDescription());
+            assertEquals(1, action2.getInputs().size());
+            assertEquals(new File("/input").toURI(), action1.getInputs().iterator().next().getURI());
+            assertEquals(1, action2.getOutputs().size());
+            assertEquals(new File("/output").toURI(), action2.getOutputs().iterator().next().getURI());
+            assertEquals(1, r2._sequenceOutputFiles.size());
+            assertEquals("so1", r2._sequenceOutputFiles.iterator().next().getName());
+            assertEquals(f, r2._sequenceOutputFiles.iterator().next().getFile());
+
+            f.delete();
         }
     }
 }
