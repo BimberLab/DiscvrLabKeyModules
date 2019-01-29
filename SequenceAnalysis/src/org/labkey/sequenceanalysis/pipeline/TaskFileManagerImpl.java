@@ -83,8 +83,9 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     @Override
     public void addSequenceOutput(SequenceOutputFile o)
     {
-        _job.getLogger().debug("adding sequence output: " + (o.getFile() == null ? o.getName() : o.getFile().getPath()));
+        _job.getLogger().debug("adding sequence output to TaskFileManager: " + (o.getFile() == null ? o.getName() : o.getFile().getPath()));
         _outputsToCreate.add(o);
+        _job.getLogger().debug("total cached: " + _outputsToCreate.size());
     }
 
     @Override

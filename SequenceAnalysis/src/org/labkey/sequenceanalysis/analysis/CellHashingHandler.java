@@ -34,11 +34,15 @@ import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class CellHashingHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceReadsetProcessor>
 {
@@ -57,7 +61,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-cbl"), "cbl", "Cell Barcode End", null, "ldk-integerfield", null, 16),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-umif"), "umif", "UMI Start", null, "ldk-integerfield", null, 17),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-umil"), "umil", "UMI End", null, "ldk-integerfield", null, 26),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-hd"), "hd", "Edit Distance", null, "ldk-integerfield", null, 1),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-hd"), "hd", "Edit Distance", null, "ldk-integerfield", null, 2),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-cells"), "cells", "Expected Cells", null, "ldk-integerfield", null, 8000),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-tr"), "tr", "RegEx", null, "textfield", null, "^[ATGCN]{15}"),
                 ToolParameterDescriptor.create("tagGroup", "Tag List", null, "ldk-simplelabkeycombo", new JSONObject(){{
@@ -141,12 +145,6 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         @Override
         public void processFilesRemote(List<Readset> readsets, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
-            List<String> args = new ArrayList<>();
-
-            args.addAll(getClientCommandArgs(ctx.getParams()));
-            args.add("-t");
-            args.add(getBarcodeFile(ctx.getSourceDirectory()).getPath());
-
             for (Readset rs : readsets)
             {
                 CiteSeqCountWrapper wrapper = new CiteSeqCountWrapper(ctx.getLogger());
@@ -159,6 +157,11 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
 
                 String fn = ctx.getParams().getString("outputFilePrefix");
 
+                List<String> args = new ArrayList<>();
+
+                args.addAll(getClientCommandArgs(ctx.getParams()));
+                args.add("-t");
+                args.add(getBarcodeFile(ctx.getSourceDirectory()).getPath());
                 args.add("-u");
                 args.add(new File(ctx.getOutputDir(), "citeSeqUnknownBarcodes.txt").getPath());
 
@@ -265,5 +268,151 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         {
             return SequencePipelineService.get().getExeForPackage("CITESEQCOUNTPATH", "CITE-seq-Count");
         }
+    }
+
+    public void compareWhitelistToTopCells(Readset htoReadset, File htoList, File outputDir, String basename, Logger log, File whitelistFile) throws PipelineJobException
+    {
+        log.info("comparing whitelist to top cells by count");
+
+        Set<String> whitelist = new HashSet<>();
+        try (CSVReader reader = new CSVReader(Readers.getReader(whitelistFile), ','))
+        {
+            String[] line;
+            while ((line = reader.readNext()) != null)
+            {
+                whitelist.add(line[0]);
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        log.info("total cells in whitelist: " + whitelist.size());
+
+        Double topCells = whitelist.size() * 1.5;
+        File rawData = runCiteSeqCountForTopCells(htoReadset, htoList, outputDir, basename, log, topCells.intValue());
+        try (CSVReader reader = new CSVReader(Readers.getReader(rawData), ','))
+        {
+            Map<String, Integer> totals = new LinkedHashMap<>();
+            String[] line;
+            List<String> header = new ArrayList<>();
+            int idx = 0;
+            while ((line =reader.readNext()) != null)
+            {
+                idx++;
+                if ("no_match".equals(line[0]) || "total_reads".equals(line[0]))
+                {
+                    continue;
+                }
+
+                for (int j=1;j<line.length;j++)
+                {
+                    if (idx == 1)
+                    {
+                        header.add(line[j]);
+                        totals.put(line[j], 0);
+                    }
+                    else
+                    {
+                        totals.put(header.get(j), totals.get(header.get(j)) + Integer.parseInt(line[j]));
+                    }
+                }
+            }
+
+            List<String> intersect = new ArrayList<>(whitelist);
+            whitelist.retainAll(header);
+            whitelist.removeIf(x -> {
+                return totals.get(x) == 0;
+            });
+
+            log.info("total cells in CiteSeqCount table: " + header.size());
+            DecimalFormat df = new DecimalFormat("##.##%");
+            double pct = (double)intersect.size() / whitelist.size();
+            log.info("intersect: " + intersect.size() + " (" + df.format(pct) + ")");
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        rawData.delete();
+    }
+
+    private File runCiteSeqCountForTopCells(Readset htoReadset, File htoList, File outputDir, String basename, Logger log, int topCells) throws PipelineJobException
+    {
+        List<String> args = new ArrayList<>();
+        args.add("-cells");
+        args.add(String.valueOf(topCells));
+
+        return runCiteSeqCount(htoReadset, htoList, null, outputDir, basename, log, args, true);
+    }
+
+    public File runCiteSeqCount(Readset htoReadset, File htoList, File cellBarcodeList, File outputDir, String basename, Logger log, List<String> extraArgs, boolean returnRawData) throws PipelineJobException
+    {
+        CellHashingHandler.CiteSeqCountWrapper wrapper = new CellHashingHandler.CiteSeqCountWrapper(log);
+        List<String> params = new ArrayList<>();
+        params.add("-t");
+        params.add(htoList.getPath());
+
+        if (cellBarcodeList != null)
+        {
+            params.add("-wl");
+            params.add(cellBarcodeList.getPath());
+        }
+
+        if (extraArgs != null)
+        {
+            params.addAll(extraArgs);
+        }
+
+        List<? extends ReadData> rd = htoReadset.getReadData();
+        if (rd.size() != 1)
+        {
+            throw new PipelineJobException("Expected HTO readset to have single pair of FASTQs");
+        }
+
+        for (ToolParameterDescriptor param : CellHashingHandler.getDefaultParams())
+        {
+            if (cellBarcodeList != null && param.getName().equals("cells"))
+            {
+                continue;
+            }
+
+            if (param.getCommandLineParam() != null && param.getDefaultValue() != null)
+            {
+                //this should avoid double-adding if extraArgs contains the param
+                if (params.contains(param.getCommandLineParam().getArgName()))
+                {
+                    log.debug("skipping default param because called specified a value: " + param.getName());
+                    continue;
+                }
+
+                params.addAll(param.getCommandLineParam().getArguments(param.getDefaultValue().toString()));
+            }
+        }
+
+        File citeSeqCountOutput = new File(outputDir, basename + ".citeSeqCounts.txt");
+        wrapper.execute(params, rd.get(0).getFile1(), rd.get(0).getFile2(), citeSeqCountOutput);
+        if (!citeSeqCountOutput.exists())
+        {
+            throw new PipelineJobException("missing expected file: " + citeSeqCountOutput.getPath());
+        }
+
+        if (returnRawData)
+        {
+            return citeSeqCountOutput;
+        }
+
+        CellHashingHandler handler = new CellHashingHandler();
+        handler.generalFinalCalls(citeSeqCountOutput, outputDir, basename, log);
+
+        File outputFile = new File(outputDir, basename + ".txt");
+        if (!outputFile.exists())
+        {
+            throw new PipelineJobException("missing expected file: " + outputFile.getPath());
+        }
+
+        return outputFile;
     }
 }

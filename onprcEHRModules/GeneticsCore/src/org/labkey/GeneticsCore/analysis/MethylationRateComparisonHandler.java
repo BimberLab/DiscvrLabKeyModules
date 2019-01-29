@@ -155,7 +155,7 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler<S
         }
 
         @Override
-        public void complete(PipelineJob job, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated) throws PipelineJobException
+        public void complete(PipelineJob job, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated, SequenceAnalysisJobSupport support) throws PipelineJobException
         {
             for (SequenceOutputFile so : outputsCreated)
             {

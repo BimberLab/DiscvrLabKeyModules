@@ -102,8 +102,11 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
             cacheExpData(m.getAlignmentData());
         }
 
-        SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(m.getReadset(), job.getUser());
-        cacheReadset(rs);
+        if (m.getReadset() != null)
+        {
+            SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(m.getReadset(), job.getUser());
+            cacheReadset(rs);
+        }
 
         if (m.getLibraryId() != null)
         {

@@ -14,6 +14,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
+import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -94,6 +95,11 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
             if (f.getReadset() != null)
             {
                 getPipelineJob().getSequenceSupport().cacheReadset(f.getReadset(), getJob().getUser());
+            }
+
+            if (f.getAnalysis_id() != null)
+            {
+                getPipelineJob().getSequenceSupport().cacheAnalysis(AnalysisModelImpl.getFromDb(f.getAnalysis_id(), getJob().getUser()), getJob());
             }
         }
 

@@ -19,7 +19,6 @@ Ext4.define('SequenceAnalysis.window.AddFileSetsWindow', {
                     }
 
                     var checked = LABKEY.DataRegions[dataRegionName].getChecked();
-                    LDK.Assert.assertEquality('getChecked and getSelected do not match', results.selected.length, checked.length)
                     Ext4.create('SequenceAnalysis.window.AddFileSetsWindow', {
                         targetTable: 'outputfiles',
                         targetField: 'outputFileId',

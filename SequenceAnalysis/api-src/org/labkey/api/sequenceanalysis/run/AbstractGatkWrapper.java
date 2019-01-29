@@ -47,6 +47,21 @@ abstract public class AbstractGatkWrapper extends AbstractCommandWrapper
         return path == null ? new File(getJarName()) : new File(path, getJarName());
     }
 
+    protected void addJavaHomeToEnvironment()
+    {
+        //since GATK requires java8, set JAVA_HOME to match this:
+        File java8 = new File(SequencePipelineService.get().getJava8FilePath()).getParentFile();
+        if (java8.getParentFile() == null)
+        {
+            getLogger().debug("unexpected path to java8, cannot determine JAVA_HOME: " + java8.getPath());
+            return;
+        }
+
+        String javaDir = java8.getParentFile().getPath();
+        getLogger().debug("setting JAVA_HOME to java8 location: " + javaDir);
+        addToEnvironment("JAVA_HOME", javaDir);
+    }
+    
     protected File getQueueJAR()
     {
         String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("GATKPATH");

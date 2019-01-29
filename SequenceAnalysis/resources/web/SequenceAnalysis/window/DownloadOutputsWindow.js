@@ -102,5 +102,7 @@ Ext4.define('SequenceAnalysis.window.DownloadOutputsWindow', {
         }).submit({
             params: params
         });
+
+        this.close();
     }
 });

@@ -18,10 +18,16 @@ package org.labkey.cluster;
 
 import org.labkey.api.action.ConfirmAction;
 import org.labkey.api.action.SpringActionController;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobService;
+import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.pipeline.PipelineStatusFile;
+import org.labkey.api.pipeline.PipelineStatusUrls;
 import org.labkey.api.pipeline.RemoteExecutionEngine;
 import org.labkey.api.security.RequiresPermission;
+import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.permissions.AdminPermission;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.HtmlView;
 import org.springframework.validation.BindException;
@@ -67,6 +73,63 @@ public class ClusterController extends SpringActionController
             }
 
             return true;
+        }
+    }
+
+    @RequiresSiteAdmin
+    public class ForcePipelineCancelAction extends ConfirmAction<ForcePipelineCancelForm>
+    {
+        public void validateCommand(ForcePipelineCancelForm form, Errors errors)
+        {
+
+        }
+
+        public URLHelper getSuccessURL(ForcePipelineCancelForm form)
+        {
+            return PageFlowUtil.urlProvider(PipelineStatusUrls.class).urlBegin(getContainer());
+        }
+
+        public ModelAndView getConfirmView(ForcePipelineCancelForm form, BindException errors) throws Exception
+        {
+            return new HtmlView("This will change the status of the pipeline job with the provided ID to Cancelled.  It is intended to help the situation when the normal UI leave a job in a perpetual 'Cancelling' state." +
+                    "To continue, enter the Job ID and hit submit:<br><br>" +
+                    "<label>Enter Job ID: </label><input name=\"jobId\"><br>");
+        }
+
+        public boolean handlePost(ForcePipelineCancelForm form, BindException errors) throws Exception
+        {
+            PipelineStatusFile sf = PipelineService.get().getStatusFile(form.getJobId());
+            if (sf == null)
+            {
+                errors.reject(ERROR_MSG, "Unable to find job: " + form.getJobId());
+                return false;
+            }
+
+            if (!PipelineJob.TaskStatus.cancelling.name().equalsIgnoreCase(sf.getStatus()))
+            {
+                errors.reject(ERROR_MSG, "This should only be used on jobs with status cancelling.  Was: " + sf.getStatus());
+                return false;
+            }
+
+            sf.setStatus(PipelineJob.TaskStatus.cancelled.name().toUpperCase());
+            sf.save();
+
+            return true;
+        }
+    }
+
+    public static class ForcePipelineCancelForm
+    {
+        private int jobId;
+
+        public int getJobId()
+        {
+            return jobId;
+        }
+
+        public void setJobId(int jobId)
+        {
+            this.jobId = jobId;
         }
     }
 }

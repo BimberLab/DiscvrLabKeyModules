@@ -493,6 +493,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
                 //debugging:
                 ctx.getLogger().debug("loaded from file.  total recorded actions: " + ret.getRecordedActions().size());
+                ctx.getLogger().debug("total sequence outputs: " + ret.getSequenceOutputFiles().size());
                 for (RecordedAction a : ret.getRecordedActions())
                 {
                     ctx.getLogger().debug("action: " + a.getName() + ", inputs: " + a.getInputs().size() + ", outputs: " + a.getOutputs().size());

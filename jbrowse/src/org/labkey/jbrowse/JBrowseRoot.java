@@ -1,7 +1,6 @@
 package org.labkey.jbrowse;
 
 import htsjdk.samtools.util.BlockCompressedOutputStream;
-import htsjdk.samtools.util.SequenceUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
@@ -193,6 +192,11 @@ public class JBrowseRoot
         return prepareOutputFile(u, outputFileId, forceRecreateJson, null);
     }
 
+    private File getOutDirForOutputFile(JsonFile jsonFile)
+    {
+        return new File(getTracksDir(jsonFile.getContainerObj()), "data-" + jsonFile.getOutputFile().toString());
+    }
+
     public JsonFile prepareOutputFile(User u, Integer outputFileId, boolean forceRecreateJson, JSONObject additionalConfig) throws IOException
     {
         getLogger().debug("preparing outputfile: " + outputFileId);
@@ -211,9 +215,9 @@ public class JBrowseRoot
         }
 
         //in case we have a cached version, re-create
-        File outDir = new File(getTracksDir(jsonFile.getContainerObj()), "data-" + jsonFile.getOutputFile().toString());
         if (forceRecreateJson && jsonFile != null)
         {
+            File outDir = getOutDirForOutputFile(jsonFile);
             if (outDir.exists())
             {
                 getLogger().debug("deleting existing directory: " + outDir.getPath());
@@ -241,6 +245,8 @@ public class JBrowseRoot
 
             Map<String, Object> jsonRecord = new CaseInsensitiveHashMap<>();
             jsonRecord.put("outputfile", outputFileId);
+
+            File outDir = new File(getTracksDir(fileContainer), "data-" + outputFileId.toString());
             jsonRecord.put("relPath", FileUtil.relativePath(getBaseDir(fileContainer).getPath(), outDir.getPath()));
             jsonRecord.put("container", fileContainer.getId());
             jsonRecord.put("created", new Date());
@@ -260,6 +266,7 @@ public class JBrowseRoot
 
         if (jsonFile != null)
         {
+            File outDir = getOutDirForOutputFile(jsonFile);
             processFile(so.getExpData(), outDir, "data-" + jsonFile.getOutputFile(), jsonFile.getLabel(), additionalConfig, jsonFile.getCategory(), jsonFile.getRefLibraryData());
             if (getTrackListForOutputFile(jsonFile) == null)
             {

@@ -84,6 +84,11 @@ define(['dojo/_base/declare',
                 makeFeatureDescriptionLabel: function(feature){
                     var ret = this.inherited(arguments);
 
+                    if (feature.get('start')){
+                        var realStart = feature.get('start') + 1;
+                        ret.text += '<br>Position: ' + realStart;
+                    }
+
                     var effArray = feature.get('ANN') || [];
                     if( effArray &&  typeof effArray === 'object' && 'values' in effArray )
                         effArray = effArray.values;

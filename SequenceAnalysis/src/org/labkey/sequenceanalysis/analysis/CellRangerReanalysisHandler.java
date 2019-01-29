@@ -13,7 +13,6 @@ import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.InvalidKeyException;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.QueryUpdateServiceException;
-import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
@@ -117,7 +116,7 @@ public class CellRangerReanalysisHandler extends AbstractParameterizedOutputHand
         }
 
         @Override
-        public void complete(PipelineJob job, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated) throws PipelineJobException
+        public void complete(PipelineJob job, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated, SequenceAnalysisJobSupport support) throws PipelineJobException
         {
             if (job.getParameters().containsKey("deletePrevious") && "true".equals(job.getParameters().get("deletePrevious").toLowerCase()))
             {

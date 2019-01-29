@@ -352,6 +352,8 @@ for (i in 3:ncol(bar.tsne_all)) {
 }
 dev.off()
 
+write.table(bar.tsne_all, file = paste0(outputBasename, '.tsne.txt'), sep = '\t', row.names = F)
+
 ###################################
 ## Perform sample classification ##
 ###################################
@@ -370,7 +372,7 @@ for (q in seq(0.01, 0.99, by=0.02)) {
 extrema_round1 <- findThresh(call.list=bar.table_sweep.list, id="round1")
 png(paste0(outputBasename, 'round1.png'))
 ggplot(data=res_round1, aes(x=q, y=Proportion, color=Subset)) + geom_line() +
-  theme(legend.position = "none", panel.grid.major = element_blank(), axis.line = element_line(colour = "black"),
+  theme(legend.position = "right", panel.grid.major = element_blank(), axis.line = element_line(colour = "black"),
         panel.grid.minor = element_blank(), panel.background = element_blank()) +
   geom_vline(xintercept = extrema_round1, lty=2) + scale_color_manual(values=c("red","black","blue"))
 dev.off()
@@ -400,7 +402,7 @@ if (length(neg.cells) > 0) {
     if (length(extrema_round2) > 0) {
       png(paste0(outputBasename, 'round2.png'))
       ggplot(data=res_round2, aes(x=q, y=Proportion, color=Subset)) + geom_line() +
-        theme(legend.position = "none", panel.grid.major = element_blank(), axis.line = element_line(colour = "black"),
+        theme(legend.position = "right", panel.grid.major = element_blank(), axis.line = element_line(colour = "black"),
               panel.grid.minor = element_blank(), panel.background = element_blank()) +
         geom_vline(xintercept = extrema_round2, lty=2) + scale_color_manual(values=c("red","black","blue"))
       dev.off()

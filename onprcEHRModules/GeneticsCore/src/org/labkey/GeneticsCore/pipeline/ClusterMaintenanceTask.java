@@ -22,11 +22,7 @@ import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.pipeline.RemoteExecutionEngine;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.security.LimitedUser;
-import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
-import org.labkey.api.security.roles.EditorRole;
-import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Job;
 import org.labkey.api.util.JobRunner;
@@ -41,7 +37,6 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -107,8 +102,7 @@ public class ClusterMaintenanceTask implements SystemMaintenance.MaintenanceTask
                     {
                         try
                         {
-                            User u = new LimitedUser(UserManager.getGuestUser(), new int[0], Collections.singleton(RoleManager.getRole(EditorRole.class)), true);
-                            PipelineJob job = ClusterService.get().createClusterRemotePipelineJob(ContainerManager.getHomeContainer(), u, "Maintenance: " + engine.getType(), engine, task, logFile);
+                            PipelineJob job = ClusterService.get().createClusterRemotePipelineJob(ContainerManager.getHomeContainer(), UserManager.getGuestUser(), "Maintenance: " + engine.getType(), engine, task, logFile);
                             PipelineService.get().queueJob(job);
                         }
                         catch (PipelineValidationException e)

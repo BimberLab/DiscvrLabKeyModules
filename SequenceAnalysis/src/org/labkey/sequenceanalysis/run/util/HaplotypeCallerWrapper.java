@@ -116,6 +116,7 @@ public class HaplotypeCallerWrapper extends AbstractGatkWrapper
     public void executeWithQueue(File inputBam, File referenceFasta, File outputFile, List<String> options) throws PipelineJobException
     {
         getLogger().info("Running GATK HaplotypeCaller using Queue for: " + inputBam.getName());
+        addJavaHomeToEnvironment();
 
         ensureDictionary(referenceFasta);
 

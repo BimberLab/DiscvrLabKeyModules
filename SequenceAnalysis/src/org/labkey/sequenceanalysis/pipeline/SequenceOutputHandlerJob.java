@@ -100,7 +100,7 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
             {
                 ObjectMapper objectMapper = createObjectMapper();
                 List<SequenceOutputFile> ret = objectMapper.readValue(is, new TypeReference<List<SequenceOutputFile>>(){});
-                getLogger().debug("read SequenceOutputFiles from file: " + ret.size());
+                getLogger().debug("read SequenceOutputFiles from file, total: " + ret.size());
 
                 for (SequenceOutputFile so : ret)
                 {

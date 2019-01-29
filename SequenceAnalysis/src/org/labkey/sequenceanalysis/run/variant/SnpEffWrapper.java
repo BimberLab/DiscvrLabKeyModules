@@ -33,7 +33,7 @@ public class SnpEffWrapper extends AbstractCommandWrapper
         String basename = getGenomeBasename(genomeId, geneId);
 
         List<String> params = new ArrayList<>();
-        params.add(SequencePipelineService.get().getJavaFilepath());
+        params.add(SequencePipelineService.get().getJava8FilePath());
         params.addAll(SequencePipelineService.get().getJavaOpts());
         params.add("-jar");
         params.add(getSnpEffJar().getPath());

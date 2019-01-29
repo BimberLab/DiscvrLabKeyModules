@@ -244,6 +244,9 @@ define([
                     },
                     CLN_RS: {
                         title: 'ClinVar RS Numbers'
+                    },
+                    LiftedContig: {
+                        title: 'Lifted Position'
                     }
                 },
 
@@ -302,6 +305,16 @@ define([
                         fmt( 'Filters', filters, f );
                     }
 
+                    if (this.config.ensemblId){
+                        var contig = this.refSeq.name;
+                        contig = contig.replace(/^chr/, '');
+                        contig = contig.replace(/^0/, '');
+                        var pos = contig + ':' + f.get('start') + '-' + f.get('end');
+
+                        var url = 'https://www.ensembl.org/' + this.config.ensemblId +'/Location/View?db=core;r=' + pos;
+                        fmt('External Links', '<a href="' + url +'" target="_blank">View Region In Ensembl</a>', f);
+                    }
+
                     //fmt( 'Length', Util.addCommas(f.get('end')-f.get('start'))+' bp',f );
                 },
 
@@ -346,9 +359,39 @@ define([
                         }
                     }
 
-                    console.log(ret);
                     return ret;
                 },
+
+                /**
+                fmtDetailLiftedContigValue: function(parent, title, val, f, class_) {
+                    val = val || '';
+                    if (!val){
+                        return;
+                    }
+
+                    if (val && lang.isArray(val)) {
+                        val = val.join(',');
+                    }
+
+                    if (f.get('LiftedStart')) {
+                        val += ':' + f.get('LiftedStart');
+
+                        if (f.get('LiftedStop')){
+                            val += '-' + f.get('LiftedStop');
+                        }
+                    }
+
+                    if (f.get('ReverseComplementedAlleles')) {
+                        val += ' (*Reverse Complemented)';
+                    }
+
+                    array.forEach(parsed, function(val){
+                        domConstruct.create('div', { className: 'value ' + class_, innerHTML: val }, parent );
+                    }, this);
+
+                    return 1;
+                },
+                 **/
 
                 fmtDetailOMIMDValue: function(parent, title, val, f, class_) {
                     //example:

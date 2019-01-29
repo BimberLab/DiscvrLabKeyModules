@@ -91,6 +91,7 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
     public File executeWithQueue(File inputBam, File outputBam, File referenceFasta, @Nullable File knownIndelsVcf) throws PipelineJobException
     {
         getLogger().info("Running GATK IndelRealigner using Queue for: " + inputBam.getName());
+        addJavaHomeToEnvironment();
 
         List<File> tempFiles = new ArrayList<>();
         File workingBam = performSharedWork(inputBam, outputBam, referenceFasta, tempFiles);
