@@ -168,11 +168,6 @@ public class BillingTriggerHelper
         return _cachedCharges.get(chargeId);
     }
 
-    public boolean isSiteAdmin()
-    {
-        return getUser().isSiteAdmin();
-    }
-
     public boolean isBillingAdmin()
     {
         return getContainer().hasPermission(getUser(), ONPRCBillingAdminPermission.class);

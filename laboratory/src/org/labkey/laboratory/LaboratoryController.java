@@ -1091,7 +1091,7 @@ public class LaboratoryController extends SpringActionController
 
             if (form.isIncludeSiteSummary())
             {
-                if (getUser().isSiteAdmin())
+                if (getUser().hasSiteAdminPermission())
                 {
                     Map<Container, Set<DemographicsSource>> map = service.getAllDemographicsSources(getUser());
                     Map<String, JSONArray> siteSummary = new HashMap<String, JSONArray>();
@@ -1167,7 +1167,7 @@ public class LaboratoryController extends SpringActionController
 
             if (form.isIncludeSiteSummary())
             {
-                if (getUser().isSiteAdmin())
+                if (getUser().hasSiteAdminPermission())
                 {
                     Map<Container, Set<AdditionalDataSource>> map = service.getAllAdditionalDataSources(getUser());
                     Map<String, JSONArray> siteSummary = new HashMap<String, JSONArray>();

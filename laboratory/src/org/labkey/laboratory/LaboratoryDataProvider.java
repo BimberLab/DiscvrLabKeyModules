@@ -176,7 +176,7 @@ public class LaboratoryDataProvider extends AbstractDataProvider
             items.add(new SimpleSettingsItem(this, LaboratoryModule.SCHEMA_NAME, "Sample_Additive", categoryName, "Allowable Sample Additives"));
             items.add(new SimpleSettingsItem(this, LaboratoryModule.SCHEMA_NAME, "Species", categoryName, "Allowable Species"));
 
-            if (u.isSiteAdmin())
+            if (u.hasSiteAdminPermission())
             {
                 items.add(new DetailsUrlWithoutLabelNavItem(this, "Synchronize Assay Fields", DetailsURL.fromString("/laboratory/synchronizeAssayFields.view", ContainerManager.getRoot()), LaboratoryService.NavItemCategory.settings, adminSettings));
                 items.add(new DetailsUrlWithoutLabelNavItem(this, "Reset Tabs and Webparts", DetailsURL.fromString("/laboratory/resetLaboratoryFolders.view", ContainerManager.getRoot()), LaboratoryService.NavItemCategory.settings, adminSettings));
@@ -200,7 +200,7 @@ public class LaboratoryDataProvider extends AbstractDataProvider
 
                 items.add(new SimpleSettingsItem(this, LaboratoryModule.SCHEMA_NAME, "Sample_Type", "Samples", "Allowable Sample Types"));
 
-                if (u.isSiteAdmin())
+                if (u.hasSiteAdminPermission())
                 {
                     items.add(new DetailsUrlWithoutLabelNavItem(this, "Synchronize Assay Fields", DetailsURL.fromString("/laboratory/synchronizeAssayFields.view", c), LaboratoryService.NavItemCategory.settings, adminSettings));
                     items.add(new DetailsUrlWithoutLabelNavItem(this, "Reset Tabs and Webparts", DetailsURL.fromString("/laboratory/resetLaboratoryFolders.view", c), LaboratoryService.NavItemCategory.settings, adminSettings));
