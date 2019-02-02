@@ -6,7 +6,6 @@
         <dependency path="clientapi"/>
         <dependency path="clientapi_core"/>
         <dependency path="Ext4ClientApi"/>
-        <dependency path="ldk.context"/>
 
         <dependency path="ux/ItemSelector/MultiSelect.js"/>
         <dependency path="ux/ItemSelector/ItemSelector.css"/>
