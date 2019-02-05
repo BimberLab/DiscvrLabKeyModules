@@ -589,6 +589,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             ProcessVariantsHandler.Resumer r = new ProcessVariantsHandler.Resumer();
             r._log = _log;
             r._recordedActions = new LinkedHashSet<>();
+            r._fileManager = new TaskFileManagerImpl();
             RecordedAction action1 = new RecordedAction();
             action1.setName("Action1");
             action1.setDescription("Description");
