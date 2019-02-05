@@ -393,8 +393,8 @@ Ext4.define('OpenLdapSync.panel.LdapSettingsPanel', {
                             var groupSelection = panel.down('#groupSelection');
                             groupSelection.removeAll();
 
-                            if (val.syncMode == 'groupWhitelist') {
-                                groupSelection.add(this.getGroupSelectionCfg('include'))
+                            if (val.syncMode === 'groupWhitelist') {
+                                groupSelection.add(this.getGroupSelectionCfg('include'));
                             }
                         }
                     }
@@ -528,8 +528,6 @@ Ext4.define('OpenLdapSync.panel.LdapSettingsPanel', {
     },
 
     getGroupSelectionCfg: function(mode){
-        this.loadGroups();
-
         this.groupStore = this.groupStore || Ext4.create('Ext.data.Store', {
             fields: ['name', 'dn', 'description', 'objectGUID'],
             proxy: {
@@ -552,7 +550,13 @@ Ext4.define('OpenLdapSync.panel.LdapSettingsPanel', {
                 valueField: 'dn',
                 multiSelect: false,
                 store: this.groupStore,
-                buttons: ['add', 'remove']
+                buttons: ['add', 'remove'],
+                listeners: {
+                    scope: this,
+                    render: function(){
+                        this.loadGroups(); //only call this after items added to panel
+                    }
+                }
             },{
                 xtype: 'button',
                 text: 'Reload Group List',
@@ -561,7 +565,6 @@ Ext4.define('OpenLdapSync.panel.LdapSettingsPanel', {
                     var panel = btn.up('openldapsync-ldapsettingspanel');
                     panel.groupStore.removeAll();
                     panel.loadGroups();
-
                 }
             }]
         };
@@ -574,7 +577,7 @@ Ext4.define('OpenLdapSync.panel.LdapSettingsPanel', {
 //                value: (this.ldapSettings ? this.ldapSettings.disallowedDn : null)
 //            });
 //        }
-        if (mode == 'include') {
+        if (mode === 'include') {
             Ext4.apply(cfg.items[0], {
                 itemId: 'allowedDn',
                 name: 'allowedDn',
