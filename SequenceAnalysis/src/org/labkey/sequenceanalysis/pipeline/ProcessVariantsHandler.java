@@ -413,7 +413,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                         so1.setReadset(inputFiles.iterator().next().getReadset());
                         so1.setDescription("Total samples: " + sampleCount);
 
-                        _resumer.addSequenceOutput(so1);
+                        _resumer.getFileManager().addSequenceOutput(so1);
                     }
                 }
             }
@@ -446,7 +446,6 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         private static final String GENOTYPE_GVCFS = "GENOTYPE_GVCFS";
 
         private Map<String, File> _finalVcfs = new HashMap<>();
-        private Set<SequenceOutputFile> _sequenceOutputFiles = new HashSet<>();
 
         //for serialization
         public Resumer()
@@ -493,7 +492,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
                 //debugging:
                 ctx.getLogger().debug("loaded from file.  total recorded actions: " + ret.getRecordedActions().size());
-                ctx.getLogger().debug("total sequence outputs: " + ret.getSequenceOutputFiles().size());
+                ctx.getLogger().debug("total sequence outputs: " + ret.getFileManager().getOutputsToCreate().size());
                 for (RecordedAction a : ret.getRecordedActions())
                 {
                     ctx.getLogger().debug("action: " + a.getName() + ", inputs: " + a.getInputs().size() + ", outputs: " + a.getOutputs().size());
@@ -510,8 +509,8 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
         public void markComplete(JobContext ctx)
         {
-            ctx.getLogger().debug("total sequence outputs tracked in resumer: " + getSequenceOutputFiles().size());
-            for (SequenceOutputFile so : getSequenceOutputFiles())
+            ctx.getLogger().debug("total sequence outputs tracked in resumer: " + getFileManager().getOutputsToCreate().size());
+            for (SequenceOutputFile so : getFileManager().getOutputsToCreate())
             {
                 ctx.addSequenceOutput(so);
             }
@@ -538,14 +537,6 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             saveState();
         }
 
-        @Override
-        protected void logInfoBeforeSave()
-        {
-            super.logInfoBeforeSave();
-
-            _log.debug("total sequence outputs: " + _sequenceOutputFiles.size());
-        }
-
         private String getKey(int stepIdx, String inputFilePath)
         {
             return stepIdx + "<>" + inputFilePath;
@@ -559,21 +550,6 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         public File getVcfFromStep(int stepIdx, String inputFilePath)
         {
             return _finalVcfs.get(getKey(stepIdx, inputFilePath));
-        }
-
-        public Set<SequenceOutputFile> getSequenceOutputFiles()
-        {
-            return _sequenceOutputFiles;
-        }
-
-        public void setSequenceOutputFiles(Set<SequenceOutputFile> sequenceOutputFiles)
-        {
-            _sequenceOutputFiles = sequenceOutputFiles;
-        }
-
-        public void addSequenceOutput(SequenceOutputFile sequenceOutputFile)
-        {
-            _sequenceOutputFiles.add(sequenceOutputFile);
         }
 
         public Map<String, File> getFinalVcfs()
@@ -623,11 +599,10 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             File tmp = new File(System.getProperty("java.io.tmpdir"));
             File f = FileUtil.getAbsoluteCaseSensitiveFile(new File(tmp, ProcessVariantsHandler.Resumer.JSON_NAME));
 
-            r._sequenceOutputFiles = new HashSet<>();
             SequenceOutputFile so = new SequenceOutputFile();
             so.setName("so1");
             so.setFile(f);
-            r._sequenceOutputFiles.add(so);
+            r.getFileManager().addSequenceOutput(so);
 
             r.writeToJson(tmp);
 
@@ -641,9 +616,9 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             assertEquals(new File("/input").toURI(), action1.getInputs().iterator().next().getURI());
             assertEquals(1, action2.getOutputs().size());
             assertEquals(new File("/output").toURI(), action2.getOutputs().iterator().next().getURI());
-            assertEquals(1, r2._sequenceOutputFiles.size());
-            assertEquals("so1", r2._sequenceOutputFiles.iterator().next().getName());
-            assertEquals(f, r2._sequenceOutputFiles.iterator().next().getFile());
+            assertEquals(1, r2.getFileManager().getOutputsToCreate().size());
+            assertEquals("so1", r2.getFileManager().getOutputsToCreate().iterator().next().getName());
+            assertEquals(f, r2.getFileManager().getOutputsToCreate().iterator().next().getFile());
 
             f.delete();
         }

@@ -39,6 +39,7 @@ import org.labkey.api.pipeline.WorkDirFactory;
 import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
@@ -1646,6 +1647,10 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             action1.addInput(new File("/input"), "Input");
             action1.addOutput(new File("/output"), "Output", false);
             r._recordedActions.add(action1);
+            r._fileManager = new TaskFileManagerImpl();
+            SequenceOutputFile so = new SequenceOutputFile();
+            so.setName("so1");
+            r._fileManager.addSequenceOutput(so);
 
             File tmp = new File(System.getProperty("java.io.tmpdir"));
             File file = new File(tmp, Resumer.JSON_NAME);
@@ -1661,6 +1666,9 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             assertEquals(new File("/input").toURI(), action1.getInputs().iterator().next().getURI());
             assertEquals(1, action2.getOutputs().size());
             assertEquals(new File("/output").toURI(), action2.getOutputs().iterator().next().getURI());
+
+            assertEquals(1, r2.getFileManager().getOutputsToCreate().size());
+            assertEquals("so1", r2.getFileManager().getOutputsToCreate().iterator().next().getName());
 
             file.delete();
         }

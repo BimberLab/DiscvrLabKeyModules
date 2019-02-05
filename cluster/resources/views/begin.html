@@ -36,6 +36,6 @@ configure your LabKey server to use this (LabKey's core docs will describe this)
 <p/>
 <h3>Testing:</h3>
 To test your configuration, there is a helper that will submit a dummy job to any cluster engines configured on this site.  This should be run after your server has been configured to use the cluster and restarted.  <a href="<%=contextPath%>/cluster<%=containerPath%>/runTestPipeline.view">Click here to run this.</a>
-<pre>
-
-</pre>
+<p/>
+<h3>Other Features:</h3>
+While not related to this module or a cluster, pipeline jobs in LabKey that run on the webserver frequently are unable to properly cancel themselves and get stuck in a 'cancelling' state. Use <a href="<%=contextPath%>/cluster<%=containerPath%>/forcePipelineCancel.view">this link</a> to manually set the status of a 'cancelling' job to 'cancelled'.

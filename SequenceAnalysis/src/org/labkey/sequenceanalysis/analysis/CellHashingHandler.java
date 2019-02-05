@@ -315,14 +315,15 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                     }
                     else
                     {
-                        totals.put(header.get(j), totals.get(header.get(j)) + Integer.parseInt(line[j]));
+                        String headerText = header.get(j - 1);
+                        totals.put(headerText, totals.get(headerText) + Integer.parseInt(line[j]));
                     }
                 }
             }
 
             List<String> intersect = new ArrayList<>(whitelist);
-            whitelist.retainAll(header);
-            whitelist.removeIf(x -> {
+            intersect.retainAll(header);
+            intersect.removeIf(x -> {
                 return totals.get(x) == 0;
             });
 

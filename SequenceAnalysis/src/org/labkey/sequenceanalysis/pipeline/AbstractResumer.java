@@ -70,6 +70,7 @@ abstract public class AbstractResumer implements Serializable
     protected void logInfoBeforeSave()
     {
         _log.debug("total actions: " + _recordedActions.size());
+        _log.debug("total sequence outputs: " + getFileManager().getOutputsToCreate().size());
     }
 
     protected void writeToJson(File outDir) throws PipelineJobException

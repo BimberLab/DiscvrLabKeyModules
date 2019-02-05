@@ -212,7 +212,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             so1.setCreated(new Date());
             so1.setModified(new Date());
 
-            resumer.addSequenceOutput(so1);
+            resumer.getFileManager().addSequenceOutput(so1);
             //TODO: rename output?
 
             resumer.markComplete(ctx);

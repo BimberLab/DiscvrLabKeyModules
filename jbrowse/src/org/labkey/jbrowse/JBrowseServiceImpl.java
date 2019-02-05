@@ -37,7 +37,7 @@ public class JBrowseServiceImpl extends JBrowseService
 
         JsonFile ret = root.prepareOutputFile(u, outputFileId, forceRecreateJson, additionalConfig);
 
-        return ret.getObjectId();
+        return ret == null ? null : ret.getObjectId();
     }
 
     public void reprocessDatabase(Container c, User u, String databaseGuid) throws PipelineValidationException

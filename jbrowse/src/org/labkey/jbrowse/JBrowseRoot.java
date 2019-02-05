@@ -26,15 +26,19 @@ import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.files.FileContentService;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.reader.Readers;
+import org.labkey.api.reports.ExternalScriptEngineDefinition;
+import org.labkey.api.reports.LabkeyScriptEngineManager;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
+import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -132,6 +136,27 @@ public class JBrowseRoot
         return runScript(scriptName, args, null);
     }
 
+    private String getPerlLocation()
+    {
+        LabkeyScriptEngineManager svc = ServiceRegistry.get().getService(LabkeyScriptEngineManager.class);
+        for (ExternalScriptEngineDefinition def : svc.getEngineDefinitions())
+        {
+            if (def.getExtensions() != null && Arrays.stream(def.getExtensions()).anyMatch("pl"::equals))
+            {
+                getLogger().debug("using perl engine path");
+                return def.getExePath();
+            }
+        }
+
+        String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("PERL_HOME");
+        if (path == null)
+        {
+            path = System.getProperty("perl.home", System.getenv("PERL_HOME"));
+        }
+
+        return path == null ? "perl" : new File(path, "perl").getPath();
+    }
+
     private boolean runScript(String scriptName, List<String> args, @Nullable File workingDir) throws IOException
     {
         File scriptFile = new File(JBrowseManager.get().getJBrowseBinDir(), scriptName);
@@ -141,7 +166,12 @@ public class JBrowseRoot
             return false;
         }
 
-        args.add(0, "perl");
+        if (workingDir != null && !workingDir.exists())
+        {
+            workingDir.mkdirs();
+        }
+
+        args.add(0, getPerlLocation());
         args.add(1, scriptFile.getPath());
 
         getLogger().info("preparing jbrowse resource:");
@@ -154,6 +184,12 @@ public class JBrowseRoot
         {
             getLogger().info("using working directory: " + workingDir.getPath());
             pb.directory(workingDir);
+        }
+
+        String path = System.getenv("PATH");
+        if (path != null)
+        {
+            getLogger().debug("using PATH: " + path);
         }
 
         Process p = null;
@@ -267,6 +303,11 @@ public class JBrowseRoot
         if (jsonFile != null)
         {
             File outDir = getOutDirForOutputFile(jsonFile);
+            if (!outDir.exists())
+            {
+                outDir.mkdirs();
+            }
+
             processFile(so.getExpData(), outDir, "data-" + jsonFile.getOutputFile(), jsonFile.getLabel(), additionalConfig, jsonFile.getCategory(), jsonFile.getRefLibraryData());
             if (getTrackListForOutputFile(jsonFile) == null)
             {

@@ -136,33 +136,32 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             File sequenceDir = new File(root.getRootPath(), ".sequences");
             TableInfo tableRefNtSequences = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
             TableSelector ntTs = new TableSelector(tableRefNtSequences, new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
-            final Set<String> expectedSequences = new HashSet<>();
-            for (RefNtSequenceModel m : ntTs.getArrayList(RefNtSequenceModel.class))
-            {
+            final Set<String> expectedSequences = new HashSet<>(10000, 1000);
+            ntTs.forEach(m -> {
                 if (m.getSequenceFile() == null || m.getSequenceFile() == 0)
                 {
                     log.error("sequence record lacks a sequence file Id: " + m.getRowid());
-                    continue;
+                    return;
                 }
 
                 ExpData d = ExperimentService.get().getExpData(m.getSequenceFile());
                 if (d == null || d.getFile() == null)
                 {
                     log.error("file was null for sequence: " + m.getRowid());
-                    continue;
+                    return;
                 }
 
                 if (!d.getFile().exists())
                 {
                     log.error("expected sequence file does not exist for sequence: " + m.getRowid() + " " + m.getName() + ", expected: " + d.getFile().getPath());
-                    continue;
+                    return;
                 }
 
                 if (d.getFile().getAbsolutePath().toLowerCase().startsWith(sequenceDir.getAbsolutePath().toLowerCase()))
                 {
                     expectedSequences.add(d.getFile().getName());
                 }
-            }
+            }, RefNtSequenceModel.class);
 
             if (sequenceDir.exists())
             {
