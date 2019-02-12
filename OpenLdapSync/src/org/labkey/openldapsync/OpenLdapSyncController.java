@@ -114,7 +114,7 @@ public class OpenLdapSyncController extends SpringActionController
                 {
                     JSONObject json = new JSONObject();
                     json.put("dn", e.getDn().getName());
-                    json.put("displayName", e.getDisplayName());
+                    json.put("name", e.getDisplayName());
                     groupsArr.put(json);
                 }
                 resp.put("groups", groupsArr);

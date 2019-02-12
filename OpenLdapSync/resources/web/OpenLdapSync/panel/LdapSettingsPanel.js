@@ -529,7 +529,7 @@ Ext4.define('OpenLdapSync.panel.LdapSettingsPanel', {
 
     getGroupSelectionCfg: function(mode){
         this.groupStore = this.groupStore || Ext4.create('Ext.data.Store', {
-            fields: ['displayName', 'dn'],
+            fields: ['name', 'dn'],
             proxy: {
                 type: 'memory'
             }
@@ -546,7 +546,7 @@ Ext4.define('OpenLdapSync.panel.LdapSettingsPanel', {
                 width: 800,
                 autoScroll: true,
                 labelAlign: 'top',
-                displayField: 'displayName',
+                displayField: 'name',
                 valueField: 'dn',
                 multiSelect: false,
                 store: this.groupStore,
