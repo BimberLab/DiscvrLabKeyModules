@@ -22,6 +22,7 @@ import org.apache.directory.api.ldap.model.exception.LdapException;
 import org.apache.directory.api.ldap.model.exception.LdapOperationException;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
@@ -111,7 +112,10 @@ public class OpenLdapSyncController extends SpringActionController
                 JSONArray groupsArr = new JSONArray();
                 for (LdapEntry e : groups)
                 {
-                    groupsArr.put(e.toJSON());
+                    JSONObject json = new JSONObject();
+                    json.put("dn", e.getDn().getName());
+                    json.put("displayName", e.getDisplayName());
+                    groupsArr.put(json);
                 }
                 resp.put("groups", groupsArr);
             }

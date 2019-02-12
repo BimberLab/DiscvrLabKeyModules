@@ -5,11 +5,7 @@ import org.apache.directory.api.ldap.model.entry.Entry;
 import org.apache.directory.api.ldap.model.exception.LdapInvalidAttributeValueException;
 import org.apache.directory.api.ldap.model.name.Dn;
 import org.apache.log4j.Logger;
-import org.json.JSONObject;
 import org.labkey.api.security.ValidEmail;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -23,7 +19,6 @@ public class LdapEntry
 
     private Entry _entry;
     private LdapSettings _settings;
-    private Map<String, Object> _attributes = new HashMap<>();
 
     protected LdapEntry()
     {
@@ -34,41 +29,6 @@ public class LdapEntry
     {
         _entry = e;
         _settings = settings;
-
-        //TODO: convert most to fields, also allow site config to map field names to concepts
-        _attributes.put("dn", e.getDn().getName());
-        _attributes.put("description", getAttributeSafe(e, "description"));
-        _attributes.put("name", getAttributeSafe(e, "name"));
-
-        _attributes.put("displayName", getAttributeSafe(e, "displayName"));
-        _attributes.put("givenName", getAttributeSafe(e, "givenName"));
-        _attributes.put("sn", getAttributeSafe(e, "sn"));
-        _attributes.put("mail", getAttributeSafe(e, "mail"));
-
-        _attributes.put("sAMAccountName", getAttributeSafe(e, "sAMAccountName"));
-        _attributes.put("objectSid", getAttributeSafe(e, "objectSid"));
-        _attributes.put("objectGUID", getAttributeSafe(e, "objectGUID"));
-    }
-
-    private String getAttributeSafe(Entry e, String attrName)
-    {
-        try
-        {
-            Attribute att = e.get(attrName);
-            return att == null ? null : att.getString();
-        }
-        catch (LdapInvalidAttributeValueException ex)
-        {
-            //ignore?
-        }
-
-        return null;
-    }
-
-    public JSONObject toJSON()
-    {
-        JSONObject json = new JSONObject(_attributes);
-        return json;
     }
 
     public ValidEmail getValidEmail()
