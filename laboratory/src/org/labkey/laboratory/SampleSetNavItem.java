@@ -65,9 +65,7 @@ public class SampleSetNavItem extends AbstractImportingNavItem
         if (!c.hasPermission(u, InsertPermission.class))
             return null;
 
-        ActionURL url = PageFlowUtil.urlProvider(ExperimentUrls.class).getShowUploadMaterialsURL(c);
-        url.addParameter("name", _sampleSet.getName());
-
+        ActionURL url = PageFlowUtil.urlProvider(ExperimentUrls.class).getImportSamplesURL(c, _sampleSet.getName());
         return url;
     }
 
