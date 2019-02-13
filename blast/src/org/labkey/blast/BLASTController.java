@@ -50,8 +50,10 @@ import org.labkey.api.study.assay.AssayFileWriter;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
+import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.blast.model.BlastJob;
 import org.labkey.blast.pipeline.BlastDatabasePipelineJob;
 import org.springframework.validation.BindException;
@@ -61,11 +63,10 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -180,10 +181,8 @@ public class BLASTController extends SpringActionController
         }
 
         @Override
-        public void validate(Object target, Errors errors)
+        public void validateCommand(RunBlastForm form, Errors errors)
         {
-            RunBlastForm form = (RunBlastForm)target;
-
             if (BLASTManager.get().getBinDir() == null)
                 errors.reject(ERROR_MSG, "BLAST bin folder has not been set or is not valid");
 
@@ -262,7 +261,7 @@ public class BLASTController extends SpringActionController
                         File targetDirectory = writer.ensureUploadDirectory(getContainer());
                         File input = writer.findUniqueFileName("blast", targetDirectory);
                         input.createNewFile();
-                        try (BufferedWriter fw = new BufferedWriter(new FileWriter(input)))
+                        try (PrintWriter fw = PrintWriters.getPrintWriter(input))
                         {
                             fw.write(form.getQuery());
                         }
@@ -604,7 +603,7 @@ public class BLASTController extends SpringActionController
                 return;
             }
 
-            try (OutputStreamWriter out = new OutputStreamWriter(response.getOutputStream()))
+            try (OutputStreamWriter out = new OutputStreamWriter(response.getOutputStream(), StringUtilsLabKey.DEFAULT_CHARSET))
             {
                 Map<String, String> headers = new HashMap<>();
 
