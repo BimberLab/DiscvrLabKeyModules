@@ -584,10 +584,9 @@ public class LaboratoryController extends SpringActionController
     public class ProcessAssayDataAction extends AbstractFileUploadAction<ProcessAssayForm>
     {
         @Override
-        public void export(ProcessAssayForm form, HttpServletResponse response, BindException errors) throws Exception
+        protected void setContentType(HttpServletResponse response)
         {
             response.setContentType(ApiJsonWriter.CONTENT_TYPE_JSON);
-            super.export(form, response, errors);
         }
 
         protected File getTargetFile(String filename) throws IOException
@@ -607,7 +606,8 @@ public class LaboratoryController extends SpringActionController
             }
         }
 
-        protected String getResponse(Map<String, Pair<File, String>> files, ProcessAssayForm form) throws UploadException
+        @Override
+        public String getResponse(ProcessAssayForm form, Map<String, Pair<File, String>> files) throws UploadException
         {
             JSONObject resp = new JSONObject();
             try

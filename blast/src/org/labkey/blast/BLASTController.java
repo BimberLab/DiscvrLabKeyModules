@@ -55,6 +55,7 @@ import org.labkey.api.view.NavTree;
 import org.labkey.blast.model.BlastJob;
 import org.labkey.blast.pipeline.BlastDatabasePipelineJob;
 import org.springframework.validation.BindException;
+import org.springframework.validation.Errors;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -173,19 +174,16 @@ public class BLASTController extends SpringActionController
     public class RunBlastAction extends AbstractFileUploadAction<RunBlastForm>
     {
         @Override
-        public void export(RunBlastForm form, HttpServletResponse response, BindException errors) throws Exception
+        protected void setContentType(HttpServletResponse response)
         {
-            if (errors.hasErrors())
-                throw new UploadException("Error", HttpServletResponse.SC_BAD_REQUEST);
-
             response.setContentType(ApiJsonWriter.CONTENT_TYPE_JSON);
-
-            super.export(form, response, errors);
         }
 
         @Override
-        public void validate(RunBlastForm form, BindException errors)
+        public void validate(Object target, Errors errors)
         {
+            RunBlastForm form = (RunBlastForm)target;
+
             if (BLASTManager.get().getBinDir() == null)
                 errors.reject(ERROR_MSG, "BLAST bin folder has not been set or is not valid");
 
@@ -222,7 +220,8 @@ public class BLASTController extends SpringActionController
             }
         }
 
-        protected String getResponse(Map<String, Pair<File, String>> files, RunBlastForm form) throws UploadException
+        @Override
+        public String getResponse(RunBlastForm form, Map<String, Pair<File, String>> files)
         {
             JSONObject resp = new JSONObject();
             Map<String, String> params = new HashMap<>();

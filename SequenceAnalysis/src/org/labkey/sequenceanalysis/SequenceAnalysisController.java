@@ -2259,11 +2259,9 @@ public class SequenceAnalysisController extends SpringActionController
     public class ImportFastaSequencesAction extends AbstractFileUploadAction<ImportFastaSequencesForm>
     {
         @Override
-        public void export(ImportFastaSequencesForm form, HttpServletResponse response, BindException errors) throws Exception
+        protected void setContentType(HttpServletResponse response)
         {
             response.setContentType(ApiJsonWriter.CONTENT_TYPE_JSON);
-
-            super.export(form, response, errors);
         }
 
         protected File getTargetFile(String filename) throws IOException
@@ -2279,7 +2277,8 @@ public class SequenceAnalysisController extends SpringActionController
             return writer.findUniqueFileName(filename, targetDirectory);
         }
 
-        protected String getResponse(Map<String, Pair<File, String>> files, ImportFastaSequencesForm form) throws UploadException
+        @Override
+        public String getResponse(ImportFastaSequencesForm form, Map<String, Pair<File, String>> files)
         {
             JSONObject resp = new JSONObject();
             try
@@ -2551,11 +2550,9 @@ public class SequenceAnalysisController extends SpringActionController
     public class ImportOutputFileAction extends AbstractFileUploadAction<ImportOutputFileForm>
     {
         @Override
-        public void export(ImportOutputFileForm form, HttpServletResponse response, BindException errors) throws Exception
+        protected void setContentType(HttpServletResponse response)
         {
             response.setContentType(ApiJsonWriter.CONTENT_TYPE_JSON);
-
-            super.export(form, response, errors);
         }
 
         protected File getTargetFile(String filename) throws IOException
@@ -2575,7 +2572,8 @@ public class SequenceAnalysisController extends SpringActionController
             }
         }
 
-        protected String getResponse(Map<String, Pair<File, String>> files, ImportOutputFileForm form) throws UploadException
+        @Override
+        public String getResponse(ImportOutputFileForm form, Map<String, Pair<File, String>> files)
         {
             JSONObject resp = new JSONObject();
             try
@@ -2685,11 +2683,9 @@ public class SequenceAnalysisController extends SpringActionController
     public class ImportTrackAction extends AbstractFileUploadAction<ImportTrackForm>
     {
         @Override
-        public void export(ImportTrackForm form, HttpServletResponse response, BindException errors) throws Exception
+        protected void setContentType(HttpServletResponse response)
         {
             response.setContentType(ApiJsonWriter.CONTENT_TYPE_JSON);
-
-            super.export(form, response, errors);
         }
 
         protected File getTargetFile(String filename) throws IOException
@@ -2708,7 +2704,8 @@ public class SequenceAnalysisController extends SpringActionController
             }
         }
 
-        protected String getResponse(Map<String, Pair<File, String>> files, ImportTrackForm form) throws UploadException
+        @Override
+        public String getResponse(ImportTrackForm form, Map<String, Pair<File, String>> files) throws UploadException
         {
             JSONObject resp = new JSONObject();
             if (form.getTrackName() == null || form.getLibraryId() == null)
@@ -2827,11 +2824,9 @@ public class SequenceAnalysisController extends SpringActionController
     public class ImportChainFileAction extends AbstractFileUploadAction<ImportChainFileForm>
     {
         @Override
-        public void export(ImportChainFileForm form, HttpServletResponse response, BindException errors) throws Exception
+        protected void setContentType(HttpServletResponse response)
         {
             response.setContentType(ApiJsonWriter.CONTENT_TYPE_JSON);
-
-            super.export(form, response, errors);
         }
 
         protected File getTargetFile(String filename) throws IOException
@@ -2851,7 +2846,8 @@ public class SequenceAnalysisController extends SpringActionController
             }
         }
 
-        protected String getResponse(Map<String, Pair<File, String>> files, ImportChainFileForm form) throws UploadException
+        @Override
+        public String getResponse(ImportChainFileForm form, Map<String, Pair<File, String>> files)
         {
             JSONObject resp = new JSONObject();
             try
