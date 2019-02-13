@@ -1889,7 +1889,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class StartPipelineJobAction extends ApiAction<AnalyzeForm>
+    public class StartPipelineJobAction extends MutatingApiAction<AnalyzeForm>
     {
         public ApiResponse execute(AnalyzeForm form, BindException errors) throws Exception
         {
