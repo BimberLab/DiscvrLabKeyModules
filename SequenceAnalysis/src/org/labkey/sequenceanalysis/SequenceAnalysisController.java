@@ -2592,7 +2592,7 @@ public class SequenceAnalysisController extends SpringActionController
                     data.save(getUser());
                     params.put("dataid", data.getRowId());
                     params.put("library_id", form.getLibraryId());
-                    if (form.getReadset() > 0)
+                    if (form.getReadset() != null)
                         params.put("readset", form.getReadset());
                     params.put("category", form.getCategory());
 
@@ -2626,7 +2626,7 @@ public class SequenceAnalysisController extends SpringActionController
         private String _description;
         private String _category;
         private int _libraryId;
-        private int _readset;
+        private Integer _readset;
 
         public String getName()
         {
@@ -2658,12 +2658,12 @@ public class SequenceAnalysisController extends SpringActionController
             _libraryId = libraryId;
         }
 
-        public int getReadset()
+        public Integer getReadset()
         {
             return _readset;
         }
 
-        public void setReadset(int readset)
+        public void setReadset(Integer readset)
         {
             _readset = readset;
         }
