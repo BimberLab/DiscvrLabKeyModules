@@ -23,11 +23,12 @@ import org.apache.directory.api.ldap.model.exception.LdapOperationException;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.Marshal;
 import org.labkey.api.action.Marshaller;
+import org.labkey.api.action.MutatingApiAction;
+import org.labkey.api.action.ReadOnlyApiAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.AdminOperationsPermission;
@@ -55,7 +56,7 @@ public class OpenLdapSyncController extends SpringActionController
     }
 
     @RequiresPermission(AdminOperationsPermission.class)
-    public class InitiateLdapSyncAction extends ApiAction<InitiateLdapSyncForm>
+    public class InitiateLdapSyncAction extends MutatingApiAction<InitiateLdapSyncForm>
     {
         public ApiResponse execute(InitiateLdapSyncForm form, BindException errors) throws Exception
         {
@@ -97,7 +98,7 @@ public class OpenLdapSyncController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class ListLdapGroupsAction extends ApiAction<LdapForm>
+    public class ListLdapGroupsAction extends ReadOnlyApiAction<LdapForm>
     {
         public ApiResponse execute(LdapForm form, BindException errors) throws Exception
         {
@@ -480,7 +481,7 @@ public class OpenLdapSyncController extends SpringActionController
     }
 
     @RequiresPermission(AdminOperationsPermission.class)
-    public class TestLdapConnectionAction extends ApiAction<Object>
+    public class TestLdapConnectionAction extends MutatingApiAction<Object>
     {
         public ApiResponse execute(Object form, BindException errors) throws Exception
         {
@@ -529,7 +530,7 @@ public class OpenLdapSyncController extends SpringActionController
     }
 
     @RequiresPermission(AdminOperationsPermission.class)
-    public class GetLdapSettingsAction extends ApiAction<Object>
+    public class GetLdapSettingsAction extends ReadOnlyApiAction<Object>
     {
         public ApiResponse execute(Object form, BindException errors)
         {
@@ -552,7 +553,7 @@ public class OpenLdapSyncController extends SpringActionController
 
     @Marshal(Marshaller.Jackson)
     @RequiresPermission(AdminOperationsPermission.class)
-    public class SetLdapSettingsAction extends ApiAction<LdapForm>
+    public class SetLdapSettingsAction extends MutatingApiAction<LdapForm>
     {
         public ApiResponse execute(LdapForm form, BindException errors)
         {

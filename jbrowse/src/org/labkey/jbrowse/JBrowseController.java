@@ -24,9 +24,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
+import org.labkey.api.action.MutatingApiAction;
+import org.labkey.api.action.ReadOnlyApiAction;
 import org.labkey.api.action.SimpleApiJsonForm;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
@@ -92,7 +93,7 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class GetSettingsAction extends ApiAction<Object>
+    public class GetSettingsAction extends ReadOnlyApiAction<Object>
     {
         public ApiResponse execute(Object form, BindException errors)
         {
@@ -107,7 +108,7 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(AdminOperationsPermission.class)
-    public class SetSettingsAction extends ApiAction<SettingsForm>
+    public class SetSettingsAction extends MutatingApiAction<SettingsForm>
     {
         public ApiResponse execute(SettingsForm form, BindException errors)
         {
@@ -151,7 +152,7 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class CreateDataBaseAction extends ApiAction<DatabaseForm>
+    public class CreateDataBaseAction extends MutatingApiAction<DatabaseForm>
     {
         public ApiResponse execute(DatabaseForm form, BindException errors)
         {
@@ -176,7 +177,7 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class AddDatabaseMemberAction extends ApiAction<DatabaseForm>
+    public class AddDatabaseMemberAction extends MutatingApiAction<DatabaseForm>
     {
         public ApiResponse execute(DatabaseForm form, BindException errors)
         {
@@ -330,7 +331,7 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class ReprocessResourcesAction extends ApiAction<ReprocessResourcesForm>
+    public class ReprocessResourcesAction extends MutatingApiAction<ReprocessResourcesForm>
     {
         public ApiResponse execute(ReprocessResourcesForm form, BindException errors)
         {
@@ -447,7 +448,7 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class ModifyAttributesAction extends ApiAction<SimpleApiJsonForm>
+    public class ModifyAttributesAction extends MutatingApiAction<SimpleApiJsonForm>
     {
         public ApiResponse execute(SimpleApiJsonForm form, BindException errors)
         {
@@ -528,7 +529,7 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetGenotypes extends ApiAction<GetGenotypesForm>
+    public class GetGenotypes extends ReadOnlyApiAction<GetGenotypesForm>
     {
         private List<JsonFile> getJsonFiles(GetGenotypesForm form)
         {

@@ -3,9 +3,10 @@ package org.labkey.GeneticsCore;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
+import org.labkey.api.action.MutatingApiAction;
+import org.labkey.api.action.ReadOnlyApiAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -39,7 +40,7 @@ public class GeneticsCoreController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetNavItemsAction extends ApiAction<Object>
+    public class GetNavItemsAction extends ReadOnlyApiAction<Object>
     {
         public ApiResponse execute(Object form, BindException errors)
         {
@@ -123,7 +124,7 @@ public class GeneticsCoreController extends SpringActionController
     }
 
     @RequiresPermission(UpdatePermission.class)
-    public class CacheAnalysesAction extends ApiAction<CacheAnalysesForm>
+    public class CacheAnalysesAction extends MutatingApiAction<CacheAnalysesForm>
     {
         public ApiResponse execute(CacheAnalysesForm form, BindException errors)
         {
@@ -200,9 +201,8 @@ public class GeneticsCoreController extends SpringActionController
         }
     }
 
-
     @RequiresPermission(UpdatePermission.class)
-    public class CacheHaplotypesAction extends ApiAction<CacheAnalysesForm>
+    public class CacheHaplotypesAction extends MutatingApiAction<CacheAnalysesForm>
     {
         public ApiResponse execute(CacheAnalysesForm form, BindException errors)
         {

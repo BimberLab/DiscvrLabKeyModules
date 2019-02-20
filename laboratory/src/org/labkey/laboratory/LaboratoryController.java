@@ -29,6 +29,8 @@ import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ConfirmAction;
 import org.labkey.api.action.ExportAction;
+import org.labkey.api.action.MutatingApiAction;
+import org.labkey.api.action.ReadOnlyApiAction;
 import org.labkey.api.action.ReturnUrlForm;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
@@ -674,7 +676,7 @@ public class LaboratoryController extends SpringActionController
 
 
     @RequiresPermission(AdminPermission.class)
-    public class PopulateDefaultsAction extends ApiAction<PopulateDefaultsForm>
+    public class PopulateDefaultsAction extends MutatingApiAction<PopulateDefaultsForm>
     {
         public ApiResponse execute(PopulateDefaultsForm form, BindException errors) throws Exception
         {
@@ -712,7 +714,7 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(UpdatePermission.class)
-    public class UpdateWorkbookAction extends ApiAction<UpdateWorkbookForm>
+    public class UpdateWorkbookAction extends MutatingApiAction<UpdateWorkbookForm>
     {
         public ApiResponse execute(UpdateWorkbookForm form, BindException errors) throws Exception
         {
@@ -750,7 +752,7 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(UpdatePermission.class)
-    public class UpdateWorkbookTagsAction extends ApiAction<UpdateWorkbookForm>
+    public class UpdateWorkbookTagsAction extends MutatingApiAction<UpdateWorkbookForm>
     {
         public ApiResponse execute(UpdateWorkbookForm form, BindException errors) throws Exception
         {
@@ -864,7 +866,7 @@ public class LaboratoryController extends SpringActionController
 
 
     @RequiresPermission(UpdatePermission.class)
-    public class SaveTemplateAction extends ApiAction<SaveTemplateForm>
+    public class SaveTemplateAction extends MutatingApiAction<SaveTemplateForm>
     {
         public ApiResponse execute(SaveTemplateForm form, BindException errors) throws Exception
         {
@@ -1048,7 +1050,7 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetDemographicsSourcesAction extends ApiAction<DataSourcesForm>
+    public class GetDemographicsSourcesAction extends ReadOnlyApiAction<DataSourcesForm>
     {
         public ApiResponse execute(DataSourcesForm form, BindException errors)
         {
@@ -1124,7 +1126,7 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetAdditionalDataSourcesAction extends ApiAction<DataSourcesForm>
+    public class GetAdditionalDataSourcesAction extends ReadOnlyApiAction<DataSourcesForm>
     {
         public ApiResponse execute(DataSourcesForm form, BindException errors)
         {
@@ -1242,7 +1244,7 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(LaboratoryAdminPermission.class)
-    public class SetDemographicsSourcesAction extends ApiAction<SetDataSourcesForm>
+    public class SetDemographicsSourcesAction extends MutatingApiAction<SetDataSourcesForm>
     {
         public ApiResponse execute(SetDataSourcesForm form, BindException errors)
         {
@@ -1300,7 +1302,7 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(LaboratoryAdminPermission.class)
-    public class SetAdditionalDataSourcesAction extends ApiAction<SetDataSourcesForm>
+    public class SetAdditionalDataSourcesAction extends MutatingApiAction<SetDataSourcesForm>
     {
         public ApiResponse execute(SetDataSourcesForm form, BindException errors)
         {
@@ -1381,7 +1383,7 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(LaboratoryAdminPermission.class)
-    public class SetUrlDataSourcesAction extends ApiAction<SetUrlDataSourcesForm>
+    public class SetUrlDataSourcesAction extends MutatingApiAction<SetUrlDataSourcesForm>
     {
         public ApiResponse execute(SetUrlDataSourcesForm form, BindException errors)
         {
@@ -1436,7 +1438,7 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetAssayImportHeadersAction extends ApiAction<AssayImportHeadersForm>
+    public class GetAssayImportHeadersAction extends ReadOnlyApiAction<AssayImportHeadersForm>
     {
         public ApiResponse execute(AssayImportHeadersForm form, BindException errors)
         {
@@ -1477,7 +1479,7 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(LaboratoryAdminPermission.class)
-    public class SetItemVisibilityAction extends ApiAction<JsonDataForm>
+    public class SetItemVisibilityAction extends MutatingApiAction<JsonDataForm>
     {
         public ApiResponse execute(JsonDataForm form, BindException errors)
         {
@@ -1530,7 +1532,7 @@ public class LaboratoryController extends SpringActionController
 
 
     @RequiresPermission(LaboratoryAdminPermission.class)
-    public class SetItemDefaultViewAction extends ApiAction<JsonDataForm>
+    public class SetItemDefaultViewAction extends MutatingApiAction<JsonDataForm>
     {
         public ApiResponse execute(JsonDataForm form, BindException errors)
         {
@@ -1563,7 +1565,7 @@ public class LaboratoryController extends SpringActionController
 
 
     @RequiresPermission(LaboratoryAdminPermission.class)
-    public class SetDataBrowserSettingsAction extends ApiAction<JsonDataForm>
+    public class SetDataBrowserSettingsAction extends MutatingApiAction<JsonDataForm>
     {
         public ApiResponse execute(JsonDataForm form, BindException errors)
         {
@@ -1623,7 +1625,7 @@ public class LaboratoryController extends SpringActionController
 
 
     @RequiresPermission(LaboratoryAdminPermission.class)
-    public class SaveAssayDefaultsAction extends ApiAction<JsonDataForm>
+    public class SaveAssayDefaultsAction extends MutatingApiAction<JsonDataForm>
     {
         public ApiResponse execute(JsonDataForm form, BindException errors)
         {
@@ -1655,7 +1657,7 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetDataItemsAction extends ApiAction<GetDataItemsForm>
+    public class GetDataItemsAction extends ReadOnlyApiAction<GetDataItemsForm>
     {
         public ApiResponse execute(GetDataItemsForm form, BindException errors)
         {
@@ -1838,7 +1840,7 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetDataSummaryAction extends ApiAction<DataSummaryForm>
+    public class GetDataSummaryAction extends ReadOnlyApiAction<DataSummaryForm>
     {
         public ApiResponse execute(DataSummaryForm form, BindException errors)
         {
@@ -1914,7 +1916,7 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetSubjectIdSummaryAction extends ApiAction<SubjectSummaryForm>
+    public class GetSubjectIdSummaryAction extends ReadOnlyApiAction<SubjectSummaryForm>
     {
         public ApiResponse execute(SubjectSummaryForm form, BindException errors)
         {
@@ -2256,7 +2258,7 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class MigrateWorkbooksAction extends ApiAction<MigrateWorkbooksForm>
+    public class MigrateWorkbooksAction extends MutatingApiAction<MigrateWorkbooksForm>
     {
         public ApiResponse execute(MigrateWorkbooksForm form, BindException errors) throws Exception
         {

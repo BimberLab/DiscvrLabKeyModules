@@ -17,10 +17,11 @@
 package org.labkey.omerointegration;
 
 import org.apache.log4j.Logger;
-import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ExportAction;
+import org.labkey.api.action.MutatingApiAction;
+import org.labkey.api.action.ReadOnlyApiAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.security.IgnoresTermsOfUse;
@@ -46,7 +47,7 @@ public class OmeroIntegrationController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class GetSettingsAction extends ApiAction<Object>
+    public class GetSettingsAction extends ReadOnlyApiAction<Object>
     {
         public ApiResponse execute(Object form, BindException errors)
         {
@@ -58,7 +59,7 @@ public class OmeroIntegrationController extends SpringActionController
     }
 
     @RequiresSiteAdmin
-    public class SetSettingsAction extends ApiAction<SettingsForm>
+    public class SetSettingsAction extends MutatingApiAction<SettingsForm>
     {
         public ApiResponse execute(SettingsForm form, BindException errors)
         {
