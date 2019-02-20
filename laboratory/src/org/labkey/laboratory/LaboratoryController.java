@@ -1657,7 +1657,7 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetDataItemsAction extends ReadOnlyApiAction<GetDataItemsForm>
+    public class GetDataItemsAction extends MutatingApiAction<GetDataItemsForm>
     {
         public ApiResponse execute(GetDataItemsForm form, BindException errors)
         {

@@ -180,6 +180,9 @@ public class LdapSettings
         if (!ret.containsKey(PORT_PROP))
             ret.put(PORT_PROP, (useSSL ? 636 : 389));
 
+        if (isMissingOrEmpty(ret, MEMBER_SYNC_PROP))
+            ret.put(MEMBER_SYNC_PROP, MemberSyncMode.noAction.name());
+
         return ret;
     }
 
