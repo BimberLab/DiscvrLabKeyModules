@@ -911,7 +911,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(UpdatePermission.class)
-    public class SaveAnalysisAsTemplateAction extends ApiAction<SaveAnalysisAsTemplateForm>
+    public class SaveAnalysisAsTemplateAction extends MutatingApiAction<SaveAnalysisAsTemplateForm>
     {
         public ApiResponse execute(SaveAnalysisAsTemplateForm form, BindException errors) throws Exception
         {
@@ -1171,7 +1171,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class AnalyzeBamAction extends ApiAction<AnalyzeBamForm>
+    public class AnalyzeBamAction extends MutatingApiAction<AnalyzeBamForm>
     {
         public ApiResponse execute(AnalyzeBamForm form, BindException errors) throws Exception
         {
@@ -2092,7 +2092,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class CreateReferenceLibraryAction extends ApiAction<CreateReferenceLibraryForm>
+    public class CreateReferenceLibraryAction extends MutatingApiAction<CreateReferenceLibraryForm>
     {
         public ApiResponse execute(CreateReferenceLibraryForm form, BindException errors) throws Exception
         {
@@ -2184,6 +2184,8 @@ public class SequenceAnalysisController extends SpringActionController
         private String[] _intervals;
         private boolean _skipCacheIndexes = false;
         private boolean _skipTriggers = false;
+        private String _genomeBuild;
+        private String _compareSpecies;
 
         public String getName()
         {
@@ -2254,6 +2256,26 @@ public class SequenceAnalysisController extends SpringActionController
         {
             _skipTriggers = skipTriggers;
         }
+
+        public String getGenomeBuild()
+        {
+            return _genomeBuild;
+        }
+
+        public void setGenomeBuild(String genomeBuild)
+        {
+            _genomeBuild = genomeBuild;
+        }
+
+        public String getCompareSpecies()
+        {
+            return _compareSpecies;
+        }
+
+        public void setCompareSpecies(String compareSpecies)
+        {
+            _compareSpecies = compareSpecies;
+        }
     }
 
     @RequiresPermission(InsertPermission.class)
@@ -2320,7 +2342,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class ImportReferenceSequencesAction extends ApiAction<ImportFastaSequencesForm>
+    public class ImportReferenceSequencesAction extends MutatingApiAction<ImportFastaSequencesForm>
     {
         @Override
         public Object execute(ImportFastaSequencesForm form, BindException errors) throws Exception
@@ -3118,7 +3140,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class RecreateReferenceLibraryAction extends ApiAction<RecreateReferenceLibraryForm>
+    public class RecreateReferenceLibraryAction extends MutatingApiAction<RecreateReferenceLibraryForm>
     {
         public ApiResponse execute(RecreateReferenceLibraryForm form, BindException errors)
         {
@@ -3712,7 +3734,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class RunSequenceHandlerAction extends ApiAction<RunSequenceHandlerForm>
+    public class RunSequenceHandlerAction extends MutatingApiAction<RunSequenceHandlerForm>
     {
         public ApiResponse execute(RunSequenceHandlerForm form, BindException errors) throws Exception
         {
@@ -3904,7 +3926,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class ImportOutputFilesAction extends ApiAction<ImportOutputFilesForm>
+    public class ImportOutputFilesAction extends MutatingApiAction<ImportOutputFilesForm>
     {
         public ApiResponse execute(ImportOutputFilesForm form, BindException errors) throws Exception
         {
@@ -4622,7 +4644,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public static class ConcatenateSequencesAction extends ApiAction<ConcatenateSequencesForm>
+    public static class ConcatenateSequencesAction extends MutatingApiAction<ConcatenateSequencesForm>
     {
         @Override
         public Object execute(ConcatenateSequencesForm form, BindException errors) throws Exception
@@ -4701,7 +4723,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class ImportSequenceTracksAction extends ApiAction<ImportTracksForm>
+    public class ImportSequenceTracksAction extends MutatingApiAction<ImportTracksForm>
     {
         public ApiResponse execute(ImportTracksForm form, BindException errors) throws Exception
         {
@@ -4799,7 +4821,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class SetSequenceImportDefaultsAction extends ApiAction<SetSequenceImportDefaultsForm>
+    public class SetSequenceImportDefaultsAction extends MutatingApiAction<SetSequenceImportDefaultsForm>
     {
         public static final String INPUT_FILE_TREATMENT = "inputFileTreatment";
 
@@ -4831,9 +4853,9 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class GetSamplesFromVcfAction extends ApiAction<GetSamplesFromVcfForm>
+    public class GetSamplesFromVcfAction extends ApiAction<OutputFilesForm>
     {
-        public ApiResponse execute(GetSamplesFromVcfForm form, BindException errors) throws Exception
+        public ApiResponse execute(OutputFilesForm form, BindException errors) throws Exception
         {
             Map<String, Object> resp = new HashMap<>();
 
@@ -4882,7 +4904,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    public static class GetSamplesFromVcfForm
+    public static class OutputFilesForm
     {
         Integer[] _outputFileIds;
 
@@ -4894,6 +4916,92 @@ public class SequenceAnalysisController extends SpringActionController
         public void setOutputFileIds(Integer[] outputFileIds)
         {
             _outputFileIds = outputFileIds;
+        }
+    }
+
+    @RequiresPermission(InsertPermission.class)
+    @CSRF
+    public class DownloadLoupeDataAction extends ExportAction<OutputFilesForm>
+    {
+        @Override
+        public void export(OutputFilesForm form, HttpServletResponse response, BindException errors) throws Exception
+        {
+            Map<String, Set<File>> toExport = new HashMap<>();
+
+            for (Integer rowId : form.getOutputFileIds())
+            {
+                SequenceOutputFile so = SequenceOutputFile.getForId(rowId);
+                if (so != null)
+                {
+                    File loupe = so.getFile();
+                    if (!loupe.exists())
+                    {
+                        errors.reject(ERROR_MSG, "Missing file: " + loupe.getPath());
+                        return;
+                    }
+
+                    String name = FileUtil.makeLegalName(so.getName());
+                    Set<File> toAdd = toExport.getOrDefault(name, new HashSet<>());
+                    for (String dir : Arrays.asList("filtered_feature_bc_matrix", "raw_feature_bc_matrix", "filtered_gene_bc_matrices", "raw_gene_bc_matrices"))
+                    {
+                        File subDir = new File(loupe.getParentFile(), dir);
+                        if (subDir.exists())
+                        {
+                            toAdd.add(subDir);
+                        }
+                    }
+
+                    toExport.put(name, toAdd);
+                }
+                else
+                {
+                    errors.reject(ERROR_MSG, "Unable to find output file with ID: " + rowId);
+                    return;
+                }
+            }
+
+            PageFlowUtil.prepareResponseForFile(response, Collections.emptyMap(), "LoupeData.zip", true);
+            try (ZipOutputStream zOut = new ZipOutputStream(response.getOutputStream()))
+            {
+                for (String dir : toExport.keySet())
+                {
+                    String prefix = dir + "/";
+                    for (File f : toExport.get(dir))
+                    {
+                        try
+                        {
+                            addToArchive(zOut, f, prefix);
+                        }
+                        catch (Exception e)
+                        {
+                            _log.error(e);
+                            errors.reject(ERROR_MSG, e.getMessage());
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void addToArchive(ZipOutputStream zOut, File srcFile, String prefix) throws IOException
+        {
+            if (srcFile.isDirectory())
+            {
+                File[] files = srcFile.listFiles();
+                for (int i = 0; i < files.length; i++)
+                {
+                    addToArchive(zOut, files[i], prefix + srcFile.getName() + "/");
+                }
+            }
+            else
+            {
+                try (FileInputStream in = new FileInputStream(srcFile))
+                {
+                    zOut.putNextEntry(new ZipEntry(prefix + srcFile.getName()));
+                    IOUtils.copy(in, zOut);
+                    zOut.closeEntry();
+                }
+            }
         }
     }
 }

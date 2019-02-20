@@ -882,7 +882,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             }
             else if (formats.size() > 1)
             {
-                job.getLogger().warn("ambigous encoding detected: " + input.getPath() + ". matched:");
+                job.getLogger().warn("ambiguous encoding detected: " + input.getPath() + ". matched:");
                 for (FastqQualityFormat fmt : formats)
                 {
                     job.getLogger().warn(fmt.name());

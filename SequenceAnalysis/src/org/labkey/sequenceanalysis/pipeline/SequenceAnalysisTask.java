@@ -17,8 +17,10 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpProtocol;
@@ -33,6 +35,7 @@ import org.labkey.api.pipeline.WorkDirFactory;
 import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -154,15 +157,28 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             SequenceReadsetImpl rs = getPipelineJob().getReadset();
             String basename = rs.getLegalFileName();
 
-            analysisModel = new AnalysisModelImpl();
-            analysisModel.setContainer(getJob().getContainer().getId());
+            //Note: allow for the possibility of job failure and restart.  if an analysis record exists from this job and readset, re-use:
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("runId"), runId);
+            filter.addCondition(FieldKey.fromString("readset"), rs.getReadsetId());
+            TableSelector ts = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_ANALYSES), filter, null);
+            if (ts.exists())
+            {
+                analysisModel = ts.getObject(AnalysisModelImpl.class);
+                getPipelineJob().getLogger().debug("re-using existing analysis record: " + analysisModel.getRowId());
+            }
+            else
+            {
+                analysisModel = new AnalysisModelImpl();
+                analysisModel.setContainer(getJob().getContainer().getId());
+                analysisModel.setDescription(taskHelper.getSettings().getJobDescription());
+                analysisModel.setRunId(runId);
+                analysisModel.setReadset(rs.getReadsetId());
+            }
+
             analysisModel.setCreatedby(getJob().getUser().getUserId());
             analysisModel.setCreated(new Date());
             analysisModel.setModifiedby(getJob().getUser().getUserId());
             analysisModel.setModified(new Date());
-            analysisModel.setDescription(taskHelper.getSettings().getJobDescription());
-            analysisModel.setRunId(runId);
-            analysisModel.setReadset(rs.getReadsetId());
 
             //find BAM
             List<? extends ExpData> datas = run.getInputDatas(SequenceAlignmentTask.FINAL_BAM_ROLE, ExpProtocol.ApplicationType.ExperimentRunOutput);
@@ -176,14 +192,18 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                         if (found)
                         {
                             getJob().getLogger().warn("ERROR: More than 1 matching BAM found for basename: " + basename);
-                            getJob().getLogger().warn("BAM was: " + d.getFile().getPath());
+                            getJob().getLogger().warn("Duplicate BAM was: " + d.getFile().getPath());
                         }
 
                         if (!d.getFile().exists())
-                            throw new PipelineJobException("Unable to find file: " + d.getFile().getPath());
-
-                        analysisModel.setAlignmentFile(d.getRowId());
-                        found = true;
+                        {
+                            getJob().getLogger().warn("BAM registered as output does not exist: " + d.getFile().getPath());
+                        }
+                        else
+                        {
+                            analysisModel.setAlignmentFile(d.getRowId());
+                            found = true;
+                        }
                     }
                 }
             }
@@ -342,20 +362,18 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
 
         getJob().getLogger().info("creating analysis record for BAM: " + bam.getName());
         TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
-        analysisModel = Table.insert(getJob().getUser(), ti, analysisModel);
-
-        getJob().getLogger().info("created analysis: " + analysisModel.getRowId());
+        if (analysisModel.getRowId() == null)
+        {
+            analysisModel = Table.insert(getJob().getUser(), ti, analysisModel);
+            getJob().getLogger().info("created analysis: " + analysisModel.getRowId());
+        }
+        else
+        {
+            getJob().getLogger().info("re-using existing analysis: " + analysisModel.getRowId());
+        }
 
         if (!discardBam)
         {
-            SequenceOutputFile so = new SequenceOutputFile();
-            so.setName(bam.getName());
-            so.setCategory("Alignment");
-            so.setAnalysis_id(analysisModel.getAnalysisId());
-            so.setReadset(analysisModel.getReadset());
-            so.setLibrary_id(analysisModel.getLibrary_Id());
-            AlignmentStep alignmentStep = taskHelper.getSingleStep(AlignmentStep.class).create(taskHelper);
-            so.setDescription("Aligner: " + alignmentStep.getProvider().getName());
             ExpData d = ExperimentService.get().getExpDataByURL(bam, getJob().getContainer());
             if (d == null)
             {
@@ -366,11 +384,31 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                 d.setName(bam.getName());
                 d.save(getJob().getUser());
             }
-            so.setDataId(d.getRowId());
-            so.setContainer(getJob().getContainerId());
-            so.setRunId(runId);
 
-            Table.insert(getJob().getUser(), SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), so);
+            //check if this has already been created:
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("dataId"), d.getRowId());
+            filter.addCondition(FieldKey.fromString("analysis_id"), analysisModel.getRowId());
+            filter.addCondition(FieldKey.fromString("category"), "Alignment");
+            if (new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), filter, null).exists())
+            {
+                getJob().getLogger().debug("existing alignment output found, will not re-create");
+            }
+            else
+            {
+                SequenceOutputFile so = new SequenceOutputFile();
+                so.setName(bam.getName());
+                so.setCategory("Alignment");
+                so.setAnalysis_id(analysisModel.getAnalysisId());
+                so.setReadset(analysisModel.getReadset());
+                so.setLibrary_id(analysisModel.getLibrary_Id());
+                AlignmentStep alignmentStep = taskHelper.getSingleStep(AlignmentStep.class).create(taskHelper);
+                so.setDescription("Aligner: " + alignmentStep.getProvider().getName());
+                so.setDataId(d.getRowId());
+                so.setContainer(getJob().getContainerId());
+                so.setRunId(runId);
+
+                Table.insert(getJob().getUser(), SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), so);
+            }
         }
         else
         {

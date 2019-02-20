@@ -42,6 +42,7 @@ import org.labkey.sequenceanalysis.analysis.BamCleanupHandler;
 import org.labkey.sequenceanalysis.analysis.BamHaplotypeHandler;
 import org.labkey.sequenceanalysis.analysis.CellHashingHandler;
 import org.labkey.sequenceanalysis.analysis.CellRangerAggrHandler;
+import org.labkey.sequenceanalysis.analysis.CellRangerRawDataHandler;
 import org.labkey.sequenceanalysis.analysis.CellRangerReanalysisHandler;
 import org.labkey.sequenceanalysis.analysis.CombineStarGeneCountsHandler;
 import org.labkey.sequenceanalysis.analysis.CombineSubreadGeneCountsHandler;
@@ -313,6 +314,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new RecalculateSequenceMetricsHandler());
         SequenceAnalysisService.get().registerFileHandler(new CellRangerReanalysisHandler());
         SequenceAnalysisService.get().registerFileHandler(new CellRangerAggrHandler());
+        SequenceAnalysisService.get().registerFileHandler(new CellRangerRawDataHandler());
         SequenceAnalysisService.get().registerFileHandler(new ListVcfSamplesHandler());
 
         SequenceAnalysisService.get().registerReadsetHandler(new MultiQCHandler());

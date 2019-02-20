@@ -444,7 +444,7 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler<S
                                             line[0],  //sequence name
                                             String.valueOf(Integer.parseInt(line[1]) - 1),  //start, 0-based
                                             line[1],  //end, 1-based
-                                            "Methlyation p-value", //name
+                                            "p-value", //name
                                             line[2],  //pval
                                             "+",      //strand
                                     });
@@ -469,7 +469,7 @@ public class MethylationRateComparisonHandler implements SequenceOutputHandler<S
                     ctx.getLogger().info("sorting output");
                     File sorted = new File(ctx.getOutputDir(), "tmp.bed");
                     CommandWrapper wrapper = SequencePipelineService.get().getCommandWrapper(ctx.getLogger());
-                    wrapper.execute(Arrays.asList("/bin/sh", "-c", "cat '" + finalOut.getPath() + "' | grep -v '^#' | sort -V -k1,1 -k2,2n"), ProcessBuilder.Redirect.appendTo(sorted));
+                    wrapper.execute(Arrays.asList("/bin/sh", "-c", "cat '" + finalOut.getPath() + "' | grep -v '^#' | sort -k1,1 -k2,2n -k3,3n"), ProcessBuilder.Redirect.appendTo(sorted));
                     finalOut.delete();
                     FileUtils.moveFile(sorted, finalOut);
                 }
