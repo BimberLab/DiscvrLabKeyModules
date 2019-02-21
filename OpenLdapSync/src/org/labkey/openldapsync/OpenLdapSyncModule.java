@@ -30,9 +30,11 @@ import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.security.permissions.AdminOperationsPermission;
 import org.labkey.api.settings.AdminConsole;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.openldapsync.ldap.LdapScheduler;
 import org.labkey.openldapsync.ldap.LdapSyncAuditProvider;
+import org.labkey.openldapsync.ldap.LdapSyncRunner;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -111,5 +113,11 @@ public class OpenLdapSyncModule extends SpringModule
     public @NotNull Collection<String> getSchemaNames()
     {
         return Collections.unmodifiableSet(Collections.singleton(OpenLdapSyncSchema.NAME));
+    }
+
+    @Override
+    public @NotNull Set<Class> getIntegrationTests()
+    {
+        return PageFlowUtil.set(LdapSyncRunner.TestCase.class);
     }
 }

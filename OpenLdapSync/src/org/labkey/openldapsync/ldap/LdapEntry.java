@@ -18,11 +18,12 @@ public class LdapEntry
     private static final Logger _log = Logger.getLogger(LdapEntry.class);
 
     private Entry _entry;
-    private LdapSettings _settings;
+    protected LdapSettings _settings;
 
-    protected LdapEntry()
+    //testing purposes only
+    protected LdapEntry(LdapSettings settings)
     {
-        //testing purposes only
+        _settings = settings;
     }
 
     public LdapEntry(Entry e, LdapSettings settings)
@@ -51,16 +52,7 @@ public class LdapEntry
 
     public String getEmail()
     {
-        try
-        {
-            Attribute a = _entry.get(_settings.getEmailMapping());
-            return a == null ? null : a.getString();
-        }
-        catch (LdapInvalidAttributeValueException e)
-        {
-            //not sure what's best here
-        }
-        return null;
+        return getAttribute(_settings.getEmailMapping());
     }
 
     public boolean isEnabled()
@@ -68,108 +60,71 @@ public class LdapEntry
         if (!_settings.shouldReadUserAccountControl())
             return true;
 
+        String a = getAttribute("userAccountControl");
+        if (a == null)
+        {
+            //only report this error for users.
+            if (_entry.hasObjectClass(_settings.getUserObjectClass()))
+            {
+                _log.info("Unable to determine if LDAP user is active, lacked userAccountControl attribute: " + getDisplayName() + " / " + getDn());
+            }
+
+            return true;
+        }
+
         try
         {
-            Attribute a = _entry.get("userAccountControl");
-            if (a == null || a.getString() == null)
-            {
-                //only report this error for users.
-                if (_entry.hasObjectClass(_settings.getUserObjectClass()))
-                {
-                    _log.info("Unable to determine if LDAP user is active, lacked userAccountControl attribute: " + getDisplayName() + " / " + getDn());
-                }
-
-                return true;
-            }
-
-            try
-            {
-                Integer value = Integer.parseInt(a.getString());
-                return (value.intValue() & 2) == 0;
-            }
-            catch (NumberFormatException e)
-            {
-                _log.error("Invalid value for userAccountControl: " + a.getString() + " for user: " + getEmail());
-                return false;
-            }
+            Integer value = Integer.parseInt(a);
+            return (value.intValue() & 2) == 0;
         }
-        catch (LdapInvalidAttributeValueException e)
+        catch (NumberFormatException e)
         {
-            //not sure what's best here
+            _log.error("Invalid value for userAccountControl: " + a + " for user: " + getEmail());
+            return false;
         }
-        return true;
     }
 
     public String getDisplayName()
     {
-        try
-        {
-            Attribute a = _entry.get(_settings.getDisplayNameMapping());
-            if (a == null)
-                a = _entry.get("name");
+        String a = getAttribute(_settings.getDisplayNameMapping());
+        if (a == null)
+            a = getAttribute("name");
 
-            return a == null ? null : a.getString();
-        }
-        catch (LdapInvalidAttributeValueException e)
-        {
-            //not sure what's best here
-        }
-        return null;
+        return a;
     }
 
-    public String getLastName() throws LdapInvalidAttributeValueException
+    public String getLastName()
+    {
+        return getAttribute(_settings.getLastNameMapping());
+    }
+
+    public String getFirstName()
+    {
+        return getAttribute(_settings.getFirstNameMapping());
+    }
+
+    public String getPhone()
+    {
+        return getAttribute(_settings.getPhoneMapping());
+    }
+
+    public String getUID()
+    {
+        return getAttribute(_settings.getUIDMapping());
+    }
+
+    protected String getAttribute(String alias)
     {
         try
         {
-            Attribute a = _entry.get(_settings.getLastNameMapping());
+            Attribute a = _entry.get(alias);
             return a == null ? null : a.getString();
         }
         catch (LdapInvalidAttributeValueException e)
         {
-            //not sure what's best here
+            _log.error("Invalid LDAP attribute for: " + alias, e);
         }
-        return null;
-    }
 
-    public String getFirstName() throws LdapInvalidAttributeValueException
-    {
-        try
-        {
-            Attribute a = _entry.get(_settings.getFirstNameMapping());
-            return a == null ? null : a.getString();
-        }
-        catch (LdapInvalidAttributeValueException e)
-        {
-            //not sure what's best here
-        }
-        return null;
-    }
-
-    public String getPhone() throws LdapInvalidAttributeValueException
-    {
-        try
-        {
-            Attribute a = _entry.get(_settings.getPhoneMapping());
-            return a == null ? null : a.getString();
-        }
-        catch (LdapInvalidAttributeValueException e)
-        {
-            //not sure what's best here
-        }
-        return null;
-    }
-
-    public String getUID() throws LdapInvalidAttributeValueException
-    {
-        try
-        {
-            Attribute a = _entry.get(_settings.getUIDMapping());
-            return a == null ? null : a.getString();
-        }
-        catch (LdapInvalidAttributeValueException e)
-        {
-            //not sure what's best here
-        }
         return null;
     }
 }

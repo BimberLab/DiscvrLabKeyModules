@@ -72,7 +72,7 @@ public class LdapSettings
 
     public LdapSettings()
     {
-        _settings = getSettingsMap();
+        _settings = createSettingsMap();
     }
 
     public static void setLdapSettings(Map<String, String> props, Map<String, String> encryptedProps) throws ConfigurationException
@@ -117,6 +117,11 @@ public class LdapSettings
     }
 
     public Map<String, Object> getSettingsMap()
+    {
+        return Collections.unmodifiableMap(_settings);
+    }
+
+    public Map<String, Object> createSettingsMap()
     {
         Map<String, Object> ret = new HashMap<>();
 
@@ -184,6 +189,12 @@ public class LdapSettings
             ret.put(MEMBER_SYNC_PROP, MemberSyncMode.noAction.name());
 
         return ret;
+    }
+
+    //for automated testing purposes
+    protected Map<String, Object> getMutableSettings()
+    {
+        return _settings;
     }
 
     private boolean isMissingOrEmpty(Map<String, Object> ret, String prop)
