@@ -35,7 +35,7 @@ Ext4.define('OpenLdapSync.panel.LdapSettingsPanel', {
 
         LABKEY.Ajax.request({
             url : LABKEY.ActionURL.buildURL('openldapsync', 'getLdapSettings'),
-            method : 'GET',
+            method : 'POST',
             success: LABKEY.Utils.getCallbackWrapper(this.onLoad, this),
             failure: LABKEY.Utils.getCallbackWrapper(this.onError, this)
         });
@@ -127,7 +127,7 @@ Ext4.define('OpenLdapSync.panel.LdapSettingsPanel', {
 
                         LABKEY.Ajax.request({
                             url : LABKEY.ActionURL.buildURL('openldapsync', 'testLdapConnection'),
-                            method : 'GET',
+                            method : 'POST',
                             success: LABKEY.Utils.getCallbackWrapper(function(response){
                                 Ext4.Msg.hide();
                                 Ext4.Msg.alert('Success', 'Authentication was successful');

@@ -38,7 +38,7 @@ Ext4.onReady(function (){
             loadData: function(){
                 LABKEY.Ajax.request({
                     url: LABKEY.ActionURL.buildURL('blast', 'getSettings', null),
-                    method : 'GET',
+                    method : 'POST',
                     scope: this,
                     failure: LDK.Utils.getErrorCallback(),
                     success: this.onLoad

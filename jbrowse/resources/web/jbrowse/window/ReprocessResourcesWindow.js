@@ -70,6 +70,7 @@ Ext4.define('JBrowse.window.ReprocessResourcesWindow', {
 
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('jbrowse', 'reprocessResources'),
+            method: 'POST',
             jsonData: jsonData,
             scope: this,
             success: function(){

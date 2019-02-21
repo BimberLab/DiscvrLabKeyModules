@@ -32,8 +32,9 @@ SequenceAnalysis.Utils = new function(){
                 params.includeAll = config.includeHidden;
 
             var requestConfig = {
-                url : LABKEY.ActionURL.buildURL('sequenceanalysis', 'getDataItems', config.containerPath, params),
-                method : 'GET',
+                url : LABKEY.ActionURL.buildURL('sequenceanalysis', 'getDataItems', config.containerPath),
+                method : 'POST',
+                jsonData: params,
                 failure: LDK.Utils.getErrorCallback({
                     callback: config.failure
                 }),

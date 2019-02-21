@@ -90,6 +90,7 @@ Ext4.define('SequenceAnalysis.window.CompareSequencesWindow', {
 
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'compareFastaSequences'),
+            method: 'POST',
             jsonData: {
                 fasta: fasta,
                 category: category,

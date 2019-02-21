@@ -529,7 +529,7 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetGenotypes extends ReadOnlyApiAction<GetGenotypesForm>
+    public class GetGenotypesAction extends ReadOnlyApiAction<GetGenotypesForm>
     {
         private List<JsonFile> getJsonFiles(GetGenotypesForm form)
         {

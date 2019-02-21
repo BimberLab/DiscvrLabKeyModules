@@ -76,7 +76,11 @@ Ext4.define('SequenceAnalysis.window.VcfSampleWindow', {
 
         Ext4.Msg.wait('Loading...');
         LABKEY.Ajax.request({
-            url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'getSamplesFromVcf', null, {outputFileIds: this.outputFileIds}),
+            url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'getSamplesFromVcf', null),
+            method: 'POST',
+            jsonData: {
+                outputFileIds: this.outputFileIds
+            },
             failure: LABKEY.Utils.getCallbackWrapper(LDK.Utils.getErrorCallback(), this),
             scope: this,
             success: LABKEY.Utils.getCallbackWrapper(this.onLoad, this)

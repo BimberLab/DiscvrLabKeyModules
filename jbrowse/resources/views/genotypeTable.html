@@ -6,7 +6,14 @@
         var stop = LABKEY.ActionURL.getParameter("stop");
 
         LABKEY.Ajax.request({
-            url: LABKEY.ActionURL.buildURL('jbrowse', 'getGenotypes', null, {trackId: trackId, chr: chr, start: start, stop: stop}),
+            url: LABKEY.ActionURL.buildURL('jbrowse', 'getGenotypes', null),
+            method: 'POST',
+            jsonData: {
+                trackId: trackId,
+                chr: chr,
+                start: start,
+                stop: stop
+            },
             scope: this,
             failure: LDK.Utils.getErrorCallback(),
             success: LABKEY.Utils.getCallbackWrapper(function(response){

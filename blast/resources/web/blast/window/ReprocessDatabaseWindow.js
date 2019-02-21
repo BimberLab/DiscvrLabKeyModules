@@ -48,6 +48,7 @@ Ext4.define('BLAST.window.ReprocessDatabaseWindow', {
 
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('blast', 'recreateDatabase'),
+            method: 'POST',
             jsonData: {
                 databaseIds: this.databaseIds
             },

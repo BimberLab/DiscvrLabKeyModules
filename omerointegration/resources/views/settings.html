@@ -31,7 +31,7 @@ Ext4.onReady(function (){
             loadData: function(){
                 LABKEY.Ajax.request({
                     url: LABKEY.ActionURL.buildURL('omerointegration', 'getSettings', null),
-                    method : 'GET',
+                    method : 'POST',
                     scope: this,
                     failure: LABKEY.Utils.getCallbackWrapper(function(response){
                         Ext4.Msg.alert('Error', response.exception || 'There was an error with this request');

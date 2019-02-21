@@ -117,7 +117,7 @@ Ext4.define('GeneticsCore.window.PublishResultsWindow', {
         Ext4.Msg.wait('Saving...');
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('geneticscore', this.actionName, null),
-            method: 'post',
+            method: 'POST',
             timeout: 10000000,
             scope: this,
             jsonData: {

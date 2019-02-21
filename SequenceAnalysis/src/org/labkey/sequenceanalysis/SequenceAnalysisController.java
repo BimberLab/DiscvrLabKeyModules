@@ -1404,7 +1404,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetAASnps extends ReadOnlyApiAction<AASNPForm>
+    public class GetAASnpsAction extends ReadOnlyApiAction<AASNPForm>
     {
         public ApiResponse execute(AASNPForm form, BindException errors) throws Exception
         {

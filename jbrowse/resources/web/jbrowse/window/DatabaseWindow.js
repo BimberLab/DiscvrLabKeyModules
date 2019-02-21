@@ -257,6 +257,7 @@ Ext4.define('JBrowse.window.DatabaseWindow', {
         Ext4.Msg.wait('Saving...');
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('jbrowse', (mode == 'createNew' ? 'createDatabase' : 'addDatabaseMember'), containerPath),
+            method: 'POST',
             jsonData: vals,
             scope: this,
             success: function(){

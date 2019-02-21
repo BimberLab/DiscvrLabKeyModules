@@ -26,6 +26,7 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 
 		LABKEY.Ajax.request({
 			url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'getAnalysisToolDetails'),
+			method: 'POST',
 			scope: this,
 			success: LABKEY.Utils.getCallbackWrapper(this.onDataLoad, this),
 			failure: LDK.Utils.getErrorCallback()

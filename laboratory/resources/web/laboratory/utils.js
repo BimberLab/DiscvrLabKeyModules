@@ -37,8 +37,9 @@ Laboratory.Utils = new function(){
                 params.includeAll = config.includeHidden;
 
             var requestConfig = {
-                url : LABKEY.ActionURL.buildURL('laboratory', 'getDataItems', config.containerPath, params),
-                method : 'GET',
+                url : LABKEY.ActionURL.buildURL('laboratory', 'getDataItems', config.containerPath),
+                method : 'POST',
+                jsonData: params,
                 failure: LDK.Utils.getErrorCallback({
                     callback: config.failure
                 }),
@@ -128,8 +129,9 @@ Laboratory.Utils = new function(){
                 params.assayId = config.assayId;
 
             var requestConfig = {
-                url : LABKEY.ActionURL.buildURL('laboratory', 'getImportMethods', config.containerPath, params),
-                method : 'GET',
+                url : LABKEY.ActionURL.buildURL('laboratory', 'getImportMethods', config.containerPath),
+                method : 'POST',
+                jsonData: params,
                 success: LABKEY.Utils.getCallbackWrapper(LABKEY.Utils.getOnSuccess(config), config.scope),
                 failure: LDK.Utils.getErrorCallback()
             }
@@ -152,8 +154,9 @@ Laboratory.Utils = new function(){
                 params.providers = config.providers
 
             var requestConfig = {
-                url : LABKEY.ActionURL.buildURL('laboratory', 'getDataSummary', config.containerPath, params),
-                method : 'GET',
+                url : LABKEY.ActionURL.buildURL('laboratory', 'getDataSummary', config.containerPath),
+                method : 'POST',
+                jsonData: params,
                 success: LABKEY.Utils.getCallbackWrapper(LABKEY.Utils.getOnSuccess(config), config.scope),
                 failure: LDK.Utils.getErrorCallback({
                     callback: config.failure
@@ -186,8 +189,9 @@ Laboratory.Utils = new function(){
             params.subjectIds = config.subjectIds;
 
             var requestConfig = {
-                url : LABKEY.ActionURL.buildURL('laboratory', 'getSubjectIdSummary', config.containerPath, params),
-                method : 'GET',
+                url : LABKEY.ActionURL.buildURL('laboratory', 'getSubjectIdSummary', config.containerPath),
+                method : 'POST',
+                jsonData: params,
                 success: LABKEY.Utils.getCallbackWrapper(LABKEY.Utils.getOnSuccess(config), config.scope),
                 failure: LDK.Utils.getErrorCallback({
                     callback: config.failure

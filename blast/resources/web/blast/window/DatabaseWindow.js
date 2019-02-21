@@ -60,6 +60,7 @@ Ext4.define('BLAST.window.DatabaseWindow', {
         Ext4.Msg.wait('Saving...');
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('blast', 'createDatabase', null),
+            method: 'POST',
             jsonData: {
                 libraryIds: this.libraryIds
             },
