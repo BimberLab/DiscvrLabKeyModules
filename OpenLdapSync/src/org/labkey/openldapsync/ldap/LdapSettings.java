@@ -65,6 +65,14 @@ public class LdapSettings
     public static final String USE_SSL_PROP = "useSSL";
     public static final String SSL_PROTOCOL_PROP = "sslProtocol";
 
+    public static final String DEFAULT_EMAIL_FIELD_VAL = "mail";
+    public static final String DEFAULT_DISPLAY_NAME_VAL = "displayName";
+    public static final String DEFAULT_LAST_NAME_VAL = "sn";
+    public static final String DEFAULT_FIRST_NAME_VAL = "givenName";
+    public static final String DEFAULT_PHONE_VAL = "telephoneNumber";
+    public static final String DEFAULT_UID_VAL = "userPrincipalName";
+    public static final String DEFUALT_USERCLASS_VAL = "user";
+    public static final String DEFUALT_GROUPCLASS_VAL = "groups";
 
     public static final String DELIM = "<>";
 
@@ -158,28 +166,28 @@ public class LdapSettings
         ret.putAll(encryptedMap);
 
         if (isMissingOrEmpty(ret, GROUP_OBJECTCLASS_PROP))
-            ret.put(GROUP_OBJECTCLASS_PROP, "group");
+            ret.put(GROUP_OBJECTCLASS_PROP, DEFUALT_GROUPCLASS_VAL);
 
         if (isMissingOrEmpty(ret, USER_OBJECTCLASS_PROP))
-            ret.put(USER_OBJECTCLASS_PROP, "user");
+            ret.put(USER_OBJECTCLASS_PROP, DEFUALT_USERCLASS_VAL);
 
         if (isMissingOrEmpty(ret, EMAIL_FIELD_PROP))
-            ret.put(EMAIL_FIELD_PROP, "mail");
+            ret.put(EMAIL_FIELD_PROP, DEFAULT_EMAIL_FIELD_VAL);
 
         if (isMissingOrEmpty(ret, DISPLAYNAME_FIELD_PROP))
-            ret.put(DISPLAYNAME_FIELD_PROP, "displayName");
+            ret.put(DISPLAYNAME_FIELD_PROP, DEFAULT_DISPLAY_NAME_VAL);
 
         if (isMissingOrEmpty(ret, LASTNAME_FIELD_PROP))
-            ret.put(LASTNAME_FIELD_PROP, "sn");
+            ret.put(LASTNAME_FIELD_PROP, DEFAULT_LAST_NAME_VAL);
 
         if (isMissingOrEmpty(ret, FIRSTNAME_FIELD_PROP))
-            ret.put(FIRSTNAME_FIELD_PROP, "givenName");
+            ret.put(FIRSTNAME_FIELD_PROP, DEFAULT_FIRST_NAME_VAL);
 
         if (isMissingOrEmpty(ret, PHONE_FIELD_PROP))
-            ret.put(PHONE_FIELD_PROP, "telephoneNumber");
+            ret.put(PHONE_FIELD_PROP, DEFAULT_PHONE_VAL);
 
         if (isMissingOrEmpty(ret, UID_FIELD_PROP))
-            ret.put(UID_FIELD_PROP, "userPrincipalName");
+            ret.put(UID_FIELD_PROP, DEFAULT_UID_VAL);
 
         boolean useSSL = ret.containsKey(USE_SSL_PROP) ? (Boolean)ret.get(USE_SSL_PROP) : false;
         if (!ret.containsKey(PORT_PROP))

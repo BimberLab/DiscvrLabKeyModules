@@ -52,6 +52,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.labkey.openldapsync.ldap.LdapSettings.DEFAULT_DISPLAY_NAME_VAL;
+import static org.labkey.openldapsync.ldap.LdapSettings.DEFAULT_EMAIL_FIELD_VAL;
+import static org.labkey.openldapsync.ldap.LdapSettings.DEFAULT_FIRST_NAME_VAL;
+import static org.labkey.openldapsync.ldap.LdapSettings.DEFAULT_LAST_NAME_VAL;
+import static org.labkey.openldapsync.ldap.LdapSettings.DEFAULT_PHONE_VAL;
+import static org.labkey.openldapsync.ldap.LdapSettings.DEFAULT_UID_VAL;
 import static org.labkey.openldapsync.ldap.LdapSettings.DISPLAYNAME_FIELD_PROP;
 import static org.labkey.openldapsync.ldap.LdapSettings.FIRSTNAME_FIELD_PROP;
 
@@ -854,12 +860,12 @@ public class LdapSyncRunner implements Job
             ValidEmail ve = new ValidEmail(email);
 
             Map<String, String> props = new HashMap<>();
-            props.put("mail", email);
-            props.put("displayName", "Test user");
-            props.put("userPrincipalName", ve.getPersonal());
-            props.put("telephoneNumber", "(123) 456-7890");
-            props.put("givenName", "Test");
-            props.put("sn", "User");
+            props.put(DEFAULT_EMAIL_FIELD_VAL, email);
+            props.put(DEFAULT_DISPLAY_NAME_VAL, "Test user");
+            props.put(DEFAULT_UID_VAL, ve.getPersonal());
+            props.put(DEFAULT_PHONE_VAL, "(123) 456-7890");
+            props.put(DEFAULT_FIRST_NAME_VAL, "Test");
+            props.put(DEFAULT_LAST_NAME_VAL, "User");
 
             String dn = "uid=" + ve.getPersonal() + ",cn=users,dc=example,dc=com";
 
@@ -910,13 +916,13 @@ public class LdapSyncRunner implements Job
         @After
         public void cleanup() throws Exception
         {
-            cleanUsersAndGroups();
-
-            Container project = getProject();
-            if (project != null)
-            {
-                ContainerManager.delete(project, TestContext.get().getUser());
-            }
+//            cleanUsersAndGroups();
+//
+//            Container project = getProject();
+//            if (project != null)
+//            {
+//                ContainerManager.delete(project, TestContext.get().getUser());
+//            }
         }
 
         private void cleanUsersAndGroups() throws Exception
@@ -999,7 +1005,7 @@ public class LdapSyncRunner implements Job
             final String displayName = "CustomDisplay1";
             final String firstName = "CustomFirstName1";
             user._otherProps.put("customDisplayName", displayName);
-            user._otherProps.remove("displayName");
+            user._otherProps.remove(DEFAULT_DISPLAY_NAME_VAL);
 
             user._otherProps.put("customFirstName", firstName);
             user._otherProps.remove("givenName");
@@ -1124,7 +1130,7 @@ public class LdapSyncRunner implements Job
             public static MockLdapEntry createGroup(String dn, String groupName, LdapSettings settings) throws LdapInvalidDnException
             {
                 Map<String, String> props = new HashMap<>();
-                props.put("displayName", groupName);
+                props.put(DEFAULT_DISPLAY_NAME_VAL, groupName);
 
                 return new MockLdapEntry(dn, props, settings);
             }
@@ -1152,7 +1158,16 @@ public class LdapSyncRunner implements Job
         {
             public MutatableLdapSettings()
             {
-                
+                super();
+
+                //reset these values so we get consistent behavior even if this instance has custom properties
+                setProperty(EMAIL_FIELD_PROP, DEFAULT_EMAIL_FIELD_VAL);
+                setProperty(DISPLAYNAME_FIELD_PROP, DEFAULT_DISPLAY_NAME_VAL);
+                setProperty(UID_FIELD_PROP, DEFAULT_UID_VAL);
+                setProperty(PHONE_FIELD_PROP, DEFAULT_PHONE_VAL);
+                setProperty(FIRSTNAME_FIELD_PROP, DEFAULT_FIRST_NAME_VAL);
+                setProperty(LASTNAME_FIELD_PROP, DEFAULT_FIRST_NAME_VAL);
+                setProperty(DISPLAYNAME_FIELD_PROP, DEFAULT_DISPLAY_NAME_VAL);
             }
             
             public void setProperty(String prop, String value)
