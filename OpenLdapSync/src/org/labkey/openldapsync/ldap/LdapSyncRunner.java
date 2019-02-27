@@ -41,7 +41,6 @@ import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -955,14 +954,12 @@ public class LdapSyncRunner implements Job
 
         private LdapSyncRunner getRunner() throws Exception
         {
-            return getRunner(null);
+            //always use this so we force consistent values, even if this server has custom site-wide settings.
+            return getRunner(new MutatableLdapSettings());
         }
         
-        private LdapSyncRunner getRunner(@Nullable LdapSettings customSettings) throws Exception
+        private LdapSyncRunner getRunner(LdapSettings settings) throws Exception
         {
-            //this can be modified to test behaviors.  We might need to test subclass, so we can mutate it
-            LdapSettings settings = customSettings == null ? new LdapSettings() : customSettings;
-
             LdapSyncRunner runner = new LdapSyncRunner();
             runner._userGroupContainer = getProject();
             runner._wrapper = getConnectionWrapper(settings);
@@ -1167,7 +1164,6 @@ public class LdapSyncRunner implements Job
                 setProperty(PHONE_FIELD_PROP, DEFAULT_PHONE_VAL);
                 setProperty(FIRSTNAME_FIELD_PROP, DEFAULT_FIRST_NAME_VAL);
                 setProperty(LASTNAME_FIELD_PROP, DEFAULT_FIRST_NAME_VAL);
-                setProperty(DISPLAYNAME_FIELD_PROP, DEFAULT_DISPLAY_NAME_VAL);
             }
             
             public void setProperty(String prop, String value)
