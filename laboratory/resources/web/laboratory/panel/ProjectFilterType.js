@@ -106,17 +106,20 @@ Ext4.define('Laboratory.panel.ProjectFilterType', {
         return filterArray;
     },
 
-    checkValid: function(){
+    isValid: function(){
         var val = this.down('#projectField').getValue();
         if(!val || !val.length){
-            Ext4.Msg.alert('Error', 'Must choose a project');
             return false;
-        };
+        }
 
         return true;
     },
 
-    validateReport: function(report){
+    getFilterInvalidMessage: function(){
+        return 'Error: Must choose a project';
+    },
+
+    validateReportForFilterType: function(report){
         if (!report.allProjectsFieldName){
             return 'This report cannot be used with the selected filter type, because the report does not contain a field with project information';
         }
