@@ -1364,6 +1364,7 @@ labModules/laboratory/src/org/labkey/laboratory/SampleSetDataProvider.java -text
 labModules/laboratory/src/org/labkey/laboratory/SampleSetNavItem.java -text
 labModules/laboratory/src/org/labkey/laboratory/SamplesCountNavItem.java -text
 labModules/laboratory/src/org/labkey/laboratory/URLDataSource.java -text
+labModules/laboratory/src/org/labkey/laboratory/WorkbookTestCase.java -text
 labModules/laboratory/src/org/labkey/laboratory/assay/AssayHelper.java -text
 labModules/laboratory/src/org/labkey/laboratory/assay/ManualEntryAssayImportMethod.java -text
 labModules/laboratory/src/org/labkey/laboratory/assay/RunUploadContext.java -text

@@ -230,4 +230,10 @@ public class LaboratoryModule extends ExtendedSimpleModule
     {
         return new LaboratoryUpgradeCode();
     }
+
+    @Override
+    public @NotNull Set<Class> getIntegrationTests()
+    {
+        return PageFlowUtil.set(WorkbookTestCase.class);
+    }
 }
