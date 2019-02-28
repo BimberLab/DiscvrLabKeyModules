@@ -122,6 +122,10 @@ public class GenotypeConcordanceStep extends AbstractCommandPipelineStep<Variant
                         if (!g.isNoCall())
                         {
                             t.totalCalled += 1;
+                            if (vc.isNotFiltered())
+                            {
+                                t.totalCalledPassing += 1;
+                            }
                         }
 
                         if (g.hasAnyAttribute("GTD") && g.getAnyAttribute("GTD") != null)
@@ -134,20 +138,30 @@ public class GenotypeConcordanceStep extends AbstractCommandPipelineStep<Variant
 
                             int val = Integer.parseInt(g.getAnyAttribute("GTD").toString());
                             t.totalCompared += 1;
+                            if (vc.isNotFiltered())
+                            {
+                                t.totalComparedPassing += 1;
+                            }
                             if (val == 1)
                             {
                                 t.totalDiscordant += 1;
+                                if (vc.isNotFiltered())
+                                {
+                                    t.totalDiscordantPassing += 1;
+                                }
                             }
                         }
                     }
                 }
             }
 
-            writer.writeNext(new String[]{"SampleName", "TotalCalledGenotypes", "TotalComparedToRef", "TotalDiscordant", "FractionDiscordant"});
+            writer.writeNext(new String[]{"SampleName", "Subset", "TotalCalledGenotypes", "TotalComparedToRef", "TotalDiscordant", "FractionDiscordant"});
             for (String sn : sampleNames)
             {
                 DiscordantTracker t = discordantMap.get(sn);
-                writer.writeNext(new String[]{sn, String.valueOf(t.totalCalled), String.valueOf(t.totalCompared), String.valueOf(t.totalDiscordant), (t.totalCompared == 0 ? "" : String.valueOf(t.totalDiscordant / (double)t.totalCompared))});
+                writer.writeNext(new String[]{sn, "All", String.valueOf(t.totalCalled), String.valueOf(t.totalCompared), String.valueOf(t.totalDiscordant), (t.totalCompared == 0 ? "" : String.valueOf(t.totalDiscordant / (double)t.totalCompared))});
+
+                writer.writeNext(new String[]{sn, "Passing", String.valueOf(t.totalCalledPassing), String.valueOf(t.totalComparedPassing), String.valueOf(t.totalDiscordantPassing), (t.totalComparedPassing == 0 ? "" : String.valueOf(t.totalDiscordantPassing / (double)t.totalComparedPassing))});
             }
         }
         catch (IOException e)
@@ -165,5 +179,10 @@ public class GenotypeConcordanceStep extends AbstractCommandPipelineStep<Variant
         long totalCompared = 0L;
         long totalDiscordant = 0L;
         long totalCalled = 0L;
+
+        long totalComparedPassing = 0L;
+        long totalDiscordantPassing = 0L;
+        long totalCalledPassing = 0L;
+
     }
 }
