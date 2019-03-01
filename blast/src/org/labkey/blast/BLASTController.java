@@ -20,7 +20,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.labkey.api.action.AbstractFileUploadAction;
-import org.labkey.api.action.ApiAction;
+import org.labkey.api.action.ReadOnlyApiAction;
+import org.labkey.api.action.MutatingApiAction;
 import org.labkey.api.action.ApiJsonWriter;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
@@ -84,7 +85,7 @@ public class BLASTController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class GetSettingsAction extends ApiAction<Object>
+    public class GetSettingsAction extends ReadOnlyApiAction<Object>
     {
         public ApiResponse execute(Object form, BindException errors)
         {
@@ -99,7 +100,7 @@ public class BLASTController extends SpringActionController
     }
 
     @RequiresSiteAdmin
-    public class SetSettingsAction extends ApiAction<SettingsForm>
+    public class SetSettingsAction extends MutatingApiAction<SettingsForm>
     {
         public ApiResponse execute(SettingsForm form, BindException errors)
         {
@@ -144,7 +145,7 @@ public class BLASTController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class CreateDatabaseAction extends ApiAction<DatabaseForm>
+    public class CreateDatabaseAction extends MutatingApiAction<DatabaseForm>
     {
         public ApiResponse execute(DatabaseForm form, BindException errors)
         {
@@ -464,7 +465,7 @@ public class BLASTController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class RecreateDatabaseAction extends ApiAction<RecreateDatabaseForm>
+    public class RecreateDatabaseAction extends MutatingApiAction<RecreateDatabaseForm>
     {
         public ApiResponse execute(RecreateDatabaseForm form, BindException errors)
         {

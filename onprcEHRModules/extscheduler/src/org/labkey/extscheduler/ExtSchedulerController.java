@@ -1,6 +1,6 @@
 package org.labkey.extscheduler;
 
-import org.labkey.api.action.ApiAction;
+import org.labkey.api.action.ReadOnlyApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.SpringActionController;
@@ -29,7 +29,7 @@ public class ExtSchedulerController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetSchedulerGroupMembersAction extends ApiAction<Object>
+    public class GetSchedulerGroupMembersAction extends ReadOnlyApiAction<Object>
     {
         @Override
         public Object execute(Object o, BindException errors) throws Exception

@@ -23,7 +23,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.labkey.api.action.AbstractFileUploadAction;
-import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiJsonWriter;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
@@ -1771,7 +1770,7 @@ public class LaboratoryController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetImportMethodsAction extends ApiAction<ImportMethodsForm>
+    public class GetImportMethodsAction extends ReadOnlyApiAction<ImportMethodsForm>
     {
         public ApiResponse execute(ImportMethodsForm form, BindException errors)
         {

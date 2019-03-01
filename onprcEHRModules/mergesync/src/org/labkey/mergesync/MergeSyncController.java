@@ -21,6 +21,7 @@ import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.MutatingApiAction;
+import org.labkey.api.action.ReadOnlyApiAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.ConvertHelper;
@@ -48,7 +49,7 @@ public class MergeSyncController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class SetEtlDetailsAction extends ApiAction<EtlAdminForm>
+    public class SetEtlDetailsAction extends MutatingApiAction<EtlAdminForm>
     {
         public ApiResponse execute(EtlAdminForm form, BindException errors)
         {
@@ -236,7 +237,7 @@ public class MergeSyncController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class GetEtlDetailsAction extends ApiAction<Object>
+    public class GetEtlDetailsAction extends ReadOnlyApiAction<Object>
     {
         public ApiResponse execute(Object form, BindException errors)
         {
@@ -289,7 +290,7 @@ public class MergeSyncController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class ResyncRunsAction extends ApiAction<ResyncRunsForm>
+    public class ResyncRunsAction extends MutatingApiAction<ResyncRunsForm>
     {
         public ApiResponse execute(ResyncRunsForm form, BindException errors)
         {

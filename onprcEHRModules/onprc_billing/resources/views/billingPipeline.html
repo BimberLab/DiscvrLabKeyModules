@@ -134,6 +134,7 @@
 
                 LABKEY.Ajax.request({
                     url: LABKEY.ActionURL.buildURL('onprc_billing', 'RunBillingPipeline'),
+                    method: 'POST',
                     params: jsonParameters,
                     scope: this,
                     success: function() {

@@ -13,6 +13,7 @@ MergeSync.buttons = new function(){
             Ext4.Msg.wait('Loading...');
             LABKEY.Ajax.request({
                 url: LABKEY.ActionURL.buildURL('mergesync', 'resyncRuns', null, {pks: checked}),
+                method: 'POST',
                 scope: this,
                 failure: LDK.Utils.getErrorCallback(),
                 success: function(){

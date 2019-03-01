@@ -17,7 +17,7 @@
 package org.labkey.sla;
 
 import org.json.JSONObject;
-import org.labkey.api.action.ApiAction;
+import org.labkey.api.action.ReadOnlyApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ConfirmAction;
@@ -147,7 +147,7 @@ public class SLAController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class SetEtlDetailsAction extends ApiAction<EtlAdminForm>
+    public class SetEtlDetailsAction extends MutatingApiAction<EtlAdminForm>
     {
         public ApiResponse execute(EtlAdminForm form, BindException errors)
         {
@@ -345,7 +345,7 @@ public class SLAController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class GetEtlDetailsAction extends ApiAction<Object>
+    public class GetEtlDetailsAction extends ReadOnlyApiAction<Object>
     {
         public ApiResponse execute(Object form, BindException errors)
         {
@@ -374,7 +374,7 @@ public class SLAController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class SendPurchaseOrderNotificationAction extends ApiAction<PurchaseOrderEmailForm>
+    public class SendPurchaseOrderNotificationAction extends MutatingApiAction<PurchaseOrderEmailForm>
     {
         @Override
         public Object execute(PurchaseOrderEmailForm form, BindException errors) throws Exception
@@ -543,7 +543,7 @@ public class SLAController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class InsertPurchaseOrderAction extends ApiAction<PurchaseForm>
+    public class InsertPurchaseOrderAction extends MutatingApiAction<PurchaseForm>
     {
         private Container _adminContainer;
 
@@ -586,7 +586,7 @@ public class SLAController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetPurchaseOrderDraftAction extends ApiAction<PurchaseDraftForm>
+    public class GetPurchaseOrderDraftAction extends ReadOnlyApiAction<PurchaseDraftForm>
     {
         private Container _adminContainer;
         private PurchaseDraftForm _draft;
@@ -621,7 +621,7 @@ public class SLAController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class SavePurchaseOrderDraftAction extends ApiAction<PurchaseDraftForm>
+    public class SavePurchaseOrderDraftAction extends MutatingApiAction<PurchaseDraftForm>
     {
         private Container _adminContainer;
 
