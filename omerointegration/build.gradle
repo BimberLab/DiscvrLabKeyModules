@@ -4,10 +4,6 @@ repositories {
    mavenLocal()
    mavenCentral()
    maven {
-      name 'Unidata'
-      url 'https://artifacts.unidata.ucar.edu/content/repositories/unidata-releases'
-   }
-   maven {
       url 'http://artifacts.openmicroscopy.org/artifactory/maven/'
    }
 }
