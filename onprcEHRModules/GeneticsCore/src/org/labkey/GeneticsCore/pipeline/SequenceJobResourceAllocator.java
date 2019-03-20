@@ -320,7 +320,8 @@ public class SequenceJobResourceAllocator implements ClusterResourceAllocator
                 }
             }
         }
-        else if (params.get("resourceSettings.resourceSettings.veryLongJob") != null)
+
+        if (params.get("resourceSettings.resourceSettings.veryLongJob") != null)
         {
             Boolean weekLongJob = ConvertHelper.convert(params.get("resourceSettings.resourceSettings.veryLongJob"), Boolean.class);
             if (weekLongJob)
@@ -335,10 +336,6 @@ public class SequenceJobResourceAllocator implements ClusterResourceAllocator
                     lines.add("#SBATCH --partition=very_long_jobs");
                     lines.add("#SBATCH --time=43200");
                 }
-            }
-            else
-            {
-                job.getLogger().warn("This pipeline engine does not support very_long_job");
             }
         }
     }

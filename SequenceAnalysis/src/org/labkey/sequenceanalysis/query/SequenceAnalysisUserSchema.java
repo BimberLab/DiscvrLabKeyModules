@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.query;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.data.AbstractTableInfo;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -105,6 +106,13 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         else if (SequenceAnalysisSchema.TABLE_OUTPUTFILES.equalsIgnoreCase(name))
         {
             return createOutputFiles(sourceTable);
+        }
+        else if (SequenceAnalysisSchema.TABLE_BARCODES.equalsIgnoreCase(name))
+        {
+            TableInfo ret = super.createWrappedTable(name, sourceTable);
+            LDKService.get().applyNaturalSort((AbstractTableInfo)ret, "tag_name");
+
+            return ret;
         }
         else
             return super.createWrappedTable(name, sourceTable);

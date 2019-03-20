@@ -14,6 +14,7 @@ import org.labkey.api.pipeline.ParamParser;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobService;
+import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.TaskFactory;
 import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.pipeline.TaskPipeline;
@@ -57,6 +58,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     private String _folderPrefix;
     private List<File> _inputFiles;
     private List<SequenceOutputFile> _outputsToCreate = new ArrayList<>();
+    private PipeRoot _folderFileRoot;
 
     transient private JSONObject _params;
 
@@ -77,6 +79,8 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         _webserverJobDir = createLocalDirectory(pipeRoot);
         _params = params;
         writeParameters(params);
+
+        _folderFileRoot = c.isWorkbook()? PipelineService.get().findPipelineRoot(c.getParent()) : pipeRoot;
 
         setLogFile(_getLogFile());
     }
@@ -101,6 +105,11 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     public List<File> getInputFiles()
     {
         return _inputFiles == null ? Collections.emptyList() : Collections.unmodifiableList(_inputFiles);
+    }
+
+    public void setFolderFileRoot(PipeRoot folderFileRoot)
+    {
+        _folderFileRoot = folderFileRoot;
     }
 
     public void setDescription(String description)
@@ -305,6 +314,11 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         super.clearActionSet(run);
 
         _experimentRunRowId = run.getRowId();
+    }
+
+    public PipeRoot getFolderPipeRoot()
+    {
+        return _folderFileRoot;
     }
 
     public Integer getExperimentRunRowId()

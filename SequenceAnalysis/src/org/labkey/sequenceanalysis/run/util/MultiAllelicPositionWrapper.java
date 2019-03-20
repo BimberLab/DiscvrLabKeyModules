@@ -22,7 +22,7 @@ public class MultiAllelicPositionWrapper extends AbstractGatkWrapper
     public File run(List<File> inputBams, File outputFile, File referenceFasta, @Nullable List<String> options) throws PipelineJobException
     {
         List<String> args = new ArrayList<>(getBaseArgs());
-        args.add("-T");
+
         args.add("MultipleAllelesAtLoci");
         args.add("-R");
         args.add(referenceFasta.getPath());
@@ -31,7 +31,7 @@ public class MultiAllelicPositionWrapper extends AbstractGatkWrapper
             args.add("-I");
             args.add(f.getPath());
         }
-        args.add("-o");
+        args.add("-O");
         args.add(outputFile.getPath());
         if (options != null)
         {
@@ -46,6 +46,6 @@ public class MultiAllelicPositionWrapper extends AbstractGatkWrapper
     @Override
     protected String getJarName()
     {
-        return "GenomeAnalysisTK-discvr.jar";
+        return "DISCVRSeq.jar";
     }
 }

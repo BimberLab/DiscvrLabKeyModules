@@ -21,19 +21,18 @@ public class VariantQCWrapper extends AbstractGatkWrapper
     @Override
     protected String getJarName()
     {
-        return "VariantQC.jar";
+        return "DISCVRSeq.jar";
     }
 
     public File execute(File inputVCF, File referenceFasta, File outputHtml, List<String> options) throws PipelineJobException
     {
         List<String> args = new ArrayList<>(getBaseArgs());
-        args.add("-T");
         args.add("VariantQC");
         args.add("-R");
         args.add(referenceFasta.getPath());
         args.add("-V");
         args.add(inputVCF.getPath());
-        args.add("-o");
+        args.add("-O");
         args.add(outputHtml.getPath());
         if (options != null)
         {

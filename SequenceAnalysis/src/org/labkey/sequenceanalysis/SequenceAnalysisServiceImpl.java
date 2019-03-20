@@ -17,10 +17,14 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.laboratory.NavItem;
+import org.labkey.api.module.Module;
+import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
+import org.labkey.api.resource.FileResource;
+import org.labkey.api.resource.Resource;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.sequenceanalysis.GenomeTrigger;
@@ -31,6 +35,7 @@ import org.labkey.api.sequenceanalysis.SequenceDataProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.Path;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
@@ -426,5 +431,19 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     public File getPicardJar()
     {
         return SequenceAnalysisManager.getPicardJar();
+    }
+
+    public String getScriptPath(String moduleName, String path) throws PipelineJobException
+    {
+        Module module = ModuleLoader.getInstance().getModule(moduleName);
+        Resource script = module.getModuleResource(Path.parse(path));
+        if (script == null || !script.exists())
+            throw new PipelineJobException("Unable to find file: " + path + " in module: " + moduleName);
+
+        File f = ((FileResource) script).getFile();
+        if (!f.exists())
+            throw new PipelineJobException("Unable to find file: " + f.getPath());
+
+        return f.getPath();
     }
 }

@@ -580,4 +580,29 @@ public class CellRangerWrapper extends AbstractCommandWrapper
     {
         return SequencePipelineService.get().getExeForPackage("CELLRANGERPATH", "cellranger");
     }
+
+    public static Set<File> getRawDataDirs(File outputDir, boolean filteredOnly)
+    {
+        List<String> dirs = new ArrayList<>();
+        dirs.add("filtered_feature_bc_matrix");
+        dirs.add("filtered_gene_bc_matrices");
+
+        if (!filteredOnly)
+        {
+            dirs.add("raw_gene_bc_matrices");
+            dirs.add("raw_feature_bc_matrix");
+        }
+
+        Set<File> toAdd = new HashSet<>();
+        for (String dir : dirs)
+        {
+            File subDir = new File(outputDir, dir);
+            if (subDir.exists())
+            {
+                toAdd.add(subDir);
+            }
+        }
+
+        return toAdd;
+    }
 }

@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
+import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.WorkDirectory;
@@ -84,6 +85,11 @@ public class JobContextImpl implements SequenceOutputHandler.JobContext
     public void addSequenceOutput(SequenceOutputFile o)
     {
         _fileManager.addSequenceOutput(o);
+    }
+
+    public PipeRoot getFolderPipeRoot()
+    {
+        return _job.getFolderPipeRoot();
     }
 
     @Override

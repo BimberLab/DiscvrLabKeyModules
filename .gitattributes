@@ -405,6 +405,10 @@ labModules/SequenceAnalysis/resources/external/qscript/GenotypeGVCFsRunner.scala
 labModules/SequenceAnalysis/resources/external/qscript/HaplotypeCallerRunner.scala -text
 labModules/SequenceAnalysis/resources/external/qscript/IndelRealignerRunner.scala -text
 labModules/SequenceAnalysis/resources/external/sam-1.96.jar -text
+labModules/SequenceAnalysis/resources/external/scRNAseq/Seurat3.rmd -text
+labModules/SequenceAnalysis/resources/external/scRNAseq/htoClassifier.Rmd -text
+labModules/SequenceAnalysis/resources/external/scRNAseq/htoClassifier.sh -text
+labModules/SequenceAnalysis/resources/external/scRNAseq/seuratWrapper.sh -text
 labModules/SequenceAnalysis/resources/external/tableToGraph.r -text
 labModules/SequenceAnalysis/resources/folderTypes/Sequence[!!-~]Analysis.folderType.xml -text
 labModules/SequenceAnalysis/resources/module.xml -text
@@ -846,6 +850,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CellHashing
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CellRangerAggrHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CellRangerRawDataHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CellRangerReanalysisHandler.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CellRangerSeuratHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CombineStarGeneCountsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CombineSubreadGeneCountsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/CompareVariantsHandler.java -text
@@ -1122,8 +1127,6 @@ labModules/laboratory/resources/folderTypes/Study[!!-~]Workbook.folderType.xml -
 labModules/laboratory/resources/module.xml -text
 labModules/laboratory/resources/queries/core/workbooks.query.xml -text
 labModules/laboratory/resources/queries/core/workbooks/.qview.xml -text
-labModules/laboratory/resources/queries/exp/Files.sql -text
-labModules/laboratory/resources/queries/exp/Files/.qview.xml -text
 labModules/laboratory/resources/queries/laboratory/96well_plate.query.xml -text
 labModules/laboratory/resources/queries/laboratory/96well_plate.sql -text
 labModules/laboratory/resources/queries/laboratory/assay_run_templates.query.xml -text

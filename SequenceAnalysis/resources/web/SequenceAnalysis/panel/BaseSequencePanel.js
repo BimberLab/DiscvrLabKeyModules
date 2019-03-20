@@ -255,6 +255,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                                     containerPath: Laboratory.Utils.getQueryContainerPath(),
                                     schemaName: 'sequenceanalysis',
                                     queryName: 'saved_analyses',
+                                    sort: 'name',
                                     filterArray: [LABKEY.Filter.create('taskid', this.jobType)],
                                     autoLoad: true,
                                     columns: 'rowid,name,json'

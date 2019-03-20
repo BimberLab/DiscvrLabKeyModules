@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.variant;
 
+import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
@@ -7,13 +8,14 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
-import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -32,7 +34,11 @@ public class VariantQCStep extends AbstractPipelineStep implements VariantProces
     {
         public Provider()
         {
-            super("VariantQCStep", "VariantQC", "", "This will generate an HTML summary report for the final VCF file", null, null, "");
+            super("VariantQCStep", "VariantQC", "", "This will generate an HTML summary report for the final VCF file", Arrays.asList(
+                    ToolParameterDescriptor.create("writeJson", "Write Raw Data", "If selected, both an HTML report and a text file with the raw data will be created.", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, true)
+            ), null, "https://bimberlab.github.io/DISCVRSeq/");
         }
 
         public VariantQCStep create(PipelineContext ctx)
@@ -47,12 +53,6 @@ public class VariantQCStep extends AbstractPipelineStep implements VariantProces
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
 
         List<String> options = new ArrayList<>();
-        Integer maxThreads = SequenceTaskHelper.getMaxThreads(getPipelineCtx().getLogger());
-        if (maxThreads != null)
-        {
-            options.add("-nt");
-            options.add(maxThreads.toString());
-        }
 
         File pedFile = ProcessVariantsHandler.getPedigreeFile(getPipelineCtx().getSourceDirectory());
         if (pedFile.exists())
@@ -60,8 +60,14 @@ public class VariantQCStep extends AbstractPipelineStep implements VariantProces
             options.add("-ped");
             options.add(pedFile.getPath());
 
-            options.add("-pedValidationType");
-            options.add("SILENT");
+            //options.add("-pedValidationType");
+            //options.add("SILENT");
+        }
+
+        if (getProvider().getParameterByName("writeJson").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true))
+        {
+            options.add("--rawData");
+            options.add(new File(outputDirectory, SequencePipelineService.get().getUnzippedBaseName(inputVCF.getName()) + ".variantQC.json").getPath());
         }
 
         File outputHtml = new File(outputDirectory, SequencePipelineService.get().getUnzippedBaseName(inputVCF.getName()) + ".variantQC.html");

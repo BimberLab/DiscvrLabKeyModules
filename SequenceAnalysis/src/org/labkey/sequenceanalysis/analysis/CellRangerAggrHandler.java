@@ -2,7 +2,6 @@ package org.labkey.sequenceanalysis.analysis;
 
 import au.com.bytecode.opencsv.CSVWriter;
 import org.apache.commons.io.FileUtils;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -44,7 +43,7 @@ public class CellRangerAggrHandler extends AbstractParameterizedOutputHandler<Se
                 ToolParameterDescriptor.create("id", "Run ID", "This will be used as the final sample/file name", "textfield", new JSONObject(){{
                     put("allowBlank", false);
                 }}, null),
-                ToolParameterDescriptor.create("csvData", "CSV Data", "Provide a table that maps readset to additional category fields.  This will be provided directly to cellranger aggr.  The first column must be the output file ID, which is how the system connects your input to these files.  We recommend cut and pasting this text into excel, editing, and then pasting back.", "sequenceanalysis-aggr-checkbox", new JSONObject(){{
+                ToolParameterDescriptor.create("csvData", "CSV Data", "Provide a table that maps readset to additional category fields.  This will be provided directly to cellranger aggr.  The first column must be the output file ID, which is how the system connects your input to these files.  We recommend cut and pasting this text into excel, editing, and then pasting back.", "sequenceanalysis-aggr-textarea", new JSONObject(){{
                     put("checked", true);
                 }}, null)
         ));

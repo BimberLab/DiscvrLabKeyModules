@@ -573,12 +573,12 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         }
     }
 
-    private void swapFilesInRecordedActions(File original, File newFile, Collection<RecordedAction> actions, SequenceJob job)
+    private void swapFilesInRecordedActions(File original, File newFile, Collection<RecordedAction> actions, SequenceJob job, @Nullable AbstractResumer resumer) throws PipelineJobException
     {
-        swapFilesInRecordedActions(_job.getLogger(), original, newFile, actions, job);
+        swapFilesInRecordedActions(_job.getLogger(), original, newFile, actions, job, resumer);
     }
 
-    public static void swapFilesInRecordedActions(Logger log, File original, File newFile, Collection<RecordedAction> actions, SequenceJob job)
+    public static void swapFilesInRecordedActions(Logger log, File original, File newFile, Collection<RecordedAction> actions, SequenceJob job, @Nullable AbstractResumer resumer) throws PipelineJobException
     {
         log.debug("Swapping copied output file in actions: ");
         log.debug("\tOriginal file: " + original.getPath());
@@ -601,6 +601,13 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
                 log.debug("swapping file in sequence output: " + original.getPath());
                 so.setFile(newFile);
             }
+        }
+
+        //NOTE: this was added to allow better resume if the job is killed during the cleanup process.
+        if (resumer != null)
+        {
+            resumer.addFileCopiedLocally(original, newFile);
+            resumer.saveState();
         }
     }
 
@@ -696,7 +703,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         }
     }
 
-    private void processCopiedFile(File original, File moved, Collection<RecordedAction> actions) throws IOException
+    private void processCopiedFile(File original, File moved, Collection<RecordedAction> actions, @Nullable AbstractResumer resumer) throws IOException, PipelineJobException
     {
         //this should be harmless (although unnecessary) if the working dir is the same as the normal location
         if (moved.isDirectory())
@@ -712,14 +719,14 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
                 _job.getLogger().debug("Directory has " + moved.listFiles().length + " children");
                 for (File f : moved.listFiles())
                 {
-                    processCopiedFile(new File(original, f.getName()), f, actions);
+                    processCopiedFile(new File(original, f.getName()), f, actions, resumer);
                 }
             }
         }
         else
         {
             _job.getLogger().debug("Processing file: " + moved.getName());
-            swapFilesInRecordedActions(original, moved, actions, _job);
+            swapFilesInRecordedActions(original, moved, actions, _job, resumer);
         }
     }
 
@@ -736,6 +743,11 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     @Override
     public void cleanup(Collection<RecordedAction> actions) throws PipelineJobException
     {
+        cleanup(actions, null);
+    }
+
+    public void cleanup(Collection<RecordedAction> actions, @Nullable AbstractResumer resumer) throws PipelineJobException
+    {
         _job.getLogger().debug("performing file cleanup");
         _job.setStatus(PipelineJob.TaskStatus.running, "PERFORMING FILE CLEANUP");
 
@@ -744,7 +756,9 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         {
             _job.addOutputToCreate(so);
         }
-        _outputsToCreate.clear();
+
+        //Snapshot this list
+        List<Pair<File, File>> previouslyCopiedFiles = resumer == null ? null : new ArrayList<>(resumer.getFilesCopiedLocally());
 
         try
         {
@@ -763,7 +777,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
                 //then sort out which files were specified as named outputs later
                 for (File input : _wd.getDir().listFiles())
                 {
-                    copyFile(input, actions);
+                    copyFile(input, actions, resumer);
                 }
             }
             else
@@ -775,13 +789,25 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         {
             throw new PipelineJobException(e);
         }
+
+        if (previouslyCopiedFiles != null)
+        {
+            _job.getLogger().debug("Inspecting previously copied files (due to job resume): " + previouslyCopiedFiles.size());
+            for (Pair<File, File> pair : previouslyCopiedFiles)
+            {
+                swapFilesInRecordedActions(pair.first, pair.second, actions, _job, null);
+            }
+        }
+
+        //Defer this until the end, since we will be saving the resumer periodically as we copy files
+        _outputsToCreate.clear();
     }
 
-    private void copyFile(File input, Collection<RecordedAction> actions) throws IOException
+    private void copyFile(File input, Collection<RecordedAction> actions, @Nullable AbstractResumer resumer) throws IOException, PipelineJobException
     {
         try
         {
-            doCopyFile(input, actions);
+            doCopyFile(input, actions, resumer);
         }
         catch (IOException e)
         {
@@ -803,7 +829,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         }
     }
 
-    private void doCopyFile(File input, Collection<RecordedAction> actions) throws IOException
+    private void doCopyFile(File input, Collection<RecordedAction> actions, @Nullable AbstractResumer resumer) throws IOException, PipelineJobException
     {
         _job.getLogger().debug("copying file: " + input.getPath());
 
@@ -833,7 +859,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
                 File[] children = input.listFiles();
                 for (File child : children)
                 {
-                    copyFile(child, actions);
+                    copyFile(child, actions, resumer);
                 }
 
                 FileUtils.deleteDirectory(input);
@@ -860,7 +886,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
             }
 
             dest = _wd.outputFile(input, dest);
-            processCopiedFile(input, dest, actions);
+            processCopiedFile(input, dest, actions, resumer);
         }
     }
 

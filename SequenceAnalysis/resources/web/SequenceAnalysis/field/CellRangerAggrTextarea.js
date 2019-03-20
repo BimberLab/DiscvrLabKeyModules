@@ -1,6 +1,6 @@
 Ext4.define('SequenceAnalysis.field.CellRangerAggrTextarea', {
     extend: 'Ext.form.field.TextArea',
-    alias: 'widget.sequenceanalysis-aggr-checkbox',
+    alias: 'widget.sequenceanalysis-aggr-textarea',
 
     initComponent: function () {
         Ext4.apply(this, {

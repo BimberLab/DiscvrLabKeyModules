@@ -93,6 +93,8 @@ public class SequenceOutputHandlerRemoteTask extends WorkDirectoryTask<SequenceO
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
+        SequenceTaskHelper.logModuleVersions(getJob().getLogger());
+
         TaskFileManagerImpl manager = new TaskFileManagerImpl(getPipelineJob(), _wd.getDir(), _wd);
 
         SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler = getPipelineJob().getHandler();

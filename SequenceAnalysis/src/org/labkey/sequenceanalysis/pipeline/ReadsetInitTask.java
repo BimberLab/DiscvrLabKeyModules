@@ -408,7 +408,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
                         if (!compressed.exists())
                             throw new PipelineJobException("Unable to compress file: " + input);
 
-                        TaskFileManagerImpl.swapFilesInRecordedActions(job.getLogger(), input, compressed, actions, job);
+                        TaskFileManagerImpl.swapFilesInRecordedActions(job.getLogger(), input, compressed, actions, job, null);
 
                         input.delete();
                         if (outputFiles != null && outputFiles.contains(input))
@@ -446,7 +446,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
                 {
                     job.getLogger().debug("\tThis input was unaltered during normalization and a copy already exists in the analysis folder so the original will be discarded");
                     input.delete();
-                    TaskFileManagerImpl.swapFilesInRecordedActions(job.getLogger(), input, output, actions, job);
+                    TaskFileManagerImpl.swapFilesInRecordedActions(job.getLogger(), input, output, actions, job, null);
                     return;
                 }
                 else
@@ -476,7 +476,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
                 }
             }
 
-            TaskFileManagerImpl.swapFilesInRecordedActions(job.getLogger(), input, output, actions, job);
+            TaskFileManagerImpl.swapFilesInRecordedActions(job.getLogger(), input, output, actions, job, null);
         }
         catch (IOException e)
         {

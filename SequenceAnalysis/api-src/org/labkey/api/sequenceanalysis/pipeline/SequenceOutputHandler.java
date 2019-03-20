@@ -19,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.module.Module;
+import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
@@ -212,6 +213,8 @@ public interface SequenceOutputHandler<T>
         public TaskFileManager getFileManager();
 
         public void addSequenceOutput(SequenceOutputFile o);
+
+        public PipeRoot getFolderPipeRoot();
     }
 
     public interface HasActionNames

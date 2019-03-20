@@ -254,7 +254,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             getHelper().getFileManager().processUnzippedInputs();
             getHelper().getFileManager().deleteIntermediateFiles();
             getHelper().getFileManager().deleteDeferredIntermediateFiles();
-            getHelper().getFileManager().cleanup(_resumer.getRecordedActions());
+            getHelper().getFileManager().cleanup(_resumer.getRecordedActions(), _resumer);
             _resumer.markComplete(false);
         }
         catch (IOException e)

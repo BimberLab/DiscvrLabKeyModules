@@ -261,6 +261,7 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
                 outputFileIds: this.outputFileIds,
                 readsetIds: this.readsetIds,
                 doSplitJobs: !!params.doSplitJobs,
+                useOutputFileContainer: !!params.useOutputFileContainer,
                 params: Ext4.encode(params)
             },
             scope: this,

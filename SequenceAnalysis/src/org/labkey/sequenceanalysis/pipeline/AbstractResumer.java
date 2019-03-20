@@ -5,14 +5,17 @@ import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
+import org.labkey.api.util.Pair;
 
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,6 +31,8 @@ abstract public class AbstractResumer implements Serializable
     protected boolean _isResume = false;
     protected Map<File, File> _copiedInputs = new HashMap<>();
 
+    protected List<Pair<File, File>> _filesCopiedLocally = new ArrayList<>();
+
     //for serialization
     protected AbstractResumer()
     {
@@ -40,6 +45,7 @@ abstract public class AbstractResumer implements Serializable
         _log = log;
         _fileManager = fileManager;
         _recordedActions = new LinkedHashSet<>();
+        _filesCopiedLocally = new ArrayList<>();
     }
 
     protected static File getSerializedJson(File outdir, String jsonName)
@@ -167,5 +173,20 @@ abstract public class AbstractResumer implements Serializable
     public void setCopiedInputs(Map<File, File> copiedInputs)
     {
         _copiedInputs = copiedInputs;
+    }
+
+    public List<Pair<File, File>> getFilesCopiedLocally()
+    {
+        return _filesCopiedLocally;
+    }
+
+    public void setFilesCopiedLocally(List<Pair<File, File>> filesCopiedLocally)
+    {
+        _filesCopiedLocally = filesCopiedLocally;
+    }
+
+    public void addFileCopiedLocally(File orig, File copied)
+    {
+        _filesCopiedLocally.add(Pair.of(orig, copied));
     }
 }

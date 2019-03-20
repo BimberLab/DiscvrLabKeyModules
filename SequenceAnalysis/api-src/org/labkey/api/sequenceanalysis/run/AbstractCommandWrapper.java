@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +53,16 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
     public AbstractCommandWrapper(@Nullable Logger logger)
     {
         _log = logger;
+
+        //Apply some default environment vars:
+        for (String varName : Arrays.asList("HOME", "UID", "JAVA_HOME"))
+        {
+            String val = StringUtils.trimToNull(System.getenv(varName));
+            if (val != null)
+            {
+                _environment.put(varName, val);
+            }
+        }
     }
 
     @Override

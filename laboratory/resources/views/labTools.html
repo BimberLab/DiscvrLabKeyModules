@@ -90,9 +90,9 @@ Ext4.onReady(function(){
                 }, this);
             }
 
-            if (importItems.length == 0){
+            if (importItems.length === 0){
                 importItems.push({
-                    text: 'There are no data types defined'
+                    text: LABKEY.Security.currentUser.canInsert ? 'There are no data types defined' : 'You do not have permission to import data'
                 })
             }
 
@@ -124,10 +124,10 @@ Ext4.onReady(function(){
                 }, this);
             }
 
-            if (sampleItems.length == 0){
+            if (sampleItems.length === 0){
                 sampleItems.push({
-                    text: 'There are no sample types defined'
-                })
+                    text: LABKEY.Security.currentUser.canInsert ? 'There are no sample types defined' : 'You do not have permission to import samples'
+                });
             }
 
             var config = {

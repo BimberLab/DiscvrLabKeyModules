@@ -1,0 +1,34 @@
+```{r}
+
+source('https://raw.githubusercontent.com/bbimber/rnaseq/master/seurat/cellHashingFunctions.R')
+
+```
+
+# Basic QC and Filtering on input:
+
+```{r}
+
+barcodeData <- processCiteSeqCount(barcodeFile)
+generateQcPlots(barcodeData)
+
+```
+
+# Using Seurat:
+
+```{r}
+
+sc <- generateCellHashCallsSeurat(barcodeData)
+
+```
+
+# Using MULTI-seq Classifier:
+
+```{r}
+
+mc <- generateCellHashCallsMultiSeq(barcodeData)
+
+```{r}
+
+dt <- processEnsemblHtoCalls(mc, sc, barcodeData, outFile = finalCallFile, allCallsOutFile = allCallsOutFile)
+
+```

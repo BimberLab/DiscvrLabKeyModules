@@ -149,6 +149,7 @@ import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.BamHaplotyper;
+import org.labkey.sequenceanalysis.run.alignment.CellRangerWrapper;
 import org.labkey.sequenceanalysis.run.analysis.AASnpByCodonAggregator;
 import org.labkey.sequenceanalysis.run.analysis.AASnpByReadAggregator;
 import org.labkey.sequenceanalysis.run.analysis.AlignmentAggregator;
@@ -3740,7 +3741,7 @@ public class SequenceAnalysisController extends SpringActionController
         {
             PipeRoot pr = PipelineService.get().findPipelineRoot(getContainer());
             if (pr == null || !pr.isValid())
-                throw new NotFoundException();
+                throw new ApiUsageException("Pipe root invalid or not set for container: " + getContainer().getPath());
 
             if (StringUtils.isEmpty(form.getHandlerClass()))
             {
@@ -3823,6 +3824,7 @@ public class SequenceAnalysisController extends SpringActionController
                 List<String> guids = new ArrayList<>();
                 if (handler.doSplitJobs() || form.getDoSplitJobs())
                 {
+                    Map<Container, PipeRoot> containerToPipeRootMap = new HashMap<>();
                     for (SequenceOutputFile o : outputFiles)
                     {
                         JSONObject json = new JSONObject(form.getParams());
@@ -3834,7 +3836,9 @@ public class SequenceAnalysisController extends SpringActionController
 
                         jobName = jobName + "." + o.getRowid();
 
-                        SequenceOutputHandlerJob job = new SequenceOutputHandlerJob(getContainer(), getUser(), jobName, pr, handler, Arrays.asList(o), json);
+                        Container targetContainer = form.getUseOutputFileContainer() ? ContainerManager.getForId(o.getContainer()) : getContainer();
+                        PipeRoot pr1 = getPipeRoot(targetContainer, containerToPipeRootMap);
+                        SequenceOutputHandlerJob job = new SequenceOutputHandlerJob(targetContainer, getUser(), jobName, pr1, handler, Arrays.asList(o), json);
                         PipelineService.get().queueJob(job);
                         guids.add(job.getJobGUID());
                     }
@@ -3850,7 +3854,9 @@ public class SequenceAnalysisController extends SpringActionController
 
                         jobName = jobName + "." + o.getReadsetId();
 
-                        SequenceReadsetHandlerJob job = new SequenceReadsetHandlerJob(getContainer(), getUser(), jobName, pr, handler, Arrays.asList(o), json);
+                        Container targetContainer = form.getUseOutputFileContainer() ? ContainerManager.getForId(o.getContainer()) : getContainer();
+                        PipeRoot pr1 = getPipeRoot(targetContainer, containerToPipeRootMap);
+                        SequenceReadsetHandlerJob job = new SequenceReadsetHandlerJob(targetContainer, getUser(), jobName, pr1, handler, Arrays.asList(o), json);
                         PipelineService.get().queueJob(job);
                         guids.add(job.getJobGUID());
                     }
@@ -3886,6 +3892,20 @@ public class SequenceAnalysisController extends SpringActionController
                 return null;
             }
         }
+
+        private PipeRoot getPipeRoot(Container targetContainer, Map<Container, PipeRoot> containerToPipeRootMap)
+        {
+            if (!containerToPipeRootMap.containsKey(targetContainer))
+            {
+                PipeRoot pr = PipelineService.get().getPipelineRootSetting(targetContainer);
+                if (pr == null || !pr.isValid())
+                    throw new ApiUsageException("Pipe root invalid or not set for container: " + targetContainer.getPath());
+
+                containerToPipeRootMap.put(targetContainer, pr);
+            }
+
+            return containerToPipeRootMap.get(targetContainer);
+        }
     }
 
     public static class RunSequenceHandlerForm extends CheckFileStatusForm
@@ -3893,6 +3913,7 @@ public class SequenceAnalysisController extends SpringActionController
         private String _jobName;
         private String _params;
         private Boolean _doSplitJobs = false;
+        private Boolean _useOutputFileContainer = false;
 
         public String getJobName()
         {
@@ -3916,12 +3937,22 @@ public class SequenceAnalysisController extends SpringActionController
 
         public Boolean getDoSplitJobs()
         {
-            return _doSplitJobs;
+            return _doSplitJobs == null ? false : _doSplitJobs;
         }
 
         public void setDoSplitJobs(Boolean doSplitJobs)
         {
             _doSplitJobs = doSplitJobs;
+        }
+
+        public Boolean getUseOutputFileContainer()
+        {
+            return _useOutputFileContainer == null ? false : _useOutputFileContainer;
+        }
+
+        public void setUseOutputFileContainer(Boolean useOutputFileContainer)
+        {
+            _useOutputFileContainer = useOutputFileContainer;
         }
     }
 
@@ -4941,14 +4972,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                     String name = FileUtil.makeLegalName(so.getName());
                     Set<File> toAdd = toExport.getOrDefault(name, new HashSet<>());
-                    for (String dir : Arrays.asList("filtered_feature_bc_matrix", "raw_feature_bc_matrix", "filtered_gene_bc_matrices", "raw_gene_bc_matrices"))
-                    {
-                        File subDir = new File(loupe.getParentFile(), dir);
-                        if (subDir.exists())
-                        {
-                            toAdd.add(subDir);
-                        }
-                    }
+                    toAdd.addAll(CellRangerWrapper.getRawDataDirs(loupe.getParentFile(), false));
 
                     toExport.put(name, toAdd);
                 }

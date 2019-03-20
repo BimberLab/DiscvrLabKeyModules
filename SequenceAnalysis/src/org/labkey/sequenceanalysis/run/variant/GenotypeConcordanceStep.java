@@ -5,6 +5,7 @@ import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
@@ -46,6 +47,9 @@ public class GenotypeConcordanceStep extends AbstractCommandPipelineStep<Variant
             super("GenotypeConcordanceStep", "Annotate Genotype Concordance", "GATK", "Annotate genotypes relative to a reference VCF using a custom GATK Annotator", Arrays.asList(
                     ToolParameterDescriptor.createExpDataParam("refVCF", "Reference VCF", "This VCF will be used as the reference to annotate genotypes in the input VCF.  Genotypes that differ from this VCF will be annotated (but not filtered).  Genotypes not called in either VCF are skipped.", "ldk-expdatafield", new JSONObject(){{
                         put("allowBlank", false);
+                    }}, null),
+                    ToolParameterDescriptor.create("skipAnnotation", "Skip Annotation Step If Present", "If checked, this step will first check if the VCF already has the GTD annotations for genotype discordance.  If present, it will not attempt to re-annotate, and will just generate the summary report.  This is designed to allow the summary to be created more than once, without forcing creation of an entirely new VCF.", "checkbox", new JSONObject(){{
+                        put("checked", true);
                     }}, null)
             ), Arrays.asList("ldk/field/ExpDataField.js"), "");
         }
@@ -63,15 +67,7 @@ public class GenotypeConcordanceStep extends AbstractCommandPipelineStep<Variant
 
         List<String> options = new ArrayList<>();
 
-        File outputVcf = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".annotated.vcf.gz");
-
         output.addInput(inputVCF, "Input VCF");
-
-        options.add("-A");
-        options.add("GenotypeConcordance");
-        options.add("-A");
-        options.add("GenotypeConcordanceBySite");
-
         Integer fileId = getProvider().getParameterByName("refVCF").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
         if (fileId == null)
         {
@@ -85,27 +81,45 @@ public class GenotypeConcordanceStep extends AbstractCommandPipelineStep<Variant
         }
         output.addInput(refVCF, "Reference VCF");
 
-        options.add("-resource:GT_SOURCE");
-        options.add(refVCF.getPath());
-
-        Integer threads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
-        if (threads != null)
+        File vcfForReport;
+        Boolean skipAnnotation = getProvider().getParameterByName("skipAnnotation").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class);
+        if (skipAnnotation && annotationsPresent(inputVCF))
         {
-            options.add("-nt");
-            options.add(String.valueOf(Math.min(threads, 8)));
+            getPipelineCtx().getLogger().info("The input VCF already has the proper annotations, so it will not be re-annotated.  Creating a report alone.");
+            vcfForReport = inputVCF;
         }
-
-        getWrapper().execute(genome.getWorkingFastaFile(), inputVCF, outputVcf, options);
-        if (!outputVcf.exists())
+        else
         {
-            throw new PipelineJobException("output not found: " + outputVcf);
-        }
+            File outputVcf = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".annotated.vcf.gz");
+            vcfForReport = outputVcf;
 
-        output.setVcf(outputVcf);
+            options.add("-A");
+            options.add("GenotypeConcordance");
+            options.add("-A");
+            options.add("GenotypeConcordanceBySite");
+
+            options.add("-resource:GT_SOURCE");
+            options.add(refVCF.getPath());
+
+            Integer threads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
+            if (threads != null)
+            {
+                options.add("-nt");
+                options.add(String.valueOf(Math.min(threads, 8)));
+            }
+
+            getWrapper().execute(genome.getWorkingFastaFile(), inputVCF, outputVcf, options);
+            if (!outputVcf.exists())
+            {
+                throw new PipelineJobException("output not found: " + outputVcf);
+            }
+
+            output.setVcf(outputVcf);
+        }
 
         getPipelineCtx().getLogger().debug("writing summary report");
-        File report = new File(outputDirectory, SequenceAnalysisService.get().getUnzippedBaseName(inputVCF.getName()) + "concordance.txt");
-        try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(report), '\t', CSVWriter.NO_QUOTE_CHARACTER); VCFFileReader reader = new VCFFileReader(outputVcf))
+        File report = new File(outputDirectory, SequenceAnalysisService.get().getUnzippedBaseName(inputVCF.getName()) + ".concordance.txt");
+        try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(report), '\t', CSVWriter.NO_QUOTE_CHARACTER); VCFFileReader reader = new VCFFileReader(vcfForReport))
         {
             List<String> sampleNames = reader.getFileHeader().getSampleNamesInOrder();
             Map<String, DiscordantTracker> discordantMap = new HashMap<>();
@@ -169,9 +183,26 @@ public class GenotypeConcordanceStep extends AbstractCommandPipelineStep<Variant
             throw new PipelineJobException(e);
         }
 
-        output.addSequenceOutput(report, outputVcf.getName() + " genotype discordance report", "Genotype Discordance Report", null, null, genome.getGenomeId(), null);
+        output.addSequenceOutput(report, vcfForReport.getName() + " genotype discordance report", "Genotype Discordance Report", null, null, genome.getGenomeId(), null);
 
         return output;
+    }
+
+    private boolean annotationsPresent(File inputVcf)
+    {
+        try (VCFFileReader reader = new VCFFileReader(inputVcf))
+        {
+            VCFHeader header = reader.getFileHeader();
+
+            boolean ret = header.hasFormatLine("GTD") && header.hasInfoLine("GTD");
+
+            if (!ret)
+            {
+                getPipelineCtx().getLogger().info("This VCF lacks the GTD annotations, so it will be re-annotated");
+            }
+
+            return ret;
+        }
     }
 
     private class DiscordantTracker

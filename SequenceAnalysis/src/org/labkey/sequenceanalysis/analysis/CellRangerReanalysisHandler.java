@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class CellRangerReanalysisHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
@@ -236,6 +237,14 @@ public class CellRangerReanalysisHandler extends AbstractParameterizedOutputHand
                     else
                     {
                         ctx.getLogger().warn("Unable to find folder: " + scDir.getPath());
+                    }
+
+                    Set<File> rawDataDirs = CellRangerWrapper.getRawDataDirs(matrix.getParentFile(), false);
+                    for (File dir : rawDataDirs)
+                    {
+                        File dest = new File(out, dir.getName());
+                        ctx.getLogger().debug("copying raw data from: " + dir.getPath() + " to " + dest.getPath());
+                        FileUtils.copyDirectory(dir, dest);
                     }
 
                 }
