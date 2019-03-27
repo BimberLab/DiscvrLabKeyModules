@@ -3,9 +3,12 @@ package org.labkey.sequenceanalysis.analysis;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.util.IOUtil;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.module.Module;
@@ -39,6 +42,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -47,6 +51,8 @@ import java.util.Set;
 
 public class CellHashingHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceReadsetProcessor>
 {
+    private static final String CALL_EXTENSION = ".calls.txt";
+
     public CellHashingHandler()
     {
         super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "CITE-Seq Count", "This will run CITE-Seq Count to generate a table of features counts from CITE-Seq or cell hashing libraries", null, getDefaultParams());
@@ -141,6 +147,34 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         }
 
         @Override
+        public void complete(PipelineJob job, List<Readset> readsets, List<SequenceOutputFile> outputsCreated) throws PipelineJobException
+        {
+            TableInfo ti = SequenceAnalysisSchema.getInstance().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
+            for (SequenceOutputFile so : outputsCreated)
+            {
+                job.getLogger().info("Saving quality metrics for: " + so.getName());
+                if (so.getFile().getName().endsWith(CALL_EXTENSION))
+                {
+                    Map<String, Long> counts = parseOutputTable(so.getFile());
+                    for (String name : counts.keySet())
+                    {
+                        Map<String, Object> r = new HashMap<>();
+                        r.put("category", "Cell Hashing");
+                        r.put("metricname", StringUtils.capitalize(name));
+                        r.put("metricvalue", counts.get(name));
+                        r.put("dataid", so.getDataId());
+                        r.put("readset", so.getReadset());
+
+                        r.put("container", job.getContainer());
+                        r.put("createdby", job.getUser().getUserId());
+
+                        Table.insert(job.getUser(), ti, r);
+                    }
+                }
+            }
+        }
+
+        @Override
         public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<Readset> readsets, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
 
@@ -170,10 +204,10 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                 args.add("-t");
                 args.add(getBarcodeFile(ctx.getSourceDirectory()).getPath());
                 args.add("-u");
-                File unknownBarcodes = new File(ctx.getOutputDir(), FileUtil.makeLegalName(rs.getName() + "_" + "_unknownBarcodes.txt"));
+                File unknownBarcodes = new File(ctx.getOutputDir(), FileUtil.makeLegalName(rs.getName() + "_unknownBarcodes.txt"));
                 args.add(unknownBarcodes.getPath());
 
-                File output1 = new File(ctx.getOutputDir(), FileUtil.makeLegalName(rs.getName() + "_" + "_cellHashingRawCounts.txt"));
+                File output1 = new File(ctx.getOutputDir(), FileUtil.makeLegalName(rs.getName() + "_cellHashingRawCounts.txt"));
 
                 ctx.getFileManager().addInput(action, "Input FASTQ", rd.getFile1());
                 ctx.getFileManager().addInput(action, "Input FASTQ", rd.getFile2());
@@ -186,10 +220,19 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                 }
 
                 File htoCalls = generalFinalCalls(output1, ctx.getOutputDir(), outputBasename, ctx.getLogger());
-                File html = new File(htoCalls.getParentFile(), FileUtil.getBaseName(htoCalls.getName()) + ".html");
+                File html = new File(htoCalls.getParentFile(), outputBasename + ".html");
 
-                ctx.getFileManager().addSequenceOutput(htoCalls, rs.getName() + ": Cell Hashing Calls","Cell Hashing Calls", rs.getReadsetId(), null, null, null);
+                if (!html.exists())
+                {
+                    throw new PipelineJobException("Unable to find expected HTML file: " + html.getPath());
+                }
+
+                Map<String, Long> callMap = parseOutputTable(htoCalls);
+
+                String description = String.format("Total Singlet: %,d, Doublet: %,d, Seurat Called: %,d, MultiSeq Called: %,d, Negative: %,d", callMap.get("singlet"), callMap.get("doublet"), callMap.get("seuratCalled"), callMap.get("multiSeqCalled"), callMap.get("negative"));
+                ctx.getFileManager().addSequenceOutput(htoCalls, rs.getName() + ": Cell Hashing Calls","Cell Hashing Calls", rs.getReadsetId(), null, null, description);
                 ctx.getFileManager().addSequenceOutput(html, rs.getName() + ": Cell Hashing Report","Cell Hashing Report", rs.getReadsetId(), null, null, null);
+
 
                 ctx.getFileManager().addOutput(action, "Unknown barcodes", unknownBarcodes);
                 ctx.getFileManager().addOutput(action, "CITE-seq Raw Counts", output1);
@@ -199,12 +242,100 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         }
     }
 
+    private Map<String, Long> parseOutputTable(File htoCalls) throws PipelineJobException
+    {
+        long singlet = 0L;
+        long doublet = 0L;
+        long negative = 0L;
+        long seuratCalled = 0L;
+        long multiSeqCalled = 0L;
+
+        try (CSVReader reader = new CSVReader(Readers.getReader(htoCalls), '\t'))
+        {
+            String[] line;
+
+            int htoClassIdx = -1;
+            int seuratIdx = -1;
+            int multiSeqIdx = -1;
+
+            List<String> header = new ArrayList<>();
+            while ((line = reader.readNext()) != null)
+            {
+                //skip header
+                if (header.isEmpty())
+                {
+                    header.addAll(Arrays.asList(line));
+                    htoClassIdx = header.indexOf("HTO_Classification");
+                    seuratIdx = header.indexOf("Seurat");
+                    multiSeqIdx = header.indexOf("MultiSeq");
+                    continue;
+                }
+
+                if ("Singlet".equals(line[htoClassIdx]))
+                {
+                    singlet++;
+                }
+                else if ("Doublet".equals(line[htoClassIdx]))
+                {
+                    doublet++;
+                }
+                else if ("Negative".equals(line[htoClassIdx]))
+                {
+                    negative++;
+                }
+
+                if ("TRUE".equals(line[seuratIdx]))
+                {
+                    seuratCalled++;
+                }
+
+                if ("TRUE".equals(line[multiSeqIdx]))
+                {
+                    multiSeqCalled++;
+                }
+            }
+
+            Map<String, Long> ret = new HashMap<>();
+            ret.put("singlet", singlet);
+            ret.put("doublet", doublet);
+            ret.put("negative", negative);
+            ret.put("seuratCalled", seuratCalled);
+            ret.put("multiSeqCalled", multiSeqCalled);
+
+            return ret;
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+    }
     public File generalFinalCalls(File citeSeqCountsOutput, File outputDir, String basename, Logger log) throws PipelineJobException
     {
         String scriptWrapper = getScriptPath("sequenceanalysis", "/external/scRNAseq/htoClassifier.sh");
 
         SimpleScriptWrapper rWrapper = new SimpleScriptWrapper(log);
-        rWrapper.setWorkingDir(citeSeqCountsOutput.getParentFile());
+        rWrapper.setWorkingDir(outputDir);
+
+        if (!outputDir.equals(citeSeqCountsOutput.getParentFile()))
+        {
+            //needed for docker currently
+            log.debug("Copying CiteSeqCount output to working directory");
+            File dest = new File(outputDir, citeSeqCountsOutput.getName());
+            if (dest.exists())
+            {
+                dest.delete();
+            }
+
+            try
+            {
+                FileUtils.copyFile(citeSeqCountsOutput, dest);
+                citeSeqCountsOutput = dest;
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
 
         File rScript = new File(getScriptPath("sequenceanalysis", "/external/scRNAseq/htoClassifier.Rmd"));
         File localScript = new File(outputDir, rScript.getName());
@@ -215,7 +346,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         IOUtil.copyFile(rScript, localScript);
 
         File htmlFile = new File(outputDir, basename + ".html");
-        File callsFile = new File(outputDir, basename + ".txt");
+        File callsFile = new File(outputDir, basename + CALL_EXTENSION);
         File rawCallsFile = new File(outputDir, basename + ".raw.txt");
         rWrapper.execute(Arrays.asList("/bin/bash", scriptWrapper, citeSeqCountsOutput.getName(), htmlFile.getName(), callsFile.getName(), rawCallsFile.getName()));
         if (!htmlFile.exists())

@@ -606,26 +606,22 @@ public class SequenceAnalysisController extends SpringActionController
                 return;
             }
 
-            Set<String> ids = DataRegionSelection.getSelected(form.getViewContext(), true);
-            List<Object> keys = new ArrayList<Object>(ids);
-            SimpleFilter filter = new SimpleFilter(FieldKey.fromString(_table.getPkColumns().get(0).getColumnName()), StringUtils.join(keys, ";"), CompareType.IN);
-
             if (_table.getColumn("container") != null)
             {
+                Set<String> ids = DataRegionSelection.getSelected(form.getViewContext(), true);
+                List<Object> keys = new ArrayList<>(ids);
+                SimpleFilter filter = new SimpleFilter(FieldKey.fromString(_table.getPkColumns().get(0).getColumnName()), keys, CompareType.IN);
+
                 TableSelector ts = new TableSelector(_table, Collections.singleton("container"), filter, null);
-                ts.forEach(new TableSelector.ForEachBlock<ResultSet>()
-                {
-                    public void exec(ResultSet rs) throws SQLException
-                    {
-                        Container c = ContainerManager.getForId(rs.getString("container"));
-                        if (!c.hasPermission(getUser(), DeletePermission.class))
-                            throw new UnauthorizedException("User does not have delete permission on folder: " + c.getTitle());
-                    }
+                ts.forEachResults(rs -> {
+                    Container c = ContainerManager.getForId(rs.getString("container"));
+                    if (!c.hasPermission(getUser(), DeletePermission.class))
+                        throw new UnauthorizedException("User does not have delete permission on folder: " + c.getTitle());
                 });
             }
         }
 
-        private void findAnalysesToDelete(List<Integer> keys, StringBuilder msg, Set<Integer> outputFileIds, Set<Integer> expRunsToDelete)
+        private void findAnalysesToDelete(Collection<Integer> keys, StringBuilder msg, Set<Integer> outputFileIds, Set<Integer> expRunsToDelete)
         {
             appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY, "Alignment Records", keys, "analysis_id", "rowid");
             outputFileIds.addAll(appendTotal(msg, SequenceAnalysisSchema.TABLE_OUTPUTFILES, "Output Files", keys, "analysis_id", "rowid"));
@@ -656,13 +652,13 @@ public class SequenceAnalysisController extends SpringActionController
             StringBuilder msg = new StringBuilder("Are you sure you want to delete the following " + keys.size() + " ");
             if (SequenceAnalysisSchema.TABLE_ANALYSES.equals(_table.getName()))
             {
-                msg.append("analyses " + StringUtils.join(keys, ", ") + "?  This will delete the analyses, plus all associated data.  This includes:<br>");
+                msg.append("analyses: " + StringUtils.join(keys, ", ") + "?  This will delete the analyses, plus all associated data.  This includes:<br>");
                 analysisIds.addAll(keys);
                 findAnalysesToDelete(keys, msg, outputFileIds, expRunsToDelete);
             }
             else if (SequenceAnalysisSchema.TABLE_READSETS.equals(_table.getName()))
             {
-                msg.append("readsets " + StringUtils.join(keys, ", ") + "?  This will delete the readsets, plus all associated data.  This includes:<br>");
+                msg.append("readsets: " + StringUtils.join(keys, ", ") + "?  This will delete the readsets, plus all associated data.  This includes:<br>");
                 readsetIds.addAll(keys);
                 readDataIds.addAll(appendTotal(msg, SequenceAnalysisSchema.TABLE_READ_DATA, "Sequence File Records", keys, "readset", "rowid"));
                 analysisIds.addAll(appendTotal(msg, SequenceAnalysisSchema.TABLE_ANALYSES, "Analyses", keys, "readset", "rowid"));
@@ -677,7 +673,7 @@ public class SequenceAnalysisController extends SpringActionController
             }
             else if (SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES.equals(_table.getName()))
             {
-                msg.append("NT reference sequences " + StringUtils.join(keys, ", ") + "?  This will delete the reference sequences, plus all associated data.  This includes:<br>");
+                msg.append("NT reference sequences: " + StringUtils.join(keys, ", ") + "?  This will delete the reference sequences, plus all associated data.  This includes:<br>");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES, "Reference AA Sequences", keys, "ref_nt_id", "rowid");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_FEATURES, "NT Features", keys, "ref_nt_id", "rowid");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_COVERAGE, "Coverage Records", keys, "ref_nt_id", "rowid");
@@ -688,14 +684,14 @@ public class SequenceAnalysisController extends SpringActionController
             }
             else if (SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES.equals(_table.getName()))
             {
-                msg.append("AA reference sequences " + StringUtils.join(keys, ", ") + "?  This will delete the reference sequences, plus all associated data.  This includes:<br>");
+                msg.append("AA reference sequences: " + StringUtils.join(keys, ", ") + "?  This will delete the reference sequences, plus all associated data.  This includes:<br>");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_FEATURES, "AA features", keys, "ref_aa_id", "rowid");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_DRUG_RESISTANCE, "drug resistance mutations", keys, "ref_aa_id", "rowid");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "ref_aa_id", "rowid");
             }
             else if (SequenceAnalysisSchema.TABLE_REF_LIBRARIES.equals(_table.getName()))
             {
-                msg.append("Reference genomes " + StringUtils.join(keys, ", ") + "?  This will delete the reference genomes, plus all associated data.  This includes:<br>");
+                msg.append("Reference genomes: " + StringUtils.join(keys, ", ") + "?  This will delete the reference genomes, plus all associated data.  This includes:<br>");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS, "genome sequences", keys, "library_id", "rowid");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_LIBRARY_TRACKS, "tracks", keys, "library_id", "rowid");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_CHAIN_FILES, "chain files from this genome", keys, "genomeId1", "rowid");
@@ -704,11 +700,11 @@ public class SequenceAnalysisController extends SpringActionController
             }
             else if (SequenceAnalysisSchema.TABLE_OUTPUTFILES.equals(_table.getName()))
             {
-                msg.append("output files " + StringUtils.join(keys, ", ") + "?<br>");
+                msg.append("output files: " + StringUtils.join(keys, ", ") + "?<br>");
                 outputFileIds.addAll(keys);
 
                 //we will delete these expDatas, so find any analysis records matching this file
-                List<Integer> additionalAnalysisIds = SequenceAnalysisManager.get().deleteOutputFiles(keys, getUser(), getContainer(), false);
+                Collection<Integer> additionalAnalysisIds = SequenceAnalysisManager.get().deleteOutputFiles(keys, getUser(), getContainer(), false);
                 analysisIds.addAll(additionalAnalysisIds);
 
                 if (!additionalAnalysisIds.isEmpty())
@@ -721,6 +717,13 @@ public class SequenceAnalysisController extends SpringActionController
                 //also pipeline jobs
                 expRunsToDelete.addAll(getExpRunIds(SequenceAnalysisSchema.TABLE_OUTPUTFILES, keys, "rowid", "runId"));
                 expRunsToDelete.addAll(getExpRunIds(SequenceAnalysisSchema.TABLE_ANALYSES, additionalAnalysisIds, "rowid", "runId"));
+
+                //Note: this number could be reduced if there are other records from the same ExpData.  A check is performed at actual delete-time.
+                List<Integer> dataIds = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), PageFlowUtil.set("dataId"), new SimpleFilter(FieldKey.fromString("rowid"), outputFileIds, CompareType.IN), null).getArrayList(Integer.class);
+                if (!dataIds.isEmpty())
+                {
+                    appendTotal(msg, SequenceAnalysisSchema.TABLE_QUALITY_METRICS, "quality metrics", dataIds, "dataId", "rowid");
+                }
             }
 
             if (!expRunsToDelete.isEmpty())
@@ -786,16 +789,16 @@ public class SequenceAnalysisController extends SpringActionController
 
         private Set<Integer> getExpRunIds(String tableName, Collection<Integer> keys, String pkColName, String runIdCol)
         {
-            SimpleFilter filter = new SimpleFilter(FieldKey.fromString(pkColName), StringUtils.join(keys, ";"), CompareType.IN);
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString(pkColName), keys, CompareType.IN);
             filter.addCondition(FieldKey.fromString(runIdCol), null, CompareType.NONBLANK);
             TableSelector ts = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(tableName), PageFlowUtil.set(runIdCol), filter, null);
 
             return new HashSet<>(ts.getArrayList(Integer.class));
         }
 
-        private Set<Integer> appendTotal(StringBuilder sb, String tableName, String noun, List<Integer> keys, String filterCol, String pkCol)
+        private Set<Integer> appendTotal(StringBuilder sb, String tableName, String noun, Collection<Integer> keys, String filterCol, String pkCol)
         {
-            SimpleFilter filter = new SimpleFilter(FieldKey.fromString(filterCol), StringUtils.join(keys, ";"), CompareType.IN);
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString(filterCol), keys, CompareType.IN);
             TableSelector ts = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(tableName), PageFlowUtil.set(pkCol), filter, null);
             Set<Integer> total = new HashSet<>(ts.getArrayList(Integer.class));
             sb.append("<br>" + total.size() + " " + noun);

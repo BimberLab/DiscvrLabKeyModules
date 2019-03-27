@@ -4,30 +4,42 @@ source('https://raw.githubusercontent.com/bbimber/rnaseq/master/seurat/cellHashi
 
 ```
 
-# Basic QC and Filtering on input:
+## Basic QC and Filtering on input:
 
-```{r}
+```{r QC}
 
 barcodeData <- processCiteSeqCount(barcodeFile)
+if (nrow(barcodeData) == 0) {
+  stop('No passing HTOs')
+}
+
+if (ncol(barcodeData) == 0) {
+  stop('No passing cells')
+}
+
 generateQcPlots(barcodeData)
 
 ```
 
-# Using Seurat:
+## Using Seurat:
 
-```{r}
+```{r Seurat}
 
 sc <- generateCellHashCallsSeurat(barcodeData)
 
 ```
 
-# Using MULTI-seq Classifier:
+## Using MULTI-seq Classifier:
 
-```{r}
+```{r MULTI-seq}
 
 mc <- generateCellHashCallsMultiSeq(barcodeData)
 
-```{r}
+```
+
+## Merge calls
+
+```{r ProcessCalls}
 
 dt <- processEnsemblHtoCalls(mc, sc, barcodeData, outFile = finalCallFile, allCallsOutFile = allCallsOutFile)
 

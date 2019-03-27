@@ -82,6 +82,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -231,7 +232,7 @@ public class SequenceAnalysisManager
         }
     }
 
-    public void deleteAnalysis(User user, Container container, List<Integer> rowIds) throws Exception
+    public void deleteAnalysis(User user, Container container, Collection<Integer> rowIds) throws Exception
     {
         SequenceAnalysisSchema s = SequenceAnalysisSchema.getInstance();
 
@@ -266,7 +267,7 @@ public class SequenceAnalysisManager
         }
     }
 
-    public List<Integer> deleteOutputFiles(List<Integer> rowIds, User user, Container container, boolean doDelete) throws Exception
+    public Collection<Integer> deleteOutputFiles(List<Integer> outputFileIds, User user, Container container, boolean doDelete) throws Exception
     {
         SequenceAnalysisSchema s = SequenceAnalysisSchema.getInstance();
 
@@ -278,8 +279,9 @@ public class SequenceAnalysisManager
                 throw new IllegalArgumentException("Unable to find sequenceanalysis user schema");
             }
 
-            Set<Integer> notDeleted = new HashSet<>();
-            List<SequenceOutputFile> files = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), new SimpleFilter(FieldKey.fromString("rowid"), rowIds, CompareType.IN), null).getArrayList(SequenceOutputFile.class);
+            Set<Integer> outputFilesWithDataNotDeleted = new HashSet<>();
+            Set<Integer> expDataDeleted = new HashSet<>();
+            List<SequenceOutputFile> files = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), new SimpleFilter(FieldKey.fromString("rowid"), outputFileIds, CompareType.IN), null).getArrayList(SequenceOutputFile.class);
             for (SequenceOutputFile so : files)
             {
                 ExpData d = so.getExpData();
@@ -287,7 +289,7 @@ public class SequenceAnalysisManager
                 {
                     // account for possibility that another sequence output is using this file.  this would probably be from an error, like a pipeline resume/double import, but even in this case we shouldnt delete it
                     // also check based on filepath
-                    SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), rowIds, CompareType.NOT_IN);
+                    SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), outputFileIds, CompareType.NOT_IN);
                     filter.addCondition(new SimpleFilter.OrClause(
                             new CompareType.CompareClause(FieldKey.fromString("dataId"), CompareType.EQUAL, so.getDataId()),
                             new CompareType.CompareClause(FieldKey.fromString("dataId/DataFileUrl"), CompareType.EQUAL, so.getExpData().getDataFileUrl())
@@ -300,38 +302,50 @@ public class SequenceAnalysisManager
 
                     if (new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), filter, null).exists())
                     {
-                        _log.error("outputfile appears to be in use by another record, will not delete.  dataId: " + so.getDataId() + ", " + d.getDataFileUrl());
-                        notDeleted.add(so.getRowid());
+                        _log.error("outputfile file appears to be in use by another record, will not delete the associated file.  dataId: " + so.getDataId() + ", " + d.getDataFileUrl());
+                        outputFilesWithDataNotDeleted.add(so.getRowid());
                     }
-                    else
+                    else if (doDelete)
                     {
-                        if (doDelete)
-                        {
-                            d.getFile().delete();
-                        }
+                        d.getFile().delete();
+                        expDataDeleted.add(d.getRowId());
                     }
                 }
             }
 
-            List<Integer> toCheck = new ArrayList<>(rowIds);
-            toCheck.removeAll(notDeleted);
-            List<Integer> additionalAnalysisIds = SequenceAnalysisManager.get().getAnalysesAssociatedWithOutputFiles(toCheck);
+            Set<Integer> additionalAnalysisIds = SequenceAnalysisManager.get().getAnalysesAssociatedWithOutputFiles(outputFileIds);
 
             if (doDelete)
             {
-                final List<Map<String, Object>> toDelete = new ArrayList<>();
-                rowIds.forEach(x -> {
+                final List<Map<String, Object>> outputFilesToDelete = new ArrayList<>();
+                outputFileIds.forEach(x -> {
                     Map<String, Object> map = new CaseInsensitiveHashMap<>();
                     map.put("rowid", x);
-                    toDelete.add(map);
+                    outputFilesToDelete.add(map);
                 });
 
                 Map<String, Object> scriptContext = new HashMap<>();
                 scriptContext.put("deleteFromServer", true);  //a flag to make the trigger script accept this
-                us.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES).getUpdateService().deleteRows(user, container, toDelete, null, scriptContext);
+                us.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES).getUpdateService().deleteRows(user, container, outputFilesToDelete, null, scriptContext);
 
                 if (!additionalAnalysisIds.isEmpty())
                     SequenceAnalysisManager.get().deleteAnalysis(user, container, additionalAnalysisIds);
+
+                //also look for orphan quality metrics:
+                if (!expDataDeleted.isEmpty())
+                {
+                    List<Integer> metricRowIds = new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), PageFlowUtil.set("rowId"), new SimpleFilter(FieldKey.fromString("dataId"), expDataDeleted, CompareType.IN), null).getArrayList(Integer.class);
+                    if (!metricRowIds.isEmpty())
+                    {
+                        final List<Map<String, Object>> metricToDelete = new ArrayList<>();
+                        metricRowIds.forEach(x -> {
+                            Map<String, Object> map = new CaseInsensitiveHashMap<>();
+                            map.put("rowid", x);
+                            metricToDelete.add(map);
+                        });
+                        us.getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS).getUpdateService().deleteRows(user, container, metricToDelete, null, scriptContext);
+                    }
+                }
 
                 transaction.commit();
             }
@@ -340,9 +354,25 @@ public class SequenceAnalysisManager
         }
     }
 
-    public List<Integer> getAnalysesAssociatedWithOutputFiles(List<Integer> keys)
+    public Set<Integer> getAnalysesAssociatedWithOutputFiles(List<Integer> outputFileIds)
     {
-        return keys.isEmpty() ? Collections.emptyList() : new SqlSelector(SequenceAnalysisSchema.getInstance().getSchema(), new SQLFragment("SELECT distinct a.rowid FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " o JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " a ON (o.dataId = a.alignmentFile) WHERE o.rowid IN (" + StringUtils.join(keys, ",") + ")")).getArrayList(Integer.class);
+        Set<Integer> possibleDeletes = new HashSet<>(outputFileIds.isEmpty() ? Collections.emptyList() : new SqlSelector(SequenceAnalysisSchema.getInstance().getSchema(), new SQLFragment("SELECT distinct a.rowid FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " o JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " a ON (o.dataId = a.alignmentFile) WHERE o.rowid IN (" + StringUtils.join(outputFileIds, ",") + ")")).getArrayList(Integer.class));
+
+        //make sure these are not in use by other outputfiles not being deleted
+        if (!possibleDeletes.isEmpty())
+        {
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowId"), outputFileIds, CompareType.NOT_IN);
+            filter.addCondition(FieldKey.fromString("analysis_id"), possibleDeletes, CompareType.IN);
+
+            List<Integer> inUse = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), PageFlowUtil.set("analysis_id"), filter, null).getArrayList(Integer.class);
+            if (!inUse.isEmpty())
+            {
+                _log.info("found " + inUse.size() + " analyses associated with outputs being deleted along with another output.  these will not be deleted.");
+                possibleDeletes.removeAll(inUse);
+            }
+        }
+
+        return possibleDeletes;
     }
 
     public void deleteRefNtSequence(User user, Container container, List<Integer> rowIds) throws Exception

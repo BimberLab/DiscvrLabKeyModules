@@ -45,10 +45,7 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                 }}, false),
                 ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
                     put("checked", false);
-                }}, false),
-                ToolParameterDescriptor.create("dimsToUse", "PCs To Use", "This is not ideal, but for now hard code this value.  This is the number of PCs that seurat will use.", "ldk-integerfield", new JSONObject(){{
-
-                }}, 12)
+                }}, false)
         ));
     }
 
@@ -195,9 +192,10 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
 
 
             String outPrefix = FileUtil.makeLegalName(ctx.getParams().getString("projectName"));
-            String dataType = "raw";
             File tmpScript = new File(ctx.getWorkingDirectory(), "script.R");
             ctx.getFileManager().addIntermediateFile(tmpScript);
+
+            File outHtml = new File(ctx.getWorkingDirectory(), outPrefix + ".html");
 
             try (PrintWriter writer = PrintWriters.getPrintWriter(tmpScript))
             {
@@ -221,6 +219,7 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                 ctx.getFileManager().addIntermediateFile(scriptCopy);
 
                 writer.println("outPrefix <- '" + outPrefix + "'");
+                writer.println("resolutionToUse <- 0.6");
                 writer.println("data <- list(");
                 String delim = "";
                 for (SequenceOutputFile so : dataMap.keySet())
@@ -231,32 +230,9 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                 writer.println(")");
                 writer.println();
                 writer.println();
-
-                //TODO:
-                writer.println("metaData <- list(");
-//                for (SequenceOutputFile so : dataMap.keySet())
-//                {
-//                    writer.println("\t'" + so.getRowid() + "'=list(");
-//
-//                    writer.println(")");
-//                }
-//                writer.println();
-//                writer.println();
-                writer.println(")");
-
-                String dimsToUse = ctx.getParams().optString("dimsToUse", "12");
-                writer.println("dimsToUse <- " + dimsToUse);
-                writer.println("suffix <- '" + dataType + "'");
-                writer.println();
-                writer.println();
-
-                File outHtml = new File(ctx.getWorkingDirectory(), outPrefix + ".html");
                 writer.println("setwd('/work')");
 
                 writer.println("rmarkdown::render('" + rmdScript.getName() + "', clean=TRUE, output_file='" + outHtml.getName() + "')");
-
-                ctx.getFileManager().addOutput(action, "Seurat Report", outHtml);
-                ctx.getFileManager().addSequenceOutput(outHtml, "Seurat Report: " + outPrefix, "Seurat Report", (inputFiles.size() == 1 ? inputFiles.iterator().next().getReadset() : null), null, getGenomeId(inputFiles), null);
             }
             catch (IOException e)
             {
@@ -267,7 +243,7 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
             wrapper.setWorkingDir(ctx.getWorkingDirectory());
             wrapper.execute(Arrays.asList("/bin/bash", wrapperScript.getName(), pr.getPath()));
 
-            File seuratObj = new File(ctx.getWorkingDirectory(), outPrefix + ".seurat." + dataType + ".rds");
+            File seuratObj = new File(ctx.getWorkingDirectory(), outPrefix + ".seurat.rds");
             if (!seuratObj.exists())
             {
                 throw new PipelineJobException("Unable to find expected file: " + seuratObj.getPath());
@@ -275,7 +251,14 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
             ctx.getFileManager().addSequenceOutput(seuratObj, "Seurat Object: " + outPrefix, "Seurat Data", (inputFiles.size() == 1 ? inputFiles.iterator().next().getReadset() : null), null, getGenomeId(inputFiles), null);
             ctx.getFileManager().addOutput(action, "Seurat Object", seuratObj);
 
-            File seuratObjRaw = new File(ctx.getWorkingDirectory(), outPrefix + ".rawData." + dataType + ".rds");
+            if (!outHtml.exists())
+            {
+                throw new PipelineJobException("Unable to find summary report");
+            }
+            ctx.getFileManager().addOutput(action, "Seurat Report", outHtml);
+            ctx.getFileManager().addSequenceOutput(outHtml, "Seurat Report: " + outPrefix, "Seurat Report", (inputFiles.size() == 1 ? inputFiles.iterator().next().getReadset() : null), null, getGenomeId(inputFiles), null);
+
+            File seuratObjRaw = new File(ctx.getWorkingDirectory(), outPrefix + ".rawData.rds");
             if (seuratObjRaw.exists())
             {
                 ctx.getFileManager().addIntermediateFile(seuratObjRaw);

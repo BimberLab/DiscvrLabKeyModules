@@ -1,6 +1,6 @@
 ```{r}
 
-#knitr::opts_chunk$set(message=FALSE, warning=FALSE,echo=TRUE,error = FALSE)
+knitr::opts_chunk$set(message=FALSE, warning=FALSE,echo=TRUE,error = FALSE)
 library(knitr)
 library(ggplot2)
 library(Seurat)
@@ -8,72 +8,39 @@ library(dplyr)
 
 source('https://raw.githubusercontent.com/bbimber/rnaseq/master/seurat/seuratFunctions.R')
 
-
 ```
 
-# Prepare data
+## Prepare data
 
-```{r}
+```{r PreparingData}
 
-saveFile <- paste0(outPrefix, '.rawData.', suffix, '.rds')
-isResume <- F
+saveFile <- paste0(outPrefix, '.rawData.rds')
 seuratObjs <- list()
 if (file.exists(saveFile)) {
   print('resuming from file')
   seuratObjs <- readRDS(saveFile)
-  isResume <- T
-}
+} else {
+  for (datasetName in names(data)) {
+    print(paste0('Loading dataset: ', datasetName))
+    seuratObjs[datasetName] <- readAndFilter10xData(data[[datasetName]], datasetName)
 
-if (!isResume) {
-  for (exptNum in names(data)) {
-    print(paste0('Loading experiment: ', exptNum))
-    if (!is.null(seuratObjs[[exptNum]])) {
-      print('seurat obj exists, skipping')
-      next;
-    }
-
-    seuratRawData <- Read10X(data.dir = paste0(data[[exptNum]]))
-    seuratRawData <- performEmptyDropletFiltering(seuratRawData)
-
-    seuratObj <- createSeuratObj(seuratRawData, project = exptNum)
-    printQcPlots1(seuratObj)
-
-    minNFeature <- 200
-    maxNFeature <- 3000
-    maxPctMito <- 0.1
-
-    seuratObj@misc$OriginalCells <- length(colnames(x = seuratObj))
-    seuratObj <- subset(x = seuratObj, subset = nFeature_RNA > minNFeature & nFeature_RNA < maxNFeature & percent.mito < maxPctMito)
-    print(paste0('Initial cells: ', seuratObj@misc$OriginalCells, ', after filter: ', length(colnames(x = seuratObj))))
-
-    barcodeFile <- paste0(exptNum, '.citeSeqCounts.txt')
-    #seuratObj <- appendCellHashing(seuratObj, barcodeFile)
-
-    seuratObjs[exptNum] <- seuratObj
-
-    print(seuratObj)
+    print(seuratObjs[datasetName])
   }
 
   saveRDS(seuratObjs, file = saveFile)
-  rm(seuratRawData)
 }
-
 
 ```
 
+## Merge data
 
-# Merge data
-
-```{r}
-
+```{r MergeDatasets}
 
 seuratObj <- NULL
-isResume <- F
-saveFile <- paste0(outPrefix, '.seurat.', suffix, '.rds')
+saveFile <- paste0(outPrefix, '.seurat.rds')
 if (file.exists(saveFile)) {
   print('resuming from file')
   seuratObj <- readRDS(saveFile)
-  isResume <- T
 } else {
   seuratObj <- mergeSeuratObjs(seuratObjs, data)
   saveRDS(seuratObj, file = saveFile)
@@ -82,95 +49,31 @@ if (file.exists(saveFile)) {
 
 seuratObj
 
-
 ```
 
+## Initial Processing
 
-```{r}
-
+```{r InitialProcessing}
 
 seuratObj <- processSeurat1(seuratObj, saveFile = saveFile)
 
-print(paste0('Variable genes: ', length(x = VariableFeatures(object = seuratObj))))
+```
 
-print(VizDimLoadings(object = seuratObj, dims = 1:2))
-print(DimPlot(object = seuratObj))
+## DimRedux
 
-DimHeatmap(object = seuratObj, dims = 1, cells = 500, balanced = TRUE)
-DimHeatmap(object = seuratObj, dims = 1:20, cells = 500, balanced = TRUE)
+```{r DimRedux}
 
-JackStrawPlot(object = seuratObj, dims = 1:20)
-ElbowPlot(object = seuratObj)
+seuratObj <- findClustersAndDimRedux(seuratObj, saveFile = saveFile)
 
+findMarkers(seuratObj, resolutionToUse, outFile = paste0(outPrefix, '.markers.txt'), saveFileMarkers = paste0(outPrefix, '.markers.rds'))
 
 ```
 
+## Print Session Info
 
+```{r SessionInfo}
 
-
-```{r}
-
-if (!hasStepRun(seuratObj, 'FindNeighbors')) {
-  seuratObj <- FindNeighbors(object = seuratObj, dims = 1:dimsToUse)
-  seuratObj <- markStepRun(seuratObj, 'FindNeighbors')
-}
-
-if (!hasStepRun(seuratObj, 'FindClusters')) {
-  for (resolution in c(0.2, 0.4, 0.8, 1.2, 0.6)){
-    seuratObj <- FindClusters(object = seuratObj, resolution = resolution)
-    seuratObj[[paste0("ClusterNames_", resolution)]] <- Idents(object = seuratObj)
-    seuratObj <- markStepRun(seuratObj, 'FindClusters')
-  }
-}
-
-if (!hasStepRun(seuratObj, 'RunTSNE')) {
-  seuratObj <- RunTSNE(object = seuratObj, dims.use = 1:dimsToUse)
-  seuratObj <- markStepRun(seuratObj, 'RunTSNE')
-}
-
-
-plot1 <- DimPlot(object = seuratObj, label = TRUE) + ggtitle('0.6')
-plot2 <- DimPlot(object = seuratObj, group.by = "ClusterNames_0.2", label = TRUE) + ggtitle('0.2')
-plot3 <- DimPlot(object = seuratObj, group.by = "ClusterNames_0.4", label = TRUE) + ggtitle('0.4')
-plot4 <- DimPlot(object = seuratObj, group.by = "ClusterNames_0.8", label = TRUE) + ggtitle('0.8')
-plot5 <- DimPlot(object = seuratObj, group.by = "ClusterNames_1.2", label = TRUE) + ggtitle('1.2')
-
-CombinePlots(plots = list(plot2, plot3, plot1, plot4, plot5), legend = 'none')
-
-#DimPlot(object = seuratObj, reduction = 'tsne', group.by = 'HTO_classification')
-#DimPlot(object = seuratObj, reduction = 'tsne', group.by = 'HTO_classification.global')
-#table(seuratObj$HTO_classification)
-#seuratObj <- subset(x = seuratObj, subset = HTO_classification.global != 'Doublet')
-#DimPlot(object = seuratObj, reduction = 'tsne', group.by = 'HTO_classification')
-#table(seuratObj$HTO_classification)
-
-
-```
-
-
-
-```{r}
-
-Idents(seuratObj) <- seuratObj$ClusterNames_0.6
-
-saveFileMarkers <- paste0(outPrefix, '.', suffix, '.markers.rds')
-if (file.exists(saveFileMarkers)) {
-  print('resuming from file')
-  seuratObj.markers <- readRDS(saveFileMarkers)
-} else {
-  seuratObj.markers <- FindAllMarkers(object = seuratObj, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
-  saveRDS(seuratObj.markers, file = saveFileMarkers)
-}
-
-toPlot <- seuratObj.markers %>% filter(p_val_adj < 0.001) %>% group_by(cluster)  %>% filter(avg_logFC > 0.5) %>% top_n(9, avg_logFC) %>% select(gene)
-
-write.table(toPlot, file = paste0(outPrefix, '.', suffix, '.markers.txt'), sep = '\t', row.names = F, quote = F)
-
-DimPlot(object = seuratObj, reduction = 'tsne')
-
-top10 <- seuratObj.markers %>% group_by(cluster) %>% top_n(10, avg_logFC)
-DoHeatmap(object = seuratObj, features = top10$gene)
-
+sessionInfo()
 
 ```
 
