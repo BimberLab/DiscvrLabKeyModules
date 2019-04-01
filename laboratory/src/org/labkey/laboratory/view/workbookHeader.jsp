@@ -57,7 +57,7 @@
 
         //set page title
         var titleId = Ext4.id();
-        var markup = '<span class="wb-name">' + workbookId + ':&nbsp;</span><span class="labkey-edit-in-place" id="' + titleId + '">' + title + '</span>';
+        var markup = '<span class="wb-name">' + workbookId + ':&nbsp;</span><span class="labkey-edit-in-place" id="' + titleId + '">' + Ext4.util.Format.htmlEncode(title) + '</span>';
         var elem = document.querySelector('.lk-body-title h3');
         if (elem){
             elem.innerHTML = markup;
