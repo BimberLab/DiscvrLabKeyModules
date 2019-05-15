@@ -29,6 +29,13 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
 {
     private static final Logger _log = Logger.getLogger(ONPRC_BillingCustomizer.class);
 
+    // consider moving this helper to AbstractTableCustomizer
+    private QueryForeignKey.Builder qfk(AbstractTableInfo ti)
+    {
+        // default to useRawFkValue if displayField==null
+        return QueryForeignKey.from(ti.getUserSchema(), ti.getContainerFilter()).raw(true);
+    }
+
     public void customize(TableInfo table)
     {
         if (table instanceof AbstractTableInfo)
@@ -131,7 +138,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             UserSchema us = getUserSchema(table, "ehr_lookups");
             if (us != null)
             {
-                table.getColumn(FieldKey.fromString("chargetype")).setFk(new QueryForeignKey(us, us.getContainer(), queryName, "value", null, true));
+                table.getMutableColumn(FieldKey.fromString("chargetype")).setFk( qfk(table).schema(us).to(queryName, "value", null) );
             }
         }
 
@@ -140,7 +147,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             UserSchema us = getUserSchema(table, "onprc_billing_public");
             if (us != null)
             {
-                table.getColumn(FieldKey.fromString("assistingstaff")).setFk(new QueryForeignKey(us, us.getContainer(), "chargeUnits", "chargetype", null, true));
+                table.getMutableColumn(FieldKey.fromString("assistingstaff")).setFk( qfk(table).schema(us).to("chargeUnits", "chargetype", null) );
             }
         }
     }
@@ -155,7 +162,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
                 UserSchema us = getUserSchema(ti, "ehr_lookups", ehrContainer);
                 if (us != null)
                 {
-                    ti.getColumn(FieldKey.fromString("code")).setFk(new QueryForeignKey(us, us.getContainer(), "snomed", "code", "meaning", false));
+                    ti.getMutableColumn(FieldKey.fromString("code")).setFk( qfk(ti).schema(us).to("snomed", "code", "meaning") );
                 }
             }
         }
@@ -163,7 +170,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
 
     private void addTotalCost(AbstractTableInfo ti)
     {
-        ColumnInfo unitCost = ti.getColumn("unitCost");
+        var unitCost = ti.getMutableColumn("unitCost");
         if (unitCost != null)
         {
             unitCost.setFormat("$###,##0.00");
@@ -180,8 +187,8 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
 
         if (ti.getColumn("nihRate") != null)
         {
-            ti.getColumn("nihRate").setLabel("NIH Rate");
-            ti.getColumn("nihRate").setFormat("$###,##0.00");
+            ti.getMutableColumn("nihRate").setLabel("NIH Rate");
+            ti.getMutableColumn("nihRate").setFormat("$###,##0.00");
         }
     }
 
@@ -235,7 +242,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             return;
         }
 
-        table.getColumn("userid").setFk(new QueryForeignKey(us, publicContainer, "UsersAndGroups", "UserId", "DisplayName"));
+        table.getMutableColumn("userid").setFk(new QueryForeignKey(us, publicContainer, "UsersAndGroups", "UserId", "DisplayName"));
     }
 
     private void customizeMiscCharges(AbstractTableInfo table)
@@ -246,28 +253,28 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             return;
         }
 
-        ColumnInfo invoicedItemId = table.getColumn("invoicedItemId");
+        var invoicedItemId = table.getMutableColumn("invoicedItemId");
         if (invoicedItemId != null)
         {
-            invoicedItemId.setFk(new QueryForeignKey(us, us.getContainer(), "invoicedItems", "objectid", "rowid"));
+            invoicedItemId.setFk( qfk(table).schema(us).to("invoicedItems", "objectid", "rowid"));
         }
 
-        ColumnInfo sourceInvoicedItem = table.getColumn("sourceInvoicedItem");
+        var sourceInvoicedItem = table.getMutableColumn("sourceInvoicedItem");
         if (sourceInvoicedItem != null)
         {
-            sourceInvoicedItem.setFk(new QueryForeignKey(us, us.getContainer(), "invoicedItems", "objectid", "transactionNumber"));
+            sourceInvoicedItem.setFk( qfk(table).schema(us).to("invoicedItems", "objectid", "transactionNumber") );
         }
 
-        ColumnInfo invoiceId = table.getColumn("invoiceId");
+        var invoiceId = table.getMutableColumn("invoiceId");
         if (invoiceId != null)
         {
-            invoiceId.setFk(new QueryForeignKey(us, us.getContainer(), "invoiceRuns", "objectid", "rowid"));
+            invoiceId.setFk( qfk(table).schema(us).to("invoiceRuns", "objectid", "rowid") );
         }
 
-        ColumnInfo chargeType = table.getColumn("chargeType");
+        var chargeType = table.getMutableColumn("chargeType");
         if (chargeType != null)
         {
-            chargeType.setFk(new QueryForeignKey(us, us.getContainer(), "chargeUnits", "chargeType", null, true));
+            chargeType.setFk( qfk(table).schema(us).to("chargeUnits", "chargeType", null) );
         }
 
         addAliasLookup(table, "debitedaccount");
@@ -279,23 +286,23 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
         table.getButtonBarConfig().setAlwaysShowRecordSelectors(true);
         table.setDetailsURL(DetailsURL.fromString("/onprc_billing/invoicedItemDetails.view?invoicedItem=${objectid}"));
 
-        ColumnInfo col = table.getColumn("invoicedItemId");
+        var col = table.getMutableColumn("invoicedItemId");
         if (col != null)
         {
             UserSchema us = getBillingUserSchema(table);
             if (us != null)
             {
-                col.setFk(new QueryForeignKey(us, null, "invoicedItems", "objectid", "rowid"));
+                col.setFk( qfk(table).schema(us).to("invoicedItems", "objectid", "rowid") );
             }
         }
 
-        ColumnInfo idCol = table.getColumn("Id");
+        var idCol = table.getMutableColumn("Id");
         if (idCol != null)
         {
             Container ehrContainer = EHRService.get().getEHRStudyContainer(table.getUserSchema().getContainer());
             if (ehrContainer != null)
             {
-                idCol.setFk(new QueryForeignKey("study", ehrContainer, ehrContainer, table.getUserSchema().getUser(), "animal", "Id", "Id"));
+                idCol.setFk( qfk(table).schema("study", ehrContainer).to("animal", "Id", "Id") );
                 EHRService.get().appendCalculatedIdCols(table, "date");
             }
         }
@@ -330,7 +337,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
 
     private void addAliasLookup(AbstractTableInfo table, String sourceColName)
     {
-        ColumnInfo sourceCol = table.getColumn(sourceColName);
+        var sourceCol = table.getMutableColumn(sourceColName);
         if (sourceCol != null && sourceCol.getFk() == null)
         {
             UserSchema us = getUserSchema(table, "onprc_billing_public");
@@ -341,7 +348,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
 
             if (us != null)
             {
-                sourceCol.setFk(new QueryForeignKey(us, us.getContainer(), "aliases", "alias", "alias", true));
+                sourceCol.setFk( qfk(table).schema(us).to("aliases", "alias", "alias") );
                 sourceCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing_public&query.queryName=aliases&query.alias~eq=${" + sourceColName + "}"));
             }
         }
@@ -355,7 +362,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             if (found)
                 continue; //a table should never contain both of these anyway
 
-            ColumnInfo grant = ti.getColumn(field);
+            var grant = ti.getMutableColumn(field);
             if (grant != null)
             {
                 found = true;
@@ -363,12 +370,15 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
                 {
                     UserSchema us = getUserSchema(ti, "onprc_billing_public");
                     if (us != null)
-                        grant.setFk(new QueryForeignKey(us, null, "grants", "grantNumber", "grantNumber"));
+                        grant.setFk(QueryForeignKey.from(us, ti.getContainerFilter())
+                                .table("grants")
+                                .key("grantNumber")
+                                .display("grantNumber"));
                 }
             }
         }
 
-        ColumnInfo account = ti.getColumn("account");
+        var account = ti.getMutableColumn("account");
         if (account != null && !ti.getName().equalsIgnoreCase("accounts"))
         {
             account.setLabel("Alias");
@@ -377,13 +387,13 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
                 UserSchema us = getUserSchema(ti, "onprc_billing_public");
                 if (us != null)
                 {
-                    account.setFk(new QueryForeignKey(us, null, "aliases", "alias", "alias", true));
+                    account.setFk( qfk(ti).schema(us).to("aliases", "alias", "alias") );
                     account.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing_public&query.queryName=aliases&query.alias~eq=${account}", us.getContainer()));
                 }
             }
         }
 
-        ColumnInfo projectNumber = ti.getColumn("projectNumber");
+        var projectNumber = ti.getMutableColumn("projectNumber");
         if (projectNumber != null && !ti.getName().equalsIgnoreCase("grantProjects"))
         {
             UserSchema us = getUserSchema(ti, "onprc_billing_public");
@@ -393,49 +403,58 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             }
         }
 
-        ColumnInfo chargeId = ti.getColumn("chargeId");
+        var chargeId = ti.getMutableColumn("chargeId");
         if (chargeId != null)
         {
             UserSchema us = getUserSchema(ti, "onprc_billing_public");
             if (us != null){
-                chargeId.setFk(new QueryForeignKey(us, null, "chargeableItems", "rowid", "name"));
+                chargeId.setFk(QueryForeignKey.from(us, ti.getContainerFilter())
+                        .table("chargeableItems")
+                        .key("rowid")
+                        .display("name"));
             }
             chargeId.setLabel("Charge Name");
         }
 
-        ColumnInfo rateId = ti.getColumn("rateId");
+        var rateId = ti.getMutableColumn("rateId");
         if (rateId != null)
         {
             UserSchema us = getUserSchema(ti, "onprc_billing_public");
             if (us != null){
-                rateId.setFk(new QueryForeignKey(us, null, "chargeableRates", "rowid", "rowid"));
+                rateId.setFk(QueryForeignKey.from(us, ti.getContainerFilter())
+                        .table("chargeableRates")
+                        .key("rowid")
+                        .display("rowid"));
             }
             rateId.setLabel("Rate");
         }
 
-        ColumnInfo exemptionId = ti.getColumn("exemptionId");
+        var exemptionId = ti.getMutableColumn("exemptionId");
         if (exemptionId != null)
         {
             UserSchema us = getUserSchema(ti, "onprc_billing_public");
             if (us != null){
-                exemptionId.setFk(new QueryForeignKey(us, null, "chargeableRateExemptions", "rowid", "rowid"));
+                exemptionId.setFk(QueryForeignKey.from(us, ti.getContainerFilter())
+                        .table("chargeableRateExemptions")
+                        .key("rowid")
+                        .display("rowid"));
             }
             exemptionId.setLabel("Rate Exemption");
         }
 
-        ColumnInfo chargeType = ti.getColumn("chargetype");
+        var chargeType = ti.getMutableColumn("chargetype");
         if (chargeType != null)
         {
             chargeType.setLabel("Charge Unit");
         }
 
-        ColumnInfo creditAccountType = ti.getColumn("creditAccountType");
+        var creditAccountType = ti.getMutableColumn("creditAccountType");
         if (creditAccountType != null)
         {
             creditAccountType.setLabel("Credit Alias Based On");
         }
 
-        ColumnInfo currentActiveAlias = ti.getColumn("currentActiveAlias");
+        var currentActiveAlias = ti.getMutableColumn("currentActiveAlias");
         if (currentActiveAlias != null)
         {
             currentActiveAlias.setLabel("Currently Active Alias For Project");
@@ -464,7 +483,10 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
 
         if (us != null)
         {
-            ti.getColumn(activeAccount).setFk(new QueryForeignKey(us, null, ONPRC_BillingSchema.TABLE_ALIASES, "alias", "alias"));
+            ti.getMutableColumn(activeAccount).setFk(QueryForeignKey.from(us, ti.getContainerFilter())
+                    .table(ONPRC_BillingSchema.TABLE_ALIASES)
+                    .key("alias")
+                    .display("alias"));
         }
     }
 
@@ -480,7 +502,10 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             ti.addColumn(col);
         }
         //NOTE: this is separated to allow linked schemas to use the same column
-        ti.getColumn(activeRate).setFk(new QueryForeignKey(ti.getUserSchema(), null, ONPRC_BillingSchema.TABLE_CHARGE_RATES, "rowid", "rowid"));
+        ti.getMutableColumn(activeRate).setFk(QueryForeignKey.from(ti.getUserSchema(), ti.getContainerFilter())
+                .table(ONPRC_BillingSchema.TABLE_CHARGE_RATES)
+                .key("rowid")
+                .display("rowid"));
 
         String totalExemptions = "totalExemptions";
         if (ti.getColumn(totalExemptions) == null)
@@ -502,7 +527,10 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             ti.addColumn(col);
         }
         //NOTE: this is separated to allow linked schemas to use the same column
-        ti.getColumn(activeCreditAccount).setFk(new QueryForeignKey(ti.getUserSchema(), null, ONPRC_BillingSchema.TABLE_CREDIT_ACCOUNT, "rowid", "rowid"));
+        ti.getMutableColumn(activeCreditAccount).setFk(QueryForeignKey.from(ti.getUserSchema(), ti.getContainerFilter())
+                .table(ONPRC_BillingSchema.TABLE_CREDIT_ACCOUNT)
+                .key("rowid")
+                .display("rowid"));
     }
 
     private void customizeProjectAccountHistory(AbstractTableInfo ti)
@@ -529,7 +557,7 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
             UserSchema us = getUserSchema(ti, "onprc_billing_public");
             if (us != null)
             {
-                newAccountCol.setFk(new QueryForeignKey(us, null, "aliases", "alias", "alias", true));
+                newAccountCol.setFk( qfk(ti).schema(us).to("aliases", "alias", "alias") );
                 newAccountCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=onprc_billing_public&query.queryName=aliases&query.alias~eq=${account}", us.getContainer()));
             }
         }
@@ -573,13 +601,13 @@ public class ONPRC_BillingCustomizer extends AbstractTableCustomizer
     {
         LDKService.get().appendCalculatedDateColumns(ti, null, "budgetEndDate");
 
-        ColumnInfo aliasType = ti.getColumn(FieldKey.fromString("aliasType"));
+        var aliasType = ti.getMutableColumn(FieldKey.fromString("aliasType"));
         if (aliasType != null && aliasType.getFk() == null)
         {
             UserSchema us = getUserSchema(ti, "onprc_billing_public");
             if (us != null)
             {
-                aliasType.setFk(new QueryForeignKey(us, null, "aliasTypes", "aliasType", null, true));
+                aliasType.setFk( qfk(ti).schema(us).to("aliasTypes", "aliasType", null) );
             }
         }
     }

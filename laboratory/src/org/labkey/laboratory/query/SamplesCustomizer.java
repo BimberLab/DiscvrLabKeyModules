@@ -1,6 +1,7 @@
 package org.labkey.laboratory.query;
 
 import org.labkey.api.data.AbstractTableInfo;
+import org.labkey.api.data.BaseColumnInfo;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
@@ -60,7 +61,7 @@ public class SamplesCustomizer implements TableCustomizer
             int idx = columns.indexOf(quantity);
             columns.add(idx + 1, col);
             for (ColumnInfo c : columns)
-                ti.addColumn(c);
+                ti.addColumn( (BaseColumnInfo)c );
         }
     }
 }

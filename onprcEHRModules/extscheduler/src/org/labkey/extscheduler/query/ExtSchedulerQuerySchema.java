@@ -2,6 +2,7 @@ package org.labkey.extscheduler.query;
 
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
@@ -33,12 +34,12 @@ public class ExtSchedulerQuerySchema extends UserSchema
     }
 
     @Override
-    public TableInfo createTable(String name)
+    public TableInfo createTable(String name, ContainerFilter cf)
     {
         if (RESOURCES_TABLE_NAME.equalsIgnoreCase(name))
-            return new ResourcesTable(ExtSchedulerSchema.getInstance().getSchema().getTable(RESOURCES_TABLE_NAME), this);
+            return new ResourcesTable(ExtSchedulerSchema.getInstance().getSchema().getTable(RESOURCES_TABLE_NAME), this, cf);
         if (EVENTS_TABLE_NAME.equalsIgnoreCase(name))
-            return new EventsTable(ExtSchedulerSchema.getInstance().getSchema().getTable(EVENTS_TABLE_NAME), this);
+            return new EventsTable(ExtSchedulerSchema.getInstance().getSchema().getTable(EVENTS_TABLE_NAME), this, cf);
 
         return null;
     }

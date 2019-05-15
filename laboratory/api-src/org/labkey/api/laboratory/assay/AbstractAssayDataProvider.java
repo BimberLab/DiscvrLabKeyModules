@@ -335,7 +335,7 @@ abstract public class AbstractAssayDataProvider extends AbstractDataProvider imp
             boolean visible = new AssayNavItem(this, p).isVisible(c, u);
             if (visible)
             {
-                TableInfo ti = AssayService.get().createRunTable(p, getAssayProvider(), u, c);
+                TableInfo ti = AssayService.get().createRunTable(p, getAssayProvider(), u, c, null);
                 if (ti != null)
                 {
                     items.add(new AssaySummaryNavItem(this, ti.getPublicSchemaName(), ti.getPublicName(), LaboratoryService.NavItemCategory.data, LaboratoryService.NavItemCategory.data.name(), p.getName() + " Runs", p));

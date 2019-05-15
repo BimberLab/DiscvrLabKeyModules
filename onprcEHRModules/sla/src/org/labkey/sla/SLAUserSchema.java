@@ -3,6 +3,7 @@ package org.labkey.sla;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.ehr.security.EHRProtocolEditPermission;
 import org.labkey.api.ldk.table.CustomPermissionsTable;
@@ -24,17 +25,17 @@ public class SLAUserSchema extends SimpleUserSchema
 
     @Override
     @Nullable
-    protected TableInfo createWrappedTable(String name, @NotNull TableInfo schematable)
+    protected TableInfo createWrappedTable(String name, @NotNull TableInfo schematable, ContainerFilter cf)
     {
         if ("allowableAnimals".equalsIgnoreCase(name))
         {
-            CustomPermissionsTable ti = new CustomPermissionsTable(this, schematable).init();
+            CustomPermissionsTable ti = new CustomPermissionsTable(this, schematable, cf).init();
             ti.addPermissionMapping(InsertPermission.class, EHRProtocolEditPermission.class);
             ti.addPermissionMapping(UpdatePermission.class, EHRProtocolEditPermission.class);
             ti.addPermissionMapping(DeletePermission.class, EHRProtocolEditPermission.class);
             return ti;
         }
 
-        return super.createWrappedTable(name, schematable);
+        return super.createWrappedTable(name, schematable, cf);
     }
 }

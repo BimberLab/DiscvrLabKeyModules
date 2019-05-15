@@ -2,6 +2,7 @@ package org.labkey.extscheduler.query;
 
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.AbstractTableInfo;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.DatabaseTableType;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.query.DefaultQueryUpdateService;
@@ -14,9 +15,9 @@ import org.labkey.api.security.permissions.ReadPermission;
 
 public class ResourcesTable extends FilteredTable<ExtSchedulerQuerySchema>
 {
-    public ResourcesTable(TableInfo table, ExtSchedulerQuerySchema schema)
+    public ResourcesTable(TableInfo table, ExtSchedulerQuerySchema schema, ContainerFilter cf)
     {
-        super(table, schema);
+        super(table, schema, cf);
         wrapAllColumns(true);
 
         if (!getContainer().hasPermission(schema.getUser(), AdminPermission.class))

@@ -3,6 +3,7 @@ package org.labkey.extscheduler.query;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.AbstractTableInfo;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DatabaseTableType;
 import org.labkey.api.data.JdbcType;
@@ -32,9 +33,9 @@ import java.util.Map;
 
 public class EventsTable extends FilteredTable<ExtSchedulerQuerySchema>
 {
-    public EventsTable(TableInfo table, ExtSchedulerQuerySchema schema)
+    public EventsTable(TableInfo table, ExtSchedulerQuerySchema schema, ContainerFilter cf)
     {
-        super(table, schema);
+        super(table, schema, cf);
         wrapAllColumns(true);
 
         SqlDialect dialect = getSchema().getSqlDialect();

@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.AbstractTableInfo;
+import org.labkey.api.data.BaseColumnInfo;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DataColumn;
@@ -17,6 +18,7 @@ import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.LDKService;
+import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
@@ -88,7 +90,7 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
 
     private void customizeSharedCols(AbstractTableInfo ti)
     {
-        for (ColumnInfo col : ti.getColumns())
+        for (var col : ti.getMutableColumns())
         {
             COL_ENUM.processColumn(col, ti);
         }
@@ -97,21 +99,21 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
     private enum COL_ENUM
     {
         refNtSequence(Integer.class, PageFlowUtil.set("sequenceid", "ref_nt_sequence")){
-            public void customizeColumn(ColumnInfo col, AbstractTableInfo ti)
+            public void customizeColumn(BaseColumnInfo col, AbstractTableInfo ti)
             {
                 col.setLabel("Ref NT Sequence");
                 addFk(ti.getUserSchema().getContainer(), ti.getUserSchema().getUser(), col, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES, "rowid", "name");
             }
         },
         libraryId(Integer.class, PageFlowUtil.set("genomeId", "genome_id", "library_id")){
-            public void customizeColumn(ColumnInfo col, AbstractTableInfo ti)
+            public void customizeColumn(BaseColumnInfo col, AbstractTableInfo ti)
             {
                 col.setLabel("Reference Genome");
                 addFk(ti.getUserSchema().getContainer(), ti.getUserSchema().getUser(), col, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES, "rowid", "rowid");
             }
         },
         runid(Integer.class, PageFlowUtil.set("run_id")){
-            public void customizeColumn(ColumnInfo col, AbstractTableInfo ti)
+            public void customizeColumn(BaseColumnInfo col, AbstractTableInfo ti)
             {
                 col.setLabel("Run");
                 col.setShownInInsertView(false);
@@ -122,7 +124,7 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
             }
         },
         jobid(Integer.class, PageFlowUtil.set("job_id")){
-            public void customizeColumn(ColumnInfo col, AbstractTableInfo ti)
+            public void customizeColumn(BaseColumnInfo col, AbstractTableInfo ti)
             {
                 col.setLabel("Job Id");
                 col.setShownInInsertView(false);
@@ -132,21 +134,21 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
             }
         },
         dataId(Integer.class, PageFlowUtil.set("data_id")){
-            public void customizeColumn(ColumnInfo col, AbstractTableInfo ti)
+            public void customizeColumn(BaseColumnInfo col, AbstractTableInfo ti)
             {
                 col.setLabel("File Id");
                 addFk(ti.getUserSchema().getContainer(), ti.getUserSchema().getUser(), col, "exp", "data", "rowid", null);
             }
         },
         readset(Integer.class, PageFlowUtil.set("readsetId", "readset_id")){
-            public void customizeColumn(ColumnInfo col, AbstractTableInfo ti)
+            public void customizeColumn(BaseColumnInfo col, AbstractTableInfo ti)
             {
                 col.setLabel("Readset");
                 addFk(ti.getUserSchema().getContainer(), ti.getUserSchema().getUser(), col, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS, "rowid", null);
             }
         },
         analysisId(Integer.class, PageFlowUtil.set("analysis_id")){
-            public void customizeColumn(ColumnInfo col, AbstractTableInfo ti)
+            public void customizeColumn(BaseColumnInfo col, AbstractTableInfo ti)
             {
                 col.setLabel("Analysis Id");
                 addFk(ti.getUserSchema().getContainer(), ti.getUserSchema().getUser(), col, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, "rowid", null);
@@ -167,24 +169,26 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
             return alternateNames;
         }
 
-        private static void setNonEditable(ColumnInfo col)
+        private static void setNonEditable(BaseColumnInfo col)
         {
             col.setUserEditable(false);
             col.setShownInInsertView(false);
             col.setShownInUpdateView(false);
         }
 
-        private static void addFk(Container c, User u, ColumnInfo col, String schema, String query, String pkCol, @Nullable String displayCol)
+        private static void addFk(Container c, User u, BaseColumnInfo col, String schema, String query, String pkCol, @Nullable String displayCol)
         {
             if (col.getFk() == null)
             {
-                col.setFk(new QueryForeignKey(schema, c, null, u, query, pkCol, displayCol));
+                col.setFk(QueryForeignKey.from(DefaultSchema.get(u,c),null)
+                    .schema(schema, c)
+                    .to(query, pkCol, displayCol));
             }
         }
 
-        abstract public void customizeColumn(ColumnInfo col, AbstractTableInfo ti);
+        abstract public void customizeColumn(BaseColumnInfo col, AbstractTableInfo ti);
 
-        public static void processColumn(ColumnInfo col, AbstractTableInfo ti)
+        public static void processColumn(BaseColumnInfo col, AbstractTableInfo ti)
         {
             for (COL_ENUM colEnum : COL_ENUM.values())
             {

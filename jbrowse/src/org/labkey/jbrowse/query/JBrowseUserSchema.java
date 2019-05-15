@@ -3,6 +3,7 @@ package org.labkey.jbrowse.query;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.ldk.table.SharedDataTable;
@@ -40,11 +41,11 @@ public class JBrowseUserSchema extends SimpleUserSchema
 
     @Override
     @Nullable
-    protected TableInfo createWrappedTable(String name, @NotNull TableInfo sourceTable)
+    protected TableInfo createWrappedTable(String name, @NotNull TableInfo sourceTable, ContainerFilter cf)
     {
         if (JBrowseSchema.TABLE_JSONFILES.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable).init();
+            return new SharedDataTable(this, sourceTable).init();                // TODO: assert cf is null or not default?
         else
-            return super.createWrappedTable(name, sourceTable);
+            return super.createWrappedTable(name, sourceTable, cf);
     }
 }

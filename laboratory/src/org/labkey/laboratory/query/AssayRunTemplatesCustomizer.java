@@ -1,6 +1,7 @@
 package org.labkey.laboratory.query;
 
 import org.labkey.api.data.AbstractTableInfo;
+import org.labkey.api.data.BaseColumnInfo;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
@@ -45,7 +46,7 @@ public class AssayRunTemplatesCustomizer implements TableCustomizer
 
             List<ColumnInfo> newCols = new ArrayList<ColumnInfo>();
 
-            ColumnInfo completeCol = new ExprColumn(ti, "enter_results", new SQLFragment("'Enter Results'"), JdbcType.VARCHAR, ti.getColumn("assayId"), ti.getColumn("runid"));
+            ExprColumn completeCol = new ExprColumn(ti, "enter_results", new SQLFragment("'Enter Results'"), JdbcType.VARCHAR, ti.getColumn("assayId"), ti.getColumn("runid"));
             completeCol.setName("enter_results");
             completeCol.setLabel("Enter Results");
             completeCol.setUserEditable(false);
@@ -76,7 +77,7 @@ public class AssayRunTemplatesCustomizer implements TableCustomizer
 
             for (ColumnInfo ci : newCols)
             {
-                ati.addColumn(ci);
+                ati.addColumn( (BaseColumnInfo) ci);
             }
         }
 

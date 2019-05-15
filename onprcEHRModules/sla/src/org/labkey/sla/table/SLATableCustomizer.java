@@ -34,21 +34,29 @@ public class SLATableCustomizer extends AbstractTableCustomizer
         Container ehrContainer = EHRService.get().getEHRStudyContainer(ti.getUserSchema().getContainer());
         if (ehrContainer != null)
         {
-            ColumnInfo project = ti.getColumn("project");
+            var project = ti.getMutableColumn("project");
             if (project != null && !ti.getName().equalsIgnoreCase("project"))
             {
                 project.setFacetingBehaviorType(FacetingBehaviorType.ALWAYS_OFF);
                 UserSchema ehrSchema = getUserSchema(ti, "ehr", ehrContainer);
                 if (ehrSchema != null)
-                    project.setFk(new QueryForeignKey(ehrSchema, ehrContainer, "project", "project", "displayName"));
+                    project.setFk(QueryForeignKey.from(ehrSchema, ti.getContainerFilter())
+                            .container(ehrContainer)
+                            .table("project")
+                            .key("project")
+                            .display("displayName"));
             }
 
-            ColumnInfo chargeId = ti.getColumn("chargeId");
+            var chargeId = ti.getMutableColumn("chargeId");
             if (chargeId != null && !ti.getName().equalsIgnoreCase("chargeableItems"))
             {
                 UserSchema billingSchema = getUserSchema(ti, "onprc_billing", ehrContainer);
                 if (billingSchema != null)
-                    chargeId.setFk(new QueryForeignKey(billingSchema, ehrContainer, "chargeableItems", "rowid", "name"));
+                    chargeId.setFk(QueryForeignKey.from(billingSchema, ti.getContainerFilter())
+                            .container(ehrContainer)
+                            .table("chargeableItems")
+                            .key("rowid")
+                            .display("name"));
             }
         }
     }

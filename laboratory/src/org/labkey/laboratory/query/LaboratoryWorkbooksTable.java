@@ -5,6 +5,7 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
@@ -46,9 +47,9 @@ public class LaboratoryWorkbooksTable extends SimpleUserSchema.SimpleTable
 
     private static final Logger _log = Logger.getLogger(LaboratoryWorkbooksTable.class);
 
-    public LaboratoryWorkbooksTable(UserSchema us, TableInfo st)
+    public LaboratoryWorkbooksTable(UserSchema us, TableInfo st, ContainerFilter cf)
     {
-        super(us, st);
+        super(us, st, cf);
     }
 
     public SimpleUserSchema.SimpleTable init()
@@ -58,7 +59,7 @@ public class LaboratoryWorkbooksTable extends SimpleUserSchema.SimpleTable
         setTitleColumn(WORKBOOK_ID_COl);
         setDetailsURL(DetailsURL.fromString("/project/start.view"));
 
-        ColumnInfo col = getColumn(WORKBOOK_ID_COl);
+        var col = getMutableColumn(WORKBOOK_ID_COl);
         col.setURL(DetailsURL.fromString("/project/start.view"));
 
         String chr = getSqlDialect().isPostgreSQL() ? "chr" : "char";
@@ -83,12 +84,12 @@ public class LaboratoryWorkbooksTable extends SimpleUserSchema.SimpleTable
     @Override
     public QueryUpdateService getUpdateService()
     {
-        return new UpdateSerivce(this);
+        return new UpdateService(this);
     }
 
-    private class UpdateSerivce extends SimpleQueryUpdateService
+    private class UpdateService extends SimpleQueryUpdateService
     {
-        public UpdateSerivce(SimpleUserSchema.SimpleTable ti)
+        public UpdateService(SimpleUserSchema.SimpleTable ti)
         {
             super(ti, ti.getRealTable());
         }

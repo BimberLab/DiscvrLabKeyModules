@@ -6,6 +6,7 @@ import org.labkey.api.data.Aggregate;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SimpleFilter;
@@ -49,9 +50,9 @@ public class ContainerIncrementingTable extends SimpleUserSchema.SimpleTable
     private static final String SELF_ASSIGNED_COL = "_selfAssignedId_";
     private static final String PROPERT_CATEGORY_BASE = "laboratory.tableRowId";
 
-    public ContainerIncrementingTable(UserSchema us, TableInfo st, String incrementingCol)
+    public ContainerIncrementingTable(UserSchema us, TableInfo st, ContainerFilter cf, String incrementingCol)
     {
-        super(us, st);
+        super(us, st, cf);
         _incrementingCol = incrementingCol;
     }
 
@@ -59,7 +60,7 @@ public class ContainerIncrementingTable extends SimpleUserSchema.SimpleTable
     {
         super.init();
 
-        ColumnInfo col = getColumn(_incrementingCol);
+        var col = getMutableColumn(_incrementingCol);
         if (col == null)
             throw new IllegalArgumentException("Unable to find column: " + _incrementingCol);
 

@@ -2,6 +2,7 @@ package org.labkey.laboratory;
 
 import org.labkey.api.collections.CaseInsensitiveTreeSet;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.module.Module;
@@ -33,6 +34,7 @@ public class ExtraDataSourcesUserSchema extends SimpleUserSchema
     {
         DefaultSchema.registerProvider(NAME, new DefaultSchema.SchemaProvider(m)
         {
+            @Override
             public QuerySchema createSchema(final DefaultSchema schema, Module module)
             {
                 return new ExtraDataSourcesUserSchema(schema.getUser(), schema.getContainer());
@@ -41,7 +43,7 @@ public class ExtraDataSourcesUserSchema extends SimpleUserSchema
     }
 
     @Override
-    public TableInfo createTable(String name)
+    public TableInfo createTable(String name, ContainerFilter cf)
     {
         LaboratoryServiceImpl service = (LaboratoryServiceImpl)LaboratoryServiceImpl.get();
         Set<AdditionalDataSource> sources = service.getAdditionalDataSources(getContainer(), getUser());
@@ -51,6 +53,7 @@ public class ExtraDataSourcesUserSchema extends SimpleUserSchema
             {
                 if (!getContainer().isWorkbook() || source.isImportIntoWorkbooks())
                 {
+                    // TODO: QueryDefinition.getTable doesn't yet have ContainerFilter option
                     TableInfo ti = source.getTableInfo(getContainer(), getUser());
                     new WrappingTableCustomizer().customize(ti);
 
@@ -74,7 +77,7 @@ public class ExtraDataSourcesUserSchema extends SimpleUserSchema
     }
 
     @Override
-    public synchronized Set<String> getVisibleTableNames()
+    public Set<String> getVisibleTableNames()
     {
         return Collections.unmodifiableSet(getTableNames());
     }
@@ -83,7 +86,7 @@ public class ExtraDataSourcesUserSchema extends SimpleUserSchema
     public Set<String> getTableNames()
     {
         Set<String> tables = new CaseInsensitiveTreeSet();
-        LaboratoryServiceImpl service = (LaboratoryServiceImpl)LaboratoryServiceImpl.get();
+        LaboratoryServiceImpl service = LaboratoryServiceImpl.get();
         Set<AdditionalDataSource> sources = service.getAdditionalDataSources(getContainer(), getUser());
         for (AdditionalDataSource source : sources)
         {

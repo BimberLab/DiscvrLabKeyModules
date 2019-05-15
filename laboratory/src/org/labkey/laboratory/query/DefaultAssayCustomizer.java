@@ -1,7 +1,6 @@
 package org.labkey.laboratory.query;
 
 import org.labkey.api.data.AbstractTableInfo;
-import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.laboratory.LaboratoryService;
@@ -60,7 +59,7 @@ public class DefaultAssayCustomizer implements TableCustomizer
 
     public void customizeSharedColumns(AbstractTableInfo ti)
     {
-        ColumnInfo hypothesis = ti.getColumn("hypothesis");
+        var hypothesis = ti.getMutableColumn("hypothesis");
         if (hypothesis != null)
         {
             hypothesis.setShownInInsertView(false);
@@ -98,14 +97,14 @@ public class DefaultAssayCustomizer implements TableCustomizer
 
     public void customizeDataTable(AbstractTableInfo ti)
     {
-        ColumnInfo subject = ti.getColumn("subjectId");
+        var subject = ti.getMutableColumn("subjectId");
         if (subject != null)
         {
             subject.setLabel("Subject Id");
             subject.setConceptURI("http://cpas.labkey.com/Study#ParticipantId");
         }
 
-        ColumnInfo sampleId = ti.getColumn("sampleId");
+        var sampleId = ti.getMutableColumn("sampleId");
         if (sampleId != null)
         {
             sampleId.setLabel("Freezer Id");
@@ -113,11 +112,14 @@ public class DefaultAssayCustomizer implements TableCustomizer
             UserSchema us = _lc.getUserSchema(ti, "laboratory");
             if (us != null)
             {
-                sampleId.setFk(new QueryForeignKey(us, null, "samples", "rowid", "rowid"));
+                sampleId.setFk(QueryForeignKey.from(us, ti.getContainerFilter())
+                        .table("samples")
+                        .key("rowid")
+                        .display("rowid"));
             }
         }
 
-        ColumnInfo sampleType = ti.getColumn("sampleType");
+        var sampleType = ti.getMutableColumn("sampleType");
         if (sampleType != null)
         {
             sampleType.setLabel("Sample Type");
@@ -125,11 +127,14 @@ public class DefaultAssayCustomizer implements TableCustomizer
             UserSchema us = _lc.getUserSchema(ti, "laboratory");
             if (us != null)
             {
-                sampleType.setFk(new QueryForeignKey(us, null, "sample_type", "type", "type"));
+                sampleType.setFk(QueryForeignKey.from(us, ti.getContainerFilter())
+                        .table("sample_type")
+                        .key("type")
+                        .display("type"));
             }
         }
 
-        ColumnInfo result = ti.getColumn("result");
+        var result = ti.getMutableColumn("result");
         if (result != null)
         {
             result.setLabel("Result");
@@ -139,7 +144,7 @@ public class DefaultAssayCustomizer implements TableCustomizer
             result.setConceptURI(LaboratoryService.ASSAYRESULT_CONCEPT_URI);
         }
 
-        ColumnInfo rawResult = ti.getColumn("rawResult");
+        var rawResult = ti.getMutableColumn("rawResult");
         if (rawResult != null)
         {
             rawResult.setLabel("Raw Result");
@@ -154,20 +159,20 @@ public class DefaultAssayCustomizer implements TableCustomizer
             rawResult.setConceptURI(LaboratoryService.ASSAYRAWRESULT_CONCEPT_URI);
         }
 
-        ColumnInfo date = ti.getColumn("date");
+        var date = ti.getMutableColumn("date");
         if (date != null)
         {
             date.setLabel("Sample Date");
             date.setConceptURI(LaboratoryService.SAMPLEDATE_CONCEPT_URI);
         }
 
-        ColumnInfo requestId = ti.getColumn("requestId");
+        var requestId = ti.getMutableColumn("requestId");
         if (requestId != null)
         {
             requestId.setLabel("Request Id");
         }
 
-        ColumnInfo qcFlags = ti.getColumn("qcflags");
+        var qcFlags = ti.getMutableColumn("qcflags");
         if (qcFlags != null)
         {
             qcFlags.setLabel("QC Flags");
@@ -176,7 +181,7 @@ public class DefaultAssayCustomizer implements TableCustomizer
             qcFlags.setDimension(false);
         }
 
-        ColumnInfo statusFlags = ti.getColumn("statusflag");
+        var statusFlags = ti.getMutableColumn("statusflag");
         if (statusFlags != null)
         {
             statusFlags.setLabel("Status Flag");
@@ -187,7 +192,10 @@ public class DefaultAssayCustomizer implements TableCustomizer
             UserSchema us = _lc.getUserSchema(ti, "laboratory");
             if (us != null)
             {
-                statusFlags.setFk(new QueryForeignKey(us, null, "result_status", "status", "status"));
+                statusFlags.setFk(QueryForeignKey.from(us, ti.getContainerFilter())
+                        .table("result_status")
+                        .key("status")
+                        .display("status"));
             }
         }
 
@@ -203,20 +211,20 @@ public class DefaultAssayCustomizer implements TableCustomizer
 
     public void customizeBatchTable(AbstractTableInfo ti)
     {
-        ColumnInfo name = ti.getColumn("name");
+        var name = ti.getMutableColumn("name");
         if (name != null)
         {
             name.setLabel("Batch Name");
             name.setShownInInsertView(false);
         }
 
-        ColumnInfo comments = ti.getColumn("comments");
+        var comments = ti.getMutableColumn("comments");
         if (comments != null)
         {
             comments.setShownInInsertView(false);
         }
 
-        ColumnInfo importMethod = ti.getColumn("importMethod");
+        var importMethod = ti.getMutableColumn("importMethod");
         if (importMethod != null)
         {
             importMethod.setHidden(true);

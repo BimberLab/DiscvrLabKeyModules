@@ -6,6 +6,7 @@ import org.labkey.api.data.AbstractTableInfo;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DisplayColumn;
@@ -65,7 +66,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
 
     @Override
     @Nullable
-    protected TableInfo createWrappedTable(String name, @NotNull TableInfo sourceTable)
+    protected TableInfo createWrappedTable(String name, @NotNull TableInfo sourceTable, ContainerFilter cf)
     {
         if (SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES.equalsIgnoreCase(name))
         {
@@ -73,11 +74,11 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         }
         else if (SequenceAnalysisSchema.TABLE_READSETS.equalsIgnoreCase(name))
         {
-            return createReadsetsTable(sourceTable);
+            return createReadsetsTable(sourceTable, cf);
         }
         else if (SequenceAnalysisSchema.TABLE_READ_DATA.equalsIgnoreCase(name))
         {
-            return createReadDataTable(sourceTable);
+            return createReadDataTable(sourceTable, cf);
         }
         else if (SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES.equalsIgnoreCase(name))
             return new SharedDataTable(this, sourceTable).init();
@@ -100,27 +101,27 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         else if (SequenceAnalysisSchema.TABLE_CHAIN_FILES.equalsIgnoreCase(name))
             return new SharedDataTable(this, sourceTable).init();
         else if (SequenceAnalysisSchema.TABLE_READSET_STATUS.equalsIgnoreCase(name))
-            return new ContainerScopedTable<>(this, sourceTable, "status").init();
+            return new ContainerScopedTable<>(this, sourceTable, cf, "status").init();
         else if (SequenceAnalysisSchema.TABLE_LIBRARY_TYPES.equalsIgnoreCase(name))
-            return new ContainerScopedTable<>(this, sourceTable, "type").init();
+            return new ContainerScopedTable<>(this, sourceTable, cf, "type").init();
         else if (SequenceAnalysisSchema.TABLE_OUTPUTFILES.equalsIgnoreCase(name))
         {
-            return createOutputFiles(sourceTable);
+            return createOutputFiles(sourceTable, cf);
         }
         else if (SequenceAnalysisSchema.TABLE_BARCODES.equalsIgnoreCase(name))
         {
-            TableInfo ret = super.createWrappedTable(name, sourceTable);
+            TableInfo ret = super.createWrappedTable(name, sourceTable, cf);
             LDKService.get().applyNaturalSort((AbstractTableInfo)ret, "tag_name");
 
             return ret;
         }
         else
-            return super.createWrappedTable(name, sourceTable);
+            return super.createWrappedTable(name, sourceTable, cf);
     }
 
-    private TableInfo createOutputFiles(TableInfo sourceTable)
+    private TableInfo createOutputFiles(TableInfo sourceTable, ContainerFilter cf)
     {
-        SimpleTable ret = new SimpleTable(this, sourceTable).init();
+        SimpleTable ret = new SimpleTable(this, sourceTable, cf).init();
         LinkedHashSet<String> scriptIncludes = new LinkedHashSet<>();
         if (ret.getButtonBarConfig().getScriptIncludes() != null)
         {
@@ -159,9 +160,9 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         return ret;
     }
 
-    private TableInfo createReadDataTable(TableInfo sourceTable)
+    private TableInfo createReadDataTable(TableInfo sourceTable, ContainerFilter cf)
     {
-        SimpleTable ret = new SimpleTable(this, sourceTable).init();
+        SimpleTable ret = new SimpleTable(this, sourceTable, cf).init();
 
         if (ret.getColumn("totalForwardReads") == null)
         {
@@ -191,9 +192,9 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         return ret;
     }
 
-    private TableInfo createReadsetsTable(TableInfo sourceTable)
+    private TableInfo createReadsetsTable(TableInfo sourceTable, ContainerFilter cf)
     {
-        SimpleTable ret = new SimpleTable(this, sourceTable).init();
+        SimpleTable ret = new SimpleTable(this, sourceTable, cf).init();
         if (ret.getColumn("files") == null)
         {
             WrappedColumn newCol = new WrappedColumn(ret.getColumn("rowid"), "files");

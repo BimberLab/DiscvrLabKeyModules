@@ -3,6 +3,7 @@ package org.labkey.laboratory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.module.Module;
@@ -41,60 +42,60 @@ public class LaboratoryUserSchema extends SimpleUserSchema
 
     @Override
     @Nullable
-    protected TableInfo createWrappedTable(String name, @NotNull TableInfo sourceTable)
+    protected TableInfo createWrappedTable(String name, @NotNull TableInfo sourceTable, ContainerFilter cf)
     {
         if (LaboratorySchema.TABLE_SUBJECTS.equalsIgnoreCase(name))
-            return getSubjectsTable(name, sourceTable);
+            return getSubjectsTable(name, sourceTable, cf);
         else if (LaboratorySchema.TABLE_FREEZERS.equalsIgnoreCase(name))
-            return getContainerScopedTable(name, sourceTable, "name");
+            return getContainerScopedTable(name, sourceTable, cf, "name");
         else if (LaboratorySchema.TABLE_SAMPLE_TYPE.equalsIgnoreCase(name))
-            return getContainerScopedTable(name, sourceTable, "type");
+            return getContainerScopedTable(name, sourceTable, cf, "type");
         else if (LaboratorySchema.TABLE_DNA_OLIGOS.equalsIgnoreCase(name))
-            return getDnaOligosTable(name, sourceTable);
+            return getDnaOligosTable(name, sourceTable, cf);
         else if (LaboratorySchema.TABLE_PEPTIDES.equalsIgnoreCase(name))
-            return getPeptideTable(name, sourceTable);
+            return getPeptideTable(name, sourceTable, cf);
         else if (LaboratorySchema.TABLE_ANTIBODIES.equalsIgnoreCase(name))
-            return getAntibodiesTable(name, sourceTable);
+            return getAntibodiesTable(name, sourceTable, cf);
         else if (LaboratorySchema.TABLE_WORKBOOKS.equalsIgnoreCase(name))
-            return getWorkbooksTable(name, sourceTable);
+            return getWorkbooksTable(name, sourceTable, cf);
         else if (LaboratorySchema.TABLE_SAMPLES.equalsIgnoreCase(name))
-            return getSamplesTable(name, sourceTable);
+            return getSamplesTable(name, sourceTable, cf);
         else
-            return super.createWrappedTable(name, sourceTable);
+            return super.createWrappedTable(name, sourceTable, cf);
     }
 
-    private SimpleTable getSubjectsTable(String name, @NotNull TableInfo schematable)
+    private SimpleTable getSubjectsTable(String name, @NotNull TableInfo schematable, ContainerFilter cf)
     {
-        return new ContainerScopedTable(this, schematable, "subjectname").init();
+        return new ContainerScopedTable(this, schematable, cf, "subjectname").init();
     }
 
-    private TableInfo getContainerScopedTable(String name, @NotNull TableInfo schematable, String pkCol)
+    private TableInfo getContainerScopedTable(String name, @NotNull TableInfo schematable, ContainerFilter cf, String pkCol)
     {
-        return new ContainerScopedTable(this, schematable, pkCol).init();
+        return new ContainerScopedTable(this, schematable, cf, pkCol).init();
     }
 
-    private SimpleTable getDnaOligosTable(String name, @NotNull TableInfo schematable)
+    private SimpleTable getDnaOligosTable(String name, @NotNull TableInfo schematable, ContainerFilter cf)
     {
-        return new ContainerIncrementingTable(this, schematable, "oligo_id").init();
+        return new ContainerIncrementingTable(this, schematable, cf, "oligo_id").init();
     }
 
-    private SimpleTable getSamplesTable(String name, @NotNull TableInfo schematable)
+    private SimpleTable getSamplesTable(String name, @NotNull TableInfo schematable, ContainerFilter cf)
     {
-        return new ContainerIncrementingTable(this, schematable, "freezerid").init();
+        return new ContainerIncrementingTable(this, schematable, cf, "freezerid").init();
     }
 
-    private SimpleTable getPeptideTable(String name, @NotNull TableInfo schematable)
+    private SimpleTable getPeptideTable(String name, @NotNull TableInfo schematable, ContainerFilter cf)
     {
-        return new ContainerIncrementingTable(this, schematable, "peptideId").init();
+        return new ContainerIncrementingTable(this, schematable, cf, "peptideId").init();
     }
 
-    private SimpleTable getAntibodiesTable(String name, @NotNull TableInfo schematable)
+    private SimpleTable getAntibodiesTable(String name, @NotNull TableInfo schematable, ContainerFilter cf)
     {
-        return new ContainerIncrementingTable(this, schematable, "antibodyId").init();
+        return new ContainerIncrementingTable(this, schematable, cf, "antibodyId").init();
     }
 
-    private SimpleTable getWorkbooksTable(String name, @NotNull TableInfo schematable)
+    private SimpleTable getWorkbooksTable(String name, @NotNull TableInfo schematable, ContainerFilter cf)
     {
-        return new LaboratoryWorkbooksTable(this, schematable).init();
+        return new LaboratoryWorkbooksTable(this, schematable, cf).init();
     }
 }

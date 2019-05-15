@@ -2,8 +2,8 @@ package org.labkey.mergesync;
 
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.collections.CaseInsensitiveTreeSet;
-import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
@@ -63,27 +63,27 @@ public class MergeSyncUserSchema extends SimpleUserSchema
     }
 
     @Override
-    public TableInfo createTable(String name)
+    public TableInfo createTable(String name, ContainerFilter cf)
     {
         if (TABLE_MERGE_RESULTS.equalsIgnoreCase(name))
         {
             DbSchema schema = MergeSyncManager.get().getMergeSchema();
             if (schema != null)
-                return MergeSyncUserSchema.getMergeDataTable(schema);
+                return getMergeDataTable(schema, cf);
         }
         else if (TABLE_MERGE_RUNS.equalsIgnoreCase(name))
         {
             DbSchema schema = MergeSyncManager.get().getMergeSchema();
             if (schema != null)
-                return MergeSyncUserSchema.getMergeRunsTable(schema);
+                return getMergeRunsTable(schema, cf);
         }
 
-        return super.createTable(name);
+        return super.createTable(name, cf);
     }
 
-    public static TableInfo getMergeDataTable(DbSchema schema)
+    public static TableInfo getMergeDataTable(DbSchema schema, ContainerFilter cf)
     {
-        return new VirtualTable(schema, TABLE_MERGE_RESULTS)
+        return new VirtualTable(schema, TABLE_MERGE_RESULTS, null, cf)
         {
             {
                 setTitle("Merge Raw Result Data");
@@ -201,17 +201,17 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 addColumn(new ExprColumn(this, "accession", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".accession"), JdbcType.INTEGER));
                 addColumn(new ExprColumn(this, "panelId", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".panelId"), JdbcType.INTEGER));
                 addColumn(new ExprColumn(this, "animalId", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".animalId"), JdbcType.VARCHAR));
-                ColumnInfo verifyDateCol = addColumn(new ExprColumn(this, "dateVerified", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".dateVerified"), JdbcType.TIMESTAMP));
+                var verifyDateCol = addColumn(new ExprColumn(this, "dateVerified", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".dateVerified"), JdbcType.TIMESTAMP));
                 verifyDateCol.setFormat("yyyy-MM-dd HH:mm");
 
-                ColumnInfo dateCol = addColumn(new ExprColumn(this, "date", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".date"), JdbcType.TIMESTAMP));
+                var dateCol = addColumn(new ExprColumn(this, "date", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".date"), JdbcType.TIMESTAMP));
                 dateCol.setFormat("yyyy-MM-dd HH:mm");
 
                 addColumn(new ExprColumn(this, "projectName", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".project"), JdbcType.VARCHAR));
-                ColumnInfo dateCollectedCol = addColumn(new ExprColumn(this, "dateCollected", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".dateCollected"), JdbcType.TIMESTAMP));
+                var dateCollectedCol = addColumn(new ExprColumn(this, "dateCollected", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".dateCollected"), JdbcType.TIMESTAMP));
                 dateCollectedCol.setFormat("yyyy-MM-dd HH:mm");
 
-                ColumnInfo dateOrderedCol = addColumn(new ExprColumn(this, "dateOrdered", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".dateCollected"), JdbcType.TIMESTAMP));
+                var dateOrderedCol = addColumn(new ExprColumn(this, "dateOrdered", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".dateCollected"), JdbcType.TIMESTAMP));
                 dateOrderedCol.setFormat("yyyy-MM-dd HH:mm");
 
                 addColumn(new ExprColumn(this, "runDate", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".runDate"), JdbcType.TIMESTAMP));
@@ -238,9 +238,9 @@ public class MergeSyncUserSchema extends SimpleUserSchema
         };
     }
 
-    public static TableInfo getMergeRunsTable(DbSchema schema)
+    public static TableInfo getMergeRunsTable(DbSchema schema, ContainerFilter cf)
     {
-        return new VirtualTable(schema, TABLE_MERGE_RUNS)
+        return new VirtualTable(schema, TABLE_MERGE_RUNS, null, cf)
         {
             {
                 setTitle("Merge Run Data");
@@ -320,17 +320,17 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 addColumn(new ExprColumn(this, "accession", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".accession"), JdbcType.INTEGER));
                 addColumn(new ExprColumn(this, "panelId", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".panelId"), JdbcType.INTEGER));
                 addColumn(new ExprColumn(this, "animalId", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".animalId"), JdbcType.VARCHAR));
-                ColumnInfo verifyDateCol = addColumn(new ExprColumn(this, "dateVerified", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".dateVerified"), JdbcType.TIMESTAMP));
+                var verifyDateCol = addColumn(new ExprColumn(this, "dateVerified", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".dateVerified"), JdbcType.TIMESTAMP));
                 verifyDateCol.setFormat("yyyy-MM-dd HH:mm");
 
-                ColumnInfo dateCol = addColumn(new ExprColumn(this, "date", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".date"), JdbcType.TIMESTAMP));
+                var dateCol = addColumn(new ExprColumn(this, "date", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".date"), JdbcType.TIMESTAMP));
                 dateCol.setFormat("yyyy-MM-dd HH:mm");
 
                 addColumn(new ExprColumn(this, "projectName", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".project"), JdbcType.VARCHAR));
-                ColumnInfo dateCollectedCol = addColumn(new ExprColumn(this, "dateCollected", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".dateCollected"), JdbcType.TIMESTAMP));
+                var dateCollectedCol = addColumn(new ExprColumn(this, "dateCollected", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".dateCollected"), JdbcType.TIMESTAMP));
                 dateCollectedCol.setFormat("yyyy-MM-dd HH:mm");
 
-                ColumnInfo dateOrderedCol = addColumn(new ExprColumn(this, "dateOrdered", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".dateCollected"), JdbcType.TIMESTAMP));
+                var dateOrderedCol = addColumn(new ExprColumn(this, "dateOrdered", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".dateCollected"), JdbcType.TIMESTAMP));
                 dateOrderedCol.setFormat("yyyy-MM-dd HH:mm");
 
                 addColumn(new ExprColumn(this, "servicename_abbr", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".servicename_abbr"), JdbcType.VARCHAR));
@@ -345,7 +345,7 @@ public class MergeSyncUserSchema extends SimpleUserSchema
                 addColumn(new ExprColumn(this, "numericLastName", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".numericLastName"), JdbcType.BOOLEAN));
                 addColumn(new ExprColumn(this, "runRemark", new SQLFragment(ExprColumn.STR_TABLE_ALIAS + ".runRemark"), JdbcType.VARCHAR));
 
-                getColumn("pk").setKeyField(true);
+                getMutableColumn("pk").setKeyField(true);
             }
         };
     }

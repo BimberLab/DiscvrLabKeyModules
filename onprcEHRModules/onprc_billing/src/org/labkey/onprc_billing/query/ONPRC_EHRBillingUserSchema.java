@@ -18,6 +18,7 @@ package org.labkey.onprc_billing.query;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.ehr.security.EHRDataEntryPermission;
@@ -48,11 +49,11 @@ public class ONPRC_EHRBillingUserSchema extends SimpleUserSchema
 
     @Override
     @Nullable
-    protected TableInfo createWrappedTable(String name, @NotNull TableInfo schematable)
+    protected TableInfo createWrappedTable(String name, @NotNull TableInfo schematable, ContainerFilter cf)
     {
         if ("miscCharges".equalsIgnoreCase(name))
         {
-            CustomPermissionsTable ti = new CustomPermissionsTable(this, schematable).init();
+            CustomPermissionsTable ti = new CustomPermissionsTable(this, schematable, cf).init();
             ti.addPermissionMapping(InsertPermission.class, EHRDataEntryPermission.class);
             ti.addPermissionMapping(UpdatePermission.class, EHRDataEntryPermission.class);
             //NOTE: we really should do a QCState-based permission scheme, or filter based on whether that item was billed or not
@@ -61,12 +62,12 @@ public class ONPRC_EHRBillingUserSchema extends SimpleUserSchema
         }
         else if (ONPRC_BillingSchema.TABLE_CREDIT_GRANTS.equalsIgnoreCase(name))
         {
-            ContainerScopedTable ti = new ContainerScopedTable(this, schematable, "grantNumber");
+            ContainerScopedTable ti = new ContainerScopedTable(this, schematable, cf, "grantNumber");
             return ti.init();
         }
         else if (ONPRC_BillingSchema.TABLE_ALIASES.equalsIgnoreCase(name))
         {
-            ContainerScopedTable ti = new ContainerScopedTable(this, schematable, "alias").init();
+            ContainerScopedTable ti = new ContainerScopedTable(this, schematable, cf, "alias").init();
             ti.addPermissionMapping(InsertPermission.class, ONPRCBillingAdminPermission.class);
             ti.addPermissionMapping(UpdatePermission.class, ONPRCBillingAdminPermission.class);
             ti.addPermissionMapping(DeletePermission.class, ONPRCBillingAdminPermission.class);
@@ -75,7 +76,7 @@ public class ONPRC_EHRBillingUserSchema extends SimpleUserSchema
         }
         else if (ONPRC_BillingSchema.TABLE_PROJECT_ACCOUNT_HISTORY.equalsIgnoreCase(name))
         {
-            CustomPermissionsTable ti = new CustomPermissionsTable(this, schematable).init();
+            CustomPermissionsTable ti = new CustomPermissionsTable(this, schematable, cf).init();
 
             ti.addPermissionMapping(InsertPermission.class, ONPRCAliasEditorPermission.class);
             ti.addPermissionMapping(UpdatePermission.class, ONPRCAliasEditorPermission.class);
@@ -84,7 +85,7 @@ public class ONPRC_EHRBillingUserSchema extends SimpleUserSchema
         }
         else
         {
-            CustomPermissionsTable ti = new CustomPermissionsTable(this, schematable).init();
+            CustomPermissionsTable ti = new CustomPermissionsTable(this, schematable, cf).init();
 
             ti.addPermissionMapping(InsertPermission.class, ONPRCBillingAdminPermission.class);
             ti.addPermissionMapping(UpdatePermission.class, ONPRCBillingAdminPermission.class);

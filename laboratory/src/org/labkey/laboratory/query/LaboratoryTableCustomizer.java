@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.AbstractTableInfo;
+import org.labkey.api.data.BaseColumnInfo;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
@@ -161,10 +162,10 @@ public class LaboratoryTableCustomizer implements TableCustomizer
 
     public void customizeColumns(AbstractTableInfo  ti)
     {
-        ColumnInfo container = ti.getColumn("container");
+        var container = ti.getMutableColumn("container");
         if (container == null)
         {
-            container = ti.getColumn("folder");
+            container = ti.getMutableColumn("folder");
         }
 
         if (container != null && ti.getColumn("workbook") == null)
@@ -174,9 +175,12 @@ public class LaboratoryTableCustomizer implements TableCustomizer
             {
                 container.setHidden(true);
 
-                ColumnInfo wrappedContainer = new WrappedColumn(container, "workbook");
+                WrappedColumn wrappedContainer = new WrappedColumn(container, "workbook");
                 wrappedContainer.setLabel("Workbook");
-                wrappedContainer.setFk(new QueryForeignKey(us, null, "workbooks", LaboratoryWorkbooksTable.WORKBOOK_COL, "workbookId"));
+                wrappedContainer.setFk(QueryForeignKey
+                        .from(ti.getUserSchema(), ti.getContainerFilter())
+                        .schema(us)
+                        .to("workbooks", LaboratoryWorkbooksTable.WORKBOOK_COL, "workbookId"));
                 wrappedContainer.setURL(DetailsURL.fromString("/project/start.view"));
                 wrappedContainer.setShownInDetailsView(true);
                 wrappedContainer.setFacetingBehaviorType(FacetingBehaviorType.ALWAYS_OFF);
@@ -284,33 +288,41 @@ public class LaboratoryTableCustomizer implements TableCustomizer
                     col.setIsUnselectable(true);
                     col.setUserEditable(false);
 
-                    col.setFk(new QueryForeignKey(qd.getTableInfo(targetContainer, us.getUser()).getUserSchema(), null, qd.getQueryName(), qd.getTargetColumn(), qd.getTargetColumn()){
+                    UserSchema targetSchema = qd.getTableInfo(targetContainer, us.getUser()).getUserSchema();
+                    col.setFk(new QueryForeignKey(us, ti.getContainerFilter(), targetSchema, null, qd.getQueryName(), qd.getTargetColumn(), qd.getTargetColumn())
+                    {
                         public TableInfo getLookupTableInfo()
                         {
-                            AbstractTableInfo ti = (AbstractTableInfo)super.getLookupTableInfo();
-                            ti.getColumn(qd.getTargetColumn()).setKeyField(true);
-
-                            Set<ColumnInfo> birthCols = new HashSet<>();
-                            Set<ColumnInfo> deathCols = new HashSet<>();
-                            for (ColumnInfo ci : ti.getColumns())
+                            if (null == _table)
                             {
-                                if (LaboratoryService.BIRTHDATE_CONCEPT_URI.equalsIgnoreCase(ci.getConceptURI()))
+                                // get forWrite==true because we modify this table
+                                TableInfo ti = ((UserSchema)getSchema()).getTable(_tableName, getLookupContainerFilter(), true, true);
+
+                                ((BaseColumnInfo)ti.getColumn(qd.getTargetColumn())).setKeyField(true);
+
+                                Set<ColumnInfo> birthCols = new HashSet<>();
+                                Set<ColumnInfo> deathCols = new HashSet<>();
+                                for (ColumnInfo ci : ti.getColumns())
                                 {
-                                    birthCols.add(ci);
+                                    if (LaboratoryService.BIRTHDATE_CONCEPT_URI.equalsIgnoreCase(ci.getConceptURI()))
+                                    {
+                                        birthCols.add(ci);
+                                    }
+                                    else if (LaboratoryService.DEATHDATE_CONCEPT_URI.equalsIgnoreCase(ci.getConceptURI()))
+                                    {
+                                        deathCols.add(ci);
+                                    }
                                 }
-                                else if (LaboratoryService.DEATHDATE_CONCEPT_URI.equalsIgnoreCase(ci.getConceptURI()))
+
+                                if (!birthCols.isEmpty())
                                 {
-                                    deathCols.add(ci);
+                                    ColumnInfo deathCol = deathCols.isEmpty() ? null : deathCols.iterator().next();
+                                    addAgeCols((AbstractTableInfo)ti, birthCols.iterator().next(), deathCol);
                                 }
+                                _table = ti;
                             }
 
-                            if (!birthCols.isEmpty())
-                            {
-                                ColumnInfo deathCol = deathCols.isEmpty() ? null : deathCols.iterator().next();
-                                addAgeCols(ti, birthCols.iterator().next(), deathCol);
-                            }
-
-                            return ti;
+                            return _table;
                         }
 
 //                        @Override
@@ -381,7 +393,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
 
                 if (ti != null)
                 {
-                    ColumnInfo col = ti.getColumn(pkColRawName);
+                    BaseColumnInfo col = (BaseColumnInfo)ti.getColumn(pkColRawName);
                     col.setKeyField(true);
                     col.setHidden(true);
                 }
@@ -449,12 +461,12 @@ public class LaboratoryTableCustomizer implements TableCustomizer
 
                 if (ti != null)
                 {
-                    ColumnInfo col = ti.getColumn(pkColRawName);
+                    BaseColumnInfo col = (BaseColumnInfo)ti.getColumn(pkColRawName);
                     col.setKeyField(true);
                     col.setHidden(true);
 
-                    ti.getColumn("projects").setLabel("Overlapping Groups");
-                    ti.getColumn("groups").setLabel("Overlapping Sub-groups");
+                    ((BaseColumnInfo)ti.getColumn("projects")).setLabel("Overlapping Groups");
+                    ((BaseColumnInfo)ti.getColumn("groups")).setLabel("Overlapping Sub-groups");
                 }
 
                 return ti;
@@ -495,11 +507,11 @@ public class LaboratoryTableCustomizer implements TableCustomizer
 
                 if (ti != null)
                 {
-                    ColumnInfo col = ti.getColumn(pkColRawName);
+                    BaseColumnInfo col = (BaseColumnInfo)ti.getColumn(pkColRawName);
                     col.setKeyField(true);
                     col.setHidden(true);
 
-                    ti.getColumn("lastStartDate").setLabel("Most Recent Start Date");
+                    ((BaseColumnInfo)ti.getColumn("lastStartDate")).setLabel("Most Recent Start Date");
                 }
 
                 return ti;
@@ -557,12 +569,12 @@ public class LaboratoryTableCustomizer implements TableCustomizer
 
                 if (ti != null)
                 {
-                    ColumnInfo col = ti.getColumn(pkColRawName);
+                    BaseColumnInfo col = (BaseColumnInfo) ti.getColumn(pkColRawName);
                     col.setKeyField(true);
                     col.setHidden(true);
 
-                    ti.getColumn("projects").setLabel("All Groups/Projects");
-                    ti.getColumn("groups").setLabel("All Sub-Groups");
+                    ((BaseColumnInfo)ti.getColumn("projects")).setLabel("All Groups/Projects");
+                    ((BaseColumnInfo)ti.getColumn("groups")).setLabel("All Sub-Groups");
                 }
 
                 return ti;
@@ -603,11 +615,11 @@ public class LaboratoryTableCustomizer implements TableCustomizer
 
                 if (ti != null)
                 {
-                    ColumnInfo col = ti.getColumn(pkColRawName);
+                    BaseColumnInfo col = (BaseColumnInfo) ti.getColumn(pkColRawName);
                     col.setKeyField(true);
                     col.setHidden(true);
 
-                    ti.getColumn("lastStartDate").setLabel("Most Recent Start Date");
+                    ((BaseColumnInfo)ti.getColumn("lastStartDate")).setLabel("Most Recent Start Date");
                 }
 
                 return ti;
@@ -786,7 +798,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
 
                 if (ti != null)
                 {
-                    ColumnInfo col = ti.getColumn(pkColRawName);
+                    BaseColumnInfo col = (BaseColumnInfo)ti.getColumn(pkColRawName);
                     col.setKeyField(true);
                     col.setHidden(true);
                 }
@@ -828,7 +840,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
             SQLFragment sql = getAgeInMonthsSQL(ti.getSchema(), birthCol, deathCol);
             JdbcType type = JdbcType.INTEGER;
 
-            ColumnInfo col = new ExprColumn(ti, name, sql, type, getDependentColumns(birthCol, deathCol));
+            ExprColumn col = new ExprColumn(ti, name, sql, type, getDependentColumns(birthCol, deathCol));
             col.setLabel(label);
             col.setShownInDetailsView(false);
             col.setFormat("0.##");
@@ -913,7 +925,7 @@ public class LaboratoryTableCustomizer implements TableCustomizer
                 sql = new SQLFragment(fragment, divisor);
             }
 
-            ColumnInfo col = new ExprColumn(ti, name, sql, type, getDependentColumns(parent, deathCol));
+            ExprColumn col = new ExprColumn(ti, name, sql, type, getDependentColumns(parent, deathCol));
             col.setLabel(label);
             col.setShownInDetailsView(false);
             col.setFormat("0.##");

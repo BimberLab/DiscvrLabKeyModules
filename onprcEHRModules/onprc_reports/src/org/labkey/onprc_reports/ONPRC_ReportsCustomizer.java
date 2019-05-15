@@ -1,6 +1,7 @@
 package org.labkey.onprc_reports;
 
 import org.labkey.api.data.AbstractTableInfo;
+import org.labkey.api.data.BaseColumnInfo;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
@@ -33,7 +34,7 @@ public class ONPRC_ReportsCustomizer implements TableCustomizer
         String name = "mhcSummary";
         if (ti.getColumn(name) == null)
         {
-            ColumnInfo col = getWrappedIdCol(ti.getUserSchema(), ti, name, "demographicsMHCTests");
+            BaseColumnInfo col = getWrappedIdCol(ti.getUserSchema(), ti, name, "demographicsMHCTests");
             col.setLabel("MHC Test Summary");
             ti.addColumn(col);
         }
@@ -41,20 +42,23 @@ public class ONPRC_ReportsCustomizer implements TableCustomizer
         String name2 = "dnaBank";
         if (ti.getColumn(name2) == null)
         {
-            ColumnInfo col = getWrappedIdCol(ti.getUserSchema(), ti, name2, "demographicsDNABank");
+            BaseColumnInfo col = getWrappedIdCol(ti.getUserSchema(), ti, name2, "demographicsDNABank");
             col.setLabel("DNA Bank Summary");
             ti.addColumn(col);
         }
     }
 
-    private ColumnInfo getWrappedIdCol(UserSchema us, AbstractTableInfo ds, String name, String queryName)
+    private BaseColumnInfo getWrappedIdCol(UserSchema us, AbstractTableInfo ds, String name, String queryName)
     {
         String ID_COL = "Id";
         WrappedColumn col = new WrappedColumn(ds.getColumn(ID_COL), name);
         col.setReadOnly(true);
         col.setIsUnselectable(true);
         col.setUserEditable(false);
-        col.setFk(new QueryForeignKey(us, null, queryName, ID_COL, ID_COL));
+        col.setFk(QueryForeignKey.from(us, ds.getContainerFilter())
+                .table(queryName)
+                .key(ID_COL)
+                .display(ID_COL));
 
         return col;
     }

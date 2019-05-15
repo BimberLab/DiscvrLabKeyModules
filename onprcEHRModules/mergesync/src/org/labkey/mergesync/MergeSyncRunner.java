@@ -126,7 +126,7 @@ public class MergeSyncRunner implements Job
             return;
         }
 
-        TableInfo resultTable = MergeSyncUserSchema.getMergeDataTable(mergeSchema);
+        TableInfo resultTable = MergeSyncUserSchema.getMergeDataTable(mergeSchema, null);
         if (resultTable == null)
         {
             _log.error("Unable to create merge results table");
@@ -165,8 +165,8 @@ public class MergeSyncRunner implements Job
             return;
         }
 
-        TableInfo runsTable = MergeSyncUserSchema.getMergeRunsTable(mergeSchema);
-        final TableInfo mergeResultTable = MergeSyncUserSchema.getMergeDataTable(mergeSchema);
+        TableInfo runsTable = MergeSyncUserSchema.getMergeRunsTable(mergeSchema, null);
+        final TableInfo mergeResultTable = MergeSyncUserSchema.getMergeDataTable(mergeSchema, null);
 
         //sync on date/time in order to avoid additional work
         SimpleFilter runFilter = new SimpleFilter(FieldKey.fromString("dateVerified"), minDate, CompareType.GTE);
@@ -215,7 +215,7 @@ public class MergeSyncRunner implements Job
 
     private void validateRuns(final Container c, final User u, DbSchema mergeSchema, int offset, final Date syncStart)
     {
-        TableInfo runsTable = MergeSyncUserSchema.getMergeRunsTable(mergeSchema);
+        TableInfo runsTable = MergeSyncUserSchema.getMergeRunsTable(mergeSchema, null);
 
         Calendar minDate = Calendar.getInstance();
         minDate.setTime(new Date());
@@ -280,8 +280,8 @@ public class MergeSyncRunner implements Job
 
         _log.info("attempting to resync single run: " + mergeAccession + " / " + mergeTestId);
 
-        TableInfo runsTable = MergeSyncUserSchema.getMergeRunsTable(mergeSchema);
-        final TableInfo mergeResultTable = MergeSyncUserSchema.getMergeDataTable(mergeSchema);
+        TableInfo runsTable = MergeSyncUserSchema.getMergeRunsTable(mergeSchema, null);
+        final TableInfo mergeResultTable = MergeSyncUserSchema.getMergeDataTable(mergeSchema, null);
 
         SimpleFilter runFilter = new SimpleFilter(FieldKey.fromString("accession"), mergeAccession, CompareType.EQUAL);
         runFilter.addCondition(FieldKey.fromString("panelid"), mergeTestId);
