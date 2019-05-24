@@ -57,7 +57,7 @@ public class MergeSyncUserSchema extends SimpleUserSchema
     }
 
     @Override
-    public synchronized Set<String> getVisibleTableNames()
+    public Set<String> getVisibleTableNames()
     {
         return getTableNames();
     }
