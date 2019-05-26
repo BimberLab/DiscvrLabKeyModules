@@ -53,7 +53,7 @@
     Ext4.onReady(function(){
         var webpartId = <%=q(wpId)%>;
         var workbookId = <%=h(workbookId)%>;
-        var title = <%=q(getViewContext().getContainer().getTitle())%> || '';
+        var title = <%=q(getContainer().getTitle())%> || '';
 
         //set page title
         var titleId = Ext4.id();
@@ -65,7 +65,7 @@
         }
 
         Ext4.create('Laboratory.panel.WorkbookHeaderPanel', {
-            description: <%=q(getViewContext().getContainer().getDescription())%>,
+            description: <%=q(getContainer().getDescription())%>,
             materials: <%=q(model.getMaterials())%>,
             methods: <%=q(model.getMethods())%>,
             results: <%=q(model.getResults())%>,
