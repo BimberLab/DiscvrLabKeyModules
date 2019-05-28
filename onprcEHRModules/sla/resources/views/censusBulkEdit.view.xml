@@ -1,5 +1,0 @@
-<view xmlns="http://labkey.org/data/xml/view" title="SLA Census Bulk Editing Grid">
-    <dependencies>
-        <dependency path="sla.context" />
-    </dependencies>
-</view>

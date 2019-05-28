@@ -1,5 +1,0 @@
-<view xmlns="http://labkey.org/data/xml/view" title="Rate Calculation">
-    <dependencies>
-        <dependency path="ehr.context" />
-    </dependencies>
-</view>

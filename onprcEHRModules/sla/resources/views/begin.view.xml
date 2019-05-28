@@ -1,5 +1,0 @@
-<view xmlns="http://labkey.org/data/xml/view" title="Small Lab Animals">
-    <dependencies>
-        <dependency path="sla.context" />
-    </dependencies>
-</view>

@@ -1,6 +1,0 @@
-<view xmlns="http://labkey.org/data/xml/view" title="Sections">
-    <dependencies>
-        <dependency path="laboratory.context"/>
-        <dependency path="extWidgets/IconPanel.css" />
-    </dependencies>
-</view>
