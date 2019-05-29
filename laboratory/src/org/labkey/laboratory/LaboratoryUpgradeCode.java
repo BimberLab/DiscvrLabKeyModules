@@ -124,13 +124,13 @@ public class LaboratoryUpgradeCode implements UpgradeCode
         for (String id : containerMap.keySet())
         {
             Container c = ContainerManager.getForId(id);
-            int current = DbSequenceManager.get(c, ContainerManager.WORKBOOK_DBSEQUENCE_NAME).current();
+            int current = (int)DbSequenceManager.get(c, ContainerManager.WORKBOOK_DBSEQUENCE_NAME).current();
             if (current < containerMap.get(id))
             {
                 _log.info("updating workbook Id for container: " + c.getName() + ", from: " + current + ", to: " + containerMap.get(id));
                 while (current < containerMap.get(id))
                 {
-                    current = DbSequenceManager.get(c, ContainerManager.WORKBOOK_DBSEQUENCE_NAME).next();
+                    current = (int)DbSequenceManager.get(c, ContainerManager.WORKBOOK_DBSEQUENCE_NAME).next();
                 }
             }
 
