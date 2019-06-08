@@ -8,7 +8,7 @@ where d.object_id = (SELECT constid FROM sysconstraints WHERE id=OBJECT_ID('labo
     AND OBJECTPROPERTY(constid, 'IsDefaultCnst')=1
     );
 
-execute(@Command);
+execute (@Command);
 
 
 ALTER TABLE laboratory.samples ALTER COLUMN comment varchar(MAX);
