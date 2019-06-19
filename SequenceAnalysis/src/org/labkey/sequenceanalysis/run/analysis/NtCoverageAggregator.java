@@ -24,6 +24,7 @@ import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
@@ -52,6 +53,8 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
     private Map<String, int[][]> _hcCoverage = new HashMap<>();
     private Map<String, int[][]> _hcQual = new HashMap<>();
     private Map<String, ReferenceSequence> _refSequences = new HashMap<>();
+    private int _totalFilteredSnps = 0;
+    private int _totalAlignments = 0;
 
     private Map<String, int[][][]> _totalCoverageByBase = new HashMap<>();
     private Map<String, int[][][]> _totalQualByBase = new HashMap<>();
@@ -90,24 +93,18 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
     }
 
     @Override
-    public void inspectAlignment(SAMRecord record, ReferenceSequence ref, Map<Integer, List<NTSnp>> snps, CigarPositionIterable cpi)
+    public void inspectAlignment(SAMRecord record, ReferenceSequence ref, Map<Integer, List<NTSnp>> snps) throws PipelineJobException
     {
-        //NOTE: in order to match the behavior of SamLocusIterator, skip over Duplicate or Secondary/Supplemental reads
-        if (record.getReadUnmappedFlag() || record.getDuplicateReadFlag() || record.isSecondaryOrSupplementary())
+        if (!isPassingAlignment(record, true))
         {
             return;
         }
 
-        if (!super.inspectMapQual(record))
-        {
-            return;
-        }
-
-        assert cpi != null;
+        _totalAlignments++;
 
         initHashes(ref);
 
-        CigarPositionIterable.CigarIterator ci = cpi.iterator();
+        CigarPositionIterable.CigarIterator ci = new CigarPositionIterable(record).iterator();
         while (ci.hasNext())
         {
             CigarPositionIterable.PositionInfo pi = ci.next();
@@ -120,7 +117,7 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
             {
                 for (NTSnp ntSnp : snps.get(pi.getRefPosition()))
                 {
-                    inspectSnp(ntSnp);
+                    inspectSnp(record, ntSnp);
                 }
             }
             else
@@ -218,11 +215,14 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
         return _totalQualByBase.get(ref)[position][index][_baseIndexMap.get(base)];
     }
 
-    private void inspectSnp(NTSnp ntSnp)
+    private void inspectSnp(SAMRecord record, NTSnp ntSnp) throws PipelineJobException
     {
         char base = (char)ntSnp.getReadBase();
-        if (ntSnp.getFlag() != null)
-            base = (char)BamIterator.AMBIGUITY_CHARACTER;
+        if (!isPassingSnp(record, ntSnp))
+        {
+            base = (char) BamIterator.AMBIGUITY_CHARACTER;
+            _totalFilteredSnps++;
+        }
 
         appendSnp(ntSnp.getReferenceName(), ntSnp.getLastRefPosition(), ntSnp.getInsertIndex(), ntSnp.getBaseQuality(), base, _totalCoverage, _totalQual, _totalCoverageByBase, _totalQualByBase);
 
@@ -447,6 +447,8 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
             transaction.commit();
 
             getLogger().info("\tReference sequences saved: " + summary.keySet().size());
+            getLogger().info("\tTotal filtered SNPs: " + _totalFilteredSnps);
+            getLogger().info("\tTotal alignments inspected: " + _totalAlignments);
             getLogger().info("\tPositions saved by reference (may include indels, so total could exceed reference length):");
             for (String refId : summary.keySet())
             {

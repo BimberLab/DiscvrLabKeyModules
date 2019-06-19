@@ -123,12 +123,6 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
     }
 
     @Override
-    public List<String> validateParameters(JSONObject params)
-    {
-        return null;
-    }
-
-    @Override
     public SequenceOutputProcessor getProcessor()
     {
         return new Processor();

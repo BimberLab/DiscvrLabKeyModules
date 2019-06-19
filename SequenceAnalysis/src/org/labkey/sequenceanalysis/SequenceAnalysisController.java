@@ -609,7 +609,11 @@ public class SequenceAnalysisController extends SpringActionController
             if (_table.getColumn("container") != null)
             {
                 Set<String> ids = DataRegionSelection.getSelected(form.getViewContext(), true);
-                List<Object> keys = new ArrayList<>(ids);
+                List<Integer> keys = new ArrayList<>();
+                for (String key : ids)
+                {
+                    keys.add(ConvertHelper.convert(key, Integer.class));
+                }
                 SimpleFilter filter = new SimpleFilter(FieldKey.fromString(_table.getPkColumns().get(0).getColumnName()), keys, CompareType.IN);
 
                 TableSelector ts = new TableSelector(_table, Collections.singleton("container"), filter, null);
@@ -763,6 +767,8 @@ public class SequenceAnalysisController extends SpringActionController
                 }
             }
 
+            setTitle("Delete Sequence Records");
+
             return new HtmlView(msg.toString());
         }
 
@@ -783,6 +789,7 @@ public class SequenceAnalysisController extends SpringActionController
         {
             SimpleFilter filter = new SimpleFilter(FieldKey.fromString("runId"), expRunsToDelete, CompareType.IN);
             filter.addCondition(FieldKey.fromString("rowid"), pks, CompareType.NOT_IN);
+            filter.addCondition(FieldKey.fromString("runId"), null, CompareType.NONBLANK);
 
             return new TableSelector(SequenceAnalysisSchema.getTable(tableName), PageFlowUtil.set("runId"), filter, null).getArrayList(Integer.class);
         }
@@ -2751,6 +2758,7 @@ public class SequenceAnalysisController extends SpringActionController
                         Container target = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
                         PipeRoot root = PipelineService.get().getPipelineRootSetting(target);
 
+                        //TODO: permissions on source container (shared)?
                         ImportGenomeTrackPipelineJob job = new ImportGenomeTrackPipelineJob(target, getUser(), null, root, form.getLibraryId(), form.getTrackName(), file, entry.getValue().getValue(), form.getTrackDescription(), form.getDoChrTranslation() == null ? true : form.getDoChrTranslation());
                         PipelineService.get().queueJob(job);
 
@@ -3276,6 +3284,7 @@ public class SequenceAnalysisController extends SpringActionController
 
             ret.put("description", handler.getDescription());
             ret.put("name", handler.getName());
+            ret.put("requiresSingleGenome", handler.requiresSingleGenome());
 
             JSONArray arr = new JSONArray();
             if (form.getOutputFileIds() != null)
@@ -3785,6 +3794,13 @@ public class SequenceAnalysisController extends SpringActionController
                     errors.reject(ERROR_MSG, "No valid outputfiles found");
                     return null;
                 }
+            }
+
+            List<String> errorMsgs = handler.validateParameters(outputFiles, new JSONObject(form.getParams()));
+            if (errorMsgs != null && !errorMsgs.isEmpty())
+            {
+                errorMsgs.forEach(e -> errors.reject(ERROR_MSG, e));
+                return null;
             }
 
             List<SequenceReadsetImpl> readsets = new ArrayList<>();

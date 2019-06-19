@@ -34,7 +34,7 @@ public class FixBAMWrapper extends PicardWrapper
         getLogger().info("Running FixBAMFile: " + inputFile.getPath());
 
         List<String> params = new LinkedList<>();
-        params.add(SequencePipelineService.get().getJavaFilepath());
+        params.add(SequencePipelineService.get().getJava8FilePath());
         params.add("-classpath");
         params.add(SequenceAnalysisManager.getHtsJdkJar().getPath());
         params.add("htsjdk.samtools.FixBAMFile");

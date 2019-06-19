@@ -60,8 +60,8 @@ public class VariantQCStep extends AbstractPipelineStep implements VariantProces
             options.add("-ped");
             options.add(pedFile.getPath());
 
-            //options.add("-pedValidationType");
-            //options.add("SILENT");
+            options.add("-pedValidationType");
+            options.add("SILENT");
         }
 
         if (getProvider().getParameterByName("writeJson").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true))

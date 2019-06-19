@@ -49,6 +49,8 @@ public class NtSnpByPosAggregator extends AbstractAlignmentAggregator
     private boolean _coverageTrackedExternally;
     private Map<String, Integer> _snps = new HashMap<>();
     private Map<String, String> _settings;
+    private int _totalFilteredSnps = 0;
+    private int _totalAlignments = 0;
 
     public NtSnpByPosAggregator(Logger log, File refFasta, AvgBaseQualityAggregator avgQualAggregator, Map<String, String> settings)
     {
@@ -65,27 +67,20 @@ public class NtSnpByPosAggregator extends AbstractAlignmentAggregator
     }
 
     @Override
-    public void inspectAlignment(SAMRecord record, ReferenceSequence ref, Map<Integer, List<NTSnp>> snps, CigarPositionIterable cpi) throws PipelineJobException
+    public void inspectAlignment(SAMRecord record, ReferenceSequence ref, Map<Integer, List<NTSnp>> snps) throws PipelineJobException
     {
-        //NOTE: in order to match the behavior of SamLocusIterator, skip over Duplicate or Secondary/Supplemental reads
-        if (record.getDuplicateReadFlag() || record.isSecondaryOrSupplementary())
-        {
-            return;
-        }
-
-        if (!super.inspectMapQual(record))
-        {
-            return;
-        }
-
         //NOTE: depth is handled by superclass
         if (!_coverageTrackedExternally)
         {
-            getCoverageAggregator().inspectAlignment(record, ref, snps, cpi);
+            getCoverageAggregator().inspectAlignment(record, ref, snps);
         }
 
-        if (record.getReadUnmappedFlag())
+        if (!isPassingAlignment(record, true))
+        {
             return;
+        }
+
+        _totalAlignments++;
 
         for (Integer pos : snps.keySet())
         {
@@ -99,22 +94,27 @@ public class NtSnpByPosAggregator extends AbstractAlignmentAggregator
     protected void inspectNtSnp(NTSnp snp, SAMRecord record, ReferenceSequence ref)throws PipelineJobException
     {
         String key = getSNPKey(snp);
-        if (_cacheDef.get(key) == null)
-        {
-            _cacheDef.put(key, new CacheKeyInfo(snp, ref));
-        }
 
-        //TODO: account for paired end reads?  perhaps cache under the first mate's name?
+        //TODO: account for overlapping paired end reads?  perhaps cache under the first mate's name?
         if (snp.getReadBase() != snp.getReferenceBase(ref.getBases()))
         {
+            if (!isPassingSnp(record, snp))
+            {
+                _totalFilteredSnps++;
+                return;
+            }
+
             Integer count = _snps.get(key);
             if (count == null)
                 count = 1;
             else
                 count++;
             _snps.put(key, count);
+        }
 
-            evaluateSnp(record, snp);
+        if (_cacheDef.get(key) == null)
+        {
+            _cacheDef.put(key, new CacheKeyInfo(snp, ref));
         }
     }
 
@@ -203,6 +203,8 @@ public class NtSnpByPosAggregator extends AbstractAlignmentAggregator
             transaction.commit();
 
             getLogger().info("\tReference sequences saved: " + summary.keySet().size());
+            getLogger().info("\tTotal filtered SNPs: " + _totalFilteredSnps);
+            getLogger().info("\tTotal alignments inspected: " + _totalAlignments);
             getLogger().info("\tSNPs saved by reference:");
             for (String refId : summary.keySet())
             {

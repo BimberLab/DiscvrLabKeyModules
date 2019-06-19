@@ -1,12 +1,17 @@
 package org.labkey.sequenceanalysis.analysis;
 
+import au.com.bytecode.opencsv.CSVReader;
 import htsjdk.samtools.util.IOUtil;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
+import org.labkey.api.data.Table;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
@@ -17,12 +22,14 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -37,15 +44,18 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
     public CellRangerSeuratHandler()
     {
         super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Run Seurat", "This will run a standard seurat-based pipeline on the selected 10x/cellranger data and save the resulting Seurat object as an rds file for external use.", new LinkedHashSet<>(), Arrays.asList(
-                ToolParameterDescriptor.create("projectName", "Project Name", "This will be used as the final sample/file name", "textfield", new JSONObject(){{
-                    put("allowBlank", false);
-                }}, "SeuratData"),
+                ToolParameterDescriptor.create("projectName", "Output Name", "This will be used as the final sample/file name.  If blank, the readset name will be used.  The latter cannot be used when merging multiple inputs.", "textfield", new JSONObject(){{
+
+                }}, null),
                 ToolParameterDescriptor.create("doSplitJobs", "Run Separately", "If checked, each input dataset will be run separately.  Otherwise they will be merged", "checkbox", new JSONObject(){{
                     put("checked", false);
                 }}, false),
                 ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
                     put("checked", false);
-                }}, false)
+                }}, false),
+                ToolParameterDescriptor.create("dimsToUse", "PCs To Use", "This is not ideal, but for now hard code this value.  This is the number of PCs that seurat will use.", "ldk-integerfield", new JSONObject(){{
+
+                }}, null)
         ));
     }
 
@@ -56,8 +66,13 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
     }
 
     @Override
-    public List<String> validateParameters(JSONObject params)
+    public List<String> validateParameters(List<SequenceOutputFile> outputFiles, JSONObject params)
     {
+        if (!params.optBoolean("doSplitJobs", false) && StringUtils.trimToNull(params.optString("projectName")) == null && outputFiles.size() > 1)
+        {
+            return Collections.singletonList("Must provide the output name when merging multiple inputs");
+        }
+
         return null;
     }
 
@@ -69,6 +84,12 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
 
     @Override
     public boolean doRunLocal()
+    {
+        return false;
+    }
+
+    @Override
+    public boolean requiresSingleGenome()
     {
         return false;
     }
@@ -118,9 +139,15 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
             Map<SequenceOutputFile, String> dataMap = new HashMap<>();
 
             File pr = ctx.getFolderPipeRoot().getRootPath().getParentFile();  //drop the @files or @pipeline
+            Set<String> rsNames = new HashSet<>();
             for (SequenceOutputFile so : inputFiles)
             {
                 ctx.getFileManager().addInput(action, "CellRanger Loupe", so.getFile());
+
+                if (so.getReadset() != null)
+                {
+                    rsNames.add(ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName());
+                }
 
                 //start with seurat 3
                 File subDir = new File(so.getFile().getParentFile(), "raw_feature_bc_matrix");
@@ -191,7 +218,20 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
             }
 
 
-            String outPrefix = FileUtil.makeLegalName(ctx.getParams().getString("projectName"));
+            String outPrefix = StringUtils.trimToNull(ctx.getParams().getString("projectName"));
+            if (outPrefix == null)
+            {
+                if (rsNames.size() == 1)
+                {
+                    outPrefix = rsNames.iterator().next();
+                }
+                else
+                {
+                    throw new PipelineJobException("Must provide the output prefix when merging more than one output file");
+                }
+            }
+            outPrefix = FileUtil.makeLegalName(outPrefix);
+
             File tmpScript = new File(ctx.getWorkingDirectory(), "script.R");
             ctx.getFileManager().addIntermediateFile(tmpScript);
 
@@ -220,6 +260,9 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
 
                 writer.println("outPrefix <- '" + outPrefix + "'");
                 writer.println("resolutionToUse <- 0.6");
+                String dimsToUse = ctx.getParams().optString("dimsToUse", "NULL");
+                writer.println("dimsToUse <- " + dimsToUse);
+
                 writer.println("data <- list(");
                 String delim = "";
                 for (SequenceOutputFile so : dataMap.keySet())
@@ -262,6 +305,53 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
             if (seuratObjRaw.exists())
             {
                 ctx.getFileManager().addIntermediateFile(seuratObjRaw);
+            }
+        }
+
+        @Override
+        public void complete(PipelineJob job, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated, SequenceAnalysisJobSupport support) throws PipelineJobException
+        {
+            for (SequenceOutputFile so : outputsCreated)
+            {
+                if (so.getFile() != null && so.getFile().getPath().endsWith(".seurat.rds"))
+                {
+                    File metrics = new File(so.getFile().getPath().replaceAll(".seurat.rds", ".summary.txt"));
+                    if (metrics.exists())
+                    {
+                        job.getLogger().info("Loading metrics");
+                        TableInfo ti = SequenceAnalysisSchema.getInstance().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
+                        try (CSVReader reader = new CSVReader(Readers.getReader(metrics), '\t'))
+                        {
+                            String[] line;
+                            while ((line = reader.readNext()) != null)
+                            {
+                                if ("Category".equals(line[0]))
+                                {
+                                    continue;
+                                }
+
+                                Map<String, Object> r = new HashMap<>();
+                                r.put("category", "Seurat");
+                                r.put("metricname", line[1]);
+                                r.put("metricvalue", line[2]);
+                                r.put("dataid", so.getDataId());
+                                r.put("readset", so.getReadset());
+                                r.put("container", job.getContainer());
+                                r.put("createdby", job.getUser().getUserId());
+
+                                Table.insert(job.getUser(), ti, r);
+                            }
+                        }
+                        catch (IOException e)
+                        {
+                            throw new PipelineJobException(e);
+                        }
+                    }
+                    else
+                    {
+                        job.getLogger().info("Unable to find metrics file: " + metrics.getPath());
+                    }
+                }
             }
         }
     }

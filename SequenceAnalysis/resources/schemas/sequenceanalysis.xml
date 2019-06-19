@@ -2538,7 +2538,7 @@
                 <item text="View Quality Metrics">
                     <onClick>SequenceAnalysis.Buttons.viewQualityMetricsForOutputFiles(dataRegionName, 'analysis_id');</onClick>
                 </item>
-                <item text="Add To Fileset" requiresSelection="true">
+                <item text="Add To Fileset">
                     <onClick>SequenceAnalysis.window.AddFileSetsWindow.buttonHandlerForOutputFiles(dataRegionName);</onClick>
                 </item>
                 <item text="Download Selected">

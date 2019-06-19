@@ -402,7 +402,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                 so.setReadset(analysisModel.getReadset());
                 so.setLibrary_id(analysisModel.getLibrary_Id());
                 AlignmentStep alignmentStep = taskHelper.getSingleStep(AlignmentStep.class).create(taskHelper);
-                so.setDescription("Aligner: " + alignmentStep.getProvider().getName());
+                so.setDescription(alignmentStep.getAlignmentDescription());
                 so.setDataId(d.getRowId());
                 so.setContainer(getJob().getContainerId());
                 so.setRunId(runId);

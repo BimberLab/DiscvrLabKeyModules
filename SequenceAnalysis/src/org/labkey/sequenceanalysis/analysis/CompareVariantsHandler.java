@@ -83,12 +83,6 @@ public class CompareVariantsHandler implements SequenceOutputHandler<SequenceOut
     }
 
     @Override
-    public List<String> validateParameters(JSONObject params)
-    {
-        return null;
-    }
-
-    @Override
     public boolean doRunRemote()
     {
         return false;

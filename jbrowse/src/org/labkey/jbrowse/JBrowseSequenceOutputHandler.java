@@ -77,12 +77,6 @@ public class JBrowseSequenceOutputHandler implements SequenceOutputHandler<Seque
     }
 
     @Override
-    public List<String> validateParameters(JSONObject params)
-    {
-        return null;
-    }
-
-    @Override
     public boolean doRunRemote()
     {
         return false;

@@ -74,12 +74,6 @@ public class SbtGeneCountHandler implements SequenceOutputHandler<SequenceOutput
     }
 
     @Override
-    public List<String> validateParameters(JSONObject params)
-    {
-        return null;
-    }
-
-    @Override
     public boolean canProcess(SequenceOutputFile f)
     {
         return f.getCategory() != null && f.getCategory().startsWith("Gene Count Table") && (_txtType.isType(f.getFile()));

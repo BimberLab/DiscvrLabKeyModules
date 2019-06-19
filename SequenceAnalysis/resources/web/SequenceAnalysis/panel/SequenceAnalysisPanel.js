@@ -207,15 +207,23 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
             this.errorNames = Ext4.unique(this.errorNames);
         }
         if (this.storesLoaded === 2){
-            var dv = this.down('dataview');
-            LDK.Assert.assertNotEmpty('Dataview Not Found In SequenceAnalaysisPanel', dv);
-            if (dv){
-                dv.refresh();
-            }
+            this.afterStoreLoad();
+        }
+    },
 
-            if (this.errorNames.length){
-                alert('The follow readsets lack an input file and will be skipped: ' + this.errorNames.join(', '));
-            }
+    afterStoreLoad: function(){
+        var dv = this.down('dataview');
+        LDK.Assert.assertNotEmpty('Dataview Not Found In SequenceAnalaysisPanel', dv);
+        if (!dv){
+            console.log('deferring dataview refresh');
+            Ext4.defer(this.afterStoreLoad, 100, this);
+            return;
+        }
+
+        dv.refresh();
+
+        if (this.errorNames.length){
+            alert('The follow readsets lack an input file and will be skipped: ' + this.errorNames.join(', '));
         }
     },
 

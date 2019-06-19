@@ -41,12 +41,6 @@ public class CombineVariantsHandler extends AbstractParameterizedOutputHandler<S
     }
 
     @Override
-    public List<String> validateParameters(JSONObject params)
-    {
-        return null;
-    }
-
-    @Override
     public boolean doRunRemote()
     {
         return true;

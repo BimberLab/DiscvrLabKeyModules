@@ -115,12 +115,6 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
     }
 
     @Override
-    public List<String> validateParameters(JSONObject params)
-    {
-        return null;
-    }
-
-    @Override
     public boolean canProcess(SequenceOutputFile f)
     {
         return f.getFile() != null && _vcfFileType.isType(f.getFile());
@@ -509,6 +503,8 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
         public void markComplete(JobContext ctx)
         {
+            // NOTE: due to the way the resumer is set up, the FileManager used by the Resumer is a different
+            // instance than the JobContext, meaning we need to manually pass information back to the primary FileManager
             ctx.getLogger().debug("total sequence outputs tracked in resumer: " + getFileManager().getOutputsToCreate().size());
             for (SequenceOutputFile so : getFileManager().getOutputsToCreate())
             {
@@ -520,6 +516,8 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             {
                 ctx.addActions(a);
             }
+
+            ctx.getFileManager().addIntermediateFiles(getFileManager().getIntermediateFiles());
 
             super.markComplete();
         }

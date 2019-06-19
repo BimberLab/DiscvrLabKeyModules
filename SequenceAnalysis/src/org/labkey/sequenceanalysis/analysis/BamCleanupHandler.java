@@ -55,12 +55,6 @@ public class BamCleanupHandler extends AbstractParameterizedOutputHandler<Sequen
     }
 
     @Override
-    public List<String> validateParameters(JSONObject params)
-    {
-        return null;
-    }
-
-    @Override
     public boolean doRunRemote()
     {
         return true;

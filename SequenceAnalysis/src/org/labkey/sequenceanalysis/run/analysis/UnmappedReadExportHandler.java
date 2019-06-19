@@ -58,12 +58,6 @@ public class UnmappedReadExportHandler extends AbstractParameterizedOutputHandle
     }
 
     @Override
-    public List<String> validateParameters(JSONObject params)
-    {
-        return null;
-    }
-
-    @Override
     public boolean canProcess(SequenceOutputFile f)
     {
         return f.getFile() != null && _fileType.isType(f.getFile());

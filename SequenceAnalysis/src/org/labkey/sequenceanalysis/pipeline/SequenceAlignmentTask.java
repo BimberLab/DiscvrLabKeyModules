@@ -30,6 +30,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.pipeline.ObjectKeySerialization;
+import org.labkey.api.pipeline.PairSerializer;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
@@ -58,6 +59,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
+import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SortSamStep;
 import org.labkey.sequenceanalysis.run.preprocessing.TrimmomaticWrapper;
@@ -1250,7 +1252,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
     public static class Resumer extends AbstractResumer
     {
         private File _workingFasta = null;
-        @JsonSerialize(keyUsing = ObjectKeySerialization.Serializer.class)
+        @JsonSerialize(keyUsing = ObjectKeySerialization.Serializer.class, contentUsing = PairSerializer.class)
         @JsonDeserialize(keyUsing = ObjectKeySerialization.Deserializer.class)
         private Map<ReadData, Pair<File, File>> _filesToAlign = null;
         private File _mergedBamFile = null;
@@ -1652,6 +1654,18 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             so.setName("so1");
             r._fileManager.addSequenceOutput(so);
 
+            File file1 = new File("file1");
+            File file2 = new File("file2");
+            Pair<File, File> pair = Pair.of(file1, file2);
+
+            ReadDataImpl rd = new ReadDataImpl();
+            rd.setFile(file1, 1);
+            rd.setFile(file2, 2);
+            rd.setReadset(-1);
+            rd.setRowid(-1);
+            r._filesToAlign = new LinkedHashMap<>();
+            r._filesToAlign.put(rd, pair);
+
             File tmp = new File(System.getProperty("java.io.tmpdir"));
             File file = new File(tmp, Resumer.JSON_NAME);
             r.writeToJson(tmp);
@@ -1669,6 +1683,11 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
             assertEquals(1, r2.getFileManager().getOutputsToCreate().size());
             assertEquals("so1", r2.getFileManager().getOutputsToCreate().iterator().next().getName());
+
+            assertEquals(1, r2.getFilesToAlign().size());
+            Pair<File, File> p2 = r2.getFilesToAlign().values().iterator().next();
+            assertEquals(file1.getAbsoluteFile(), p2.first.getAbsoluteFile());
+            assertEquals(file2.getAbsoluteFile(), p2.second.getAbsoluteFile());
 
             file.delete();
         }

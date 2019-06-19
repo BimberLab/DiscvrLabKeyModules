@@ -67,6 +67,14 @@ public interface SequenceOutputHandler<T>
 
     public String getDescription();
 
+    /**
+     * @return Whether this handler requires all inputs to be based on the same genome
+     */
+    default boolean requiresSingleGenome()
+    {
+        return true;
+    }
+
     public boolean canProcess(SequenceOutputFile o);
 
     /**
@@ -103,7 +111,10 @@ public interface SequenceOutputHandler<T>
      * @param params
      * @return List of error messages.  Null or empty list indicates no errors.
      */
-    public List<String> validateParameters(JSONObject params);
+    default List<String> validateParameters(List<SequenceOutputFile> outputFiles, JSONObject params)
+    {
+        return null;
+    }
 
     /**
      * If true, the server will run portions of this handler on the remote server.  This is intended to be a background pipeline

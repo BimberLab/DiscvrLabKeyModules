@@ -249,7 +249,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                                 width: 450,
                                 fieldLabel: 'Select Run',
                                 editable: true,
-                                forceSeletion: true,
+                                forceSelection: true,
                                 store: {
                                     type: 'labkey-store',
                                     containerPath: Laboratory.Utils.getQueryContainerPath(),

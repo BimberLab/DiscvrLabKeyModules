@@ -60,12 +60,6 @@ public class RnaSeqcHandler extends AbstractParameterizedOutputHandler<SequenceO
     }
 
     @Override
-    public List<String> validateParameters(JSONObject params)
-    {
-        return null;
-    }
-
-    @Override
     public boolean doRunRemote()
     {
         return true;
@@ -175,7 +169,8 @@ public class RnaSeqcHandler extends AbstractParameterizedOutputHandler<SequenceO
             {
                 bams.add(o.getFile());
                 sampleIds.add(o.getName());
-                notes.add(o.getDescription());
+                //Note: this has contain newlines and is generally not especially useful, so omit it.
+                //notes.add(o.getDescription());
             }
 
             job.getLogger().info("running RNA-SeQC");

@@ -2,6 +2,7 @@ package org.labkey.blast.button;
 
 import org.labkey.api.ldk.table.SimpleButtonConfigFactory;
 import org.labkey.api.module.ModuleLoader;
+import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.blast.BLASTModule;
 
@@ -18,5 +19,6 @@ public class ReprocessDatabaseButton extends SimpleButtonConfigFactory
     public ReprocessDatabaseButton()
     {
         super(ModuleLoader.getInstance().getModule(BLASTModule.class), "Re-process Selected", "BLAST.window.ReprocessDatabaseWindow.buttonHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromModuleName("ldk"), ClientDependency.fromPath("blast/window/ReprocessDatabaseWindow.js"))));
+        setPermission(UpdatePermission.class);
     }
 }

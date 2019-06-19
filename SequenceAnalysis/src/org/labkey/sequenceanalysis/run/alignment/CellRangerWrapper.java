@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
 import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -12,6 +13,8 @@ import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.reader.Readers;
@@ -35,9 +38,12 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.writer.PrintWriters;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -75,7 +81,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
                     }}, null),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--expect-cells"), "expect-cells", "Expect Cells", "Expected number of recovered cells.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, 5000),
+                    }}, 8000),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--force-cells"), "force-cells", "Force Cells", "Force pipeline to use this number of cells, bypassing the cell detection algorithm. Use this if the number of cells estimated by Cell Ranger is not consistent with the barcode rank plot.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, null),
@@ -84,7 +90,10 @@ public class CellRangerWrapper extends AbstractCommandWrapper
                         put("extensions", Arrays.asList("gtf"));
                         put("width", 400);
                         put("allowBlank", false);
-                    }}, null)
+                    }}, null),
+                    ToolParameterDescriptor.create("premrna", "Use pre-mRNA GTF", "Normally, reads are only counted if they overlap exons.  If selected, the pipeline will convert the GTF to list all transcript intervals as exon, meaning reads within introns will be counted as well.  This could be useful for single-nuclei sequencing (which captures pre-mRNA), or if your GTF exon annotations may be lacking.", "checkbox", new JSONObject(){{
+
+                    }}, false)
             ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger", true, false, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
         }
 
@@ -118,6 +127,45 @@ public class CellRangerWrapper extends AbstractCommandWrapper
         }
 
         @Override
+        public String getAlignmentDescription()
+        {
+            return getAlignDescription(getProvider(), getPipelineCtx(), getStepIdx(), true);
+        }
+
+        protected static String getAlignDescription(PipelineStepProvider provider, PipelineContext ctx, int stepIdx, boolean addAligner)
+        {
+            boolean isPreMrna = isPreMrna(provider, ctx, stepIdx);
+            Integer gtfId = provider.getParameterByName("gtfFile").extractValue(ctx.getJob(), provider, stepIdx, Integer.class);
+            File gtfFile = ctx.getSequenceSupport().getCachedData(gtfId);
+            if (gtfFile == null)
+            {
+                ExpData d = ExperimentService.get().getExpData(gtfId);
+                if (d != null)
+                {
+                    gtfFile = d.getFile();
+                }
+            }
+
+            List<String> lines = new ArrayList<>();
+            if (addAligner)
+            {
+                lines.add("Aligner: " + provider.getName());
+            }
+
+            if (gtfFile != null)
+            {
+                lines.add("GTF: " + gtfFile.getName());
+            }
+
+            if (isPreMrna)
+            {
+                lines.add("Converted to pre-mRNA GTF");
+            }
+
+            return lines.isEmpty() ? null : StringUtils.join(lines, '\n');
+        }
+
+        @Override
         public String getIndexCachedDirName(PipelineJob job)
         {
             Integer gtfId = getProvider().getParameterByName("gtfFile").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
@@ -126,7 +174,14 @@ public class CellRangerWrapper extends AbstractCommandWrapper
                 throw new IllegalArgumentException("Missing gtfFile parameter");
             }
 
-            return "cellRanger-" + gtfId;
+            boolean premrna = isPreMrna(getProvider(), getPipelineCtx(), getStepIdx());
+
+            return "cellRanger-" + gtfId + (premrna ? "-premrna" : "");
+        }
+
+        private static boolean isPreMrna(PipelineStepProvider provider, PipelineContext ctx, int stepIdx)
+        {
+            return provider.getParameterByName("premrna").extractValue(ctx.getJob(), provider, stepIdx, Boolean.class, false);
         }
 
         @Override
@@ -161,6 +216,72 @@ public class CellRangerWrapper extends AbstractCommandWrapper
 
                 output.addInput(gtfFile, "GTF File");
 
+                //NOTE: cellranger requires lines to have transcript_id and gene_id.
+                getPipelineCtx().getLogger().debug("Inspecting GTF for lines without gene_id or transcript_id");
+                int linesDropped = 0;
+                int exonsAdded = 0;
+
+                File gtfEdit = new File(indexDir.getParentFile(), FileUtil.getBaseName(gtfFile) + ".geneId.gtf");
+
+                //See: https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/references
+                boolean premrna = getProvider().getParameterByName("premrna").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+                if (premrna)
+                {
+                    getPipelineCtx().getLogger().debug("Creating a pre-mRNA version of the GTF");
+                }
+
+                try (CSVReader reader = new CSVReader(Readers.getReader(gtfFile), '\t'); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(gtfEdit), '\t', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER))
+                {
+                    String[] line;
+                    while ((line = reader.readNext()) != null)
+                    {
+                        if (!line[0].startsWith("#") && line.length < 9)
+                        {
+                            linesDropped++;
+                            continue;
+                        }
+
+                        if (!line[0].startsWith("#") && (!line[8].contains("gene_id") || !line[8].contains("transcript_id")))
+                        {
+                            linesDropped++;
+                            continue;
+                        }
+
+                        if (premrna && "transcript".equalsIgnoreCase(line[2]))
+                        {
+                            exonsAdded++;
+                            line[2] = "exon";
+                        }
+
+                        writer.writeNext(line);
+                    }
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+
+                if (linesDropped > 0)
+                {
+                    getPipelineCtx().getLogger().info("dropped " + linesDropped + " lines lacking gene_id or transcript_id");
+                }
+
+                if (premrna)
+                {
+                    getPipelineCtx().getLogger().info("total transcripts converted to exon: " + exonsAdded);
+                }
+
+                boolean useAlternateGtf = linesDropped > 0 || premrna;
+                if (useAlternateGtf)
+                {
+                    gtfFile = gtfEdit;
+                }
+                else
+                {
+                    getPipelineCtx().getLogger().debug("no need to drop lines from GTF");
+                    gtfEdit.delete();
+                }
+
                 List<String> args = new ArrayList<>();
                 args.add(getWrapper().getExe().getPath());
                 args.add("mkref");
@@ -187,6 +308,11 @@ public class CellRangerWrapper extends AbstractCommandWrapper
 
                 //recache if not already
                 AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, getIndexCachedDirName(getPipelineCtx().getJob()), referenceGenome);
+
+                if (useAlternateGtf)
+                {
+                    gtfEdit.delete();
+                }
             }
 
             return output;
@@ -267,7 +393,8 @@ public class CellRangerWrapper extends AbstractCommandWrapper
                     outputHtmlRename.delete();
                 }
                 FileUtils.moveFile(outputHtml, outputHtmlRename);
-                output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x Count Summary", "10x Run Summary", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
+                String description = getAlignDescription(getProvider(), getPipelineCtx(), getStepIdx(), false);
+                output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x Count Summary", "10x Run Summary", rs.getRowId(), null, referenceGenome.getGenomeId(), description);
 
                 File loupe = new File(outdir, "cloupe.cloupe");
                 if (loupe.exists())
@@ -278,7 +405,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
                         loupeRename.delete();
                     }
                     FileUtils.moveFile(loupe, loupeRename);
-                    output.addSequenceOutput(loupeRename, rs.getName() + " 10x Loupe File", "10x Loupe File", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
+                    output.addSequenceOutput(loupeRename, rs.getName() + " 10x Loupe File", "10x Loupe File", rs.getRowId(), null, referenceGenome.getGenomeId(), description);
                 }
                 else
                 {

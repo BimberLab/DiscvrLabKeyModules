@@ -82,12 +82,6 @@ public class BamHaplotypeHandler implements SequenceOutputHandler<SequenceOutput
     }
 
     @Override
-    public List<String> validateParameters(JSONObject params)
-    {
-        return null;
-    }
-
-    @Override
     public boolean doRunRemote()
     {
         return false;

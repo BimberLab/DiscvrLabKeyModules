@@ -8,7 +8,7 @@ source('https://raw.githubusercontent.com/bbimber/rnaseq/master/seurat/cellHashi
 
 ```{r QC}
 
-barcodeData <- processCiteSeqCount(barcodeFile)
+barcodeData <- processCiteSeqCount(barcodeDir, doRowFilter = doHtoFilter)
 if (nrow(barcodeData) == 0) {
   stop('No passing HTOs')
 }
@@ -33,6 +33,7 @@ sc <- generateCellHashCallsSeurat(barcodeData)
 
 ```{r MULTI-seq}
 
+# Remove for now.
 mc <- generateCellHashCallsMultiSeq(barcodeData)
 
 ```
@@ -42,5 +43,9 @@ mc <- generateCellHashCallsMultiSeq(barcodeData)
 ```{r ProcessCalls}
 
 dt <- processEnsemblHtoCalls(mc, sc, barcodeData, outFile = finalCallFile, allCallsOutFile = allCallsOutFile)
+
+if (exists('whitelistFile') && !is.null(whitelistFile)){
+  generateSummaryForExpectedBarcodes(dt, whitelistFile=whitelistFile, outputFile='metrics.txt', barcodeData=barcodeData)
+}
 
 ```

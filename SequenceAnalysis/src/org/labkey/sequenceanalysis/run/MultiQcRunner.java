@@ -19,7 +19,7 @@ public class MultiQcRunner extends AbstractCommandWrapper
         super(logger);
     }
 
-    public File runForFastqc(List<File> inputFastqcs) throws PipelineJobException
+    public File runForFastqc(List<File> inputFastqcs, List<String> extraParams) throws PipelineJobException
     {
         List<String> args = new ArrayList<>();
 
@@ -28,6 +28,11 @@ public class MultiQcRunner extends AbstractCommandWrapper
         args.add(getOutputDir(inputFastqcs.get(0)).getPath());
         args.add("-z");
         inputFastqcs.forEach(x -> args.add(x.getPath()));
+
+        if (extraParams != null)
+        {
+            args.addAll(extraParams);
+        }
 
         execute(args);
 

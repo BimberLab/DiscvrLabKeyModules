@@ -46,6 +46,7 @@ import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.iterator.CloseableIterator;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.BatchValidationException;
@@ -326,7 +327,11 @@ public class SequenceAnalysisManager
 
                 Map<String, Object> scriptContext = new HashMap<>();
                 scriptContext.put("deleteFromServer", true);  //a flag to make the trigger script accept this
-                us.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES).getUpdateService().deleteRows(user, container, outputFilesToDelete, null, scriptContext);
+                List<Map<String, Object>> deleted = us.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES).getUpdateService().deleteRows(user, container, outputFilesToDelete, null, scriptContext);
+                if (deleted.size() != outputFilesToDelete.size())
+                {
+                    throw new PipelineJobException("The total files deleted did not match the input.  Was: " + deleted.size() + ", expected: " + outputFilesToDelete.size());
+                }
 
                 if (!additionalAnalysisIds.isEmpty())
                     SequenceAnalysisManager.get().deleteAnalysis(user, container, additionalAnalysisIds);

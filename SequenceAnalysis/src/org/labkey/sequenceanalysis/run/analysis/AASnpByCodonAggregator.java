@@ -54,6 +54,8 @@ public class AASnpByCodonAggregator extends NtSnpByPosAggregator
     private Map<String, CacheKeyInfo> _cacheDef = new HashMap<>();
     private Map<String, byte[]> _refSequenceMap = new HashMap<>();
     private static final String SNP_KEY = "_snpKey";
+    private int _totalAlignments = 0;
+    private int _totalFilteredSnps = 0;
 
     public AASnpByCodonAggregator(Logger log, File refFasta, AvgBaseQualityAggregator avgQualAggregator, Map<String, String> settings)
     {
@@ -61,20 +63,16 @@ public class AASnpByCodonAggregator extends NtSnpByPosAggregator
     }
 
     @Override
-    public void inspectAlignment(SAMRecord record, ReferenceSequence ref, Map<Integer, List<NTSnp>> snps, CigarPositionIterable cpi) throws PipelineJobException
+    public void inspectAlignment(SAMRecord record, ReferenceSequence ref, Map<Integer, List<NTSnp>> snps) throws PipelineJobException
     {
-        super.inspectAlignment(record, ref, snps, cpi);
+        super.inspectAlignment(record, ref, snps);
 
-        //NOTE: in order to match the behavior of SamLocusIterator, skip over Duplicate or Secondary/Supplemental reads
-        if (record.getReadUnmappedFlag() || record.getDuplicateReadFlag() || record.isSecondaryOrSupplementary())
+        if (!isPassingAlignment(record, true))
         {
             return;
         }
 
-        if (!super.inspectMapQual(record))
-        {
-            return;
-        }
+        _totalAlignments++;
 
         assert ref != null;
         _refSequenceMap.put(ref.getName(), ref.getBases());
@@ -86,14 +84,21 @@ public class AASnpByCodonAggregator extends NtSnpByPosAggregator
             List<NTSnp> highQualitySnps = new ArrayList<>();
             for (NTSnp snp : snps.get(pos))
             {
-                inspectNtSnp(snp, record, ref);
-                if (snp.getFlag() == null)
+                if (isPassingSnp(record, snp))
+                {
                     highQualitySnps.add(snp);
+                }
+                else
+                {
+                    _totalFilteredSnps++;
+                }
             }
-            highQualitySnpsByPos.put(pos, highQualitySnps);
+
+            if (!highQualitySnps.isEmpty())
+                highQualitySnpsByPos.put(pos, highQualitySnps);
         }
 
-        if (highQualitySnpsByPos.size() > 0)
+        if (!highQualitySnpsByPos.isEmpty())
         {
             //recalculate insert index in case SNPs within an insert were discarded
             for (Integer pos : highQualitySnpsByPos.keySet())
@@ -119,11 +124,8 @@ public class AASnpByCodonAggregator extends NtSnpByPosAggregator
 
         _cacheDef.put(key, info);
 
-        Integer count = _snps.get(key);
-        if (count == null)
-            count = 1;
-        else
-            count++;
+        Integer count = _snps.getOrDefault(key, 0);
+        count++;
 
         _snps.put(key, count);
     }
@@ -214,6 +216,8 @@ public class AASnpByCodonAggregator extends NtSnpByPosAggregator
 
             getLogger().info("\tTotal AA Reference sequences encountered: " + summary.keySet().size());
             getLogger().info("\tTotal alignments discarded due to low mapping quality: " + _lowMappingQual);
+            getLogger().info("\tTotal filtered SNPs: " + _totalFilteredSnps);
+            getLogger().info("\tTotal alignments inspected: " + _totalAlignments);
             getLogger().info("\tSNPs saved by reference:");
             for (String refId : summary.keySet())
             {

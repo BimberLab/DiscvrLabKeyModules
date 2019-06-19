@@ -76,12 +76,12 @@ public class TranslatingReferenceSequence
     public List<AASnp> translateSnpsForRead(Map<Integer, List<NTSnp>> readSnps)
     {
         List<AASnp> snps = new ArrayList<>();
-        for (Integer readIdx : readSnps.keySet())
+        for (Integer position : readSnps.keySet())
         {
-            List<NTSnp> positions = readSnps.get(readIdx);
-            for (NTSnp pi : positions)
+            List<NTSnp> snpsPerPos = readSnps.get(position);
+            for (NTSnp ntSnp : snpsPerPos)
             {
-                snps.addAll(translateSnp(pi, readSnps));
+                snps.addAll(translateSnp(ntSnp, readSnps));
             }
         }
         return snps;
@@ -117,7 +117,7 @@ public class TranslatingReferenceSequence
                         ntPosInProtein = rPos1 - pair.first + ntOffset; //0-based
                     }
 
-                    aaPosInProtein = (int)Math.floor(ntPosInProtein / 3) + 1; //1-based
+                    aaPosInProtein = (int)Math.floor(ntPosInProtein / 3.0) + 1; //1-based
 
                     if (aaPosInProtein > peptideLength)
                     {

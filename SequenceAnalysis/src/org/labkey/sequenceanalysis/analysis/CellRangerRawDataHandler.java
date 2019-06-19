@@ -63,6 +63,12 @@ public class CellRangerRawDataHandler implements SequenceOutputHandler<SequenceO
     }
 
     @Override
+    public boolean requiresSingleGenome()
+    {
+        return false;
+    }
+
+    @Override
     public @Nullable String getButtonJSHandler()
     {
         return null;
@@ -96,12 +102,6 @@ public class CellRangerRawDataHandler implements SequenceOutputHandler<SequenceO
     public boolean canProcess(SequenceOutputFile o)
     {
         return o.getFile() != null && _fileType.isType(o.getFile());
-    }
-
-    @Override
-    public List<String> validateParameters(JSONObject params)
-    {
-        return null;
     }
 
     @Override

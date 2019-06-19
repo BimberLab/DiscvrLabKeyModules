@@ -442,13 +442,13 @@ then
     rm -Rf STAR_2.5*
     rm -Rf $LKTOOLS_DIR/STAR
 
-    wget $WGET_OPTS https://github.com/alexdobin/STAR/archive/2.5.1b.tar.gz
-    gunzip 2.5.1b.tar.gz
-    tar -xf 2.5.1b.tar
-    gzip 2.5.1b.tar
+    wget $WGET_OPTS https://github.com/alexdobin/STAR/archive/2.7.0f.tar.gz
+    gunzip 2.7.0f.tar.gz
+    tar -xf 2.7.0f.tar
+    gzip 2.7.0f.tar
 
-    install ./STAR-2.5.1b/bin/Linux_x86_64_static/STAR $LKTOOLS_DIR/STAR
-    install ./STAR-2.5.1b/bin/Linux_x86_64_static/STARlong $LKTOOLS_DIR/STARlong
+    install ./STAR-2.7.0f/bin/Linux_x86_64_static/STAR $LKTOOLS_DIR/STAR
+    install ./STAR-2.7.0f/bin/Linux_x86_64_static/STARlong $LKTOOLS_DIR/STARlong
 else
     echo "Already installed"
 fi
@@ -574,7 +574,7 @@ then
     git clone https://github.com/ewels/MultiQC.git
     cd MultiQC
     python setup.py install --user
-    cp ./build/scripts-2.7/multiqc $LKTOOLS_DIR
+    cp ./build/scripts/multiqc $LKTOOLS_DIR
 else
     echo "MultiQC already installed"
 fi

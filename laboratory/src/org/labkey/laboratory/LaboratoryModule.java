@@ -24,6 +24,7 @@ import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.laboratory.security.LaboratoryAdminPermission;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.ldk.LDKService;
+import org.labkey.api.ldk.buttons.ShowBulkEditButton;
 import org.labkey.api.ldk.notification.NotificationService;
 import org.labkey.api.ldk.table.SimpleButtonConfigFactory;
 import org.labkey.api.module.ModuleContext;
@@ -179,6 +180,8 @@ public class LaboratoryModule extends ExtendedSimpleModule
         btn4.setClientDependencies(ClientDependency.fromModuleName("laboratory"));
         btn4.setPermission(UpdatePermission.class);
         LDKService.get().registerQueryButton(btn4, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_SAMPLES);
+
+        LDKService.get().registerQueryButton(new ShowBulkEditButton(this, LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_SAMPLES), LaboratoryModule.SCHEMA_NAME, LaboratorySchema.TABLE_SAMPLES);
     }
 
     @Override

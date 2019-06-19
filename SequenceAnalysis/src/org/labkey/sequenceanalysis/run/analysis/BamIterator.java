@@ -47,13 +47,14 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
-import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.DirectoryResource;
+import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.util.TestContext;
 import org.labkey.api.writer.PrintWriters;
@@ -140,7 +141,7 @@ public class BamIterator
                     i++;
 
                     SAMRecord r = it.next();
-                    if (r.getReadUnmappedFlag() || !refName.equals(r.getReferenceName()))
+                    if (refName != null && (r.getReadUnmappedFlag() || !refName.equals(r.getReferenceName())))
                         continue;
 
                     if (r.getAlignmentEnd() < start || r.getAlignmentStart() > stop)
@@ -165,32 +166,7 @@ public class BamIterator
      */
     public void iterateReads() throws IOException, PipelineJobException
     {
-        SamReaderFactory bamFact = SamReaderFactory.makeDefault();
-        bamFact.validationStringency(ValidationStringency.SILENT);
-
-        File fai = new File(_ref.getPath() + ".fai");
-        try (SamReader sam = bamFact.open(_bam); IndexedFastaSequenceFile indexedRef = new IndexedFastaSequenceFile(_ref, new FastaSequenceIndex(fai)))
-        {
-            try (SAMRecordIterator it = sam.iterator())
-            {
-                int i = 0;
-                long startTime = new Date().getTime();
-
-                while (it.hasNext())
-                {
-                    i++;
-
-                    processAlignment(it.next(), indexedRef);
-
-                    if (i % 25000 == 0)
-                    {
-                        long newTime = new Date().getTime();
-                        _logger.info("processed " + i + " alignments in " + ((newTime - startTime) / 1000) + " seconds");
-                        startTime = newTime;
-                    }
-                }
-            }
-        }
+        iterateReads(null, Integer.MIN_VALUE, Integer.MAX_VALUE);
     }
 
     private void processAlignment(SAMRecord r, IndexedFastaSequenceFile indexedRef) throws PipelineJobException
@@ -199,7 +175,7 @@ public class BamIterator
         {
             for (AlignmentAggregator aggregator : _alignmentAggregators)
             {
-                aggregator.inspectAlignment(r, null, new HashMap<Integer, List<NTSnp>>(), null);
+                aggregator.inspectAlignment(r, null, new HashMap<>());
             }
             return;
         }
@@ -249,7 +225,7 @@ public class BamIterator
 
         for (AlignmentAggregator aggregator : _alignmentAggregators)
         {
-            aggregator.inspectAlignment(r, ref, snpPositions, cpi);
+            aggregator.inspectAlignment(r, ref, snpPositions);
         }
     }
 
@@ -286,15 +262,12 @@ public class BamIterator
             Container project = ContainerManager.getForPath(PROJECT_NAME);
             if (project == null)
             {
-                if (project == null)
-                {
-                    project = ContainerManager.createContainer(ContainerManager.getRoot(), PROJECT_NAME);
-                    Set<Module> modules = new HashSet<>();
-                    modules.addAll(project.getActiveModules());
-                    modules.add(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME));
-                    project.setFolderType(FolderTypeManager.get().getFolderType("Laboratory Folder"), TestContext.get().getUser());
-                    project.setActiveModules(modules);
-                }
+                project = ContainerManager.createContainer(ContainerManager.getRoot(), PROJECT_NAME);
+                Set<Module> modules = new HashSet<>();
+                modules.addAll(project.getActiveModules());
+                modules.add(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME));
+                project.setFolderType(FolderTypeManager.get().getFolderType("Laboratory Folder"), TestContext.get().getUser());
+                project.setActiveModules(modules);
             }
         }
 
@@ -355,13 +328,14 @@ public class BamIterator
                 oneOf(log3).info("Saving NT SNP results");
                 oneOf(log3).info("\tReference sequences saved: 1");
                 oneOf(log3).info("\tSNPs saved by reference:");
-                oneOf(log3).info("\tSIVmac239_Test: 473");
+                oneOf(log3).info("\tSIVmac239_Test: 240");
             }});
 
             final Logger log4 = mock.mock(Logger.class, "log4");
             mock.checking(new Expectations() {{
                 oneOf(log4).info("Saving AA SNP Results");
                 oneOf(log4).info("\tTotal AA Reference sequences encountered: 11");
+                oneOf(log4).info("\tTotal alignments discarded due to low mapping quality: 0");
                 oneOf(log4).info("\tSNPs saved by reference:");
                 oneOf(log4).info("\tSIVmac239_Test Nef: 9");
                 oneOf(log4).info("\tSIVmac239_Test Tat: 22");
@@ -401,9 +375,9 @@ public class BamIterator
             Assert.assertEquals("Incorrect coverage count", 8892L, coverageCount);
 
             agg3.writeOutput(TestContext.get().getUser(), _project, m);
-            TableSelector ntPos = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS), new SimpleFilter(FieldKey.fromString("analysis_id"), m.getRowId()), null);
+            TableSelector ntPos = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS), PageFlowUtil.set("ref_nt_position", "ref_nt_insert_index", "adj_depth", "readcount"), new SimpleFilter(FieldKey.fromString("analysis_id"), m.getRowId()), null);
             long ntPosCount = ntPos.getRowCount();
-            Assert.assertEquals("Incorrect NT pos count", 473L, ntPosCount);
+            Assert.assertEquals("Incorrect NT pos count", 240L, ntPosCount);
 
             agg4.writeOutput(TestContext.get().getUser(), _project, m);
             TableSelector aaByCodon = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON), new SimpleFilter(FieldKey.fromString("analysis_id"), m.getRowId()), null);

@@ -51,12 +51,6 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
     }
 
     @Override
-    public List<String> validateParameters(JSONObject params)
-    {
-        return null;
-    }
-
-    @Override
     public boolean doRunRemote()
     {
         return true;

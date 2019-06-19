@@ -315,13 +315,44 @@ SequenceAnalysis.Buttons = new function(){
                 return;
             }
 
-            window.location = LABKEY.ActionURL.buildURL('sequenceanalysis', 'deleteRecords', null, {
+            SequenceAnalysis.Buttons.goToAction(LABKEY.ActionURL.buildURL('sequenceanalysis', 'deleteRecords', null), {
                 schemaName: dataRegion.schemaName,
                 'query.queryName': dataRegion.queryName,
                 dataRegionSelectionKey: 'query',
                 '.select': checked,
                 returnURL: window.location.pathname + window.location.search
-            });
+            }, 'GET');
+        },
+
+        goToAction: function(href, params, method){
+            var form = document.createElement('form');
+            form.setAttribute('method', (method || 'post'));
+            form.setAttribute('action', href);
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'X-LABKEY-CSRF';
+            input.value = LABKEY.CSRF;
+            form.appendChild(input);
+            form.style.display = 'hidden';
+
+            if (params != null){
+                for (var name in params) {
+                    var val = params[name];
+                    if (!Ext4.isArray(val)) {
+                        val = [val];
+                    }
+
+                    Ext4.Array.forEach(val, function(v){
+                        var input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = name;
+                        input.value = v;
+                        form.appendChild(input);
+                    }, this);
+                }
+            }
+            document.body.appendChild(form);
+            form.submit();
         },
 
         sequenceOutputHandler: function(dataRegionName, handlerClass){

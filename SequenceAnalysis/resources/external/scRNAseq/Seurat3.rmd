@@ -22,9 +22,9 @@ if (file.exists(saveFile)) {
 } else {
   for (datasetName in names(data)) {
     print(paste0('Loading dataset: ', datasetName))
-    seuratObjs[datasetName] <- readAndFilter10xData(data[[datasetName]], datasetName)
+    seuratObjs[[datasetName]] <- readAndFilter10xData(data[[datasetName]], datasetName)
 
-    print(seuratObjs[datasetName])
+    print(seuratObjs[[datasetName]])
   }
 
   saveRDS(seuratObjs, file = saveFile)
@@ -55,7 +55,7 @@ seuratObj
 
 ```{r InitialProcessing}
 
-seuratObj <- processSeurat1(seuratObj, saveFile = saveFile)
+seuratObj <- processSeurat1(seuratObj, variableGeneTable = paste0(outPrefix, '.variableGenes.txt'))
 
 ```
 
@@ -63,9 +63,23 @@ seuratObj <- processSeurat1(seuratObj, saveFile = saveFile)
 
 ```{r DimRedux}
 
-seuratObj <- findClustersAndDimRedux(seuratObj, saveFile = saveFile)
+seuratObj <- findClustersAndDimRedux(seuratObj)
 
 findMarkers(seuratObj, resolutionToUse, outFile = paste0(outPrefix, '.markers.txt'), saveFileMarkers = paste0(outPrefix, '.markers.rds'))
+
+```
+
+## Write Summary
+
+```{r}
+
+saveRDS(seuratObj, file = saveFile)
+
+writeSummaryMetrics(seuratObj, file = paste0(outPrefix, '.summary.txt'))
+
+saveDimRedux(seuratObj, file = paste0(outPrefix, '.DimReduxComps.csv'))
+
+writeCellBarcodes(seuratObj, file = paste0(outPrefix, '.cellBarcodes.csv'))
 
 ```
 

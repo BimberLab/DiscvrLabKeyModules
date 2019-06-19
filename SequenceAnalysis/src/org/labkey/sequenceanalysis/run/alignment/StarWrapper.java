@@ -7,6 +7,8 @@ import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
@@ -57,6 +59,34 @@ public class StarWrapper extends AbstractCommandWrapper
         public boolean supportsGzipFastqs()
         {
             return true;
+        }
+
+        @Override
+        public String getAlignmentDescription()
+        {
+            List<String> lines = new ArrayList<>();
+            lines.add("Aligner: " + getProvider().getName());
+
+            Integer gtfId = getProvider().getParameterByName("splice_sites_file").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
+            if (gtfId != null)
+            {
+                File gtfFile = getPipelineCtx().getSequenceSupport().getCachedData(gtfId);
+                if (gtfFile == null)
+                {
+                    ExpData d = ExperimentService.get().getExpData(gtfId);
+                    if (d != null)
+                    {
+                        gtfFile = d.getFile();
+                    }
+                }
+
+                if (gtfFile != null)
+                {
+                    lines.add("GTF/GFF: " + gtfFile.getName());
+                }
+            }
+
+            return lines.isEmpty() ? null : StringUtils.join(lines, '\n');
         }
 
         @Override

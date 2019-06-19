@@ -2,6 +2,7 @@ package org.labkey.jbrowse.button;
 
 import org.labkey.api.ldk.table.SimpleButtonConfigFactory;
 import org.labkey.api.module.ModuleLoader;
+import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.jbrowse.JBrowseModule;
 
@@ -18,5 +19,6 @@ public class ModifyTrackConfigButton extends SimpleButtonConfigFactory
     public ModifyTrackConfigButton()
     {
         super(ModuleLoader.getInstance().getModule(JBrowseModule.class), "Modify Track Config", "JBrowse.window.ModifyJsonConfigWindow.buttonHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromPath("jbrowse/window/ModifyJsonConfigWindow.js"))));
+        setPermission(UpdatePermission.class);
     }
 }

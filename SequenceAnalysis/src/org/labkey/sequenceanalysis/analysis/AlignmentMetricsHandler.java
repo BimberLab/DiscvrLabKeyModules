@@ -55,12 +55,6 @@ public class AlignmentMetricsHandler extends AbstractParameterizedOutputHandler<
     }
 
     @Override
-    public List<String> validateParameters(JSONObject params)
-    {
-        return null;
-    }
-
-    @Override
     public boolean doRunRemote()
     {
         return true;
@@ -95,7 +89,7 @@ public class AlignmentMetricsHandler extends AbstractParameterizedOutputHandler<
             RecordedAction action = new RecordedAction(getName());
             action.setStartTime(new Date());
 
-            Integer windowSize = params.containsKey("windowSize") && params.get("windowSize") != null ? params.getInt("windowSize") : null;
+            Integer windowSize = params.containsKey("windowSize") && params.get("windowSize") != null ? Integer.valueOf(params.getInt("windowSize")) : null;
             if (windowSize == null)
             {
                 job.error("No window size provided, aborting");

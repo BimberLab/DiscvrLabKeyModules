@@ -103,12 +103,6 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
     }
 
     @Override
-    public List<String> validateParameters(JSONObject params)
-    {
-        return null;
-    }
-
-    @Override
     public boolean doRunRemote()
     {
         return true;

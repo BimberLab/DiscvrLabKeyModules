@@ -96,18 +96,33 @@ abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
         return true;
     }
 
-    protected boolean evaluateSnp(SAMRecord r, NTSnp snp) throws PipelineJobException
+    protected boolean isPassingAlignment(SAMRecord record, boolean skipUnmapped)
     {
-        //this SNP will likely be inspected by multiple aggregators, so we
+        //NOTE: in order to match the behavior of SamLocusIterator, skip over Duplicate or Secondary/Supplemental reads
+        if (record.getDuplicateReadFlag() || record.isSecondaryOrSupplementary())
+        {
+            return false;
+        }
+
+        if (skipUnmapped && record.getReadUnmappedFlag())
+        {
+            return false;
+        }
+
+        if (!inspectMapQual(record))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    protected boolean isPassingSnp(SAMRecord r, NTSnp snp) throws PipelineJobException
+    {
+        //Note: because the SNP can be processed by multiple aggregators, only run this once
         if (snp.isFlagSet())
         {
             return snp.getFlag() == null;
-        }
-
-        if (r.getMappingQuality() < _minMapQual)
-        {
-            snp.setFlag("Below Minimum Mapping Quality");
-            return false;
         }
 
         Map<Integer, Map<String, Double>> avgQualsForRef = getQualsForReference(r.getReferenceIndex());
@@ -140,11 +155,11 @@ abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
 
         if (avgQualAtPosition == null)
         {
-            getLogger().error("missing avgQual: " + r.getReadName() + " / " + r.isSecondaryOrSupplementary() + " / " + r.getDuplicateReadFlag() + " / " + snp.getIndel() + " / " + snp.getReadPosition() + " / " + snp.getLastReadPosition() + " /read base: [" + snp.getReadBaseString() + "] /lastRef: " + snp.getLastRefPosition() + " /bases with quals: " + (avgQuals == null ? "" : StringUtils.join(Arrays.asList(avgQuals.keySet()), ";")));
+            getLogger().error("missing avgQual: " + snp.getIndel() + " / " + snp.getReadPosition() + " / " + snp.getLastReadPosition() + " /read base: [" + snp.getReadBaseString() + "] /lastRef: " + snp.getLastRefPosition() + " /bases with quals: " + (avgQuals == null ? "" : StringUtils.join(Arrays.asList(avgQuals.keySet()), ";")));
             avgQualAtPosition = 95.0;
         }
 
-        snp.setFlag(null); //so we only perform inspection once
+        snp.setFlag(null);  //force this to have a set value
         if (snp.isIndel())
         {
             if (qual < _minDipQual)

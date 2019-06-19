@@ -38,17 +38,11 @@ public class AASnpByReadAggregator extends AASnpByCodonAggregator
     }
 
     @Override
-    public void inspectAlignment(SAMRecord record, ReferenceSequence ref, Map<Integer, List<NTSnp>> snps, CigarPositionIterable cpi) throws PipelineJobException
+    public void inspectAlignment(SAMRecord record, ReferenceSequence ref, Map<Integer, List<NTSnp>> snps) throws PipelineJobException
     {
-        super.inspectAlignment(record, ref, snps, cpi);
+        super.inspectAlignment(record, ref, snps);
 
-        //NOTE: in order to match the behavior of SamLocusIterator, skip over Duplicate or Secondary/Supplemental reads
-        if (record.getReadUnmappedFlag() || record.getDuplicateReadFlag() || record.isSecondaryOrSupplementary())
-        {
-            return;
-        }
-
-        if (!super.inspectMapQual(record))
+        if (!isPassingAlignment(record, true))
         {
             return;
         }

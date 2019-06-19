@@ -31,7 +31,7 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
     public String getVersion() throws PipelineJobException
     {
         List<String> params = new LinkedList<>();
-        params.add(SequencePipelineService.get().getJavaFilepath());
+        params.add(SequencePipelineService.get().getJava8FilePath());
         params.add("-jar");
         params.add(getJar().getPath());
         params.add(getToolName());
@@ -95,7 +95,7 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
     protected List<String> getBaseArgs()
     {
         List<String> params = new LinkedList<>();
-        params.add(SequencePipelineService.get().getJavaFilepath());
+        params.add(SequencePipelineService.get().getJava8FilePath());
         params.addAll(SequencePipelineService.get().getJavaOpts());
         params.add("-jar");
         params.add(getJar().getPath());

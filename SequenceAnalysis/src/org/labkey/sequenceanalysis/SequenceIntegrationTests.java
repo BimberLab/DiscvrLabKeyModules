@@ -3117,7 +3117,7 @@ public class SequenceIntegrationTests
             }
         }
 
-        RefNtSequenceModel nt = tsNt.getObject(RefNtSequenceModel.class);
+        RefNtSequenceModel nt = new TableSelector(tableNt, ntFilter, null).getObject(RefNtSequenceModel.class);
         if (nt == null)
         {
             throw new RuntimeException("Unable to find RefNtSequenceModel");

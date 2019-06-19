@@ -22,7 +22,6 @@ import org.labkey.api.data.Container;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
-import org.labkey.sequenceanalysis.api.picard.CigarPositionIterable;
 import org.labkey.sequenceanalysis.run.util.NTSnp;
 
 import java.util.List;
@@ -39,7 +38,7 @@ public interface AlignmentAggregator
 {
     public void writeOutput(User u, Container c, AnalysisModel model);
 
-    public void inspectAlignment(SAMRecord record, @Nullable ReferenceSequence ref, Map<Integer, List<NTSnp>> snps, @Nullable CigarPositionIterable cpi) throws PipelineJobException;
+    public void inspectAlignment(SAMRecord record, @Nullable ReferenceSequence ref, Map<Integer, List<NTSnp>> snps) throws PipelineJobException;
 
     public String getSynopsis();
 }

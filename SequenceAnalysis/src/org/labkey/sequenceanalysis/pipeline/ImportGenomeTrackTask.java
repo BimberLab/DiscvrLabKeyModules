@@ -459,7 +459,7 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
             getJob().getLogger().info("writing log of translation to : " + outLog.getPath());
         }
 
-        try (CSVReader reader = new CSVReader(IOUtil.openFileForBufferedReading(file), '\t'); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(out), '\t', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER);CSVWriter logWriter = new CSVWriter(PrintWriters.getPrintWriter(outLog), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+        try (CSVReader reader = new CSVReader(IOUtil.openFileForBufferedReading(file), '\t', CSVWriter.NO_QUOTE_CHARACTER); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(out), '\t', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER);CSVWriter logWriter = new CSVWriter(PrintWriters.getPrintWriter(outLog), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
             if (getPipelineJob().doChrTranslation())
             {

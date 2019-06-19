@@ -44,6 +44,12 @@ public class ListVcfSamplesHandler implements SequenceOutputHandler<SequenceOutp
     }
 
     @Override
+    public boolean requiresSingleGenome()
+    {
+        return false;
+    }
+
+    @Override
     public @Nullable String getButtonJSHandler()
     {
         return "SequenceAnalysis.window.VcfSampleWindow.buttonHandler";
@@ -71,12 +77,6 @@ public class ListVcfSamplesHandler implements SequenceOutputHandler<SequenceOutp
     public boolean useWorkbooks()
     {
         return false;
-    }
-
-    @Override
-    public List<String> validateParameters(JSONObject params)
-    {
-        return null;
     }
 
     @Override

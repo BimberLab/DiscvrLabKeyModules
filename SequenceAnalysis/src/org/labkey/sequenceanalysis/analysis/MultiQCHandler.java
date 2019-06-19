@@ -44,12 +44,6 @@ public class MultiQCHandler extends AbstractParameterizedOutputHandler<SequenceO
     }
 
     @Override
-    public List<String> validateParameters(JSONObject params)
-    {
-        return null;
-    }
-
-    @Override
     public boolean doRunRemote()
     {
         return true;
@@ -126,7 +120,18 @@ public class MultiQCHandler extends AbstractParameterizedOutputHandler<SequenceO
                 MultiQcRunner runner = new MultiQcRunner(ctx.getLogger());
                 runner.setWorkingDir(ctx.getOutputDir());
                 runner.setOutputDir(ctx.getOutputDir());
-                File report = runner.runForFastqc(fastqcZip);
+
+                List<String> extraParams = new ArrayList<>();
+                extraParams.add("--ignore");
+                extraParams.add("Undetermined*");
+                extraParams.add("--ignore");
+                extraParams.add("undetermined*");
+                extraParams.add("--ignore");
+                extraParams.add("*._STARpass1");
+
+                extraParams.add("-e bcl2fastq");
+
+                File report = runner.runForFastqc(fastqcZip, extraParams);
                 action.addOutput(report, "MultiQC Report", false);
 
                 SequenceOutputFile so = new SequenceOutputFile();
