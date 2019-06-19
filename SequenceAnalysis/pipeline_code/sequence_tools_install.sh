@@ -559,25 +559,25 @@ fi
 #
 #MultiQC
 #
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install MultiQC"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/multiqc || ! -z $FORCE_REINSTALL ]];
-then
-    rm -Rf MultiQC*
-    rm -Rf $LKTOOLS_DIR/multiqc
-
-    git clone https://github.com/ewels/MultiQC.git
-    cd MultiQC
-    python setup.py install --user
-    cp ./build/scripts/multiqc $LKTOOLS_DIR
-else
-    echo "MultiQC already installed"
-fi
+#echo ""
+#echo ""
+#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+#echo "Install MultiQC"
+#echo ""
+#cd $LKSRC_DIR
+#
+#if [[ ! -e ${LKTOOLS_DIR}/multiqc || ! -z $FORCE_REINSTALL ]];
+#then
+#    rm -Rf MultiQC*
+#    rm -Rf $LKTOOLS_DIR/multiqc
+#
+#    git clone https://github.com/ewels/MultiQC.git
+#    cd MultiQC
+#    python setup.py install --user
+#    cp ./build/scripts/multiqc $LKTOOLS_DIR
+#else
+#    echo "MultiQC already installed"
+#fi
 
 
 #
