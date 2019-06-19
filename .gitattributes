@@ -185,6 +185,7 @@ DISCVR/jbrowse/src/org/labkey/jbrowse/pipeline/JBrowseSessionTask.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/query/DatabaseDisplayColumnFactory.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/query/JBrowseUserSchema.java -text
 DISCVR/jbrowse/src/org/labkey/jbrowse/view/browser.jsp -text
+DISCVR/jbrowse/test/src/org/labkey/test/tests/external/labModules/JBrowseTest.java -text
 DISCVR/jbrowse/tools/demoImages/img0.psd -text
 DISCVR/jbrowse/tools/demoImages/img1.psd -text
 DISCVR/jbrowse/tools/demoImages/img2.psd -text
@@ -1088,6 +1089,12 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/util/SequenceOutputF
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/util/SequenceUtil.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/util/TranslatingReferenceSequence.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/visualization/VariationChart.java -text
+labModules/SequenceAnalysis/test/sampledata/sequenceAnalysis/Illumina-F.fastq.gz -text
+labModules/SequenceAnalysis/test/sampledata/sequenceAnalysis/Illumina-R.fastq.gz -text
+labModules/SequenceAnalysis/test/sampledata/sequenceAnalysis/SkipMe.fastq.gz -text
+labModules/SequenceAnalysis/test/sampledata/sequenceAnalysis/genomeAnnotations/fakeData.bed -text
+labModules/SequenceAnalysis/test/sampledata/sequenceAnalysis/genomeAnnotations/fakeData.gff -text
+labModules/SequenceAnalysis/test/src/org/labkey/test/tests/external/labModules/SequenceTest.java -text
 labModules/SequenceAnalysis/tools/Ref[!!-~]NTs.xlsx -text
 labModules/SequenceAnalysis/tools/pipeline_config/pipelineConfig_remote.xml -text
 labModules/SequenceAnalysis/tools/pipeline_config/remoteMuleConfig.xml -text
