@@ -1477,7 +1477,7 @@ public class SequenceTest extends BaseWebDriverTest
         File fileRoot = TestFileUtils.getDefaultFileRoot(projectName);
 
         File f = new File(dataDir, "fakeData.bed");
-        f = replaceGenomeName(f, new File(fileRoot, "fakeData.bed"), genomeName);
+        f = replaceContigName(f, new File(fileRoot, "fakeData.bed"), genomeName);
 
         test.log("adding track: " + f.getName());
         DataRegionTable dr2 = DataRegionTable.findDataRegionWithinWebpart(test, "Annotations/Tracks");
@@ -1506,7 +1506,7 @@ public class SequenceTest extends BaseWebDriverTest
                 target.delete();
             }
 
-            replaceGenomeName(new File(dataDir, fn), target, genomeName);
+            replaceContigName(new File(dataDir, fn), target, genomeName);
         }
 
         LabModuleHelper helper = new LabModuleHelper(test);
@@ -1535,14 +1535,14 @@ public class SequenceTest extends BaseWebDriverTest
         return startedPipelineJobs;
     }
 
-    private static File replaceGenomeName(File input, File output, String genomeName) throws IOException
+    private static File replaceContigName(File input, File output, String genomeName) throws IOException
     {
         try (BufferedReader reader = Readers.getReader(input); PrintWriter writer = PrintWriters.getPrintWriter(output))
         {
             String line;
             while ((line = reader.readLine()) != null)
             {
-                writer.write(line.replaceAll("SIVmac239", genomeName));
+                writer.println(line.replaceAll("SIVmac239", "SIVmac239_Test"));
             }
         }
 
