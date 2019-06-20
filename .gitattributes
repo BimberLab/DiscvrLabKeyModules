@@ -798,6 +798,7 @@ labModules/SequenceAnalysis/resources/web/SequenceAnalysis/sequenceanalysisButto
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/snp_haplotype.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/AddFileSetsWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/AddSraRunWindow.js -text
+labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ChangeReadsetStatusWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/CompareSequencesWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/ConcatenatedSequenceWindow.js -text
 labModules/SequenceAnalysis/resources/web/SequenceAnalysis/window/CreateAnalysisSetWindow.js -text
@@ -868,6 +869,8 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/UnmappedSeq
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/api/picard/CigarPositionIterable.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/AddSraRunButton.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/CellHashingButton.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/ChangeReadsetStatusButton.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/ChangeReadsetStatusForAnalysesButton.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/ReprocessLibraryButton.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/button/RunMultiQCButton.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/model/AdapterModel.java -text
