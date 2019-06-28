@@ -72,6 +72,8 @@ public class LaboratoryWorkbooksTable extends SimpleUserSchema.SimpleTable
         nameCol.setLabel("Name");
         addColumn(nameCol);
 
+        setDeleteURL(DetailsURL.fromString("admin/deleteWorkbooks.view"));
+
         return this;
     }
 
