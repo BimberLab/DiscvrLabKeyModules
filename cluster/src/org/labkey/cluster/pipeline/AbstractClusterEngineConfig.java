@@ -167,7 +167,8 @@ abstract class AbstractClusterEngineConfig implements PipelineJobService.RemoteE
 
         if (ret != null && !asURI)
         {
-            return ret.replaceFirst("^file:/", "/");
+            ret = ret.replaceFirst("^file:/", "/");
+            ret = ret.replaceAll("$/+", "/");
         }
 
         return ret;

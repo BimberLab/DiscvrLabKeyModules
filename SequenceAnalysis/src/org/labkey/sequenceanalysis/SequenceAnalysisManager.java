@@ -806,7 +806,13 @@ public class SequenceAnalysisManager
 
     public File getReferenceLibraryDir(Container c)
     {
-        File pipelineDir = PipelineService.get().getPipelineRootSetting(c).getRootPath();
+        PipeRoot pr = PipelineService.get().getPipelineRootSetting(c);
+        if (pr == null)
+        {
+            throw new IllegalArgumentException("Pipeline root is null for folder: " + c.getPath());
+        }
+
+        File pipelineDir = pr.getRootPath();
         if (pipelineDir == null)
         {
             return null;
