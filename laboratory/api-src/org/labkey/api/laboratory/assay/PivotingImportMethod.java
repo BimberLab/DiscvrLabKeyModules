@@ -15,9 +15,6 @@
  */
 package org.labkey.api.laboratory.assay;
 
-import com.google.gwt.codegen.server.StringGenerator;
-import org.json.JSONObject;
-import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.Sort;
 import org.labkey.api.data.TableInfo;
@@ -26,15 +23,12 @@ import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.property.Domain;
 import org.labkey.api.exp.property.DomainProperty;
 import org.labkey.api.security.User;
-import org.labkey.api.study.assay.AssayService;
-import org.labkey.api.util.Pair;
 import org.labkey.api.view.ViewContext;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * User: bimber
