@@ -1113,6 +1113,7 @@
                 <shownInInsertView>false</shownInInsertView>
                 <shownInUpdateView>true</shownInUpdateView>
                 <isUserEditable>false</isUserEditable>
+                <isHidden>true</isHidden>
                 <columnTitle>Run</columnTitle>
                 <fk>
                     <fkDbSchema>exp</fkDbSchema>

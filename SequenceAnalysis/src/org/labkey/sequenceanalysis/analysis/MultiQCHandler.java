@@ -121,17 +121,7 @@ public class MultiQCHandler extends AbstractParameterizedOutputHandler<SequenceO
                 runner.setWorkingDir(ctx.getOutputDir());
                 runner.setOutputDir(ctx.getOutputDir());
 
-                List<String> extraParams = new ArrayList<>();
-                extraParams.add("--ignore");
-                extraParams.add("Undetermined*");
-                extraParams.add("--ignore");
-                extraParams.add("undetermined*");
-                extraParams.add("--ignore");
-                extraParams.add("*._STARpass1");
-
-                extraParams.add("-e bcl2fastq");
-
-                File report = runner.runForFastqc(fastqcZip, extraParams);
+                File report = runner.runForFiles(fastqcZip, ctx.getOutputDir(), null);
                 action.addOutput(report, "MultiQC Report", false);
 
                 SequenceOutputFile so = new SequenceOutputFile();

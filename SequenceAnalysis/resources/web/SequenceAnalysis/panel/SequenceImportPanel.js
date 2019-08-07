@@ -2129,16 +2129,33 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     itemId: 'inferFromName',
                     hidden: true,
                     handler: function(btn){
+                        var grid = btn.up('grid');
+                        grid.getPlugin('cellediting').completeEdit();
+                        var s = grid.getSelectionModel().getSelection();
+
+                        //select all
+                        if (!s.length) {
+                            grid.getSelectionModel().selectAll();
+                            s = grid.getSelectionModel().getSelection();
+                        }
+
                         Ext4.create('Ext.window.Window', {
                             sequencePanel: this,
+                            targetGrid: grid,
                             readsetStore: this.readsetStore,
                             title: 'Infer Readset Id',
                             bodyStyle: 'padding: 5px;',
                             width: 500,
                             items: [{
-                                html: 'If the file groups contain the readset ID within them, this can be parsed to automatically connect these to existing records.  Currently this only supports file groups beginning with readset ID.  You can enter a delimiter below and all text from the beginning through this delimiter will be used as the readset ID.',
+                                html: 'If the file groups contain the readset ID within them, this can be parsed to automatically connect these to existing records.  Currently this only supports file groups beginning with readset ID or with a consistent prefix (i.e. s_).  You can enter a delimiter below and all text from the beginning through this delimiter will be used as the readset ID.',
                                 style: 'padding-bottom: 10px;',
                                 border: false
+                            },{
+                                xtype: 'textfield',
+                                fieldLabel: 'Prefix',
+                                helpPopup: 'This prefix will be dropped from the beginning of all sample/file names',
+                                value: 's_',
+                                itemId: 'prefix'
                             },{
                                 xtype: 'textfield',
                                 fieldLabel: 'Delimiter',
@@ -2148,6 +2165,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                             buttons: [{
                                 text: 'Submit',
                                 handler: function (btn) {
+                                    var prefix = btn.up('window').down('#prefix').getValue();
                                     var delim = btn.up('window').down('#delimiter').getValue();
                                     if (!delim){
                                         Ext4.Msg.alert('Error', 'Must enter a delimiter');
@@ -2155,10 +2173,14 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                                     }
 
                                     var readsetsToUpdate = [];
-                                    btn.up('window').readsetStore.each(function(r){
-                                        var fg = r.get('fileGroupId').split(delim);
-                                        if (fg.length > 1){
-                                            var id = fg[0];
+                                    Ext4.Array.forEach(btn.up('window').targetGrid.getSelectionModel().getSelection(), function(r){
+                                        var fg = r.get('fileGroupId');
+                                        if (prefix) {
+                                            fg = fg.replace(new RegExp('^' + prefix), '');
+                                        }
+                                        fg = fg.split(delim);
+                                        var id = fg[0];
+                                        if (Ext4.isNumeric(id)) {
                                             r.set('readset', id);
                                             readsetsToUpdate.push(id);
                                         }

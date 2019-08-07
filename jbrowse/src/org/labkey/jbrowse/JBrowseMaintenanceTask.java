@@ -1,6 +1,7 @@
 package org.labkey.jbrowse;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -11,7 +12,11 @@ import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.jbrowse.JBrowseService;
+import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.security.User;
+import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.SystemMaintenance.MaintenanceTask;
 import org.labkey.jbrowse.model.Database;
 import org.labkey.jbrowse.model.JsonFile;
@@ -204,6 +209,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                 }
 
                 //also databases
+                Set<String> toRecreate = new HashSet<>();
                 TableInfo tableJsonDatabases = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES);
                 TableSelector ts2 = new TableSelector(tableJsonDatabases, Collections.singleton("objectid"), new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
                 List<String> expectedDatabases = ts2.getArrayList(String.class);
@@ -226,7 +232,10 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                             {
                                 for (File child : subdir.listFiles())
                                 {
-                                    detectBrokenSymlink(log, child);
+                                    if (detectBrokenSymlink(log, child))
+                                    {
+                                        toRecreate.add(childDir.getName());
+                                    }
                                 }
                             }
                         }
@@ -239,6 +248,17 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                     if (!dir.exists())
                     {
                         log.error("missing expected DB directory: " + dir.getPath());
+                        toRecreate.add(objectId);
+                    }
+                }
+
+                if (!toRecreate.isEmpty())
+                {
+                    log.info("re-creating " + toRecreate.size() + " jbrowse sessions");
+                    log.info(StringUtils.join(toRecreate, ";"));
+                    for (String objectId : toRecreate)
+                    {
+                        recreateSession(c, objectId, log);
                     }
                 }
             }
@@ -250,11 +270,34 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
         }
     }
 
-    private void detectBrokenSymlink(Logger log, File dir)
+    private boolean detectBrokenSymlink(Logger log, File dir)
     {
         if (Files.isSymbolicLink(dir.toPath()) && !dir.exists())
         {
             log.error("possible broken symlink: " + dir.getPath());
+            return true;
         }
+
+        return false;
+    }
+
+    private void recreateSession(final Container c, final String databaseId, final Logger log)
+    {
+        JobRunner jr = JobRunner.getDefault();
+        jr.execute(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    JBrowseService.get().reprocessDatabase(c, User.getSearchUser(), databaseId);
+                }
+                catch (PipelineValidationException e)
+                {
+                    log.error(e.getMessage(), e);
+                }
+            }
+        });
     }
 }

@@ -88,4 +88,6 @@ abstract public class SequenceAnalysisService
     abstract public String getVCFLineCount(File vcf, Logger log, boolean passOnly) throws PipelineJobException;
 
     abstract public File getPicardJar();
+
+    abstract public File writeAllCellHashingBarcodes(File webserverDir) throws PipelineJobException;
 }

@@ -37,6 +37,7 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.ExperimentException;
 import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
@@ -498,12 +499,12 @@ public class BLASTController extends SpringActionController
                         throw new PipelineValidationException("Insufficient permissions to update BLAST database: " + databaseGuid);
                     }
 
-                    PipelineService.get().queueJob(new BlastDatabasePipelineJob(c, getUser(), null, root, databaseGuid));
+                    PipelineService.get().queueJob(BlastDatabasePipelineJob.recreate(c, getUser(), null, root, databaseGuid));
                 }
 
                 return new ApiSimpleResponse("success", true);
             }
-            catch (PipelineValidationException e)
+            catch (PipelineValidationException | PipelineJobException e)
             {
                 errors.reject(ERROR_MSG, e.getMessage());
                 return null;

@@ -31,7 +31,8 @@ public class JobsTableCustomizer implements TableCustomizer
             String totalReadsets = "totalReadsets";
             if (ti.getColumn(totalReadsets) == null)
             {
-                ExprColumn newCol = new ExprColumn(ti, totalReadsets, getSql("sequence_readsets"), JdbcType.INTEGER, ti.getColumn("RowId"));
+                //NOTE: the readset can technically include data from multiple pipeline jobs
+                ExprColumn newCol = new ExprColumn(ti, totalReadsets, getReadsetSql(), JdbcType.INTEGER, ti.getColumn("RowId"));
                 newCol.setLabel("Readsets From This Job");
                 ((AbstractTableInfo)ti).addColumn(newCol);
             }
@@ -63,12 +64,15 @@ public class JobsTableCustomizer implements TableCustomizer
             String hasSequenceData = "hasSequenceData";
             if (ti.getColumn(hasSequenceData) == null)
             {
-                SQLFragment sql = new SQLFragment("(SELECT CASE WHEN (" +
-                        "(SELECT count(rs.rowid) FROM sequenceanalysis.sequence_readsets rs WHERE r.RowId = rs.runid) > 0 OR\n" +
-                        "(SELECT count(sa.rowid) FROM sequenceanalysis.sequence_analyses sa WHERE r.RowId = sa.runid) > 0 OR\n" +
-                        "(SELECT count(o.rowid) FROM sequenceanalysis.outputfiles o WHERE r.RowId = o.runid) > 0\n" +
-                        ") THEN " + ti.getSqlDialect().getBooleanTRUE() + " ELSE " + ti.getSqlDialect().getBooleanFALSE() + " END as expr\n" +
+                SQLFragment sql = new SQLFragment("(SELECT CASE " +
+                        "WHEN sum(CASE WHEN (rs.RowId IS NULL AND rd.RowId IS NULL AND sa.RowId IS NULL AND o.RowId IS NULL) THEN 0 ELSE 1 END) = 0 THEN " + ti.getSqlDialect().getBooleanFALSE() + "\n" +
+                        "WHEN sum(CASE WHEN (rs.RowId IS NULL AND rd.RowId IS NULL AND sa.RowId IS NULL AND o.RowId IS NULL) THEN 0 ELSE 1 END) IS NULL THEN " + ti.getSqlDialect().getBooleanFALSE() + "\n" +
+                        "ELSE " + ti.getSqlDialect().getBooleanTRUE() + " END as expr\n" +
                         "FROM exp.experimentrun r\n" +
+                        "LEFT JOIN sequenceanalysis.sequence_readsets rs ON (r.RowId = rs.runid)\n" +
+                        "LEFT JOIN sequenceanalysis.readdata rd on (r.RowId = rd.runid)\n" +
+                        "LEFT JOIN sequenceanalysis.sequence_analyses sa ON (r.RowId = sa.runid)\n" +
+                        "LEFT JOIN sequenceanalysis.outputfiles o ON (r.RowId = o.runid)\n" +
                         "WHERE (r.jobid = " + ExprColumn.STR_TABLE_ALIAS + ".RowId OR r.jobid = (SELECT p.RowId FROM pipeline.statusfiles p WHERE " + ExprColumn.STR_TABLE_ALIAS + ".jobparent = p.job))\n" +
                         ")");
                 ExprColumn newCol = new ExprColumn(ti, hasSequenceData, sql, JdbcType.BOOLEAN, ti.getColumn("RowId"));
@@ -84,6 +88,23 @@ public class JobsTableCustomizer implements TableCustomizer
                 "FROM exp.experimentrun r\n" +
                 "JOIN sequenceanalysis." + tableName + " rs ON (r.RowId = rs.runid)\n" +
                 "WHERE (r.jobid = " + ExprColumn.STR_TABLE_ALIAS + ".RowId OR r.jobid = (SELECT p.RowId FROM pipeline.statusfiles p WHERE " + ExprColumn.STR_TABLE_ALIAS + ".jobparent = p.job))\n" +
+                ")");
+    }
+
+    private SQLFragment getReadsetSql()
+    {
+        return new SQLFragment("(SELECT COUNT(distinct t.readset) as expr\n" +
+                "FROM (\n" +
+                "SELECT rs.rowid as readset\n" +
+                "FROM exp.experimentrun r\n" +
+                "JOIN sequenceanalysis.sequence_readsets rs ON (r.RowId = rs.runid)\n" +
+                "WHERE (r.jobid = " + ExprColumn.STR_TABLE_ALIAS + ".RowId OR r.jobid = (SELECT p.RowId FROM pipeline.statusfiles p WHERE " + ExprColumn.STR_TABLE_ALIAS + ".jobparent = p.job))\n" +
+                "UNION ALL\n" +
+                "SELECT rd.readset " +
+                "FROM exp.experimentrun r\n" +
+                "JOIN sequenceanalysis.readdata rd ON (r.RowId = rd.runid)\n" +
+                "WHERE (r.jobid = " + ExprColumn.STR_TABLE_ALIAS + ".RowId OR r.jobid = (SELECT p.RowId FROM pipeline.statusfiles p WHERE " + ExprColumn.STR_TABLE_ALIAS + ".jobparent = p.job))\n" +
+                ") t\n" +
                 ")");
     }
 }

@@ -11,7 +11,7 @@
         <column name="hasSequenceData"/>
     </columns>
     <filters>
-        <!--<filter column="Provider" operator="neqornull" value="ETL"/>-->
+        <filter column="hasSequenceData" operator="eq" value="false"/>
         <filter column="Provider" operator="in" value="sequenceOutputHandler;Sequence Pipeline;sequenceReadsetHandler"/>
         <filter column="Status" operator="eq" value="COMPLETE"/>
     </filters>

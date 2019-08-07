@@ -530,7 +530,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 Date start = new Date();
                 action.setStartTime(start);
                 getHelper().getFileManager().addInput(action, "Input FASTQ", pair.first);
-                if (inputFile2 != null)
+                if (pair.second != null)
                 {
                     getHelper().getFileManager().addInput(action, "Input FASTQ", pair.second);
                 }

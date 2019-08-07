@@ -85,7 +85,7 @@ public class FastqUtils
 
     public static Pair<Long, Long> logSequenceCounts(File inputFile1, File inputFile2, Logger log, @Nullable Long previousCount1, @Nullable Long previousCount2) throws PipelineJobException
     {
-        final long bytes = 10737418240L; //10gb
+        final long bytes = 2147483648L; //2gb
 
         Long count1 = null;
         long size1 = FileUtils.sizeOf(inputFile1);

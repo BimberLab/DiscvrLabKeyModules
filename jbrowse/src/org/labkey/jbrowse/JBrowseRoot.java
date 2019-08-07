@@ -29,10 +29,12 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
+import org.labkey.api.query.UserSchema;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.reports.ExternalScriptEngineDefinition;
 import org.labkey.api.reports.LabkeyScriptEngineManager;
 import org.labkey.api.security.User;
+import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
@@ -244,6 +246,23 @@ public class JBrowseRoot
         if (ts1.exists())
         {
             jsonFile = ts1.getObject(JsonFile.class);
+            File outDir = getOutDirForOutputFile(jsonFile);
+            if (outDir.exists())
+            {
+                getLogger().debug("Inspecting directory for broken symlinks: " + outDir.getPath());
+                for (File f : outDir.listFiles())
+                {
+                    if (Files.isSymbolicLink(f.toPath()) && !f.exists())
+                    {
+                        getLogger().info("found broken symlink: " + f.getPath());
+                        getLogger().debug("deleting existing directory: " + outDir.getPath());
+                        forceRecreateJson = true;
+                        safeDeleteDiretory(outDir);
+                        break;
+                    }
+                }
+            }
+
             if (!forceRecreateJson)
             {
                 return jsonFile;
@@ -665,7 +684,22 @@ public class JBrowseRoot
 
                 Container target = f.getContainerObj();
                 target = target.isWorkbook() ? target.getParent() : target;
-                TableInfo ti = QueryService.get().getUserSchema(u, target, JBrowseManager.SEQUENCE_ANALYSIS).getTable("outputfiles");
+                UserSchema us = QueryService.get().getUserSchema(u, target, JBrowseManager.SEQUENCE_ANALYSIS);
+                TableInfo ti = us.getTable("outputfiles");
+                if (ti == null)
+                {
+                    getLogger().error("unable to find outputfiles table:");
+                    getLogger().error("container: " + target.getPath());
+                    getLogger().error("user: " + u.getUserId());
+                    getLogger().error("userName: " + u.getDisplayName(u));
+                    getLogger().error("has read permission: " + target.hasPermission(u, ReadPermission.class));
+                    getLogger().error("has home read permission: " + ContainerManager.getHomeContainer().hasPermission(u, ReadPermission.class));
+                    getLogger().error("has shared read permission: " + ContainerManager.getSharedContainer().hasPermission(u, ReadPermission.class));
+                    getLogger().error("other tables: " + StringUtils.join(us.getTableNames(), ";"));
+
+                    throw new PipelineJobException("Unable to find outputfiles table");
+                }
+
                 Set<FieldKey> keys = PageFlowUtil.set(
                         FieldKey.fromString("description"),
                         FieldKey.fromString("analysis_id"),
@@ -712,8 +746,26 @@ public class JBrowseRoot
                     }
                 }
 
+                File trackFile = getTrackListForOutputFile(f);
+                boolean doCreate = trackFile == null;
+                if (trackFile != null && trackFile.getParentFile().exists())
+                {
+                    getLogger().debug("Inspecting existing directory for broken symlinks: " + trackFile.getParentFile().getPath());
+                    for (File file : trackFile.getParentFile().listFiles())
+                    {
+                        if (Files.isSymbolicLink(file.toPath()) && !file.exists())
+                        {
+                            getLogger().info("found broken symlink: " + file.getPath());
+                            getLogger().debug("deleting existing directory: " + outDir.getPath());
+                            doCreate = true;
+                            safeDeleteDiretory(outDir);
+                            break;
+                        }
+                    }
+                }
+
                 //try to recreate if it does not exist
-                if (getTrackListForOutputFile(f) == null)
+                if (doCreate)
                 {
                     getLogger().info("existing trackList not found, creating");
                     File outputDir = new File(getTracksDir(f.getContainerObj()), "data-" + f.getOutputFile().toString());
@@ -1600,7 +1652,7 @@ public class JBrowseRoot
         o.put("type", "AnnotatedVariants/View/Track/VCFVariants");
         o.put("key", featureLabel);
         o.put("hideNotFilterPass", true);
-        o.put("chunkSizeLimit", 3000000);
+        o.put("chunkSizeLimit", 5000000);
 
         String relPath = FileUtil.relativePath(getBaseDir(data.getContainer()).getPath(), outDir.getPath());
         getLogger().debug("using relative path: " + relPath);

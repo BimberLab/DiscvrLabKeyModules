@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.query;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.AbstractTableInfo;
@@ -30,6 +31,7 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.SimpleUserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
@@ -167,7 +169,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         if (ret.getColumn("totalForwardReads") == null)
         {
             SQLFragment sql = new SQLFragment("(SELECT SUM(q.metricvalue) as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd " +
-                    " LEFT JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_QUALITY_METRICS + " q ON (rd.fileid1 = q.dataid AND q.metricname = 'Total Reads') " +
+                    " LEFT JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_QUALITY_METRICS + " q ON (rd.fileid1 = q.dataid AND q.metricname = 'Total Reads' AND (rd.readset IS NULL OR rd.readset = q.readset)) " +
                     " WHERE rd.rowid = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
             ExprColumn newCol = new ExprColumn(ret, "totalForwardReads", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
             newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=quality_metrics&query.dataid~eq=${fileid1}&query.metricname~eq=Total Reads"));
@@ -180,7 +182,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         if (ret.getColumn("totalReverseReads") == null)
         {
             SQLFragment sql = new SQLFragment("(SELECT SUM(q.metricvalue) as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd " +
-                    " LEFT JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_QUALITY_METRICS + " q ON (rd.fileid2 = q.dataid AND q.metricname = 'Total Reads') " +
+                    " LEFT JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_QUALITY_METRICS + " q ON (rd.fileid2 = q.dataid AND q.metricname = 'Total Reads' AND (rd.readset IS NULL OR rd.readset = q.readset)) " +
                     " WHERE rd.rowid = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
             ExprColumn newCol = new ExprColumn(ret, "totalReverseReads", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
             newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=quality_metrics&query.dataid~eq=${fileid2}&query.metricname~eq=Total Reads"));
@@ -317,10 +319,65 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             ret.addColumn(newCol);
         }
 
+        if (ret.getColumn("runIds") == null)
+        {
+            SQLFragment sql = new SQLFragment("(SELECT ").append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("rd.runId"), true, true, "','")).append(" FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
+            ExprColumn newCol = new ExprColumn(ret, "runIds", sql, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
+            newCol.setLabel("Run(s)");
+
+            newCol.setDisplayColumnFactory(new PipelineDisplayColumnFactory("/experiment/showRunGraphDetail.view?rowId="));
+            ret.addColumn(newCol);
+        }
+
+        if (ret.getColumn("jobIds") == null)
+        {
+            SQLFragment sql = new SQLFragment("(SELECT ").append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("runs.jobId"), true, true, "','")).append(" FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd JOIN exp.experimentrun runs ON (rd.runId = runs.rowId) WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
+            ExprColumn newCol = new ExprColumn(ret, "jobIds", sql, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
+            newCol.setLabel("Job(s)");
+
+            newCol.setDisplayColumnFactory(new PipelineDisplayColumnFactory("/pipeline-status/details.view?rowId="));
+            ret.addColumn(newCol);
+        }
+
         LDKService.get().applyNaturalSort(ret, "name");
         LDKService.get().applyNaturalSort(ret, "subjectid");
 
         return ret;
+    }
+
+    private static class PipelineDisplayColumnFactory implements DisplayColumnFactory
+    {
+        String _baseUrl;
+
+        public PipelineDisplayColumnFactory(String baseUrl)
+        {
+            _baseUrl = baseUrl;
+        }
+
+        @Override
+        public DisplayColumn createRenderer(ColumnInfo colInfo)
+        {
+            return new DataColumn(colInfo)
+            {
+                @Override
+                public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
+                {
+                    String result = StringUtils.trimToNull(super.getFormattedValue(ctx));
+                    String delim = "";
+                    if (result != null)
+                    {
+                        String[] tokens = result.split(",");
+                        for (String token : tokens)
+                        {
+                            String url = DetailsURL.fromString(_baseUrl + PageFlowUtil.encode(token), ctx.getContainer()).getActionURL().toString();
+
+                            out.write(delim + "<a href=\"" + url + "\">" + token + "</a>");
+                            delim = "<br>";
+                        }
+                    }
+                }
+            };
+        }
     }
 
     private TableInfo createRefSequencesTable(TableInfo sourceTable)

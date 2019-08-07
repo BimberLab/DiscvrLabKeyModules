@@ -173,7 +173,8 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
                 filter.addCondition(FieldKey.fromString("dataId"), o.getDataId());
                 if (new TableSelector(ti, filter, null).exists())
                 {
-                    job.getLogger().error("Possible double creation of output file: " + o.getName());
+                    job.getLogger().error("Existing output file found, skipping: " + o.getName());
+                    continue;
                 }
             }
 
@@ -209,12 +210,20 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
 
         if (o.getDataId() == null && o.getFile() != null)
         {
-            job.getLogger().debug("creating ExpData for file: " + o.getFile().getName());
-            ExpData d = ExperimentService.get().createData(job.getContainer(), new DataType(o.getCategory()));
+            job.getLogger().debug("possibly creating ExpData for file: " + o.getFile().getName());
+            ExpData d = ExperimentService.get().getExpDataByURL(o.getFile(), job.getContainer());
+            if (d != null)
+            {
+                job.getLogger().debug("Existing ExpData found, using: " + d.getRowId() + ", " + d.getFilePath().toString());
+            }
+            else
+            {
+                d = ExperimentService.get().createData(job.getContainer(), new DataType(o.getCategory()));
+                d.setDataFileURI(o.getFile().toURI());
+                d.setName(o.getFile().getName());
+                d.save(job.getUser());
+            }
 
-            d.setDataFileURI(o.getFile().toURI());
-            d.setName(o.getFile().getName());
-            d.save(job.getUser());
             o.setDataId(d.getRowId());
         }
     }

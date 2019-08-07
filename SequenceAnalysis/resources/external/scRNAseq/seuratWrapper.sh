@@ -17,4 +17,4 @@ fi
 
 sudo $DOCKER pull bbimber/rnaseq:seurat
 
-sudo $DOCKER run --rm=true $RAM_OPTS -v "${WD}:/work" -v "${HOME}:/homeDir" -u $UID -v "${LK_ROOT}:/lkRoot" -e USERID=$UID -w /work -e HOME=/homeDir bbimber/rnaseq:seurat Rscript --vanilla script.R
+sudo $DOCKER run --rm=true $RAM_OPTS -v "${WD}:/work" -v "${HOME}:/homeDir" -u $UID -e USERID=$UID -w /work -e HOME=/homeDir bbimber/rnaseq:seurat Rscript --vanilla script.R

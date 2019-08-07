@@ -6,7 +6,12 @@
         <column name="ActiveHostName"/>
         <column name="Created" />
         <column name="CreatedBy" />
-        <column name="Folder"/>
+        <column name="Folder/Path">
+            <properties>
+                <property name="columnTitle" value="Folder"/>
+            </properties>
+        </column>
+        <column name="RowId" />
     </columns>
     <sorts>
         <sort column="Created" descending="true"/>

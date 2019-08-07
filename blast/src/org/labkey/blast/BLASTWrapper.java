@@ -5,6 +5,8 @@ import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineJobService;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.blast.model.BlastJob;
@@ -32,14 +34,9 @@ public class BLASTWrapper extends AbstractCommandWrapper
         super(log);
     }
 
-    public File runBlastN(String blastDbGuid, File input, File outputFile, Map<String, Object> params, File binDir, File dbDir) throws PipelineJobException, IOException
+    public File runBlastN(String blastDbGuid, File input, File outputFile, Map<String, Object> params, @Nullable File binDir, File dbDir) throws PipelineJobException, IOException
     {
-        if (binDir == null || !binDir.exists())
-        {
-            throw new IllegalArgumentException("BLAST bin dir does not exist: " + binDir);
-        }
-
-        File exe = new File(binDir, "blastn" + getExtension());
+        File exe = getExe("blastn", binDir);
         if (!exe.exists())
         {
             throw new IllegalArgumentException("Unable to find blastn executable");
@@ -97,13 +94,7 @@ public class BLASTWrapper extends AbstractCommandWrapper
 
     public void runBlastFormatter(File inputFile, BlastJob.BLAST_OUTPUT_FORMAT outputFormat, Writer out) throws PipelineJobException, IOException
     {
-        File binDir = BLASTManager.get().getBinDir();
-        if (binDir == null || !binDir.exists())
-        {
-            throw new IllegalArgumentException("BLAST bin dir does not exist: " + binDir);
-        }
-
-        File exe = new File(binDir, "blast_formatter" + getExtension());
+        File exe = getExe("blast_formatter", null);
         if (!exe.exists())
         {
             throw new IllegalArgumentException("Unable to find blast_formatter executable");
@@ -123,17 +114,7 @@ public class BLASTWrapper extends AbstractCommandWrapper
 
     public File createDatabase(String dbName, String title, File fastaFile, File dbDir, Logger log) throws PipelineJobException, IOException
     {
-        File binDir = BLASTManager.get().getBinDir();
-        if (binDir == null)
-        {
-            throw new IllegalArgumentException("BLAST bin dir has not been set, aborting.");
-        }
-        else if (!binDir.exists())
-        {
-            throw new IllegalArgumentException("BLAST bin dir does not exist: " + binDir);
-        }
-
-        File exe = new File(binDir, "makeblastdb" + getExtension());
+        File exe = getExe("makeblastdb", null);
         if (!exe.exists())
         {
             throw new IllegalArgumentException("Unable to find makeblastdb executable.  This location is defined through the admin console.");
@@ -201,7 +182,7 @@ public class BLASTWrapper extends AbstractCommandWrapper
         }
 
         //make index
-        File indexExe = new File(binDir, "makembindex" + getExtension());
+        File indexExe = getExe("makembindex", null);
         if (!indexExe.exists())
         {
             throw new IllegalArgumentException("Unable to find makembindex executable.  This location is defined through the admin console.");
@@ -266,5 +247,36 @@ public class BLASTWrapper extends AbstractCommandWrapper
     private String getExtension()
     {
         return SystemUtils.IS_OS_WINDOWS ? ".exe" : "";
+    }
+
+    private File getExe(String name, @Nullable File binDir)
+    {
+        name = name + getExtension();
+
+        File ret;
+        if (binDir == null && PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
+        {
+            binDir = BLASTManager.get().getBinDir();
+            if (binDir != null && !binDir.exists())
+            {
+                throw new IllegalArgumentException("BLAST bin dir does not exist: " + binDir);
+            }
+        }
+
+        if (binDir != null)
+        {
+            ret = new File(binDir, name);
+        }
+        else
+        {
+            ret = SequencePipelineService.get().getExeForPackage("BLASTPATH", name);
+        }
+
+        if (!ret.exists())
+        {
+            throw new IllegalArgumentException("Unable to find BLAST executable, expected: " + ret.getPath());
+        }
+
+        return ret;
     }
 }

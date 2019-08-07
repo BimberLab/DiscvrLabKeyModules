@@ -507,15 +507,10 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         return output;
     }
 
-    public File runCiteSeqCount(Readset htoReadset, File htoList, File cellBarcodeList, File outputDir, String basename, Logger log, List<String> extraArgs, boolean doHtoFiltering, @Nullable File localPipelineDir) throws PipelineJobException
+    public File runCiteSeqCount(Readset htoReadset, File htoList, File cellBarcodeList, File outputDir, String basename, Logger log, List<String> extraArgs, boolean doHtoFiltering, File localPipelineDir) throws PipelineJobException
     {
         CellHashingHandler handler = new CellHashingHandler();
 
-        //NOTE: this was removed since we now capture better metrics in R
-        //first compare whitelist:
-        //handler.compareWhitelistToTopCells(htoReadset, htoList, outputDir, basename + "-compare", log, cellBarcodeList);
-
-        //then return calls
         return handler.runCiteSeqCount(htoReadset, htoList, cellBarcodeList, outputDir, basename, log, extraArgs, doHtoFiltering, localPipelineDir);
     }
 }

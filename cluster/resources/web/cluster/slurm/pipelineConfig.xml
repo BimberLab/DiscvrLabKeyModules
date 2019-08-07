@@ -78,10 +78,10 @@
     <!--If using SSH, this must be configured not to require prompts, such as passwords.  SSH keys can be configured between the servers-->
     <bean id="slurmSSHProperties" class="org.labkey.cluster.pipeline.SlurmExecutionEngineConfig">
         <property name="location" value="cluster" />
-        <property name="submitCommand" value="ssh ${clusterUser}@condorServer.edu -c 'sbatch ${submitScript}'"/>
-        <property name="statusCommand" value="ssh ${clusterUser}@condorServer.edu -c 'squeue --all'"/>
-        <property name="historyCommand" value="ssh ${clusterUser}@condorServer.edu -c 'sacct --allusers --jobs=${clusterId}'"/>
-        <property name="removeCommand" value="ssh ${clusterUser}@condorServer.edu -c 'scancel ${clusterId}'"/>
+        <property name="submitCommand" value="ssh -q ${clusterUser}@condorServer.edu -c 'sbatch ${submitScript}'"/>
+        <property name="statusCommand" value="ssh -q ${clusterUser}@condorServer.edu -c 'squeue --all'"/>
+        <property name="historyCommand" value="ssh -q ${clusterUser}@condorServer.edu -c 'sacct --allusers --jobs=${clusterId}'"/>
+        <property name="removeCommand" value="ssh -q ${clusterUser}@condorServer.edu -c 'scancel ${clusterId}'"/>
 
         <!--See the slurmProperties bean for examples of supported config options-->
     </bean>

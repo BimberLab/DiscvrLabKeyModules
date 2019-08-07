@@ -169,32 +169,37 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
             _log.error("clusterId was null for job: " + job.getRowId() + " / " + job.getStatus());
         }
 
-        List<String> ret = execute(getConfig().getHistoryCommandExpr().eval(ctx));
+        String command = getConfig().getHistoryCommandExpr().eval(ctx);
+        List<String> ret = execute(command);
         if (ret != null)
         {
             //verify success
             boolean headerFound = false;
+            boolean foundJobLine = false;
             LinkedHashSet<String> statuses = new LinkedHashSet<>();
             for (String line : ret)
             {
                 line = StringUtils.trimToNull(line);
-                if (line == null || line.startsWith("JobID "))
+                if (line == null)
                 {
                     continue;
                 }
 
-                if (line.startsWith("------------"))
+                if (line.startsWith("JobID"))
+                {
+                    foundJobLine = true;
+                }
+                else if (foundJobLine && line.startsWith("------------"))
                 {
                     headerFound = true;
-                    continue;
                 }
-
-                if (headerFound)
+                else if (headerFound)
                 {
                     String[] tokens = line.split("( )+");
                     if (tokens.length < 6)
                     {
                         _log.error("sacct line unexpectedly short: [" + line + "]");
+                        _log.error("command: " + command);
                         continue;
                     }
                     int statusIdx = tokens.length == 7 ? 5 : 4;

@@ -29,6 +29,8 @@ public class FlashWrapper extends AbstractCommandWrapper
         args.add("-o");
         args.add(outPrefix);
 
+        args.add("-z");
+
         if (extraParams != null)
         {
             args.addAll(extraParams);
@@ -39,7 +41,7 @@ public class FlashWrapper extends AbstractCommandWrapper
 
         execute(args);
 
-        File output = new File(outputDir, outPrefix + ".extendedFrags.fastq");
+        File output = new File(outputDir, outPrefix + ".extendedFrags.fastq.gz");
         if (!output.exists())
         {
             throw new PipelineJobException("Unable to find expected output: " + output.getPath());

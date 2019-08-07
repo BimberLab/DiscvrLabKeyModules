@@ -274,6 +274,7 @@ labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/Abstract
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/AbstractGatkWrapper.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/CommandWrapper.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/CreateSequenceDictionaryWrapper.java -text
+labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/DISCVRSeqRunner.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/GeneToNameTranslator.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/PicardWrapper.java -text
 labModules/SequenceAnalysis/api-src/org/labkey/api/sequenceanalysis/run/RCommandWrapper.java -text
@@ -417,6 +418,7 @@ labModules/SequenceAnalysis/resources/queries/exp/DataInputs/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/pipeline/Job.query.xml -text
 labModules/SequenceAnalysis/resources/queries/pipeline/Job/.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/pipeline/Job/Active[!!-~]Jobs.qview.xml -text
+labModules/SequenceAnalysis/resources/queries/pipeline/Job/Sequence[!!-~]Jobs[!!-~]Without[!!-~]Data.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/pipeline/Job/Sequence[!!-~]Jobs.qview.xml -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/aa_features_combined.sql -text
 labModules/SequenceAnalysis/resources/queries/sequenceanalysis/aa_snps_by_codon/.qview.xml -text
@@ -860,6 +862,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/GenotypeGVC
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/HaplotypeCallerHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/LiftoverHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/ListVcfSamplesHandler.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/MultiQCBamHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/MultiQCHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/PicardAlignmentMetricsHandler.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/analysis/RecalculateSequenceMetricsHandler.java -text
@@ -1000,7 +1003,9 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/Bl
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/CutadaptWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/DownsampleFastqWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/FastqcProcessingStep.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/FlashPipelineStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/PreprocessingOutputImpl.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/PrintReadsContainingStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/SeqtkRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/Sff2FastqRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/TrimmomaticWrapper.java -text

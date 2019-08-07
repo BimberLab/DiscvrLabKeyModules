@@ -44,8 +44,8 @@ public class PreprocessingOutputImpl extends DefaultPipelineStepOutput implement
             throw new PipelineJobException("No output created after preprocessing, expected: " + _processed.first.getPath());
         }
 
-        //if we had 2 inputs, we expect 2 outputs
-        if (_inputs.second != null)
+        //even if we had 2 inputs, the result could be a single file
+        if (_processed.second != null)
         {
             if (_processed.second.exists())
             {

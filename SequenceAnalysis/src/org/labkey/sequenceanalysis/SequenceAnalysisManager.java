@@ -219,7 +219,7 @@ public class SequenceAnalysisManager
 
                 //then the readsets themselves
                 List<Map<String, Object>> keysToDelete = new ArrayList<>();
-                keysToDelete.add(new CaseInsensitiveHashMap<Object>(){{put("rowId", rowId);}});
+                keysToDelete.add(new CaseInsensitiveHashMap<>(){{put("rowId", rowId);}});
 
                 Map<String, Object> scriptContext = new HashMap<>();
                 scriptContext.put("deleteFromServer", true);  //a flag to make the trigger script accept this

@@ -30,6 +30,7 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.files.FileContentService;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
@@ -90,10 +91,13 @@ public class BLASTManager
 
     public File getBinDir()
     {
-        Map<String, String> props = PropertyManager.getProperties(CONFIG_PROPERTY_DOMAIN);
-        if (props.containsKey(BLAST_BIN_DIR))
+        if (PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
         {
-            return new File(props.get(BLAST_BIN_DIR));
+            Map<String, String> props = PropertyManager.getProperties(CONFIG_PROPERTY_DOMAIN);
+            if (props.containsKey(BLAST_BIN_DIR))
+            {
+                return new File(props.get(BLAST_BIN_DIR));
+            }
         }
 
         return null;
@@ -144,7 +148,7 @@ public class BLASTManager
             PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
             PipelineService.get().queueJob(new BlastDatabasePipelineJob(c, u, null, root, libraryId));
         }
-        catch (PipelineValidationException e)
+        catch (PipelineValidationException | PipelineJobException e)
         {
             throw new IllegalArgumentException(e);
         }
@@ -211,7 +215,7 @@ public class BLASTManager
             try
             {
                 BLASTWrapper wrapper = new BLASTWrapper(Logger.getLogger(BLASTManager.class));
-                wrapper.runBlastN(job.getDatabaseId(), job.getExpectedInputFile(), job.getExpectedOutputFile(), job.getParamMap(), BLASTManager.get().getBinDir(), BLASTManager.get().getDatabaseDir(dbContainer, false));
+                wrapper.runBlastN(job.getDatabaseId(), job.getExpectedInputFile(), job.getExpectedOutputFile(), job.getParamMap(), null, BLASTManager.get().getDatabaseDir(dbContainer, false));
                 job.setComplete(u, null);
             }
             catch (PipelineJobException e)

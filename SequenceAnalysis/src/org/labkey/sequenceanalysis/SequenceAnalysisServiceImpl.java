@@ -37,6 +37,7 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.view.UnauthorizedException;
+import org.labkey.sequenceanalysis.analysis.CellHashingHandler;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
@@ -445,5 +446,11 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
             throw new PipelineJobException("Unable to find file: " + f.getPath());
 
         return f.getPath();
+    }
+
+    @Override
+    public File writeAllCellHashingBarcodes(File webserverDir) throws PipelineJobException
+    {
+        return CellHashingHandler.writeAllBarcodes(webserverDir);
     }
 }

@@ -62,7 +62,7 @@ public class BlastGenomeTrigger implements GenomeTrigger
                 for (String databaseGuid : existingDbs)
                 {
                     log.info("recreating existing BLAST database: " + databaseGuid);
-                    PipelineService.get().queueJob(new BlastDatabasePipelineJob(c, u, null, root, databaseGuid));
+                    PipelineService.get().queueJob(BlastDatabasePipelineJob.recreate(c, u, null, root, databaseGuid));
                 }
             }
             else
@@ -71,7 +71,7 @@ public class BlastGenomeTrigger implements GenomeTrigger
                 BLASTManager.get().createDatabase(c, u, genomeId);
             }
         }
-        catch (IOException | PipelineValidationException e)
+        catch (IOException | PipelineValidationException | PipelineJobException e)
         {
             log.error(e);
         }

@@ -11,8 +11,9 @@ Ext4.define('SequenceAnalysis.panel.BamHaplotypePanel', {
             items: [{
                 title: 'Instructions',
                 border: true,
+                bodyStyle: 'padding: 5px',
                 html: 'This page is designed to reconstruct NT haplotypes across short region of interest from BAM alignments.  It uses read data (including paired read information) to rebuild local halotypes, and presents all distinct NT sequences across the region.  ' +
-                        'It will respect INDELs, provides a relatively simple model to filter out SNPs based on quality.  It will then output all distinct sequences across this region, including their frequency.  It was originally built to study haplotypes across short regions of interest, such cytotoxic T-lymphocyte epitopes, compensatory mutations or drug resistance.' +
+                        'It will respect INDELs, provides a relatively simple model to filter out SNPs based on quality.  It will then output all distinct sequences across this region, including their frequency.  It was originally built to study haplotypes across short regions of interest, such cytotoxic T-lymphocyte epitopes, compensatory mutations, or drug resistance.' +
                         'This report is meant for research only and is provided without any warranty.<p>',
                 style: 'margin-bottom: 20px;'
             }, this.getFilterConfig(), {
@@ -30,7 +31,39 @@ Ext4.define('SequenceAnalysis.panel.BamHaplotypePanel', {
                     }],
                     defaults: {
                         border: false
-                    }
+                    },
+                    buttonAlign: 'left',
+                    buttons: [{
+                        text: 'View As FASTA',
+                        itemId: 'downloadBtn',
+                        disabled: true,
+                        handler: function(btn){
+                            var panel = btn.up('#results');
+                            var fastaData = panel.fastaData;
+                            if (!fastaData) {
+                                Ext4.Msg.alert('Error', 'Data not found.  This may indicate results have not loaded yet.');
+                                return;
+                            }
+
+                            Ext4.create('Ext.window.Window', {
+                                width: 800,
+                                title: 'Haplotype Data As FASTA',
+                                bodyStyle: 'padding: 5px',
+                                items: [{
+                                    xtype: 'textarea',
+                                    width: 780,
+                                    height: 300,
+                                    value: fastaData
+                                }],
+                                buttons: [{
+                                    text: 'Close',
+                                    handler: function(btn){
+                                        btn.up('window').close();
+                                    }
+                                }]
+                            }).show();
+                        }
+                    }]
                 }]
             }]
         });
@@ -144,6 +177,7 @@ Ext4.define('SequenceAnalysis.panel.BamHaplotypePanel', {
         target.removeAll();
 
         var html = '';
+        var fastaData = [];
 
         var sampleMap = results.sampleNames;
 
@@ -171,7 +205,7 @@ Ext4.define('SequenceAnalysis.panel.BamHaplotypePanel', {
             }
 
             arr.sort(function(a, b){
-                if (a.total == b.total)
+                if (a.total === b.total)
                     return 0;
                 else if (a.total > b.total)
                     return -1;
@@ -188,12 +222,22 @@ Ext4.define('SequenceAnalysis.panel.BamHaplotypePanel', {
             html += '</tr>';
 
             Ext4.each(arr, function(data){
-                console.log(data);
                 html += '<tr><td style="font-family:courier,Courier New,monospace;white-space:nowrap;padding:5px;border-collapse:collapse;">' + data.sequence + '</td>';
                 html += '<td style="padding: 5px;text-align:center;">' + (data.total) + '</td>';
                 Ext4.each(this.outputFileIds, function(id){
                     var pct = (data.samples[id] ? ' (' + Ext4.util.Format.number(((data.samples[id] / totalForAll) * 100), '0.00') + '%)' : '');
                     html += '<td style="padding: 5px;text-align:center;">' + (data.samples[id] ? data.samples[id] : '') + pct + '</td>';
+
+                    //also add as FASTA:
+                    fastaData.push('>' + sampleMap[id] + '_' + data.total);
+
+                    //restore dots with reference:
+                    var str = '';
+                    for (var i = 0; i < data.sequence.length; i++) {
+                        str += data.sequence.charAt(i) === '.' ? interval.referenceSequence.charAt(i) : data.sequence.charAt(i);
+                    }
+
+                    fastaData.push(str);
                 }, this);
 
                 html += '</tr>';
@@ -209,10 +253,12 @@ Ext4.define('SequenceAnalysis.panel.BamHaplotypePanel', {
         this.setWidth(size.width + 20);
         target.setSize({
             width: size.width + 10,
-            height: size.height + 20
+            height: size.height + 60
         });
 
+        target.fastaData = fastaData.join('\n');
+        this.down('#downloadBtn').setDisabled(false);
+
         this.doLayout();
-        console.log(results);
     }
 });

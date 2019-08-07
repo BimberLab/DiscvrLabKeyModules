@@ -1246,6 +1246,7 @@ then
     install ./ncbi-blast-2.2.31+/bin/blastn $LKTOOLS_DIR/blastn
     install ./ncbi-blast-2.2.31+/bin/blast_formatter $LKTOOLS_DIR/blast_formatter
     install ./ncbi-blast-2.2.31+/bin/makeblastdb $LKTOOLS_DIR/makeblastdb
+    install ./ncbi-blast-2.2.31+/bin/makembindex $LKTOOLS_DIR/makembindex
 else
     echo "Already installed"
 fi

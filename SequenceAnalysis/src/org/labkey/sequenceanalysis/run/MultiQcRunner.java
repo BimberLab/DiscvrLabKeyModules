@@ -10,6 +10,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class MultiQcRunner extends AbstractCommandWrapper
@@ -19,24 +20,34 @@ public class MultiQcRunner extends AbstractCommandWrapper
         super(logger);
     }
 
-    public File runForFastqc(List<File> inputFastqcs, List<String> extraParams) throws PipelineJobException
+    public File runForFiles(Collection<File> filePaths, File outDir, List<String> extraParams) throws PipelineJobException
     {
         List<String> args = new ArrayList<>();
 
         args.add(getMultiQc());
         args.add("-o");
-        args.add(getOutputDir(inputFastqcs.get(0)).getPath());
+        args.add(outDir.getPath());
         args.add("-z");
-        inputFastqcs.forEach(x -> args.add(x.getPath()));
+        args.add("--ignore");
+        args.add("Undetermined*");
+        args.add("--ignore");
+        args.add("undetermined*");
+        args.add("--ignore");
+        args.add("*._STARpass1");
+
+        args.add("-e");
+        args.add("bcl2fastq");
 
         if (extraParams != null)
         {
             args.addAll(extraParams);
         }
 
+        filePaths.forEach(x -> args.add(x.getPath()));
+
         execute(args);
 
-        File report = new File(getOutputDir(inputFastqcs.get(0)), "multiqc_report.html");
+        File report = new File(outDir, "multiqc_report.html");
         if (!report.exists())
         {
             throw new PipelineJobException("report not found: " + report.getPath());
