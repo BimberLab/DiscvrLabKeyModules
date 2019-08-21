@@ -1008,6 +1008,7 @@ labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/Pr
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/PrintReadsContainingStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/SeqtkRunner.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/Sff2FastqRunner.java -text
+labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/SummarizeAlignmentsStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/preprocessing/TrimmomaticWrapper.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/reference/CustomReferenceLibraryStep.java -text
 labModules/SequenceAnalysis/src/org/labkey/sequenceanalysis/run/reference/DNAReferenceLibraryStep.java -text

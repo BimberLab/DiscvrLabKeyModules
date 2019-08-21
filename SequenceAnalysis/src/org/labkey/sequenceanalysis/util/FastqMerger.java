@@ -36,7 +36,7 @@ public class FastqMerger
         _logger.info("merging FASTQ files");
 
         FileType gz = new FileType(".gz");
-        try (PrintWriter writer = PrintWriters.getPrintWriter(gz.isType(output) ? new GZIPOutputStream(new FileOutputStream(output, true)) : new FileOutputStream(output, true)))
+        try (PrintWriter writer = PrintWriters.getPrintWriter(gz.isType(output) ? new GZIPOutputStream(new FileOutputStream(output)) : new FileOutputStream(output)))
         {
             for (File f : inputs)
             {

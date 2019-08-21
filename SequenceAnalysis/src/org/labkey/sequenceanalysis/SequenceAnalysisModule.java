@@ -99,6 +99,7 @@ import org.labkey.sequenceanalysis.run.preprocessing.DownsampleFastqWrapper;
 import org.labkey.sequenceanalysis.run.preprocessing.FastqcProcessingStep;
 import org.labkey.sequenceanalysis.run.preprocessing.FlashPipelineStep;
 import org.labkey.sequenceanalysis.run.preprocessing.PrintReadsContainingStep;
+import org.labkey.sequenceanalysis.run.preprocessing.SummarizeAlignmentsStep;
 import org.labkey.sequenceanalysis.run.preprocessing.TrimmomaticWrapper;
 import org.labkey.sequenceanalysis.run.reference.CustomReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.DNAReferenceLibraryStep;
@@ -260,6 +261,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new SnpCountAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new ExportOverlappingReadsAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new SubreadAnalysis.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SummarizeAlignmentsStep.Provider());
 
         //SequencePipelineService.get().registerPipelineStep(new BlastUnmappedReadAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new PARalyzerAnalysis.Provider());

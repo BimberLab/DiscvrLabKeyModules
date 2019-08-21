@@ -2,11 +2,7 @@
 
 knitr::opts_chunk$set(message=FALSE, warning=FALSE,echo=TRUE,error = FALSE)
 library(knitr)
-library(ggplot2)
-library(Seurat)
-library(dplyr)
-
-source('https://raw.githubusercontent.com/bbimber/rnaseq/master/seurat/seuratFunctions.R')
+library(OOSAP)
 
 ```
 
@@ -14,20 +10,20 @@ source('https://raw.githubusercontent.com/bbimber/rnaseq/master/seurat/seuratFun
 
 ```{r PreparingData}
 
-saveFile <- paste0(outPrefix, '.rawData.rds')
+rawDataSaveFile <- paste0(outPrefix, '.rawData.rds')
 seuratObjs <- list()
-if (file.exists(saveFile)) {
+if (file.exists(rawDataSaveFile)) {
   print('resuming from file')
-  seuratObjs <- readRDS(saveFile)
+  seuratObjs <- readRDS(rawDataSaveFile)
 } else {
   for (datasetName in names(data)) {
     print(paste0('Loading dataset: ', datasetName))
-    seuratObjs[[datasetName]] <- readAndFilter10xData(data[[datasetName]], datasetName)
+    seuratObjs[[datasetName]] <- ReadAndFilter10xData(dataDir = data[[datasetName]], datasetName = datasetName)
 
     print(seuratObjs[[datasetName]])
   }
 
-  saveRDS(seuratObjs, file = saveFile)
+  saveRDS(seuratObjs, file = rawDataSaveFile)
 }
 
 ```
@@ -42,12 +38,12 @@ if (file.exists(saveFile)) {
   print('resuming from file')
   seuratObj <- readRDS(saveFile)
 } else {
-  seuratObj <- mergeSeuratObjs(seuratObjs, data)
+  seuratObj <- MergeSeuratObjs(seuratObjs, metadata = data)
   saveRDS(seuratObj, file = saveFile)
   rm(seuratObjs)
 }
 
-seuratObj
+print(seuratObj)
 
 ```
 
@@ -55,7 +51,7 @@ seuratObj
 
 ```{r InitialProcessing}
 
-seuratObj <- processSeurat1(seuratObj, variableGeneTable = paste0(outPrefix, '.variableGenes.txt'))
+seuratObj <- ProcessSeurat1(seuratObj, variableGeneTable = paste0(outPrefix, '.variableGenes.txt'), doCellFilter = doCellFilter, saveFile = saveFile)
 
 ```
 
@@ -63,9 +59,32 @@ seuratObj <- processSeurat1(seuratObj, variableGeneTable = paste0(outPrefix, '.v
 
 ```{r DimRedux}
 
-seuratObj <- findClustersAndDimRedux(seuratObj)
+seuratObj <- FindClustersAndDimRedux(seuratObj, dimsToUse = dimsToUse)
 
-findMarkers(seuratObj, resolutionToUse, outFile = paste0(outPrefix, '.markers.txt'), saveFileMarkers = paste0(outPrefix, '.markers.rds'))
+Find_Markers(seuratObj, resolutionToUse = resolutionToUse, outFile = paste0(outPrefix, '.markers.txt'), saveFileMarkers = paste0(outPrefix, '.markers.rds'))
+
+```
+
+## SingleR
+
+```{r}
+
+seuratObj <- RunSingleR(seuratObj = seuratObj, resultTableFile = paste0(outPrefix, '.singleR.txt'))
+saveRDS(seuratObj, file = saveFile)
+
+DimPlot_SingleRClassLabs(seuratObj, plotIndividually = T)
+
+Tabulate_SingleRClassLabs(seuratObj, plotIndividually = T)
+
+```
+
+## Phenotypes
+
+```{r}
+
+PlotImmuneMarkers(seuratObj, reduction = 'tsne')
+
+PlotImmuneMarkers(seuratObj, reduction = 'umap')
 
 ```
 
@@ -74,12 +93,13 @@ findMarkers(seuratObj, resolutionToUse, outFile = paste0(outPrefix, '.markers.tx
 ```{r}
 
 saveRDS(seuratObj, file = saveFile)
+unlink(rawDataSaveFile)
 
-writeSummaryMetrics(seuratObj, file = paste0(outPrefix, '.summary.txt'))
+WriteSummaryMetrics(seuratObj, file = paste0(outPrefix, '.summary.txt'))
 
-saveDimRedux(seuratObj, file = paste0(outPrefix, '.DimReduxComps.csv'))
+SaveDimRedux(seuratObj, file = paste0(outPrefix, '.DimReduxComps.csv'))
 
-writeCellBarcodes(seuratObj, file = paste0(outPrefix, '.cellBarcodes.csv'))
+WriteCellBarcodes(seuratObj, file = paste0(outPrefix, '.cellBarcodes.csv'))
 
 ```
 

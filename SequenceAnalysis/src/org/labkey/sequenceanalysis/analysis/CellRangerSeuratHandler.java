@@ -55,7 +55,10 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                 }}, false),
                 ToolParameterDescriptor.create("dimsToUse", "PCs To Use", "This is not ideal, but for now hard code this value.  This is the number of PCs that seurat will use.", "ldk-integerfield", new JSONObject(){{
 
-                }}, null)
+                }}, null),
+                ToolParameterDescriptor.create("doCellFilter", "Perform Cell Filtering", "If selected, cells will be filtered on pct.mito and number of unique genes.", "checkbox", new JSONObject(){{
+                    put("checked", true);
+                }}, true)
         ));
     }
 
@@ -262,6 +265,8 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                 writer.println("resolutionToUse <- 0.6");
                 String dimsToUse = ctx.getParams().optString("dimsToUse", "NULL");
                 writer.println("dimsToUse <- " + dimsToUse);
+                boolean doCellFilter = ctx.getParams().optBoolean("doCellFilter", true);
+                writer.println("doCellFilter <- " + String.valueOf(doCellFilter).toUpperCase());
 
                 writer.println("data <- list(");
                 String delim = "";

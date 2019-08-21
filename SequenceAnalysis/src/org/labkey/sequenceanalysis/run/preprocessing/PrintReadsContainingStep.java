@@ -11,7 +11,6 @@ import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
-import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
@@ -38,17 +37,14 @@ public class PrintReadsContainingStep extends AbstractCommandPipelineStep<PrintR
             super("PrintReadsContaining", "Filter Reads By Sequence Motifs", "PrintReadsContaining", "This step filters input reads and will output only reads containing the provided sequence(s).", Arrays.asList(
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--matchAllExpressions"), "matchAllExpressions", "Match All Expressions", "If checked, the sequence must match all expressions.", "checkbox", null, false),
                     ToolParameterDescriptor.create("readExpressions", "Read Expressions (both)", "The list of expressions to test, one per line.  Expressions can be simple strings or a java regular expression.  The default is to retain a read pair matching any of these.", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
-                        put("delimiter", "<>");
                         put("replaceAllWhitespace", false);
                         put("width", 400);
                     }}, null),
                     ToolParameterDescriptor.create("read1Expressions", "Read Expressions (forward)", "The list of expressions to test in read1, one per line.  Expressions can be simple strings or a java regular expression.  The default is to retain a read pair where read1 matches any of these.", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
-                        put("delimiter", "<>");
                         put("replaceAllWhitespace", false);
                         put("width", 400);
                     }}, null),
                     ToolParameterDescriptor.create("read2Expressions", "Read Expressions (reverse)", "The list of expressions to test in read2, one per line.  Expressions can be simple strings or a java regular expression.  The default is to retain a read pair where read2 matches any of these.", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
-                        put("delimiter", "<>");
                         put("replaceAllWhitespace", false);
                         put("width", 400);
                     }}, null)
@@ -67,7 +63,7 @@ public class PrintReadsContainingStep extends AbstractCommandPipelineStep<PrintR
         param = StringUtils.trimToNull(param);
         if (param != null)
         {
-            String[] values = param.split("<>");
+            String[] values = param.split(";");
             for (String value : values)
             {
                 ret.add(argName);
@@ -92,6 +88,10 @@ public class PrintReadsContainingStep extends AbstractCommandPipelineStep<PrintR
 
         File output1 = new File(outputDir, SequenceAnalysisService.get().getUnzippedBaseName(inputFile.getName()) + ".filtered.fastq.gz");
         File output2 = inputFile2 == null ? null : new File(outputDir, SequenceAnalysisService.get().getUnzippedBaseName(inputFile2.getName()) + ".filtered.fastq.gz");
+        File summary = new File(outputDir, SequenceAnalysisService.get().getUnzippedBaseName(inputFile.getName()) + ".summary.txt");
+
+        extraArgs.add("--summaryFile");
+        extraArgs.add(summary.getPath());
 
         Pair<File, File> outputs = getWrapper().execute(inputFile, inputFile2, output1, output2, extraArgs);
         if (!SequencePipelineService.get().hasMinLineCount(outputs.first, 4))
@@ -100,6 +100,7 @@ public class PrintReadsContainingStep extends AbstractCommandPipelineStep<PrintR
         }
 
         output.setProcessedFastq(Pair.of(output1, output2));
+        output.addOutput(summary, "PrintReadsContaining Summary File");
 
         return output;
     }

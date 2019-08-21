@@ -22,6 +22,6 @@ if [ ! -z $SEQUENCEANALYSIS_MAX_RAM ];then
     RAM_OPTS=" --memory=${SEQUENCEANALYSIS_MAX_RAM}g"
 fi
 
-sudo $DOCKER pull bbimber/rnaseq:seurat
+sudo $DOCKER pull bimberlab/oosap
 
-sudo $DOCKER run --rm=true $RAM_OPTS -v "${WD}:/work" -v "${HOME}:/homeDir" -u $UID -e USERID=$UID -w /work -e HOME=/homeDir bbimber/rnaseq:seurat Rscript -e "barcodeDir <- '"${CITESEQ_COUNT_DIR}"';finalCallFile <- '"${FINAL_CALLS}"';doHtoFilter <- "${DO_HTO_FILTER}";allCallsOutFile <- '"${RAW_CALLS}"';"${WHITELIST}"rmarkdown::render('htoClassifier.Rmd', output_file = '"${HTML_FILE}"')"
+sudo $DOCKER run --rm=true $RAM_OPTS -v "${WD}:/work" -v "${HOME}:/homeDir" -u $UID -e USERID=$UID -w /work -e HOME=/homeDir bimberlab/oosap Rscript -e "barcodeDir <- '"${CITESEQ_COUNT_DIR}"';finalCallFile <- '"${FINAL_CALLS}"';doHtoFilter <- "${DO_HTO_FILTER}";allCallsOutFile <- '"${RAW_CALLS}"';"${WHITELIST}"rmarkdown::render('htoClassifier.Rmd', output_file = '"${HTML_FILE}"')"

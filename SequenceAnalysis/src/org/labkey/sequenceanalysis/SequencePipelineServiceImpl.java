@@ -279,6 +279,12 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     @Override
     public List<String> getJavaOpts()
     {
+        return getJavaOpts(null);
+    }
+
+    @Override
+    public List<String> getJavaOpts(@Nullable Integer maxRamOverride)
+    {
         List<String> params = new ArrayList<>();
         String tmpDir = getJavaTempDir();
         if (StringUtils.trimToNull(tmpDir) != null)
@@ -289,7 +295,12 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         //try environment first:
 
         Integer maxRam = getMaxRam();
-        if (maxRam != null)
+        if (maxRamOverride != null)
+        {
+            params.add("-Xmx" + maxRamOverride + "g");
+            params.add("-Xms" + maxRamOverride + "g");
+        }
+        else if (maxRam != null)
         {
             params.add("-Xmx" + maxRam + "g");
             params.add("-Xms" + maxRam + "g");

@@ -50,6 +50,7 @@ import org.labkey.api.action.ReturnUrlForm;
 import org.labkey.api.action.SimpleApiJsonForm;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
+import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.ColumnInfo;
@@ -114,7 +115,6 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -1176,6 +1176,8 @@ public class SequenceAnalysisController extends SpringActionController
             {
                 ExceptionUtil.logExceptionToMothership(getViewContext().getRequest(), e);
                 errors.reject(ERROR_MSG, e.getMessage());
+                _log.error(e);
+                return null;
             }
             return new ApiSimpleResponse(resultProperties);
         }
@@ -4185,6 +4187,7 @@ public class SequenceAnalysisController extends SpringActionController
             if (form.getOutputFileIds() == null || form.getOutputFileIds().length == 0)
             {
                 errors.reject(ERROR_MSG, "No output files provided");
+                return null;
             }
 
             //test permissions

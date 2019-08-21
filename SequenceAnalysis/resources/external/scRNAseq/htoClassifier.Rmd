@@ -1,6 +1,6 @@
 ```{r}
 
-source('https://raw.githubusercontent.com/bbimber/rnaseq/master/seurat/cellHashingFunctions.R')
+library(OOSAP)
 
 ```
 
@@ -8,7 +8,7 @@ source('https://raw.githubusercontent.com/bbimber/rnaseq/master/seurat/cellHashi
 
 ```{r QC}
 
-barcodeData <- processCiteSeqCount(barcodeDir, doRowFilter = doHtoFilter)
+barcodeData <- ProcessCiteSeqCount(bFile = barcodeDir, doRowFilter = doHtoFilter)
 if (nrow(barcodeData) == 0) {
   stop('No passing HTOs')
 }
@@ -17,35 +17,18 @@ if (ncol(barcodeData) == 0) {
   stop('No passing cells')
 }
 
-generateQcPlots(barcodeData)
+GenerateQcPlots(barcodeData)
 
 ```
 
-## Using Seurat:
+## Generate calls
 
-```{r Seurat}
+```{r GenerateCalls}
 
-sc <- generateCellHashCallsSeurat(barcodeData)
-
-```
-
-## Using MULTI-seq Classifier:
-
-```{r MULTI-seq}
-
-# Remove for now.
-mc <- generateCellHashCallsMultiSeq(barcodeData)
-
-```
-
-## Merge calls
-
-```{r ProcessCalls}
-
-dt <- processEnsemblHtoCalls(mc, sc, barcodeData, outFile = finalCallFile, allCallsOutFile = allCallsOutFile)
+dt <- GenerateCellHashingCalls(barcodeData = barcodeData, outFile = finalCallFile, allCallsOutFile = allCallsOutFile)
 
 if (exists('whitelistFile') && !is.null(whitelistFile)){
-  generateSummaryForExpectedBarcodes(dt, whitelistFile=whitelistFile, outputFile='metrics.txt', barcodeData=barcodeData)
+  GenerateSummaryForExpectedBarcodes(dt, whitelistFile=whitelistFile, outputFile='metrics.txt', barcodeData=barcodeData)
 }
 
 ```

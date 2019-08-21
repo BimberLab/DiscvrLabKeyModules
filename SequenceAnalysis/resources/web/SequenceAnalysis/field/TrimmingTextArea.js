@@ -19,6 +19,15 @@ Ext4.define('SequenceAnalysis.field.TrimmingTextArea', {
         this.callParent();
     },
 
+    setValue: function(val){
+        if (Ext4.isString(val)) {
+            val = val.split(this.delimiter);
+            val = val.join('\n');
+        }
+
+        this.callParent([val]);
+    },
+
     getSubmitValue: function(){
         var val = this.callParent(arguments);
         val = this.processText(val);

@@ -280,7 +280,13 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                                     return;
                                 }
 
+                                // can occur in rare cases, probably when store is loading
                                 var recIdx = combo.store.find('rowid', combo.getValue());
+                                if (recIdx < 0) {
+                                    Ext4.Msg.alert('Error', 'Must choose a protocol');
+                                    return;
+                                }
+
                                 var rec = combo.store.getAt(recIdx);
                                 var json = rec.get('json');
                                 if (Ext4.isString(rec.get('json'))) {

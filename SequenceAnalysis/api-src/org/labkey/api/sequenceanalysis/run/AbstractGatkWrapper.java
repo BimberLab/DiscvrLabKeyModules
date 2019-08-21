@@ -19,6 +19,7 @@ import java.util.List;
 abstract public class AbstractGatkWrapper extends AbstractCommandWrapper
 {
     protected Integer _minRamPerQueueJob = 2;
+    protected Integer _maxRamOverride = null;
 
     public AbstractGatkWrapper(Logger log)
     {
@@ -45,6 +46,11 @@ abstract public class AbstractGatkWrapper extends AbstractCommandWrapper
         }
 
         return path == null ? new File(getJarName()) : new File(path, getJarName());
+    }
+
+    public void setMaxRamOverride(Integer maxRamOverride)
+    {
+        _maxRamOverride = maxRamOverride;
     }
 
     protected void addJavaHomeToEnvironment()
@@ -97,7 +103,7 @@ abstract public class AbstractGatkWrapper extends AbstractCommandWrapper
     {
         List<String> args = new ArrayList<>();
         args.add(SequencePipelineService.get().getJava8FilePath());
-        args.addAll(SequencePipelineService.get().getJavaOpts());
+        args.addAll(SequencePipelineService.get().getJavaOpts(_maxRamOverride));
         args.add("-jar");
         args.add(getJAR().getPath());
         args.add("--version");
@@ -160,7 +166,7 @@ abstract public class AbstractGatkWrapper extends AbstractCommandWrapper
     {
         List<String> args = new ArrayList<>();
         args.add(SequencePipelineService.get().getJava8FilePath());
-        args.addAll(SequencePipelineService.get().getJavaOpts());
+        args.addAll(SequencePipelineService.get().getJavaOpts(_maxRamOverride));
         args.add("-jar");
         args.add(getJAR().getPath());
 
