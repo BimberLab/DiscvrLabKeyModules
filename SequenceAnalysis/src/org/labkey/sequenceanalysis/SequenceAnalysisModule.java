@@ -141,27 +141,32 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
     public static final String PROTOCOL = "Sequence Analysis";
     public static final ExperimentRunType EXP_RUN_TYPE = new SequenceAnalysisExperimentRunType();
 
+    @Override
     public String getName()
     {
         return NAME;
     }
 
+    @Override
     public double getVersion()
     {
         return 12.319;
     }
 
+    @Override
     public boolean hasScripts()
     {
         return true;
     }
 
+    @Override
     @NotNull
     protected Collection<WebPartFactory> createWebPartFactories()
     {
         return Collections.emptyList();
     }
 
+    @Override
     protected void init()
     {
         addController(CONTROLLER_NAME, SequenceAnalysisController.class);
@@ -418,6 +423,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         return testClasses;
     }
 
+    @Override
     @NotNull
     public Set<Class> getUnitTests()
     {

@@ -49,7 +49,6 @@ import org.labkey.laboratory.notification.LabSummaryNotification;
 import org.labkey.laboratory.query.WorkbookModel;
 import org.labkey.laboratory.security.LaboratoryAdminRole;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -68,23 +67,27 @@ public class LaboratoryModule extends ExtendedSimpleModule
     public static final String CONTROLLER_NAME = "laboratory";
     public static final String SCHEMA_NAME = "laboratory";
 
+    @Override
     public String getName()
     {
         return NAME;
     }
 
+    @Override
     public double getVersion()
     {
         return 12.304;
     }
 
+    @Override
     @NotNull
     protected Collection<WebPartFactory> createWebPartFactories()
     {
-        return new ArrayList<WebPartFactory>(Arrays.asList(
+        return Arrays.asList(
             new BaseWebPartFactory("Workbook Header")
             {
-                public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+                @Override
+                public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
                 {
                     WorkbookModel model = LaboratoryManager.get().getWorkbookModel(portalCtx.getContainer());
                     if (model == null)
@@ -106,7 +109,8 @@ public class LaboratoryModule extends ExtendedSimpleModule
             },
             new BaseWebPartFactory("Laboratory Data Browser")
             {
-                public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+                @Override
+                public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
                 {
                     JspView<Object> view = new JspView<>("/org/labkey/laboratory/view/dataBrowser.jsp", new Object());
                     view.setTitle("Laboratory Data Browser");
@@ -135,9 +139,10 @@ public class LaboratoryModule extends ExtendedSimpleModule
                     return WebPartFactory.LOCATION_BODY.equals(location);
                 }
             }
-        ));
+        );
     }
 
+    @Override
     protected void init()
     {
         addController(CONTROLLER_NAME, LaboratoryController.class);
@@ -220,8 +225,7 @@ public class LaboratoryModule extends ExtendedSimpleModule
     @Override
     public JSONObject getPageContextJson(ContainerUser context)
     {
-        Map<String, Object> ret = new HashMap<>();
-        ret.putAll(super.getPageContextJson(context));
+        Map<String, Object> ret = new HashMap<>(super.getPageContextJson(context));
 
         ret.put("isLaboratoryAdmin", context.getContainer().hasPermission(context.getUser(), LaboratoryAdminPermission.class));
 
