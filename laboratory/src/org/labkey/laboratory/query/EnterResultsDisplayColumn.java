@@ -63,7 +63,7 @@ public class EnterResultsDisplayColumn extends DataColumn
             {
                 props = Collections.emptyMap();
             }
-            out.write(PageFlowUtil.textLink(value.toString(), url, null, null, props));
+            out.write(PageFlowUtil.link(value.toString()).href(url).attributes(props).toString());
         }
     }
 

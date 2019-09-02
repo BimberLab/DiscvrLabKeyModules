@@ -42,7 +42,7 @@ public class DownloadSequenceDisplayColumnFactory implements DisplayColumnFactor
             public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
             {
                 Object val = ctx.get(FieldKey.fromString(getBoundColumn().getFieldKey().getParent(), "rowId"));
-                out.write(PageFlowUtil.textLink("Download Sequence", "javascript:void(0);", "SequenceAnalysis.window.DownloadSequencesWindow.downloadSingle(" + val + ")", null));
+                out.write(PageFlowUtil.link("Download Sequence").onClick("SequenceAnalysis.window.DownloadSequencesWindow.downloadSingle(" + val + ")").toString());
             }
 
             @Override
