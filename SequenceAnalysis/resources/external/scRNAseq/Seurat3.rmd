@@ -4,6 +4,17 @@ knitr::opts_chunk$set(message=FALSE, warning=FALSE,echo=TRUE,error = FALSE)
 library(knitr)
 library(OOSAP)
 
+cores <- Sys.getenv('SEQUENCEANALYSIS_MAX_THREADS')
+if (cores != ''){
+    print(paste0('Setting future::plan to ', cores, ' cores'))
+    future::plan("multiprocess", workers = as.integer(cores))
+} else {
+    print('SEQUENCEANALYSIS_MAX_THREADS not set, will not set cores')
+}
+
+print('Updating future.globals.maxSize')
+options(future.globals.maxSize = Inf)
+
 ```
 
 ## Prepare data
@@ -51,7 +62,7 @@ print(seuratObj)
 
 ```{r InitialProcessing}
 
-seuratObj <- ProcessSeurat1(seuratObj, variableGeneTable = paste0(outPrefix, '.variableGenes.txt'), doCellFilter = doCellFilter, saveFile = saveFile)
+seuratObj <- ProcessSeurat1(seuratObj, variableGeneTable = paste0(outPrefix, '.variableGenes.txt'), doCellFilter = doCellFilter, doCellCycle = doCellCycle, useSCTransform = useSCTransform, saveFile = saveFile)
 
 ```
 

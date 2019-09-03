@@ -37,6 +37,7 @@ import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -993,7 +994,15 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         {
             if (getHelper().getSettings().isDoBarcode())
             {
-                getHelper().getFileManager().addIntermediateFile(input);
+                if (getHelper().getFileManager().getInputFileTreatment() == TaskFileManager.InputFileTreatment.delete)
+                {
+                    getJob().getLogger().debug("Marking input as intermediate file: " + input.getPath());
+                    getHelper().getFileManager().addIntermediateFile(input);
+                }
+                else
+                {
+                    getJob().getLogger().debug("Inputs were not selected for deletion, not marking as intermediate: " + input.getPath());
+                }
             }
         }
 

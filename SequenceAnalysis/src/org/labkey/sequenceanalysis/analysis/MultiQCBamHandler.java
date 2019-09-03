@@ -99,12 +99,12 @@ public class MultiQCBamHandler extends AbstractParameterizedOutputHandler<Sequen
                         {
                             if (rd.getFile1() != null)
                             {
-                                dirs.add(findPipelineRoot(rd.getFile1(), ReadsetImportJob.NAME));
+                                dirs.add(findPipelineRoot(rd.getFile1().getParentFile(), ReadsetImportJob.NAME));
                             }
 
                             if (rd.getFile2() != null)
                             {
-                                dirs.add(findPipelineRoot(rd.getFile2(), ReadsetImportJob.NAME));
+                                dirs.add(findPipelineRoot(rd.getFile2().getParentFile(), ReadsetImportJob.NAME));
                             }
                         }
                     }
@@ -144,12 +144,12 @@ public class MultiQCBamHandler extends AbstractParameterizedOutputHandler<Sequen
             ctx.addActions(action);
         }
         
-        private File findPipelineRoot(File start, String dirName)
+        private File findPipelineRoot(File startDir, String dirName)
         {
-            File ret = start.getParentFile();
+            File ret = startDir;
             while (ret != null)
             {
-                if (dirName.equals(ret.getName()))
+                if (ret.getParentFile() != null && ret.getParentFile().getName().equals(dirName))
                 {
                     return ret;
                 }
@@ -158,7 +158,7 @@ public class MultiQCBamHandler extends AbstractParameterizedOutputHandler<Sequen
             }
 
             //indicates pipeline root not found
-            return start.getParentFile();
+            return startDir;
         }
     }
 }

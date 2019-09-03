@@ -979,7 +979,41 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
             failure: LDK.Utils.getErrorCallback()
         });
 
+        multi.add(LABKEY.Ajax.request, {
+            method: 'POST',
+            url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'getResourceSettingsJson'),
+            scope: this,
+            success: function(response){
+                LDK.Utils.decodeHttpResponseJson(response);
+                if (response.responseJSON){
+                    var json = response.responseJSON;
+                    var cfg = this.getJobResourcesCfg(response.responseJSON);
+                    if (cfg) {
+                        cfg.title = 'Step 4: Job Resources (optional)';
+                        var idx = this.items.length - 1;
+                        this.insert(idx, cfg);
+                    }
+                }
+            },
+            failure: LDK.Utils.getErrorCallback()
+        });
+
         multi.send(this.onSendComplete, this);
+    },
+
+    getJobResourcesCfg: function(results){
+        if (results.resourceSettings){
+            return {
+                xtype: 'sequenceanalysis-analysissectionpanel',
+                title: 'Job Resources',
+                stepType: 'resourceSettings',
+                sectionDescription: '',
+                toolConfig: results,
+                toolIdx: 0
+            }
+        }
+
+        return null;
     },
 
     onSendComplete: function(){

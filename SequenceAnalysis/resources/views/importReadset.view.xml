@@ -6,5 +6,6 @@
         <dependency path="SequenceAnalysis/panel/SequenceImportSettingsPanel.js"/>
         <dependency path="SequenceAnalysis/panel/SequenceImportPanel.js"/>
         <dependency path="SequenceAnalysis/window/InstrumentRunWindow.js"/>
+        <dependency path="SequenceAnalysis/panel/AnalysisSectionPanel.js"/>
     </dependencies>
 </view>

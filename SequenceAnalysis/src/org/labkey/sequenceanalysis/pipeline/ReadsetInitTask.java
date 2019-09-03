@@ -440,6 +440,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
             //NOTE: we assume the input is gzipped already
             File outputDir = job.getAnalysisDirectory();
             File output = new File(outputDir, input.getName());
+            job.getLogger().debug("Destination: " + output.getPath());
             if (output.exists())
             {
                 if (unalteredInputs != null && unalteredInputs.contains(output))

@@ -10,14 +10,16 @@ library(OOSAP)
 
 barcodeData <- ProcessCiteSeqCount(bFile = barcodeDir, doRowFilter = doHtoFilter)
 if (nrow(barcodeData) == 0) {
-  stop('No passing HTOs')
+  print('No passing HTOs')
 }
 
 if (ncol(barcodeData) == 0) {
-  stop('No passing cells')
+  print('No passing cells')
 }
 
-GenerateQcPlots(barcodeData)
+if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
+    GenerateQcPlots(barcodeData)
+}
 
 ```
 
@@ -25,10 +27,12 @@ GenerateQcPlots(barcodeData)
 
 ```{r GenerateCalls}
 
-dt <- GenerateCellHashingCalls(barcodeData = barcodeData, outFile = finalCallFile, allCallsOutFile = allCallsOutFile)
+if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
+    dt <- GenerateCellHashingCalls(barcodeData = barcodeData, outFile = finalCallFile, allCallsOutFile = allCallsOutFile)
 
-if (exists('whitelistFile') && !is.null(whitelistFile)){
-  GenerateSummaryForExpectedBarcodes(dt, whitelistFile=whitelistFile, outputFile='metrics.txt', barcodeData=barcodeData)
+    if (exists('whitelistFile') && !is.null(whitelistFile)){
+      GenerateSummaryForExpectedBarcodes(dt, whitelistFile=whitelistFile, outputFile='metrics.txt', barcodeData=barcodeData)
+    }
 }
 
 ```

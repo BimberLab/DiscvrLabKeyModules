@@ -53,12 +53,21 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                 ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
                     put("checked", false);
                 }}, false),
-                ToolParameterDescriptor.create("dimsToUse", "PCs To Use", "This is not ideal, but for now hard code this value.  This is the number of PCs that seurat will use.", "ldk-integerfield", new JSONObject(){{
+                ToolParameterDescriptor.create("dimsToUse", "PCs To Use", "If non-blank, this is the number of PCs that seurat will use for dim reduction steps.", "ldk-integerfield", new JSONObject(){{
 
                 }}, null),
+                ToolParameterDescriptor.create("minDimsToUse", "Minimum PCs To Use", "If non-blank, the pipeline will attempt to infer the number of PCs to use for dim reduction, but will not use fewer than this value.", "ldk-integerfield", new JSONObject(){{
+
+                }}, 10),
                 ToolParameterDescriptor.create("doCellFilter", "Perform Cell Filtering", "If selected, cells will be filtered on pct.mito and number of unique genes.", "checkbox", new JSONObject(){{
                     put("checked", true);
-                }}, true)
+                }}, true),
+                ToolParameterDescriptor.create("doCellCycle", "Perform Cell Cycle Correction", "If selected, the pipeline will attempt to correct for cell cycle.", "checkbox", new JSONObject(){{
+                    put("checked", true);
+                }}, true),
+                ToolParameterDescriptor.create("useSCTransform", "Use SCTransform", "If selected, the pipeline will use the newer SCtransform method instead of the standard Seurat pipeline.", "checkbox", new JSONObject(){{
+                    put("checked", false);
+                }}, false)
         ));
     }
 
@@ -263,10 +272,18 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
 
                 writer.println("outPrefix <- '" + outPrefix + "'");
                 writer.println("resolutionToUse <- 0.6");
-                String dimsToUse = ctx.getParams().optString("dimsToUse", "NULL");
+                String dimsToUse = StringUtils.trimToNull(ctx.getParams().optString("dimsToUse"));
+                dimsToUse = dimsToUse == null ? "NULL" : dimsToUse;
+
                 writer.println("dimsToUse <- " + dimsToUse);
                 boolean doCellFilter = ctx.getParams().optBoolean("doCellFilter", true);
                 writer.println("doCellFilter <- " + String.valueOf(doCellFilter).toUpperCase());
+
+                boolean doCellCycle = ctx.getParams().optBoolean("doCellCycle", true);
+                writer.println("doCellCycle <- " + String.valueOf(doCellCycle).toUpperCase());
+
+                boolean useSCTransform = ctx.getParams().optBoolean("useSCTransform", false);
+                writer.println("useSCTransform <- " + String.valueOf(useSCTransform).toUpperCase());
 
                 writer.println("data <- list(");
                 String delim = "";
@@ -296,7 +313,16 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
             {
                 throw new PipelineJobException("Unable to find expected file: " + seuratObj.getPath());
             }
-            ctx.getFileManager().addSequenceOutput(seuratObj, "Seurat Object: " + outPrefix, "Seurat Data", (inputFiles.size() == 1 ? inputFiles.iterator().next().getReadset() : null), null, getGenomeId(inputFiles), null);
+
+            String dimsToUse = StringUtils.trimToNull(ctx.getParams().optString("dimsToUse"));
+            String description = StringUtils.join(new String[]{
+                    "Correct Cell Cycle: " + ctx.getParams().optBoolean("doCellCycle", true),
+                    "Perform Cell Filtering: " + ctx.getParams().optBoolean("doCellFilter", true),
+                    "Dims To Use: " + (dimsToUse == null ? "automatic" : dimsToUse),
+                    "Use SCTransform: " + ctx.getParams().optBoolean("useSCTransform", false)
+            }, "\n");
+
+            ctx.getFileManager().addSequenceOutput(seuratObj, "Seurat Object: " + outPrefix, "Seurat Data", (inputFiles.size() == 1 ? inputFiles.iterator().next().getReadset() : null), null, getGenomeId(inputFiles), description);
             ctx.getFileManager().addOutput(action, "Seurat Object", seuratObj);
 
             if (!outHtml.exists())

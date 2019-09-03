@@ -921,6 +921,25 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
+    @RequiresPermission(ReadPermission.class)
+    public class GetResourceSettingsJsonAction extends ReadOnlyApiAction<Object>
+    {
+        public ApiResponse execute(Object form, BindException errors)
+        {
+            Map<String, Object> ret = new HashMap<>();
+
+            JSONObject resourceSettings = getReourceSettingsJson();
+            if (resourceSettings != null)
+            {
+                JSONArray arr = new JSONArray();
+                arr.put(resourceSettings);
+                ret.put("resourceSettings", arr);
+            }
+
+            return new ApiSimpleResponse(ret);
+        }
+    }
+
     @RequiresPermission(UpdatePermission.class)
     public class SaveAnalysisAsTemplateAction extends MutatingApiAction<SaveAnalysisAsTemplateForm>
     {

@@ -56,7 +56,7 @@ public class SummarizeAlignmentsStep extends AbstractPipelineStep implements Ana
         fact.referenceSequence(referenceGenome.getWorkingFastaFile());
         try (SamReader bamReader = fact.open(inputBam); SAMRecordIterator it = bamReader.iterator(); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(tsv), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
-            writer.writeNext(new String[]{"Chr", "Start", "End", "Strand", "ReadLength", "RefLength", "Ratio", "Cigar"});
+            writer.writeNext(new String[]{"Chr", "Start", "Strand", "ReadLength", "RefLength", "Ratio", "Cigar", "MAPQ"});
             NumberFormat pctFormat = NumberFormat.getPercentInstance();
             pctFormat.setMaximumFractionDigits(1);
 
@@ -69,7 +69,7 @@ public class SummarizeAlignmentsStep extends AbstractPipelineStep implements Ana
                 }
 
                 Double ratio = Double.valueOf(rec.getLengthOnReference()) / rec.getReadLength();
-                String[] vals = new String[]{rec.getContig(), String.valueOf(rec.getReadNegativeStrandFlag() ? rec.getEnd() : rec.getStart()), (rec.getReadNegativeStrandFlag() ? "-" : "+"), String.valueOf(rec.getReadLength()), String.valueOf(rec.getLengthOnReference()), pctFormat.format(ratio), rec.getCigarString()};
+                String[] vals = new String[]{rec.getContig(), String.valueOf(rec.getReadNegativeStrandFlag() ? rec.getEnd() : rec.getStart()), (rec.getReadNegativeStrandFlag() ? "-" : "+"), String.valueOf(rec.getReadLength()), String.valueOf(rec.getLengthOnReference()), pctFormat.format(ratio), rec.getCigarString(), String.valueOf(rec.getMappingQuality())};
                 writer.writeNext(vals);
             }
         }
@@ -79,6 +79,7 @@ public class SummarizeAlignmentsStep extends AbstractPipelineStep implements Ana
         }
 
         output.addOutput(tsv, "Alignment Summary Table");
+        output.addSequenceOutput(tsv, "Alignment Summary Table: " + rs.getName(), "Alignment Start Table", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
 
         return output;
     }
