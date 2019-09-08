@@ -138,8 +138,15 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         return new Processor();
     }
 
+    private static SequenceOutputHandlerJob getPipelineJob(PipelineJob job)
+    {
+        return (SequenceOutputHandlerJob)job;
+    }
+
     public static void initVariantProcessing(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, File outputDir) throws PipelineJobException
     {
+        SequenceTaskHelper taskHelper = new SequenceTaskHelper(getPipelineJob(job), outputDir);
+
         List<PipelineStepCtx<VariantProcessingStep>> providers = SequencePipelineService.get().getSteps(job, VariantProcessingStep.class);
         boolean requiresPedigree = false;
         for (PipelineStepCtx<VariantProcessingStep> stepCtx : providers)
@@ -158,6 +165,9 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             {
                 requiresPedigree = true;
             }
+
+            VariantProcessingStep step = stepCtx.getProvider().create(taskHelper);
+            step.init(job, support, inputFiles);
         }
 
         if (requiresPedigree)

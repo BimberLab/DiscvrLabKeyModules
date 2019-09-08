@@ -90,4 +90,6 @@ abstract public class SequenceAnalysisService
     abstract public File getPicardJar();
 
     abstract public File writeAllCellHashingBarcodes(File webserverDir) throws PipelineJobException;
+
+    abstract public String createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String assemblyId, String description, boolean skipCacheIndexes, boolean skipTriggers) throws IOException;
 }

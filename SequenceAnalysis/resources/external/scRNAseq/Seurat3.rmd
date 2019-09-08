@@ -1,4 +1,4 @@
-```{r}
+```{r Setup}
 
 knitr::opts_chunk$set(message=FALSE, warning=FALSE,echo=TRUE,error = FALSE)
 library(knitr)
@@ -14,6 +14,15 @@ if (cores != ''){
 
 print('Updating future.globals.maxSize')
 options(future.globals.maxSize = Inf)
+
+print('Global variables: ')
+for (v in c('outPrefix', 'resolutionToUse', 'dimsToUse', 'minDimsToUse', 'doCellFilter', 'doCellCycle', 'useSCTransform', 'mergeMethod')){
+    if (exists(v)){
+        print(paste0(v, ': ', get(v)))
+    } else {
+      print(paste0(v, ': not defined'))
+    }
+}
 
 ```
 
@@ -49,7 +58,7 @@ if (file.exists(saveFile)) {
   print('resuming from file')
   seuratObj <- readRDS(saveFile)
 } else {
-  seuratObj <- MergeSeuratObjs(seuratObjs, metadata = data)
+  seuratObj <- MergeSeuratObjs(seuratObjs, metadata = data, method = mergeMethod)
   saveRDS(seuratObj, file = saveFile)
   rm(seuratObjs)
 }
@@ -70,7 +79,8 @@ seuratObj <- ProcessSeurat1(seuratObj, variableGeneTable = paste0(outPrefix, '.v
 
 ```{r DimRedux}
 
-seuratObj <- FindClustersAndDimRedux(seuratObj, dimsToUse = dimsToUse)
+seuratObj <- FindClustersAndDimRedux(seuratObj, dimsToUse = dimsToUse, minDimsToUse = minDimsToUse)
+saveRDS(seuratObj, file = saveFile)
 
 Find_Markers(seuratObj, resolutionToUse = resolutionToUse, outFile = paste0(outPrefix, '.markers.txt'), saveFileMarkers = paste0(outPrefix, '.markers.rds'))
 
@@ -78,7 +88,7 @@ Find_Markers(seuratObj, resolutionToUse = resolutionToUse, outFile = paste0(outP
 
 ## SingleR
 
-```{r}
+```{r SingleR}
 
 seuratObj <- RunSingleR(seuratObj = seuratObj, resultTableFile = paste0(outPrefix, '.singleR.txt'))
 saveRDS(seuratObj, file = saveFile)
@@ -91,17 +101,27 @@ Tabulate_SingleRClassLabs(seuratObj, plotIndividually = T)
 
 ## Phenotypes
 
-```{r}
+```{r Phenotypes}
 
 PlotImmuneMarkers(seuratObj, reduction = 'tsne')
 
 PlotImmuneMarkers(seuratObj, reduction = 'umap')
 
+if (length(unique(seuratObj$BarcodePrefix)) > 1) {
+    print(DimPlot(seuratObj, reduction = 'pca', group.by = 'BarcodePrefix', label = T))
+    print(DimPlot(seuratObj, reduction = 'tsne', group.by = 'BarcodePrefix', label = T))
+    print(DimPlot(seuratObj, reduction = 'umap', group.by = 'BarcodePrefix', label = T))
+
+    t <- table(Cluster = Idents(seuratObj), Dataset = seuratObj$BarcodePrefix)
+    t <- round(t / colSums(t), 2)
+    knitr::kable(t)
+}
+
 ```
 
 ## Write Summary
 
-```{r}
+```{r Summary}
 
 saveRDS(seuratObj, file = saveFile)
 unlink(rawDataSaveFile)

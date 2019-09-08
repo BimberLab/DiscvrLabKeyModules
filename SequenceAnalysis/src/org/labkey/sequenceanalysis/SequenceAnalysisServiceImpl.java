@@ -40,6 +40,7 @@ import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sequenceanalysis.analysis.CellHashingHandler;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
+import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.BgzipRunner;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
@@ -452,5 +453,13 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     public File writeAllCellHashingBarcodes(File webserverDir) throws PipelineJobException
     {
         return CellHashingHandler.writeAllBarcodes(webserverDir);
+    }
+
+    @Override
+    public String createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String assemblyId, String description, boolean skipCacheIndexes, boolean skipTriggers) throws IOException
+    {
+        ReferenceLibraryPipelineJob job = SequenceAnalysisManager.get().createReferenceLibrary(sequenceIds, c, u, name, assemblyId, description, skipCacheIndexes, skipTriggers, null);
+
+        return job.getJobGUID();
     }
 }

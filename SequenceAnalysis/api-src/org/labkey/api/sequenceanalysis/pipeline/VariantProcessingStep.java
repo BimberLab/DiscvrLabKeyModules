@@ -15,9 +15,12 @@
  */
 package org.labkey.api.sequenceanalysis.pipeline;
 
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * User: bimber
@@ -27,6 +30,11 @@ import java.io.File;
 public interface VariantProcessingStep extends PipelineStep
 {
     public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome) throws PipelineJobException;
+
+    default void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles) throws PipelineJobException
+    {
+
+    }
 
     public static interface Output extends PipelineStepOutput
     {

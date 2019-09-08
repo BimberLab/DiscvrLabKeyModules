@@ -67,8 +67,11 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                 }}, true),
                 ToolParameterDescriptor.create("useSCTransform", "Use SCTransform", "If selected, the pipeline will use the newer SCtransform method instead of the standard Seurat pipeline.", "checkbox", new JSONObject(){{
                     put("checked", false);
-                }}, false)
-        ));
+                }}, false),
+                ToolParameterDescriptor.create("mergeMethod", "Merge Method", "This determines whether any batch correction will be applied when merging datasets.", "ldk-simplecombo", new JSONObject(){{
+                    put("storeValues", "simple;cca");
+                }}, "simple")
+            ));
     }
 
     @Override
@@ -245,8 +248,6 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
             outPrefix = FileUtil.makeLegalName(outPrefix);
 
             File tmpScript = new File(ctx.getWorkingDirectory(), "script.R");
-            ctx.getFileManager().addIntermediateFile(tmpScript);
-
             File outHtml = new File(ctx.getWorkingDirectory(), outPrefix + ".html");
 
             try (PrintWriter writer = PrintWriters.getPrintWriter(tmpScript))
@@ -272,10 +273,13 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
 
                 writer.println("outPrefix <- '" + outPrefix + "'");
                 writer.println("resolutionToUse <- 0.6");
-                String dimsToUse = StringUtils.trimToNull(ctx.getParams().optString("dimsToUse"));
-                dimsToUse = dimsToUse == null ? "NULL" : dimsToUse;
+                for (String v : new String[]{"dimsToUse", "minDimsToUse", "mergeMethod"}) {
+                    String val = StringUtils.trimToNull(ctx.getParams().optString(v));
+                    val = val == null ? "NULL" : val;
 
-                writer.println("dimsToUse <- " + dimsToUse);
+                    writer.println(v + " <- " + val);
+                }
+
                 boolean doCellFilter = ctx.getParams().optBoolean("doCellFilter", true);
                 writer.println("doCellFilter <- " + String.valueOf(doCellFilter).toUpperCase());
 
@@ -315,11 +319,16 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
             }
 
             String dimsToUse = StringUtils.trimToNull(ctx.getParams().optString("dimsToUse"));
+            String minDimsToUse = StringUtils.trimToNull(ctx.getParams().optString("minDimsToUse"));
+            String mergeMethod = StringUtils.trimToNull(ctx.getParams().optString("mergeMethod"));
+
             String description = StringUtils.join(new String[]{
                     "Correct Cell Cycle: " + ctx.getParams().optBoolean("doCellCycle", true),
                     "Perform Cell Filtering: " + ctx.getParams().optBoolean("doCellFilter", true),
+                    "Min. Dims To Use: " + (minDimsToUse == null ? "NA" : minDimsToUse),
                     "Dims To Use: " + (dimsToUse == null ? "automatic" : dimsToUse),
-                    "Use SCTransform: " + ctx.getParams().optBoolean("useSCTransform", false)
+                    "Use SCTransform: " + ctx.getParams().optBoolean("useSCTransform", false),
+                    "Merge method: " + mergeMethod
             }, "\n");
 
             ctx.getFileManager().addSequenceOutput(seuratObj, "Seurat Object: " + outPrefix, "Seurat Data", (inputFiles.size() == 1 ? inputFiles.iterator().next().getReadset() : null), null, getGenomeId(inputFiles), description);
@@ -330,7 +339,7 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                 throw new PipelineJobException("Unable to find summary report");
             }
             ctx.getFileManager().addOutput(action, "Seurat Report", outHtml);
-            ctx.getFileManager().addSequenceOutput(outHtml, "Seurat Report: " + outPrefix, "Seurat Report", (inputFiles.size() == 1 ? inputFiles.iterator().next().getReadset() : null), null, getGenomeId(inputFiles), null);
+            ctx.getFileManager().addSequenceOutput(outHtml, "Seurat Report: " + outPrefix, "Seurat Report", (inputFiles.size() == 1 ? inputFiles.iterator().next().getReadset() : null), null, getGenomeId(inputFiles), description);
 
             File seuratObjRaw = new File(ctx.getWorkingDirectory(), outPrefix + ".rawData.rds");
             if (seuratObjRaw.exists())

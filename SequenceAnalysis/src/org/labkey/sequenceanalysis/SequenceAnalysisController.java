@@ -4379,6 +4379,12 @@ public class SequenceAnalysisController extends SpringActionController
                             continue;
                         }
 
+                        if (m.getSeqLength() > 1000000)
+                        {
+                            _log.info("skipping large reference: " + m.getName());
+                            continue;
+                        }
+
                         SequenceMatch sm = SequenceMatch.checkReference(fastaHeader, fastaData.get(fastaHeader), m);
                         if (sm != null)
                         {
@@ -4393,6 +4399,12 @@ public class SequenceAnalysisController extends SpringActionController
                         {
                             if (hitNames.contains(m.getName()))
                             {
+                                continue;
+                            }
+
+                            if (m.getSeqLength() > 1000000)
+                            {
+                                _log.info("skipping large reference: " + m.getName());
                                 continue;
                             }
 
