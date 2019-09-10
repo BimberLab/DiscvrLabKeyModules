@@ -79,8 +79,7 @@ seuratObj <- ProcessSeurat1(seuratObj, variableGeneTable = paste0(outPrefix, '.v
 
 ```{r DimRedux}
 
-seuratObj <- FindClustersAndDimRedux(seuratObj, dimsToUse = dimsToUse, minDimsToUse = minDimsToUse)
-saveRDS(seuratObj, file = saveFile)
+seuratObj <- FindClustersAndDimRedux(seuratObj, dimsToUse = dimsToUse, minDimsToUse = minDimsToUse, saveFile = saveFile)
 
 Find_Markers(seuratObj, resolutionToUse = resolutionToUse, outFile = paste0(outPrefix, '.markers.txt'), saveFileMarkers = paste0(outPrefix, '.markers.rds'))
 
@@ -90,12 +89,18 @@ Find_Markers(seuratObj, resolutionToUse = resolutionToUse, outFile = paste0(outP
 
 ```{r SingleR}
 
-seuratObj <- RunSingleR(seuratObj = seuratObj, resultTableFile = paste0(outPrefix, '.singleR.txt'))
-saveRDS(seuratObj, file = saveFile)
+tryCatch({
+    seuratObj <- RunSingleR(seuratObj = seuratObj, resultTableFile = paste0(outPrefix, '.singleR.txt'))
+    saveRDS(seuratObj, file = saveFile)
 
-DimPlot_SingleRClassLabs(seuratObj, plotIndividually = T)
+    DimPlot_SingleRClassLabs(seuratObj, plotIndividually = T)
 
-Tabulate_SingleRClassLabs(seuratObj, plotIndividually = T)
+    Tabulate_SingleRClassLabs(seuratObj, plotIndividually = T)
+}, error = function(e){
+    print('There was an error in SingleR')
+
+    saveRDS(e, file = 'error.rds')
+})
 
 ```
 
@@ -108,11 +113,11 @@ PlotImmuneMarkers(seuratObj, reduction = 'tsne')
 PlotImmuneMarkers(seuratObj, reduction = 'umap')
 
 if (length(unique(seuratObj$BarcodePrefix)) > 1) {
-    print(DimPlot(seuratObj, reduction = 'pca', group.by = 'BarcodePrefix', label = T))
-    print(DimPlot(seuratObj, reduction = 'tsne', group.by = 'BarcodePrefix', label = T))
-    print(DimPlot(seuratObj, reduction = 'umap', group.by = 'BarcodePrefix', label = T))
+    print(Seurat::DimPlot(seuratObj, reduction = 'pca', group.by = 'BarcodePrefix', label = T))
+    print(Seurat::DimPlot(seuratObj, reduction = 'tsne', group.by = 'BarcodePrefix', label = T))
+    print(Seurat::DimPlot(seuratObj, reduction = 'umap', group.by = 'BarcodePrefix', label = T))
 
-    t <- table(Cluster = Idents(seuratObj), Dataset = seuratObj$BarcodePrefix)
+    t <- table(Cluster = Seurat::Idents(seuratObj), Dataset = seuratObj$BarcodePrefix)
     t <- round(t / colSums(t), 2)
     knitr::kable(t)
 }

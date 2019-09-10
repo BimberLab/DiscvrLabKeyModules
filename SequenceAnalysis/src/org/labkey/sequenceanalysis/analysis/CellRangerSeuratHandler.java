@@ -273,12 +273,16 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
 
                 writer.println("outPrefix <- '" + outPrefix + "'");
                 writer.println("resolutionToUse <- 0.6");
-                for (String v : new String[]{"dimsToUse", "minDimsToUse", "mergeMethod"}) {
+                for (String v : new String[]{"dimsToUse", "minDimsToUse"}) {
                     String val = StringUtils.trimToNull(ctx.getParams().optString(v));
                     val = val == null ? "NULL" : val;
 
                     writer.println(v + " <- " + val);
                 }
+
+                String mergeMethod = StringUtils.trimToNull(ctx.getParams().optString("mergeMethod"));
+                mergeMethod = mergeMethod == null ? "NULL" : "'" + mergeMethod + "'";
+                writer.println("mergeMethod <- " + mergeMethod);
 
                 boolean doCellFilter = ctx.getParams().optBoolean("doCellFilter", true);
                 writer.println("doCellFilter <- " + String.valueOf(doCellFilter).toUpperCase());
