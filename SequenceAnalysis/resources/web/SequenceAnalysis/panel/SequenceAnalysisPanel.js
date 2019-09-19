@@ -213,7 +213,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
 
     afterStoreLoad: function(){
         var dv = this.down('dataview');
-        LDK.Assert.assertNotEmpty('Dataview Not Found In SequenceAnalaysisPanel', dv);
         if (!dv){
             console.log('deferring dataview refresh');
             Ext4.defer(this.afterStoreLoad, 100, this);
