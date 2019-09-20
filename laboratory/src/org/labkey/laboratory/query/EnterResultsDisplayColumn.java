@@ -1,5 +1,6 @@
 package org.labkey.laboratory.query;
 
+import org.labkey.api.assay.AssayService;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -7,14 +8,11 @@ import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.api.ExperimentService;
-import org.labkey.api.assay.AssayService;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Collections;
-import java.util.Map;
 
 /**
  * User: bimber
@@ -54,16 +52,7 @@ public class EnterResultsDisplayColumn extends DataColumn
 
         if (value != null && url != null)
         {
-            Map<String, String> props;
-            if (_linkTarget != null)
-            {
-                props = Collections.singletonMap("target", _linkTarget);
-            }
-            else
-            {
-                props = Collections.emptyMap();
-            }
-            out.write(PageFlowUtil.link(value.toString()).href(url).attributes(props).toString());
+            out.write(PageFlowUtil.link(value.toString()).href(url).target(_linkTarget).toString());
         }
     }
 
