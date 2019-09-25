@@ -78,6 +78,16 @@ public interface SequenceOutputHandler<T>
     public boolean canProcess(SequenceOutputFile o);
 
     /**
+     * If false, this handler will not be returned with the list of available handlers for a given set of files.
+     * This allows the developer to register handlers that feed into the pipeline, but can only be called through specific code/UI
+     * @return Whether to show this handler in user-facing UI
+     */
+    default boolean isVisible()
+    {
+        return true;
+    }
+
+    /**
      * This should be a JS function that will be called after we have verified that the output files selected
      * can be processed by this handler.  The handler should provide either a JS handler or a successURL.  If both are provided,
      * the URL will be used prferentially.  The JS handler function will be called with the following arguments:

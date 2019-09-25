@@ -4244,7 +4244,7 @@ public class SequenceAnalysisController extends SpringActionController
                 List<Integer> availableIds = new ArrayList<>();
                 for (SequenceOutputFile o : outputFiles)
                 {
-                    if (handler.canProcess(o))
+                    if (handler.isVisible() && handler.canProcess(o))
                     {
                         availableIds.add(o.getRowid());
                     }

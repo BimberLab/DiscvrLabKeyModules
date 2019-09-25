@@ -28,6 +28,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
 
         this.callParent(arguments);
 
+        this.addEvents('sectiontoggle', 'dataload');
+
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'getAnalysisToolDetails'),
             method: 'POST',
@@ -35,8 +37,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
             success: LABKEY.Utils.getCallbackWrapper(this.onDataLoad, this),
             failure: LDK.Utils.getErrorCallback()
         });
-
-        this.addEvents('sectiontoggle');
     },
 
     onDataLoad: function(results){
@@ -95,6 +95,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
 
         var btn = this.down('#copyPrevious');
         btn.handler.call(this, btn);
+
+        this.fireEvent('dataload', this);
     },
 
     //loads the exp.RowId for each file
@@ -213,9 +215,10 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
 
     afterStoreLoad: function(){
         var dv = this.down('dataview');
+
+        //this will occur if the stores return before onDataLoad
         if (!dv){
-            console.log('deferring dataview refresh');
-            Ext4.defer(this.afterStoreLoad, 100, this);
+            this.on('dataload', this.afterStoreLoad, this, {single: true, delay: 100});
             return;
         }
 

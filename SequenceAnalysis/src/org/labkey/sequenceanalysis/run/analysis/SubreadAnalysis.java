@@ -61,8 +61,8 @@ public class SubreadAnalysis extends AbstractCommandPipelineStep<SubreadAnalysis
                         put("checked", true);
                     }}, true),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--ignoreDup"), "ignoreDup", "Ignore Duplicates", "If specified, reads flagged as duplicated will be ignored.", "checkbox", new JSONObject(){{
-                        put("checked", true);
-                    }}, true),
+                        put("checked", false);
+                    }}, false),
                     ToolParameterDescriptor.create("strandSpecific", "Strand Specific", "If reads are stranded, specify that here.", "ldk-simplecombo", new JSONObject(){{
                         put("storeValues", "Unstranded;Stranded;Reversely Stranded");
                         put("value", "Unstranded");

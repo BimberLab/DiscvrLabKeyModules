@@ -51,15 +51,17 @@ Ext4.define('SequenceAnalysis.field.IntervalField', {
 
             Ext4.Array.forEach(val, function(v, idx){
                 var toTest = val[idx].split(':');
-                if (toTest.length != 2){
+                if (toTest.length > 2){
                     msgs.push('Invalid interval: ' + v);
                     return;
                 }
-
-                var coords = toTest[1].split('-');
-                if (coords.length != 2){
-                    msgs.push('Invalid interval: ' + v);
-                    return;
+                //NOTE: an interval with just a contig name is valid
+                else if (toTest.length === 2) {
+                    var coords = toTest[1].split('-');
+                    if (coords.length !== 2) {
+                        msgs.push('Invalid interval: ' + v);
+                        return;
+                    }
                 }
             }, this);
 

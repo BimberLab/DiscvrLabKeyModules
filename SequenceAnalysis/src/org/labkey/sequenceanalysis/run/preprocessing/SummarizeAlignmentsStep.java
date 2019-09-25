@@ -21,6 +21,7 @@ import org.labkey.api.writer.PrintWriters;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
 public class SummarizeAlignmentsStep extends AbstractPipelineStep implements AnalysisStep
@@ -54,13 +55,13 @@ public class SummarizeAlignmentsStep extends AbstractPipelineStep implements Ana
         SamReaderFactory fact = SamReaderFactory.makeDefault();
         fact.validationStringency(ValidationStringency.SILENT);
         fact.referenceSequence(referenceGenome.getWorkingFastaFile());
+        long numRecords = 0L;
         try (SamReader bamReader = fact.open(inputBam); SAMRecordIterator it = bamReader.iterator(); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(tsv), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
             writer.writeNext(new String[]{"Chr", "Start", "Strand", "ReadLength", "RefLength", "Ratio", "Cigar", "MAPQ"});
-            NumberFormat pctFormat = NumberFormat.getPercentInstance();
-            pctFormat.setMaximumFractionDigits(1);
+            NumberFormat fmt = new DecimalFormat("0.##");
 
-            while(it.hasNext())
+            while (it.hasNext())
             {
                 SAMRecord rec = it.next();
                 if (rec.isSecondaryAlignment() || rec.getReadUnmappedFlag())
@@ -68,8 +69,9 @@ public class SummarizeAlignmentsStep extends AbstractPipelineStep implements Ana
                     continue;
                 }
 
+                numRecords++;
                 Double ratio = Double.valueOf(rec.getLengthOnReference()) / rec.getReadLength();
-                String[] vals = new String[]{rec.getContig(), String.valueOf(rec.getReadNegativeStrandFlag() ? rec.getEnd() : rec.getStart()), (rec.getReadNegativeStrandFlag() ? "-" : "+"), String.valueOf(rec.getReadLength()), String.valueOf(rec.getLengthOnReference()), pctFormat.format(ratio), rec.getCigarString(), String.valueOf(rec.getMappingQuality())};
+                String[] vals = new String[]{rec.getContig(), String.valueOf(rec.getReadNegativeStrandFlag() ? rec.getEnd() : rec.getStart()), (rec.getReadNegativeStrandFlag() ? "-" : "+"), String.valueOf(rec.getReadLength()), String.valueOf(rec.getLengthOnReference()), fmt.format(ratio), rec.getCigarString(), String.valueOf(rec.getMappingQuality())};
                 writer.writeNext(vals);
             }
         }
@@ -79,7 +81,7 @@ public class SummarizeAlignmentsStep extends AbstractPipelineStep implements Ana
         }
 
         output.addOutput(tsv, "Alignment Summary Table");
-        output.addSequenceOutput(tsv, "Alignment Summary Table: " + rs.getName(), "Alignment Start Table", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+        output.addSequenceOutput(tsv, "Alignment Summary Table: " + rs.getName(), "Alignment Start Table", rs.getReadsetId(), null, referenceGenome.getGenomeId(), "Records: " + numRecords);
 
         return output;
     }

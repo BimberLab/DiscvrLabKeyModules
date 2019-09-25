@@ -110,10 +110,12 @@ public class DepthOfCoverageHandler extends AbstractParameterizedOutputHandler<S
             String intervalString = StringUtils.trimToNull(ctx.getParams().optString("intervals"));
             if (intervalString != null)
             {
-                for (Interval i : splitIntervals(intervalString))
+                String[] intervals = intervalString.split(";");
+                validateIntervals(intervals);
+                for (String i : intervals)
                 {
                     extraArgs.add("-L");
-                    extraArgs.add(i.getContig() + ":" + i.getStart() + "-" + i.getEnd());
+                    extraArgs.add(i);
                 }
             }
 
@@ -139,6 +141,9 @@ public class DepthOfCoverageHandler extends AbstractParameterizedOutputHandler<S
                 extraArgs.add("-nt");
                 extraArgs.add(SequencePipelineService.get().getMaxThreads(ctx.getLogger()).toString());
             }
+
+            extraArgs.add("-U");
+            extraArgs.add("ALLOW_N_CIGAR_READS");
 
             List<File> inputBams = new ArrayList<>();
             Set<Integer> libraryIds = new HashSet<>();
@@ -230,22 +235,24 @@ public class DepthOfCoverageHandler extends AbstractParameterizedOutputHandler<S
         }
     }
 
-    public static List<Interval> splitIntervals(String intervalString) throws PipelineJobException
+    public static void validateIntervals(String[] intervals) throws PipelineJobException
     {
-        List<Interval> intervals = new ArrayList<>();
-        for (String i : intervalString.split(";"))
+        for (String i : intervals)
         {
-            String[] tokens = i.split(":|-");
-            if (tokens.length != 3)
+            //NOTE: the contig name can contain hyphen..
+            String[] tokens = i.split(":");
+            if (tokens.length > 2)
             {
                 throw new PipelineJobException("Invalid interval: " + i);
             }
-
-            intervals.add(new Interval(tokens[0], Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2])));
+            else if (tokens.length == 2)
+            {
+                String[] coords = tokens[1].split("-");
+                if (coords.length != 2)
+                {
+                    throw new PipelineJobException("Invalid interval: " + i);
+                }
+            }
         }
-
-        Collections.sort(intervals);
-
-        return intervals;
     }
 }

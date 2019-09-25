@@ -177,25 +177,25 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
 
     abstract protected Pair<String, String> getStatusForJob(ClusterJob job, Container c);
 
-    private File getSerializedJobFile(File statusFile)
+    private File getSerializedJobFile(File jobLogFile)
     {
-        if (statusFile == null)
+        if (jobLogFile == null)
         {
             return null;
         }
 
-        String name = FileUtil.getBaseName(statusFile.getName());
+        String name = FileUtil.getBaseName(jobLogFile.getName());
 
-        return new File(statusFile.getParentFile(), name + ".job.xml");
+        return new File(jobLogFile.getParentFile(), name + ".job.json.txt");
     }
 
     protected File writeJobToFile(PipelineJob job) throws IOException
     {
-        //next, serialize job to XML.  deleting any existing file which might be from a previous task
+        //next, serialize job to JSON.  deleting any existing file which might be from a previous task
         File serializedJobFile = getSerializedJobFile(job.getLogFile());
         if (NetworkDrive.exists(serializedJobFile))
         {
-            _log.info("job XML already exists, deleting");
+            _log.info("job JSON already exists, deleting");
             serializedJobFile.delete();
         }
 
@@ -479,24 +479,24 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
             PipelineJob pj = null;
             if (sf != null && status != null)
             {
-                File xml = getSerializedJobFile(new File(sf.getFilePath()));
-                if (!xml.exists())
+                File json = getSerializedJobFile(new File(sf.getFilePath()));
+                if (!json.exists())
                 {
-                    throw new PipelineJobException("unable to find pipeline XML file, expected: " + xml.getPath());
+                    throw new PipelineJobException("unable to find pipeline JSON file, expected: " + json.getPath());
                 }
 
-                //NOTE: this should read from serialized XML file, not rely on the DB
-                pj = PipelineJob.readFromFile(xml);
+                //NOTE: this should read from serialized JSON file, not rely on the DB
+                pj = PipelineJob.readFromFile(json);
                 if (pj == null)
                 {
-                    _log.error("unable to create PipelineJob from xml file: " + sf.getRowId());
+                    _log.error("unable to create PipelineJob from json file: " + sf.getRowId());
                     return;
                 }
 
                 String jobTaskId = pj.getActiveTaskId() == null ? "" : pj.getActiveTaskId().toString();
                 if (!jobTaskId.equals(j.getActiveTaskId()))
                 {
-                    pj.getLogger().debug("pipeline XML activeTaskId (" + jobTaskId + ") does not match submission record (" + j.getActiveTaskId() + ").  this probably means it progressed tasks.  will not update status");
+                    pj.getLogger().debug("pipeline json activeTaskId (" + jobTaskId + ") does not match submission record (" + j.getActiveTaskId() + ").  this probably means it progressed tasks.  will not update status");
                     return;
                 }
 
@@ -513,7 +513,7 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
                 if (taskStatus != null)
                 {
                     //if the remote job exits w/ a non-zero exit code, cluster might still count this as complete.
-                    //to differentiate completed w/ error from successful completion, test activeTaskStatus as recorded in the job XML
+                    //to differentiate completed w/ error from successful completion, test activeTaskStatus as recorded in the job json
                     if (taskStatus == PipelineJob.TaskStatus.complete)
                     {
                         if (pj.getActiveTaskStatus() == PipelineJob.TaskStatus.error)
@@ -523,17 +523,17 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
                         else if (pj.getActiveTaskStatus() == PipelineJob.TaskStatus.running)
                         {
                             //this might indicate the job aborted mid-task without properly marking itself as complete
-                            pj.getLogger().warn("marking job as complete, even though XML indicates task status is running.  this might indicate the job aborted improperly?");
+                            pj.getLogger().warn("marking job as complete, even though JSON indicates task status is running.  this might indicate the job aborted improperly?");
                         }
                         else if (pj.getActiveTaskStatus() != PipelineJob.TaskStatus.complete)
                         {
                             //this might indicate the job aborted mid-task without properly marking itself as complete
-                            pj.getLogger().warn("Cluster indicates job status is complete, but the job XML is not marked complete.  this probably indicates the java process aborted improperly.");
+                            pj.getLogger().warn("Cluster indicates job status is complete, but the job JSON is not marked complete.  this probably indicates the java process aborted improperly.");
                             taskStatus = PipelineJob.TaskStatus.error;
                         }
                         else if (pj.getErrors() > 0)
                         {
-                            pj.getLogger().warn("marking job as complete, even though XML indicates task has errors.  this might indicate the job aborted improperly?");
+                            pj.getLogger().warn("marking job as complete, even though JSON indicates task has errors.  this might indicate the job aborted improperly?");
                         }
                     }
 

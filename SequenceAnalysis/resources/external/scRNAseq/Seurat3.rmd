@@ -124,6 +124,15 @@ if (length(unique(seuratObj$BarcodePrefix)) > 1) {
 
 ```
 
+## Activation
+
+```{r ActivationScore}
+
+seuratObj <- ClassifySGSAndApply(seuratObj = seuratObj, geneSetName = 'HighlyActivated', geneList = OOSAP::Phenotyping_GeneList()$HighlyActivated, positivityThreshold = 0.5, saveFilePath = paste0(outPrefix, '.ha.txt'))
+saveRDS(seuratObj, file = saveFile)
+
+```
+
 ## Write Summary
 
 ```{r Summary}
