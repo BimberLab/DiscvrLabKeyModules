@@ -82,7 +82,7 @@ public class SequenceTest extends BaseWebDriverTest
 {
     protected LabModuleHelper _helper = new LabModuleHelper(this);
     protected String _pipelineRoot = null;
-    private static final File _sampleData = new File(TestFileUtils.getLabKeyRoot(), "externalModules/labModules/SequenceAnalysis/resources/sampleData");
+    private static final File _sampleData = new File(TestFileUtils.getLabKeyRoot(), "server/modules/DiscvrLabKeyModules/SequenceAnalysis/resources/sampleData");
     protected final String _readsetPipelineName = "Import sequence data";
     protected final String _alignmentImportPipelineName = "Import Alignment(s)";
 
