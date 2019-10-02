@@ -216,7 +216,7 @@ public class JBrowseTest extends BaseWebDriverTest
             SequenceTest.addOutputFile(this, f, SequenceTest.TEST_GENOME_NAME, f.getName(), "Gene Annotations", "This is an output file", false);
         }
 
-        File testBam = new File(TestFileUtils.getLabKeyRoot(), "/externalModules/labModules/SequenceAnalysis/resources/sampleData/test.bam");
+        File testBam = new File(SequenceTest._sampleData, "test.bam");
         SequenceTest.addOutputFile(this, testBam, SequenceTest.TEST_GENOME_NAME, "TestBAM", "BAM File", "This is an output file", false);
 
         //create session w/ some of these, verify
