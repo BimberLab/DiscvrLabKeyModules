@@ -179,7 +179,7 @@ public class LaboratoryContainerListener extends SimpleModuleContainerListener
     }
 
     @Override
-    protected void purgeTable(UserSchema userSchema, TableInfo table, Container c, User u)
+    protected void purgeTable(UserSchema userSchema, TableInfo table, Container c)
     {
         if (table.getName().equalsIgnoreCase(LaboratorySchema.TABLE_WORKBOOKS))
         {
@@ -191,7 +191,7 @@ public class LaboratoryContainerListener extends SimpleModuleContainerListener
         }
         else
         {
-            super.purgeTable(userSchema, table, c, u);
+            super.purgeTable(userSchema, table, c);
         }
     }
 }
