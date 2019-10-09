@@ -82,7 +82,7 @@ public class SequenceTest extends BaseWebDriverTest
 {
     protected LabModuleHelper _helper = new LabModuleHelper(this);
     protected String _pipelineRoot = null;
-    private static final File _sampleData = new File(TestFileUtils.getLabKeyRoot(), "server/modules/DiscvrLabKeyModules/SequenceAnalysis/resources/sampleData");
+    public static final File _sampleData = new File(TestFileUtils.getLabKeyRoot(), "server/modules/DiscvrLabKeyModules/SequenceAnalysis/resources/sampleData");
     protected final String _readsetPipelineName = "Import sequence data";
     protected final String _alignmentImportPipelineName = "Import Alignment(s)";
 
@@ -1578,13 +1578,7 @@ public class SequenceTest extends BaseWebDriverTest
 
     private void basicOutputFilesTest(boolean sequencePipelineEnabled) throws Exception
     {
-        File testBamSource = new File(TestFileUtils.getLabKeyRoot(),
-                File.separatorChar + "externalModules" +
-                        File.separatorChar + "labModules" +
-                        File.separatorChar + "SequenceAnalysis" +
-                        File.separatorChar + "resources" +
-                        File.separatorChar + "sampleData" +
-                        File.separatorChar + "test.bam");
+        File testBamSource = new File(_sampleData, "test.bam");
 
         if (!testBamSource.exists())
         {
