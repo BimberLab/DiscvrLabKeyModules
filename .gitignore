@@ -1,3 +1,4 @@
 /.gradle
-DISCVR/jbrowse/resources/web/jbrowseApp
+/jbrowse/resources/web/jbrowseApp
+/jbrowse/node_modules
 /intellijBuild
