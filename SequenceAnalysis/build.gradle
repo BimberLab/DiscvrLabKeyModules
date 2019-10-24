@@ -1,4 +1,11 @@
-import org.labkey.gradle.util.BuildUtils;
+import org.labkey.gradle.plugin.TeamCity
+import org.labkey.gradle.plugin.extension.ServerDeployExtension
+import org.labkey.gradle.plugin.extension.TeamCityExtension
+import org.labkey.gradle.util.BuildUtils
+import org.labkey.gradle.util.GroupNames
+import org.labkey.gradle.util.PropertiesUtils
+
+import java.util.regex.Matcher
 
 repositories {
    jcenter()
@@ -21,5 +28,35 @@ dependencies {
    // Note: if changing this, we might need to match the htsjdk version set in gradle.properties
    external("com.github.broadinstitute:picard:2.18.4") {
       exclude group: "javax.servlet", module: "servlet-api"
+   }
+}
+
+if (project.findProject(BuildUtils.getTestProjectPath(project.gradle)) != null && project.hasProperty("teamcity"))
+{
+   def testProject = project.findProject(BuildUtils.getTestProjectPath(project.gradle))
+   def createPipelineConfigTask = project.tasks.register("createPipelineConfig", Copy) {
+      Copy task ->
+         task.group = GroupNames.TEST_SERVER
+         task.description = "Create pipeline configs for running tests on the test server"
+         task.from project.file("test/configs")
+         task.include "pipelineConfig.xml"
+         task.filter({ String line ->
+            Matcher matcher = PropertiesUtils.PROPERTY_PATTERN.matcher(line)
+            def extension = testProject.extensions.findByType(TeamCityExtension.class)
+            String newLine = line
+            while (matcher.find())
+            {
+               if (matcher.group(1).equals("SEQUENCEANALYSIS_CODELOCATION") || matcher.group(1).equals("SEQUENCEANALYSIS_TOOLS"))
+                  newLine = newLine.replace(matcher.group(), extension.getTeamCityProperty("additional.pipeline.tools"))
+               else if (matcher.group(1).equals("SEQUENCEANALYSIS_EXTERNALDIR"))
+                  newLine = newLine.replace(matcher.group(), project.file("pipeline_code/external").getAbsolutePath())
+            }
+            return newLine
+
+         })
+         task.destinationDir = new File("${ServerDeployExtension.getServerDeployDirectory(project)}/config")
+   }
+   testProject.tasks.named("startTomcat").configure {
+      dependsOn(createPipelineConfigTask)
    }
 }
