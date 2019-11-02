@@ -17,7 +17,7 @@ repositories {
 dependencies {
    apiCompile "com.github.samtools:htsjdk:${htsjdkVersion}"
    external "com.github.samtools:htsjdk:${htsjdkVersion}"
-   BuildUtils.addLabKeyDependency(project: project, config: "compile", depProjectPath: ":server:modules:DiscvrLabKeyModules:laboratory", depProjectConfig: "apiCompile")
+   BuildUtils.addLabKeyDependency(project: project, config: "compile", depProjectPath: ":server:modules:LabDevKitModules:laboratory", depProjectConfig: "apiCompile")
    BuildUtils.addLabKeyDependency(project: project, config: "compile", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "apiCompile")
    external 'org.biojava:biojava3-core:3.0.7'
    external 'org.biojava:biojava3-genome:3.0.7'

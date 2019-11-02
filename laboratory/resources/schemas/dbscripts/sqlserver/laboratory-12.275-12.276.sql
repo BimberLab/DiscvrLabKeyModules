@@ -1,1 +1,0 @@
-EXEC sp_rename 'laboratory.samples.collectdate', 'processdate', 'COLUMN'

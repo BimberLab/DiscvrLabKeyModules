@@ -1,8 +1,0 @@
-<view xmlns="http://labkey.org/data/xml/view" title="Site Settings For DISCVR Modules">
-    <permissions>
-        <permission name="admin"/>
-    </permissions>
-    <dependencies>
-        <dependency path="laboratory.context"/>
-    </dependencies>
-</view>
