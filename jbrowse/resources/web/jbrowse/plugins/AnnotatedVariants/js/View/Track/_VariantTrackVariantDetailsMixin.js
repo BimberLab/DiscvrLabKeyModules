@@ -311,7 +311,8 @@ define([
                         contig = contig.replace(/^0/, '');
                         var pos = contig + ':' + f.get('start') + '-' + f.get('end');
 
-                        var url = 'https://www.ensembl.org/' + this.config.ensemblId +'/Location/View?db=core;r=' + pos;
+                        var ensemblUrl = this.config.ensemblUrl || 'www.ensembl.org';
+                        var url = 'https://' + ensemblUrl + '/' + this.config.ensemblId +'/Location/View?db=core;r=' + pos;
                         fmt('External Links', '<a href="' + url +'" target="_blank">View Region In Ensembl</a>', f);
                     }
 

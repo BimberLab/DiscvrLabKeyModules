@@ -60,6 +60,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -352,42 +353,48 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
 
             getJob().getLogger().info("creation complete");
 
-            Set<GenomeTrigger> triggers = SequenceAnalysisServiceImpl.get().getGenomeTriggers();
+            Set<GenomeTrigger> triggers = new HashSet<>(getPipelineJob().getExtraTriggers());
+            if (getPipelineJob().isSkipTriggers())
+            {
+                getPipelineJob().getLogger().debug("skipping default triggers");
+            }
+            else
+            {
+                triggers.addAll(SequenceAnalysisServiceImpl.get().getGenomeTriggers());
+                if (!triggers.isEmpty())
+                {
+                    getPipelineJob().getLogger().debug("total custom triggers: " + triggers.size());
+                }
+            }
+
             if (!triggers.isEmpty())
             {
-                if (getPipelineJob().isSkipTriggers())
+                JobRunner jr = JobRunner.getDefault();
+                for (final GenomeTrigger t : triggers)
                 {
-                    getPipelineJob().getLogger().debug("skipping triggers");
-                }
-                else
-                {
-                    JobRunner jr = JobRunner.getDefault();
-                    for (final GenomeTrigger t : triggers)
+                    if (t.isAvailable(getJob().getContainer()))
                     {
-                        if (t.isAvailable(getJob().getContainer()))
+                        getJob().getLogger().info("running genome trigger: " + t.getName());
+                        final int libraryId = rowId;
+                        jr.execute(new Job()
                         {
-                            getJob().getLogger().info("running genome trigger: " + t.getName());
-                            final int libraryId = rowId;
-                            jr.execute(new Job()
+                            @Override
+                            public void run()
                             {
-                                @Override
-                                public void run()
+                                if (getPipelineJob().isCreateNew())
                                 {
-                                    if (getPipelineJob().isCreateNew())
-                                    {
-                                        t.onCreate(getJob().getContainer(), getJob().getUser(), getJob().getLogger(), libraryId);
-                                    }
-                                    else
-                                    {
-                                        t.onRecreate(getJob().getContainer(), getJob().getUser(), getJob().getLogger(), libraryId);
-                                    }
+                                    t.onCreate(getJob().getContainer(), getJob().getUser(), getJob().getLogger(), libraryId);
                                 }
-                            });
-                        }
+                                else
+                                {
+                                    t.onRecreate(getJob().getContainer(), getJob().getUser(), getJob().getLogger(), libraryId);
+                                }
+                            }
+                        });
                     }
-
-                    jr.waitForCompletion();
                 }
+
+                jr.waitForCompletion();
             }
         }
         catch (Exception e)

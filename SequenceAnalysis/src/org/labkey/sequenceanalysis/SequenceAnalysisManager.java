@@ -23,6 +23,7 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
 import org.junit.Test;
+import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -66,7 +67,6 @@ import org.labkey.api.sequenceanalysis.GenomeTrigger;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
-import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.util.Job;
 import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.PageFlowUtil;
@@ -629,7 +629,7 @@ public class SequenceAnalysisManager
         return new SqlSelector(SequenceAnalysisSchema.getInstance().getSchema(), sql).getObject(String.class);
     }
 
-    public ReferenceLibraryPipelineJob createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String assemblyId, String description, boolean skipCacheIndexes, boolean skipTriggers, @Nullable List<String> unplacedContigPrefixes) throws IOException
+    public ReferenceLibraryPipelineJob createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String assemblyId, String description, boolean skipCacheIndexes, boolean skipTriggers, @Nullable List<String> unplacedContigPrefixes, Set<GenomeTrigger> extraTriggers) throws IOException
     {
         List<ReferenceLibraryMember> libraryMembers = new ArrayList<>();
         for (Integer sequenceId : sequenceIds)
@@ -644,15 +644,15 @@ public class SequenceAnalysisManager
             libraryMembers.add(m);
         }
 
-        return createReferenceLibrary(c, u, name, assemblyId, description, libraryMembers, skipCacheIndexes, skipTriggers, unplacedContigPrefixes);
+        return createReferenceLibrary(c, u, name, assemblyId, description, libraryMembers, skipCacheIndexes, skipTriggers, unplacedContigPrefixes, extraTriggers);
     }
 
-    public ReferenceLibraryPipelineJob createReferenceLibrary(Container c, User u, String name, String assemblyId, String description, List<ReferenceLibraryMember> libraryMembers, boolean skipCacheIndexes, boolean skipTriggers, @Nullable List<String> unplacedContigPrefixes) throws IOException
+    public ReferenceLibraryPipelineJob createReferenceLibrary(Container c, User u, String name, String assemblyId, String description, List<ReferenceLibraryMember> libraryMembers, boolean skipCacheIndexes, boolean skipTriggers, @Nullable List<String> unplacedContigPrefixes, Set<GenomeTrigger> extraTriggers) throws IOException
     {
         try
         {
             PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
-            ReferenceLibraryPipelineJob job = new ReferenceLibraryPipelineJob(c, u, root, name, assemblyId, description, libraryMembers, null, skipCacheIndexes, skipTriggers, unplacedContigPrefixes);
+            ReferenceLibraryPipelineJob job = new ReferenceLibraryPipelineJob(c, u, root, name, assemblyId, description, libraryMembers, null, skipCacheIndexes, skipTriggers, unplacedContigPrefixes, extraTriggers);
             PipelineService.get().queueJob(job);
 
             return job;

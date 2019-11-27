@@ -10,14 +10,14 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
+import org.labkey.api.sequenceanalysis.pipeline.AlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.IndexOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
-import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
+import org.labkey.api.sequenceanalysis.run.AbstractAlignmentPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
@@ -78,9 +78,9 @@ public class BWAWrapper extends AbstractCommandWrapper
         }
     }
 
-    public static class BWAAlignmentStep<WrapperType extends BWAWrapper> extends AbstractCommandPipelineStep<WrapperType> implements AlignmentStep
+    public static class BWAAlignmentStep<WrapperType extends BWAWrapper> extends AbstractAlignmentPipelineStep<WrapperType> implements AlignmentStep
     {
-        public BWAAlignmentStep(PipelineStepProvider provider, PipelineContext ctx, WrapperType wrapper)
+        public BWAAlignmentStep(AlignmentStepProvider provider, PipelineContext ctx, WrapperType wrapper)
         {
             super(provider, ctx, wrapper);
         }

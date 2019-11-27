@@ -29,4 +29,6 @@ abstract public class JBrowseService
     abstract public String prepareOutputFile(User u, Logger log, Integer outputFileId, boolean forceRecreateJson, @Nullable JSONObject additionalConfig) throws IOException;
 
     abstract public void reprocessDatabase(Container c, User u, String databaseId) throws PipelineValidationException;
+
+    abstract public void registerDemographicsSource(DemographicsSource source);
 }

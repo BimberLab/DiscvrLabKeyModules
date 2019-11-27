@@ -7,7 +7,6 @@ import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
-import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -17,12 +16,10 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.GeneToNameTranslator;
 import org.labkey.api.util.FileType;
-import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -37,8 +34,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 abstract public class AbstractCombineGeneCountsHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
@@ -245,6 +240,13 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
             throw new PipelineJobException("Unable to find GTF/GFF file: " + gtfFile);
         }
 
+        Set<Integer> genomeIds = new HashSet<>();
+        inputFiles.forEach(x -> genomeIds.add(x.getLibrary_id()));
+        if (genomeIds.size() > 1)
+        {
+            throw new PipelineJobException("All inputs must be from the same genome!");
+        }
+
         action.addInput(gtfFile, "GTF/GFF file");
         job.getLogger().info("using GTF/GFF file: " + gtfFile.getPath());
 
@@ -387,6 +389,7 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
         so.setFile(outputFile);
         so.setDescription("Total datasets: " + inputFiles.size());
         so.setName(params.getString("name"));
+        so.setLibrary_id(genomeIds.iterator().next());
         ctx.addSequenceOutput(so);
 
         action.setEndTime(new Date());

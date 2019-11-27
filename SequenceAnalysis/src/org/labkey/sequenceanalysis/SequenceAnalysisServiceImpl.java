@@ -458,7 +458,13 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     @Override
     public String createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String assemblyId, String description, boolean skipCacheIndexes, boolean skipTriggers) throws IOException
     {
-        ReferenceLibraryPipelineJob job = SequenceAnalysisManager.get().createReferenceLibrary(sequenceIds, c, u, name, assemblyId, description, skipCacheIndexes, skipTriggers, null);
+        return createReferenceLibrary(sequenceIds, c, u, name, assemblyId, description, skipCacheIndexes, skipTriggers, null);
+    }
+
+    @Override
+    public String createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String assemblyId, String description, boolean skipCacheIndexes, boolean skipTriggers, Set<GenomeTrigger> extraTriggers) throws IOException
+    {
+        ReferenceLibraryPipelineJob job = SequenceAnalysisManager.get().createReferenceLibrary(sequenceIds, c, u, name, assemblyId, description, skipCacheIndexes, skipTriggers, null, extraTriggers);
 
         return job.getJobGUID();
     }

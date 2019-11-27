@@ -321,7 +321,7 @@ SequenceAnalysis.Buttons = new function(){
                 dataRegionSelectionKey: 'query',
                 '.select': checked,
                 returnURL: window.location.pathname + window.location.search
-            }, 'GET');
+            });
         },
 
         goToAction: function(href, params, method){

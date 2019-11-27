@@ -11,9 +11,9 @@ import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
+import org.labkey.api.sequenceanalysis.pipeline.AlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
-import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ProcessUtils;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SamtoolsRunner;
@@ -43,7 +43,7 @@ public class BWAMemWrapper extends BWAWrapper
 
     public static class BWAMemAlignmentStep extends BWAAlignmentStep<BWAMemWrapper>
     {
-        public BWAMemAlignmentStep(PipelineStepProvider provider, PipelineContext ctx)
+        public BWAMemAlignmentStep(AlignmentStepProvider provider, PipelineContext ctx)
         {
             super(provider, ctx, new BWAMemWrapper(ctx.getLogger()));
         }

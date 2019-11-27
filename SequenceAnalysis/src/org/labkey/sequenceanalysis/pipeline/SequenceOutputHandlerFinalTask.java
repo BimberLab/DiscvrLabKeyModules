@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -156,7 +157,7 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
 
     public static Set<SequenceOutputFile> createOutputFiles(SequenceJob job, int runId, @Nullable Integer analysisId)
     {
-        job.getLogger().info("creating " + job.getOutputsToCreate().size() + " new output files");
+        job.getLogger().info("creating " + job.getOutputsToCreate().size() + " new output files for run: " + runId);
 
         TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
         Set<SequenceOutputFile> created = new HashSet<>();
@@ -169,11 +170,11 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
             // in a rare case where a job was waiting to run during a server restart, and the task is double-started.
             if (o.getRunId() != null)
             {
-                SimpleFilter filter = new SimpleFilter(FieldKey.fromString("runId"), o.getRunId());
-                filter.addCondition(FieldKey.fromString("dataId"), o.getDataId());
+                SimpleFilter filter = new SimpleFilter(FieldKey.fromString("runId"), runId, CompareType.EQUAL);
+                filter.addCondition(FieldKey.fromString("dataId"), o.getDataId(), CompareType.EQUAL);
                 if (new TableSelector(ti, filter, null).exists())
                 {
-                    job.getLogger().error("Existing output file found, skipping: " + o.getName());
+                    job.getLogger().error("Existing output file found, skipping: " + o.getName() + ", dataid: " + o.getDataId());
                     continue;
                 }
             }

@@ -38,10 +38,12 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.run.util.CombineVariantsWrapper;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -286,8 +288,8 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 action.addInput(vcfIdx, "Input VCF Index");
             }
 
-            ctx.getFileManager().addIntermediateFile(currentVCF);
-            ctx.getFileManager().addIntermediateFile(vcfIdx);
+            resumer.getFileManager().addIntermediateFile(currentVCF);
+            resumer.getFileManager().addIntermediateFile(vcfIdx);
 
             ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(libraryId);
             action.addInput(genome.getSourceFastaFile(), "Reference FASTA");
@@ -296,7 +298,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             step.setStepIdx(stepCtx.getStepIdx());
 
             VariantProcessingStep.Output output = step.processVariants(currentVCF, ctx.getOutputDir(), genome);
-            ctx.getFileManager().addStepOutputs(action, output);
+            resumer.getFileManager().addStepOutputs(action, output);
 
             if (output.getVCF() != null)
             {
@@ -329,8 +331,8 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
         if (currentVCF.exists())
         {
-            ctx.getFileManager().removeIntermediateFile(currentVCF);
-            ctx.getFileManager().removeIntermediateFile(new File(currentVCF.getPath() + ".tbi"));
+            resumer.getFileManager().removeIntermediateFile(currentVCF);
+            resumer.getFileManager().removeIntermediateFile(new File(currentVCF.getPath() + ".tbi"));
 
             return currentVCF;
         }
@@ -376,53 +378,118 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
             _resumer = Resumer.create((JobContextImpl)ctx);
-            if (_resumer.isResume())
+
+            boolean doCombine = ctx.getParams().optBoolean("variantMerging.CombineVCFs.doCombine", false);
+            if (doCombine)
             {
-                ctx.getLogger().info("resuming previous job");
-                if (_resumer.getFileManager() == null)
+                ctx.getLogger().info("Input VCFs will be combined");
+                String priorityOrder = StringUtils.trimToNull(ctx.getParams().optString("variantMerging.CombineVCFs.priority"));
+                if (priorityOrder == null)
                 {
-                    throw new PipelineJobException("fileManager is null for resumed job");
+                    throw new PipelineJobException("Priority order not supplied for VCFs");
                 }
 
-                ((JobContextImpl)ctx).setFileManager(_resumer.getFileManager());
-            }
+                Set<Integer> genomes = new HashSet<>();
+                inputFiles.forEach(x -> genomes.add(x.getLibrary_id()));
 
-            for (SequenceOutputFile input : inputFiles)
-            {
-                File processed = processVCF(input.getFile(), input.getLibrary_id(), ctx, _resumer);
-                if (processed != null && processed.exists())
+                if (genomes.size() != 1)
                 {
-                    ctx.getLogger().debug("adding sequence output: " + processed.getPath());
-                    if (input.getFile().equals(processed))
-                    {
-                        ctx.getLogger().debug("processed file equals input, skipping: " + processed.getPath());
-                    }
-                    else
-                    {
-                        int sampleCount;
-                        try (VCFFileReader reader = new VCFFileReader(processed))
-                        {
-                            VCFHeader header = reader.getFileHeader();
-                            sampleCount = header.getSampleNamesInOrder().size();
-                        }
+                    throw new PipelineJobException("More than one reference genome found!");
+                }
 
-                        SequenceOutputFile so1 = new SequenceOutputFile();
-                        so1.setName(processed.getName());
-                        so1.setFile(processed);
-                        so1.setLibrary_id(input.getLibrary_id());
-                        so1.setCategory("VCF File");
-                        so1.setContainer(ctx.getJob().getContainerId());
-                        so1.setCreated(new Date());
-                        so1.setModified(new Date());
-                        so1.setReadset(inputFiles.iterator().next().getReadset());
-                        so1.setDescription("Total samples: " + sampleCount);
+                ReferenceGenome rg = ctx.getSequenceSupport().getCachedGenome(genomes.iterator().next());
+                CombineVariantsWrapper cv = new CombineVariantsWrapper(ctx.getLogger());
 
-                        _resumer.getFileManager().addSequenceOutput(so1);
+                Map<Integer, Integer> fileMap = new HashMap<>();
+                inputFiles.forEach(x -> fileMap.put(x.getRowid(), x.getDataId()));
+                String[] ids = priorityOrder.split(",");
+
+                List<File> vcfsInPriority = new ArrayList<>();
+                for (String id : ids)
+                {
+                    int i = Integer.parseInt(id);
+                    if (!fileMap.containsKey(i))
+                    {
+                        throw new PipelineJobException("Unable to find file matching priority: " + i);
                     }
+
+                    int dataId = fileMap.get(i);
+
+                    vcfsInPriority.add(ctx.getSequenceSupport().getCachedData(dataId));
+                }
+
+                String basename = StringUtils.trimToNull(ctx.getParams().optString("variantMerging.CombineVCFs.fileBaseName"));
+                if (basename == null)
+                {
+                    throw new PipelineJobException("Basename not supplied for VCFs");
+                }
+
+                File outFile = new File(ctx.getOutputDir(), basename + ".vcf.gz");
+                File outFileIdx = new File(outFile.getPath() + ".tbi");
+                if (outFileIdx.exists())
+                {
+                    ctx.getLogger().info("Combined VCF exists, will not re-create: " + outFile.getPath());
+                }
+                else
+                {
+                    List<String> args = new ArrayList<>();
+                    args.add("-genotypeMergeOptions");
+                    args.add("PRIORITIZE");
+
+                    cv.execute(rg.getWorkingFastaFile(), vcfsInPriority, outFile, args, true);
+                }
+
+                if (!outFile.exists())
+                {
+                    throw new PipelineJobException("Unable to find combined VCF: " + outFile.getPath());
+                }
+
+                processFile(outFile, rg.getGenomeId(), null, ctx);
+            }
+            else
+            {
+                for (SequenceOutputFile input : inputFiles)
+                {
+                    processFile(input.getFile(), input.getLibrary_id(), input.getReadset(), ctx);
                 }
             }
 
             _resumer.markComplete(ctx);
+        }
+
+        private void processFile(File input, Integer libraryId, Integer readsetId, JobContext ctx) throws PipelineJobException
+        {
+            File processed = processVCF(input, libraryId, ctx, _resumer);
+            if (processed != null && processed.exists())
+            {
+                ctx.getLogger().debug("adding sequence output: " + processed.getPath());
+                if (input.equals(processed))
+                {
+                    ctx.getLogger().debug("processed file equals input, skipping: " + processed.getPath());
+                }
+                else
+                {
+                    int sampleCount;
+                    try (VCFFileReader reader = new VCFFileReader(processed))
+                    {
+                        VCFHeader header = reader.getFileHeader();
+                        sampleCount = header.getSampleNamesInOrder().size();
+                    }
+
+                    SequenceOutputFile so1 = new SequenceOutputFile();
+                    so1.setName(processed.getName());
+                    so1.setFile(processed);
+                    so1.setLibrary_id(libraryId);
+                    so1.setCategory("VCF File");
+                    so1.setContainer(ctx.getJob().getContainerId());
+                    so1.setCreated(new Date());
+                    so1.setModified(new Date());
+                    so1.setReadset(readsetId);
+                    so1.setDescription("Total samples: " + sampleCount);
+
+                    _resumer.getFileManager().addSequenceOutput(so1);
+                }
+            }
         }
 
         @Override
@@ -464,20 +531,25 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
         public static Resumer create(JobContextImpl ctx) throws PipelineJobException
         {
+            Resumer ret;
             File json = getSerializedJson(ctx.getSourceDirectory(), JSON_NAME);
             if (!json.exists())
             {
-                return new Resumer(ctx);
+                ret = new Resumer(ctx);
             }
             else
             {
-                Resumer ret = readFromJson(json, Resumer.class);
+                ret = readFromJson(json, Resumer.class);
                 ret._isResume = true;
                 ret._log = ctx.getLogger();
                 ret._localWorkDir = ctx.getWorkDir().getDir();
                 ret._fileManager._job = (SequenceOutputHandlerJob)ctx.getJob();
                 ret._fileManager._wd = ctx.getWorkDir();
                 ret._fileManager._workLocation = ctx.getWorkDir().getDir();
+
+                ctx.getLogger().debug("FileManagers initially equal: " + ctx.getFileManager().equals(ret._fileManager));
+
+                ctx.getLogger().debug("Replacing fileManager on JobContext");
                 ctx.setFileManager(ret._fileManager);
                 try
                 {
@@ -497,6 +569,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 //debugging:
                 ctx.getLogger().debug("loaded from file.  total recorded actions: " + ret.getRecordedActions().size());
                 ctx.getLogger().debug("total sequence outputs: " + ret.getFileManager().getOutputsToCreate().size());
+                ctx.getLogger().debug("total intermediate files: " + ret.getFileManager().getIntermediateFiles().size());
                 for (RecordedAction a : ret.getRecordedActions())
                 {
                     ctx.getLogger().debug("action: " + a.getName() + ", inputs: " + a.getInputs().size() + ", outputs: " + a.getOutputs().size());
@@ -506,9 +579,18 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 {
                     throw new PipelineJobException("Job read from file, but did not have any saved actions.  This indicates a problem w/ serialization.");
                 }
-
-                return ret;
             }
+
+            if (ret.isResume())
+            {
+                ctx.getLogger().info("resuming previous job");
+
+            }
+
+            boolean fmEqual = ctx.getFileManager().equals(ret._fileManager);
+            ctx.getLogger().debug("FileManagers on resumer and JobContext equal: " + fmEqual);
+
+            return ret;
         }
 
         public void markComplete(JobContext ctx)

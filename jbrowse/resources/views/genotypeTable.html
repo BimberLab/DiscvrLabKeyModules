@@ -17,17 +17,42 @@
             scope: this,
             failure: LDK.Utils.getErrorCallback(),
             success: LABKEY.Utils.getCallbackWrapper(function(response){
+                $("#genotypeLoading").remove();
+
                 //each row is one position
-                var rows = response.results;
+                var rows = response.genotypes;
+                var demographics = response.demographics;
+                var demographicsFields = response.demographicsFields || {};
+
                 var dataSet = [];
                 $.each(rows, function(idx, row){
                     var contig = row.contig;
                     var start = row.start;
 
                     $.each(row.genotypes, function(idx, gt){
-                        dataSet.push([contig, start, gt.sample, (gt.gt === './.' ? 'No Data' : gt.gt)]);
+                        var r = [contig, start, gt.sample];
+
+                        var d = demographics[gt.sample] || {};
+                        $.each(demographicsFields, function(field, displayName) {
+                            r.push(d[field] || '');
+                        });
+
+                        r.push((gt.gt === './.' ? 'No Data' : gt.gt));
+                        dataSet.push(r);
                     });
                 });
+
+                var columns = [
+                    {title: 'Contig'},
+                    {title: 'Position'},
+                    {title: 'Sample Name'}
+                ];
+
+                $.each(demographicsFields, function(field, displayName) {
+                    columns.push({title: displayName});
+                });
+
+                columns.push({title: 'Genotype'});
 
                 $('#genotypeTable').DataTable({
                     data: dataSet,
@@ -36,17 +61,14 @@
                     buttons: [
                         'copy', 'csv', 'excel'
                     ],
-                    columns: [
-                        {title: 'Contig'},
-                        {title: 'Position'},
-                        {title: 'Sample Name'},
-                        {title: 'Genotype'}
-                    ]
+                    columns: columns
                 } );
             }, this)
         });
     })(jQuery);
 </script>
+
+<div id="genotypeLoading" class="labkey-data-region-loading-mask-icon"><i class="fa fa-spinner fa-pulse"></i>Loading...</div>
 
 <div style="width: 60%">
     <table id="genotypeTable" class="stripe hover" ></table>

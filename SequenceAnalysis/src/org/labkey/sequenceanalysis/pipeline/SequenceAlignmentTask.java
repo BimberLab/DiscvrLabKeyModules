@@ -71,6 +71,7 @@ import org.labkey.sequenceanalysis.run.util.CollectWgsMetricsWithNonZeroCoverage
 import org.labkey.sequenceanalysis.run.util.CollectWgsMetricsWrapper;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 import org.labkey.sequenceanalysis.run.util.FlagStatRunner;
+import org.labkey.sequenceanalysis.run.util.IdxStatsRunner;
 import org.labkey.sequenceanalysis.run.util.MergeBamAlignmentWrapper;
 import org.labkey.sequenceanalysis.run.util.MergeSamFilesWrapper;
 import org.labkey.sequenceanalysis.util.FastqMerger;
@@ -859,14 +860,14 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             //generate alignment metrics
             RecordedAction metricsAction = null;
             boolean supportsMetrics = alignmentStep.supportsMetrics();
+            SAMFileHeader.SortOrder so = SequencePipelineService.get().getBamSortOrder(renamedBam);
+            File index = new File(renamedBam.getPath() + ".bai");
             if (!supportsMetrics)
             {
                 getPipelineJob().getLogger().debug("this aligner does not support collection of alignment metrics");
             }
             else
             {
-                SAMFileHeader.SortOrder so = SequencePipelineService.get().getBamSortOrder(renamedBam);
-                File index = new File(renamedBam.getPath() + ".bai");
                 if (so == SAMFileHeader.SortOrder.coordinate && index.exists())
                 {
                     metricsAction = new RecordedAction(ALIGNMENT_METRICS_ACTIONNAME);
@@ -940,6 +941,26 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 {
                     getJob().getLogger().info("BAM was not coordinate sorted or index was missing, skipping capture of alignment metrics");
                 }
+            }
+
+            //generate stats
+            if (so == SAMFileHeader.SortOrder.coordinate && index.exists())
+            {
+                if (alignmentStep.getProvider().shouldRunIdxstats())
+                {
+                    IdxStatsRunner idxRunner = new IdxStatsRunner(getJob().getLogger());
+                    idxRunner.execute(renamedBam);
+                    idxRunner.executeAndSave(renamedBam, new File(renamedBam.getParentFile(), "idxstats.txt"));
+                    getHelper().getFileManager().addCommandsToAction(idxRunner.getCommandsExecuted(), metricsAction);
+                }
+                else
+                {
+                    getJob().getLogger().info("Idxstats will be skipped");
+                }
+            }
+            else
+            {
+                getJob().getLogger().warn("BAM was either not coordinate sorted or lacks index");
             }
 
             _resumer.setAlignmentMetricsDone(true, metricsAction);
@@ -1022,6 +1043,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             Date start = new Date();
             mergeAction1.setStartTime(start);
 
+            File doneFile = new File(getHelper().getWorkingDirectory(), "merge.done");
             Set<Integer> typesFound = new HashSet<>();
             for (Pair<File, File> pair : files.values())
             {
@@ -1042,7 +1064,15 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             }
 
             File mergedForward = new File(getHelper().getWorkingDirectory(), SequenceTaskHelper.getMinimalBaseName(forward.get(0).getName()) + ".merged.R1.fastq.gz");
-            merger.mergeFiles(mergedForward, forward);
+            if (doneFile.exists())
+            {
+                getJob().getLogger().info("FASTQ merge completed, skipping forward merge");
+            }
+            else
+            {
+                merger.mergeFiles(mergedForward, forward);
+            }
+
             getHelper().getFileManager().addIntermediateFile(mergedForward);
             getHelper().getFileManager().addOutput(mergeAction1, "Merged FASTQ", mergedForward);
 
@@ -1060,7 +1090,15 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 reverse.forEach(x -> getHelper().getFileManager().addInput(mergeAction2, "Input FASTQ", x));
 
                 mergedReverse = new File(getHelper().getWorkingDirectory(), SequenceTaskHelper.getMinimalBaseName(forward.get(0).getName()) + ".merged.R2.fastq.gz");
-                merger.mergeFiles(mergedReverse, forward);
+                if (doneFile.exists())
+                {
+                    getJob().getLogger().info("FASTQ merge completed, skipping reverse merge");
+                }
+                else
+                {
+                    merger.mergeFiles(mergedReverse, reverse);
+                }
+
                 getHelper().getFileManager().addIntermediateFile(mergedReverse);
                 getHelper().getFileManager().addOutput(mergeAction2, "Merged FASTQ", mergedReverse);
 
@@ -1069,6 +1107,9 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 getJob().getLogger().info("Merge Reverse FASTQs Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
                 alignActions.add(mergeAction2);
             }
+
+            FileUtils.touch(doneFile);
+            getHelper().getFileManager().addIntermediateFile(doneFile);
 
             return doAlignmentForPair(Pair.of(mergedForward, mergedReverse), referenceGenome, rs, -1, "", null);
         }

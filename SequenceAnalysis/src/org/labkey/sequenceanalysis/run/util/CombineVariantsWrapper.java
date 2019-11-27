@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.util;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
@@ -22,6 +23,11 @@ public class CombineVariantsWrapper extends AbstractGatkWrapper
 
     public void execute(File referenceFasta, List<File> inputVcfs, File outputVcf, List<String> options) throws PipelineJobException
     {
+        execute(referenceFasta, inputVcfs, outputVcf, options, false);
+    }
+
+    public void execute(File referenceFasta, List<File> inputVcfs, File outputVcf, List<String> options, boolean inPriorityOrder) throws PipelineJobException
+    {
         getLogger().info("Running GATK CombineVariants");
 
         ensureDictionary(referenceFasta);
@@ -43,14 +49,26 @@ public class CombineVariantsWrapper extends AbstractGatkWrapper
         args.add("-R");
         args.add(referenceFasta.getPath());
 
+        List<String> priorities = new ArrayList<>();
+        int idx = 0;
         for (File f : inputVcfs)
         {
-            args.add("-V");
+            idx++;
+
+            String id = String.valueOf(idx);
+            args.add("--variant" + (inPriorityOrder ? ":" + id : ""));
+            priorities.add(id);
             args.add(f.getPath());
         }
 
         args.add("-o");
         args.add(outputVcf.getPath());
+
+        if (inPriorityOrder)
+        {
+            args.add("-priority");
+            args.add(StringUtils.join(priorities, ","));
+        }
 
         if (options != null)
         {

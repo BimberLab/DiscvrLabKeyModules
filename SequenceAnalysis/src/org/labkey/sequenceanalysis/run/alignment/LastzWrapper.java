@@ -7,14 +7,14 @@ import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
+import org.labkey.api.sequenceanalysis.pipeline.AlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.IndexOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
-import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
+import org.labkey.api.sequenceanalysis.run.AbstractAlignmentPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.SamFormatConverterWrapper;
@@ -38,9 +38,9 @@ public class LastzWrapper extends AbstractCommandWrapper
         super(logger);
     }
 
-    public static class LastzAlignmentStep extends AbstractCommandPipelineStep<LastzWrapper> implements AlignmentStep
+    public static class LastzAlignmentStep extends AbstractAlignmentPipelineStep<LastzWrapper> implements AlignmentStep
     {
-        public LastzAlignmentStep(PipelineStepProvider provider, PipelineContext ctx)
+        public LastzAlignmentStep(AlignmentStepProvider provider, PipelineContext ctx)
         {
             super(provider, ctx, new LastzWrapper(ctx.getLogger()));
         }
