@@ -46,6 +46,8 @@ import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -252,6 +254,15 @@ public class SequenceTaskHelper implements PipelineContext
         catch (IOException e)
         {
             log.error(e);
+        }
+
+        try
+        {
+            log.debug("hostname: " + InetAddress.getLocalHost().getHostName());
+        }
+        catch (UnknownHostException e)
+        {
+            log.debug("unable to determine hostname: " + e.getMessage(), e);
         }
     }
 

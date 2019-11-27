@@ -16,6 +16,7 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryAction;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
+import org.labkey.api.sequenceanalysis.GenomeTrigger;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
@@ -24,8 +25,11 @@ import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * User: bimber
@@ -45,6 +49,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
     private boolean _skipTriggers = false;
     private String _libraryName;
     private List<String> _unplacedContigPrefixes;
+    private Set<GenomeTrigger> _extraTriggers = new HashSet<>();
 
     // Default constructor for serialization
     protected ReferenceLibraryPipelineJob()
@@ -52,6 +57,11 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
     }
 
     public ReferenceLibraryPipelineJob(Container c, User user, PipeRoot pipeRoot, String libraryName, String assemblyId, String description, @Nullable List<ReferenceLibraryMember> libraryMembers, @Nullable Integer libraryId, boolean skipCacheIndexes, boolean skipTriggers, @Nullable List<String> unplacedContigPrefixes) throws IOException
+    {
+        this(c, user, pipeRoot, libraryName, assemblyId, description, libraryMembers, libraryId, skipCacheIndexes, skipTriggers, unplacedContigPrefixes, null);
+    }
+
+    public ReferenceLibraryPipelineJob(Container c, User user, PipeRoot pipeRoot, String libraryName, String assemblyId, String description, @Nullable List<ReferenceLibraryMember> libraryMembers, @Nullable Integer libraryId, boolean skipCacheIndexes, boolean skipTriggers, @Nullable List<String> unplacedContigPrefixes, @Nullable Set<GenomeTrigger> extraTriggers) throws IOException
     {
         super(ReferenceLibraryPipelineProvider.NAME, c, user, "referenceLibrary_" + FileUtil.getTimestamp(), pipeRoot, new JSONObject(), new TaskId(ReferenceLibraryPipelineJob.class), FOLDER_NAME);
         _assemblyId = assemblyId;
@@ -62,6 +72,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
         _skipCacheIndexes = skipCacheIndexes;
         _skipTriggers = skipTriggers;
         _unplacedContigPrefixes = unplacedContigPrefixes;
+        _extraTriggers = extraTriggers;
 
         saveLibraryMembersToFile(libraryMembers);
     }
@@ -226,5 +237,15 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
     public boolean skipCacheIndexes()
     {
         return _skipCacheIndexes;
+    }
+
+    public void setExtraTriggers(Set<GenomeTrigger> extraTriggers)
+    {
+        _extraTriggers = extraTriggers;
+    }
+
+    public Set<GenomeTrigger> getExtraTriggers()
+    {
+        return _extraTriggers == null ? Collections.emptySet() : _extraTriggers;
     }
 }

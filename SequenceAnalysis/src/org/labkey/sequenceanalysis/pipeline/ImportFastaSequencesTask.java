@@ -110,7 +110,7 @@ public class ImportFastaSequencesTask extends PipelineJob.Task<ImportFastaSequen
                 boolean skipCacheIndexes = (boolean)getPipelineJob().getLibraryParams().get("skipCacheIndexes");
                 boolean skipTriggers = (boolean)getPipelineJob().getLibraryParams().get("skipTriggers");
 
-                SequenceAnalysisManager.get().createReferenceLibrary(sequenceIds, getJob().getContainer(), getJob().getUser(), libraryName, assemblyId, libraryDescription, skipCacheIndexes, skipTriggers, null);
+                SequenceAnalysisManager.get().createReferenceLibrary(sequenceIds, getJob().getContainer(), getJob().getUser(), libraryName, assemblyId, libraryDescription, skipCacheIndexes, skipTriggers, null, null);
             }
 
         }

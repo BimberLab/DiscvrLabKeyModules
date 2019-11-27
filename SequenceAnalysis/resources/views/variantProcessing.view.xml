@@ -9,5 +9,6 @@
 
 
         <dependency path="SequenceAnalysis/window/SaveAnalysisAsTemplateWindow.js"/>
+        <dependency path="ux/ItemSelector/MultiSelect.js"/>
     </dependencies>
 </view>

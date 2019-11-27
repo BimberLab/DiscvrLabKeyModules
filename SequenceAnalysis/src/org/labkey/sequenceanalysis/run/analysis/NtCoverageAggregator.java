@@ -28,9 +28,9 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.api.picard.CigarPositionIterable;
-import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.sequenceanalysis.run.util.NTSnp;
 
 import java.io.File;
@@ -58,12 +58,10 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
 
     private Map<String, int[][][]> _totalCoverageByBase = new HashMap<>();
     private Map<String, int[][][]> _totalQualByBase = new HashMap<>();
-    //private Map<String, int[][][]> _hcCoverageByBase = new HashMap<String, int[][][]>();
-    //private Map<String, int[][][]> _hcQualByBase = new HashMap<String, int[][][]>();
 
     private Set<String> _encounteredReferences = new HashSet<>();
 
-    private final Map<Character, String> _baseMap = new HashMap<Character, String>()
+    private final Map<Character, String> _baseMap = new HashMap<>()
     {
         {
             put('A', "a");
@@ -75,7 +73,7 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
         }
     };
 
-    private final Map<Character, Integer> _baseIndexMap = new HashMap<Character, Integer>()
+    private final Map<Character, Integer> _baseIndexMap = new HashMap<>()
     {
         {
             put('A', 0);
@@ -149,8 +147,6 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
 
         _totalCoverageByBase.put(ref.getName(), new int[capacity][INITIAL_SIZE][BASE_INITIAL_SIZE]);
         _totalQualByBase.put(ref.getName(), new int[capacity][INITIAL_SIZE][BASE_INITIAL_SIZE]);
-        //_hcCoverageByBase.put(ref.getName(), new int[capacity][INITIAL_SIZE][BASE_INITIAL_SIZE]);
-        //_hcQualByBase.put(ref.getName(), new int[capacity][INITIAL_SIZE][BASE_INITIAL_SIZE]);
     }
 
     public int getDepthAtPosition(String ref, int position, int index)

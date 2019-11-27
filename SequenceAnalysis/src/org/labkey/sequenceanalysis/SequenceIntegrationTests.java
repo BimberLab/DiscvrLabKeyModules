@@ -42,8 +42,8 @@ import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.reader.Readers;
-import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.DirectoryResource;
+import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.model.ReadData;
@@ -1405,6 +1405,8 @@ public class SequenceIntegrationTests
 
             expectedOutputs.add(new File(basedir, outDir + "/Alignment/" + rs.getName() + ".bam.bai"));
 
+            expectedOutputs.add(new File(basedir, outDir + "/Alignment/idxstats.txt"));
+
             validateInputs();
             verifyFileOutputs(basedir, expectedOutputs);
             validateAlignment(bam, aligned, unaligned);
@@ -1657,7 +1659,7 @@ public class SequenceIntegrationTests
                 throw new PipelineJobException("Unable to find SIVMac239 NT sequence");
             }
 
-            ReferenceLibraryPipelineJob libraryJob = SequenceAnalysisManager.get().createReferenceLibrary(Arrays.asList(mac239Id), _project, _context.getUser(), libraryName, null, null, true, false, null);
+            ReferenceLibraryPipelineJob libraryJob = SequenceAnalysisManager.get().createReferenceLibrary(Arrays.asList(mac239Id), _project, _context.getUser(), libraryName, null, null, true, false, null, null);
             waitForJobs(Collections.singleton(libraryJob));
 
             return new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("rowid"), libraryFilter, null).getObject(Integer.class);

@@ -63,6 +63,9 @@ public interface AlignmentStep extends PipelineStep
 
     public boolean supportsGzipFastqs();
 
+    @Override
+    AlignmentStepProvider getProvider();
+
     default String getAlignmentDescription()
     {
         return "Aligner: " + getProvider().getName();

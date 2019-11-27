@@ -9,7 +9,6 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.StopIteratingException;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
@@ -330,8 +329,6 @@ public class OrphanFilePipelineJob extends PipelineJob
                             if (!knownSequenceJobPaths.contains(subdir))
                             {
                                 messages.add("#pipeline path listed as orphan, and not present in known job paths: ");
-                                long size = FileUtils.sizeOfDirectory(subdir);
-                                messages.add("## size: " + FileUtils.byteCountToDisplaySize(size));
                                 messages.add(subdir.getPath());
                                 probableDeletes.add(subdir);
                                 unexpectedPipelineDirs.add(subdir);

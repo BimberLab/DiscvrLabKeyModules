@@ -17,15 +17,15 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
+import org.labkey.api.sequenceanalysis.pipeline.AlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.IndexOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
-import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SamSorter;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
+import org.labkey.api.sequenceanalysis.run.AbstractAlignmentPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
@@ -57,9 +57,9 @@ public class MosaikWrapper extends AbstractCommandWrapper
         super(logger);
     }
 
-    public static class MosaikAlignmentStep extends AbstractCommandPipelineStep<MosaikWrapper> implements AlignmentStep
+    public static class MosaikAlignmentStep extends AbstractAlignmentPipelineStep<MosaikWrapper> implements AlignmentStep
     {
-        public MosaikAlignmentStep(PipelineStepProvider provider, PipelineContext ctx)
+        public MosaikAlignmentStep(AlignmentStepProvider provider, PipelineContext ctx)
         {
             super(provider, ctx, new MosaikWrapper(ctx.getLogger()));
         }

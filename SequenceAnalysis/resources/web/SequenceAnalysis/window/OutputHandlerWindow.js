@@ -251,19 +251,23 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
         }
 
         var params = this.down('form').getForm().getValues();
+        var json = {
+            handlerType: this.handlerType,
+            handlerClass: this.handlerClass,
+            outputFileIds: this.outputFileIds,
+            readsetIds: this.readsetIds,
+            useOutputFileContainer: !!params.useOutputFileContainer,
+            params: Ext4.encode(params)
+        };
+
+        if (Ext4.isDefined(params.doSplitJobs)) {
+            json.doSplitJobs = !!params.doSplitJobs;
+        }
 
         Ext4.Msg.wait('Submitting...');
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler', this.containerPath),
-            jsonData: {
-                handlerType: this.handlerType,
-                handlerClass: this.handlerClass,
-                outputFileIds: this.outputFileIds,
-                readsetIds: this.readsetIds,
-                doSplitJobs: !!params.doSplitJobs,
-                useOutputFileContainer: !!params.useOutputFileContainer,
-                params: Ext4.encode(params)
-            },
+            jsonData: json,
             scope: this,
             success: function(){
                 Ext4.Msg.hide();

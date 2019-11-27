@@ -30,7 +30,6 @@ import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.files.FileContentService;
 import org.labkey.api.security.User;
-import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.MemTracker;
 import org.labkey.api.writer.PrintWriters;
 
@@ -75,6 +74,9 @@ public class RefNtSequenceModel implements Serializable
     private String _aliases;
     private String _comments;
     private Integer _seqLength;
+    private Date _datedisabled;
+    private String _disabledby;
+
     private String _container;
     private Integer _createdby;
     private Date _created;
@@ -363,6 +365,26 @@ public class RefNtSequenceModel implements Serializable
     public void setJobId(Integer jobId)
     {
         _jobId = jobId;
+    }
+
+    public Date getDatedisabled()
+    {
+        return _datedisabled;
+    }
+
+    public void setDatedisabled(Date datedisabled)
+    {
+        _datedisabled = datedisabled;
+    }
+
+    public String getDisabledby()
+    {
+        return _disabledby;
+    }
+
+    public void setDisabledby(String disabledby)
+    {
+        _disabledby = disabledby;
     }
 
     public byte[] getSequenceBases()

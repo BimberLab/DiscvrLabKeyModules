@@ -228,6 +228,95 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
             }]
         }];
 
+		var ddGroup = Ext4.id() + '-dd';
+		results.variantMerging = [{
+			description: 'This will run GATK\'s CombineVariants on the set of VCF files',
+			label: 'Merge Variants',
+			name: 'CombineVCFs',
+			parameters: [{
+				fieldXtype: 'checkbox',
+				name: 'doCombine',
+				label: 'Combine VCFs Prior To Processing',
+				description: 'If checked, the VCFs will be merged into a single VCF before processing.',
+				defaultValue: false,
+				additionalExtConfig: {
+					listeners: {
+						change: function (field, val) {
+							val = !!val;
+
+							var field1 = field.up('panel').down('textfield');
+							var field2 = field.up('panel').down('multiselect');
+							var field3 = field.up('panel').down('hidden');
+
+							field1.isToolParam = val;
+							field1.allowBlank = !val;
+
+							field2.isToolParam = val;
+							field3.isToolParam = val;
+
+							field1.setVisible(val);
+							field2.setVisible(val);
+						}
+					}
+				}
+			},{
+				fieldXtype: 'textfield',
+				name: 'fileBaseName',
+				label: 'Filename',
+				description: 'This is the basename that will be used for the output gzipped VCF',
+				commandLineParam: false,
+				additionalExtConfig: {
+					hidden: true,
+					isToolParam: false,
+					width: 500,
+					allowBlank: true //toggle value based on checkbox
+				},
+				defaultValue: null
+			},{
+				fieldXtype: 'hidden',
+				name: 'doSplitJobs',
+				label: 'Split Jobs',
+				description: 'If combine is selected, jobs should not be split',
+				commandLineParam: false,
+				additionalExtConfig: {
+					hidden: true,
+					isToolParam: false,
+					name: 'doSplitJobs',  //override the more specific name auto-assigned
+					getToolParameterValue: function(){
+						var ret = this.getValue();
+
+						return ret ? JSON.parse(ret) : ret;
+					}
+				},
+				defaultValue: false
+			},{
+				name: 'priority',
+				fieldXtype: 'multiselect',
+				additionalExtConfig: {
+					hidden: true,
+					isToolParam: false,
+					store: this.outputFileStore,
+					fieldLabel: 'Merge Priority Order',
+					style: 'padding: 10px;padding-bottom: 30px;',
+					border: true,
+					width: 500,
+					autoScroll: true,
+					helpPopup: 'This is the priority order in which files will be merged, top being highest priority',
+					displayField: 'name',
+					valueField: 'rowid',
+					multiSelect: false,
+					dragGroup: ddGroup,
+					dropGroup: ddGroup,
+					getToolParameterValue: function(){
+						var val = this.setupValue(this.store.getRange());
+						val = val == null ? null : val.join(this.delimiter);
+
+						return val;
+					}
+				}
+			}]
+		}];
+
 		var items = [];
         if (this.showGenotypeGVCFs){
             items.push({
@@ -239,6 +328,18 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
                 toolConfig: results
             })
         }
+        else {
+			items.push({
+				xtype: 'sequenceanalysis-analysissectionpanel',
+				title: 'Merge VCFs',
+				stepType: 'variantMerging',
+				singleTool: false,
+				toolIdx: 0,
+				sectionDescription: 'This section allows you to optionally merge the input VCFs prior to processing',
+				toolConfig: results
+			})
+		}
+
 		items.push({
 			xtype: 'sequenceanalysis-analysissectionpanel',
 			title: 'Variant Preprocessing',
@@ -277,14 +378,20 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 		}
 
 		Ext4.Msg.wait('Submitting...');
+		var json = {
+			handlerClass: 'org.labkey.sequenceanalysis.' + (this.showGenotypeGVCFs ? 'analysis.GenotypeGVCFHandler' : 'pipeline.ProcessVariantsHandler'),
+			outputFileIds: this.outputFileIds,
+			params: Ext4.encode(values)
+		}
+
+		if (Ext4.isDefined(values.doSplitJobs)) {
+			console.log('split jobs set');
+			json.doSplitJobs = !!values.doSplitJobs;
+		}
 
 		LABKEY.Ajax.request({
 			url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler'),
-			jsonData: {
-				handlerClass: 'org.labkey.sequenceanalysis.' + (this.showGenotypeGVCFs ? 'analysis.GenotypeGVCFHandler' : 'pipeline.ProcessVariantsHandler'),
-				outputFileIds: this.outputFileIds,
-				params: Ext4.encode(values)
-			},
+			jsonData: json,
 			scope: this,
 			success: function(){
 				Ext4.Msg.hide();

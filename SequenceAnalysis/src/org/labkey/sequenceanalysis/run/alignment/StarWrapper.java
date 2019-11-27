@@ -15,14 +15,14 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
+import org.labkey.api.sequenceanalysis.pipeline.AlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.IndexOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
-import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
+import org.labkey.api.sequenceanalysis.run.AbstractAlignmentPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
@@ -48,9 +48,9 @@ public class StarWrapper extends AbstractCommandWrapper
 
     public static String LONG_READS = "longReads";
 
-    public static class StarAlignmentStep extends AbstractCommandPipelineStep<StarWrapper> implements AlignmentStep
+    public static class StarAlignmentStep extends AbstractAlignmentPipelineStep<StarWrapper> implements AlignmentStep
     {
-        public StarAlignmentStep(PipelineStepProvider provider, PipelineContext ctx)
+        public StarAlignmentStep(AlignmentStepProvider provider, PipelineContext ctx)
         {
             super(provider, ctx, new StarWrapper(ctx.getLogger()));
         }

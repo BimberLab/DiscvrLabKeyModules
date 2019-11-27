@@ -1,15 +1,12 @@
 package org.labkey.sequenceanalysis.query;
 
 import org.labkey.api.data.AbstractTableInfo;
-import org.labkey.api.data.Container;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
-import org.labkey.api.laboratory.LaboratoryService;
-import org.labkey.api.query.DetailsURL;
+import org.labkey.api.ldk.LDKService;
 import org.labkey.api.query.ExprColumn;
-import org.labkey.api.query.QueryForeignKey;
 
 /**
  * User: bimber
@@ -79,6 +76,8 @@ public class JobsTableCustomizer implements TableCustomizer
                 newCol.setLabel("Has Sequence Data?");
                 ((AbstractTableInfo)ti).addColumn(newCol);
             }
+
+            LDKService.get().getDefaultTableCustomizer().customize(ti);
         }
     }
 

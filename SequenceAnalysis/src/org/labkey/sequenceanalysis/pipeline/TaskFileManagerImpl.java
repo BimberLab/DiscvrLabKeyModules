@@ -651,7 +651,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
 
         if (isDeleteIntermediateFiles())
         {
-            _job.getLogger().debug("Intermediate files will be removed");
+            _job.getLogger().debug("Intermediate files will be removed, total: " + _intermediateFiles.size());
 
             for (File f : _intermediateFiles)
             {

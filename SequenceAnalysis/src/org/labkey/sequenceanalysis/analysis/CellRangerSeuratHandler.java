@@ -364,6 +364,7 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                     {
                         job.getLogger().info("Loading metrics");
                         TableInfo ti = SequenceAnalysisSchema.getInstance().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
+                        int total = 0;
                         try (CSVReader reader = new CSVReader(Readers.getReader(metrics), '\t'))
                         {
                             String[] line;
@@ -378,22 +379,26 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                                 r.put("category", "Seurat");
                                 r.put("metricname", line[1]);
                                 r.put("metricvalue", line[2]);
+                                r.put("analysis_id", so.getAnalysis_id());
                                 r.put("dataid", so.getDataId());
                                 r.put("readset", so.getReadset());
                                 r.put("container", job.getContainer());
                                 r.put("createdby", job.getUser().getUserId());
 
                                 Table.insert(job.getUser(), ti, r);
+                                total++;
                             }
                         }
                         catch (IOException e)
                         {
                             throw new PipelineJobException(e);
                         }
+
+                        job.getLogger().info("total metrics: " + total);
                     }
                     else
                     {
-                        job.getLogger().info("Unable to find metrics file: " + metrics.getPath());
+                        job.getLogger().warn("Unable to find metrics file: " + metrics.getPath());
                     }
                 }
             }

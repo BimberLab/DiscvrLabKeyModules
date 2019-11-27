@@ -127,10 +127,12 @@ import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HtmlView;
+import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.api.view.template.ClientDependency;
+import org.labkey.api.view.template.PageConfig;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
@@ -162,10 +164,13 @@ import org.labkey.sequenceanalysis.util.ChainFileValidator;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 import org.labkey.sequenceanalysis.visualization.VariationChart;
+import org.springframework.beans.PropertyValues;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
+import org.springframework.web.bind.ServletRequestParameterPropertyValues;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
@@ -567,6 +572,7 @@ public class SequenceAnalysisController extends SpringActionController
     public static class DeleteForm extends QueryForm
     {
         private Integer[] _jobIds;
+        private boolean _doDelete = false;
 
         public Integer[] getJobIds()
         {
@@ -576,6 +582,16 @@ public class SequenceAnalysisController extends SpringActionController
         public void setJobIds(Integer[] jobIds)
         {
             _jobIds = jobIds;
+        }
+
+        public boolean isDoDelete()
+        {
+            return _doDelete;
+        }
+
+        public void setDoDelete(boolean doDelete)
+        {
+            _doDelete = doDelete;
         }
     }
 
@@ -767,9 +783,39 @@ public class SequenceAnalysisController extends SpringActionController
                 }
             }
 
+            msg.append("<input type='hidden' name='doDelete' value='1'");
+
             setTitle("Delete Sequence Records");
 
             return new HtmlView(msg.toString());
+        }
+
+        @Override
+        public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception
+        {
+            PropertyValues values = getPropertyValues();
+            if (null == values)
+                values = new ServletRequestParameterPropertyValues(request);
+
+            BindException errors = bindParameters(values);
+            DeleteForm form = (DeleteForm)errors.getTarget();
+
+            if (!form.isDoDelete()) {
+                validate(form, errors);
+                boolean success = !errors.hasErrors();
+                if (success)
+                {
+                    setProperties(values);
+                    getViewContext().setBindPropertyValues(getPropertyValues());
+                    ModelAndView confirmView = getConfirmView(form, errors);
+                    JspView<ConfirmAction> confirmWrapper = new JspView<>("/org/labkey/api/action/confirmWrapper.jsp", this);
+                    confirmWrapper.setBody(confirmView);
+                    getPageConfig().setTemplate(PageConfig.Template.Dialog);
+                    return confirmWrapper;
+                }
+            }
+
+            return super.handleRequest(request, response);
         }
 
         private void getAdditionalRuns(Set<Integer> readsetIds, Set<Integer> readDataIds, Set<Integer> analysisIds, Set<Integer> outputFileIds, Set<Integer> expRunsToDelete)
@@ -2201,7 +2247,7 @@ public class SequenceAnalysisController extends SpringActionController
                 idx++;
             }
 
-            SequenceAnalysisManager.get().createReferenceLibrary(getContainer(), getUser(), form.getName(), form.getAssemblyId(), form.getDescription(), members, form.isSkipCacheIndexes(), form.isSkipTriggers(), null);
+            SequenceAnalysisManager.get().createReferenceLibrary(getContainer(), getUser(), form.getName(), form.getAssemblyId(), form.getDescription(), members, form.isSkipCacheIndexes(), form.isSkipTriggers(), null, null);
 
             return new ApiSimpleResponse("Success", true);
         }
@@ -3862,7 +3908,8 @@ public class SequenceAnalysisController extends SpringActionController
             try
             {
                 List<String> guids = new ArrayList<>();
-                if (handler.doSplitJobs() || form.getDoSplitJobs())
+                boolean doSplit = form.isSplitJobsProvided() ? form.getDoSplitJobs() : handler.doSplitJobs();
+                if (doSplit)
                 {
                     Map<Container, PipeRoot> containerToPipeRootMap = new HashMap<>();
                     for (SequenceOutputFile o : outputFiles)
@@ -3952,7 +3999,7 @@ public class SequenceAnalysisController extends SpringActionController
     {
         private String _jobName;
         private String _params;
-        private Boolean _doSplitJobs = false;
+        private Boolean _doSplitJobs = null;
         private Boolean _useOutputFileContainer = false;
 
         public String getJobName()
@@ -3977,7 +4024,12 @@ public class SequenceAnalysisController extends SpringActionController
 
         public Boolean getDoSplitJobs()
         {
-            return _doSplitJobs == null ? false : _doSplitJobs;
+            return _doSplitJobs;
+        }
+
+        public boolean isSplitJobsProvided()
+        {
+            return _doSplitJobs != null;
         }
 
         public void setDoSplitJobs(Boolean doSplitJobs)
@@ -4197,17 +4249,17 @@ public class SequenceAnalysisController extends SpringActionController
             Map<String, Object> ret = new HashMap<>();
             Set<JSONObject> availableHandlers = new HashSet<>();
             List<Integer> outputFileIds = new ArrayList<>();
-            for (int i : form.getOutputFileIds())
-            {
-                outputFileIds.add(i);
-            }
-            List<SequenceOutputFile> outputFiles = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), new SimpleFilter(FieldKey.fromString("rowid"), outputFileIds, CompareType.IN), null).getArrayList(SequenceOutputFile.class);
-
             if (form.getOutputFileIds() == null || form.getOutputFileIds().length == 0)
             {
                 errors.reject(ERROR_MSG, "No output files provided");
                 return null;
             }
+
+            for (int i : form.getOutputFileIds())
+            {
+                outputFileIds.add(i);
+            }
+            List<SequenceOutputFile> outputFiles = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), new SimpleFilter(FieldKey.fromString("rowid"), outputFileIds, CompareType.IN), null).getArrayList(SequenceOutputFile.class);
 
             //test permissions
             List<JSONObject> outputFileJson = new ArrayList<>();
@@ -4381,7 +4433,6 @@ public class SequenceAnalysisController extends SpringActionController
 
                         if (m.getSeqLength() > 1000000)
                         {
-                            _log.info("skipping large reference: " + m.getName());
                             continue;
                         }
 
@@ -4404,7 +4455,6 @@ public class SequenceAnalysisController extends SpringActionController
 
                             if (m.getSeqLength() > 1000000)
                             {
-                                _log.info("skipping large reference: " + m.getName());
                                 continue;
                             }
 
