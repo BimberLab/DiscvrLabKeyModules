@@ -71,7 +71,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-cbl"), "cbl", "Cell Barcode End", null, "ldk-integerfield", null, 16),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-umif"), "umif", "UMI Start", null, "ldk-integerfield", null, 17),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-umil"), "umil", "UMI End", null, "ldk-integerfield", null, 26),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--max-error"), "hd", "Edit Distance", null, "ldk-integerfield", null, 2),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--max-error"), "hd", "Edit Distance", null, "ldk-integerfield", null, 1),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-cells"), "cells", "Expected Cells", null, "ldk-integerfield", null, 20000),
                 //ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-tr"), "tr", "RegEx", null, "textfield", null, "^[ATGCN]{15}"),
                 ToolParameterDescriptor.create("tagGroup", "Tag List", null, "ldk-simplelabkeycombo", new JSONObject(){{
@@ -538,7 +538,11 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
             args.add("-o");
             args.add(outputDir.getPath());
 
-            execute(args);
+            String output = executeWithOutput(args);
+            if (output.contains("format requires -2147483648 <= number"))
+            {
+                throw new PipelineJobException("Error running Cite-seq-count. Repeat using more cores");
+            }
         }
 
         private File getExe()
