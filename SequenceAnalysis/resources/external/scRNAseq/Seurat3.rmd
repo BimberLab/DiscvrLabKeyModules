@@ -73,6 +73,8 @@ print(seuratObj)
 
 seuratObj <- ProcessSeurat1(seuratObj, variableGeneTable = paste0(outPrefix, '.variableGenes.txt'), doCellFilter = doCellFilter, doCellCycle = doCellCycle, useSCTransform = useSCTransform, saveFile = saveFile)
 
+print(seuratObj)
+
 ```
 
 ## DimRedux
@@ -82,6 +84,8 @@ seuratObj <- ProcessSeurat1(seuratObj, variableGeneTable = paste0(outPrefix, '.v
 seuratObj <- FindClustersAndDimRedux(seuratObj, dimsToUse = dimsToUse, minDimsToUse = minDimsToUse, saveFile = saveFile)
 
 Find_Markers(seuratObj, resolutionToUse = resolutionToUse, outFile = paste0(outPrefix, '.markers.txt'), saveFileMarkers = paste0(outPrefix, '.markers.rds'))
+
+print(seuratObj)
 
 ```
 
@@ -101,6 +105,8 @@ tryCatch({
 
     saveRDS(e, file = 'error.rds')
 })
+
+print(seuratObj)
 
 ```
 
