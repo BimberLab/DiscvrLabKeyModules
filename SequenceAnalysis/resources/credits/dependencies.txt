@@ -1,4 +1,4 @@
-# direct external dependencies for project :server:modules:DiscvrLabkeyModules:SequenceAnalysis
+# direct external dependencies for project :server:modules:DiscvrLabKeyModules:SequenceAnalysis
 htsjdk-2.14.3.jar
 biojava3-core-3.0.7.jar
 biojava3-genome-3.0.7.jar

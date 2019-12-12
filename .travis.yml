@@ -1,0 +1,60 @@
+language: java
+dist: trusty
+group: travis_lts
+git:
+  depth: 9999999
+jdk:
+  - openjdk13
+
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+    - $HOME/.m2
+    - $HOME/labkey_build/
+    - $HOME/site-library
+
+script:
+  - bash travis.sh
+
+before_deploy:
+  - RELEASE_NAME=`cat ${TRAVIS_BUILD_DIR}/release.txt`
+  - echo "Release name: $RELEASE_NAME"
+  - export $RELEASE_NAME
+  - cd $TRAVIS_BUILD_DIR
+
+deploy:
+  provider: github
+  api_key: ${GH_TOKEN}
+  repo: 'bimberlabinternal/BimberLabKeyModules'
+  overwrite: true
+  file_glob: true
+  file:
+    - ./lkDist/discvr/*.gz
+    - ./lkDist/discvr_modules/*.zip
+    - ./lkDist/discvr_modules/*.zip
+  name: ${RELEASE_NAME}
+  draft: true
+  body: 'This is the latest draft build, automatically published by Travis-CI.  This is not intended as a production release.'
+  skip_cleanup: true
+  on:
+    all_branches: true
+    condition: $TRAVIS_BRANCH =~ ^(develop|discvr-)*
+
+  provider: github
+  api_key: ${GH_TOKEN}
+  repo: $TRAVIS_REPO_SLUG
+  overwrite: true
+  body: 'Automatically published by Travis-CI'
+  file_glob: true
+  file:
+    - ./lkDist/discvr/*.gz
+    - ./lkDist/discvr_modules/*.zip
+  name: ${TRAVIS_TAG}
+  skip_cleanup: true
+  on:
+    tags: true
