@@ -1,8 +1,8 @@
 language: java
 dist: trusty
 git:
-  - depth: 9999999
-  - clone: false
+  depth: 9999999
+  clone: false
 jdk:
   - openjdk13
 
