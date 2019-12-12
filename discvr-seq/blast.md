@@ -1,0 +1,3 @@
+More detail coming soon. This module is a wrapper around BLAST+. If you install this module, LabKey can be used to create and manage custom BLAST databases, and provides a web-based way to BLAST your data against these.
+
+Once you install this module (see download page), have you site admin go to the admin console, follow the 'DISCVR Admin' link, click 'BLAST Settings', and follow the instructions. Note: you will need to download and install BLAST+, as explained on the instructions page.

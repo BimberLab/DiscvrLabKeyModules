@@ -1,0 +1,3 @@
+More detail coming soon. The general idea is that we have seamlessly integrated with JBrowse, so that if you have enabled this module, you will be able to view data loaded in DISCVR-Seq through this browser. This includes most sequence file types, including BAMs, VCFs, BED files, etc.
+
+Once you install this module (see download page), have you site admin go to the admin console, follow the 'JBrowse Admin' link, and follow the instructions.
