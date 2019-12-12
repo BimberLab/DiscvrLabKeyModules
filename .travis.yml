@@ -2,7 +2,6 @@ language: java
 dist: trusty
 git:
   depth: 9999999
-  clone: false
 jdk:
   - openjdk13
 
@@ -18,6 +17,7 @@ cache:
     - $HOME/labkey_build/
     - $HOME/site-library
 
+install: skip
 script:
   - bash ./travis.sh
 
