@@ -49,7 +49,7 @@ function identifyBranch {
 
     #First try based on Tag, if present
     if [ ! -z $TRAVIS_TAG ];then
-        BRANCH_EXISTS=$(git ls-remote --heads https://github.com/${GIT_ORG}/${GIT_ORG}.git ${TRAVIS_TAG} | wc -l)
+        BRANCH_EXISTS=$(git ls-remote --heads https://${GH_TOKEN}@github.com/${GIT_ORG}/${REPONAME}.git ${TRAVIS_TAG} | wc -l)
         if [ -z $BRANCH_EXISTS ];then
             BRANCH=$TRAVIS_TAG
             echo 'Branch found, using '$BRANCH
@@ -58,7 +58,7 @@ function identifyBranch {
     fi
 
     # Then try branch of same name:
-    BRANCH_EXISTS=$(git ls-remote --heads https://github.com/${GIT_ORG}/${GIT_ORG}.git ${TRAVIS_BRANCH} | wc -l)
+    BRANCH_EXISTS=$(git ls-remote --heads https://${GH_TOKEN}@github.com/${GIT_ORG}/${REPONAME}.git ${TRAVIS_BRANCH} | wc -l)
     if [ -z $BRANCH_EXISTS ];then
         BRANCH=$TRAVIS_BRANCH
         echo 'Branch found, using '$BRANCH
@@ -68,7 +68,7 @@ function identifyBranch {
     # Otherwise discvr
     TO_TEST='discvr-'$BASE_VERSION_SHORT
     if [ $TO_TEST != $TRAVIS_BRANCH ];then
-        BRANCH_EXISTS=$(git ls-remote --heads https://github.com/${GIT_ORG}/${GIT_ORG}.git ${TO_TEST} | wc -l)
+        BRANCH_EXISTS=$(git ls-remote --heads https://${GH_TOKEN}@github.com/${GIT_ORG}/${REPONAME}.git ${TO_TEST} | wc -l)
         if [ -z $BRANCH_EXISTS ];then
             BRANCH=$TO_TEST
             echo 'Branch found, using '$BRANCH
@@ -79,7 +79,7 @@ function identifyBranch {
     # Otherwise release
     TO_TEST='release'${BASE_VERSION_SHORT}-SNAPSHOT
     if [ $TO_TEST != $TRAVIS_BRANCH ];then
-        BRANCH_EXISTS=$(git ls-remote --heads https://github.com/${GIT_ORG}/${GIT_ORG}.git ${TO_TEST} | wc -l)
+        BRANCH_EXISTS=$(git ls-remote --heads https://${GH_TOKEN}@github.com/${GIT_ORG}/${REPONAME}.git ${TO_TEST} | wc -l)
         if [ -z $BRANCH_EXISTS ];then
             BRANCH=$TO_TEST
             echo 'Branch found, using '$BRANCH
@@ -148,12 +148,6 @@ cd $SVN_DIR
 
 # Modify gradle config:
 echo "BuildUtils.includeModules(this.settings, rootDir, [BuildUtils.SERVER_MODULES_DIR, BuildUtils.OPTIONAL_MODULES_DIR], ['ehr', 'ehr_billing', 'EHR_ComplianceDB'], true)" >> settings.gradle
-
-PROD_OPTS=
-if [ -n "$TRAVIS_TAG" ];then
-    echo "Performing pre-clean for production"
-    PROD_OPTS=" cleanNodeModules cleanDist :server:cleanBuild"
-fi
 
 #make distribution
 DIST_DIR=${TRAVIS_BUILD_DIR}/lkDist
