@@ -50,7 +50,7 @@ function identifyBranch {
     #First try based on Tag, if present
     if [ ! -z $TRAVIS_TAG ];then
         BRANCH_EXISTS=$(git ls-remote --heads https://${GH_TOKEN}@github.com/${GIT_ORG}/${REPONAME}.git ${TRAVIS_TAG} | wc -l)
-        if [ "$BRANCH_EXISTS" -ne 0 ];then
+        if [ "$BRANCH_EXISTS" != "0" ];then
             BRANCH=$TRAVIS_TAG
             echo 'Branch found, using '$BRANCH
             return
@@ -59,7 +59,7 @@ function identifyBranch {
 
     # Then try branch of same name:
     BRANCH_EXISTS=$(git ls-remote --heads https://${GH_TOKEN}@github.com/${GIT_ORG}/${REPONAME}.git ${TRAVIS_BRANCH} | wc -l)
-    if [ "$BRANCH_EXISTS" -ne 0 ];then
+    if [ "$BRANCH_EXISTS" != "0" ];then
         BRANCH=$TRAVIS_BRANCH
         echo 'Branch found, using '$BRANCH
         return
@@ -67,9 +67,9 @@ function identifyBranch {
 
     # Otherwise discvr
     TO_TEST='discvr-'$BASE_VERSION_SHORT
-    if [ $TO_TEST -ne $TRAVIS_BRANCH ];then
+    if [ $TO_TEST != $TRAVIS_BRANCH ];then
         BRANCH_EXISTS=$(git ls-remote --heads https://${GH_TOKEN}@github.com/${GIT_ORG}/${REPONAME}.git ${TO_TEST} | wc -l)
-        if [ "$BRANCH_EXISTS" -ne 0 ];then
+        if [ "$BRANCH_EXISTS" != "0" ];then
             BRANCH=$TO_TEST
             echo 'Branch found, using '$BRANCH
             return
@@ -78,9 +78,9 @@ function identifyBranch {
 
     # Otherwise release
     TO_TEST='release'${BASE_VERSION_SHORT}-SNAPSHOT
-    if [ $TO_TEST -ne $TRAVIS_BRANCH ];then
+    if [ $TO_TEST != $TRAVIS_BRANCH ];then
         BRANCH_EXISTS=$(git ls-remote --heads https://${GH_TOKEN}@github.com/${GIT_ORG}/${REPONAME}.git ${TO_TEST} | wc -l)
-        if [ "$BRANCH_EXISTS" -ne 0 ];then
+        if [ "$BRANCH_EXISTS" != "0" ];then
             BRANCH=$TO_TEST
             echo 'Branch found, using '$BRANCH
             return
@@ -110,6 +110,7 @@ function cloneGit {
     else
         cd ${SVN_DIR}${BASE}${REPONAME}
         git reset --hard HEAD
+        git clean -f -d
         git checkout $BRANCH
         git reset --hard HEAD
         git clean -f -d
