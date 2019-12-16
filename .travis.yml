@@ -2,7 +2,6 @@ language: java
 dist: trusty
 git:
   depth: 9999999
-  clone: false
 jdk:
   - openjdk13
 
@@ -20,7 +19,7 @@ cache:
 
 install: skip
 script:
-  - bash travis.sh
+  - bash ./travis.sh
 
 before_deploy:
   - RELEASE_NAME=`cat ${TRAVIS_BUILD_DIR}/release.txt`

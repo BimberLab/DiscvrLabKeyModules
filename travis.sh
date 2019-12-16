@@ -3,6 +3,11 @@
 set -e
 set -x
 
+# Allows override of settings
+if [ -e settings.sh ];then
+    source settings.sh
+fi
+
 BASE_VERSION=`echo $TRAVIS_BRANCH | sed 's/[^0-9\.]*//g'`
 BASE_VERSION_SHORT=`echo $BASE_VERSION | awk '{ print substr($0,1,4) }'`
 
@@ -25,13 +30,9 @@ cd $BASEDIR
 if [ $BASE_VERSION == 'develop' ];then
     SVN_URL=https://svn.mgt.labkey.host/stedi/trunk
     SVN_DIR=${BASEDIR}/trunk
-    LK_GIT_BRANCH=develop
-    BIMBER_GIT_BRANCH=develop
 else
-    SVN_URL=https://svn.mgt.labkey.host/stedi/branches/release${BASE_VERSION_SHORT}
-    SVN_DIR=${BASEDIR}/release${BASE_VERSION}
-    LK_GIT_BRANCH=release${BASE_VERSION_SHORT}
-    BIMBER_GIT_BRANCH=$TRAVIS_BRANCH
+    SVN_URL=https://svn.mgt.labkey.host/stedi/branches/release${BASE_VERSION_SHORT}-SNAPSHOT
+    SVN_DIR=${BASEDIR}/release${BASE_VERSION}-SNAPSHOT
 fi
 
 if [ ! -e $SVN_DIR ];then
@@ -47,19 +48,63 @@ fi
 export RELEASE_NAME=`grep -e 'labkeyVersion=' ${SVN_DIR}/gradle.properties | sed 's/labkeyVersion=//'`
 echo "Release name: "$RELEASE_NAME
 
+function identifyBranch {
+    GIT_ORG=$1
+    REPONAME=$2
+
+    #First try based on Tag, if present
+    if [ ! -z $TRAVIS_TAG ];then
+        BRANCH_EXISTS=$(git ls-remote --heads https://${GH_TOKEN}@github.com/${GIT_ORG}/${REPONAME}.git ${TRAVIS_TAG} | wc -l)
+        if [ "$BRANCH_EXISTS" != "0" ];then
+            BRANCH=$TRAVIS_TAG
+            echo 'Branch found, using '$BRANCH
+            return
+        fi
+    fi
+
+    # Then try branch of same name:
+    BRANCH_EXISTS=$(git ls-remote --heads https://${GH_TOKEN}@github.com/${GIT_ORG}/${REPONAME}.git ${TRAVIS_BRANCH} | wc -l)
+    if [ "$BRANCH_EXISTS" != "0" ];then
+        BRANCH=$TRAVIS_BRANCH
+        echo 'Branch found, using '$BRANCH
+        return
+    fi
+
+    # Otherwise discvr
+    TO_TEST='discvr-'$BASE_VERSION_SHORT
+    if [ $TO_TEST != $TRAVIS_BRANCH ];then
+        BRANCH_EXISTS=$(git ls-remote --heads https://${GH_TOKEN}@github.com/${GIT_ORG}/${REPONAME}.git ${TO_TEST} | wc -l)
+        if [ "$BRANCH_EXISTS" != "0" ];then
+            BRANCH=$TO_TEST
+            echo 'Branch found, using '$BRANCH
+            return
+        fi
+    fi
+
+    # Otherwise release
+    TO_TEST='release'${BASE_VERSION_SHORT}-SNAPSHOT
+    if [ $TO_TEST != $TRAVIS_BRANCH ];then
+        BRANCH_EXISTS=$(git ls-remote --heads https://${GH_TOKEN}@github.com/${GIT_ORG}/${REPONAME}.git ${TO_TEST} | wc -l)
+        if [ "$BRANCH_EXISTS" != "0" ];then
+            BRANCH=$TO_TEST
+            echo 'Branch found, using '$BRANCH
+            return
+        fi
+    fi
+
+    echo 'Branch not found, using default: develop'
+    BRANCH='develop'
+}
+
 function cloneGit {
     GIT_ORG=$1
     REPONAME=$2
     BRANCH=$3
+    echo "Repo: "${REPONAME}"Using branch: "$BRANCH
+
     BASE=/server/modules/
     if [ -n "$4" ];then
         BASE=$4
-    fi
-
-    BRANCH_EXISTS=$(git ls-remote --heads https://github.com/${1}/${2}.git ${3} | wc -l)
-    if [[ -z $BRANCH_EXISTS ]];then
-        echo 'Branch not found, using default: develop'
-        BRANCH='develop'
     fi
 
     TARGET_DIR=${SVN_DIR}${BASE}${REPONAME}
@@ -69,6 +114,8 @@ function cloneGit {
         git clone -b $BRANCH $GIT_URL
     else
         cd ${SVN_DIR}${BASE}${REPONAME}
+        git reset --hard HEAD
+        git clean -f -d
         git checkout $BRANCH
         git reset --hard HEAD
         git clean -f -d
@@ -77,41 +124,36 @@ function cloneGit {
 }
 
 # Labkey/Platform
-cloneGit Labkey platform $LK_GIT_BRANCH
+identifyBranch Labkey platform
+LK_BRANCH=$BRANCH
+cloneGit Labkey platform $LK_BRANCH
 
-# Labkey/distributions
-cloneGit Labkey distributions $LK_GIT_BRANCH /
+# Labkey/distributions. Note: user does not have right run ls-remote, so infer from platform
+BRANCH=`echo $LK_BRANCH | sed 's/-SNAPSHOT//'`
+cloneGit Labkey distributions $BRANCH /
 
-# Labkey/dataintegration
-cloneGit Labkey dataintegration $LK_GIT_BRANCH /server/optionalModules/
+# Labkey/dataintegration. Note: user does not have right run ls-remote, so infer from platform
+cloneGit Labkey dataintegration $LK_BRANCH /server/optionalModules/
 
 # BimberLab/DiscvrLabKeyModules
-cloneGit BimberLab DiscvrLabKeyModules $BIMBER_GIT_BRANCH
+identifyBranch BimberLab DiscvrLabKeyModules
+cloneGit BimberLab DiscvrLabKeyModules $BRANCH
 
 # BimberLabInternal/LabDevKitModules
-cloneGit BimberLabInternal LabDevKitModules $BIMBER_GIT_BRANCH
+identifyBranch BimberLabInternal LabDevKitModules
+cloneGit BimberLabInternal LabDevKitModules $BRANCH
 
 # BimberLabInternal/BimberLabKeyModules
-cloneGit BimberLabInternal BimberLabKeyModules $BIMBER_GIT_BRANCH
+identifyBranch BimberLabInternal BimberLabKeyModules
+cloneGit BimberLabInternal BimberLabKeyModules $BRANCH
 
 # Labkey/ehrModules.  Only retain Viral_Load_Assay
-cloneGit Labkey ehrModules $LK_GIT_BRANCH /externalModules/
-if [ -e ${SVN_DIR}/server/modules/Viral_Load_Assay ];then
-    rm -Rf ${SVN_DIR}/server/modules/Viral_Load_Assay
-fi
-mv ${SVN_DIR}/externalModules/ehrModules/Viral_Load_Assay ${SVN_DIR}/server/modules/
-rm -Rf  ${SVN_DIR}/externalModules/ehrModules
+cloneGit Labkey ehrModules $LK_BRANCH
 
 cd $SVN_DIR
 
 # Modify gradle config:
-echo "BuildUtils.includeModules(this.settings, rootDir, [BuildUtils.SERVER_MODULES_DIR, BuildUtils.OPTIONAL_MODULES_DIR], [], true)" >> settings.gradle
-
-PROD_OPTS=
-if [ -n "$TRAVIS_TAG" ];then
-    echo "Performing pre-clean for production"
-    PROD_OPTS=" cleanNodeModules cleanDist :server:cleanBuild"
-fi
+echo "BuildUtils.includeModules(this.settings, rootDir, [BuildUtils.SERVER_MODULES_DIR, BuildUtils.OPTIONAL_MODULES_DIR], ['ehr', 'ehr_billing', 'EHR_ComplianceDB'], true)" >> settings.gradle
 
 #make distribution
 DIST_DIR=${TRAVIS_BUILD_DIR}/lkDist
@@ -119,22 +161,40 @@ if [ ! -e $DIST_DIR ];then
     mkdir -p $DIST_DIR ];
 fi
 
+#Note: gradle's :server:stopTomcat will fail without tomcat.home set
+export CATALINA_HOME=$HOME"/labkey_build/tomcat8.5"
+if [ ! -e ${CATALINA_HOME}/bin/bootstrap.jar ];then
+    if [ -e $$CATALINA_HOME ];then
+        rm -Rf $CATALINA_HOME
+    fi
+
+    mkdir -p $CATALINA_HOME
+    cd $CATALINA_HOME
+    curl -O http://mirror.olnevhost.net/pub/apache/tomcat/tomcat-8/v8.5.50/bin/apache-tomcat-8.5.50.tar.gz
+    tar xzvf apache-tomcat-8*tar.gz -C $CATALINA_HOME --strip-components=1
+    rm apache-tomcat-8*tar.gz
+fi
+
+cd $SVN_DIR
+
 GRADLE_OPTS=-Xmx2048m
 ./gradlew \
     -Dorg.gradle.daemon=false \
+    -Dtomcat.home=$CATALINA_HOME \
     -PincludeVcs \
     -PbuildFromSource=true \
     -PdeployMode=prod \
-    $PROD_OPTS deployApp
+    cleanNodeModules cleanBuild cleanDeploy deployApp
 
 ./gradlew \
     -Dorg.gradle.daemon=false \
+    -Dtomcat.home=$CATALINA_HOME \
     -PincludeVcs \
     -PbuildFromSource=true \
     -PdeployMode=prod \
     -PmoduleSet=distributions \
     -PdistDir=$DIST_DIR \
-    $PROD_OPTS :distributions:discvr:dist :distributions:discvr_modules:dist :distributions:prime-seq-modules:dist
+    :distributions:discvr:dist :distributions:discvr_modules:dist :distributions:prime-seq-modules:dist
 
 mv ./dist/* $DIST_DIR
 
