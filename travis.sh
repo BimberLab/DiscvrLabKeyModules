@@ -161,12 +161,12 @@ if [ ! -e $DIST_DIR ];then
     mkdir -p $DIST_DIR ];
 fi
 
-#Gradle's :server:stopTomcat will fail without this set
-CATALINA_HOME=./
+#Note: gradle's :server:stopTomcat will fail without tomcat.home set
 
 GRADLE_OPTS=-Xmx2048m
 ./gradlew \
     -Dorg.gradle.daemon=false \
+    -Dtomcat.home=./ \
     -PincludeVcs \
     -PbuildFromSource=true \
     -PdeployMode=prod \
@@ -174,6 +174,7 @@ GRADLE_OPTS=-Xmx2048m
 
 ./gradlew \
     -Dorg.gradle.daemon=false \
+    -Dtomcat.home=./ \
     -PincludeVcs \
     -PbuildFromSource=true \
     -PdeployMode=prod \
