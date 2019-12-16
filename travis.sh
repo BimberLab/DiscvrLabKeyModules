@@ -174,7 +174,8 @@ if [ ! -e ${CATALINA_HOME}/bin/bootstrap.jar ];then
     tar xzvf apache-tomcat-8*tar.gz -C $CATALINA_HOME --strip-components=1
     rm apache-tomcat-8*tar.gz
 fi
-ls $CATALINA_HOME
+
+cd $SVN_DIR
 
 GRADLE_OPTS=-Xmx2048m
 ./gradlew \
