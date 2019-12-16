@@ -3,6 +3,11 @@
 set -e
 set -x
 
+# Allows override of settings
+if [ -e settings.sh ];then
+    source settings.sh
+fi
+
 BASE_VERSION=`echo $TRAVIS_BRANCH | sed 's/[^0-9\.]*//g'`
 BASE_VERSION_SHORT=`echo $BASE_VERSION | awk '{ print substr($0,1,4) }'`
 
@@ -155,6 +160,9 @@ DIST_DIR=${TRAVIS_BUILD_DIR}/lkDist
 if [ ! -e $DIST_DIR ];then
     mkdir -p $DIST_DIR ];
 fi
+
+#Gradle's :server:stopTomcat will fail without this set
+CATALINA_HOME=./
 
 GRADLE_OPTS=-Xmx2048m
 ./gradlew \
