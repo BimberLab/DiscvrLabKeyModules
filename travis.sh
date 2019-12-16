@@ -162,7 +162,7 @@ if [ ! -e $DIST_DIR ];then
 fi
 
 #Note: gradle's :server:stopTomcat will fail without tomcat.home set
-CATALINA_HOME=$HOME"/labkey_build/tomcat8.5"
+export CATALINA_HOME=$HOME"/labkey_build/tomcat8.5"
 if [ ! -e ${CATALINA_HOME}/bin/bootstrap.jar ];then
     if [ -e $$CATALINA_HOME ];then
         rm -Rf $CATALINA_HOME
@@ -174,6 +174,7 @@ if [ ! -e ${CATALINA_HOME}/bin/bootstrap.jar ];then
     tar xzvf apache-tomcat-8*tar.gz -C $CATALINA_HOME --strip-components=1
     rm apache-tomcat-8*tar.gz
 fi
+ls $CATALINA_HOME
 
 GRADLE_OPTS=-Xmx2048m
 ./gradlew \
