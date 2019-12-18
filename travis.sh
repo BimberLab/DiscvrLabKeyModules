@@ -8,7 +8,7 @@ if [ -e settings.sh ];then
     source settings.sh
 fi
 
-BASE_VERSION=`echo $TRAVIS_BRANCH | sed 's/[^0-9\.]*//g'`
+BASE_VERSION=`echo $TRAVIS_BRANCH | grep -E -o '[0-9\.]{4,8}'`
 BASE_VERSION_SHORT=`echo $BASE_VERSION | awk '{ print substr($0,1,4) }'`
 
 if [[ -z $BASE_VERSION ]];then
@@ -180,6 +180,7 @@ cd $SVN_DIR
 GRADLE_OPTS=-Xmx2048m
 ./gradlew \
     -Dorg.gradle.daemon=false \
+    --parallel \
     -Dtomcat.home=$CATALINA_HOME \
     -PincludeVcs \
     -PbuildFromSource=true \
@@ -188,6 +189,7 @@ GRADLE_OPTS=-Xmx2048m
 
 ./gradlew \
     -Dorg.gradle.daemon=false \
+    --parallel \
     -Dtomcat.home=$CATALINA_HOME \
     -PincludeVcs \
     -PbuildFromSource=true \
