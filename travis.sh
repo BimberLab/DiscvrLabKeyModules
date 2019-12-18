@@ -116,8 +116,8 @@ function cloneGit {
         cd ${SVN_DIR}${BASE}${REPONAME}
         git reset --hard HEAD
         git clean -f -d
-        git fetch
-        git checkout -b $BRANCH
+        git fetch origin
+        git switch -f $BRANCH
         git reset --hard HEAD
         git clean -f -d
         git pull origin $BRANCH

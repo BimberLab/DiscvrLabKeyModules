@@ -43,8 +43,8 @@ public class VariantFiltrationStep extends AbstractCommandPipelineStep<VariantFi
             super("VariantFiltrationStep", "GATK VariantFiltration", "GATK", "Filter variants using GATK VariantFiltration", Arrays.asList(
                     ToolParameterDescriptor.create("filters", "Filters", "Filters that will be applied to the variants.", "sequenceanalysis-variantfilterpanel", null, null),
                     new MaskParameterDescriptor(),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--clusterSize"), "clusterSize", "Cluster Size", "If both this and cluster window size are provided, and windows of the specified size with at least the specified number of SNPs will be filtered as SnpCluster.", "ldk-numberfield", null, null),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--clusterWindowSize"), "clusterWindowSize", "Cluster Window Size", "If both this and cluster size are provided, and windows of the specified size with at least the specified number of SNPs will be filtered as SnpCluster.", "ldk-numberfield", null, null)
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--cluster-size"), "clusterSize", "Cluster Size", "If both this and cluster window size are provided, and windows of the specified size with at least the specified number of SNPs will be filtered as SnpCluster.", "ldk-numberfield", null, null),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--cluster-window-size"), "clusterWindowSize", "Cluster Window Size", "If both this and cluster size are provided, and windows of the specified size with at least the specified number of SNPs will be filtered as SnpCluster.", "ldk-numberfield", null, null)
             ), Arrays.asList("sequenceanalysis/panel/VariantFilterPanel.js", "sequenceanalysis/panel/VariantMaskPanel.js", "sequenceanalysis/field/GenomeFileSelectorField.js", "ldk/field/ExpDataField.js"), "");
         }
 
@@ -76,7 +76,7 @@ public class VariantFiltrationStep extends AbstractCommandPipelineStep<VariantFi
                     throw new PipelineJobException("Improper filter: " + filterArr.getString(i));
                 }
 
-                params.add("-filterName");
+                params.add("--filter-name");
                 params.add(arr.getString(0));
                 params.add("-filter");
                 params.add(arr.getString(1));
@@ -99,7 +99,7 @@ public class VariantFiltrationStep extends AbstractCommandPipelineStep<VariantFi
                 throw new PipelineJobException("no mask name provided");
             }
 
-            params.add("--maskName");
+            params.add("--mask-name");
             params.add(mask.getString("maskName"));
 
             params.add("--mask");

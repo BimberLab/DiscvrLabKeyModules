@@ -77,10 +77,10 @@ public class SelectSNVsStep extends AbstractCommandPipelineStep<SelectVariantsWr
         List<String> options = new ArrayList<>();
 
         String toInclude = getProvider().getParameterByName(SELECT_TYPE_TO_INCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
-        SelectVariantsStep.addSelectTypeOptions(toInclude, options, "--selectTypeToInclude");
+        SelectVariantsStep.addSelectTypeOptions(toInclude, options, "--select-type-to-include");
 
         String toExclude = getProvider().getParameterByName(SELECT_TYPE_TO_EXCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
-        SelectVariantsStep.addSelectTypeOptions(toExclude, options, "--selectTypeToExclude");
+        SelectVariantsStep.addSelectTypeOptions(toExclude, options, "--select-type-to-exclude");
 
         File outputVcf = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".selectType.vcf.gz");
         getWrapper().execute(genome.getWorkingFastaFile(), inputVCF, outputVcf, options);

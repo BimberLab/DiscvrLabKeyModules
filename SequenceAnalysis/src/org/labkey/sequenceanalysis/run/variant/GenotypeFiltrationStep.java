@@ -38,7 +38,7 @@ public class GenotypeFiltrationStep extends AbstractCommandPipelineStep<VariantF
         {
             super("GenotypeFiltrationStep", "GATK VariantFiltration for Genotypes", "GATK", "Filter genotypes using GATK VariantFiltration", Arrays.asList(
                     ToolParameterDescriptor.create("filters", "Filters", "Filters that will be applied to the variants.", "sequenceanalysis-genotypefilterpanel", null, null),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--setFilteredGtToNocall"), "setFilteredGtToNocall", "Set Filtered Genotypes to No-Call", "If selected, any filtered genotypes will be converted to no-call.", "checkbox", new JSONObject(){{
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--set-filtered-genotype-to-no-call"), "setFilteredGtToNocall", "Set Filtered Genotypes to No-Call", "If selected, any filtered genotypes will be converted to no-call.", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true)
             ), Arrays.asList("sequenceanalysis/panel/GenotypeFilterPanel.js"), "");
@@ -72,9 +72,9 @@ public class GenotypeFiltrationStep extends AbstractCommandPipelineStep<VariantF
                     throw new PipelineJobException("Improper filter: " + filterArr.getString(i));
                 }
 
-                params.add("-G_filterName");
+                params.add("-G-filter-name");
                 params.add(arr.getString(0));
-                params.add("-G_filter");
+                params.add("-G-filter");
                 params.add(arr.getString(1));
             }
         }

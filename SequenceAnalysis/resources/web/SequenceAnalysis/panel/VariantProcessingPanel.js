@@ -220,6 +220,12 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
                 commandLineParam: '--includeNonVariantSites',
                 defaultValue: false
 			},{
+				fieldXtype: 'ldk-expdatafield',
+				name: 'forceSitesFile',
+				label: 'Force Output At Sites',
+				description: 'If provided, the output VCF will includes all intervals in this file (even if all samples are wild-type)',
+				defaultValue: false
+			},{
 				fieldXtype: 'checkbox',
 				name: 'doCopyInputs',
 				label: 'Copy gVCFs Locally',

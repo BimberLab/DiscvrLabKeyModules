@@ -4,7 +4,7 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
-import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
+import org.labkey.api.sequenceanalysis.run.AbstractGatk4Wrapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * Created by bimber on 4/2/2017.
  */
-public class CombineGVCFsWrapper extends AbstractGatkWrapper
+public class CombineGVCFsWrapper extends AbstractGatk4Wrapper
 {
     public CombineGVCFsWrapper(Logger log)
     {
@@ -23,7 +23,7 @@ public class CombineGVCFsWrapper extends AbstractGatkWrapper
 
     public void execute(File referenceFasta, File outputFile, @Nullable List<String> options, File... inputGVCFs) throws PipelineJobException
     {
-        getLogger().info("Running GATK CombineGVCFs");
+        getLogger().info("Running GATK 4 CombineGVCFs");
 
         ensureDictionary(referenceFasta);
 
@@ -31,7 +31,6 @@ public class CombineGVCFsWrapper extends AbstractGatkWrapper
         this.ensureVCFIndexes(inputGVCFs);
 
         List<String> args = new ArrayList<>(getBaseArgs());
-        args.add("-T");
         args.add("CombineGVCFs");
         args.add("-R");
         args.add(referenceFasta.getPath());
@@ -41,7 +40,7 @@ public class CombineGVCFsWrapper extends AbstractGatkWrapper
             args.add(gvcf.getPath());
         }
 
-        args.add("-o");
+        args.add("-O");
         args.add(outputFile.getPath());
 
         if (options != null)

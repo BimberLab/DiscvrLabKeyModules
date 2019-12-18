@@ -2,7 +2,7 @@ package org.labkey.sequenceanalysis.run.variant;
 
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
+import org.labkey.api.sequenceanalysis.run.AbstractDiscvrSeqWrapper;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Created by bimber on 6/19/2017.
  */
-public class VariantQCWrapper extends AbstractGatkWrapper
+public class VariantQCWrapper extends AbstractDiscvrSeqWrapper
 {
     public VariantQCWrapper(Logger log)
     {

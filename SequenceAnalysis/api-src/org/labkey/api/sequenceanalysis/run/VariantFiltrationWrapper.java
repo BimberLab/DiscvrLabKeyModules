@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Created by bimber on 8/8/2014.
  */
-public class VariantFiltrationWrapper extends AbstractGatkWrapper
+public class VariantFiltrationWrapper extends AbstractGatk4Wrapper
 {
     public VariantFiltrationWrapper(Logger log)
     {
@@ -24,7 +24,6 @@ public class VariantFiltrationWrapper extends AbstractGatkWrapper
         ensureDictionary(referenceFasta);
 
         List<String> args = new ArrayList<>(getBaseArgs());
-        args.add("-T");
         args.add("VariantFiltration");
         args.add("-R");
         args.add(referenceFasta.getPath());
@@ -32,7 +31,7 @@ public class VariantFiltrationWrapper extends AbstractGatkWrapper
         args.add("-V");
         args.add(inputVcf.getPath());
 
-        args.add("-o");
+        args.add("-O");
         args.add(outputVcf.getPath());
 
         if (options != null)
