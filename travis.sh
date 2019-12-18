@@ -117,7 +117,7 @@ function cloneGit {
         git reset --hard HEAD
         git clean -f -d
         git fetch
-        git checkout origin/$BRANCH
+        git checkout -b origin/$BRANCH
         git reset --hard HEAD
         git clean -f -d
         git pull
