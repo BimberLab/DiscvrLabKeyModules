@@ -281,6 +281,11 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 toolParams.add("--force-output-intervals");
             }
 
+            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.allowOldRmsMappingData") != null)
+            {
+                toolParams.add("--allow-old-rms-mapping-quality-annotation-data");
+            }
+
             toolParams.add("-A");
             toolParams.add("FractionInformativeReads");
 

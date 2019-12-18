@@ -114,10 +114,10 @@ function cloneGit {
         git clone -b $BRANCH $GIT_URL
     else
         cd ${SVN_DIR}${BASE}${REPONAME}
+        git fetch origin
         git reset --hard HEAD
         git clean -f -d
-        git fetch origin
-        git switch -f $BRANCH
+        git checkout -f $BRANCH
         git reset --hard HEAD
         git clean -f -d
         git pull origin $BRANCH
