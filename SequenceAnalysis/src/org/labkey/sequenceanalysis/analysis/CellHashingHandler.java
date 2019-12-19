@@ -71,9 +71,11 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-cbl"), "cbl", "Cell Barcode End", null, "ldk-integerfield", null, 16),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-umif"), "umif", "UMI Start", null, "ldk-integerfield", null, 17),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-umil"), "umil", "UMI End", null, "ldk-integerfield", null, 26),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--max-error"), "hd", "Edit Distance", null, "ldk-integerfield", null, 1),
+                ToolParameterDescriptor.create("scanEditDistances", "Scan Edit Distances", "If checked, CITE-seq-count will be run using edit distances from 0-3 and the iteration with the highest singlets will be used.", "checkbox", new JSONObject(){{
+                    put("checked", true);
+                }}, true),
+                ToolParameterDescriptor.create("editDistance", "Edit Distance", null, "ldk-integerfield", null, 1),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-cells"), "cells", "Expected Cells", null, "ldk-integerfield", null, 20000),
-                //ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-tr"), "tr", "RegEx", null, "textfield", null, "^[ATGCN]{15}"),
                 ToolParameterDescriptor.create("tagGroup", "Tag List", null, "ldk-simplelabkeycombo", new JSONObject(){{
                     put("schemaName", "sequenceanalysis");
                     put("queryName", "barcode_groups");
@@ -142,7 +144,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                 job.getLogger().info("Saving quality metrics for: " + so.getName());
                 if (so.getFile().getName().endsWith(CALL_EXTENSION))
                 {
-                    Map<String, Object> counts = parseOutputTable(job.getLogger(), so.getFile(), getCiteSeqCountUnknownOutput(so.getFile().getParentFile()), so.getFile().getParentFile(), null);
+                    Map<String, Object> counts = parseOutputTable(job.getLogger(), so.getFile(), getCiteSeqCountUnknownOutput(so.getFile().getParentFile(), null), so.getFile().getParentFile(), null);
                     for (String name : counts.keySet())
                     {
                         String valueField = (counts.get(name) instanceof String) ? "qualvalue" : "metricvalue";
@@ -177,88 +179,156 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
 
             for (Readset rs : readsets)
             {
-                CiteSeqCountWrapper wrapper = new CiteSeqCountWrapper(ctx.getLogger());
                 if (rs.getReadData().size() != 1)
                 {
                     throw new PipelineJobException("This tool expects each readset to have exactly one read pair.  was: " + rs.getReadData().size());
                 }
 
                 ReadData rd = rs.getReadData().get(0);
-
-                String outputBasename = FileUtil.makeLegalName(rs.getName() + "_" + ctx.getParams().getString("outputFilePrefix"));
-
-                List<String> args = new ArrayList<>();
-
-                args.addAll(getClientCommandArgs(ctx.getParams()));
-                args.add("-t");
-                args.add(getAllBarcodesFile(ctx.getSourceDirectory()).getPath());
-                args.add("-u");
-                File unknownBarcodes = getCiteSeqCountUnknownOutput(ctx.getSourceDirectory());
-                args.add(unknownBarcodes.getPath());
-
-                Integer cores = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
-                if (cores != null)
-                {
-                    args.add("-T");
-                    args.add(cores.toString());
-                }
-
-                File outputDir = new File(ctx.getOutputDir(), FileUtil.makeLegalName(rs.getName() + "_cellHashingRawCounts"));
-
                 ctx.getFileManager().addInput(action, "Input FASTQ", rd.getFile1());
                 ctx.getFileManager().addInput(action, "Input FASTQ", rd.getFile2());
 
-                File doneFile = new File(outputDir, "citeSeqCount.done");
-                if (!doneFile.exists())
+                Set<Integer> editDistances = new TreeSet<>();
+                Map<Integer, Map<String, Object>> results = new HashMap<>();
+
+                Integer highestSinglet = 0;
+                Integer bestEditDistance = null;
+
+                boolean scanEditDistances = ctx.getParams().optBoolean("scanEditDistances", false);
+                if (scanEditDistances)
                 {
-                    wrapper.execute(args, rd.getFile1(), rd.getFile2(), outputDir);
+                    editDistances.add(0);
+                    editDistances.add(1);
+                    editDistances.add(2);
+                    editDistances.add(3);
                 }
                 else
                 {
-                    ctx.getLogger().info("CITE-seq count has already run, skipping");
+                    Integer ed = ctx.getParams().optInt("editDistance", 1);
+                    editDistances.add(ed);
                 }
 
-                File outputMatrix = new File(outputDir, "umi_count/matrix.mtx.gz");
-                if (!outputMatrix.exists())
+                for (Integer editDistance : editDistances)
                 {
-                    throw new PipelineJobException("Unable to find expected file: " + outputMatrix.getPath());
+                    Map<String, Object> callMap = executeCiteSeqCount(ctx, action, rs, editDistance);
+                    results.put(editDistance, callMap);
+
+                    int singlet = Integer.parseInt(callMap.get("singlet").toString());
+                    ctx.getLogger().info("Edit distance: " + editDistance + ", singlet: " + singlet);
+                    if (singlet > highestSinglet)
+                    {
+                        highestSinglet = singlet;
+                        bestEditDistance = editDistance;
+                    }
                 }
 
-                try
+                if (bestEditDistance != null)
                 {
-                    FileUtils.touch(doneFile);
+                    ctx.getLogger().info("Using edit distance: " + bestEditDistance + ", singlet: " + highestSinglet);
+
+                    Map<String, Object> callMap = results.get(bestEditDistance);
+                    String description = String.format("Edit Distance: %,d\nTotal Singlet: %,d\nDoublet: %,d\nSeurat Called: %,d\nNegative: %,d\nUnique HTOs: %s", bestEditDistance, callMap.get("singlet"), callMap.get("doublet"), callMap.get("seuratCalled"), callMap.get("negative"), callMap.get("UniqueHtos"));
+                    File htoCalls = (File)callMap.get("htoCalls");
+                    File html = (File)callMap.get("html");
+
+                    File origUnknown = getCiteSeqCountUnknownOutput(ctx.getSourceDirectory(), bestEditDistance);
+                    File movedUnknown = getCiteSeqCountUnknownOutput(ctx.getSourceDirectory(), null);
+                    try
+                    {
+                        FileUtils.moveFile(origUnknown, movedUnknown);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
+
+                    ctx.getFileManager().addSequenceOutput(htoCalls, rs.getName() + ": Cell Hashing Calls","Cell Hashing Calls", rs.getReadsetId(), null, null, description);
+                    ctx.getFileManager().addSequenceOutput(html, rs.getName() + ": Cell Hashing Report","Cell Hashing Report", rs.getReadsetId(), null, null, description);
                 }
-                catch (IOException e)
+                else
                 {
-                    throw new PipelineJobException(e);
+                    ctx.getLogger().warn("None of the edit distances produced results");
                 }
-                ctx.getFileManager().addIntermediateFile(doneFile);
-
-                File htoCalls = generalFinalCalls(outputMatrix.getParentFile(), ctx.getOutputDir(), outputBasename, ctx.getLogger(), null, true, ctx.getSourceDirectory());
-                File html = new File(htoCalls.getParentFile(), outputBasename + ".html");
-
-                if (!html.exists())
-                {
-                    throw new PipelineJobException("Unable to find expected HTML file: " + html.getPath());
-                }
-
-                Map<String, Object> callMap = parseOutputTable(ctx.getLogger(), htoCalls, unknownBarcodes, ctx.getSourceDirectory(), ctx.getWorkingDirectory());
-
-                String description = String.format("Total Singlet: %,d\nDoublet: %,d\nSeurat Called: %,d\nNegative: %,d\nUnique HTOs: %s", callMap.get("singlet"), callMap.get("doublet"), callMap.get("seuratCalled"), callMap.get("negative"), callMap.get("UniqueHtos"));
-                ctx.getFileManager().addSequenceOutput(htoCalls, rs.getName() + ": Cell Hashing Calls","Cell Hashing Calls", rs.getReadsetId(), null, null, description);
-                ctx.getFileManager().addSequenceOutput(html, rs.getName() + ": Cell Hashing Report","Cell Hashing Report", rs.getReadsetId(), null, null, null);
-
-                ctx.getFileManager().addOutput(action, "Unknown barcodes", unknownBarcodes);
-                ctx.getFileManager().addOutput(action, "CITE-seq Raw Counts", outputMatrix);
-                ctx.getFileManager().addOutput(action, "Cell Hashing Calls", htoCalls);
-                ctx.getFileManager().addOutput(action, "Cell Hashing Report", html);
             }
         }
     }
 
-    private File getCiteSeqCountUnknownOutput(File webserverDir)
+    private Map<String, Object> executeCiteSeqCount(JobContext ctx, RecordedAction action, Readset rs, int editDistance) throws PipelineJobException
     {
-        return new File(webserverDir, "citeSeqUnknownBarcodes.txt");
+        CiteSeqCountWrapper wrapper = new CiteSeqCountWrapper(ctx.getLogger());
+        ReadData rd = rs.getReadData().get(0);
+
+        List<String> args = new ArrayList<>();
+
+        args.addAll(getClientCommandArgs(ctx.getParams()));
+        args.add("-t");
+        args.add(getAllBarcodesFile(ctx.getSourceDirectory()).getPath());
+        args.add("-u");
+        File unknownBarcodes = getCiteSeqCountUnknownOutput(ctx.getSourceDirectory(), editDistance);
+        args.add(unknownBarcodes.getPath());
+
+        args.add("--max-error");
+        args.add(String.valueOf((Integer)editDistance));
+
+        Integer cores = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
+        if (cores != null)
+        {
+            args.add("-T");
+            args.add(cores.toString());
+        }
+
+        String outputBasename = FileUtil.makeLegalName(rs.getName() + "_" + ctx.getParams().getString("outputFilePrefix") + "." + editDistance);
+        File outputDir = new File(ctx.getOutputDir(), FileUtil.makeLegalName(rs.getName() + "_cellHashingRawCounts." + editDistance));
+
+        File doneFile = new File(outputDir, "citeSeqCount." + editDistance + ".done");
+        if (!doneFile.exists())
+        {
+            wrapper.execute(args, rd.getFile1(), rd.getFile2(), outputDir);
+        }
+        else
+        {
+            ctx.getLogger().info("CITE-seq count has already run, skipping");
+        }
+
+        File outputMatrix = new File(outputDir, "umi_count/matrix.mtx.gz");
+        if (!outputMatrix.exists())
+        {
+            throw new PipelineJobException("Unable to find expected file: " + outputMatrix.getPath());
+        }
+
+        try
+        {
+            FileUtils.touch(doneFile);
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+        ctx.getFileManager().addIntermediateFile(doneFile);
+
+        File htoCalls = generalFinalCalls(outputMatrix.getParentFile(), ctx.getOutputDir(), outputBasename, ctx.getLogger(), null, true, ctx.getSourceDirectory());
+        File html = new File(htoCalls.getParentFile(), outputBasename + ".html");
+
+        if (!html.exists())
+        {
+            throw new PipelineJobException("Unable to find expected HTML file: " + html.getPath());
+        }
+
+        ctx.getFileManager().addOutput(action, "Unknown barcodes", unknownBarcodes);
+        ctx.getFileManager().addOutput(action, "CITE-seq Raw Counts", outputMatrix);
+        ctx.getFileManager().addOutput(action, "Cell Hashing Calls", htoCalls);
+        ctx.getFileManager().addOutput(action, "Cell Hashing Report", html);
+
+        Map<String, Object> callMap = parseOutputTable(ctx.getLogger(), htoCalls, unknownBarcodes, ctx.getSourceDirectory(), ctx.getWorkingDirectory());
+        callMap.put("htoCalls", htoCalls);
+        callMap.put("html", html);
+
+        return callMap;
+    }
+
+    private File getCiteSeqCountUnknownOutput(File webserverDir, Integer editDistance)
+    {
+        return new File(webserverDir, "citeSeqUnknownBarcodes." + (editDistance == null ? "" : editDistance + ".") + "txt");
     }
 
     private Map<String, Object> parseOutputTable(Logger log, File htoCalls, File unknownBarcodeFile, File localPipelineDir, @Nullable File workDir) throws PipelineJobException
@@ -329,7 +399,8 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
             ret.put("multiSeqCalled", multiSeqCalled);
             ret.put("UniqueHtos", StringUtils.join(uniqueHTOs, ","));
 
-            ret.putAll(parseUnknownBarcodes(unknownBarcodeFile, localPipelineDir, log, workDir));
+            File  metricsFile = new File(localPipelineDir, "metrics.txt");
+            ret.putAll(parseUnknownBarcodes(unknownBarcodeFile, localPipelineDir, log, workDir, metricsFile));
 
             return ret;
         }
@@ -339,10 +410,9 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         }
     }
 
-    private Map<String, Object> parseUnknownBarcodes(File unknownBarcodeFile, File localPipelineDir, Logger log, @Nullable File workDir) throws PipelineJobException
+    private Map<String, Object> parseUnknownBarcodes(File unknownBarcodeFile, File localPipelineDir, Logger log, @Nullable File workDir, File metricsFile) throws PipelineJobException
     {
         log.debug("parsing unknown barcodes file: " + unknownBarcodeFile.getPath());
-        File metricsFile = new File(localPipelineDir, "metrics.txt");
 
         Map<String, Object> ret = new HashMap<>();
         if (unknownBarcodeFile != null && unknownBarcodeFile.exists())
@@ -608,7 +678,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         }
 
         params.add("-u");
-        File unknownBarcodeFile = getCiteSeqCountUnknownOutput(localPipelineDir == null ? outputDir : localPipelineDir);
+        File unknownBarcodeFile = getCiteSeqCountUnknownOutput(localPipelineDir == null ? outputDir : localPipelineDir, null);
         params.add(unknownBarcodeFile.getPath());
 
         File citeSeqCountOutDir = new File(outputDir, basename + ".citeSeqCounts");
@@ -649,7 +719,8 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         }
 
         //this will log results and append to metrics.txt
-        parseUnknownBarcodes(unknownBarcodeFile, localPipelineDir, log, outputDir);
+        File  metricsFile = new File(localPipelineDir, "metrics.txt");
+        parseUnknownBarcodes(unknownBarcodeFile, localPipelineDir, log, outputDir, metricsFile);
 
         return outputFile;
     }
