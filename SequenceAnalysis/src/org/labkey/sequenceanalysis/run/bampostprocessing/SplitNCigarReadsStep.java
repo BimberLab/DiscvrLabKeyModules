@@ -16,6 +16,7 @@ import org.labkey.sequenceanalysis.run.util.SplitNCigarReadsWrapper;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * User: bimber
@@ -33,11 +34,7 @@ public class SplitNCigarReadsStep extends AbstractCommandPipelineStep<SplitNCiga
     {
         public Provider()
         {
-            super("SplitNCigarReads", "Split N Cigar Reads", "GATK", "This will use GATK to Splits reads that contain Ns in their CIGAR string.  It is most commonly used for RNA-Seq", Arrays.asList(
-                    ToolParameterDescriptor.create("doReassignMappingQual", "Reassign Mapping Qualities", "STAR assigns a mapping quality of 255 to good alignments, but this it interpreted as unknown by GATK.  If checked, this step will convert all MAPQ scores of 255 to 60.", "checkbox", new JSONObject(){{
-                        put("checked", true);
-                    }}, true)
-            ), null, "https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_rnaseq_SplitNCigarReads.php");
+            super("SplitNCigarReads", "Split N Cigar Reads", "GATK", "This will use GATK to Splits reads that contain Ns in their CIGAR string.  It is most commonly used for RNA-Seq", Collections.emptyList(), null, "https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_rnaseq_SplitNCigarReads.php");
         }
 
         @Override

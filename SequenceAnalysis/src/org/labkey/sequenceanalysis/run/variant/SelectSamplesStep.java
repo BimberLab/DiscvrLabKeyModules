@@ -59,7 +59,7 @@ public class SelectSamplesStep extends AbstractCommandPipelineStep<SelectVariant
         SelectVariantsStep.addSubjectSelectOptions(toInclude, options, "-sn");
 
         String toExclude = getProvider().getParameterByName(SAMPLE_EXCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
-        SelectVariantsStep.addSubjectSelectOptions(toExclude, options, "-xl_sn");
+        SelectVariantsStep.addSubjectSelectOptions(toExclude, options, "-xl-sn");
 
         File outputVcf = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".selectSamples.vcf.gz");
         getWrapper().execute(genome.getWorkingFastaFile(), inputVCF, outputVcf, options);

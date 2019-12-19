@@ -106,6 +106,7 @@ import org.labkey.sequenceanalysis.run.reference.DNAReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.SavedReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.VirusReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.util.CombineGVCFsHandler;
+import org.labkey.sequenceanalysis.run.util.GenomicsDBImportHandler;
 import org.labkey.sequenceanalysis.run.variant.CombineVariantsHandler;
 import org.labkey.sequenceanalysis.run.variant.DepthOfCoverageHandler;
 import org.labkey.sequenceanalysis.run.variant.GenotypeConcordanceStep;
@@ -315,6 +316,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new CellRangerRawDataHandler());
         SequenceAnalysisService.get().registerFileHandler(new ListVcfSamplesHandler());
         SequenceAnalysisService.get().registerFileHandler(new MultiQCBamHandler());
+        SequenceAnalysisService.get().registerFileHandler(new GenomicsDBImportHandler());
 
         SequenceAnalysisService.get().registerReadsetHandler(new MultiQCHandler());
         SequenceAnalysisService.get().registerReadsetHandler(new CellHashingHandler());

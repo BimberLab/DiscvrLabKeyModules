@@ -28,7 +28,8 @@ before_deploy:
   - cd $TRAVIS_BUILD_DIR
 
 deploy:
-  provider: github
+  # For internal distribution
+  provider: releases
   api_key: ${GH_TOKEN}
   repo: 'bimberlabinternal/BimberLabKeyModules'
   overwrite: true
@@ -36,7 +37,7 @@ deploy:
   file:
     - ./lkDist/discvr/*.gz
     - ./lkDist/discvr_modules/*.zip
-    - ./lkDist/discvr_modules/*.zip
+    - ./lkDist/prime-seq-modules/*.zip
   name: ${RELEASE_NAME}
   draft: true
   body: 'This is the latest draft build, automatically published by Travis-CI.  This is not intended as a production release.'
@@ -45,9 +46,10 @@ deploy:
     all_branches: true
     condition: $TRAVIS_BRANCH =~ ^(develop|discvr-)*
 
-  provider: github
+  # For public releases
+  provider: releases
   api_key: ${GH_TOKEN}
-  repo: $TRAVIS_REPO_SLUG
+  repo: 'BimberLab/DiscvrLabKeyModules'
   overwrite: true
   body: 'Automatically published by Travis-CI'
   file_glob: true

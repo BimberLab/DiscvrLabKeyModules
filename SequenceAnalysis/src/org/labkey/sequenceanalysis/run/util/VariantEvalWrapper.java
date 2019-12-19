@@ -2,7 +2,7 @@ package org.labkey.sequenceanalysis.run.util;
 
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
+import org.labkey.api.sequenceanalysis.run.AbstractGatk4Wrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 
 import java.io.File;
@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * Created by bimber on 8/10/2014.
  */
-public class VariantEvalWrapper extends AbstractGatkWrapper
+public class VariantEvalWrapper extends AbstractGatk4Wrapper
 {
     public VariantEvalWrapper(Logger log)
     {
@@ -22,12 +22,11 @@ public class VariantEvalWrapper extends AbstractGatkWrapper
 
     public void executeEval(File referenceFasta, File inputVcf, File outputFile, String setName) throws PipelineJobException
     {
-        getLogger().info("Running GATK VariantEval");
+        getLogger().info("Running GATK 4 VariantEval");
 
         ensureDictionary(referenceFasta);
 
         List<String> args = new ArrayList<>(getBaseArgs());
-        args.add("-T");
         args.add("VariantEval");
         args.add("-R");
         args.add(referenceFasta.getPath());
@@ -35,7 +34,7 @@ public class VariantEvalWrapper extends AbstractGatkWrapper
         args.add("--eval:" + setName);
         args.add(inputVcf.getPath());
 
-        args.add("-o");
+        args.add("-O");
         args.add(outputFile.getPath());
 
         execute(args);
@@ -61,7 +60,6 @@ public class VariantEvalWrapper extends AbstractGatkWrapper
         ensureDictionary(referenceFasta);
 
         List<String> args = new ArrayList<>(getBaseArgs());
-        args.add("-T");
         args.add("VariantEval");
         args.add("-R");
         args.add(referenceFasta.getPath());
@@ -90,7 +88,7 @@ public class VariantEvalWrapper extends AbstractGatkWrapper
         args.add("--eval:" + setName);
         args.add(inputVcf.getPath());
 
-        args.add("-o");
+        args.add("-O");
         args.add(outputFile.getPath());
 
         execute(args);

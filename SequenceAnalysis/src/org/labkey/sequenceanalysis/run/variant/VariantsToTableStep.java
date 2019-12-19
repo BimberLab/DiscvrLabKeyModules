@@ -14,7 +14,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
-import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
+import org.labkey.api.sequenceanalysis.run.AbstractGatk4Wrapper;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
@@ -164,7 +164,7 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
         return output;
     }
 
-    public static class Wrapper extends AbstractGatkWrapper
+    public static class Wrapper extends AbstractGatk4Wrapper
     {
         public Wrapper(Logger log)
         {
@@ -178,13 +178,12 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
             ensureDictionary(referenceFasta);
 
             List<String> args = new ArrayList<>(getBaseArgs());
-            args.add("-T");
             args.add("VariantsToTable");
             args.add("-R");
             args.add(referenceFasta.getPath());
             args.add("-V");
             args.add(inputVcf.getPath());
-            args.add("-o");
+            args.add("-O");
             args.add(outputFile.getPath());
 
             if (arguments != null)
