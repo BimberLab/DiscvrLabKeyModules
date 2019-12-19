@@ -198,6 +198,11 @@ GRADLE_OPTS=-Xmx2048m
     -PdistDir=$DIST_DIR \
     :distributions:discvr:dist :distributions:discvr_modules:dist :distributions:prime-seq-modules:dist
 
+#TODO: debugging only
+ls ./dist
+ls ./dist/discvr_modules
+ls ./dist/prime-seq-modules
+
 mv ./dist/* $DIST_DIR
 
 echo $RELEASE_NAME > ${TRAVIS_BUILD_DIR}/release.txt
