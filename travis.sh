@@ -190,7 +190,6 @@ GRADLE_OPTS=-Xmx2048m
 
 ./gradlew \
     -Dorg.gradle.daemon=false \
-    --parallel \
     -Dtomcat.home=$CATALINA_HOME \
     -PincludeVcs \
     -PbuildFromSource=true \
