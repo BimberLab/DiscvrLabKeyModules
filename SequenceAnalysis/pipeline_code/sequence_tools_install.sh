@@ -425,6 +425,31 @@ fi
 
 
 #
+# GATK4
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install GATK4"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/GenomeAnalysisTK4.jar || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf gatk-4.1.4.1*
+    rm -Rf $LKTOOLS_DIR/GenomeAnalysisTK4.jar
+
+    wget $WGET_OPTS https://github.com/broadinstitute/gatk/releases/download/4.1.4.1/gatk-4.1.4.1.zip
+    gunzip gatk-4.1.4.1.zip
+
+    cp ./gatk-4.1.4.1/gatk-package-4.1.4.1-local.jar $LKTOOLS_DIR/GenomeAnalysisTK4.jar
+else
+    echo "Already installed"
+fi
+
+
+#
 # STAR
 #
 echo ""
