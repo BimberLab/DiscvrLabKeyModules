@@ -23,7 +23,7 @@ script:
 
 before_deploy:
   - export RELEASE_NAME=`cat ${TRAVIS_BUILD_DIR}/release.txt`
-  - echo "Release name: "${RELEASE_NAME}
+  - 'echo "Release name: "${RELEASE_NAME}'
   - cd $TRAVIS_BUILD_DIR
 
 deploy:
