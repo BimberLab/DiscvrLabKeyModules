@@ -328,7 +328,7 @@ then
 
     #another, for MV checking
     mkdir -p ${LK_HOME}/svn/trunk/pipeline_code/
-    svn co --username cpas --password cpas --no-auth-cache https://svn.mgt.labkey.host/stedi/trunk/externalModules/labModules/SequenceAnalysis/pipeline_code/gatk ${LK_HOME}/svn/trunk/pipeline_code/gatk/
+    svn co --no-auth-cache https://github.com/BimberLab/DiscvrLabkeyModules/trunk/SequenceAnalysis/pipeline_code/gatk ${LK_HOME}/svn/trunk/pipeline_code/gatk/
     #mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/VariantType.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MendelianViolationCount.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MendelianViolationBySample.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
