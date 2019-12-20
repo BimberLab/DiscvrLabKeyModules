@@ -50,7 +50,7 @@ deploy:
     api_key: ${GH_TOKEN}
     repo: 'BimberLab/DiscvrLabKeyModules'
     overwrite: true
-    body: 'Automatically published by Travis-CI'
+    body: 'This release is compatible with LabKey Server version $TRAVIS_TAG.  It contains a full installer (which contains the core LabKey modules), and also a standalone ZIP with just the DISCVR modules.  The latter can be unzipped into your server externalModules or modules directories.'
     file_glob: true
     file:
       - ./lkDist/discvr/*.gz
