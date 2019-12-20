@@ -35,7 +35,6 @@ deploy:
     file_glob: true
     file:
       - ./lkDist/discvr/*.gz
-      - ./lkDist/discvr_modules/*.zip
       - ./lkDist/prime-seq-modules/*.zip
     name: ${RELEASE_NAME}
     draft: true
