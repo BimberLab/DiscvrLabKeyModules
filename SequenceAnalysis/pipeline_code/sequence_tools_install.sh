@@ -440,7 +440,7 @@ then
     rm -Rf $LKTOOLS_DIR/GenomeAnalysisTK4.jar
 
     wget $WGET_OPTS https://github.com/broadinstitute/gatk/releases/download/4.1.4.1/gatk-4.1.4.1.zip
-    gunzip gatk-4.1.4.1.zip
+    unzip gatk-4.1.4.1.zip
 
     cp ./gatk-4.1.4.1/gatk-package-4.1.4.1-local.jar $LKTOOLS_DIR/GenomeAnalysisTK4.jar
 else
