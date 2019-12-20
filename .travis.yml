@@ -22,41 +22,40 @@ script:
   - bash ./travis.sh
 
 before_deploy:
-  - RELEASE_NAME=`cat ${TRAVIS_BUILD_DIR}/release.txt`
-  - echo "Release name: $RELEASE_NAME"
-  - export $RELEASE_NAME
+  - export RELEASE_NAME=`cat ${TRAVIS_BUILD_DIR}/release.txt`
+  - 'echo "Release name: "${RELEASE_NAME}'
   - cd $TRAVIS_BUILD_DIR
 
 deploy:
   # For internal distribution
-  provider: releases
-  api_key: ${GH_TOKEN}
-  repo: 'bimberlabinternal/BimberLabKeyModules'
-  overwrite: true
-  file_glob: true
-  file:
-    - ./lkDist/discvr/*.gz
-    - ./lkDist/discvr_modules/*.zip
-    - ./lkDist/prime-seq-modules/*.zip
-  name: ${RELEASE_NAME}
-  draft: true
-  body: 'This is the latest draft build, automatically published by Travis-CI.  This is not intended as a production release.'
-  skip_cleanup: true
-  on:
-    all_branches: true
-    condition: $TRAVIS_BRANCH =~ ^(develop|discvr-)*
+  - provider: releases
+    api_key: ${GH_TOKEN}
+    repo: 'bimberlabinternal/BimberLabKeyModules'
+    overwrite: true
+    file_glob: true
+    file:
+      - ./lkDist/discvr/*.gz
+      - ./lkDist/prime-seq-modules/*.zip
+    name: ${RELEASE_NAME}
+    draft: true
+    body: 'This is the latest draft build, automatically published by Travis-CI.  This is not intended as a production release.'
+    skip_cleanup: true
+    on:
+      all_branches: true
+      #TODO: pull requests?
+      condition: $TRAVIS_BRANCH =~ ^(develop|discvr-)*
 
   # For public releases
-  provider: releases
-  api_key: ${GH_TOKEN}
-  repo: 'BimberLab/DiscvrLabKeyModules'
-  overwrite: true
-  body: 'Automatically published by Travis-CI'
-  file_glob: true
-  file:
-    - ./lkDist/discvr/*.gz
-    - ./lkDist/discvr_modules/*.zip
-  name: ${TRAVIS_TAG}
-  skip_cleanup: true
-  on:
-    tags: true
+  - provider: releases
+    api_key: ${GH_TOKEN}
+    repo: 'BimberLab/DiscvrLabKeyModules'
+    overwrite: true
+    body: 'Automatically published by Travis-CI'
+    file_glob: true
+    file:
+      - ./lkDist/discvr/*.gz
+      - ./lkDist/discvr_modules/*.zip
+    name: ${TRAVIS_TAG}
+    skip_cleanup: true
+    on:
+      tags: true

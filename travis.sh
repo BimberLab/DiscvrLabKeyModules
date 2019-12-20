@@ -4,8 +4,8 @@ set -e
 set -x
 
 # Allows override of settings
-if [ -e settings.sh ];then
-    source settings.sh
+if [ -e travisSettings.sh ];then
+    source travisSettings.sh
 fi
 
 BASE_VERSION=`echo $TRAVIS_BRANCH | grep -E -o '[0-9\.]{4,8}'`
