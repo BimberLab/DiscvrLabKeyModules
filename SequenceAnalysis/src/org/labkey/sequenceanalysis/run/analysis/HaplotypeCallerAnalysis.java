@@ -49,8 +49,7 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
 
     public static List<ToolParameterDescriptor> getToolDescriptors()
     {
-        return Arrays.asList(
-            ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--dont-use-soft-clipped-bases"), "dontUseSoftClippedBases", "Don't Use Soft Clipped Bases", "If specified, we will not analyze soft clipped bases in the reads", "checkbox", null, false), null);
+        return Arrays.asList(ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--dont-use-soft-clipped-bases"), "dontUseSoftClippedBases", "Don't Use Soft Clipped Bases", "If specified, we will not analyze soft clipped bases in the reads", "checkbox", null, false));
     }
 
     @Override

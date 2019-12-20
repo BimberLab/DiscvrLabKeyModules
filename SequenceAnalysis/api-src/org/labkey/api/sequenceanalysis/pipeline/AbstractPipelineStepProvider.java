@@ -50,7 +50,7 @@ abstract public class AbstractPipelineStepProvider<StepType extends PipelineStep
         _toolName = toolName;
         _description = description;
         _parameters = parameters == null ? Collections.emptyList() : parameters;
-        _clientDependencyPaths = clientDependencyPaths == null ? new LinkedHashSet<String>() : new LinkedHashSet<>(clientDependencyPaths);
+        _clientDependencyPaths = clientDependencyPaths == null ? new LinkedHashSet<>() : new LinkedHashSet<>(clientDependencyPaths);
         _websiteURL = websiteURL;
     }
 
