@@ -41,10 +41,11 @@ deploy:
     draft: false
     body: 'This is the latest draft build, automatically published by Travis-CI.  This is not intended as a production release.'
     skip_cleanup: true
-    tag_name: 'Latest'
+    tag_name: $RELEASE_NAME
     on:
       all_branches: true
-      condition: '$TRAVIS_BRANCH =~ ^(develop|discvr)[0-9\.\-]* AND NOT $TRAVIS_PULL_REQUEST'
+      #NOTE: pull requests are already skipped
+      condition: $TRAVIS_BRANCH =~ ^(develop|discvr)[0-9\.\-]*
 
   # For public releases
   - provider: releases
