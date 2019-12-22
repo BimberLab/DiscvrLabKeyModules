@@ -31,7 +31,7 @@ if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
     dt <- GenerateCellHashingCalls(barcodeData = barcodeData, outFile = finalCallFile, allCallsOutFile = allCallsOutFile)
 
     if (exists('whitelistFile') && !is.null(whitelistFile)){
-      GenerateSummaryForExpectedBarcodes(dt, whitelistFile=whitelistFile, outputFile='metrics.txt', barcodeData=barcodeData)
+      GenerateSummaryForExpectedBarcodes(dt, whitelistFile=whitelistFile, outputFile=metricsFile, barcodeData=barcodeData)
     }
 }
 
