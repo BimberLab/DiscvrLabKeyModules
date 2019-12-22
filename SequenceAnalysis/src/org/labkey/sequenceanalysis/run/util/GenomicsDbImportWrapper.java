@@ -19,7 +19,9 @@ public class GenomicsDbImportWrapper extends AbstractGatk4Wrapper
     {
         getLogger().info("Running GATK 4 GenomicsDBImport");
 
-        List<String> args = new ArrayList<>();
+        List<String> args = new ArrayList<>(getBaseArgs());
+        args.add("GenomicsDBImport");
+
         inputGvcfs.forEach(f -> {
             args.add("-V");
             args.add(f.getPath());

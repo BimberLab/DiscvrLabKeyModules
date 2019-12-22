@@ -18,6 +18,7 @@ import org.labkey.api.sequenceanalysis.pipeline.HasJobParams;
 import org.labkey.api.sequenceanalysis.pipeline.JobResourceSettings;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -518,10 +519,10 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         return output;
     }
 
-    public File runCiteSeqCount(Readset htoReadset, File htoList, File cellBarcodeList, File outputDir, String basename, Logger log, List<String> extraArgs, boolean doHtoFiltering, File localPipelineDir) throws PipelineJobException
+    public File runCiteSeqCount(PipelineStepOutput output, String outputCategory, Readset htoReadset, File htoList, File cellBarcodeList, File outputDir, String basename, Logger log, List<String> extraArgs, boolean doHtoFiltering, File localPipelineDir, @Nullable Integer editDistance, boolean scanEditDistances) throws PipelineJobException
     {
         CellHashingHandler handler = new CellHashingHandler();
 
-        return handler.runCiteSeqCount(htoReadset, htoList, cellBarcodeList, outputDir, basename, log, extraArgs, doHtoFiltering, localPipelineDir);
+        return handler.runCiteSeqCount(output, outputCategory, htoReadset, htoList, cellBarcodeList, outputDir, basename, log, extraArgs, doHtoFiltering, localPipelineDir, editDistance, scanEditDistances);
     }
 }
