@@ -27,7 +27,7 @@ public class GenomicsDbImportWrapper extends AbstractGatk4Wrapper
             args.add(f.getPath());
         });
 
-        args.add("--genomicsDBWorkspace");
+        args.add("--genomicsdb-workspace-path");
         args.add(outputFile.getPath());
 
         if (options != null)
