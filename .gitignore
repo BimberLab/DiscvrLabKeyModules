@@ -2,3 +2,5 @@
 /jbrowse/resources/web/jbrowseApp
 /jbrowse/node_modules
 /intellijBuild
+
+dependencies.txt
