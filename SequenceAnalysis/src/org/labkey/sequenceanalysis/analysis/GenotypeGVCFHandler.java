@@ -279,6 +279,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             {
                 File f = ctx.getSequenceSupport().getCachedData(ctx.getParams().getInt("variantCalling.GenotypeGVCFs.forceSitesFile"));
                 toolParams.add("--force-output-intervals");
+                toolParams.add(f.getPath());
             }
 
             if (ctx.getParams().get("variantCalling.GenotypeGVCFs.allowOldRmsMappingData") != null)
