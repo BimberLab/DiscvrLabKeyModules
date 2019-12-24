@@ -533,7 +533,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         File callsFile = new File(outputDir, basename + CALL_EXTENSION);
         File rawCallsFile = new File(outputDir, basename + ".raw.txt");
         File metricsFile = getMetricsFile(callsFile);
-        List<String> args = new ArrayList<>(Arrays.asList("/bin/bash", scriptWrapper, citeSeqCountOutDir.getName(), htmlFile.getName(), callsFile.getName(), rawCallsFile.getName(), (doHtoFiltering ? "T" : "F"), metricsFile.getPath()));
+        List<String> args = new ArrayList<>(Arrays.asList("/bin/bash", scriptWrapper, citeSeqCountOutDir.getName(), htmlFile.getName(), callsFile.getName(), rawCallsFile.getName(), (doHtoFiltering ? "T" : "F"), metricsFile.getName()));
         if (cellBarcodeWhitelist != null)
         {
             args.add(cellBarcodeWhitelist.getName());

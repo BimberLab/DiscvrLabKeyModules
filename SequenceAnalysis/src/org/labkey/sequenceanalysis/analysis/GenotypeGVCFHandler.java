@@ -286,8 +286,9 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 toolParams.add("--allow-old-rms-mapping-quality-annotation-data");
             }
 
-            toolParams.add("-A");
-            toolParams.add("FractionInformativeReads");
+            //NOTE: not supported in GATK4
+            //toolParams.add("-A");
+            //toolParams.add("FractionInformativeReads");
 
             boolean doCopyInputs = ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.doCopyInputs", false);
 
