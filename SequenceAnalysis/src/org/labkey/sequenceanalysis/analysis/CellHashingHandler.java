@@ -798,7 +798,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         }
 
         //this will log results and append to metrics
-        return parseUnknownBarcodes(unknownBarcodeFile, localPipelineDir, log, outputDir, getMetricsFile(outputFile));
+        return parseOutputTable(log, outputFile, unknownBarcodeFile, localPipelineDir, outputDir);
     }
 
     private Map<String, Integer> logTopUnknownBarcodes(File citeSeqCountUnknownOutput, Logger log, Map<String, String> allBarcodes) throws PipelineJobException
