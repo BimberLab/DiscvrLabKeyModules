@@ -660,7 +660,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         }
 
         baseArgs.add("-u");
-        File unknownBarcodeFile = getCiteSeqCountUnknownOutput(localPipelineDir == null ? outputDir : localPipelineDir, null);
+        File unknownBarcodeFile = getCiteSeqCountUnknownOutput(localPipelineDir == null ? outputDir : localPipelineDir, editDistance);
         baseArgs.add(unknownBarcodeFile.getPath());
 
         for (ToolParameterDescriptor param : CellHashingHandler.getDefaultParams())

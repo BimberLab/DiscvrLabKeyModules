@@ -56,14 +56,9 @@ public class HaplotypeCallerWrapper extends AbstractGatk4Wrapper
 
         args.add("-A");
         args.add("DepthPerSampleHC");
-        args.add("-A");
-        args.add("HomopolymerRun");
 
         args.add("--max-alternate-alleles");
         args.add("12");
-
-        //as of version 3.7, opt into the new AF calling method
-        args.add("-new-qual");
 
         execute(args);
         if (!outputFile.exists())
