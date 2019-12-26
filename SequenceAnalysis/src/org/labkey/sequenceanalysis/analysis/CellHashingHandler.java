@@ -659,10 +659,6 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
             baseArgs.add(cores.toString());
         }
 
-        baseArgs.add("-u");
-        File unknownBarcodeFile = getCiteSeqCountUnknownOutput(localPipelineDir == null ? outputDir : localPipelineDir, editDistance);
-        baseArgs.add(unknownBarcodeFile.getPath());
-
         for (ToolParameterDescriptor param : CellHashingHandler.getDefaultParams())
         {
             if (cellBarcodeList != null && param.getName().equals("cells"))
@@ -708,7 +704,12 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
 
         for (Integer ed : editDistances)
         {
-            Map<String, Object> callMap = executeCiteSeqCountWithJobCtx(outputDir, basename, htoReadset.getReadData().get(0), new ArrayList<>(baseArgs), ed, log, cellBarcodeList, doHtoFiltering, localPipelineDir, unknownBarcodeFile);
+            List<String> toolArgs = new ArrayList<>(baseArgs);
+            toolArgs.add("-u");
+            File unknownBarcodeFile = getCiteSeqCountUnknownOutput(localPipelineDir == null ? outputDir : localPipelineDir, ed);
+            toolArgs.add(unknownBarcodeFile.getPath());
+
+            Map<String, Object> callMap = executeCiteSeqCountWithJobCtx(outputDir, basename, htoReadset.getReadData().get(0), toolArgs, ed, log, cellBarcodeList, doHtoFiltering, localPipelineDir, unknownBarcodeFile);
             results.put(ed, callMap);
 
             int singlet = Integer.parseInt(callMap.get("singlet").toString());
