@@ -726,7 +726,9 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
             File unknownBarcodeFile = getCiteSeqCountUnknownOutput(localPipelineDir == null ? outputDir : localPipelineDir, ed);
             toolArgs.add(unknownBarcodeFile.getPath());
 
-            Map<String, Object> callMap = executeCiteSeqCountWithJobCtx(outputDir, basename, htoReadset.getReadData().get(0), toolArgs, ed, log, cellBarcodeList, doHtoFiltering, localPipelineDir, unknownBarcodeFile);
+            File citeSeqCountOutDir = new File(outputDir, basename + ".citeSeqCounts." + ed);
+            String outputBasename = basename + "." + ed;
+            Map<String, Object> callMap = executeCiteSeqCountWithJobCtx(outputDir, outputBasename, citeSeqCountOutDir, htoReadset.getReadData().get(0), toolArgs, ed, log, cellBarcodeList, doHtoFiltering, localPipelineDir, unknownBarcodeFile);
             results.put(ed, callMap);
 
             int singlet = Integer.parseInt(callMap.get("singlet").toString());
@@ -738,7 +740,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
             }
 
             output.addIntermediateFile(unknownBarcodeFile);
-            output.addIntermediateFile(outputDir);
+            output.addIntermediateFile(citeSeqCountOutDir);
         }
 
         if (bestEditDistance != null)
@@ -789,11 +791,9 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         }
     }
 
-    private Map<String, Object> executeCiteSeqCountWithJobCtx(File outputDir, String basename, ReadData rd, List<String> baseArgs, Integer ed, Logger log, File cellBarcodeList, boolean doHtoFiltering, File localPipelineDir, File unknownBarcodeFile) throws PipelineJobException
+    private Map<String, Object> executeCiteSeqCountWithJobCtx(File outputDir, String basename, File citeSeqCountOutDir, ReadData rd, List<String> baseArgs, Integer ed, Logger log, File cellBarcodeList, boolean doHtoFiltering, File localPipelineDir, File unknownBarcodeFile) throws PipelineJobException
     {
         CellHashingHandler.CiteSeqCountWrapper wrapper = new CellHashingHandler.CiteSeqCountWrapper(log);
-
-        File citeSeqCountOutDir = new File(outputDir, basename + ".citeSeqCounts." + ed);
         File doneFile = new File(citeSeqCountOutDir, "citeSeqCount.done");
         if (!doneFile.exists())
         {
