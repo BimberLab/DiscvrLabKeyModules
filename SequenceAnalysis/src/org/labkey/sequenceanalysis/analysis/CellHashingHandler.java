@@ -399,6 +399,14 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
             ret.put("seuratCalled", seuratCalled);
             ret.put("multiSeqCalled", multiSeqCalled);
             ret.put("UniqueHtos", StringUtils.join(uniqueHTOs, ","));
+            ret.put("htoCalls", htoCalls);
+
+            File html = new File(htoCalls.getPath().replaceAll(CALL_EXTENSION, ".html"));
+            if (!html.exists())
+            {
+                throw new PipelineJobException("Unable to find expected HTML file: " + html.getPath());
+            }
+            ret.put("html", html);
 
             File  metricsFile = getMetricsFile(htoCalls);
             ret.putAll(parseUnknownBarcodes(unknownBarcodeFile, localPipelineDir, log, workDir, metricsFile));
@@ -728,7 +736,16 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
             Map<String, Object> callMap = results.get(bestEditDistance);
             String description = String.format("Edit Distance: %,d\nTotal Singlet: %,d\nDoublet: %,d\nSeurat Called: %,d\nNegative: %,d\nUnique HTOs: %s", bestEditDistance, callMap.get("singlet"), callMap.get("doublet"), callMap.get("seuratCalled"), callMap.get("negative"), callMap.get("UniqueHtos"));
             File htoCalls = (File) callMap.get("htoCalls");
+            if (htoCalls == null)
+            {
+                throw new PipelineJobException("htoCalls file was null");
+            }
+
             File html = (File) callMap.get("html");
+            if (html == null)
+            {
+                throw new PipelineJobException("html file was null");
+            }
 
             File origUnknown = getCiteSeqCountUnknownOutput(localPipelineDir, bestEditDistance);
             File movedUnknown = getCiteSeqCountUnknownOutput(localPipelineDir, null);
