@@ -236,7 +236,13 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                     File movedUnknown = getCiteSeqCountUnknownOutput(ctx.getSourceDirectory(), null);
                     try
                     {
-                        FileUtils.moveFile(origUnknown, movedUnknown);
+                        ctx.getLogger().debug("Copying unknown barcode file to: " + movedUnknown.getPath());
+                        if (movedUnknown.exists())
+                        {
+                            movedUnknown.delete();
+                        }
+
+                        FileUtils.copyFile(origUnknown, movedUnknown);
                     }
                     catch (IOException e)
                     {
@@ -319,6 +325,9 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         ctx.getFileManager().addOutput(action, "CITE-seq Raw Counts", outputMatrix);
         ctx.getFileManager().addOutput(action, "Cell Hashing Calls", htoCalls);
         ctx.getFileManager().addOutput(action, "Cell Hashing Report", html);
+
+        ctx.getFileManager().addIntermediateFile(unknownBarcodes);
+        ctx.getFileManager().addIntermediateFile(outputDir);
 
         Map<String, Object> callMap = parseOutputTable(ctx.getLogger(), htoCalls, unknownBarcodes, ctx.getSourceDirectory(), ctx.getWorkingDirectory());
         callMap.put("htoCalls", htoCalls);
@@ -727,6 +736,9 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                 highestSinglet = singlet;
                 bestEditDistance = ed;
             }
+
+            output.addIntermediateFile(unknownBarcodeFile);
+            output.addIntermediateFile(outputDir);
         }
 
         if (bestEditDistance != null)
@@ -752,7 +764,13 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
 
             try
             {
-                FileUtils.moveFile(origUnknown, movedUnknown);
+                log.debug("Copying unknown barcode file to: " + movedUnknown.getPath());
+                if (movedUnknown.exists())
+                {
+                    movedUnknown.delete();
+                }
+
+                FileUtils.copyFile(origUnknown, movedUnknown);
             }
             catch (IOException e)
             {
