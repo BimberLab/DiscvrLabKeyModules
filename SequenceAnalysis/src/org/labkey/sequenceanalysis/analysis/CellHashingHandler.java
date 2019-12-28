@@ -145,7 +145,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                 job.getLogger().info("Saving quality metrics for: " + so.getName());
                 if (so.getFile().getName().endsWith(CALL_EXTENSION))
                 {
-                    Map<String, Object> counts = parseOutputTable(job.getLogger(), so.getFile(), getCiteSeqCountUnknownOutput(so.getFile().getParentFile(), null), so.getFile().getParentFile(), null);
+                    Map<String, Object> counts = parseOutputTable(job.getLogger(), so.getFile(), getCiteSeqCountUnknownOutput(so.getFile().getParentFile(), null), so.getFile().getParentFile(), null, false);
                     for (String name : counts.keySet())
                     {
                         String valueField = (counts.get(name) instanceof String) ? "qualvalue" : "metricvalue";
@@ -329,7 +329,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         ctx.getFileManager().addIntermediateFile(unknownBarcodes);
         ctx.getFileManager().addIntermediateFile(outputDir);
 
-        Map<String, Object> callMap = parseOutputTable(ctx.getLogger(), htoCalls, unknownBarcodes, ctx.getSourceDirectory(), ctx.getWorkingDirectory());
+        Map<String, Object> callMap = parseOutputTable(ctx.getLogger(), htoCalls, unknownBarcodes, ctx.getSourceDirectory(), ctx.getWorkingDirectory(), true);
         callMap.put("htoCalls", htoCalls);
         callMap.put("html", html);
 
@@ -341,7 +341,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         return new File(webserverDir, "citeSeqUnknownBarcodes." + (editDistance == null ? "" : editDistance + ".") + "txt");
     }
 
-    private Map<String, Object> parseOutputTable(Logger log, File htoCalls, File unknownBarcodeFile, File localPipelineDir, @Nullable File workDir) throws PipelineJobException
+    private Map<String, Object> parseOutputTable(Logger log, File htoCalls, File unknownBarcodeFile, File localPipelineDir, @Nullable File workDir, boolean includeFiles) throws PipelineJobException
     {
         long singlet = 0L;
         long doublet = 0L;
@@ -408,14 +408,17 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
             ret.put("seuratCalled", seuratCalled);
             ret.put("multiSeqCalled", multiSeqCalled);
             ret.put("UniqueHtos", StringUtils.join(uniqueHTOs, ","));
-            ret.put("htoCalls", htoCalls);
 
-            File html = new File(htoCalls.getPath().replaceAll(CALL_EXTENSION, ".html"));
-            if (!html.exists())
+            if (includeFiles)
             {
-                throw new PipelineJobException("Unable to find expected HTML file: " + html.getPath());
+                ret.put("htoCalls", htoCalls);
+                File html = new File(htoCalls.getPath().replaceAll(CALL_EXTENSION, ".html"));
+                if (!html.exists())
+                {
+                    throw new PipelineJobException("Unable to find expected HTML file: " + html.getPath());
+                }
+                ret.put("html", html);
             }
-            ret.put("html", html);
 
             File  metricsFile = getMetricsFile(htoCalls);
             ret.putAll(parseUnknownBarcodes(unknownBarcodeFile, localPipelineDir, log, workDir, metricsFile));
@@ -834,7 +837,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         }
 
         //this will log results and append to metrics
-        return parseOutputTable(log, outputFile, unknownBarcodeFile, localPipelineDir, outputDir);
+        return parseOutputTable(log, outputFile, unknownBarcodeFile, localPipelineDir, outputDir, true);
     }
 
     private Map<String, Integer> logTopUnknownBarcodes(File citeSeqCountUnknownOutput, Logger log, Map<String, String> allBarcodes) throws PipelineJobException
