@@ -1,10 +1,17 @@
 package org.labkey.sequenceanalysis.run.util;
 
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.run.AbstractGatk4Wrapper;
+import org.labkey.api.writer.PrintWriters;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +22,7 @@ public class GenomicsDbImportWrapper extends AbstractGatk4Wrapper
         super(log);
     }
 
-    public void execute(List<File> inputGvcfs, File outputFile, List<String> options) throws PipelineJobException
+    public void execute(ReferenceGenome genome, List<File> inputGvcfs, File outputFile, List<String> options) throws PipelineJobException
     {
         getLogger().info("Running GATK 4 GenomicsDBImport");
 
@@ -34,6 +41,24 @@ public class GenomicsDbImportWrapper extends AbstractGatk4Wrapper
         {
             args.addAll(options);
         }
+
+        //NOTE: GenomicsDBImport requires explicit intervals
+        File intervalList = new File(outputFile.getParentFile(), "intervals.list");
+        try (PrintWriter writer = PrintWriters.getPrintWriter(intervalList))
+        {
+            SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath());
+            for (SAMSequenceRecord rec : dict.getSequences())
+            {
+                writer.println(rec.getSequenceName());
+            }
+        }
+        catch (FileNotFoundException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        args.add("-L");
+        args.add(intervalList.getPath());
 
         execute(args);
 

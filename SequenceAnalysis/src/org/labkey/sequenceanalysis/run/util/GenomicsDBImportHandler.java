@@ -130,7 +130,7 @@ public class GenomicsDBImportHandler extends AbstractParameterizedOutputHandler<
             }
 
             GenomicsDbImportWrapper wrapper = new GenomicsDbImportWrapper(ctx.getLogger());
-            wrapper.execute(vcfsToProcess, outputFile, null);
+            wrapper.execute(genome, vcfsToProcess, outputFile, null);
 
             if (!outputFile.exists())
             {

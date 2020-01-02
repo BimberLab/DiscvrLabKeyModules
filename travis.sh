@@ -200,4 +200,11 @@ GRADLE_OPTS=-Xmx2048m
 
 mv ./dist/* $DIST_DIR
 
+#Rename artifacts if a public release:
+if [ ! -z $TRAVIS_TAG ];then
+    echo "Renaming artifact for release"
+    mv $DIST_DIR/discvr/*.gz $DIST_DIR/discvr/DISVCR-${BASE_VERSION}.installer.tar.gz
+    mv $DIST_DIR/discvr_modules/*.zip $DIST_DIR/discvr/DISVCR-${BASE_VERSION}.modules.zip
+fi
+
 echo $RELEASE_NAME > ${TRAVIS_BUILD_DIR}/release.txt
