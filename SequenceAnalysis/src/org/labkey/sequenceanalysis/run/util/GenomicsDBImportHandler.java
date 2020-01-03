@@ -7,9 +7,9 @@ import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
-import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
@@ -18,7 +18,6 @@ import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -42,7 +41,9 @@ public class GenomicsDBImportHandler extends AbstractParameterizedOutputHandler<
                 ToolParameterDescriptor.create("fileBaseName", "Filename", "This is the basename that will be used for the output gzipped VCF", "textfield", null, "CombinedGenotypes"),
                 ToolParameterDescriptor.create("doCopyLocal", "Copy gVCFs To Working Directory", "If selected, the gVCFs will be copied to the working directory first, which can improve performance when working with a large set of files.", "checkbox", new JSONObject(){{
                     put("checked", true);
-                }}, false)
+                }}, false),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--batch-size"), "batchSize", "Batch Size", "Batch size controls the number of samples for which readers are open at once and therefore provides a way to minimize memory consumption. However, it can take longer to complete. Use the consolidate flag if more than a hundred batches were used. This will improve feature read time. batchSize=0 means no batching (i.e. readers for all samples will be opened at once) Defaults to 0.", "ldk-integerfield", null, null),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--reader-threads"), "readerThreads", "Reader Threads", "How many simultaneous threads to use when opening VCFs in batches; higher values may improve performance when network latency is an issue", "ldk-integerfield", null, null)
         ));
     }
 
@@ -130,20 +131,13 @@ public class GenomicsDBImportHandler extends AbstractParameterizedOutputHandler<
             }
 
             GenomicsDbImportWrapper wrapper = new GenomicsDbImportWrapper(ctx.getLogger());
-            wrapper.execute(genome, vcfsToProcess, outputFile, null);
+            List<String> options = new ArrayList<>(getClientCommandArgs(ctx.getParams()));
+
+            wrapper.execute(genome, vcfsToProcess, outputFile, options);
 
             if (!outputFile.exists())
             {
                 throw new PipelineJobException("Unable to find expected file: " + outputFile.getPath());
-            }
-
-            try
-            {
-                SequenceAnalysisService.get().ensureVcfIndex(outputFile, ctx.getLogger());
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
             }
 
             ctx.getLogger().debug("adding sequence output: " + outputFile.getPath());
