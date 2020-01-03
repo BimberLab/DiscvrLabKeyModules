@@ -28,24 +28,26 @@ before_deploy:
   - cd $TRAVIS_BUILD_DIR
 
 deploy:
-  # For internal distribution
-  - provider: releases
-    api_key: ${GH_TOKEN}
-    repo: 'bimberlabinternal/BimberLabKeyModules'
-    overwrite: true
-    file_glob: true
-    file:
-      - ./lkDist/discvr/*.gz
-      - ./lkDist/prime-seq-modules/*.zip
-    name: ${RELEASE_NAME}
-    draft: false
-    body: 'This is the latest draft build, automatically published by Travis-CI.  This is not intended as a production release.'
-    skip_cleanup: true
-    tag_name: $RELEASE_NAME
-    on:
-      all_branches: true
-      #NOTE: pull requests are already skipped
-      condition: $TRAVIS_BRANCH =~ ^(develop|discvr)[0-9\.\-]*
+# TODO: need to properly tag code and replace existing tag if present
+# https://stackoverflow.com/questions/28217556/travis-ci-auto-tag-build-for-github-release
+#  # For internal distribution
+#  - provider: releases
+#    api_key: ${GH_TOKEN}
+#    repo: 'bimberlabinternal/BimberLabKeyModules'
+#    overwrite: true
+#    file_glob: true
+#    file:
+#      - ./lkDist/discvr/*.gz
+#      - ./lkDist/prime-seq-modules/*.zip
+#    name: ${RELEASE_NAME}
+#    draft: false
+#    body: 'This is the latest draft build, automatically published by Travis-CI.  This is not intended as a production release.'
+#    skip_cleanup: true
+#    tag_name: $RELEASE_NAME
+#    on:
+#      all_branches: true
+#      #NOTE: pull requests are already skipped
+#      condition: $TRAVIS_BRANCH =~ ^(develop|discvr)[0-9\.\-]*
 
   # For public releases
   - provider: releases
