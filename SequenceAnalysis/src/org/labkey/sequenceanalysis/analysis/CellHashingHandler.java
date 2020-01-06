@@ -649,7 +649,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         }
     }
 
-    public File runCiteSeqCount(PipelineStepOutput output, String category, Readset htoReadset, File htoList, File cellBarcodeList, File outputDir, String basename, Logger log, List<String> extraArgs, boolean doHtoFiltering, File localPipelineDir, @Nullable Integer editDistance, boolean scanEditDistances, @Nullable Integer genomeId) throws PipelineJobException
+    public File runCiteSeqCount(PipelineStepOutput output, String category, Readset htoReadset, File htoList, File cellBarcodeList, File outputDir, String basename, Logger log, List<String> extraArgs, boolean doHtoFiltering, File localPipelineDir, @Nullable Integer editDistance, boolean scanEditDistances, Readset parentReadset, @Nullable Integer genomeId) throws PipelineJobException
     {
         List<? extends ReadData> rd = htoReadset.getReadData();
         if (rd.size() != 1)
@@ -782,8 +782,8 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                 throw new PipelineJobException(e);
             }
 
-            output.addSequenceOutput(htoCalls, htoReadset.getName() + ": Cell Hashing Calls", category, htoReadset.getReadsetId(), null, genomeId, description);
-            output.addSequenceOutput(html, htoReadset.getName() + ": Cell Hashing Report", category + ": Report", htoReadset.getReadsetId(), null, genomeId, description);
+            output.addSequenceOutput(htoCalls, parentReadset.getName() + ": Cell Hashing Calls", category, parentReadset.getReadsetId(), null, genomeId, description);
+            output.addSequenceOutput(html, parentReadset.getName() + ": Cell Hashing Report", category + ": Report", parentReadset.getReadsetId(), null, genomeId, description);
 
             return htoCalls;
         }
