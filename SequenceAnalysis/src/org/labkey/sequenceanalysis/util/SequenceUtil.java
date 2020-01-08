@@ -72,7 +72,8 @@ public class SequenceUtil
         gtf(".gtf"),
         gff(Arrays.asList(".gff", ".gff3"), false),
         bed(".bed"),
-        vcf(Arrays.asList(".vcf"), true);
+        vcf(Arrays.asList(".vcf"), true),
+        gvcf(Arrays.asList(".g.vcf"), true);
 
         private List<String> _extensions;
         private boolean _allowGzip;

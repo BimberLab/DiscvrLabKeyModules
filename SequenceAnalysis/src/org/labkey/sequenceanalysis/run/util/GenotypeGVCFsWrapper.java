@@ -1,9 +1,11 @@
 package org.labkey.sequenceanalysis.run.util;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.run.AbstractGatk4Wrapper;
 import org.labkey.api.util.FileType;
@@ -41,7 +43,7 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
         if (doCopyLocal)
         {
             getLogger().info("making local copies of gVCF/GenomicsDB files prior to genotyping");
-            filesToProcess.addAll(copyVcfsLocally(Arrays.asList(inputGVCFs), toDelete, outputFile.getParentFile(), getLogger(), false));
+            filesToProcess.addAll(copyVcfsLocally(Arrays.asList(inputGVCFs), toDelete, null, getLogger(), false));
         }
         else
         {
@@ -99,6 +101,18 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
 
     public static List<File> copyVcfsLocally(Collection<File> inputGVCFs, Collection<File> toDelete, File localWorkDir, Logger log, boolean isResume) throws PipelineJobException
     {
+        if (localWorkDir == null)
+        {
+            String tmpDir = StringUtils.trimToNull(PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_TMP_DIR"));
+            if (tmpDir == null)
+            {
+                tmpDir = System.getProperty("java.io.tmpdir");
+            }
+
+            log.debug("Using temp directory: " + tmpDir);
+            localWorkDir = new File(tmpDir);
+        }
+
         List<File> vcfsToProcess = new ArrayList<>();
         for (File f : inputGVCFs)
         {

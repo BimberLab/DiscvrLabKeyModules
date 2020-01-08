@@ -123,7 +123,7 @@ public class GenomicsDBImportHandler extends AbstractParameterizedOutputHandler<
             if (doCopyLocal)
             {
                 ctx.getLogger().info("making local copies of gVCFs");
-                vcfsToProcess.addAll(GenotypeGVCFsWrapper.copyVcfsLocally(inputVcfs, toDelete, ctx.getOutputDir(), ctx.getLogger(), false));
+                vcfsToProcess.addAll(GenotypeGVCFsWrapper.copyVcfsLocally(inputVcfs, toDelete, null, ctx.getLogger(), false));
             }
             else
             {

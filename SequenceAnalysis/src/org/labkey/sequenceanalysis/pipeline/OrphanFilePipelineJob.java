@@ -500,7 +500,7 @@ public class OrphanFilePipelineJob extends PipelineJob
                     }
 
                     //sequence files not associated w/ DB records:
-                    if (SequenceUtil.FILETYPE.fastq.getFileType().isType(f) || SequenceUtil.FILETYPE.bam.getFileType().isType(f))
+                    if (SequenceUtil.FILETYPE.fastq.getFileType().isType(f) || SequenceUtil.FILETYPE.bam.getFileType().isType(f) || SequenceUtil.FILETYPE.vcf.getFileType().isType(f) || SequenceUtil.FILETYPE.gvcf.getFileType().isType(f))
                     {
                         //find all ExpDatas referencing this file
                         Set<Integer> dataIdsForFile = dataMap.get(FileUtil.getAbsoluteCaseSensitiveFile(f).toURI());
