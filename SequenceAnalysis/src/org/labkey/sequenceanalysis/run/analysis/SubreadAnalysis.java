@@ -64,6 +64,16 @@ public class SubreadAnalysis extends AbstractCommandPipelineStep<SubreadAnalysis
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--ignoreDup"), "ignoreDup", "Ignore Duplicates", "If specified, reads flagged as duplicated will be ignored.", "checkbox", new JSONObject(){{
                         put("checked", false);
                     }}, false),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--largestOverlap"), "largestOverlap", "Assign to Largest Overlap", "If specified, reads (or fragments) will be assigned to the target that has the largest number of overlapping bases.", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, true),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--fracOverlap"), "fracOverlap", "Min Read Fraction Overlapping", "Minimum fraction of overlapping bases in a read that is required for read assignment.", "ldk-numberfield", new JSONObject(){{
+                        put("minValue", 0);
+                        put("maxValue", 1);
+                    }}, 0.1),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--minOverlap"), "minOverlap", "Min Read Overlap", "Minimum number of overlapping bases in a read that is required for read assignment.", "ldk-integerfield", new JSONObject(){{
+                        put("minValue", 0);
+                    }}, null),
                     ToolParameterDescriptor.create("strandSpecific", "Strand Specific", "If reads are stranded, specify that here.", "ldk-simplecombo", new JSONObject(){{
                         put("storeValues", "Unstranded;Stranded;Reversely Stranded");
                         put("value", "Unstranded");
