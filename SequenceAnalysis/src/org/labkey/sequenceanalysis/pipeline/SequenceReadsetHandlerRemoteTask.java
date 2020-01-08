@@ -101,8 +101,9 @@ public class SequenceReadsetHandlerRemoteTask extends WorkDirectoryTask<Sequence
         getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + handler.getName());
         handler.getProcessor().processFilesRemote(getPipelineJob().getReadsets(), ctx);
 
-        manager.deleteIntermediateFiles();
-        manager.cleanup(ctx.getActions());
+        //Note: on job resume the TaskFileManager could be replaced with one from the resumer
+        ctx.getFileManager().deleteIntermediateFiles();
+        ctx.getFileManager().cleanup(ctx.getActions());
 
         return new RecordedActionSet(ctx.getActions());
     }
