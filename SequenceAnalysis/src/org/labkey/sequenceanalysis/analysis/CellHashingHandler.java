@@ -338,7 +338,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
 
     private File getCiteSeqCountUnknownOutput(File webserverDir, Integer editDistance)
     {
-        return new File(webserverDir, "citeSeqUnknownBarcodes." + (editDistance == null ? "" : editDistance + ".") + "txt");
+        return new File(webserverDir, "citeSeqUnknownBarcodes." + (editDistance == null ? "final." : editDistance + ".") + "txt");
     }
 
     private Map<String, Object> parseOutputTable(Logger log, File htoCalls, File unknownBarcodeFile, File localPipelineDir, @Nullable File workDir, boolean includeFiles) throws PipelineJobException
