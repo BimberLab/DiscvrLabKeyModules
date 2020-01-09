@@ -615,10 +615,14 @@ public class JBrowseController extends SpringActionController
         public ApiResponse execute(GetGenotypesForm form, BindException errors)
         {
             JSONArray ret = new JSONArray();
+            Map<String, Object> resultProperties = new HashMap<>();
 
             List<JsonFile> jsonFiles = getJsonFiles(form);
             try (VCFFileReader reader = new VCFFileReader(jsonFiles.get(0).getExpData().getFile()))
             {
+                Map<String, String> demographicsFields = JBrowseServiceImpl.get().getDemographicsFields(getUser(), getContainer());
+                Map<String, Map<String, Object>> demographics = JBrowseServiceImpl.get().resolveSubjects(reader.getFileHeader().getSampleNamesInOrder(), getUser(), getContainer());
+
                 try (CloseableIterator<VariantContext> it = reader.query(form.getChr(), form.getStart(), form.getStop()))
                 {
                     while (it.hasNext())
@@ -643,10 +647,11 @@ public class JBrowseController extends SpringActionController
                         ret.put(pos);
                     }
                 }
-            }
 
-            Map<String, Object> resultProperties = new HashMap<>();
-            resultProperties.put("results", ret);
+                resultProperties.put("genotypes", ret);
+                resultProperties.put("demographics", demographics);
+                resultProperties.put("demographicsFields", demographicsFields);
+            }
 
             return new ApiSimpleResponse(resultProperties);
         }
