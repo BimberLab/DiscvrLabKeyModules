@@ -512,6 +512,13 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             if (inputFile2 != null)
             {
                 originalbaseName2 = SequenceTaskHelper.getMinimalBaseName(inputFile2.getName());
+
+                if (originalbaseName.equalsIgnoreCase(originalbaseName2))
+                {
+                    getJob().getLogger().debug("Forward and reverse FASTQs have the same basename.  Appending .1 and .2 as suffixes.");
+                    originalbaseName = originalbaseName + ".1";
+                    originalbaseName2 = originalbaseName2 + ".2";
+                }
             }
 
             File outputDir = new File(getHelper().getWorkingDirectory(), originalbaseName);
@@ -550,6 +557,10 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 if (pair == null)
                 {
                     throw new PipelineJobException("No FASTQ files found after preprocessing, aborting");
+                }
+                else if (pair.second != null && pair.first.equals(pair.second))
+                {
+                    throw new PipelineJobException("First and second FASTQs are identical files.  This can occur is the basename of the forward and reverse files are the same");
                 }
 
                 getHelper().getFileManager().addStepOutputs(action, output);
