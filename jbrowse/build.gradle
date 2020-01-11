@@ -65,5 +65,5 @@ project.tasks.copyJBrowse.mustRunAfter("npmRunBuild")
 project.tasks.copyJBrowse.mustRunAfter("npmRunBuildProd")
 
 project.tasks.copyJBrowseCss.dependsOn(project.tasks.copyJBrowse)
-project.tasks.module.dependsOn(project.tasks.copyJBrowse)
-project.tasks.module.dependsOn(project.tasks.copyJBrowseCss)
+project.tasks.processModuleResources.dependsOn(project.tasks.copyJBrowse)
+project.tasks.processModuleResources.dependsOn(project.tasks.copyJBrowseCss)
