@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.variant;
 
+import htsjdk.samtools.util.Interval;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
@@ -13,6 +14,7 @@ import org.labkey.api.sequenceanalysis.run.SelectVariantsWrapper;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,7 +52,7 @@ public class SelectSamplesStep extends AbstractCommandPipelineStep<SelectVariant
     }
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome) throws PipelineJobException
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
         List<String> options = new ArrayList<>();
@@ -60,6 +62,12 @@ public class SelectSamplesStep extends AbstractCommandPipelineStep<SelectVariant
 
         String toExclude = getProvider().getParameterByName(SAMPLE_EXCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
         SelectVariantsStep.addSubjectSelectOptions(toExclude, options, "-xl-sn");
+
+        if (interval != null)
+        {
+            options.add("-L");
+            options.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+        }
 
         File outputVcf = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".selectSamples.vcf.gz");
         getWrapper().execute(genome.getWorkingFastaFile(), inputVCF, outputVcf, options);

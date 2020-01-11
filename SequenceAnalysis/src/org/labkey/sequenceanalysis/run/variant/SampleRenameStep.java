@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.run.variant;
 
 import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.Interval;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.Options;
@@ -22,6 +23,7 @@ import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.VariantFiltrationWrapper;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,7 +61,7 @@ public class SampleRenameStep extends AbstractCommandPipelineStep<VariantFiltrat
     }
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome) throws PipelineJobException
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
     {
         boolean enforceChangeAll = getProvider().getParameterByName("enforceChangeAll").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
         String sampleMapString = getProvider().getParameterByName("sampleMap").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
@@ -103,7 +105,7 @@ public class SampleRenameStep extends AbstractCommandPipelineStep<VariantFiltrat
             }
 
             writer.writeHeader(new VCFHeader(header.getMetaDataInInputOrder(), remappedSamples));
-            try (CloseableIterator<VariantContext> it = reader.iterator())
+            try (CloseableIterator<VariantContext> it = (interval == null ? reader.iterator() : reader.query(interval.getContig(), interval.getStart(), interval.getEnd())))
             {
                 int i = 0;
                 while (it.hasNext())

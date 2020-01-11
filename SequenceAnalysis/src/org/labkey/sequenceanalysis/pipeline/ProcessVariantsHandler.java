@@ -1,7 +1,10 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.util.Interval;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.FeatureReader;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
@@ -297,7 +300,22 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             VariantProcessingStep step = stepCtx.getProvider().create(ctx);
             step.setStepIdx(stepCtx.getStepIdx());
 
-            VariantProcessingStep.Output output = step.processVariants(currentVCF, ctx.getOutputDir(), genome);
+            Interval interval = null;
+            SequenceOutputHandlerJob pj = getPipelineJob(ctx.getJob());
+            if (pj instanceof VariantProcessingJob)
+            {
+                VariantProcessingJob vpj = (VariantProcessingJob)pj;
+                if (vpj.isDoScatterByContig())
+                {
+                    String contig = vpj.getContigForTask();
+                    ctx.getLogger().debug("This job will process contig: " + contig);
+
+                    SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(vpj.getDictFile().toPath());
+                    interval = new Interval(contig, 1, dict.getSequence(contig).getSequenceLength());
+                }
+            }
+
+            VariantProcessingStep.Output output = step.processVariants(currentVCF, ctx.getOutputDir(), genome, interval);
             resumer.getFileManager().addStepOutputs(action, output);
 
             if (output.getVCF() != null)

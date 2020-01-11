@@ -46,6 +46,7 @@ import org.labkey.sequenceanalysis.run.util.BgzipRunner;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 import org.labkey.sequenceanalysis.run.util.TabixRunner;
 import org.labkey.sequenceanalysis.util.ReferenceLibraryHelperImpl;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -467,5 +468,11 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         ReferenceLibraryPipelineJob job = SequenceAnalysisManager.get().createReferenceLibrary(sequenceIds, c, u, name, assemblyId, description, skipCacheIndexes, skipTriggers, null, extraTriggers);
 
         return job.getJobGUID();
+    }
+
+    @Override
+    public File combineVcfs(List<File> files, File outputDirectory, String outputBasename, Logger log) throws PipelineJobException
+    {
+        return SequenceUtil.combineVcfs(files, outputDirectory, outputBasename, log);
     }
 }

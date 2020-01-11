@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.variant;
 
+import htsjdk.samtools.util.Interval;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
@@ -14,6 +15,7 @@ import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,7 +52,7 @@ public class MendelianViolationReportStep extends AbstractPipelineStep implement
     }
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome) throws PipelineJobException
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
 
@@ -74,10 +76,16 @@ public class MendelianViolationReportStep extends AbstractPipelineStep implement
             options.add(String.valueOf(violationReportThreshold));
         }
 
-        File pedFile = ProcessVariantsHandler.getPedigreeFile(getPipelineCtx().getSourceDirectory());
+        File pedFile = ProcessVariantsHandler.getPedigreeFile(getPipelineCtx().getSourceDirectory(true));
         if (!pedFile.exists())
         {
             throw new PipelineJobException("Unable to find pedigree file: " + pedFile.getPath());
+        }
+
+        if (interval != null)
+        {
+            options.add("-L");
+            options.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
         }
 
         File outputTable = new File(outputDirectory, SequencePipelineService.get().getUnzippedBaseName(inputVCF.getName()) + ".mv.txt");

@@ -149,7 +149,13 @@ public class SequenceTaskHelper implements PipelineContext
     @Override
     public File getSourceDirectory()
     {
-        return _job.getAnalysisDirectory();
+        return getSourceDirectory(false);
+    }
+
+    @Override
+    public File getSourceDirectory(boolean forceParent)
+    {
+        return getJob().getWebserverDir(forceParent);
     }
 
     public <StepType extends PipelineStep> PipelineStepProvider<StepType> getSingleStep(Class<StepType> stepType) throws PipelineJobException

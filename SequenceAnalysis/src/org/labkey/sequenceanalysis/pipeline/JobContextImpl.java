@@ -113,7 +113,13 @@ public class JobContextImpl implements SequenceOutputHandler.JobContext
     @Override
     public File getSourceDirectory()
     {
-        return ((FileAnalysisJobSupport)getJob()).getAnalysisDirectory();
+        return getSourceDirectory(false);
+    }
+
+    @Override
+    public File getSourceDirectory(boolean forceParent)
+    {
+        return ((SequenceJob)getJob()).getWebserverDir(forceParent);
     }
 
     public LinkedHashSet<RecordedAction> getActions()

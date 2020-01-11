@@ -1,6 +1,8 @@
 package org.labkey.sequenceanalysis.run.util;
 
+import htsjdk.samtools.util.Interval;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.run.AbstractGatk4Wrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
@@ -20,7 +22,7 @@ public class VariantEvalWrapper extends AbstractGatk4Wrapper
         super(log);
     }
 
-    public void executeEval(File referenceFasta, File inputVcf, File outputFile, String setName) throws PipelineJobException
+    public void executeEval(File referenceFasta, File inputVcf, File outputFile, String setName, @Nullable Interval interval) throws PipelineJobException
     {
         getLogger().info("Running GATK 4 VariantEval");
 
@@ -30,6 +32,12 @@ public class VariantEvalWrapper extends AbstractGatk4Wrapper
         args.add("VariantEval");
         args.add("-R");
         args.add(referenceFasta.getPath());
+
+        if (interval != null)
+        {
+            args.add("-L");
+            args.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+        }
 
         args.add("--eval:" + setName);
         args.add(inputVcf.getPath());
@@ -53,7 +61,7 @@ public class VariantEvalWrapper extends AbstractGatk4Wrapper
         new SimpleScriptWrapper(getLogger()).execute(Arrays.asList("sed", "-i", "s/^[ ]\\+//g", outputFile.getPath()));
     }
 
-    public void executeEvalBySample(File referenceFasta, File inputVcf, File outputFile, String setName) throws PipelineJobException
+    public void executeEvalBySample(File referenceFasta, File inputVcf, File outputFile, String setName, @Nullable Interval interval) throws PipelineJobException
     {
         getLogger().info("Running GATK VariantEval");
 
@@ -63,6 +71,12 @@ public class VariantEvalWrapper extends AbstractGatk4Wrapper
         args.add("VariantEval");
         args.add("-R");
         args.add(referenceFasta.getPath());
+
+        if (interval != null)
+        {
+            args.add("-L");
+            args.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+        }
 
         args.add("-ST");
         args.add("Sample");

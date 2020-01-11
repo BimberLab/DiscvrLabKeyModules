@@ -16,6 +16,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,6 +41,9 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
                 ToolParameterDescriptor.create("fileBaseName", "Filename", "This is the basename that will be used for the output gzipped VCF", "textfield", null, "CombinedGenotypes"),
                 ToolParameterDescriptor.create("doCopyLocal", "Copy gVCFs To Working Directory", "If selected, the gVCFs will be copied to the working directory first, which can improve performance when working with a large set of files.", "checkbox", new JSONObject(){{
                     put("checked", true);
+                }}, true),
+                ToolParameterDescriptor.create("scatterGather", "Process Chromosomes in Parallel", "If selected, this job will be divided to run job per chromosome.  The final step will take the VCF from each intermediate step and combined to make a final VCF file.", "checkbox", new JSONObject(){{
+                    put("checked", false);
                 }}, false)
         ));
     }
@@ -137,7 +141,18 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
             CombineGVCFsWrapper wrapper = new CombineGVCFsWrapper(ctx.getLogger());
             if (!isResume)
             {
-                wrapper.execute(genome.getWorkingFastaFile(), outputFile, null, vcfsToProcess.toArray(new File[vcfsToProcess.size()]));
+                List<String> options = new ArrayList<>();
+                if (ctx.getJob() instanceof VariantProcessingJob)
+                {
+                    VariantProcessingJob job = (VariantProcessingJob)ctx.getJob();
+                    if (job.getContigForTask() != null)
+                    {
+                        options.add("-L");
+                        options.add(job.getContigForTask());
+                    }
+                }
+
+                wrapper.execute(genome.getWorkingFastaFile(), outputFile, options, vcfsToProcess.toArray(new File[vcfsToProcess.size()]));
             }
 
             if (!outputFile.exists())
@@ -157,6 +172,15 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
             ctx.getLogger().debug("adding sequence output: " + outputFile.getPath());
             SequenceOutputFile so1 = new SequenceOutputFile();
             so1.setName(outputFile.getName());
+
+            if (ctx.getJob() instanceof VariantProcessingJob)
+            {
+                VariantProcessingJob job = (VariantProcessingJob) ctx.getJob();
+                if (job.getContigForTask() != null)
+                {
+                    job.getFinalVCFs().put(job.getContigForTask(), outputFile);
+                }
+            }
 
             int sampleCount;
             try (VCFFileReader reader = new VCFFileReader(outputFile))

@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.variant;
 
+import htsjdk.samtools.util.Interval;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
@@ -12,9 +13,13 @@ import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
+import javax.annotation.Nullable;
 import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Arrays;
 
 /**
@@ -52,7 +57,7 @@ public class SNPEffStep extends AbstractCommandPipelineStep<SnpEffWrapper> imple
     private final String NAME = "snpEff";
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome) throws PipelineJobException
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
         getPipelineCtx().getLogger().info("Running SNPEff");
@@ -85,10 +90,29 @@ public class SNPEffStep extends AbstractCommandPipelineStep<SnpEffWrapper> imple
             outputVcf.delete();
         }
 
-        getWrapper().runSnpEff(genome.getGenomeId(), geneFileId, snpEffBaseDir, inputVCF, outputVcf);
+        File intFile = null;
+        if (interval != null)
+        {
+            intFile = new File(outputVcf.getParentFile(), "snpEffintervals." + interval.getContig() + ".bed");
+            try (PrintWriter writer = PrintWriters.getPrintWriter(intFile))
+            {
+                writer.println(interval.getContig() + "\t" + (interval.getStart() - 1) + '\t' + interval.getEnd());
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+
+        getWrapper().runSnpEff(genome.getGenomeId(), geneFileId, snpEffBaseDir, inputVCF, outputVcf, intFile);
         if (!outputVcf.exists())
         {
             throw new PipelineJobException("Unable to find output: " + outputVcf.getPath());
+        }
+
+        if (intFile != null)
+        {
+            output.addIntermediateFile(intFile);
         }
 
         output.setVcf(outputVcf);

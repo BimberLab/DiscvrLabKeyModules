@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.variant;
 
+import htsjdk.samtools.util.Interval;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.exp.api.ExpData;
@@ -19,6 +20,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.VariantFiltrationWrapper;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,7 +57,7 @@ public class VariantFiltrationStep extends AbstractCommandPipelineStep<VariantFi
     }
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome) throws PipelineJobException
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
         File outputVcf = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".filtered.vcf.gz");
@@ -116,7 +118,13 @@ public class VariantFiltrationStep extends AbstractCommandPipelineStep<VariantFi
             params.add(maskData.getPath());
         }
 
-            getWrapper().execute(genome.getWorkingFastaFile(), inputVCF, outputVcf, params);
+        if (interval != null)
+        {
+            params.add("-L");
+            params.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+        }
+
+        getWrapper().execute(genome.getWorkingFastaFile(), inputVCF, outputVcf, params);
         if (!outputVcf.exists())
         {
             throw new PipelineJobException("unable to find output: " + outputVcf.getPath());

@@ -63,6 +63,12 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 				name: 'jobDescription',
 				allowBlank:true
 			},{
+				fieldLabel: 'Scatter/Gather By Chromosome',
+				xtype: 'checkbox',
+				inputValue: true,
+				helpPopup: 'If selected, this job will be divided to run job per chromosome.  The final step will take the VCF from each intermediate step and combined to make a final VCF file',
+				name: 'scatterGather'
+			},{
 				fieldLabel: 'Delete Intermediate Files',
 				helpPopup: 'Check to delete the intermediate files created by this pipeline.  In general these are not needed and it will save disk space.  These files might be useful for debugging though.',
 				name: 'deleteIntermediateFiles',
@@ -397,12 +403,17 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 		}
 
 		if (Ext4.isDefined(values.doSplitJobs)) {
-			console.log('split jobs set');
 			json.doSplitJobs = !!values.doSplitJobs;
 		}
 
+		var actionName = 'runSequenceHandler';
+		if (values.scatterGather) {
+			json.scatterGather = true;
+			actionName = 'runVariantProcessing';
+		}
+
 		LABKEY.Ajax.request({
-			url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler'),
+			url: LABKEY.ActionURL.buildURL('sequenceanalysis', actionName),
 			jsonData: json,
 			scope: this,
 			success: function(){

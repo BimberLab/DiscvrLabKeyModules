@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.run.variant;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
@@ -27,7 +28,7 @@ public class SnpEffWrapper extends AbstractCommandWrapper
         super(log);
     }
 
-    public void runSnpEff(Integer genomeId, Integer geneId, File snpEffBaseDir, File input, File output) throws PipelineJobException
+    public void runSnpEff(Integer genomeId, Integer geneId, File snpEffBaseDir, File input, File output, @Nullable File intervalsFile) throws PipelineJobException
     {
         getLogger().info("Annotating VCF with snpEff");
         String basename = getGenomeBasename(genomeId, geneId);
@@ -49,6 +50,12 @@ public class SnpEffWrapper extends AbstractCommandWrapper
         params.add(basename + ".genome=" + basename);
         params.add("-t");
         params.add(input.getPath());
+
+        if (intervalsFile != null)
+        {
+            params.add("-intervals");
+            params.add(intervalsFile.getPath());
+        }
 
         File unzippedVcf = new File(getOutputDir(output), "snpEff.vcf");
         execute(params, unzippedVcf);

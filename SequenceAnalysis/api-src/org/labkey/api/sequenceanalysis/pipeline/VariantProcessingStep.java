@@ -15,6 +15,8 @@
  */
 package org.labkey.api.sequenceanalysis.pipeline;
 
+import htsjdk.samtools.util.Interval;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
@@ -29,7 +31,7 @@ import java.util.List;
  */
 public interface VariantProcessingStep extends PipelineStep
 {
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome) throws PipelineJobException;
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException;
 
     default void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles) throws PipelineJobException
     {

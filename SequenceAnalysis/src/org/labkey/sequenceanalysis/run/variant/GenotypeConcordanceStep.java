@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.run.variant;
 
 import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.Interval;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
@@ -22,6 +23,7 @@ import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.VariantAnnotatorWrapper;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -61,7 +63,7 @@ public class GenotypeConcordanceStep extends AbstractCommandPipelineStep<Variant
     }
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome) throws PipelineJobException
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
 
@@ -106,6 +108,12 @@ public class GenotypeConcordanceStep extends AbstractCommandPipelineStep<Variant
             {
                 options.add("-nt");
                 options.add(String.valueOf(Math.min(threads, 8)));
+            }
+
+            if (interval != null)
+            {
+                options.add("-L");
+                options.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
             }
 
             getWrapper().execute(genome.getWorkingFastaFile(), inputVCF, outputVcf, options);

@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.variant;
 
+import htsjdk.samtools.util.Interval;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
@@ -13,6 +14,7 @@ import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,13 +50,13 @@ public class VariantQCStep extends AbstractPipelineStep implements VariantProces
     }
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome) throws PipelineJobException
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
 
         List<String> options = new ArrayList<>();
 
-        File pedFile = ProcessVariantsHandler.getPedigreeFile(getPipelineCtx().getSourceDirectory());
+        File pedFile = ProcessVariantsHandler.getPedigreeFile(getPipelineCtx().getSourceDirectory(true));
         if (pedFile.exists())
         {
             options.add("-ped");
@@ -68,6 +70,12 @@ public class VariantQCStep extends AbstractPipelineStep implements VariantProces
         {
             options.add("--rawData");
             options.add(new File(outputDirectory, SequencePipelineService.get().getUnzippedBaseName(inputVCF.getName()) + ".variantQC.json").getPath());
+        }
+
+        if (interval != null)
+        {
+            options.add("-L");
+            options.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
         }
 
         File outputHtml = new File(outputDirectory, SequencePipelineService.get().getUnzippedBaseName(inputVCF.getName()) + ".variantQC.html");

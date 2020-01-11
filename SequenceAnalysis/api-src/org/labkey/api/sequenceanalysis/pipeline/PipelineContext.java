@@ -45,4 +45,9 @@ public interface PipelineContext
      * This is the directory where the source files were located and where we expect to deposit the files on completion.
      */
     public File getSourceDirectory();
+
+    /**
+     * This is the directory where the source files were located.  In the situation where this is a split job, forceParent=true will return the parent job's sourceDirectory.  This can be important if files are written here prior to split.
+     */
+    public File getSourceDirectory(boolean forceParent);
 }

@@ -85,28 +85,28 @@
 
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerInitTask$Factory">
-
+                    <property name="join" value="true"/>
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerWebserverTask$Factory">
-
+                    <property name="join" value="true"/>
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerRemoteTask$Factory">
-
+                    <property name="join" value="true"/>
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerFinalTask$Factory">
-
+                    <property name="join" value="true"/>
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerInitTask$Factory">
-
+                    <property name="join" value="true"/>
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerWebserverTask$Factory">
-
+                    <property name="join" value="true"/>
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerRemoteTask$Factory">
-
+                    <property name="join" value="true"/>
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerFinalTask$Factory">
-
+                    <property name="join" value="true"/>
                 </bean>
                 <bean class="org.labkey.sequenceanalysis.pipeline.ImportGenomeTrackTask$Factory">
                     <property name="location" value="webserver" />
@@ -114,6 +114,13 @@
                 <bean class="org.labkey.sequenceanalysis.pipeline.OrphanFilePipelineJob.Task$Factory">
                     <property name="location" value="webserver" />
                 </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.VariantProcessingRemoteSplitTask$Factory">
+                    <property name="join" value="false"/>
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.VariantProcessingRemoteMergeTask$Factory">
+                    <property name="join" value="true"/>
+                </bean>
+
             </list>
         </property>
         <property name="pipelines">
@@ -157,6 +164,19 @@
                         <list>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerInitTask</value>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerRemoteTask</value>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerWebserverTask</value>
+                            <ref bean="xarGeneratorJoin"/>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerFinalTask</value>
+                        </list>
+                    </property>
+                </bean>
+                <bean class="org.labkey.api.pipeline.TaskPipelineSettings">
+                    <constructor-arg type="java.lang.Class" value="org.labkey.sequenceanalysis.pipeline.VariantProcessingJob" />
+                    <property name="taskProgressionSpec">
+                        <list>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerInitTask</value>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.VariantProcessingRemoteSplitTask</value>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.VariantProcessingRemoteMergeTask</value>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerWebserverTask</value>
                             <ref bean="xarGeneratorJoin"/>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerFinalTask</value>

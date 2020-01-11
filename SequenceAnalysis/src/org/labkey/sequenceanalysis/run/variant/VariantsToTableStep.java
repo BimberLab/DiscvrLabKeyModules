@@ -4,12 +4,15 @@ import htsjdk.samtools.util.Interval;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
@@ -18,7 +21,9 @@ import org.labkey.api.sequenceanalysis.run.AbstractGatk4Wrapper;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
+import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -83,7 +88,20 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
     }
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome) throws PipelineJobException
+    public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles) throws PipelineJobException
+    {
+        String intervalText = StringUtils.trimToNull(getProvider().getParameterByName("intervals").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
+        if (intervalText != null)
+        {
+            if (job instanceof VariantProcessingJob && ((VariantProcessingJob)job).isDoScatterByContig())
+            {
+                throw new PipelineJobException("Splitting jobs per chromosome is not supported when custom intervals are provided for VariantsToTable");
+            }
+        }
+    }
+
+    @Override
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
 
@@ -131,6 +149,11 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
                 args.add("-L");
                 args.add(i.getContig() + ":" + i.getStart() + "-" + i.getEnd());
             }
+        }
+
+        if (interval != null)
+        {
+            throw new PipelineJobException("Splitting jobs per chromosome is not supported when custom intervals are provided");
         }
 
         File outputFile = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".txt");
