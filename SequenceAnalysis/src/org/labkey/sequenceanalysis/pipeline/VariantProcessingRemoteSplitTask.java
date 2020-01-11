@@ -100,25 +100,17 @@ public class VariantProcessingRemoteSplitTask extends WorkDirectoryTask<VariantP
 
         if (getPipelineJob().getContigForTask() != null)
         {
-            Set<File> finalVcfs = new HashSet<>();
-            TaskFileManagerImpl manager = (TaskFileManagerImpl)ctx.getFileManager();
-            manager.getOutputsToCreate().forEach(x ->  {
-                if ("VCF File".equals(x.getCategory()))
-                {
-                    finalVcfs.add(x.getFile());
-                }
-            });
-
-            if (finalVcfs.isEmpty())
+            if (handler instanceof SequenceOutputHandler.TracksVCF)
             {
-                throw new PipelineJobException("Unable to find final VCF");
-            }
-            else if (finalVcfs.size() > 1)
-            {
-                throw new PipelineJobException("More than one output tagged as final VCF");
-            }
+                File vcf = ((SequenceOutputHandler.TracksVCF)handler).getFinalVCF(ctx);
+                getPipelineJob().getFinalVCFs().put(getPipelineJob().getContigForTask(), vcf);
 
-            getPipelineJob().getFinalVCFs().put(getPipelineJob().getContigForTask(), finalVcfs.iterator().next());
+                getPipelineJob().getLogger().debug("Final VCF: " + vcf.getPath());
+            }
+            else
+            {
+                throw new PipelineJobException("Handler does not support TracksVCF");
+            }
         }
 
         //Note: on job resume the TaskFileManager could be replaced with one from the resumer

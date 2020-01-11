@@ -61,8 +61,10 @@ import java.util.TreeMap;
 /**
  * Created by bimber on 8/26/2014.
  */
-public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, SequenceOutputHandler.HasActionNames
+public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, SequenceOutputHandler.HasActionNames, SequenceOutputHandler.TracksVCF
 {
+    private static final String VCF_CATEGORY = "VCF File";
+
     private FileType _vcfFileType = new FileType(Arrays.asList(".vcf"), ".vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
     private ProcessVariantsHandler.Resumer _resumer;
 
@@ -135,6 +137,35 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
     public boolean doRunLocal()
     {
         return false;
+    }
+
+    @Override
+    public File getFinalVCF(JobContext ctx) throws PipelineJobException
+    {
+        return getVcfOutputByCategory(ctx, VCF_CATEGORY);
+    }
+
+    public static File getVcfOutputByCategory(JobContext ctx, String category) throws PipelineJobException
+    {
+        Set<File> finalVcfs = new HashSet<>();
+        TaskFileManagerImpl manager = (TaskFileManagerImpl)ctx.getFileManager();
+        manager.getOutputsToCreate().forEach(x ->  {
+            if (category.equals(x.getCategory()))
+            {
+                finalVcfs.add(x.getFile());
+            }
+        });
+
+        if (finalVcfs.isEmpty())
+        {
+            throw new PipelineJobException("Unable to find final VCF");
+        }
+        else if (finalVcfs.size() > 1)
+        {
+            throw new PipelineJobException("More than one output tagged as final VCF");
+        }
+
+        return finalVcfs.iterator().next();
     }
 
     @Override
@@ -498,7 +529,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                     so1.setName(processed.getName());
                     so1.setFile(processed);
                     so1.setLibrary_id(libraryId);
-                    so1.setCategory("VCF File");
+                    so1.setCategory(VCF_CATEGORY);
                     so1.setContainer(ctx.getJob().getContainerId());
                     so1.setCreated(new Date());
                     so1.setModified(new Date());

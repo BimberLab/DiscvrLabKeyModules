@@ -53,7 +53,7 @@ public class SnpEffWrapper extends AbstractCommandWrapper
 
         if (intervalsFile != null)
         {
-            params.add("-intervals");
+            params.add("-interval");
             params.add(intervalsFile.getPath());
         }
 

@@ -266,13 +266,9 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
 
         Ext4.Msg.wait('Submitting...');
         var action = 'runSequenceHandler';
-        var doScatterGather = false;
-        for (var name in params) {
-            if (name.endsWith('.scatterGather')) {
-                doScatterGather = !!params[name];
-            }
-        }
-        if (doScatterGather) {
+
+        //NOTE: this will allow jobs like CombineGVCFs to opt-in to the scatter/gather variant pipeline.
+        if (!!params.scatterGather) {
             action = 'runVariantProcessing';
             json.scatterGather = true;
         }

@@ -16,6 +16,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 
 import java.io.File;
@@ -30,9 +31,11 @@ import java.util.Set;
 /**
  * Created by bimber on 4/2/2017.
  */
-public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
+public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> implements SequenceOutputHandler.TracksVCF
 {
     public static final String NAME = "Combine GVCFs";
+    private static final String COMBINED_CATEGORY = "Combined gVCF File";
+
     private FileType _gvcfFileType = new FileType(Arrays.asList(".g.vcf"), ".g.vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
 
     public CombineGVCFsHandler()
@@ -70,6 +73,12 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
     public SequenceOutputProcessor getProcessor()
     {
         return new Processor();
+    }
+
+    @Override
+    public File getFinalVCF(JobContext ctx) throws PipelineJobException
+    {
+        return ProcessVariantsHandler.getVcfOutputByCategory(ctx, COMBINED_CATEGORY);
     }
 
     public class Processor implements SequenceOutputProcessor
@@ -192,7 +201,7 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
             so1.setDescription("GATK CombineGVCFs Output, created from " + inputFiles.size() + " files, " + sampleCount + " samples.  GATK Version: " + wrapper.getVersionString());
             so1.setFile(outputFile);
             so1.setLibrary_id(genomeId);
-            so1.setCategory("Combined gVCF File");
+            so1.setCategory(COMBINED_CATEGORY);
             so1.setContainer(ctx.getJob().getContainerId());
             so1.setCreated(new Date());
             so1.setModified(new Date());
