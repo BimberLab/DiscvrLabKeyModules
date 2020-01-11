@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.analysis;
 
+import htsjdk.samtools.util.Interval;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.apache.commons.lang3.StringUtils;
@@ -40,10 +41,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import static org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler.VCF_CATEGORY;
+
 /**
  * Created by bimber on 8/26/2014.
  */
-public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, SequenceOutputHandler.HasActionNames
+public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, SequenceOutputHandler.HasActionNames, SequenceOutputHandler.TracksVCF
 {
     private FileType _gvcfFileType = new FileType(Arrays.asList(".g.vcf"), ".g.vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
 
@@ -137,6 +140,12 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
     }
 
     @Override
+    public File getFinalVCF(JobContext ctx) throws PipelineJobException
+    {
+        return ProcessVariantsHandler.getVcfOutputByCategory(ctx, VCF_CATEGORY);
+    }
+
+    @Override
     public SequenceOutputProcessor getProcessor()
     {
         return new Processor();
@@ -217,7 +226,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             so1.setDescription("GATK GenotypeGVCF output.  GATK Version: " + wrapper.getVersionString() + ".  Total samples: " + sampleCount);
             so1.setFile(processed);
             so1.setLibrary_id(genomeId);
-            so1.setCategory("VCF File");
+            so1.setCategory(VCF_CATEGORY);
             so1.setContainer(job.getContainerId());
             so1.setCreated(new Date());
             so1.setModified(new Date());
@@ -287,9 +296,12 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 toolParams.add("--allow-old-rms-mapping-quality-annotation-data");
             }
 
-            //NOTE: not supported in GATK4
-            //toolParams.add("-A");
-            //toolParams.add("FractionInformativeReads");
+            Interval interval = ProcessVariantsHandler.getInterval(ctx);
+            if (interval != null)
+            {
+                toolParams.add("-L");
+                toolParams.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+            }
 
             boolean doCopyInputs = ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.doCopyInputs", false);
 

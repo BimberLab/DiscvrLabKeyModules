@@ -187,7 +187,17 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
                 VariantProcessingJob job = (VariantProcessingJob) ctx.getJob();
                 if (job.getContigForTask() != null)
                 {
-                    job.getFinalVCFs().put(job.getContigForTask(), outputFile);
+                    //NOTE: the VCF was copied back to the source dir, so translate paths
+                    try
+                    {
+                        String path = ctx.getWorkDir().getRelativePath(outputFile);
+                        File movedOutputFile = new File(ctx.getSourceDirectory(), path);
+                        job.getFinalVCFs().put(job.getContigForTask(), movedOutputFile);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
                 }
             }
 

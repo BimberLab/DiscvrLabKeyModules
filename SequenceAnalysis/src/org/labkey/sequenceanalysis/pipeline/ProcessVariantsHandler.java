@@ -63,7 +63,7 @@ import java.util.TreeMap;
  */
 public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, SequenceOutputHandler.HasActionNames, SequenceOutputHandler.TracksVCF
 {
-    private static final String VCF_CATEGORY = "VCF File";
+    public static final String VCF_CATEGORY = "VCF File";
 
     private FileType _vcfFileType = new FileType(Arrays.asList(".vcf"), ".vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
     private ProcessVariantsHandler.Resumer _resumer;
@@ -277,6 +277,25 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         return new File(outputDir, "gatk.ped");
     }
 
+    public static Interval getInterval(JobContext ctx)
+    {
+        PipelineJob pj = ctx.getJob();
+        if (pj instanceof VariantProcessingJob)
+        {
+            VariantProcessingJob vpj = (VariantProcessingJob)pj;
+            if (vpj.isDoScatterByContig())
+            {
+                String contig = vpj.getContigForTask();
+                ctx.getLogger().debug("This job will process contig: " + contig);
+
+                SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(vpj.getDictFile().toPath());
+                return new Interval(contig, 1, dict.getSequence(contig).getSequenceLength());
+            }
+        }
+
+        return null;
+    }
+
     public static File processVCF(File input, Integer libraryId, JobContext ctx, Resumer resumer) throws PipelineJobException
     {
         try
@@ -331,20 +350,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             VariantProcessingStep step = stepCtx.getProvider().create(ctx);
             step.setStepIdx(stepCtx.getStepIdx());
 
-            Interval interval = null;
-            SequenceOutputHandlerJob pj = getPipelineJob(ctx.getJob());
-            if (pj instanceof VariantProcessingJob)
-            {
-                VariantProcessingJob vpj = (VariantProcessingJob)pj;
-                if (vpj.isDoScatterByContig())
-                {
-                    String contig = vpj.getContigForTask();
-                    ctx.getLogger().debug("This job will process contig: " + contig);
-
-                    SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(vpj.getDictFile().toPath());
-                    interval = new Interval(contig, 1, dict.getSequence(contig).getSequenceLength());
-                }
-            }
+            Interval interval = getInterval(ctx);
 
             VariantProcessingStep.Output output = step.processVariants(currentVCF, ctx.getOutputDir(), genome, interval);
             resumer.getFileManager().addStepOutputs(action, output);
@@ -484,6 +490,13 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                     List<String> args = new ArrayList<>();
                     args.add("-genotypeMergeOptions");
                     args.add("PRIORITIZE");
+
+                    Interval interval = getInterval(ctx);
+                    if (interval != null)
+                    {
+                        args.add("-L");
+                        args.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+                    }
 
                     cv.execute(rg.getWorkingFastaFile(), vcfsInPriority, outFile, args, true);
                 }
@@ -701,10 +714,11 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             _finalVcfs = finalVcfs;
         }
 
-        public void setGenotypeGVCFsComplete(RecordedAction action, File finalVCF)
+        public void setGenotypeGVCFsComplete(RecordedAction action, File finalVCF) throws PipelineJobException
         {
             getRecordedActions().add(action);
             _finalVcfs.put(GENOTYPE_GVCFS, finalVCF);
+            saveState();
         }
 
         public boolean isGenotypeGVCFsComplete()

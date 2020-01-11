@@ -112,6 +112,10 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
             }
 
             File vcf = finalVcfs.get(contig);
+            if (!vcf.exists())
+            {
+                throw new PipelineJobException("Missing VCF: " + vcf.getPath());
+            }
 
             toConcat.add(vcf);
             action.addInput(vcf, "Input VCF");

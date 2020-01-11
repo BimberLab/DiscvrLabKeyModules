@@ -98,24 +98,34 @@ public class VariantProcessingRemoteSplitTask extends WorkDirectoryTask<VariantP
         getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + handler.getName());
         handler.getProcessor().processFilesRemote(getPipelineJob().getFiles(), ctx);
 
+        //Note: on job resume the TaskFileManager could be replaced with one from the resumer
+        ctx.getFileManager().deleteIntermediateFiles();
+        ctx.getFileManager().cleanup(ctx.getActions());
+
         if (getPipelineJob().getContigForTask() != null)
         {
             if (handler instanceof SequenceOutputHandler.TracksVCF)
             {
                 File vcf = ((SequenceOutputHandler.TracksVCF)handler).getFinalVCF(ctx);
-                getPipelineJob().getFinalVCFs().put(getPipelineJob().getContigForTask(), vcf);
+                try
+                {
+                    //NOTE: the VCF was copied back to the source dir, so translate paths
+                    String path = _wd.getRelativePath(vcf);
+                    vcf = new File(ctx.getSourceDirectory(), path);
+                    getPipelineJob().getFinalVCFs().put(getPipelineJob().getContigForTask(), vcf);
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
 
                 getPipelineJob().getLogger().debug("Final VCF: " + vcf.getPath());
             }
             else
             {
-                throw new PipelineJobException("Handler does not support TracksVCF");
+                throw new PipelineJobException("Handler does not support TracksVCF: " + handler.getName());
             }
         }
-
-        //Note: on job resume the TaskFileManager could be replaced with one from the resumer
-        ctx.getFileManager().deleteIntermediateFiles();
-        ctx.getFileManager().cleanup(ctx.getActions());
 
         return new RecordedActionSet(ctx.getActions());
     }
