@@ -47,4 +47,9 @@ public interface VariantProcessingStep extends PipelineStep
     {
 
     }
+
+    public static interface SupportsScatterGather
+    {
+
+    }
 }

@@ -489,6 +489,16 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
         }
     },
 
+    getActiveSteps: function() {
+        var ret = {};
+        var stepComponents = this.query('component[stepName]');
+        Ext4.Array.forEach(stepComponents, function(i){
+            ret[i.stepName] = i;
+        }, this);
+
+        return ret;
+    },
+
     toJSON: function(){
         var ret = {};
 
@@ -548,7 +558,7 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
     },
 
     getStepMap: function(){
-        var stepMap = {}
+        var stepMap = {};
         if (this.stepType){
             var stepNames = [];
             var stepComponents = this.query('component[stepName]');

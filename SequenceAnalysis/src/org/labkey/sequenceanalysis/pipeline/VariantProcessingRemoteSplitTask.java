@@ -98,10 +98,6 @@ public class VariantProcessingRemoteSplitTask extends WorkDirectoryTask<VariantP
         getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + handler.getName());
         handler.getProcessor().processFilesRemote(getPipelineJob().getFiles(), ctx);
 
-        //Note: on job resume the TaskFileManager could be replaced with one from the resumer
-        ctx.getFileManager().deleteIntermediateFiles();
-        ctx.getFileManager().cleanup(ctx.getActions());
-
         if (getPipelineJob().getContigForTask() != null)
         {
             if (handler instanceof SequenceOutputHandler.TracksVCF)
@@ -126,6 +122,11 @@ public class VariantProcessingRemoteSplitTask extends WorkDirectoryTask<VariantP
                 throw new PipelineJobException("Handler does not support TracksVCF: " + handler.getName());
             }
         }
+
+        //Note: on job resume the TaskFileManager could be replaced with one from the resumer
+        //Also, this needs to run after the step above to manage SequenceOutputFiles
+        ctx.getFileManager().deleteIntermediateFiles();
+        ctx.getFileManager().cleanup(ctx.getActions());
 
         return new RecordedActionSet(ctx.getActions());
     }

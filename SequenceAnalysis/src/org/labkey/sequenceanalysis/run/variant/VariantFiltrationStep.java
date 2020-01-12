@@ -38,7 +38,7 @@ public class VariantFiltrationStep extends AbstractCommandPipelineStep<VariantFi
         super(provider, ctx, new VariantFiltrationWrapper(ctx.getLogger()));
     }
 
-    public static class Provider extends AbstractVariantProcessingStepProvider<VariantFiltrationStep>
+    public static class Provider extends AbstractVariantProcessingStepProvider<VariantFiltrationStep> implements VariantProcessingStep.SupportsScatterGather
     {
         public Provider()
         {

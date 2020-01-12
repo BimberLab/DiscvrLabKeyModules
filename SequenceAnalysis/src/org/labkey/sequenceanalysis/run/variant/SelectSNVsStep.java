@@ -49,7 +49,7 @@ public class SelectSNVsStep extends AbstractCommandPipelineStep<SelectVariantsWr
         return StringUtils.join(ret, ";");
     }
 
-    public static class Provider extends AbstractVariantProcessingStepProvider<SelectSNVsStep>
+    public static class Provider extends AbstractVariantProcessingStepProvider<SelectSNVsStep> implements VariantProcessingStep.SupportsScatterGather
     {
         public Provider()
         {

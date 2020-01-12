@@ -146,6 +146,12 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
     }
 
     @Override
+    public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, Collection<SequenceOutputFile> componentOutputs)
+    {
+        return ProcessVariantsHandler.createSequenceOutput(job, processed, componentOutputs, VCF_CATEGORY);
+    }
+
+    @Override
     public SequenceOutputProcessor getProcessor()
     {
         return new Processor();

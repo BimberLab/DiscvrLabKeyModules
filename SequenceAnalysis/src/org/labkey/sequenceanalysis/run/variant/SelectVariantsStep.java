@@ -44,7 +44,7 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
         super(provider, ctx, new SelectVariantsWrapper(ctx.getLogger()));
     }
 
-    public static class Provider extends AbstractVariantProcessingStepProvider<SelectVariantsStep>
+    public static class Provider extends AbstractVariantProcessingStepProvider<SelectVariantsStep> implements VariantProcessingStep.SupportsScatterGather
     {
         public Provider()
         {

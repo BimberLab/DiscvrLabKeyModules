@@ -407,9 +407,26 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 		}
 
 		var actionName = 'runSequenceHandler';
+		var failedTools = [];
 		if (values.scatterGather) {
 			json.scatterGather = true;
 			actionName = 'runVariantProcessing';
+
+			var steps = this.down('sequenceanalysis-analysissectionpanel[stepType="variantProcessing"]').getActiveSteps();
+			if (!Ext4.Object.isEmpty(steps)) {
+				for (var name in steps) {
+					var tool = steps[name].toolConfig;
+					if (!tool.supportsScatterGather) {
+						failedTools.push(tool.label);
+					}
+				}
+			}
+
+			failedTools = Ext4.unique(failedTools);
+			if (failedTools.length) {
+				Ext4.Msg.alert('Error', 'The follow tools do not support scatter/gather: ' + failedTools.join((', ')));
+				return;
+			}
 		}
 
 		LABKEY.Ajax.request({

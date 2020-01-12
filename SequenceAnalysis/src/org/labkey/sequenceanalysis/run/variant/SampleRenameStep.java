@@ -41,7 +41,7 @@ public class SampleRenameStep extends AbstractCommandPipelineStep<VariantFiltrat
         super(provider, ctx, new VariantFiltrationWrapper(ctx.getLogger()));
     }
 
-    public static class Provider extends AbstractVariantProcessingStepProvider<SampleRenameStep>
+    public static class Provider extends AbstractVariantProcessingStepProvider<SampleRenameStep> implements VariantProcessingStep.SupportsScatterGather
     {
         public Provider()
         {

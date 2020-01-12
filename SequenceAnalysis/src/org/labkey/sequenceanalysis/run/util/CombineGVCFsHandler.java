@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -79,6 +80,12 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
     public File getFinalVCF(JobContext ctx) throws PipelineJobException
     {
         return ProcessVariantsHandler.getVcfOutputByCategory(ctx, COMBINED_CATEGORY);
+    }
+
+    @Override
+    public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, Collection<SequenceOutputFile> componentOutputs)
+    {
+        return ProcessVariantsHandler.createSequenceOutput(job, processed, componentOutputs, COMBINED_CATEGORY);
     }
 
     public class Processor implements SequenceOutputProcessor

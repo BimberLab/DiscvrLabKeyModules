@@ -145,10 +145,46 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         return getVcfOutputByCategory(ctx, VCF_CATEGORY);
     }
 
-    public static File getVcfOutputByCategory(JobContext ctx, String category) throws PipelineJobException
+    @Override
+    public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, Collection<SequenceOutputFile> componentOutputs)
+    {
+        return createSequenceOutput(job, processed, componentOutputs, VCF_CATEGORY);
+    }
+
+    public static SequenceOutputFile createSequenceOutput(PipelineJob job, File processed, Collection<SequenceOutputFile> componentOutputs, String category)
+    {
+        Set<Integer> libraryIds = new HashSet<>();
+        componentOutputs.forEach(x -> libraryIds.add(x.getLibrary_id()));
+
+        Set<Integer> readsetIds = new HashSet<>();
+        componentOutputs.forEach(x -> readsetIds.add(x.getReadset()));
+
+        int sampleCount;
+        try (VCFFileReader reader = new VCFFileReader(processed))
+        {
+            VCFHeader header = reader.getFileHeader();
+            sampleCount = header.getSampleNamesInOrder().size();
+        }
+
+        SequenceOutputFile so1 = new SequenceOutputFile();
+        so1.setName(processed.getName());
+        so1.setFile(processed);
+        so1.setLibrary_id((libraryIds.isEmpty() ? null : libraryIds.iterator().next()));
+        so1.setCategory(category);
+        so1.setContainer(job.getContainerId());
+        so1.setCreated(new Date());
+        so1.setModified(new Date());
+        so1.setReadset((readsetIds.isEmpty() ? null : readsetIds.iterator().next()));
+        so1.setDescription("Total samples: " + sampleCount);
+
+        return so1;
+    }
+
+    public static File getVcfOutputByCategory(JobContext ctx, final String category) throws PipelineJobException
     {
         Set<File> finalVcfs = new HashSet<>();
         TaskFileManagerImpl manager = (TaskFileManagerImpl)ctx.getFileManager();
+        ctx.getLogger().debug("Inspecting " + manager.getOutputsToCreate().size() + " outputs for category: " + category);
         manager.getOutputsToCreate().forEach(x ->  {
             if (category.equals(x.getCategory()))
             {
@@ -179,12 +215,21 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         return (SequenceOutputHandlerJob)job;
     }
 
+    private static VariantProcessingJob getVariantPipelineJob(PipelineJob job)
+    {
+        return job instanceof VariantProcessingJob ? (VariantProcessingJob)job : null;
+    }
+
     public static void initVariantProcessing(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, File outputDir) throws PipelineJobException
     {
         SequenceTaskHelper taskHelper = new SequenceTaskHelper(getPipelineJob(job), outputDir);
 
         List<PipelineStepCtx<VariantProcessingStep>> providers = SequencePipelineService.get().getSteps(job, VariantProcessingStep.class);
         boolean requiresPedigree = false;
+        VariantProcessingJob vj = getVariantPipelineJob(job);
+        boolean useScatterGather = vj != null && vj.isDoScatterByContig();
+        Set<String> stepsNotScatterGather = new HashSet<>();
+
         for (PipelineStepCtx<VariantProcessingStep> stepCtx : providers)
         {
             for (ToolParameterDescriptor pd : stepCtx.getProvider().getParameters())
@@ -202,8 +247,18 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 requiresPedigree = true;
             }
 
+            if (useScatterGather && !(stepCtx.getProvider() instanceof VariantProcessingStep.SupportsScatterGather))
+            {
+                stepsNotScatterGather.add(stepCtx.getProvider().getName());
+            }
+
             VariantProcessingStep step = stepCtx.getProvider().create(taskHelper);
             step.init(job, support, inputFiles);
+        }
+
+        if (!stepsNotScatterGather.isEmpty())
+        {
+            throw new PipelineJobException("The follow steps do not support scatter/gather: " + StringUtils.join(stepsNotScatterGather, ", "));
         }
 
         if (requiresPedigree)

@@ -9,15 +9,19 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.FileType;
-import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantProcessingRemoteMergeTask.Factory>
 {
@@ -118,13 +122,31 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
             }
 
             toConcat.add(vcf);
-            action.addInput(vcf, "Input VCF");
+            manager.addInput(action, "Input VCF", vcf);
             manager.addIntermediateFile(vcf);
             manager.addIntermediateFile(new File(vcf.getPath() + ".tbi"));
         }
 
         String basename = SequenceAnalysisService.get().getUnzippedBaseName(toConcat.get(0).getName());
-        SequenceAnalysisService.get().combineVcfs(toConcat, getPipelineJob().getAnalysisDirectory(), basename, getJob().getLogger());
+        File combined = SequenceAnalysisService.get().combineVcfs(toConcat, getPipelineJob().getAnalysisDirectory(), basename, getJob().getLogger());
+        manager.addOutput(action, "Merged VCF", combined);
+
+        SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler = getPipelineJob().getHandler();
+        if (handler instanceof SequenceOutputHandler.TracksVCF)
+        {
+            Set<SequenceOutputFile> outputs = new HashSet<>();
+            toConcat.forEach(f -> outputs.addAll(getPipelineJob().getOutputsToCreate().stream().filter(x -> f.equals(x.getFile())).collect(Collectors.toSet())));
+            getJob().getLogger().debug("Total component outputs created: " + outputs.size());
+            getPipelineJob().getOutputsToCreate().removeAll(outputs);
+            getJob().getLogger().debug("Total SequenceOutputFiles on job after remove: " + getPipelineJob().getOutputsToCreate().size());
+
+            SequenceOutputFile finalOutput = ((SequenceOutputHandler.TracksVCF)getPipelineJob().getHandler()).createFinalSequenceOutput(getJob(), combined, outputs);
+            manager.addSequenceOutput(finalOutput);
+        }
+        else
+        {
+            throw new PipelineJobException("Handler does not support TracksVCF: " + handler.getName());
+        }
 
         manager.deleteIntermediateFiles();
         manager.cleanup(Collections.singleton(action));

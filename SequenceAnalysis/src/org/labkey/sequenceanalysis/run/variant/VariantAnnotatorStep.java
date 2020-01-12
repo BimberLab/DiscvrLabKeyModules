@@ -34,7 +34,7 @@ public class VariantAnnotatorStep extends AbstractCommandPipelineStep<VariantAnn
         super(provider, ctx, new VariantAnnotatorWrapper(ctx.getLogger()));
     }
 
-    public static class Provider extends AbstractVariantProcessingStepProvider<VariantAnnotatorStep> implements VariantProcessingStep.RequiresPedigree
+    public static class Provider extends AbstractVariantProcessingStepProvider<VariantAnnotatorStep> implements VariantProcessingStep.RequiresPedigree,  VariantProcessingStep.SupportsScatterGather
     {
         public Provider()
         {

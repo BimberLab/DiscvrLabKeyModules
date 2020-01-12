@@ -246,5 +246,7 @@ public interface SequenceOutputHandler<T>
     public static interface TracksVCF
     {
         public File getFinalVCF(JobContext ctx) throws PipelineJobException;
+
+        public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, Collection<SequenceOutputFile> componentOutputs);
     }
 }

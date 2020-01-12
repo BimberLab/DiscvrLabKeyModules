@@ -34,7 +34,7 @@ public class SNPEffStep extends AbstractCommandPipelineStep<SnpEffWrapper> imple
         super(provider, ctx, new SnpEffWrapper(ctx.getLogger()));
     }
 
-    public static class Provider extends AbstractVariantProcessingStepProvider<SNPEffStep>
+    public static class Provider extends AbstractVariantProcessingStepProvider<SNPEffStep> implements VariantProcessingStep.SupportsScatterGather
     {
         public Provider()
         {
