@@ -2,9 +2,11 @@ package org.labkey.sequenceanalysis.analysis;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
+import com.google.common.io.Files;
 import htsjdk.samtools.util.IOUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -39,6 +41,7 @@ import org.labkey.api.util.SortHelpers;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
+import org.labkey.sequenceanalysis.util.FastqMerger;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -51,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 public class CellHashingHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceReadsetProcessor>
 {
@@ -180,14 +184,14 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
 
             for (Readset rs : readsets)
             {
-                if (rs.getReadData().size() != 1)
+                HtoMergeResult htoFastqs = possiblyMergeHtoFastqs(rs, ctx.getOutputDir(), ctx.getLogger());
+                if (!htoFastqs.intermediateFiles.isEmpty())
                 {
-                    throw new PipelineJobException("This tool expects each readset to have exactly one read pair.  was: " + rs.getReadData().size());
+                    ctx.getFileManager().addIntermediateFiles(htoFastqs.intermediateFiles);
                 }
 
-                ReadData rd = rs.getReadData().get(0);
-                ctx.getFileManager().addInput(action, "Input FASTQ", rd.getFile1());
-                ctx.getFileManager().addInput(action, "Input FASTQ", rd.getFile2());
+                ctx.getFileManager().addInput(action, "Input FASTQ", htoFastqs.files.getLeft());
+                ctx.getFileManager().addInput(action, "Input FASTQ", htoFastqs.files.getRight());
 
                 Set<Integer> editDistances = new TreeSet<>();
                 Map<Integer, Map<String, Object>> results = new HashMap<>();
@@ -649,12 +653,75 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         }
     }
 
+    private static class HtoMergeResult
+    {
+        Pair<File, File> files;
+        List<File> intermediateFiles = new ArrayList<>();
+    }
+
+    private HtoMergeResult possiblyMergeHtoFastqs(Readset htoReadset, File outdir, Logger log) throws PipelineJobException
+    {
+        HtoMergeResult ret = new HtoMergeResult();
+        File file1;
+        File file2;
+
+        if (htoReadset.getReadData().size() != 1)
+        {
+            log.info("Merging HTO data");
+            file1 = new File(outdir, FileUtil.makeLegalName(htoReadset.getName() + "hto.R1.fastq.gz"));
+            file2 = new File(outdir, FileUtil.makeLegalName(htoReadset.getName() + "hto.R2.fastq.gz"));
+
+            File doneFile = new File(outdir, "merge.done");
+            if (doneFile.exists())
+            {
+                log.info("Resuming from previous merge");
+            }
+            else
+            {
+                FastqMerger merger = new FastqMerger(log);
+                List<File> files1 = htoReadset.getReadData().stream().map(ReadData::getFile1).collect(Collectors.toList());
+                merger.mergeFiles(file1, files1);
+
+                List<File> files2 = htoReadset.getReadData().stream().map(ReadData::getFile2).collect(Collectors.toList());
+                if (files2.contains(null))
+                {
+                    throw new PipelineJobException("All HTO readsets are expected ot have forward and reverse reads");
+                }
+                merger.mergeFiles(file2, files2);
+
+                ret.intermediateFiles.add(file1);
+                ret.intermediateFiles.add(file2);
+
+                try
+                {
+                    Files.touch(doneFile);
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
+
+            ret.intermediateFiles.add(doneFile);
+        }
+        else
+        {
+            ReadData rd = htoReadset.getReadData().get(0);
+            file1 = rd.getFile1();
+            file2 = rd.getFile2();
+        }
+
+        ret.files = Pair.of(file1, file2);
+
+        return ret;
+    }
+
     public File runCiteSeqCount(PipelineStepOutput output, String category, Readset htoReadset, File htoList, File cellBarcodeList, File outputDir, String basename, Logger log, List<String> extraArgs, boolean doHtoFiltering, File localPipelineDir, @Nullable Integer editDistance, boolean scanEditDistances, Readset parentReadset, @Nullable Integer genomeId) throws PipelineJobException
     {
-        List<? extends ReadData> rd = htoReadset.getReadData();
-        if (rd.size() != 1)
+        HtoMergeResult htoFastqs = possiblyMergeHtoFastqs(htoReadset, outputDir, log);
+        if (!htoFastqs.intermediateFiles.isEmpty())
         {
-            throw new PipelineJobException("Expected HTO readset to have single pair of FASTQs, was: " + rd.size());
+            htoFastqs.intermediateFiles.forEach(x -> output.addIntermediateFile(x));
         }
 
         List<String> baseArgs = new ArrayList<>();
@@ -731,7 +798,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
 
             File citeSeqCountOutDir = new File(outputDir, basename + ".citeSeqCounts." + ed);
             String outputBasename = basename + "." + ed;
-            Map<String, Object> callMap = executeCiteSeqCountWithJobCtx(outputDir, outputBasename, citeSeqCountOutDir, htoReadset.getReadData().get(0), toolArgs, ed, log, cellBarcodeList, doHtoFiltering, localPipelineDir, unknownBarcodeFile);
+            Map<String, Object> callMap = executeCiteSeqCountWithJobCtx(outputDir, outputBasename, citeSeqCountOutDir, htoFastqs.files.getLeft(), htoFastqs.files.getRight(), toolArgs, ed, log, cellBarcodeList, doHtoFiltering, localPipelineDir, unknownBarcodeFile);
             results.put(ed, callMap);
 
             int singlet = Integer.parseInt(callMap.get("singlet").toString());
@@ -794,7 +861,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         }
     }
 
-    private Map<String, Object> executeCiteSeqCountWithJobCtx(File outputDir, String basename, File citeSeqCountOutDir, ReadData rd, List<String> baseArgs, Integer ed, Logger log, File cellBarcodeList, boolean doHtoFiltering, File localPipelineDir, File unknownBarcodeFile) throws PipelineJobException
+    private Map<String, Object> executeCiteSeqCountWithJobCtx(File outputDir, String basename, File citeSeqCountOutDir, File fastq1, File fastq2, List<String> baseArgs, Integer ed, Logger log, File cellBarcodeList, boolean doHtoFiltering, File localPipelineDir, File unknownBarcodeFile) throws PipelineJobException
     {
         CellHashingHandler.CiteSeqCountWrapper wrapper = new CellHashingHandler.CiteSeqCountWrapper(log);
         File doneFile = new File(citeSeqCountOutDir, "citeSeqCount.done");
@@ -803,7 +870,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
             baseArgs.add("--max-error");
             baseArgs.add(ed.toString());
 
-            wrapper.execute(baseArgs, rd.getFile1(), rd.getFile2(), citeSeqCountOutDir);
+            wrapper.execute(baseArgs, fastq1, fastq2, citeSeqCountOutDir);
         }
         else
         {
