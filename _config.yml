@@ -1,0 +1,10 @@
+
+plugins:
+  - jekyll-relative-links
+title: DISCVR / DISCVR-Seq LabKey Modules Documentation
+description: The primary documentation for DISCVR LabKey modules
+relative_links:
+  enabled: true
+  collections: true
+include:
+  - index.md
