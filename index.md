@@ -2,6 +2,6 @@ DISCVR is a web-based system designed to help individual labs manage and utilize
 
 Please use the links below for more information on the two arms of this project:
 
-- [DISCVR: Management of Lab Data](./discvr-seq/overview.md)
+- [DISCVR: Management of Lab Data](./discvr/overview.md)
 
-- [DISCVR-Seq: Management and Analysis of Sequence Data](./discvr-seq/overview.md) 
+- [DISCVR-Seq: Management and Analysis of Sequence Data](./discvr-seq/overview.md)
