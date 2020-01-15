@@ -10,7 +10,7 @@ This pipeline is very tightly focused (although not exclusively) on the process 
 
 These instructions describe the features of the module and how to use it once installed.  Because installing the analysis capabilities are tightly linked with the core LabKey Server data pipeline, please refer to the LabKey Server docs or post a question on the [LabKey forum](https://www.labkey.org/announcements/home/Developer/Forum/list.view?).  The authors of DISCVR monitor those forums and will reply to questions.  If you have questions about developing new tools that integrate with this module, please also use the forum as a start point.
 
-To analyze your data, the reads must first be imported into the system.  [Follow these instructions if you have not already done so](https://github.com/bbimber/discvr-seq/wiki/Sequence-Management).  Once imported, click the 'Readsets' link on the DISCVR-Seq front page:
+To analyze your data, the reads must first be imported into the system.  [Follow these instructions if you have not already done so](management.md).  Once imported, click the 'Readsets' link on the DISCVR-Seq front page:
 
 ![](../images/analysis1.png)
 

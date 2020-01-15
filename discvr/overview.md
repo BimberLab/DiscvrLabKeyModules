@@ -2,7 +2,7 @@
 
 DISCVR is a web-based system designed to help individual labs manage and utilize the data they create. It is a series of modules that extend [LabKey Server](https://labkey.org/), a robust open-source platform designed to manage scientific data with a large and active user base. The objective of DISCVR is to provide additional features tailored specifically to research labs, beyond what is available through a standard LabKey Server.  
 
-This project is closely linked to [DISCVR-Seq](../discvr-seq/overview), which is a sub-project aimed at next-generation sequencing.
+This project is closely linked to [DISCVR-Seq](../discvr-seq/overview.md), which is a sub-project aimed at next-generation sequencing.
 
 ### What Does DISCVR Do?
 DISCVR makes it easy for individual labs to create and adapt a website to manage their data. It allows labs to leverage the power of a database to store and find information. It builds on many years of experience trying to produce a system that works within the culture and practical constraints of academic labs. DISCVR is designed to add value while understanding that no lab has the time or resources to spend hours cataloging information.
@@ -20,7 +20,7 @@ As far as actually storing data, the simplest way is to simply use DISCVR to dep
 There way be certain types of data your group wishes to capture with more structure.  These could include results of assays you perform repeatedly (ELISAs, chem panels, etc.), records of when experiments occurred (dates of MRIs or other procedures), freezer inventories, or anything else.  These might currently exist in some kind of centralized excel file. DISCVR uses any of LabKey's existing capabilities to shift data from excel into a web-accessible database.  Generally speaking, it is possible to define custom tables and then use simple excel templates to upload data.  DISCVR includes some common functions including a freezer/inventory table, and DNA Oligos.  However, there is a lot of diversity in needs across labs, and it is possible to create custom assays/tables.  [Lists](https://www.labkey.org/Documentation/wiki-page.view?name=advancedListTutorial) are the simplest mechanism in LabKey, though other mechanisms exist. 
 
 ### How Do I Get Started?
-[Please read these instructions to begin](https://github.com/bbimber/discvr/wiki/Getting-Started)
+[Please read these instructions to begin](gettingStarted.md)
 
 ### How Does DISCVR Relate to LabKey Server?
 LabKey Server is an open-source platform designed to manage scientific data. It is used by a large and diverse set of research groups, both large and small. The core of LabKey is built by professional software developers, and has enterprise level security and data-sharing capabilities. DISCVR consists of modules that extend LabKey. Our goal is to leverage the features of LabKey Server, and to professionally augment them where appropriate. New versions of DISCVR are released in conjunction with LabKey Server releases.  DISCVR is open-source, and has regular automated software testing.
