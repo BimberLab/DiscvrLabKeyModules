@@ -268,7 +268,7 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
         var action = 'runSequenceHandler';
 
         //NOTE: this will allow jobs like CombineGVCFs to opt-in to the scatter/gather variant pipeline.
-        if (!!params.scatterGather) {
+        if (params.scatterGatherMethod && params.scatterGatherMethod !== 'none') {
             action = 'runVariantProcessing';
             json.scatterGather = true;
         }

@@ -55,7 +55,7 @@ public class VariantAnnotatorStep extends AbstractCommandPipelineStep<VariantAnn
     }
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable List<Interval> intervals) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
 
@@ -95,10 +95,12 @@ public class VariantAnnotatorStep extends AbstractCommandPipelineStep<VariantAnn
             options.add(String.valueOf(Math.min(threads, 8)));
         }
 
-        if (interval != null)
+        if (intervals != null)
         {
-            options.add("-L");
-            options.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+            intervals.forEach(interval -> {
+                options.add("-L");
+                options.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+            });
         }
 
          //TODO: allow annotation using fields from another VCF:

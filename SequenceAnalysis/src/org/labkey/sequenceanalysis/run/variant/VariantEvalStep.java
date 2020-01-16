@@ -14,6 +14,7 @@ import org.labkey.sequenceanalysis.run.util.VariantEvalWrapper;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.util.List;
 
 /**
  * User: bimber
@@ -41,12 +42,12 @@ public class VariantEvalStep extends AbstractCommandPipelineStep<VariantEvalWrap
     }
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable List<Interval> intervals) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
 
         File outputFile = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".eval.grp");
-        getWrapper().executeEval(genome.getWorkingFastaFile(), inputVCF, outputFile, "Set1", interval);
+        getWrapper().executeEval(genome.getWorkingFastaFile(), inputVCF, outputFile, "Set1", intervals);
 
         output.addOutput(outputFile, "Variant Eval Output");
         

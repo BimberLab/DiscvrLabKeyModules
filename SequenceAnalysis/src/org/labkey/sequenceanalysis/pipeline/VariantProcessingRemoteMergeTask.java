@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import htsjdk.samtools.util.Interval;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
@@ -68,7 +69,7 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
         {
             if (job instanceof VariantProcessingJob)
             {
-                if (!((VariantProcessingJob)job).isDoScatterByContig())
+                if (!((VariantProcessingJob)job).isScatterJob())
                 {
                     job.getLogger().info("skipping VCF merge task");
                     return false;
@@ -101,21 +102,21 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
 
         TaskFileManagerImpl manager = new TaskFileManagerImpl(getPipelineJob(), _wd.getDir(), _wd);
 
-        List<String> contigs = getPipelineJob().getAllContigs();
-        getJob().setStatus(PipelineJob.TaskStatus.running, "Combining Per Contig VFCs: " + contigs.size());
+        Map<String, List<Interval>> jobToIntervalMap = getPipelineJob().getJobToIntervalMap();
+        getJob().setStatus(PipelineJob.TaskStatus.running, "Combining Per-Contig VCFs: " + jobToIntervalMap.size());
 
         RecordedAction action = new RecordedAction(ACTION_NAME);
 
         Map<String, File> finalVcfs = getPipelineJob().getFinalVCFs();
         List<File> toConcat = new ArrayList<>();
-        for (String contig : getPipelineJob().getAllContigs())
+        for (String name : jobToIntervalMap.keySet())
         {
-            if (!finalVcfs.containsKey(contig))
+            if (!finalVcfs.containsKey(name))
             {
-                throw new PipelineJobException("Missing VCF for contig: " + contig);
+                throw new PipelineJobException("Missing VCF for interval/contig: " + name);
             }
 
-            File vcf = finalVcfs.get(contig);
+            File vcf = finalVcfs.get(name);
             if (!vcf.exists())
             {
                 throw new PipelineJobException("Missing VCF: " + vcf.getPath());
@@ -130,6 +131,9 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
         String basename = SequenceAnalysisService.get().getUnzippedBaseName(toConcat.get(0).getName());
         File combined = SequenceAnalysisService.get().combineVcfs(toConcat, getPipelineJob().getAnalysisDirectory(), basename, getJob().getLogger());
         manager.addOutput(action, "Merged VCF", combined);
+
+        //TODO: run tasks after merge?
+
 
         SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler = getPipelineJob().getHandler();
         if (handler instanceof SequenceOutputHandler.TracksVCF)

@@ -302,11 +302,13 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 toolParams.add("--allow-old-rms-mapping-quality-annotation-data");
             }
 
-            Interval interval = ProcessVariantsHandler.getInterval(ctx);
-            if (interval != null)
+            List<Interval> intervals = ProcessVariantsHandler.getIntervals(ctx);
+            if (intervals != null)
             {
-                toolParams.add("-L");
-                toolParams.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+                intervals.forEach(interval -> {
+                    toolParams.add("-L");
+                    toolParams.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+                });
             }
 
             boolean doCopyInputs = ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.doCopyInputs", false);
