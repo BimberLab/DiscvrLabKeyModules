@@ -71,8 +71,8 @@ public class LdapSettings
     public static final String DEFAULT_FIRST_NAME_VAL = "givenName";
     public static final String DEFAULT_PHONE_VAL = "telephoneNumber";
     public static final String DEFAULT_UID_VAL = "userPrincipalName";
-    public static final String DEFUALT_USERCLASS_VAL = "user";
-    public static final String DEFUALT_GROUPCLASS_VAL = "groups";
+    public static final String DEFAULT_USERCLASS_VAL = "user";
+    public static final String DEFAULT_GROUPCLASS_VAL = "group";
 
     public static final String DELIM = "<>";
 
@@ -166,10 +166,10 @@ public class LdapSettings
         ret.putAll(encryptedMap);
 
         if (isMissingOrEmpty(ret, GROUP_OBJECTCLASS_PROP))
-            ret.put(GROUP_OBJECTCLASS_PROP, DEFUALT_GROUPCLASS_VAL);
+            ret.put(GROUP_OBJECTCLASS_PROP, DEFAULT_GROUPCLASS_VAL);
 
         if (isMissingOrEmpty(ret, USER_OBJECTCLASS_PROP))
-            ret.put(USER_OBJECTCLASS_PROP, DEFUALT_USERCLASS_VAL);
+            ret.put(USER_OBJECTCLASS_PROP, DEFAULT_USERCLASS_VAL);
 
         if (isMissingOrEmpty(ret, EMAIL_FIELD_PROP))
             ret.put(EMAIL_FIELD_PROP, DEFAULT_EMAIL_FIELD_VAL);
