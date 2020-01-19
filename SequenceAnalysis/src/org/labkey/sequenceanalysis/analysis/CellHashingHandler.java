@@ -4,6 +4,7 @@ import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import com.google.common.io.Files;
 import htsjdk.samtools.util.IOUtil;
+import org.apache.commons.collections4.ComparatorUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -411,7 +412,9 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
             ret.put("negative", negative);
             ret.put("seuratCalled", seuratCalled);
             ret.put("multiSeqCalled", multiSeqCalled);
-            ret.put("UniqueHtos", StringUtils.join(uniqueHTOs, ","));
+            List<String> uniqueHTOSorted = new ArrayList<>(uniqueHTOs);
+            Collections.sort(uniqueHTOSorted, ComparatorUtils.naturalComparator());
+            ret.put("UniqueHtos", StringUtils.join(uniqueHTOSorted, ","));
 
             if (includeFiles)
             {
