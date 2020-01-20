@@ -814,15 +814,6 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
             _job.getLogger().error(e.getMessage(), e);
             _job.getLogger().error("pid: " + ManagementFactory.getRuntimeMXBean().getName());
 
-            try
-            {
-                runLsof(input);
-            }
-            catch (PipelineJobException ex)
-            {
-                _job.getLogger().error(ex.getMessage(), ex);
-            }
-
             DebugInfoDumper.dumpThreads(_job.getLogger());
 
             throw e;
@@ -888,19 +879,6 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
             dest = _wd.outputFile(input, dest);
             processCopiedFile(input, dest, actions, resumer);
         }
-    }
-
-    //TODO: debugging only
-    private void runLsof(File input) throws PipelineJobException
-    {
-        boolean isDir = input.isDirectory();
-        AbstractCommandWrapper wrapper = new AbstractCommandWrapper(_job.getLogger()){};
-        wrapper.setThrowNonZeroExits(false);
-        wrapper.setWarnNonZeroExits(false);
-        if (isDir)
-            _job.error(wrapper.executeWithOutput(Arrays.asList("/usr/sbin/lsof", "+D", input.getPath())));
-        else
-            _job.error(wrapper.executeWithOutput(Arrays.asList("lsof", input.getPath())));
     }
 
     @Override
