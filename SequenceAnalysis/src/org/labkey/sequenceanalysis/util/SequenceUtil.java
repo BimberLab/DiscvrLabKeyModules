@@ -456,7 +456,7 @@ public class SequenceUtil
             //Build header.  Note: swapping the Number=0 for strings is a hack to deal with bad cassandra data
             if (idx == 0)
             {
-                bashCommands.add(cat + " " + vcf.getPath() + " | head -n 50000 | grep -e '^#' | sed 's/Number=0,Type=String/Number=1,Type=String/';");
+                bashCommands.add(cat + " " + vcf.getPath() + " | head -n 50000 | grep -e '^#';");
             }
 
             bashCommands.add(cat + " " + vcf.getPath() + " | grep -v '^#';");
