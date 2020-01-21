@@ -49,14 +49,7 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
 
     public static List<ToolParameterDescriptor> getToolDescriptors()
     {
-        return Arrays.asList(
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-dontUseSoftClippedBases"), "dontUseSoftClippedBases", "Don't Use Soft Clipped Bases", "If specified, we will not analyze soft clipped bases in the reads", "checkbox", null, true),
-                ToolParameterDescriptor.create("multithreaded", "Multithreaded?", "If checked, this tool will attempt to run in multi-threaded mode.  This has been reliable and is probably preferred over queue (which accomplishes the same idea) due to simplicity.", "checkbox", new JSONObject(){{
-                    put("checked", true);
-                }}, null),
-                ToolParameterDescriptor.create("useQueue", "Use Queue?", "If checked, this tool will attempt to run using GATK queue.  This is the preferred way to multi-thread this tool.", "checkbox", null, true),
-                ToolParameterDescriptor.create("minRamPerQueueJob", "Min RAM Per Queue Job", "This only applies if queue is checked.  If provided, the scatter count (number of jobs) for queue will be adjusted to ensure at least this amount of RAM, in GB, is available for each job", "ldk-integerfield", null, null)
-        );
+        return Arrays.asList(ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--dont-use-soft-clipped-bases"), "dontUseSoftClippedBases", "Don't Use Soft Clipped Bases", "If specified, we will not analyze soft clipped bases in the reads", "checkbox", null, false));
     }
 
     @Override
@@ -68,34 +61,13 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
         File outputFile = new File(outputDir, FileUtil.getBaseName(inputBam) + ".g.vcf.gz");
         File idxFile = new File(outputDir, FileUtil.getBaseName(inputBam) + ".g.vcf.gz.idx");
 
-        if (getProvider().getParameterByName("multithreaded").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false))
-        {
-            getPipelineCtx().getLogger().debug("HaplotypeCaller will run multi-threaded");
-            getWrapper().setMultiThreaded(true);
-        }
-
         getWrapper().setOutputDir(outputDir);
         getWrapper().setWorkingDir(outputDir);
 
-        if (getProvider().getParameterByName("useQueue").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false))
-        {
-            Integer minRamPerQueueJob = getProvider().getParameterByName("minRamPerQueueJob").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
-            if (minRamPerQueueJob != null)
-            {
-                getWrapper().setMinRamPerQueueJob(minRamPerQueueJob);
-            }
+        List<String> args = new ArrayList<>();
+        args.addAll(getClientCommandArgs());
 
-            getWrapper().executeWithQueue(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, getClientCommandArgs());
-        }
-        else
-        {
-            List<String> args = new ArrayList<>();
-            args.addAll(getClientCommandArgs());
-            args.add("--emitRefConfidence");
-            args.add("GVCF");
-
-            getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, args);
-        }
+        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, args);
 
         output.addOutput(outputFile, "gVCF File");
         output.addSequenceOutput(outputFile, outputFile.getName(), "gVCF File", rs.getReadsetId(), null, referenceGenome.getGenomeId(), "GATK Version: " + getWrapper().getVersionString());

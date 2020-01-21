@@ -143,7 +143,7 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
             });
         },
 
-            getCfgForToolParameters: function(parameters){
+        getCfgForToolParameters: function(parameters){
             var paramCfg = [];
             Ext4.Array.forEach(parameters, function (i, idx) {
                 var o = {
@@ -265,8 +265,16 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
         }
 
         Ext4.Msg.wait('Submitting...');
+        var action = 'runSequenceHandler';
+
+        //NOTE: this will allow jobs like CombineGVCFs to opt-in to the scatter/gather variant pipeline.
+        if (!!params.scatterGather) {
+            action = 'runVariantProcessing';
+            json.scatterGather = true;
+        }
+
         LABKEY.Ajax.request({
-            url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler', this.containerPath),
+            url: LABKEY.ActionURL.buildURL('sequenceanalysis', action, this.containerPath),
             jsonData: json,
             scope: this,
             success: function(){

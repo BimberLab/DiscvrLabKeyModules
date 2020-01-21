@@ -16,6 +16,7 @@
 package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
 
 import java.util.Collection;
 import java.util.List;
@@ -30,5 +31,14 @@ abstract public class AbstractVariantProcessingStepProvider<StepType extends Var
     public AbstractVariantProcessingStepProvider(String name, String label, String toolName, String description, @Nullable List<ToolParameterDescriptor> parameters, @Nullable Collection<String> clientDependencyPaths, @Nullable String websiteURL)
     {
         super(name, label, toolName, description, parameters, clientDependencyPaths, websiteURL);
+    }
+
+    @Override
+    public JSONObject toJSON()
+    {
+        JSONObject ret = super.toJSON();
+        ret.put("supportsScatterGather", this instanceof VariantProcessingStep.SupportsScatterGather);
+
+        return ret;
     }
 }

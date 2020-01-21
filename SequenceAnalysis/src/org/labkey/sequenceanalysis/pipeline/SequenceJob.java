@@ -33,6 +33,7 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.api.writer.PrintWriters;
 
+import javax.validation.constraints.Null;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -55,6 +56,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     private String _description;
     private SequenceJobSupportImpl _support;
     private File _webserverJobDir;
+    private File _parentWebserverJobDir;
     private String _folderPrefix;
     private List<File> _inputFiles;
     private List<SequenceOutputFile> _outputsToCreate = new ArrayList<>();
@@ -65,6 +67,30 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     // Default constructor for serialization
     protected SequenceJob()
     {
+    }
+
+    protected SequenceJob(SequenceJob parentJob, String jobName, String subdirectory) throws IOException
+    {
+        super(parentJob);
+        _taskPipelineId = parentJob._taskPipelineId;
+        _experimentRunRowId = parentJob._experimentRunRowId;
+        _jobName = jobName;
+        _description = parentJob._description;
+        _support = parentJob._support;
+        _parentWebserverJobDir = parentJob._webserverJobDir;
+        _webserverJobDir = new File(parentJob._webserverJobDir, subdirectory);
+        if (!_webserverJobDir.exists())
+        {
+            _webserverJobDir.mkdirs();
+        }
+
+        _folderPrefix = parentJob._folderPrefix;
+        _inputFiles = parentJob._inputFiles;
+        _folderFileRoot = parentJob._folderFileRoot;
+
+        _params = parentJob.getParameterJson();
+
+        setLogFile(_getLogFile());
     }
 
     public SequenceJob(String providerName, Container c, User u, @Nullable String jobName, PipeRoot pipeRoot, JSONObject params, TaskId taskPipelineId, String folderPrefix) throws IOException
@@ -205,6 +231,11 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         return _jobName;
     }
 
+    public String getJobName()
+    {
+        return _jobName;
+    }
+
     @Override
     public String getProtocolName()
     {
@@ -241,6 +272,11 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         return _webserverJobDir;
     }
 
+    public File getWebserverDir(boolean forceParent)
+    {
+        return forceParent && isSplitJob() ? _parentWebserverJobDir : _webserverJobDir;
+    }
+
     @Override
     public File getAnalysisDirectory()
     {
@@ -275,7 +311,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     @Override
     public File getParametersFile()
     {
-        return new File(_webserverJobDir, _folderPrefix + ".json");
+        return new File(_parentWebserverJobDir == null ? _webserverJobDir : _parentWebserverJobDir, _folderPrefix + ".json");
     }
 
     @Nullable

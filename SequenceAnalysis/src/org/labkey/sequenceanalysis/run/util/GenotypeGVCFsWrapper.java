@@ -1,12 +1,14 @@
 package org.labkey.sequenceanalysis.run.util;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
-import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
+import org.labkey.api.sequenceanalysis.run.AbstractGatk4Wrapper;
+import org.labkey.api.util.FileType;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,7 +22,7 @@ import java.util.Set;
 /**
  * Created by bimber on 8/8/2014.
  */
-public class GenotypeGVCFsWrapper extends AbstractGatkWrapper
+public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
 {
     public GenotypeGVCFsWrapper(Logger log)
     {
@@ -29,7 +31,7 @@ public class GenotypeGVCFsWrapper extends AbstractGatkWrapper
 
     public void execute(File referenceFasta, File outputFile, @Nullable List<String> options, boolean doCopyLocal, File... inputGVCFs) throws PipelineJobException
     {
-        getLogger().info("Running GATK GenotypeGVCFs");
+        getLogger().info("Running GATK 4 GenotypeGVCFs");
 
         ensureDictionary(referenceFasta);
 
@@ -37,38 +39,42 @@ public class GenotypeGVCFsWrapper extends AbstractGatkWrapper
         this.ensureVCFIndexes(inputGVCFs);
 
         Set<File> toDelete = new HashSet<>();
-        List<File> vcfsToProcess = new ArrayList<>();
+        List<File> filesToProcess = new ArrayList<>();
         if (doCopyLocal)
         {
-            getLogger().info("making local copies of gVCFs prior to genotyping");
-            vcfsToProcess.addAll(copyVcfsLocally(Arrays.asList(inputGVCFs), toDelete, outputFile.getParentFile(), getLogger(), false));
+            getLogger().info("making local copies of gVCF/GenomicsDB files prior to genotyping");
+            filesToProcess.addAll(copyVcfsLocally(Arrays.asList(inputGVCFs), toDelete, null, getLogger(), false));
         }
         else
         {
-            vcfsToProcess.addAll(Arrays.asList(inputGVCFs));
+            filesToProcess.addAll(Arrays.asList(inputGVCFs));
         }
 
         List<String> args = new ArrayList<>(getBaseArgs());
-        args.add("-T");
         args.add("GenotypeGVCFs");
         args.add("-R");
         args.add(referenceFasta.getPath());
-        for (File gvcf : vcfsToProcess)
+        for (File f : filesToProcess)
         {
             args.add("--variant");
-            args.add(gvcf.getPath());
+            if (GVCF.isType(f))
+            {
+                args.add(f.getPath());
+            }
+            else if (f.isDirectory())
+            {
+                args.add("gendb://" + f.getPath());
+            }
+            else
+            {
+                throw new IllegalArgumentException("Unknown input: " + f.getPath());
+            }
         }
 
-        args.add("-o");
+        args.add("-O");
         args.add(outputFile.getPath());
-        args.add("-nda");
 
-        Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
-        if (maxThreads != null)
-        {
-            args.add("-nt");
-            args.add(maxThreads.toString());
-        }
+        args.add("--annotate-with-num-discovered-alleles");
 
         if (options != null)
         {
@@ -83,7 +89,7 @@ public class GenotypeGVCFsWrapper extends AbstractGatkWrapper
 
         if (!toDelete.isEmpty())
         {
-            getLogger().info("deleting locally copied gVCFs");
+            getLogger().info("deleting locally copied inputs");
             for (File f : toDelete)
             {
                 f.delete();
@@ -91,22 +97,42 @@ public class GenotypeGVCFsWrapper extends AbstractGatkWrapper
         }
     }
 
+    private static FileType GVCF = new FileType(".g.vcf", FileType.gzSupportLevel.SUPPORT_GZ);
+
     public static List<File> copyVcfsLocally(Collection<File> inputGVCFs, Collection<File> toDelete, File localWorkDir, Logger log, boolean isResume) throws PipelineJobException
     {
+        if (localWorkDir == null)
+        {
+            String tmpDir = StringUtils.trimToNull(PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_TMP_DIR"));
+            if (tmpDir == null)
+            {
+                tmpDir = System.getProperty("java.io.tmpdir");
+            }
+
+            log.debug("Using temp directory: " + tmpDir);
+            localWorkDir = new File(tmpDir);
+        }
+
         List<File> vcfsToProcess = new ArrayList<>();
         for (File f : inputGVCFs)
         {
-            File origIdx = new File(f.getPath() + ".tbi");
-            if (!origIdx.exists())
+            File origIdx = null;
+            File movedIdx = null;
+            if (GVCF.isType(f))
             {
-                throw new PipelineJobException("expected index doesn't exist: " + origIdx.getPath());
+                origIdx = new File(f.getPath() + ".tbi");
+                if (!origIdx.exists())
+                {
+                    throw new PipelineJobException("expected index doesn't exist: " + origIdx.getPath());
+                }
+
+                movedIdx = new File(localWorkDir, f.getName() + ".tbi");
             }
 
-            File movedIdx = new File(localWorkDir, f.getName() + ".tbi");
-            File movedVcf = new File(localWorkDir, f.getName());
+            File movedFile = new File(localWorkDir, f.getName());
             if (!isResume)
             {
-                if (movedIdx.exists())
+                if (movedIdx != null && movedIdx.exists())
                 {
                     log.debug("moved index exists, skipping file: " + f.getName());
                 }
@@ -115,12 +141,15 @@ public class GenotypeGVCFsWrapper extends AbstractGatkWrapper
                     log.debug("copying file: " + f.getName());
                     try
                     {
-                        if (movedVcf.exists())
+                        if (movedFile.exists())
                         {
-                            movedVcf.delete();
+                            movedFile.delete();
                         }
-                        FileUtils.copyFile(f, movedVcf);
-                        FileUtils.copyFile(origIdx, movedIdx);
+                        FileUtils.copyFile(f, movedFile);
+                        if (origIdx != null)
+                        {
+                            FileUtils.copyFile(origIdx, movedIdx);
+                        }
                     }
                     catch (IOException e)
                     {
@@ -129,10 +158,10 @@ public class GenotypeGVCFsWrapper extends AbstractGatkWrapper
                 }
             }
 
-            toDelete.add(movedVcf);
+            toDelete.add(movedFile);
             toDelete.add(movedIdx);
 
-            vcfsToProcess.add(movedVcf);
+            vcfsToProcess.add(movedFile);
         }
 
         return vcfsToProcess;
@@ -144,7 +173,10 @@ public class GenotypeGVCFsWrapper extends AbstractGatkWrapper
         {
             try
             {
-                SequenceAnalysisService.get().ensureVcfIndex(gvcf, getLogger());
+                if (GVCF.isType(gvcf))
+                {
+                    SequenceAnalysisService.get().ensureVcfIndex(gvcf, getLogger());
+                }
             }
             catch (IOException e)
             {

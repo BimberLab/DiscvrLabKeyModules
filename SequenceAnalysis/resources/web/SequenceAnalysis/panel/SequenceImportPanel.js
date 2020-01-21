@@ -1658,7 +1658,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
             },{
                 xtype: 'checkbox',
                 itemId: 'importReadsetIds',
-                fieldLabel: 'Use Previously Uploaded Readsets (not common)',
+                fieldLabel: 'Use Previously Uploaded Readsets (advanced)',
                 helpPopup: 'If checked, rather than supply all metadata here, you will simply enter the readset ID of previously imported readsets.  The previously imported values will be used.',
                 scope: this,
                 handler: function(btn, val){

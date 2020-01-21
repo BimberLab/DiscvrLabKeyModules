@@ -866,8 +866,20 @@ public class SequenceAnalysisManager
             assertTrue("JAR does not exist: " + htsjdkJar.getPath(), htsjdkJar.exists());
 
             File picardJar = SequenceAnalysisManager.getPicardJar();
-            assertNotNull("Unble to find picard jar", picardJar);
+            assertNotNull("Unable to find picard jar", picardJar);
             assertTrue("JAR does not exist: " + picardJar.getPath(), picardJar.exists());
+
+            File libDir = new File(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getExplodedPath(), "lib");
+            assertNotNull("Unable to find SequenceAnalysis lib dir", libDir);
+            assertTrue("SequenceAnalysis lib dir does not exist: " + libDir.getPath(), libDir.exists());
+
+            File apiLibDir = new File(ModuleLoader.getInstance().getModule("API").getExplodedPath(), "lib");
+            assertNotNull("Unable to find apiLibDir lib dir", apiLibDir);
+            assertTrue("apiLibDir lib dir does not exist: " + apiLibDir.getPath(), apiLibDir.exists());
+
+            File fastqcDir = new File(libDir.getParentFile(), "external/fastqc");
+            assertNotNull("Unable to find fastqcDir dir", fastqcDir);
+            assertTrue("fastqcDir dir does not exist: " + fastqcDir.getPath(), fastqcDir.exists());
         }
     }
 }

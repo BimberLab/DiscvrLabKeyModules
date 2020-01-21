@@ -1,7 +1,10 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.util.Interval;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.FeatureReader;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
@@ -58,8 +61,10 @@ import java.util.TreeMap;
 /**
  * Created by bimber on 8/26/2014.
  */
-public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, SequenceOutputHandler.HasActionNames
+public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, SequenceOutputHandler.HasActionNames, SequenceOutputHandler.TracksVCF
 {
+    public static final String VCF_CATEGORY = "VCF File";
+
     private FileType _vcfFileType = new FileType(Arrays.asList(".vcf"), ".vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
     private ProcessVariantsHandler.Resumer _resumer;
 
@@ -135,6 +140,71 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
     }
 
     @Override
+    public File getFinalVCF(JobContext ctx) throws PipelineJobException
+    {
+        return getVcfOutputByCategory(ctx, VCF_CATEGORY);
+    }
+
+    @Override
+    public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, Collection<SequenceOutputFile> componentOutputs)
+    {
+        return createSequenceOutput(job, processed, componentOutputs, VCF_CATEGORY);
+    }
+
+    public static SequenceOutputFile createSequenceOutput(PipelineJob job, File processed, Collection<SequenceOutputFile> componentOutputs, String category)
+    {
+        Set<Integer> libraryIds = new HashSet<>();
+        componentOutputs.forEach(x -> libraryIds.add(x.getLibrary_id()));
+
+        Set<Integer> readsetIds = new HashSet<>();
+        componentOutputs.forEach(x -> readsetIds.add(x.getReadset()));
+
+        int sampleCount;
+        try (VCFFileReader reader = new VCFFileReader(processed))
+        {
+            VCFHeader header = reader.getFileHeader();
+            sampleCount = header.getSampleNamesInOrder().size();
+        }
+
+        SequenceOutputFile so1 = new SequenceOutputFile();
+        so1.setName(processed.getName());
+        so1.setFile(processed);
+        so1.setLibrary_id((libraryIds.isEmpty() ? null : libraryIds.iterator().next()));
+        so1.setCategory(category);
+        so1.setContainer(job.getContainerId());
+        so1.setCreated(new Date());
+        so1.setModified(new Date());
+        so1.setReadset((readsetIds.isEmpty() ? null : readsetIds.iterator().next()));
+        so1.setDescription("Total samples: " + sampleCount);
+
+        return so1;
+    }
+
+    public static File getVcfOutputByCategory(JobContext ctx, final String category) throws PipelineJobException
+    {
+        Set<File> finalVcfs = new HashSet<>();
+        TaskFileManagerImpl manager = (TaskFileManagerImpl)ctx.getFileManager();
+        ctx.getLogger().debug("Inspecting " + manager.getOutputsToCreate().size() + " outputs for category: " + category);
+        manager.getOutputsToCreate().forEach(x ->  {
+            if (category.equals(x.getCategory()))
+            {
+                finalVcfs.add(x.getFile());
+            }
+        });
+
+        if (finalVcfs.isEmpty())
+        {
+            throw new PipelineJobException("Unable to find final VCF");
+        }
+        else if (finalVcfs.size() > 1)
+        {
+            throw new PipelineJobException("More than one output tagged as final VCF");
+        }
+
+        return finalVcfs.iterator().next();
+    }
+
+    @Override
     public SequenceOutputProcessor getProcessor()
     {
         return new Processor();
@@ -145,12 +215,21 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         return (SequenceOutputHandlerJob)job;
     }
 
+    private static VariantProcessingJob getVariantPipelineJob(PipelineJob job)
+    {
+        return job instanceof VariantProcessingJob ? (VariantProcessingJob)job : null;
+    }
+
     public static void initVariantProcessing(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, File outputDir) throws PipelineJobException
     {
         SequenceTaskHelper taskHelper = new SequenceTaskHelper(getPipelineJob(job), outputDir);
 
         List<PipelineStepCtx<VariantProcessingStep>> providers = SequencePipelineService.get().getSteps(job, VariantProcessingStep.class);
         boolean requiresPedigree = false;
+        VariantProcessingJob vj = getVariantPipelineJob(job);
+        boolean useScatterGather = vj != null && vj.isDoScatterByContig();
+        Set<String> stepsNotScatterGather = new HashSet<>();
+
         for (PipelineStepCtx<VariantProcessingStep> stepCtx : providers)
         {
             for (ToolParameterDescriptor pd : stepCtx.getProvider().getParameters())
@@ -168,8 +247,18 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 requiresPedigree = true;
             }
 
+            if (useScatterGather && !(stepCtx.getProvider() instanceof VariantProcessingStep.SupportsScatterGather))
+            {
+                stepsNotScatterGather.add(stepCtx.getProvider().getName());
+            }
+
             VariantProcessingStep step = stepCtx.getProvider().create(taskHelper);
             step.init(job, support, inputFiles);
+        }
+
+        if (!stepsNotScatterGather.isEmpty())
+        {
+            throw new PipelineJobException("The follow steps do not support scatter/gather: " + StringUtils.join(stepsNotScatterGather, ", "));
         }
 
         if (requiresPedigree)
@@ -243,6 +332,25 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         return new File(outputDir, "gatk.ped");
     }
 
+    public static Interval getInterval(JobContext ctx)
+    {
+        PipelineJob pj = ctx.getJob();
+        if (pj instanceof VariantProcessingJob)
+        {
+            VariantProcessingJob vpj = (VariantProcessingJob)pj;
+            if (vpj.isDoScatterByContig())
+            {
+                String contig = vpj.getContigForTask();
+                ctx.getLogger().debug("This job will process contig: " + contig);
+
+                SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(vpj.getDictFile().toPath());
+                return new Interval(contig, 1, dict.getSequence(contig).getSequenceLength());
+            }
+        }
+
+        return null;
+    }
+
     public static File processVCF(File input, Integer libraryId, JobContext ctx, Resumer resumer) throws PipelineJobException
     {
         try
@@ -297,7 +405,9 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             VariantProcessingStep step = stepCtx.getProvider().create(ctx);
             step.setStepIdx(stepCtx.getStepIdx());
 
-            VariantProcessingStep.Output output = step.processVariants(currentVCF, ctx.getOutputDir(), genome);
+            Interval interval = getInterval(ctx);
+
+            VariantProcessingStep.Output output = step.processVariants(currentVCF, ctx.getOutputDir(), genome, interval);
             resumer.getFileManager().addStepOutputs(action, output);
 
             if (output.getVCF() != null)
@@ -436,6 +546,13 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                     args.add("-genotypeMergeOptions");
                     args.add("PRIORITIZE");
 
+                    Interval interval = getInterval(ctx);
+                    if (interval != null)
+                    {
+                        args.add("-L");
+                        args.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+                    }
+
                     cv.execute(rg.getWorkingFastaFile(), vcfsInPriority, outFile, args, true);
                 }
 
@@ -480,7 +597,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                     so1.setName(processed.getName());
                     so1.setFile(processed);
                     so1.setLibrary_id(libraryId);
-                    so1.setCategory("VCF File");
+                    so1.setCategory(VCF_CATEGORY);
                     so1.setContainer(ctx.getJob().getContainerId());
                     so1.setCreated(new Date());
                     so1.setModified(new Date());
@@ -652,10 +769,11 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             _finalVcfs = finalVcfs;
         }
 
-        public void setGenotypeGVCFsComplete(RecordedAction action, File finalVCF)
+        public void setGenotypeGVCFsComplete(RecordedAction action, File finalVCF) throws PipelineJobException
         {
             getRecordedActions().add(action);
             _finalVcfs.put(GENOTYPE_GVCFS, finalVCF);
+            saveState();
         }
 
         public boolean isGenotypeGVCFsComplete()

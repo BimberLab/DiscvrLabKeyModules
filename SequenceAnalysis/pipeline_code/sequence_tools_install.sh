@@ -328,15 +328,13 @@ then
 
     #another, for MV checking
     mkdir -p ${LK_HOME}/svn/trunk/pipeline_code/
-    svn co --username cpas --password cpas --no-auth-cache https://svn.mgt.labkey.host/stedi/trunk/externalModules/labModules/SequenceAnalysis/pipeline_code/gatk ${LK_HOME}/svn/trunk/pipeline_code/gatk/
-    #mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/VariantType.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
+    svn co --no-auth-cache https://github.com/BimberLab/DiscvrLabkeyModules/trunk/SequenceAnalysis/pipeline_code/gatk ${LK_HOME}/svn/trunk/pipeline_code/gatk/
+
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MendelianViolationCount.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MendelianViolationBySample.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/GenotypeConcordance.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/GenotypeConcordanceBySite.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
     mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MinorAlleleFrequency.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
-    mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MultipleAllelesAtLoci.java ./gatk-protected/public/gatk-tools-public/src/main/java/org/broadinstitute/gatk/tools/walkers/coverage/
-    mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/RemoveAnnotations.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/
 
     cd gatk-protected
 
@@ -420,6 +418,31 @@ then
     #sed -i 's/-o $coordsfile/-o \\"$coordsfile\\"/' gmap_build
     #sed -i 's/-c $coordsfile/-c \\"$coordsfile\\"/' gmap_build
     #sed -i 's/-f $fasta_sources/-c \\"$fasta_sources\\"/' gmap_build
+else
+    echo "Already installed"
+fi
+
+
+#
+# GATK4
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install GATK4"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/GenomeAnalysisTK4.jar || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf gatk-4.1.4.1*
+    rm -Rf $LKTOOLS_DIR/GenomeAnalysisTK4.jar
+
+    wget $WGET_OPTS https://github.com/broadinstitute/gatk/releases/download/4.1.4.1/gatk-4.1.4.1.zip
+    unzip gatk-4.1.4.1.zip
+
+    cp ./gatk-4.1.4.1/gatk-package-4.1.4.1-local.jar $LKTOOLS_DIR/GenomeAnalysisTK4.jar
 else
     echo "Already installed"
 fi

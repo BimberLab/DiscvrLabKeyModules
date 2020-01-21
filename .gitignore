@@ -2,5 +2,6 @@
 /jbrowse/resources/web/jbrowseApp
 /jbrowse/node_modules
 /intellijBuild
+/travisSettings.sh
 
 dependencies.txt

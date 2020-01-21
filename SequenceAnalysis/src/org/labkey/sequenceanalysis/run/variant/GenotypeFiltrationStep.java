@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.variant;
 
+import htsjdk.samtools.util.Interval;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -15,6 +16,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.VariantFiltrationWrapper;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,13 +34,13 @@ public class GenotypeFiltrationStep extends AbstractCommandPipelineStep<VariantF
         super(provider, ctx, new VariantFiltrationWrapper(ctx.getLogger()));
     }
 
-    public static class Provider extends AbstractVariantProcessingStepProvider<GenotypeFiltrationStep>
+    public static class Provider extends AbstractVariantProcessingStepProvider<GenotypeFiltrationStep> implements VariantProcessingStep.SupportsScatterGather
     {
         public Provider()
         {
             super("GenotypeFiltrationStep", "GATK VariantFiltration for Genotypes", "GATK", "Filter genotypes using GATK VariantFiltration", Arrays.asList(
                     ToolParameterDescriptor.create("filters", "Filters", "Filters that will be applied to the variants.", "sequenceanalysis-genotypefilterpanel", null, null),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--setFilteredGtToNocall"), "setFilteredGtToNocall", "Set Filtered Genotypes to No-Call", "If selected, any filtered genotypes will be converted to no-call.", "checkbox", new JSONObject(){{
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--set-filtered-genotype-to-no-call"), "setFilteredGtToNocall", "Set Filtered Genotypes to No-Call", "If selected, any filtered genotypes will be converted to no-call.", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true)
             ), Arrays.asList("sequenceanalysis/panel/GenotypeFilterPanel.js"), "");
@@ -51,7 +53,7 @@ public class GenotypeFiltrationStep extends AbstractCommandPipelineStep<VariantF
     }
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome) throws PipelineJobException
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
         File outputVcf = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".gfiltered.vcf.gz");
@@ -72,11 +74,17 @@ public class GenotypeFiltrationStep extends AbstractCommandPipelineStep<VariantF
                     throw new PipelineJobException("Improper filter: " + filterArr.getString(i));
                 }
 
-                params.add("-G_filterName");
+                params.add("-G-filter-name");
                 params.add(arr.getString(0));
-                params.add("-G_filter");
+                params.add("-G-filter");
                 params.add(arr.getString(1));
             }
+        }
+
+        if (interval != null)
+        {
+            params.add("-L");
+            params.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
         }
 
         getWrapper().execute(genome.getWorkingFastaFile(), inputVCF, outputVcf, params);

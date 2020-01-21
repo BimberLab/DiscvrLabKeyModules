@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.variant;
 
+import htsjdk.samtools.util.Interval;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
@@ -11,6 +12,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.VariantEvalWrapper;
 
+import javax.annotation.Nullable;
 import java.io.File;
 
 /**
@@ -39,12 +41,12 @@ public class VariantEvalStep extends AbstractCommandPipelineStep<VariantEvalWrap
     }
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome) throws PipelineJobException
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
 
         File outputFile = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".eval.grp");
-        getWrapper().executeEval(genome.getWorkingFastaFile(), inputVCF, outputFile, "Set1");
+        getWrapper().executeEval(genome.getWorkingFastaFile(), inputVCF, outputFile, "Set1", interval);
 
         output.addOutput(outputFile, "Variant Eval Output");
         

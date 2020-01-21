@@ -76,7 +76,7 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
                     continue;
                 }
 
-                boolean isFirstMate = !(rec.getProperPairFlag() && rec.getSecondOfPairFlag());
+                boolean isFirstMate = !(rec.getReadPairedFlag() && rec.getSecondOfPairFlag());
                 if (!isFirstMate)
                 {
                     continue;

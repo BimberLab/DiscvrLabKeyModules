@@ -3,7 +3,7 @@ package org.labkey.sequenceanalysis.run.util;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
+import org.labkey.api.sequenceanalysis.run.AbstractDiscvrSeqWrapper;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * Created by bimber on 4/24/2017.
  */
-public class MultiAllelicPositionWrapper extends AbstractGatkWrapper
+public class MultiAllelicPositionWrapper extends AbstractDiscvrSeqWrapper
 {
     public MultiAllelicPositionWrapper(Logger log)
     {
@@ -41,11 +41,5 @@ public class MultiAllelicPositionWrapper extends AbstractGatkWrapper
         execute(args);
 
         return outputFile;
-    }
-
-    @Override
-    protected String getJarName()
-    {
-        return "DISCVRSeq.jar";
     }
 }

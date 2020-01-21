@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -47,10 +48,10 @@ public class SubreadAnalysis extends AbstractCommandPipelineStep<SubreadAnalysis
                     }}, null),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-M"), "countMultiMappingReads", "Count Multi Mapping Reads", "If checked, reads mapped to more than one locus will be counted", "checkbox", new JSONObject(){{
 
-                    }}, false),
+                    }}, true),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-O"), "allowMultiOverlap", "Allow Multi Overlap", "If checked, reads aligning to more than one meta feature (typically transcript) will be counted.  Note: this means that read will be counted more than once.", "checkbox", new JSONObject(){{
 
-                    }}, false),
+                    }}, true),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-p"), "isPairedEnd", "Count Fragments", "If specified, fragments (or templates) will be counted instead of reads. This option is only applicable for paired-end reads.", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true),
@@ -63,6 +64,16 @@ public class SubreadAnalysis extends AbstractCommandPipelineStep<SubreadAnalysis
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--ignoreDup"), "ignoreDup", "Ignore Duplicates", "If specified, reads flagged as duplicated will be ignored.", "checkbox", new JSONObject(){{
                         put("checked", false);
                     }}, false),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--largestOverlap"), "largestOverlap", "Assign to Largest Overlap", "If specified, reads (or fragments) will be assigned to the target that has the largest number of overlapping bases.", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, true),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--fracOverlap"), "fracOverlap", "Min Read Fraction Overlapping", "Minimum fraction of overlapping bases in a read that is required for read assignment.", "ldk-numberfield", new JSONObject(){{
+                        put("minValue", 0);
+                        put("maxValue", 1);
+                    }}, 0.1),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--minOverlap"), "minOverlap", "Min Read Overlap", "Minimum number of overlapping bases in a read that is required for read assignment.", "ldk-integerfield", new JSONObject(){{
+                        put("minValue", 0);
+                    }}, null),
                     ToolParameterDescriptor.create("strandSpecific", "Strand Specific", "If reads are stranded, specify that here.", "ldk-simplecombo", new JSONObject(){{
                         put("storeValues", "Unstranded;Stranded;Reversely Stranded");
                         put("value", "Unstranded");
@@ -136,8 +147,17 @@ public class SubreadAnalysis extends AbstractCommandPipelineStep<SubreadAnalysis
 
         AnalysisOutputImpl output = new AnalysisOutputImpl();
 
+        String description = StringUtils.join(new String[]{
+                "Count Multi-mapping: " + getProvider().getParameterByName("countMultiMappingReads").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()),
+                "Count Multi-overlap: " + getProvider().getParameterByName("allowMultiOverlap").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()),
+                "Count Fragments: " + getProvider().getParameterByName("isPairedEnd").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()),
+                "Assign Fractional Counts: " + getProvider().getParameterByName("fraction").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()),
+                "Primary Alignments: " + getProvider().getParameterByName("primary").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()),
+                "Ignore Duplicates: " + getProvider().getParameterByName("ignoreDup").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()),
+                "Strandedness: " + getProvider().getParameterByName("strandSpecific").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx())
+        }, "\n");
         output.addInput(inputBam, "BAM File");
-        output.addSequenceOutput(outputFile, "Feature Counts: " + inputBam.getName(), "Subread Feature Counts", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+        output.addSequenceOutput(outputFile, "Feature Counts: " + inputBam.getName(), "Subread Feature Counts", rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
 
         File summary = new File(outputFile.getPath() + ".summary");
         if (summary.exists())

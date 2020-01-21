@@ -150,6 +150,7 @@ import org.labkey.sequenceanalysis.pipeline.SequenceJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
+import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 import org.labkey.sequenceanalysis.run.BamHaplotyper;
 import org.labkey.sequenceanalysis.run.alignment.CellRangerWrapper;
 import org.labkey.sequenceanalysis.run.analysis.AASnpByCodonAggregator;
@@ -3925,7 +3926,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                         Container targetContainer = form.getUseOutputFileContainer() ? ContainerManager.getForId(o.getContainer()) : getContainer();
                         PipeRoot pr1 = getPipeRoot(targetContainer, containerToPipeRootMap);
-                        SequenceOutputHandlerJob job = new SequenceOutputHandlerJob(targetContainer, getUser(), jobName, pr1, handler, Arrays.asList(o), json);
+                        PipelineJob job = createOutputJob(form, targetContainer, jobName, pr1, handler, Arrays.asList(o), json);
                         PipelineService.get().queueJob(job);
                         guids.add(job.getJobGUID());
                     }
@@ -3953,7 +3954,7 @@ public class SequenceAnalysisController extends SpringActionController
                     if (!outputFiles.isEmpty())
                     {
                         JSONObject json = new JSONObject(form.getParams());
-                        SequenceOutputHandlerJob job = new SequenceOutputHandlerJob(getContainer(), getUser(), (StringUtils.isEmpty(form.getJobName()) ? handler.getName().replaceAll(" ", "_") + "_" + FileUtil.getTimestamp() : form.getJobName()), pr, handler, outputFiles, json);
+                        PipelineJob job = createOutputJob(form, getContainer(), (StringUtils.isEmpty(form.getJobName()) ? handler.getName().replaceAll(" ", "_") + "_" + FileUtil.getTimestamp() : form.getJobName()), pr, handler, outputFiles, json);
                         PipelineService.get().queueJob(job);
                         guids.add(job.getJobGUID());
                     }
@@ -3980,6 +3981,11 @@ public class SequenceAnalysisController extends SpringActionController
             }
         }
 
+        protected PipelineJob createOutputJob(RunSequenceHandlerForm form, Container targetContainer, String jobName, PipeRoot pr1, SequenceOutputHandler handler, List<SequenceOutputFile> inputs, JSONObject json) throws IOException, PipelineJobException
+        {
+            return new SequenceOutputHandlerJob(targetContainer, getUser(), jobName, pr1, handler, inputs, json);
+        }
+
         private PipeRoot getPipeRoot(Container targetContainer, Map<Container, PipeRoot> containerToPipeRootMap)
         {
             if (!containerToPipeRootMap.containsKey(targetContainer))
@@ -3995,12 +4001,22 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
+    @RequiresPermission(InsertPermission.class)
+    public class RunVariantProcessingAction extends RunSequenceHandlerAction
+    {
+        protected PipelineJob createOutputJob(RunSequenceHandlerForm form, Container targetContainer, String jobName, PipeRoot pr1, SequenceOutputHandler handler, List<SequenceOutputFile> inputs, JSONObject json) throws PipelineJobException, IOException
+        {
+            return new VariantProcessingJob(targetContainer, getUser(), jobName, pr1, handler, inputs, json, form.isScatterGather());
+        }
+    }
+
     public static class RunSequenceHandlerForm extends CheckFileStatusForm
     {
         private String _jobName;
         private String _params;
         private Boolean _doSplitJobs = null;
         private Boolean _useOutputFileContainer = false;
+        private Boolean _scatterGather = null;
 
         public String getJobName()
         {
@@ -4035,6 +4051,21 @@ public class SequenceAnalysisController extends SpringActionController
         public void setDoSplitJobs(Boolean doSplitJobs)
         {
             _doSplitJobs = doSplitJobs;
+        }
+
+        public Boolean getScatterGather()
+        {
+            return _scatterGather;
+        }
+
+        public void setScatterGather(Boolean scatterGather)
+        {
+            _scatterGather = scatterGather;
+        }
+
+        public boolean isScatterGather()
+        {
+            return _scatterGather != null && _scatterGather;
         }
 
         public Boolean getUseOutputFileContainer()

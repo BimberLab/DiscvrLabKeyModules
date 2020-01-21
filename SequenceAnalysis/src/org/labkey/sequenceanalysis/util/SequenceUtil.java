@@ -17,14 +17,16 @@ import htsjdk.tribble.FeatureReader;
 import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.CommandWrapper;
+import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.StringUtilsLabKey;
@@ -42,7 +44,9 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -72,7 +76,8 @@ public class SequenceUtil
         gtf(".gtf"),
         gff(Arrays.asList(".gff", ".gff3"), false),
         bed(".bed"),
-        vcf(Arrays.asList(".vcf"), true);
+        vcf(Arrays.asList(".vcf"), true),
+        gvcf(Arrays.asList(".g.vcf"), true);
 
         private List<String> _extensions;
         private boolean _allowGzip;
@@ -435,5 +440,57 @@ public class SequenceUtil
             FileUtils.moveFile(sorted, input);
         }
         sorted.delete();
+    }
+
+    public static File combineVcfs(List<File> files, File outputDirectory, String outputBasename, Logger log) throws PipelineJobException
+    {
+        log.info("combining VCFs: ");
+        File outputGzip = new File(outputDirectory, outputBasename + ".vcf.gz");
+
+        List<String> bashCommands = new ArrayList<>();
+        int idx = 0;
+        for (File vcf : files)
+        {
+            String cat = vcf.getName().toLowerCase().endsWith(".gz") ? "zcat" : "cat";
+
+            //Build header.  Note: swapping the Number=0 for strings is a hack to deal with bad cassandra data
+            if (idx == 0)
+            {
+                bashCommands.add(cat + " " + vcf.getPath() + " | head -n 50000 | grep -e '^#';");
+            }
+
+            bashCommands.add(cat + " " + vcf.getPath() + " | grep -v '^#';");
+            idx++;
+        }
+
+        try
+        {
+            File bashTmp = new File(outputDirectory, "vcfCombine.sh");
+            try (PrintWriter writer = PrintWriters.getPrintWriter(bashTmp))
+            {
+                writer.write("#!/bin/bash\n");
+                writer.write("set -x\n");
+                writer.write("set -e\n");
+                writer.write("{\n");
+                bashCommands.forEach(x -> writer.write(x + '\n'));
+                writer.write("} | bgzip > " + outputGzip + "\n");
+            }
+
+            SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
+            wrapper.execute(Arrays.asList("/bin/bash", bashTmp.getPath()));
+
+            SequenceAnalysisService.get().ensureVcfIndex(outputGzip, log);
+
+            bashTmp.delete();
+
+            log.info("total variants: " + SequenceAnalysisService.get().getVCFLineCount(outputGzip, log, false));
+            log.info("passing variants: " + SequenceAnalysisService.get().getVCFLineCount(outputGzip, log, true));
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        return outputGzip;
     }
 }

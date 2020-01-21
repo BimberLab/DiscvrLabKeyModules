@@ -1,11 +1,14 @@
 package org.labkey.sequenceanalysis.analysis;
 
+import htsjdk.samtools.util.Interval;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -25,6 +28,7 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.pipeline.JobContextImpl;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
+import org.labkey.sequenceanalysis.run.util.GenomicsDBImportHandler;
 import org.labkey.sequenceanalysis.run.util.GenotypeGVCFsWrapper;
 
 import java.io.File;
@@ -37,10 +41,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import static org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler.VCF_CATEGORY;
+
 /**
  * Created by bimber on 8/26/2014.
  */
-public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, SequenceOutputHandler.HasActionNames
+public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, SequenceOutputHandler.HasActionNames, SequenceOutputHandler.TracksVCF
 {
     private FileType _gvcfFileType = new FileType(Arrays.asList(".g.vcf"), ".g.vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
 
@@ -118,7 +124,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
     @Override
     public boolean canProcess(SequenceOutputFile f)
     {
-        return f.getFile() != null && _gvcfFileType.isType(f.getFile());
+        return f.getFile() != null && (_gvcfFileType.isType(f.getFile()) || GenomicsDBImportHandler.CATEGORY.equals(f.getCategory()));
     }
 
     @Override
@@ -134,6 +140,18 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
     }
 
     @Override
+    public File getFinalVCF(JobContext ctx) throws PipelineJobException
+    {
+        return ProcessVariantsHandler.getVcfOutputByCategory(ctx, VCF_CATEGORY);
+    }
+
+    @Override
+    public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, Collection<SequenceOutputFile> componentOutputs)
+    {
+        return ProcessVariantsHandler.createSequenceOutput(job, processed, componentOutputs, VCF_CATEGORY);
+    }
+
+    @Override
     public SequenceOutputProcessor getProcessor()
     {
         return new Processor();
@@ -145,6 +163,19 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
             ProcessVariantsHandler.initVariantProcessing(job, support, inputFiles, outputDir);
+
+            if (params.get("variantCalling.GenotypeGVCFs.forceSitesFile") != null)
+            {
+                int dataId = params.getInt("variantCalling.GenotypeGVCFs.forceSitesFile");
+                ExpData data = ExperimentService.get().getExpData(dataId);
+                if (data == null)
+                {
+                    throw new PipelineJobException("Unable to find ExpData with ID: " + dataId);
+                }
+
+                job.getLogger().debug("Caching ExpData: " + dataId);
+                support.cacheExpData(data);
+            }
         }
 
         @Override
@@ -201,7 +232,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             so1.setDescription("GATK GenotypeGVCF output.  GATK Version: " + wrapper.getVersionString() + ".  Total samples: " + sampleCount);
             so1.setFile(processed);
             so1.setLibrary_id(genomeId);
-            so1.setCategory("VCF File");
+            so1.setCategory(VCF_CATEGORY);
             so1.setContainer(job.getContainerId());
             so1.setCreated(new Date());
             so1.setModified(new Date());
@@ -218,14 +249,14 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
 
         }
 
-        private File runGenotypeGVCFs(PipelineJob job, JobContext ctx, ProcessVariantsHandler.Resumer resumer, List<File> inputVcfs, int genomeId) throws PipelineJobException
+        private File runGenotypeGVCFs(PipelineJob job, JobContext ctx, ProcessVariantsHandler.Resumer resumer, List<File> inputFiles, int genomeId) throws PipelineJobException
         {
             RecordedAction action = new RecordedAction(getName());
             action.setStartTime(new Date());
 
-            for (File f : inputVcfs)
+            for (File f : inputFiles)
             {
-                action.addInput(f, "Input gVCF");
+                action.addInput(f, "Input Variants");
             }
 
             GenotypeGVCFsWrapper wrapper = new GenotypeGVCFsWrapper(job.getLogger());
@@ -244,27 +275,43 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             List<String> toolParams = new ArrayList<>();
             if (ctx.getParams().get("variantCalling.GenotypeGVCFs.stand_call_conf") != null)
             {
-                toolParams.add("-stand_call_conf");
+                toolParams.add("-stand-call-conf");
                 toolParams.add(ctx.getParams().get("variantCalling.GenotypeGVCFs.stand_call_conf").toString());
             }
 
             if (ctx.getParams().get("variantCalling.GenotypeGVCFs.max_alternate_alleles") != null)
             {
-                toolParams.add("--max_alternate_alleles");
+                toolParams.add("--max-alternate-alleles");
                 toolParams.add(ctx.getParams().get("variantCalling.GenotypeGVCFs.max_alternate_alleles").toString());
             }
 
             if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.includeNonVariantSites"))
             {
-                toolParams.add("--includeNonVariantSites");
+                toolParams.add("--include-non-variant-sites");
             }
 
-            toolParams.add("-A");
-            toolParams.add("FractionInformativeReads");
+            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.forceSitesFile") != null)
+            {
+                File f = ctx.getSequenceSupport().getCachedData(ctx.getParams().getInt("variantCalling.GenotypeGVCFs.forceSitesFile"));
+                toolParams.add("--force-output-intervals");
+                toolParams.add(f.getPath());
+            }
+
+            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.allowOldRmsMappingData") != null)
+            {
+                toolParams.add("--allow-old-rms-mapping-quality-annotation-data");
+            }
+
+            Interval interval = ProcessVariantsHandler.getInterval(ctx);
+            if (interval != null)
+            {
+                toolParams.add("-L");
+                toolParams.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+            }
 
             boolean doCopyInputs = ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.doCopyInputs", false);
 
-            wrapper.execute(genome.getSourceFastaFile(), outputVcf, toolParams, doCopyInputs, inputVcfs.toArray(new File[inputVcfs.size()]));
+            wrapper.execute(genome.getSourceFastaFile(), outputVcf, toolParams, doCopyInputs, inputFiles.toArray(new File[inputFiles.size()]));
             action.addOutput(outputVcf, "VCF", outputVcf.exists(), true);
             action.setEndTime(new Date());
             resumer.setGenotypeGVCFsComplete(action, outputVcf);

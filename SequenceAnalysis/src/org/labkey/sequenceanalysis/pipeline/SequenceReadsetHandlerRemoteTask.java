@@ -93,16 +93,15 @@ public class SequenceReadsetHandlerRemoteTask extends WorkDirectoryTask<Sequence
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
-        TaskFileManagerImpl manager = new TaskFileManagerImpl(getPipelineJob(), _wd.getDir(), _wd);
-
         SequenceOutputHandler<SequenceOutputHandler.SequenceReadsetProcessor> handler = getPipelineJob().getHandler();
-        JobContextImpl ctx = new JobContextImpl(getPipelineJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), _wd.getDir(), manager, _wd);
+        JobContextImpl ctx = new JobContextImpl(getPipelineJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), _wd.getDir(), new TaskFileManagerImpl(getPipelineJob(), _wd.getDir(), _wd), _wd);
 
         getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + handler.getName());
         handler.getProcessor().processFilesRemote(getPipelineJob().getReadsets(), ctx);
 
-        manager.deleteIntermediateFiles();
-        manager.cleanup(ctx.getActions());
+        //Note: on job resume the TaskFileManager could be replaced with one from the resumer
+        ctx.getFileManager().deleteIntermediateFiles();
+        ctx.getFileManager().cleanup(ctx.getActions());
 
         return new RecordedActionSet(ctx.getActions());
     }

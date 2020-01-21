@@ -95,12 +95,6 @@ public class HaplotypeCallerHandler extends AbstractParameterizedOutputHandler<S
                 File idxFile = new File(ctx.getOutputDir(), FileUtil.getBaseName(so.getFile()) + ".g.vcf.gz.idx");
 
                 HaplotypeCallerWrapper wrapper = new HaplotypeCallerWrapper(job.getLogger());
-                if (params.optBoolean("multithreaded", false))
-                {
-                    job.getLogger().debug("HaplotypeCaller will run multi-threaded");
-                    wrapper.setMultiThreaded(true);
-                }
-
                 wrapper.setOutputDir(ctx.getOutputDir());
 
                 ReferenceGenome referenceGenome = ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id());
@@ -109,25 +103,10 @@ public class HaplotypeCallerHandler extends AbstractParameterizedOutputHandler<S
                     throw new PipelineJobException("No reference genome found for output: " + so.getRowid());
                 }
 
-                if (params.optBoolean("useQueue", false))
-                {
-                    Integer minRamPerQueueJob = params.optInt("minRamPerQueueJob");
-                    if (minRamPerQueueJob != null)
-                    {
-                        wrapper.setMinRamPerQueueJob(minRamPerQueueJob);
-                    }
+                List<String> args = new ArrayList<>();
+                args.addAll(getClientCommandArgs(params));
 
-                    wrapper.executeWithQueue(so.getFile(), referenceGenome.getWorkingFastaFile(), outputFile, getClientCommandArgs(params));
-                }
-                else
-                {
-                    List<String> args = new ArrayList<>();
-                    args.addAll(getClientCommandArgs(params));
-                    args.add("--emitRefConfidence");
-                    args.add("GVCF");
-
-                    wrapper.execute(so.getFile(), referenceGenome.getWorkingFastaFile(), outputFile, args);
-                }
+                wrapper.execute(so.getFile(), referenceGenome.getWorkingFastaFile(), outputFile, args);
 
                 action.addOutput(outputFile, "gVCF File", false);
                 if (idxFile.exists())

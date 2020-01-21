@@ -68,6 +68,9 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                 ToolParameterDescriptor.create("useSCTransform", "Use SCTransform", "If selected, the pipeline will use the newer SCtransform method instead of the standard Seurat pipeline.", "checkbox", new JSONObject(){{
                     put("checked", false);
                 }}, false),
+                ToolParameterDescriptor.create("runSingleR", "Run SingleR", "If selected, SingleR will be run after Seurat processing.", "checkbox", new JSONObject(){{
+                    put("checked", true);
+                }}, true),
                 ToolParameterDescriptor.create("mergeMethod", "Merge Method", "This determines whether any batch correction will be applied when merging datasets.", "ldk-simplecombo", new JSONObject(){{
                     put("storeValues", "simple;cca");
                 }}, "simple")
@@ -286,6 +289,9 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
 
                 boolean doCellFilter = ctx.getParams().optBoolean("doCellFilter", true);
                 writer.println("doCellFilter <- " + String.valueOf(doCellFilter).toUpperCase());
+
+                boolean runSingleR = ctx.getParams().optBoolean("runSingleR", true);
+                writer.println("runSingleR <- " + String.valueOf(runSingleR).toUpperCase());
 
                 boolean doCellCycle = ctx.getParams().optBoolean("doCellCycle", true);
                 writer.println("doCellCycle <- " + String.valueOf(doCellCycle).toUpperCase());

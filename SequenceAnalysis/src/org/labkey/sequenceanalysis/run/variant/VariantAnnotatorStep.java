@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.variant;
 
+import htsjdk.samtools.util.Interval;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
@@ -15,6 +16,7 @@ import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.VariantAnnotatorWrapper;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,7 +34,7 @@ public class VariantAnnotatorStep extends AbstractCommandPipelineStep<VariantAnn
         super(provider, ctx, new VariantAnnotatorWrapper(ctx.getLogger()));
     }
 
-    public static class Provider extends AbstractVariantProcessingStepProvider<VariantAnnotatorStep> implements VariantProcessingStep.RequiresPedigree
+    public static class Provider extends AbstractVariantProcessingStepProvider<VariantAnnotatorStep> implements VariantProcessingStep.RequiresPedigree,  VariantProcessingStep.SupportsScatterGather
     {
         public Provider()
         {
@@ -53,7 +55,7 @@ public class VariantAnnotatorStep extends AbstractCommandPipelineStep<VariantAnn
     }
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome) throws PipelineJobException
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
 
@@ -68,7 +70,7 @@ public class VariantAnnotatorStep extends AbstractCommandPipelineStep<VariantAnn
             options.add("-A");
             options.add("MendelianViolationBySample");
 
-            File pedFile = ProcessVariantsHandler.getPedigreeFile(getPipelineCtx().getSourceDirectory());
+            File pedFile = ProcessVariantsHandler.getPedigreeFile(getPipelineCtx().getSourceDirectory(true));
             if (!pedFile.exists())
             {
                 throw new PipelineJobException("Unable to find pedigree file: " + pedFile.getPath());
@@ -91,6 +93,12 @@ public class VariantAnnotatorStep extends AbstractCommandPipelineStep<VariantAnn
         {
             options.add("-nt");
             options.add(String.valueOf(Math.min(threads, 8)));
+        }
+
+        if (interval != null)
+        {
+            options.add("-L");
+            options.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
         }
 
          //TODO: allow annotation using fields from another VCF:

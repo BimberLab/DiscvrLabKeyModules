@@ -95,16 +95,15 @@ public class SequenceOutputHandlerRemoteTask extends WorkDirectoryTask<SequenceO
     {
         SequenceTaskHelper.logModuleVersions(getJob().getLogger());
 
-        TaskFileManagerImpl manager = new TaskFileManagerImpl(getPipelineJob(), _wd.getDir(), _wd);
-
         SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler = getPipelineJob().getHandler();
-        JobContextImpl ctx = new JobContextImpl(getPipelineJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), _wd.getDir(), manager, _wd);
+        JobContextImpl ctx = new JobContextImpl(getPipelineJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), _wd.getDir(), new TaskFileManagerImpl(getPipelineJob(), _wd.getDir(), _wd), _wd);
 
         getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + handler.getName());
         handler.getProcessor().processFilesRemote(getPipelineJob().getFiles(), ctx);
 
-        manager.deleteIntermediateFiles();
-        manager.cleanup(ctx.getActions());
+        //Note: on job resume the TaskFileManager could be replaced with one from the resumer
+        ctx.getFileManager().deleteIntermediateFiles();
+        ctx.getFileManager().cleanup(ctx.getActions());
 
         return new RecordedActionSet(ctx.getActions());
     }

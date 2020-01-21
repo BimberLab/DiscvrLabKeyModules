@@ -43,6 +43,12 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
     {
     }
 
+    protected SequenceOutputHandlerJob(SequenceOutputHandlerJob parentJob, String jobName, String subfolder) throws IOException
+    {
+        super(parentJob, jobName, subfolder);
+        _handlerClassName = parentJob._handlerClassName;
+    }
+
     public SequenceOutputHandlerJob(Container c, User user, @Nullable String jobName, PipeRoot pipeRoot, SequenceOutputHandler handler, List<SequenceOutputFile> files, JSONObject jsonParams) throws IOException
     {
         super(SequenceOutputHandlerPipelineProvider.NAME, c, user, jobName, pipeRoot, jsonParams, null, FOLDER_NAME);
@@ -142,6 +148,14 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
 
     public File getSerializedOutputFilesFile()
     {
+        if (isSplitJob())
+        {
+            String logName = FileUtil.getBaseName(getLogFile());
+            logName = logName.substring(0, logName.lastIndexOf("-"));
+
+            return new File(getWebserverDir(true), logName + ".outputs.json.gz");
+        }
+
         return new File(getDataDirectory(), FileUtil.getBaseName(getLogFile()) + ".outputs.json.gz");
     }
 

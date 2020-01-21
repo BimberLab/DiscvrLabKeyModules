@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Created by bimber on 8/8/2014.
  */
-public class SelectVariantsWrapper extends AbstractGatkWrapper
+public class SelectVariantsWrapper extends AbstractGatk4Wrapper
 {
     public SelectVariantsWrapper(Logger log)
     {
@@ -19,12 +19,11 @@ public class SelectVariantsWrapper extends AbstractGatkWrapper
 
     public void execute(File referenceFasta, File inputVcf, File outputVcf, List<String> options) throws PipelineJobException
     {
-        getLogger().info("Running GATK SelectVariants");
+        getLogger().info("Running GATK 4 SelectVariants");
 
         ensureDictionary(referenceFasta);
 
         List<String> args = new ArrayList<>(getBaseArgs());
-        args.add("-T");
         args.add("SelectVariants");
         args.add("-R");
         args.add(referenceFasta.getPath());
@@ -32,7 +31,7 @@ public class SelectVariantsWrapper extends AbstractGatkWrapper
         args.add("-V");
         args.add(inputVcf.getPath());
 
-        args.add("-o");
+        args.add("-O");
         args.add(outputVcf.getPath());
 
         if (options != null)

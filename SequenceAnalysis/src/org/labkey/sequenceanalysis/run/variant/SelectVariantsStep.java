@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.variant;
 
+import htsjdk.samtools.util.Interval;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -20,6 +21,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.SelectVariantsWrapper;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,7 +44,7 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
         super(provider, ctx, new SelectVariantsWrapper(ctx.getLogger()));
     }
 
-    public static class Provider extends AbstractVariantProcessingStepProvider<SelectVariantsStep>
+    public static class Provider extends AbstractVariantProcessingStepProvider<SelectVariantsStep> implements VariantProcessingStep.SupportsScatterGather
     {
         public Provider()
         {
@@ -52,11 +54,10 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
                         put("showFilterName", false);
                         put("title", "Select Expressions");
                     }}, null),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-ef"), "excludeFiltered", "Exclude Filtered", "If selected, any filtered sites will be removed", "checkbox", null, null),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-env"), "excludeNonVariant", "Exclude Non-Variant", "If selected, any non-variant sites will be removed", "checkbox", null, null),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-noTrim"), "noTrim", "Preserve Original Alleles", "If selected, the all alleles from the input will be retained, even if not used by any remaining genotypes.", "checkbox", null, null),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-trimAlternates"), "trimAlternates", "Trim Unused Alternates", "If selected, any alternate alleles not used in any genotypes will be trimmed.", "checkbox", null, null),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-sites_only"), "sitesOnly", "Output Sites Only", "If selected, genotypes will be omitted and a VCF with only the first 8 columns will be produced.", "checkbox", null, null),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--exclude-filtered"), "excludeFiltered", "Exclude Filtered", "If selected, any filtered sites will be removed", "checkbox", null, null),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--exclude-non-variants"), "excludeNonVariant", "Exclude Non-Variant", "If selected, any non-variant sites will be removed", "checkbox", null, null),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--preserve-alleles"), "noTrim", "Preserve Original Alleles", "If selected, the all alleles from the input will be retained, even if not used by any remaining genotypes.", "checkbox", null, null),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--remove-unused-alternates"), "trimAlternates", "Remove Unused Alternates", "If selected, any alternate alleles not used in any genotypes will be trimmed.", "checkbox", null, null),
                     ToolParameterDescriptor.create(SELECT_TYPE_TO_INCLUDE, "Select Type(s) To Include", "Only variants of the selected type(s) will be included", "ldk-simplecombo", new JSONObject(){{
                         put("storeValues", SelectSNVsStep.getSelectTypes());
                         put("multiSelect", true);
@@ -78,23 +79,23 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
     }
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome) throws PipelineJobException
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
 
         List<String> options = new ArrayList<>();
 
         String toInclude = getProvider().getParameterByName(SELECT_TYPE_TO_INCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
-        addSelectTypeOptions(toInclude, options, "--selectTypeToInclude");
+        addSelectTypeOptions(toInclude, options, "--select-type-to-include");
 
         String toExclude = getProvider().getParameterByName(SELECT_TYPE_TO_EXCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
-        addSelectTypeOptions(toExclude, options, "--selectTypeToExclude");
+        addSelectTypeOptions(toExclude, options, "--select-type-to-exclude");
 
         String samplesToInclude = getProvider().getParameterByName(SelectSamplesStep.SAMPLE_INCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
         SelectVariantsStep.addSubjectSelectOptions(samplesToInclude, options, "-sn");
 
         String samplesToExclude = getProvider().getParameterByName(SelectSamplesStep.SAMPLE_EXCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
-        SelectVariantsStep.addSubjectSelectOptions(samplesToExclude, options, "-xl_sn");
+        SelectVariantsStep.addSubjectSelectOptions(samplesToExclude, options, "-xl-sn");
 
         //intervals:
         String intervalText = getProvider().getParameterByName(INTERVALS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null);
@@ -123,6 +124,12 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
         }
 
         options.addAll(getClientCommandArgs());
+
+        if (interval != null)
+        {
+            options.add("-L");
+            options.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+        }
 
         File outputVcf = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".selectVariants.vcf.gz");
         getWrapper().execute(genome.getWorkingFastaFile(), inputVCF, outputVcf, options);

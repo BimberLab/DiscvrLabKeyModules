@@ -1,0 +1,8 @@
+# direct external dependencies for project :server:modules:DiscvrLabKeyModules:SequenceAnalysis
+htsjdk-2.14.3.jar
+biojava3-core-3.0.7.jar
+biojava3-genome-3.0.7.jar
+bzip2-0.9.1.jar
+sam-1.96.jar
+commons-math3-3.6.1.jar
+picard-2.18.4.jar

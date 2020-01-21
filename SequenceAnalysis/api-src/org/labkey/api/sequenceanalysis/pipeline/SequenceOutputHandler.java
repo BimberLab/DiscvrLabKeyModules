@@ -242,4 +242,11 @@ public interface SequenceOutputHandler<T>
     {
         public Collection<String> getAllowableActionNames();
     }
+
+    public static interface TracksVCF
+    {
+        public File getFinalVCF(JobContext ctx) throws PipelineJobException;
+
+        public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, Collection<SequenceOutputFile> componentOutputs);
+    }
 }

@@ -2,7 +2,7 @@ package org.labkey.sequenceanalysis.run.util;
 
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
+import org.labkey.api.sequenceanalysis.run.AbstractDiscvrSeqWrapper;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -11,17 +11,11 @@ import java.util.List;
 /**
  * Created by bimber on 6/19/2017.
  */
-public class ImmunoGenotypingWrapper extends AbstractGatkWrapper
+public class ImmunoGenotypingWrapper extends AbstractDiscvrSeqWrapper
 {
     public ImmunoGenotypingWrapper(Logger log)
     {
         super(log);
-    }
-
-    @Override
-    protected String getJarName()
-    {
-        return "DISCVRSeq.jar";
     }
 
     public File execute(File inputBam, File referenceFasta, File outputPrefix, List<String> options) throws PipelineJobException
