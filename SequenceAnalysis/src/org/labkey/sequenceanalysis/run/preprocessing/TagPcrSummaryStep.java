@@ -108,8 +108,8 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
                         refMap.put(vals[0], ref);
                     }
 
-                    String after = ref.getBaseString().substring(start, start + 1000);
-                    String before = ref.getBaseString().substring(start - 1000, start);
+                    String after = ref.getBaseString().substring(start, Math.min(start + 1000, ref.length()));
+                    String before = ref.getBaseString().substring(Math.max(1, start - 1000), start);
                     writer.writeNext(new String[]{vals[0], vals[1], vals[2], String.valueOf(val), after, before});
                 }
                 else
