@@ -499,6 +499,12 @@ public class OrphanFilePipelineJob extends PipelineJob
                         }
                     }
 
+                    //orphan copy file:
+                    if (f.getName().endsWith(".copy"))
+                    {
+                        orphanSequenceFiles.add(f);
+                    }
+
                     //sequence files not associated w/ DB records:
                     if (SequenceUtil.FILETYPE.fastq.getFileType().isType(f) || SequenceUtil.FILETYPE.bam.getFileType().isType(f) || SequenceUtil.FILETYPE.vcf.getFileType().isType(f) || SequenceUtil.FILETYPE.gvcf.getFileType().isType(f))
                     {
