@@ -92,11 +92,21 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     public void cacheReadset(SequenceReadsetImpl m)
     {
         m.cacheForRemoteServer();
+        if (getCachedReadset(m.getRowId()) != null)
+        {
+            return;
+        }
+
         _cachedReadsets.add(m);
     }
 
     public void cacheAnalysis(AnalysisModelImpl m, PipelineJob job)
     {
+        if (getCachedAnalysis(m.getRowId()) != null)
+        {
+            return;
+        }
+
         if (m.getAlignmentFile() != null)
         {
             cacheExpData(m.getAlignmentData());
@@ -134,6 +144,11 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     public void cacheGenome(ReferenceGenome m)
     {
         Integer key = m.getGenomeId();
+        if (getCachedGenome(key) != null)
+        {
+            return;
+        }
+
         if (m.isTemporaryGenome())
         {
             key = TEMPORARY_GENOME;

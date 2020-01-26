@@ -859,8 +859,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         }
         else
         {
-            log.warn("None of the edit distances produced results");
-            return null;
+            throw new PipelineJobException("None of the edit distances produced results");
         }
     }
 
