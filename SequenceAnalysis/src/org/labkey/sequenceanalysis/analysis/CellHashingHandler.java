@@ -821,7 +821,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
             log.info("Using edit distance: " + bestEditDistance + ", singlet: " + highestSinglet);
 
             Map<String, Object> callMap = results.get(bestEditDistance);
-            String description = String.format("Edit Distance: %,d\nTotal Singlet: %,d\nDoublet: %,d\nSeurat Called: %,d\nNegative: %,d\nUnique HTOs: %s", bestEditDistance, callMap.get("singlet"), callMap.get("doublet"), callMap.get("seuratCalled"), callMap.get("negative"), callMap.get("UniqueHtos"));
+            String description = String.format("Edit Distance: %,d\nTotal Singlet: %,d\nDoublet: %,d\nSeurat Called: %,d\nMultiSeq Called: %,d\nNegative: %,d\nUnique HTOs: %s", bestEditDistance, callMap.get("singlet"), callMap.get("doublet"), callMap.get("seuratCalled"), callMap.get("multiSeqCalled"), callMap.get("negative"), callMap.get("UniqueHtos"));
             File htoCalls = (File) callMap.get("htoCalls");
             if (htoCalls == null)
             {
