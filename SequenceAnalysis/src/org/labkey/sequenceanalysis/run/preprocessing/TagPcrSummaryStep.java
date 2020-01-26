@@ -22,9 +22,11 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.writer.PrintWriters;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -57,14 +59,17 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
     public Output performAnalysisPerSampleRemote(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
     {
         AnalysisOutputImpl output = new AnalysisOutputImpl();
+        NumberFormat pf = NumberFormat.getPercentInstance();
+        pf.setMaximumFractionDigits(6);
 
         File tsv = new File(outputDir, SequenceAnalysisService.get().getUnzippedBaseName(inputBam.getName()) + ".summary.txt");
 
         SamReaderFactory fact = SamReaderFactory.makeDefault();
         fact.validationStringency(ValidationStringency.SILENT);
         fact.referenceSequence(referenceGenome.getWorkingFastaFile());
-        long numRecords = 0L;
-        Map<String, Long> alignMap = new HashMap<>();
+        int numRecords = 0;
+        int totalOutput = 0;
+        Map<String, Integer> alignMap = new HashMap<>();
         ReferenceSequenceFileFactory refFact = new ReferenceSequenceFileFactory();
         try (SamReader bamReader = fact.open(inputBam); SAMRecordIterator it = bamReader.iterator(); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(tsv), '\t', CSVWriter.NO_QUOTE_CHARACTER);ReferenceSequenceFile refSeq = refFact.getReferenceSequenceFile(referenceGenome.getWorkingFastaFile()))
         {
@@ -84,7 +89,7 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
 
                 numRecords++;
                 String key = getAlignmentKey(rec);
-                long val = alignMap.getOrDefault(key, 0L);
+                int val = alignMap.getOrDefault(key, 0);
                 val++;
 
                 alignMap.put(key, val);
@@ -95,7 +100,7 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
             Map<String, ReferenceSequence> refMap = new HashMap<>();
             for (String key : alignMap.keySet())
             {
-                long val = alignMap.get(key);
+                int val = alignMap.get(key);
                 if (val > minAlignments)
                 {
                     String[] vals = key.split("<>");
@@ -108,6 +113,7 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
                         refMap.put(vals[0], ref);
                     }
 
+                    totalOutput += val;
                     String after = ref.getBaseString().substring(start, Math.min(start + 1000, ref.length()));
                     String before = ref.getBaseString().substring(Math.max(1, start - 1000), start);
                     writer.writeNext(new String[]{vals[0], vals[1], vals[2], String.valueOf(val), after, before});
@@ -123,8 +129,11 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
             throw new PipelineJobException(e);
         }
 
+        File fastq1 = rs.getReadData().get(0).getFile1();
+        double junctionRate = totalOutput / (double)(SequenceUtil.getLineCount(fastq1) / 4);
+
         output.addOutput(tsv, "Tag-PCR Integration Sites");
-        output.addSequenceOutput(tsv, "Putative Integration Sites: " + rs.getName(), "Tag-PCR Integration Sites", rs.getReadsetId(), null, referenceGenome.getGenomeId(), "Records: " + numRecords);
+        output.addSequenceOutput(tsv, "Putative Integration Sites: " + rs.getName(), "Tag-PCR Integration Sites", rs.getReadsetId(), null, referenceGenome.getGenomeId(), "Records: " + numRecords + "\nJunction hit rate: " + pf.format(junctionRate));
 
         return output;
     }
