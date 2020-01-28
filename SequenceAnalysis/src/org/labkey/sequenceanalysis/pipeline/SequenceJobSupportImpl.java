@@ -144,14 +144,14 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     public void cacheGenome(ReferenceGenome m)
     {
         Integer key = m.getGenomeId();
-        if (getCachedGenome(key) != null)
-        {
-            return;
-        }
-
         if (m.isTemporaryGenome())
         {
             key = TEMPORARY_GENOME;
+        }
+
+        if (getCachedGenome(key) != null)
+        {
+            return;
         }
 
         _cachedGenomes.put(key, m);
