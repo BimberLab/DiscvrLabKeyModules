@@ -48,17 +48,14 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
 
     }
 
-    public SequenceJobSupportImpl(SequenceJobSupportImpl support)
-    {
-        _cachedFilePaths.putAll(support._cachedFilePaths);
-        _cachedAnalyses.putAll(support._cachedAnalyses);
-        _cachedReadsets.addAll(support._cachedReadsets);
-        _cachedGenomes.putAll(support._cachedGenomes);
-    }
-
     @Override
     public SequenceReadsetImpl getCachedReadset(Integer rowId)
     {
+        if (rowId == null || rowId < 1)
+        {
+            throw new IllegalArgumentException("Attempting to access cached readset without a valid ID: " + rowId);
+        }
+
         for (SequenceReadsetImpl rs : _cachedReadsets)
         {
             if (rowId.equals(rs.getRowId()))
@@ -92,9 +89,19 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     public void cacheReadset(SequenceReadsetImpl m)
     {
         m.cacheForRemoteServer();
-        if (getCachedReadset(m.getRowId()) != null)
+        if (m.existsInDatabase())
         {
-            return;
+            if (getCachedReadset(m.getRowId()) != null)
+            {
+                _cachedReadsets.remove(getCachedReadset(m.getRowId()));
+            }
+        }
+        else
+        {
+            if (_cachedReadsets.contains(m))
+            {
+                _cachedReadsets.remove(m);
+            }
         }
 
         _cachedReadsets.add(m);
@@ -102,11 +109,6 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
 
     public void cacheAnalysis(AnalysisModelImpl m, PipelineJob job)
     {
-        if (getCachedAnalysis(m.getRowId()) != null)
-        {
-            return;
-        }
-
         if (m.getAlignmentFile() != null)
         {
             cacheExpData(m.getAlignmentData());
@@ -151,7 +153,7 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
 
         if (getCachedGenome(key) != null)
         {
-            return;
+            _cachedGenomes.remove(getCachedGenome(key));
         }
 
         _cachedGenomes.put(key, m);
@@ -289,6 +291,42 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
             //TODO: determine if we can coax jackson into serializing these properly
             assertEquals("Object not serialized with correct key type", Integer.class, serializedMap.keySet().iterator().next().getClass());
             assertNotNull("Map keys not serialized properly", serializedMap.get(1));
+        }
+
+        @Test
+        public void testReadsetCaching() {
+            SequenceJobSupportImpl js = new SequenceJobSupportImpl();
+
+            SequenceReadsetImpl rs1 = new SequenceReadsetImpl();
+            rs1.setRowId(100);
+            assertTrue(rs1.existsInDatabase());
+
+            SequenceReadsetImpl rs2 = new SequenceReadsetImpl();
+            assertFalse(rs2.existsInDatabase());
+
+            SequenceReadsetImpl rs3 = new SequenceReadsetImpl();
+            assertFalse(rs3.existsInDatabase());
+
+            js.cacheReadset(rs1);
+            assertEquals(1, js._cachedReadsets.size());
+
+            js.cacheReadset(rs1);
+            assertEquals(1, js._cachedReadsets.size());
+
+            js.cacheReadset(rs2);
+            assertEquals(2, js._cachedReadsets.size());
+
+            js.cacheReadset(rs3);
+            assertEquals(3, js._cachedReadsets.size());
+
+            js.cacheReadset(rs2);
+            assertEquals(3, js._cachedReadsets.size());
+
+            js._cachedReadsets.remove(rs2);
+            assertEquals(2, js._cachedReadsets.size());
+
+            js.cacheReadset(rs2);
+            assertEquals(3, js._cachedReadsets.size());
         }
     }
 }
