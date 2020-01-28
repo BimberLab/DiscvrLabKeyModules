@@ -13,6 +13,7 @@ import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.jbrowse.JBrowseService;
+import org.labkey.api.ldk.LDKService;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
@@ -283,6 +284,13 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
 
     private void recreateSession(final Container c, final String databaseId, final Logger log)
     {
+        final User adminUser = LDKService.get().getBackgroundAdminUser();
+        if (adminUser == null)
+        {
+            log.error("LDK module BackgroundAdminUser property not set.  If this is set, JBrowseMaintenanceTask could automatically submit repair jobs.");
+            return;
+        }
+
         JobRunner jr = JobRunner.getDefault();
         jr.execute(new Runnable()
         {
@@ -291,7 +299,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
             {
                 try
                 {
-                    JBrowseService.get().reprocessDatabase(c, User.getSearchUser(), databaseId);
+                    JBrowseService.get().reprocessDatabase(c, adminUser, databaseId);
                 }
                 catch (PipelineValidationException e)
                 {

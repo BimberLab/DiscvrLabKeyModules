@@ -75,6 +75,7 @@ import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
 import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
+import org.labkey.sequenceanalysis.pipeline.SequenceAnalysisTask;
 
 import java.io.File;
 import java.io.IOException;
@@ -280,6 +281,7 @@ public class SequenceAnalysisManager
                 throw new IllegalArgumentException("Unable to find sequenceanalysis user schema");
             }
 
+            Set<Integer> bamsDeleted = new HashSet<>();
             Set<Integer> outputFilesWithDataNotDeleted = new HashSet<>();
             Set<Integer> expDataDeleted = new HashSet<>();
             List<SequenceOutputFile> files = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), new SimpleFilter(FieldKey.fromString("rowid"), outputFileIds, CompareType.IN), null).getArrayList(SequenceOutputFile.class);
@@ -310,6 +312,11 @@ public class SequenceAnalysisManager
                     {
                         d.getFile().delete();
                         expDataDeleted.add(d.getRowId());
+                        
+                        if (SequenceAnalysisTask.ALIGNMENT_CATEGORY.equals(so.getCategory()) && so.getAnalysis_id() != null)
+                        {
+                            bamsDeleted.add(d.getRowId());
+                        }
                     }
                 }
             }
@@ -349,6 +356,31 @@ public class SequenceAnalysisManager
                             metricToDelete.add(map);
                         });
                         us.getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS).getUpdateService().deleteRows(user, container, metricToDelete, null, scriptContext);
+                    }
+                }
+                
+                //Because Alignment files are tagged in outputfiles and analyses, if the former is deleted, automatically update the latter
+                if (!bamsDeleted.isEmpty())
+                {
+                    //Find all analyses using these BAMs:
+                    List<Integer> analysesUsingBams = new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_ANALYSES), PageFlowUtil.set("rowId"), new SimpleFilter(FieldKey.fromString("alignmentfile"), bamsDeleted, CompareType.IN), null).getArrayList(Integer.class);
+                    analysesUsingBams.removeAll(additionalAnalysisIds);
+                    if (!analysesUsingBams.isEmpty())
+                    {
+                        final List<Map<String, Object>> rows = new ArrayList<>();
+                        final List<Map<String, Object>> oldKeys = new ArrayList<>();
+                        analysesUsingBams.forEach(x -> {
+                            Map<String, Object> map = new CaseInsensitiveHashMap<>();
+                            map.put("rowid", x);
+                            oldKeys.add(map);
+
+                            map = new CaseInsensitiveHashMap<>();
+                            map.put("rowid", x);
+                            map.put("alignmentfile", null);
+                            rows.add(map);
+                        });
+
+                        us.getTable(SequenceAnalysisSchema.TABLE_ANALYSES).getUpdateService().updateRows(user, container, rows, oldKeys, null, scriptContext);
                     }
                 }
 

@@ -19,6 +19,7 @@ import org.junit.Test;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
@@ -94,6 +95,10 @@ public class OutputIntegrationTests
             JSONObject config = substituteParams(new File(_sampleData, VARIANT_JOB), jobName);
             Set<Integer> outputFileIds = Collections.singleton(outputFileId);
 
+            TableInfo ti = QueryService.get().getUserSchema(TestContext.get().getUser(), _project, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES, null);
+            assertTrue("No FK found", ti.getColumn("runId").getFk() != null);
+            assertEquals("Job FK not found", 1, QueryService.get().getColumns(ti, Arrays.asList(FieldKey.fromString("runId/jobid/job"))).size());
+
             Set<PipelineJob> jobs = createOutputHandlerJob(jobName, config, ProcessVariantsHandler.class, outputFileIds);
             waitForJobs(jobs);
 
@@ -112,7 +117,7 @@ public class OutputIntegrationTests
                 verifyFileOutputs(job.getAnalysisDirectory(), extraFiles);
 
                 //verify outputfile created:
-                TableSelector ts = new TableSelector(QueryService.get().getUserSchema(TestContext.get().getUser(), _project, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), PageFlowUtil.set("rowid"), new SimpleFilter(FieldKey.fromString("runId/jobid/job"), job.getJobGUID()), null);
+                TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid"), new SimpleFilter(FieldKey.fromString("runId/jobid/job"), job.getJobGUID()), null);
                 List<Integer> rowIDs = ts.getArrayList(Integer.class);
                 assertEquals("outputs not created", 1, rowIDs.size());
                 //SequenceOutputFile so = SequenceOutputFile.getForId(rowIDs.get(0));

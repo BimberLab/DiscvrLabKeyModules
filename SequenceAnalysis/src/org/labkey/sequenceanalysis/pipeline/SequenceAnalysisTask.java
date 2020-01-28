@@ -71,6 +71,8 @@ import java.util.Map;
  */
 public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask.Factory>
 {
+    public static final String ALIGNMENT_CATEGORY = "Alignment";
+
     protected SequenceAnalysisTask(Factory factory, PipelineJob job)
     {
         super(factory, job);
@@ -379,7 +381,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             {
                 getJob().getLogger().info("creating ExpData for file: " + bam.getPath());
 
-                d = ExperimentService.get().createData(getJob().getContainer(), new DataType("Alignment"));
+                d = ExperimentService.get().createData(getJob().getContainer(), new DataType(ALIGNMENT_CATEGORY));
                 d.setDataFileURI(bam.toURI());
                 d.setName(bam.getName());
                 d.save(getJob().getUser());
@@ -388,7 +390,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             //check if this has already been created:
             SimpleFilter filter = new SimpleFilter(FieldKey.fromString("dataId"), d.getRowId());
             filter.addCondition(FieldKey.fromString("analysis_id"), analysisModel.getRowId());
-            filter.addCondition(FieldKey.fromString("category"), "Alignment");
+            filter.addCondition(FieldKey.fromString("category"), ALIGNMENT_CATEGORY);
             if (new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), filter, null).exists())
             {
                 getJob().getLogger().debug("existing alignment output found, will not re-create");
@@ -397,7 +399,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             {
                 SequenceOutputFile so = new SequenceOutputFile();
                 so.setName(bam.getName());
-                so.setCategory("Alignment");
+                so.setCategory(ALIGNMENT_CATEGORY);
                 so.setAnalysis_id(analysisModel.getAnalysisId());
                 so.setReadset(analysisModel.getReadset());
                 so.setLibrary_id(analysisModel.getLibrary_Id());

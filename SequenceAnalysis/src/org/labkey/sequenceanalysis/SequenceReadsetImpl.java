@@ -77,6 +77,11 @@ public class SequenceReadsetImpl implements Readset
         _rowId = rowId;
     }
 
+    public boolean existsInDatabase()
+    {
+        return _rowId != null &&  _rowId > 0;
+    }
+
     @Override
     @JsonIgnore
     public Integer getReadsetId()
