@@ -451,9 +451,9 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     }
 
     @Override
-    public File writeAllCellHashingBarcodes(File webserverDir) throws PipelineJobException
+    public File writeAllCellHashingBarcodes(File webserverDir, User u, Container c) throws PipelineJobException
     {
-        return CellHashingHandler.writeAllBarcodes(webserverDir);
+        return CellHashingHandler.writeAllBarcodes(webserverDir, u, c);
     }
 
     @Override

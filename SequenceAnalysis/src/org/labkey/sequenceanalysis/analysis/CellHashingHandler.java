@@ -11,7 +11,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
+import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Sort;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -21,9 +23,11 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryService;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.Resource;
+import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -138,7 +142,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         {
             String tagGroup = params.getString("tagGroup");
 
-            writeAllBarcodes(outputDir, tagGroup);
+            writeAllBarcodes(outputDir, tagGroup, job.getUser(), job.getContainer());
         }
 
         @Override
@@ -965,17 +969,18 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         return new File(webserverDir, "allHTOBarcodes.txt");
     }
 
-    public static File writeAllBarcodes(File webserverDir) throws PipelineJobException
+    public static File writeAllBarcodes(File webserverDir, User u, Container c) throws PipelineJobException
     {
-        return writeAllBarcodes(webserverDir, DEFAULT_TAG_GROUP);
+        return writeAllBarcodes(webserverDir, DEFAULT_TAG_GROUP, u, c);
     }
 
-    public static File writeAllBarcodes(File webserverDir, String groupName) throws PipelineJobException
+    public static File writeAllBarcodes(File webserverDir, String groupName, User u, Container c) throws PipelineJobException
     {
         File out = getAllBarcodesFile(webserverDir);
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(out), ',', CSVWriter.NO_QUOTE_CHARACTER))
         {
-            TableSelector ts = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_BARCODES), PageFlowUtil.set("sequence", "tag_name"), new SimpleFilter(FieldKey.fromString("group_name"), groupName), null);
+            TableInfo ti = QueryService.get().getUserSchema(u, c, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_BARCODES, null);
+            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("sequence", "tag_name"), new SimpleFilter(FieldKey.fromString("group_name"), groupName), new Sort("tag_name"));
             ts.forEachResults(rs -> {
                 writer.writeNext(new String[]{rs.getString(FieldKey.fromString("sequence")), rs.getString(FieldKey.fromString("tag_name"))});
             });
