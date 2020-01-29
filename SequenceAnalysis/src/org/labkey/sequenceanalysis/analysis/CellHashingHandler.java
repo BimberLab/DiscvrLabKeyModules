@@ -237,7 +237,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                     ctx.getLogger().info("Using edit distance: " + bestEditDistance + ", singlet: " + highestSinglet);
 
                     Map<String, Object> callMap = results.get(bestEditDistance);
-                    String description = String.format("Edit Distance: %,d\nTotal Singlet: %,d\nDoublet: %,d\nSeurat Called: %,d\nNegative: %,d\nUnique HTOs: %s", bestEditDistance, callMap.get("singlet"), callMap.get("doublet"), callMap.get("seuratCalled"), callMap.get("negative"), callMap.get("UniqueHtos"));
+                    String description = String.format("Edit Distance: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nSeurat Called: %,d\nNegative: %,d\nUnique HTOs: %s", bestEditDistance, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("seuratSinglet"), callMap.get("negative"), callMap.get("UniqueHtos"));
                     File htoCalls = (File)callMap.get("htoCalls");
                     File html = (File)callMap.get("html");
 
@@ -354,9 +354,10 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
     {
         long singlet = 0L;
         long doublet = 0L;
+        long discordant = 0L;
         long negative = 0L;
-        long seuratCalled = 0L;
-        long multiSeqCalled = 0L;
+        long seuratSinglet = 0L;
+        long multiSeqSinglet = 0L;
         Set<String> uniqueHTOs = new TreeSet<>();
 
         try (CSVReader reader = new CSVReader(Readers.getReader(htoCalls), '\t'))
@@ -390,32 +391,38 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                 {
                     doublet++;
                 }
+                else if ("Discordant".equals(line[htoClassIdx]))
+                {
+                    discordant++;
+                }
                 else if ("Negative".equals(line[htoClassIdx]))
                 {
                     negative++;
                 }
 
-                if (!"Doublet".equals(line[htoIdx]) && !"Negative".equals(line[htoIdx])) {
+                if ("Singlet".equals(line[htoClassIdx]))
+                {
                     uniqueHTOs.add(line[htoIdx]);
-                }
 
-                if ("TRUE".equals(line[seuratIdx]))
-                {
-                    seuratCalled++;
-                }
+                    if ("TRUE".equals(line[seuratIdx]))
+                    {
+                        seuratSinglet++;
+                    }
 
-                if ("TRUE".equals(line[multiSeqIdx]))
-                {
-                    multiSeqCalled++;
+                    if ("TRUE".equals(line[multiSeqIdx]))
+                    {
+                        multiSeqSinglet++;
+                    }
                 }
             }
 
             Map<String, Object> ret = new HashMap<>();
             ret.put("singlet", singlet);
             ret.put("doublet", doublet);
+            ret.put("discordant", discordant);
             ret.put("negative", negative);
-            ret.put("seuratCalled", seuratCalled);
-            ret.put("multiSeqCalled", multiSeqCalled);
+            ret.put("seuratSinglet", seuratSinglet);
+            ret.put("multiSeqSinglet", multiSeqSinglet);
             List<String> uniqueHTOSorted = new ArrayList<>(uniqueHTOs);
             Collections.sort(uniqueHTOSorted, ComparatorUtils.naturalComparator());
             ret.put("UniqueHtos", StringUtils.join(uniqueHTOSorted, ","));
@@ -825,7 +832,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
             log.info("Using edit distance: " + bestEditDistance + ", singlet: " + highestSinglet);
 
             Map<String, Object> callMap = results.get(bestEditDistance);
-            String description = String.format("Edit Distance: %,d\nTotal Singlet: %,d\nDoublet: %,d\nSeurat Called: %,d\nMultiSeq Called: %,d\nNegative: %,d\nUnique HTOs: %s", bestEditDistance, callMap.get("singlet"), callMap.get("doublet"), callMap.get("seuratCalled"), callMap.get("multiSeqCalled"), callMap.get("negative"), callMap.get("UniqueHtos"));
+            String description = String.format("Edit Distance: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nSeurat Singlet: %,d\nMultiSeq Singlet: %,d\nNegative: %,d\nUnique HTOs: %s", bestEditDistance, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("seuratSinglet"), callMap.get("multiSeqSinglet"), callMap.get("negative"), callMap.get("UniqueHtos"));
             File htoCalls = (File) callMap.get("htoCalls");
             if (htoCalls == null)
             {
