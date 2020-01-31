@@ -57,7 +57,7 @@ public class VariantFiltrationStep extends AbstractCommandPipelineStep<VariantFi
     }
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable List<Interval> intervals) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
         File outputVcf = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".filtered.vcf.gz");
@@ -118,10 +118,12 @@ public class VariantFiltrationStep extends AbstractCommandPipelineStep<VariantFi
             params.add(maskData.getPath());
         }
 
-        if (interval != null)
+        if (intervals != null)
         {
-            params.add("-L");
-            params.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+            intervals.forEach(interval -> {
+                params.add("-L");
+                params.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+            });
         }
 
         getWrapper().execute(genome.getWorkingFastaFile(), inputVCF, outputVcf, params);

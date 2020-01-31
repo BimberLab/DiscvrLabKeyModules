@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * User: bimber
@@ -57,7 +58,7 @@ public class SNPEffStep extends AbstractCommandPipelineStep<SnpEffWrapper> imple
     private final String NAME = "snpEff";
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable List<Interval> intervals) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
         getPipelineCtx().getLogger().info("Running SNPEff");
@@ -91,12 +92,14 @@ public class SNPEffStep extends AbstractCommandPipelineStep<SnpEffWrapper> imple
         }
 
         File intFile = null;
-        if (interval != null)
+        if (intervals != null)
         {
-            intFile = new File(outputVcf.getParentFile(), "snpEffintervals." + interval.getContig() + ".bed");
+            intFile = new File(outputVcf.getParentFile(), "snpEffintervals.bed");
             try (PrintWriter writer = PrintWriters.getPrintWriter(intFile))
             {
-                writer.println(interval.getContig() + "\t" + (interval.getStart() - 1) + '\t' + interval.getEnd());
+                intervals.forEach(interval -> {
+                    writer.println(interval.getContig() + "\t" + (interval.getStart() - 1) + '\t' + interval.getEnd());
+                });
             }
             catch (IOException e)
             {

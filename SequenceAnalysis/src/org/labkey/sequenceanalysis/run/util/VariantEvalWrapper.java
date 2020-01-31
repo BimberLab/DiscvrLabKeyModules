@@ -22,7 +22,7 @@ public class VariantEvalWrapper extends AbstractGatk4Wrapper
         super(log);
     }
 
-    public void executeEval(File referenceFasta, File inputVcf, File outputFile, String setName, @Nullable Interval interval) throws PipelineJobException
+    public void executeEval(File referenceFasta, File inputVcf, File outputFile, String setName, @Nullable List<Interval> intervals) throws PipelineJobException
     {
         getLogger().info("Running GATK 4 VariantEval");
 
@@ -33,10 +33,12 @@ public class VariantEvalWrapper extends AbstractGatk4Wrapper
         args.add("-R");
         args.add(referenceFasta.getPath());
 
-        if (interval != null)
+        if (intervals != null)
         {
-            args.add("-L");
-            args.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+            intervals.forEach(interval -> {
+                args.add("-L");
+                args.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+            });
         }
 
         args.add("--eval:" + setName);
@@ -61,7 +63,7 @@ public class VariantEvalWrapper extends AbstractGatk4Wrapper
         new SimpleScriptWrapper(getLogger()).execute(Arrays.asList("sed", "-i", "s/^[ ]\\+//g", outputFile.getPath()));
     }
 
-    public void executeEvalBySample(File referenceFasta, File inputVcf, File outputFile, String setName, @Nullable Interval interval) throws PipelineJobException
+    public void executeEvalBySample(File referenceFasta, File inputVcf, File outputFile, String setName, @Nullable List<Interval> intervals) throws PipelineJobException
     {
         getLogger().info("Running GATK VariantEval");
 
@@ -72,10 +74,12 @@ public class VariantEvalWrapper extends AbstractGatk4Wrapper
         args.add("-R");
         args.add(referenceFasta.getPath());
 
-        if (interval != null)
+        if (intervals != null)
         {
-            args.add("-L");
-            args.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+            intervals.forEach(interval -> {
+                args.add("-L");
+                args.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+            });
         }
 
         args.add("-ST");

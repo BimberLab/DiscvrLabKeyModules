@@ -109,7 +109,7 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
                 tmpDir = System.getProperty("java.io.tmpdir");
             }
 
-            log.debug("Using temp directory: " + tmpDir);
+            log.debug("Copying files to temp directory: " + tmpDir);
             localWorkDir = new File(tmpDir);
         }
 
@@ -138,7 +138,8 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
                 }
                 else
                 {
-                    log.debug("copying file: " + f.getName());
+                    long size = FileUtils.sizeOfDirectory(f);
+                    log.debug("copying file: " + f.getName() + ", size: " + FileUtils.byteCountToDisplaySize(size));
                     try
                     {
                         if (movedFile.exists())

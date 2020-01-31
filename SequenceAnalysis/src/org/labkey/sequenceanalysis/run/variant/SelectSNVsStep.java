@@ -72,7 +72,7 @@ public class SelectSNVsStep extends AbstractCommandPipelineStep<SelectVariantsWr
     }
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable List<Interval> intervals) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
 
@@ -84,10 +84,12 @@ public class SelectSNVsStep extends AbstractCommandPipelineStep<SelectVariantsWr
         String toExclude = getProvider().getParameterByName(SELECT_TYPE_TO_EXCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
         SelectVariantsStep.addSelectTypeOptions(toExclude, options, "--select-type-to-exclude");
 
-        if (interval != null)
+        if (intervals != null)
         {
-            options.add("-L");
-            options.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+            intervals.forEach(interval -> {
+                options.add("-L");
+                options.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+            });
         }
 
         File outputVcf = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".selectType.vcf.gz");

@@ -5,6 +5,7 @@
         <dependency path="SequenceAnalysis/sequenceAnalysis.css"/>
         <dependency path="SequenceAnalysis/panel/AnalysisSectionPanel.js"/>
         <dependency path="SequenceAnalysis/panel/BaseSequencePanel.js"/>
+        <dependency path="SequenceAnalysis/panel/VariantScatterGatherPanel.js"/>
         <dependency path="SequenceAnalysis/panel/VariantProcessingPanel.js"/>
 
 

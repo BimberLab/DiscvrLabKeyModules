@@ -61,6 +61,7 @@ import org.labkey.sequenceanalysis.pipeline.SequenceJobSupportImpl;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.SequencePipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerPipelineProvider;
+import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 import org.labkey.sequenceanalysis.query.SequenceAnalysisUserSchema;
 import org.labkey.sequenceanalysis.run.alignment.BWAMemWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWASWWrapper;
@@ -125,6 +126,7 @@ import org.labkey.sequenceanalysis.run.variant.VariantFiltrationStep;
 import org.labkey.sequenceanalysis.run.variant.VariantQCStep;
 import org.labkey.sequenceanalysis.run.variant.VariantsToTableStep;
 import org.labkey.sequenceanalysis.util.Barcoder;
+import org.labkey.sequenceanalysis.util.ScatterGatherUtils;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -429,7 +431,14 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
     @NotNull
     public Set<Class> getUnitTests()
     {
-        return PageFlowUtil.set(SequenceAlignmentTask.TestCase.class, SequenceAnalysisManager.TestCase.class, SequenceJobSupportImpl.TestCase.class, ProcessVariantsHandler.TestCase.class);
+        return PageFlowUtil.set(
+                SequenceAlignmentTask.TestCase.class,
+                SequenceAnalysisManager.TestCase.class,
+                SequenceJobSupportImpl.TestCase.class,
+                ProcessVariantsHandler.TestCase.class,
+                VariantProcessingJob.TestCase.class,
+                ScatterGatherUtils.TestCase.class
+        );
     }
 
     @Override

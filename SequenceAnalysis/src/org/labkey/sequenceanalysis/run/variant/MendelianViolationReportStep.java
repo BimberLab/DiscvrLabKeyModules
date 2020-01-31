@@ -52,7 +52,7 @@ public class MendelianViolationReportStep extends AbstractPipelineStep implement
     }
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable List<Interval> intervals) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
 
@@ -82,10 +82,12 @@ public class MendelianViolationReportStep extends AbstractPipelineStep implement
             throw new PipelineJobException("Unable to find pedigree file: " + pedFile.getPath());
         }
 
-        if (interval != null)
+        if (intervals != null)
         {
-            options.add("-L");
-            options.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+            intervals.forEach(interval -> {
+                options.add("-L");
+                options.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+            });
         }
 
         File outputTable = new File(outputDirectory, SequencePipelineService.get().getUnzippedBaseName(inputVCF.getName()) + ".mv.txt");

@@ -63,11 +63,10 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 				name: 'jobDescription',
 				allowBlank:true
 			},{
-				fieldLabel: 'Scatter/Gather By Chromosome',
-				xtype: 'checkbox',
-				inputValue: true,
-				helpPopup: 'If selected, this job will be divided to run job per chromosome.  The final step will take the VCF from each intermediate step and combined to make a final VCF file',
-				name: 'scatterGather'
+				xtype: 'sequenceanalysis-variantscattergatherpanel',
+				width: 620,
+				defaultFieldWidth: 600,
+				bodyStyle: ''
 			},{
 				fieldLabel: 'Delete Intermediate Files',
 				helpPopup: 'Check to delete the intermediate files created by this pipeline.  In general these are not needed and it will save disk space.  These files might be useful for debugging though.',
@@ -408,7 +407,7 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 
 		var actionName = 'runSequenceHandler';
 		var failedTools = [];
-		if (values.scatterGather) {
+		if (values.scatterGatherMethod && values.scatterGatherMethod !== 'none') {
 			json.scatterGather = true;
 			actionName = 'runVariantProcessing';
 

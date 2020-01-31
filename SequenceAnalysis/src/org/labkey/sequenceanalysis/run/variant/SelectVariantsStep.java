@@ -79,7 +79,7 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
     }
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable List<Interval> intervals) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
 
@@ -125,10 +125,12 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
 
         options.addAll(getClientCommandArgs());
 
-        if (interval != null)
+        if (intervals != null)
         {
-            options.add("-L");
-            options.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+            intervals.forEach(interval -> {
+                options.add("-L");
+                options.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+            });
         }
 
         File outputVcf = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".selectVariants.vcf.gz");

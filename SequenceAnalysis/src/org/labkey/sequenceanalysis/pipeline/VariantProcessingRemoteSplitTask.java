@@ -98,7 +98,7 @@ public class VariantProcessingRemoteSplitTask extends WorkDirectoryTask<VariantP
         getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + handler.getName());
         handler.getProcessor().processFilesRemote(getPipelineJob().getFiles(), ctx);
 
-        if (getPipelineJob().getContigForTask() != null)
+        if (getPipelineJob().getIntervalsForTask() != null)
         {
             if (handler instanceof SequenceOutputHandler.TracksVCF)
             {
@@ -108,7 +108,7 @@ public class VariantProcessingRemoteSplitTask extends WorkDirectoryTask<VariantP
                     //NOTE: the VCF was copied back to the source dir, so translate paths
                     String path = _wd.getRelativePath(vcf);
                     vcf = new File(ctx.getSourceDirectory(), path);
-                    getPipelineJob().getFinalVCFs().put(getPipelineJob().getContigForTask(), vcf);
+                    getPipelineJob().getFinalVCFs().put(getPipelineJob().getIntervalSetName(), vcf);
                 }
                 catch (IOException e)
                 {
