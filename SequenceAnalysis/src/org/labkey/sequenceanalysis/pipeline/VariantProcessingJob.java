@@ -191,7 +191,7 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
 
     private File getJobToIntervalFile()
     {
-        return isSplitJob() ? getDataDirectory().getParentFile() : getDataDirectory();
+        return new File(isSplitJob() ? getDataDirectory().getParentFile() : getDataDirectory(), "jobsToInterval.json.txt");
     }
 
     private void writeJobToIntervalMap(Map<String, List<Interval>> jobToIntervalMap) throws IOException
