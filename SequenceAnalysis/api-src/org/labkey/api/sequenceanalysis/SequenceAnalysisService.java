@@ -97,4 +97,6 @@ abstract public class SequenceAnalysisService
     abstract public String createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String assemblyId, String description, boolean skipCacheIndexes, boolean skipTriggers, Set<GenomeTrigger> extraTriggers) throws IOException;
 
     abstract public File combineVcfs(List<File> files, File outputDirectory, String outputBasename, Logger log) throws PipelineJobException;
+
+    abstract public String getScriptPath(String moduleName, String path) throws PipelineJobException;
 }

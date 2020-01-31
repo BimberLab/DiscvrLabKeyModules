@@ -436,6 +436,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         return SequenceAnalysisManager.getPicardJar();
     }
 
+    @Override
     public String getScriptPath(String moduleName, String path) throws PipelineJobException
     {
         Module module = ModuleLoader.getInstance().getModule(moduleName);
