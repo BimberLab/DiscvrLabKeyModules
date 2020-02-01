@@ -7,7 +7,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -100,7 +99,7 @@ public class ScatterGatherUtils
 
         private void addInterval(String refName, int start, int end)
         {
-            _intervalList.add(new Interval(refName, 1, end));
+            _intervalList.add(new Interval(refName, start, end));
             _basesPerActiveIntervalList += (end - start + 1);
 
             possiblyEndSet();
@@ -145,21 +144,46 @@ public class ScatterGatherUtils
             Map<String, List<Interval>> ret = divideGenome(dict, 1000, true);
             assertEquals("Incorrect number of jobs", 8, ret.size());
             assertEquals("Incorrect interval end", 2000, ret.get("Job3").get(0).getEnd());
+            assertEquals("Incorrect start", 1001, ret.get("Job3").get(0).getStart());
             assertEquals("Incorrect interval end", 4, ret.get("Job8").size());
 
             Map<String, List<Interval>> ret2 = divideGenome(dict, 3000, false);
             assertEquals("Incorrect number of jobs", 3, ret2.size());
+            for (String jobName : ret2.keySet())
+            {
+                for (Interval i : ret2.get(jobName))
+                {
+                    assertEquals("Incorrect start", 1, i.getStart());
+                }
+            }
 
             Map<String, List<Interval>> ret3 = divideGenome(dict, 3002, false);
             assertEquals("Incorrect number of jobs", 3, ret3.size());
+            for (String jobName : ret3.keySet())
+            {
+                for (Interval i : ret3.get(jobName))
+                {
+                    assertEquals("Incorrect start", 1, i.getStart());
+                }
+            }
 
             Map<String, List<Interval>> ret4 = divideGenome(dict, 2999, false);
-            assertEquals("Incorrect number of jobs", 3, ret3.size());
+            assertEquals("Incorrect number of jobs", 3, ret4.size());
+            for (String jobName : ret4.keySet())
+            {
+                for (Interval i : ret4.get(jobName))
+                {
+                    assertEquals("Incorrect start", 1, i.getStart());
+                }
+            }
 
             Map<String, List<Interval>> ret5 = divideGenome(dict, 750, true);
             assertEquals("Incorrect number of jobs", 10, ret5.size());
             assertEquals("Incorrect interval end", 1000, ret5.get("Job1").get(0).getEnd());
             assertEquals("Incorrect interval end", 4, ret5.get("Job10").size());
+
+            assertEquals("Incorrect interval start", 751, ret5.get("Job3").get(0).getStart());
+            assertEquals("Incorrect interval start", 1501, ret5.get("Job8").get(0).getStart());
         }
     }
 }

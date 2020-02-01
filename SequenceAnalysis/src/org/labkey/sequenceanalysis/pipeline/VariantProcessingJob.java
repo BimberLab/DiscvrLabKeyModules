@@ -1,11 +1,12 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
-import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.apache.log4j.Logger;
@@ -20,18 +21,19 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.pipeline.TaskPipeline;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.util.ScatterGatherUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -191,17 +193,20 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
 
     private File getJobToIntervalFile()
     {
-        return new File(isSplitJob() ? getDataDirectory().getParentFile() : getDataDirectory(), "jobsToInterval.json.txt");
+        return new File(isSplitJob() ? getDataDirectory().getParentFile() : getDataDirectory(), "jobsToInterval.txt");
     }
 
     private void writeJobToIntervalMap(Map<String, List<Interval>> jobToIntervalMap) throws IOException
     {
-        File out = getJobToIntervalFile();
-        try (OutputStream output = IOUtil.maybeBufferOutputStream(IOUtil.openFileForWriting(out)))
+        try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(getJobToIntervalFile()), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
-            getLogger().info("writing JobToInterval map to file: " + jobToIntervalMap.size());
-            ObjectMapper objectMapper = createObjectMapper();
-            objectMapper.writeValue(output, jobToIntervalMap);
+            for (String name : jobToIntervalMap.keySet())
+            {
+                for (Interval i : jobToIntervalMap.get(name))
+                {
+                    writer.writeNext(new String[]{name, i.getContig(), String.valueOf(i.getStart()), String.valueOf(i.getEnd())});
+                }
+            }
         }
     }
 
@@ -210,12 +215,20 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
     {
         if (_jobToIntervalMap == null)
         {
-            File json = getJobToIntervalFile();
-            try (InputStream is = IOUtil.maybeBufferInputStream(IOUtil.openFileForReading(json)))
+            File tsv = getJobToIntervalFile();
+            try (CSVReader reader = new CSVReader(Readers.getReader(tsv), '\t'))
             {
-                ObjectMapper objectMapper = createObjectMapper();
-                _jobToIntervalMap = objectMapper.readValue(is, new TypeReference<LinkedHashMap<String, List<Interval>>>(){});
+                LinkedHashMap<String, List<Interval>> ret = new LinkedHashMap<>();
+                String[] line;
+                while ((line = reader.readNext()) != null)
+                {
+                    List<Interval> group = ret.getOrDefault(line[0], new ArrayList<>());
+                    group.add(new Interval(line[1], Integer.parseInt(line[2]), Integer.parseInt(line[3])));
 
+                    ret.put(line[0], group);
+                }
+
+                _jobToIntervalMap = ret;
             }
             catch (IOException e)
             {
@@ -312,6 +325,32 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
             assertEquals(job1.getScatterGatherMethod(), job2.getScatterGatherMethod());
 
             xml.delete();
+        }
+
+        @Test
+        public void intervalSerializeTest() throws Exception
+        {
+            VariantProcessingJob job1 = new VariantProcessingJob(){
+                @Override
+                public File getDataDirectory()
+                {
+                    return new File(System.getProperty("java.io.tmpdir"));
+                }
+            };
+
+            job1._intervalSetName = "chr1";
+            job1._scatterGatherMethod = ScatterGatherUtils.ScatterGatherMethod.chunked;
+
+            Map<String, List<Interval>> intervalMap = new LinkedHashMap<>();
+            intervalMap.put("1", Arrays.asList(new Interval("chr1", 1, 10)));
+            intervalMap.put("4", Arrays.asList(new Interval("chr4", 1, 10)));
+            intervalMap.put("5", Arrays.asList(new Interval("chr5", 1, 10)));
+            intervalMap.put("2", Arrays.asList(new Interval("chr2", 1, 10), new Interval("chr2", 11, 20), new Interval("chr2", 21, 400)));
+            job1.writeJobToIntervalMap(intervalMap);
+            job1._jobToIntervalMap = null;
+
+            Map<String, List<Interval>> intervalMap2 = job1.getJobToIntervalMap();
+            assertEquals(intervalMap, intervalMap2);
         }
     }
 }
