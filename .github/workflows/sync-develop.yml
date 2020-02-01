@@ -3,11 +3,12 @@ on:
   schedule:
     - cron:  "*/15 * * * *"
 jobs:
-  repo-sync:
+  sync-develop:
     runs-on: ubuntu-latest
     steps:
-        uses: bimberlabinternal/DevOps/githubActions/git-sync
-        with:
+      - name: "Sync Develop Branch"
+      - uses: bimberlabinternal/DevOps/githubActions/git-sync
+      - with:
           source_repo: "labkey/DiscvrLabkeyModules"
           source_branch: "develop"
           destination_branch: "develop"
