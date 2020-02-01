@@ -6,7 +6,7 @@ jobs:
   repo-sync:
     runs-on: ubuntu-latest
     steps:
-        uses: bimberlabinternal/githubActions/git-sync@v2
+        uses: bimberlabinternal/githubActions/git-sync
         with:
           source_repo: "labkey/DiscvrLabkeyModules"
           source_branch: "develop"
