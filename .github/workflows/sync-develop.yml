@@ -1,0 +1,14 @@
+# Designed to keep develop branch as a perfect copy of LabKey fork
+on:
+  schedule:
+    - cron:  "*/15 * * * *"
+jobs:
+  repo-sync:
+    runs-on: ubuntu-latest
+    steps:
+        uses: bimberlabinternal/githubActions/git-sync@v2
+        with:
+          source_repo: "labkey/DiscvrLabkeyModules"
+          source_branch: "develop"
+          destination_branch: "develop"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
