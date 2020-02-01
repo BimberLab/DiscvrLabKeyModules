@@ -7,8 +7,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Sync Develop Branch"
-      - uses: bimberlabinternal/DevOps/githubActions/git-sync
-      - with:
+        uses: bimberlabinternal/DevOps/githubActions/git-sync
+        with:
           source_repo: "labkey/DiscvrLabkeyModules"
           source_branch: "develop"
           destination_branch: "develop"
