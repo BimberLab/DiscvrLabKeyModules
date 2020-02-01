@@ -119,7 +119,7 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
             long totalSize = dict.getReferenceLength();
             int numJobs = getParameterJson().getInt("scatterGather.totalJobs");
             int jobSize = (int)Math.ceil(totalSize / (double)numJobs);
-            getLogger().info("Creating " + numJobs + " jobs with approximate size: " + jobSize + " bp.  estimated total jobs: ");
+            getLogger().info("Creating " + numJobs + " jobs with approximate size: " + jobSize + " bp.");
             ret = ScatterGatherUtils.divideGenome(dict, jobSize, true);
         }
         else

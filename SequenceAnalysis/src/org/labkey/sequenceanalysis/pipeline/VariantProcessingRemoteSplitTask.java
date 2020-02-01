@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import htsjdk.samtools.util.Interval;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
@@ -15,9 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class VariantProcessingRemoteSplitTask extends WorkDirectoryTask<VariantProcessingRemoteSplitTask.Factory>
 {
@@ -98,8 +97,11 @@ public class VariantProcessingRemoteSplitTask extends WorkDirectoryTask<VariantP
         getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + handler.getName());
         handler.getProcessor().processFilesRemote(getPipelineJob().getFiles(), ctx);
 
-        if (getPipelineJob().getIntervalsForTask() != null)
+        List<Interval> intervals = getPipelineJob().getIntervalsForTask();
+        if (intervals != null)
         {
+            getJob().getLogger().info("Using intervals: " + getPipelineJob().getIntervalSetName() + ", total: " + intervals.size());
+
             if (handler instanceof SequenceOutputHandler.TracksVCF)
             {
                 File vcf = ((SequenceOutputHandler.TracksVCF)handler).getFinalVCF(ctx);
