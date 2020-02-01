@@ -94,14 +94,17 @@ public class VariantProcessingRemoteSplitTask extends WorkDirectoryTask<VariantP
         SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler = getPipelineJob().getHandler();
         JobContextImpl ctx = new JobContextImpl(getPipelineJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), _wd.getDir(), new TaskFileManagerImpl(getPipelineJob(), _wd.getDir(), _wd), _wd);
 
-        getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + handler.getName());
-        handler.getProcessor().processFilesRemote(getPipelineJob().getFiles(), ctx);
-
         List<Interval> intervals = getPipelineJob().getIntervalsForTask();
         if (intervals != null)
         {
             getJob().getLogger().info("Using intervals: " + getPipelineJob().getIntervalSetName() + ", total: " + intervals.size());
+        }
 
+        getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + handler.getName());
+        handler.getProcessor().processFilesRemote(getPipelineJob().getFiles(), ctx);
+
+        if (intervals != null)
+        {
             if (handler instanceof SequenceOutputHandler.TracksVCF)
             {
                 File vcf = ((SequenceOutputHandler.TracksVCF)handler).getFinalVCF(ctx);
