@@ -350,6 +350,8 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             {
                 List<Interval> intervals = vpj.getIntervalsForTask();
                 ctx.getLogger().debug("This job will process " + intervals.size() + " intervals: " + vpj.getIntervalSetName());
+
+                return intervals;
             }
         }
 
