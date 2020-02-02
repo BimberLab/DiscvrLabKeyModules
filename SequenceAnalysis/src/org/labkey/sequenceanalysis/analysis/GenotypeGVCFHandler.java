@@ -164,6 +164,21 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
         {
             ProcessVariantsHandler.initVariantProcessing(job, support, inputFiles, outputDir);
 
+            Set<Integer> genomeIds = new HashSet<>();
+            for (SequenceOutputFile so : inputFiles)
+            {
+                genomeIds.add(so.getLibrary_id());
+            }
+
+            if (genomeIds.size() > 1)
+            {
+                throw new PipelineJobException("The selected files use more than one genome");
+            }
+            else if (genomeIds.isEmpty())
+            {
+                throw new PipelineJobException("No genome ID found for inputs");
+            }
+
             if (params.get("variantCalling.GenotypeGVCFs.forceSitesFile") != null)
             {
                 int dataId = params.getInt("variantCalling.GenotypeGVCFs.forceSitesFile");
@@ -195,6 +210,10 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             if (genomeIds.size() > 1)
             {
                 throw new PipelineJobException("The selected files use more than one genome");
+            }
+            else if (genomeIds.isEmpty())
+            {
+                throw new PipelineJobException("No genome ID found for inputs");
             }
 
             int genomeId = genomeIds.iterator().next();
