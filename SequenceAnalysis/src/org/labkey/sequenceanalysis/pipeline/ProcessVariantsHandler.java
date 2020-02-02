@@ -554,7 +554,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                     args.add("PRIORITIZE");
 
                     List<Interval> intervals = getIntervals(ctx);
-                    if (!intervals.isEmpty())
+                    if (intervals != null)
                     {
                         for (Interval interval : intervals)
                         {
