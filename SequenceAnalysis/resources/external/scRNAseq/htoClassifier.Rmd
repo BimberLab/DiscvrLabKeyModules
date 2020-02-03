@@ -8,7 +8,7 @@ library(OOSAP)
 
 ```{r QC}
 
-barcodeData <- ProcessCiteSeqCount(bFile = barcodeDir, doRowFilter = doHtoFilter)
+barcodeData <- ProcessCiteSeqCount(bFile = barcodeDir, doRowFilter = doHtoFilter, doColumnFilter = doCellFilter)
 if (nrow(barcodeData) == 0) {
   print('No passing HTOs')
 }
