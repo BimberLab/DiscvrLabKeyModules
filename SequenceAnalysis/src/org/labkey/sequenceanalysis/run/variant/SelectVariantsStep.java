@@ -58,6 +58,7 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--exclude-non-variants"), "excludeNonVariant", "Exclude Non-Variant", "If selected, any non-variant sites will be removed", "checkbox", null, null),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--preserve-alleles"), "noTrim", "Preserve Original Alleles", "If selected, the all alleles from the input will be retained, even if not used by any remaining genotypes.", "checkbox", null, null),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--remove-unused-alternates"), "trimAlternates", "Remove Unused Alternates", "If selected, any alternate alleles not used in any genotypes will be trimmed.", "checkbox", null, null),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--sites-only-vcf-output"), "sitesOnly", "Sites Only VCF Output", "If selected, the resulting VCF will omit samples and include only the site information.", "checkbox", null, null),
                     ToolParameterDescriptor.create(SELECT_TYPE_TO_INCLUDE, "Select Type(s) To Include", "Only variants of the selected type(s) will be included", "ldk-simplecombo", new JSONObject(){{
                         put("storeValues", SelectSNVsStep.getSelectTypes());
                         put("multiSelect", true);
