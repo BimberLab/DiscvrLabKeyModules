@@ -82,9 +82,9 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
     }
 
     @Override
-    public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, Collection<SequenceOutputFile> componentOutputs)
+    public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, List<SequenceOutputFile> inputFiles)
     {
-        return ProcessVariantsHandler.createSequenceOutput(job, processed, componentOutputs, COMBINED_CATEGORY);
+        return ProcessVariantsHandler.createSequenceOutput(job, processed, inputFiles, COMBINED_CATEGORY);
     }
 
     public class Processor implements SequenceOutputProcessor

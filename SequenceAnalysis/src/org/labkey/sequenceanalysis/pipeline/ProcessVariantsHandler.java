@@ -146,15 +146,15 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
     }
 
     @Override
-    public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, Collection<SequenceOutputFile> componentOutputs)
+    public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, List<SequenceOutputFile> inputFiles)
     {
-        return createSequenceOutput(job, processed, componentOutputs, VCF_CATEGORY);
+        return createSequenceOutput(job, processed, inputFiles, VCF_CATEGORY);
     }
 
-    public static SequenceOutputFile createSequenceOutput(PipelineJob job, File processed, Collection<SequenceOutputFile> componentOutputs, String category)
+    public static SequenceOutputFile createSequenceOutput(PipelineJob job, File processed, List<SequenceOutputFile> inputFiles, String category)
     {
         Set<Integer> libraryIds = new HashSet<>();
-        componentOutputs.forEach(x -> {
+        inputFiles.forEach(x -> {
             if (x.getLibrary_id() != null)
                 libraryIds.add(x.getLibrary_id());
         });
@@ -165,7 +165,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         }
 
         Set<Integer> readsetIds = new HashSet<>();
-        componentOutputs.forEach(x -> readsetIds.add(x.getReadset()));
+        inputFiles.forEach(x -> readsetIds.add(x.getReadset()));
 
         int sampleCount;
         try (VCFFileReader reader = new VCFFileReader(processed))

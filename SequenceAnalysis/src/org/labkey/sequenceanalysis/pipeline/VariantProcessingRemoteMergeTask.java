@@ -129,7 +129,16 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
         }
 
         String basename = SequenceAnalysisService.get().getUnzippedBaseName(toConcat.get(0).getName());
-        File combined = SequenceAnalysisService.get().combineVcfs(toConcat, getPipelineJob().getAnalysisDirectory(), basename, getJob().getLogger());
+        File combined = new File(getPipelineJob().getAnalysisDirectory(), basename + ".vcf.gz");
+        File combinedIdx = new File(combined.getPath() + ".tbi");
+        if (combinedIdx.exists())
+        {
+            getJob().getLogger().info("VCF exists, will not recreate: " + combined.getPath());
+        }
+        else
+        {
+            combined = SequenceAnalysisService.get().combineVcfs(toConcat, combined, getJob().getLogger());
+        }
         manager.addOutput(action, "Merged VCF", combined);
 
         //TODO: run tasks after merge?
@@ -144,7 +153,7 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
             getPipelineJob().getOutputsToCreate().removeAll(outputs);
             getJob().getLogger().debug("Total SequenceOutputFiles on job after remove: " + getPipelineJob().getOutputsToCreate().size());
 
-            SequenceOutputFile finalOutput = ((SequenceOutputHandler.TracksVCF)getPipelineJob().getHandler()).createFinalSequenceOutput(getJob(), combined, outputs);
+            SequenceOutputFile finalOutput = ((SequenceOutputHandler.TracksVCF)getPipelineJob().getHandler()).createFinalSequenceOutput(getJob(), combined, getPipelineJob().getFiles());
             manager.addSequenceOutput(finalOutput);
         }
         else

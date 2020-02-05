@@ -442,10 +442,9 @@ public class SequenceUtil
         sorted.delete();
     }
 
-    public static File combineVcfs(List<File> files, File outputDirectory, String outputBasename, Logger log) throws PipelineJobException
+    public static File combineVcfs(List<File> files, File outputGzip, Logger log) throws PipelineJobException
     {
         log.info("combining VCFs: ");
-        File outputGzip = new File(outputDirectory, outputBasename + ".vcf.gz");
 
         List<String> bashCommands = new ArrayList<>();
         int idx = 0;
@@ -465,7 +464,7 @@ public class SequenceUtil
 
         try
         {
-            File bashTmp = new File(outputDirectory, "vcfCombine.sh");
+            File bashTmp = new File(outputGzip.getParentFile(), "vcfCombine.sh");
             try (PrintWriter writer = PrintWriters.getPrintWriter(bashTmp))
             {
                 writer.write("#!/bin/bash\n");

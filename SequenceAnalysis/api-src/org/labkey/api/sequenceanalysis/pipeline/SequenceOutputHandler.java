@@ -247,6 +247,6 @@ public interface SequenceOutputHandler<T>
     {
         public File getFinalVCF(JobContext ctx) throws PipelineJobException;
 
-        public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, Collection<SequenceOutputFile> componentOutputs);
+        public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, List<SequenceOutputFile> inputFiles);
     }
 }

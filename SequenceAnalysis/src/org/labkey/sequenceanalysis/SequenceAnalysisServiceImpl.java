@@ -472,8 +472,8 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     }
 
     @Override
-    public File combineVcfs(List<File> files, File outputDirectory, String outputBasename, Logger log) throws PipelineJobException
+    public File combineVcfs(List<File> files, File outputGz, Logger log) throws PipelineJobException
     {
-        return SequenceUtil.combineVcfs(files, outputDirectory, outputBasename, log);
+        return SequenceUtil.combineVcfs(files, outputGz, log);
     }
 }
