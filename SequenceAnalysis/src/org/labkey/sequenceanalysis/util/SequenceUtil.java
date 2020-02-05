@@ -16,8 +16,8 @@ import htsjdk.tribble.CloseableTribbleIterator;
 import htsjdk.tribble.FeatureReader;
 import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
+import htsjdk.variant.vcf.VCFFileReader;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
@@ -44,9 +44,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -442,9 +440,36 @@ public class SequenceUtil
         sorted.delete();
     }
 
-    public static File combineVcfs(List<File> files, File outputGzip, Logger log) throws PipelineJobException
+    public static File combineVcfs(List<File> files, File outputGzip, Logger log, boolean verifyHeadersIdentical) throws PipelineJobException
     {
         log.info("combining VCFs: ");
+
+        if (verifyHeadersIdentical)
+        {
+            log.info("Verifying headers are identical");
+            String priorHeaderString = null;
+            for (File x : files)
+            {
+                try (VCFFileReader reader = new VCFFileReader(x))
+                {
+                    if (priorHeaderString == null)
+                    {
+                        priorHeaderString = reader.getFileHeader().toString();
+                    }
+                    else
+                    {
+                        if (!priorHeaderString.equals(reader.getFileHeader().toString()))
+                        {
+                            throw new PipelineJobException("VCF headers do not match.  Encountered for: " + x.getPath());
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            log.info("Will not verify headers");
+        }
 
         List<String> bashCommands = new ArrayList<>();
         int idx = 0;
