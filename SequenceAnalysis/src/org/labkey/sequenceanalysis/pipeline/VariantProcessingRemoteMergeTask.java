@@ -137,7 +137,7 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
         }
         else
         {
-            combined = SequenceAnalysisService.get().combineVcfs(toConcat, combined, getJob().getLogger(), true);
+            combined = SequenceAnalysisService.get().combineVcfs(toConcat, combined, getJob().getLogger());
         }
         manager.addOutput(action, "Merged VCF", combined);
 

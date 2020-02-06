@@ -16,7 +16,11 @@ import htsjdk.tribble.CloseableTribbleIterator;
 import htsjdk.tribble.FeatureReader;
 import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
+import htsjdk.variant.variantcontext.writer.VariantContextWriter;
+import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -440,51 +444,33 @@ public class SequenceUtil
         sorted.delete();
     }
 
-    public static File combineVcfs(List<File> files, File outputGzip, Logger log, boolean verifyHeadersIdentical) throws PipelineJobException
+    public static File combineVcfs(List<File> files, File outputGzip, Logger log) throws PipelineJobException
     {
         log.info("combining VCFs: ");
 
-        if (verifyHeadersIdentical)
-        {
-            log.info("Verifying headers are identical");
-            String priorHeaderString = null;
-            for (File x : files)
+        log.info("Merging headers:");
+        List<VCFHeader> headers = new ArrayList<>();
+        files.forEach(x -> {
+            try (VCFFileReader reader = new VCFFileReader(x))
             {
-                try (VCFFileReader reader = new VCFFileReader(x))
-                {
-                    if (priorHeaderString == null)
-                    {
-                        priorHeaderString = reader.getFileHeader().toString();
-                    }
-                    else
-                    {
-                        if (!priorHeaderString.equals(reader.getFileHeader().toString()))
-                        {
-                            throw new PipelineJobException("VCF headers do not match.  Encountered for: " + x.getPath());
-                        }
-                    }
-                }
+                headers.add(reader.getFileHeader());
             }
-        }
-        else
+        });
+
+        File headerFile = new File(outputGzip.getParentFile(), "header.vcf");
+        VariantContextWriterBuilder builder = new VariantContextWriterBuilder().setOutputFile(headerFile);
+        try (VariantContextWriter writer = builder.build())
         {
-            log.info("Will not verify headers");
+            writer.writeHeader(new VCFHeader(VCFUtils.smartMergeHeaders(headers, true)));
         }
 
         List<String> bashCommands = new ArrayList<>();
-        int idx = 0;
+        bashCommands.add("cat " + headerFile.getPath());
+
         for (File vcf : files)
         {
             String cat = vcf.getName().toLowerCase().endsWith(".gz") ? "zcat" : "cat";
-
-            //Build header.  Note: swapping the Number=0 for strings is a hack to deal with bad cassandra data
-            if (idx == 0)
-            {
-                bashCommands.add(cat + " " + vcf.getPath() + " | head -n 50000 | grep -e '^#';");
-            }
-
             bashCommands.add(cat + " " + vcf.getPath() + " | grep -v '^#';");
-            idx++;
         }
 
         try
