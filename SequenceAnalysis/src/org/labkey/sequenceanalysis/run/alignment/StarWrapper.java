@@ -10,6 +10,7 @@ import org.json.JSONObject;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
@@ -28,6 +29,7 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -220,6 +222,29 @@ public class StarWrapper extends AbstractCommandWrapper
             }
 
             output.addOutput(out, AlignmentOutputImpl.BAM_ROLE);
+
+            File log = new File(outputDirectory, basename + "Log.final.out");
+            if (log.exists())
+            {
+                getPipelineCtx().getLogger().info("STAR log:");
+                try (BufferedReader reader = Readers.getReader(log))
+                {
+                    String line;
+                    while ((line = reader.readLine()) != null)
+                    {
+                        getPipelineCtx().getLogger().info(line);
+                    }
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+
+            }
+            else
+            {
+                getPipelineCtx().getLogger().error("STAR log not found:" + log.getPath());
+            }
 
             if (hasGtf)
             {
