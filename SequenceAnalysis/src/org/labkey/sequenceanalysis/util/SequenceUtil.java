@@ -452,10 +452,21 @@ public class SequenceUtil
 
         log.info("Merging headers:");
         List<VCFHeader> headers = new ArrayList<>();
+        final List<String> samples = new ArrayList<>();
         files.forEach(x -> {
             try (VCFFileReader reader = new VCFFileReader(x))
             {
-                headers.add(reader.getFileHeader());
+                VCFHeader header = reader.getFileHeader();
+                headers.add(header);
+
+                if (samples.isEmpty())
+                {
+                    samples.addAll(header.getSampleNamesInOrder());
+                }
+                else if (!samples.equals(header.getSampleNamesInOrder()))
+                {
+                    throw new IllegalArgumentException("Samples list different between VCF headers!  Encountered for: " + x.getPath());
+                }
             }
         });
 
@@ -464,7 +475,8 @@ public class SequenceUtil
         builder.setReferenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath()));
         try (VariantContextWriter writer = builder.build())
         {
-            writer.writeHeader(new VCFHeader(VCFUtils.smartMergeHeaders(headers, true)));
+            log.info("total samples: " + samples.size());
+            writer.writeHeader(new VCFHeader(VCFUtils.smartMergeHeaders(headers, true), samples));
         }
 
         List<String> bashCommands = new ArrayList<>();
@@ -500,6 +512,11 @@ public class SequenceUtil
             log.info("passing variants: " + SequenceAnalysisService.get().getVCFLineCount(outputGzip, log, true));
 
             headerFile.delete();
+            File headerIdx = new File(headerFile.getPath() + ".idx");
+            if (headerIdx.exists())
+            {
+                headerIdx.delete();
+            }
         }
         catch (IOException e)
         {
