@@ -11,6 +11,7 @@ import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.FileType;
 
@@ -137,7 +138,13 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
         }
         else
         {
-            combined = SequenceAnalysisService.get().combineVcfs(toConcat, combined, getJob().getLogger());
+            if (getPipelineJob().getSequenceSupport().getCachedGenomes().size() != 1)
+            {
+                throw new PipelineJobException("Expected a single genome, found: " + getPipelineJob().getSequenceSupport().getCachedGenomes().size());
+            }
+
+            ReferenceGenome genome = getPipelineJob().getSequenceSupport().getCachedGenomes().iterator().next();
+            combined = SequenceAnalysisService.get().combineVcfs(toConcat, combined, genome, getJob().getLogger());
         }
         manager.addOutput(action, "Merged VCF", combined);
 

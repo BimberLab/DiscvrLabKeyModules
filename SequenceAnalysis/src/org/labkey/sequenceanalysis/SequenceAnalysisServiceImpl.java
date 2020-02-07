@@ -32,6 +32,7 @@ import org.labkey.api.sequenceanalysis.PedigreeRecord;
 import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceDataProvider;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
@@ -472,8 +473,8 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     }
 
     @Override
-    public File combineVcfs(List<File> files, File outputGz, Logger log) throws PipelineJobException
+    public File combineVcfs(List<File> files, File outputGz, ReferenceGenome genome, Logger log) throws PipelineJobException
     {
-        return SequenceUtil.combineVcfs(files, outputGz, log);
+        return SequenceUtil.combineVcfs(files, genome, outputGz, log);
     }
 }

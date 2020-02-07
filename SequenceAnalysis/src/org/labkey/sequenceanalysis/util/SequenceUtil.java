@@ -16,6 +16,7 @@ import htsjdk.tribble.CloseableTribbleIterator;
 import htsjdk.tribble.FeatureReader;
 import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
@@ -28,6 +29,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
@@ -444,7 +446,7 @@ public class SequenceUtil
         sorted.delete();
     }
 
-    public static File combineVcfs(List<File> files, File outputGzip, Logger log) throws PipelineJobException
+    public static File combineVcfs(List<File> files, ReferenceGenome genome, File outputGzip, Logger log) throws PipelineJobException
     {
         log.info("combining VCFs: ");
 
@@ -459,6 +461,7 @@ public class SequenceUtil
 
         File headerFile = new File(outputGzip.getParentFile(), "header.vcf");
         VariantContextWriterBuilder builder = new VariantContextWriterBuilder().setOutputFile(headerFile);
+        builder.setReferenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath()));
         try (VariantContextWriter writer = builder.build())
         {
             writer.writeHeader(new VCFHeader(VCFUtils.smartMergeHeaders(headers, true)));
@@ -495,6 +498,8 @@ public class SequenceUtil
 
             log.info("total variants: " + SequenceAnalysisService.get().getVCFLineCount(outputGzip, log, false));
             log.info("passing variants: " + SequenceAnalysisService.get().getVCFLineCount(outputGzip, log, true));
+
+            headerFile.delete();
         }
         catch (IOException e)
         {
