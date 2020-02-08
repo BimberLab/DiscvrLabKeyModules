@@ -3,7 +3,7 @@ on:
   schedule:
     - cron:  "*/15 * * * *"
 jobs:
-  sync-develop:
+  sync-release-branches:
     runs-on: ubuntu-latest
     steps:
       - name: "Sync Release Branches"
