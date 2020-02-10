@@ -453,7 +453,15 @@ public class StarWrapper extends AbstractCommandWrapper
                     }}, null),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--outFilterMultimapNmax"), "outFilterMultimapNmax", "Max Number of Alignments", "Maximum number of loci the read is allowed to map to. Alignments (all of them) will be output only if the read maps to no more loci than this value.", "ldk-integerfield", new JSONObject(){{
                     put("minValue", 0);
-                }}, 10)
+                }}, 10),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--outFilterScoreMinOverLread"), "outFilterScoreMinOverLread", "Filter Score Min (Over Read Length)", "Alignment will be output only if its score is higher than or equal to this value, normalized to read length (or sum of paired read length). Defaults to 0.66", "ldk-integerfield", new JSONObject(){{
+                    put("minValue", 0);
+                    put("maxValue", 1);
+                }}, null),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--outFilterMatchNminOverLread"), "outFilterMatchNminOverLread", "Min Matched Based (Over Read Length)", "Alignment will be output only if the number of matched bases is higher than or equal to this value, normalized to read length (or sum of paired read length).  Defaults to 0.66", "ldk-integerfield", new JSONObject(){{
+                    put("minValue", 0);
+                    put("maxValue", 1);
+                }}, null)
             ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "https://github.com/alexdobin/STAR/", true, true, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
 
             setAlwaysCacheIndex(true);
