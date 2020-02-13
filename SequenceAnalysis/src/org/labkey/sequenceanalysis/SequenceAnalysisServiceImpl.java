@@ -7,6 +7,7 @@ import htsjdk.variant.vcf.VCFCodec;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -473,8 +474,8 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     }
 
     @Override
-    public File combineVcfs(List<File> files, File outputGz, ReferenceGenome genome, Logger log) throws PipelineJobException
+    public File combineVcfs(List<File> files, File outputGz, ReferenceGenome genome, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel) throws PipelineJobException
     {
-        return SequenceUtil.combineVcfs(files, genome, outputGz, log);
+        return SequenceUtil.combineVcfs(files, genome, outputGz, log, multiThreaded, compressionLevel);
     }
 }

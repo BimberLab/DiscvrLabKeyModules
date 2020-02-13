@@ -17,6 +17,7 @@ package org.labkey.api.sequenceanalysis;
 
 
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.laboratory.NavItem;
 import org.labkey.api.pipeline.PipelineJob;
@@ -96,7 +97,7 @@ abstract public class SequenceAnalysisService
 
     abstract public String createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String assemblyId, String description, boolean skipCacheIndexes, boolean skipTriggers, Set<GenomeTrigger> extraTriggers) throws IOException;
 
-    abstract public File combineVcfs(List<File> files, File outputGz, ReferenceGenome genome, Logger log) throws PipelineJobException;
+    abstract public File combineVcfs(List<File> files, File outputGz, ReferenceGenome genome, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel) throws PipelineJobException;
 
     abstract public String getScriptPath(String moduleName, String path) throws PipelineJobException;
 }

@@ -147,7 +147,7 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
             }
 
             ReferenceGenome genome = getPipelineJob().getSequenceSupport().getCachedGenome(genomeIds.iterator().next());
-            combined = SequenceAnalysisService.get().combineVcfs(toConcat, combined, genome, getJob().getLogger());
+            combined = SequenceAnalysisService.get().combineVcfs(toConcat, combined, genome, getJob().getLogger(), true, null);
         }
         manager.addOutput(action, "Merged VCF", combined);
 
