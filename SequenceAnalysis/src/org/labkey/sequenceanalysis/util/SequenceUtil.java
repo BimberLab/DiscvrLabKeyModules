@@ -16,14 +16,20 @@ import htsjdk.tribble.CloseableTribbleIterator;
 import htsjdk.tribble.FeatureReader;
 import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
+import htsjdk.variant.variantcontext.writer.VariantContextWriter;
+import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
+import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
@@ -44,9 +50,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -223,7 +227,8 @@ public class SequenceUtil
         }
     }
 
-    public static void bgzip(File input, File output)
+    @Deprecated
+    private static void bgzip(File input, File output)
     {
         try (FileInputStream i = new FileInputStream(input); BlockCompressedOutputStream o = new BlockCompressedOutputStream(new FileOutputStream(output), output))
         {
@@ -442,30 +447,51 @@ public class SequenceUtil
         sorted.delete();
     }
 
-    public static File combineVcfs(List<File> files, File outputDirectory, String outputBasename, Logger log) throws PipelineJobException
+    public static File combineVcfs(List<File> files, ReferenceGenome genome, File outputGzip, Logger log) throws PipelineJobException
     {
         log.info("combining VCFs: ");
-        File outputGzip = new File(outputDirectory, outputBasename + ".vcf.gz");
+
+        log.info("Merging headers:");
+        List<VCFHeader> headers = new ArrayList<>();
+        final List<String> samples = new ArrayList<>();
+        files.forEach(x -> {
+            try (VCFFileReader reader = new VCFFileReader(x))
+            {
+                VCFHeader header = reader.getFileHeader();
+                headers.add(header);
+
+                if (samples.isEmpty())
+                {
+                    samples.addAll(header.getSampleNamesInOrder());
+                }
+                else if (!samples.equals(header.getSampleNamesInOrder()))
+                {
+                    throw new IllegalArgumentException("Samples list different between VCF headers!  Encountered for: " + x.getPath());
+                }
+            }
+        });
+
+        File headerFile = new File(outputGzip.getParentFile(), "header.vcf");
+        VariantContextWriterBuilder builder = new VariantContextWriterBuilder().setOutputFile(headerFile);
+        builder.setReferenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath()));
+        try (VariantContextWriter writer = builder.build())
+        {
+            log.info("total samples: " + samples.size());
+            writer.writeHeader(new VCFHeader(VCFUtils.smartMergeHeaders(headers, true), samples));
+        }
 
         List<String> bashCommands = new ArrayList<>();
-        int idx = 0;
+        bashCommands.add("cat " + headerFile.getPath());
+
         for (File vcf : files)
         {
             String cat = vcf.getName().toLowerCase().endsWith(".gz") ? "zcat" : "cat";
-
-            //Build header.  Note: swapping the Number=0 for strings is a hack to deal with bad cassandra data
-            if (idx == 0)
-            {
-                bashCommands.add(cat + " " + vcf.getPath() + " | head -n 50000 | grep -e '^#';");
-            }
-
             bashCommands.add(cat + " " + vcf.getPath() + " | grep -v '^#';");
-            idx++;
         }
 
         try
         {
-            File bashTmp = new File(outputDirectory, "vcfCombine.sh");
+            File bashTmp = new File(outputGzip.getParentFile(), "vcfCombine.sh");
             try (PrintWriter writer = PrintWriters.getPrintWriter(bashTmp))
             {
                 writer.write("#!/bin/bash\n");
@@ -473,7 +499,14 @@ public class SequenceUtil
                 writer.write("set -e\n");
                 writer.write("{\n");
                 bashCommands.forEach(x -> writer.write(x + '\n'));
-                writer.write("} | bgzip > " + outputGzip + "\n");
+
+                Integer threads = SequencePipelineService.get().getMaxThreads(log);
+                if (threads != null)
+                {
+                    threads = Math.max(1, threads - 1);
+                }
+
+                writer.write("} | bgzip -f" + (threads == null ? "" : " --threads " + threads) + " > " + outputGzip + "\n");
             }
 
             SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
@@ -485,6 +518,13 @@ public class SequenceUtil
 
             log.info("total variants: " + SequenceAnalysisService.get().getVCFLineCount(outputGzip, log, false));
             log.info("passing variants: " + SequenceAnalysisService.get().getVCFLineCount(outputGzip, log, true));
+
+            headerFile.delete();
+            File headerIdx = new File(headerFile.getPath() + ".idx");
+            if (headerIdx.exists())
+            {
+                headerIdx.delete();
+            }
         }
         catch (IOException e)
         {

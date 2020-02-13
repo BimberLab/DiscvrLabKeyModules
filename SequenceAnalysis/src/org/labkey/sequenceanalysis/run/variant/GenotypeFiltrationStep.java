@@ -53,7 +53,7 @@ public class GenotypeFiltrationStep extends AbstractCommandPipelineStep<VariantF
     }
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable List<Interval> intervals) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
         File outputVcf = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".gfiltered.vcf.gz");
@@ -81,10 +81,12 @@ public class GenotypeFiltrationStep extends AbstractCommandPipelineStep<VariantF
             }
         }
 
-        if (interval != null)
+        if (intervals != null)
         {
-            params.add("-L");
-            params.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+            intervals.forEach(interval -> {
+                params.add("-L");
+                params.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+            });
         }
 
         getWrapper().execute(genome.getWorkingFastaFile(), inputVCF, outputVcf, params);

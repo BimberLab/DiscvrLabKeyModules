@@ -93,7 +93,7 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
         String intervalText = StringUtils.trimToNull(getProvider().getParameterByName("intervals").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
         if (intervalText != null)
         {
-            if (job instanceof VariantProcessingJob && ((VariantProcessingJob)job).isDoScatterByContig())
+            if (job instanceof VariantProcessingJob && ((VariantProcessingJob)job).isScatterJob())
             {
                 throw new PipelineJobException("Splitting jobs per chromosome is not supported when custom intervals are provided for VariantsToTable");
             }
@@ -101,7 +101,7 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
     }
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable List<Interval> intervals) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
 
@@ -151,7 +151,7 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
             }
         }
 
-        if (interval != null)
+        if (intervals != null)
         {
             throw new PipelineJobException("Splitting jobs per chromosome is not supported when custom intervals are provided");
         }

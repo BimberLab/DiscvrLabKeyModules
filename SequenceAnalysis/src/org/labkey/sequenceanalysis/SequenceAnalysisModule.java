@@ -39,7 +39,25 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
-import org.labkey.sequenceanalysis.analysis.*;
+import org.labkey.sequenceanalysis.analysis.BamCleanupHandler;
+import org.labkey.sequenceanalysis.analysis.BamHaplotypeHandler;
+import org.labkey.sequenceanalysis.analysis.CellHashingHandler;
+import org.labkey.sequenceanalysis.analysis.CellRangerAggrHandler;
+import org.labkey.sequenceanalysis.analysis.CellRangerRawDataHandler;
+import org.labkey.sequenceanalysis.analysis.CellRangerReanalysisHandler;
+import org.labkey.sequenceanalysis.analysis.CombineStarGeneCountsHandler;
+import org.labkey.sequenceanalysis.analysis.CombineSubreadGeneCountsHandler;
+import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
+import org.labkey.sequenceanalysis.analysis.HaplotypeCallerHandler;
+import org.labkey.sequenceanalysis.analysis.LiftoverHandler;
+import org.labkey.sequenceanalysis.analysis.ListVcfSamplesHandler;
+import org.labkey.sequenceanalysis.analysis.MultiQCBamHandler;
+import org.labkey.sequenceanalysis.analysis.MultiQCHandler;
+import org.labkey.sequenceanalysis.analysis.PicardAlignmentMetricsHandler;
+import org.labkey.sequenceanalysis.analysis.RecalculateSequenceMetricsHandler;
+import org.labkey.sequenceanalysis.analysis.RnaSeqcHandler;
+import org.labkey.sequenceanalysis.analysis.SbtGeneCountHandler;
+import org.labkey.sequenceanalysis.analysis.UnmappedSequenceBasedGenotypeHandler;
 import org.labkey.sequenceanalysis.button.AddSraRunButton;
 import org.labkey.sequenceanalysis.button.CellHashingButton;
 import org.labkey.sequenceanalysis.button.ChangeReadsetStatusButton;
@@ -61,6 +79,7 @@ import org.labkey.sequenceanalysis.pipeline.SequenceJobSupportImpl;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.SequencePipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerPipelineProvider;
+import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 import org.labkey.sequenceanalysis.query.SequenceAnalysisUserSchema;
 import org.labkey.sequenceanalysis.run.alignment.BWAMemWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWASWWrapper;
@@ -125,6 +144,7 @@ import org.labkey.sequenceanalysis.run.variant.VariantFiltrationStep;
 import org.labkey.sequenceanalysis.run.variant.VariantQCStep;
 import org.labkey.sequenceanalysis.run.variant.VariantsToTableStep;
 import org.labkey.sequenceanalysis.util.Barcoder;
+import org.labkey.sequenceanalysis.util.ScatterGatherUtils;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -312,7 +332,6 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new RecalculateSequenceMetricsHandler());
         SequenceAnalysisService.get().registerFileHandler(new CellRangerReanalysisHandler());
         SequenceAnalysisService.get().registerFileHandler(new CellRangerAggrHandler());
-        SequenceAnalysisService.get().registerFileHandler(new CellRangerSeuratHandler());
         SequenceAnalysisService.get().registerFileHandler(new CellRangerRawDataHandler());
         SequenceAnalysisService.get().registerFileHandler(new ListVcfSamplesHandler());
         SequenceAnalysisService.get().registerFileHandler(new MultiQCBamHandler());
@@ -429,7 +448,14 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
     @NotNull
     public Set<Class> getUnitTests()
     {
-        return PageFlowUtil.set(SequenceAlignmentTask.TestCase.class, SequenceAnalysisManager.TestCase.class, SequenceJobSupportImpl.TestCase.class, ProcessVariantsHandler.TestCase.class);
+        return PageFlowUtil.set(
+                SequenceAlignmentTask.TestCase.class,
+                SequenceAnalysisManager.TestCase.class,
+                SequenceJobSupportImpl.TestCase.class,
+                ProcessVariantsHandler.TestCase.class,
+                VariantProcessingJob.TestCase.class,
+                ScatterGatherUtils.TestCase.class
+        );
     }
 
     @Override

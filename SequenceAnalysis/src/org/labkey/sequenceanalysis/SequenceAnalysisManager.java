@@ -187,7 +187,7 @@ public class SequenceAnalysisManager
 
         Map<String, Object> scriptContext = new HashMap<>();
         scriptContext.put("deleteFromServer", true);  //a flag to make the trigger script accept this
-        List<Map<String, Object>> deleted = us.getTable(tableName).getUpdateService().deleteRows(us.getUser(), us.getContainer(), toDelete, null, scriptContext);
+        List<Map<String, Object>> deleted = us.getTable(tableName, null).getUpdateService().deleteRows(us.getUser(), us.getContainer(), toDelete, null, scriptContext);
 
         return deleted.size();
     }
@@ -196,7 +196,7 @@ public class SequenceAnalysisManager
     {
         SequenceAnalysisSchema s = SequenceAnalysisSchema.getInstance();
         UserSchema us = QueryService.get().getUserSchema(user, c, SequenceAnalysisSchema.SCHEMA_NAME);
-        TableInfo readsets = us.getTable(SequenceAnalysisSchema.TABLE_READSETS);
+        TableInfo readsets = us.getTable(SequenceAnalysisSchema.TABLE_READSETS, null);
 
         try (DbScope.Transaction transaction = s.getSchema().getScope().ensureTransaction())
         {
@@ -263,7 +263,7 @@ public class SequenceAnalysisManager
 
                 Map<String, Object> scriptContext = new HashMap<>();
                 scriptContext.put("deleteFromServer", true);  //a flag to make the trigger script accept this
-                us.getTable(SequenceAnalysisSchema.TABLE_ANALYSES).getUpdateService().deleteRows(user, container, keysToDelete, null, scriptContext);
+                us.getTable(SequenceAnalysisSchema.TABLE_ANALYSES, null).getUpdateService().deleteRows(user, container, keysToDelete, null, scriptContext);
             }
             transaction.commit();
         }
@@ -303,7 +303,7 @@ public class SequenceAnalysisManager
                         container = container.getParent();
                     }
 
-                    if (new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), filter, null).exists())
+                    if (new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES, null), filter, null).exists())
                     {
                         _log.error("outputfile file appears to be in use by another record, will not delete the associated file.  dataId: " + so.getDataId() + ", " + d.getDataFileUrl());
                         outputFilesWithDataNotDeleted.add(so.getRowid());
@@ -312,12 +312,13 @@ public class SequenceAnalysisManager
                     {
                         d.getFile().delete();
                         expDataDeleted.add(d.getRowId());
-                        
-                        if (SequenceAnalysisTask.ALIGNMENT_CATEGORY.equals(so.getCategory()) && so.getAnalysis_id() != null)
-                        {
-                            bamsDeleted.add(d.getRowId());
-                        }
                     }
+                }
+
+                //NOTE: move outside block above in case this delete occurred after the actual file was deleted
+                if (d != null && SequenceAnalysisTask.ALIGNMENT_CATEGORY.equals(so.getCategory()) && so.getAnalysis_id() != null)
+                {
+                    bamsDeleted.add(d.getRowId());
                 }
             }
 
@@ -334,7 +335,7 @@ public class SequenceAnalysisManager
 
                 Map<String, Object> scriptContext = new HashMap<>();
                 scriptContext.put("deleteFromServer", true);  //a flag to make the trigger script accept this
-                List<Map<String, Object>> deleted = us.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES).getUpdateService().deleteRows(user, container, outputFilesToDelete, null, scriptContext);
+                List<Map<String, Object>> deleted = us.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES, null).getUpdateService().deleteRows(user, container, outputFilesToDelete, null, scriptContext);
                 if (deleted.size() != outputFilesToDelete.size())
                 {
                     throw new PipelineJobException("The total files deleted did not match the input.  Was: " + deleted.size() + ", expected: " + outputFilesToDelete.size());
@@ -363,24 +364,35 @@ public class SequenceAnalysisManager
                 if (!bamsDeleted.isEmpty())
                 {
                     //Find all analyses using these BAMs:
-                    List<Integer> analysesUsingBams = new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_ANALYSES), PageFlowUtil.set("rowId"), new SimpleFilter(FieldKey.fromString("alignmentfile"), bamsDeleted, CompareType.IN), null).getArrayList(Integer.class);
-                    analysesUsingBams.removeAll(additionalAnalysisIds);
-                    if (!analysesUsingBams.isEmpty())
+                    final List<Map<String, Object>> rows = new ArrayList<>();
+                    final List<Map<String, Object>> oldKeys = new ArrayList<>();
+
+                    TableSelector ts = new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_ANALYSES, null), PageFlowUtil.set("rowid", "container"), new SimpleFilter(FieldKey.fromString("alignmentfile"), bamsDeleted, CompareType.IN), null);
+                    if (ts.exists())
                     {
-                        final List<Map<String, Object>> rows = new ArrayList<>();
-                        final List<Map<String, Object>> oldKeys = new ArrayList<>();
-                        analysesUsingBams.forEach(x -> {
+                        ts.forEachResults(rs -> {
+                            //these were deleted anyway
+                            if (additionalAnalysisIds.contains(rs.getInt(FieldKey.fromString("rowid"))))
+                            {
+                                return;
+                            }
+
                             Map<String, Object> map = new CaseInsensitiveHashMap<>();
-                            map.put("rowid", x);
+                            map.put("rowid", rs.getInt(FieldKey.fromString("rowid")));
                             oldKeys.add(map);
 
                             map = new CaseInsensitiveHashMap<>();
-                            map.put("rowid", x);
+                            map.put("rowid", rs.getInt(FieldKey.fromString("rowid")));
                             map.put("alignmentfile", null);
+                            map.put("container", rs.getString(FieldKey.fromString("container")));
                             rows.add(map);
                         });
+                    }
 
-                        us.getTable(SequenceAnalysisSchema.TABLE_ANALYSES).getUpdateService().updateRows(user, container, rows, oldKeys, null, scriptContext);
+                    if (!rows.isEmpty())
+                    {
+                        _log.info("Will set alignmentfile to NULL on " + rows.size() + " analyses because the BAM was deleted");
+                        us.getTable(SequenceAnalysisSchema.TABLE_ANALYSES, null).getUpdateService().updateRows(user, container, rows, oldKeys, null, scriptContext);
                     }
                 }
 
@@ -650,7 +662,7 @@ public class SequenceAnalysisManager
         Map<String, Object> scriptContext = new HashMap<>();
         scriptContext.put("deleteFromServer", true);  //a flag to make the trigger script accept this
         UserSchema us = QueryService.get().getUserSchema(user, c, SequenceAnalysisSchema.SCHEMA_NAME);
-        us.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES).getUpdateService().deleteRows(user, c, toDelete, null, scriptContext);
+        us.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES, null).getUpdateService().deleteRows(user, c, toDelete, null, scriptContext);
     }
 
     public String getNTRefForAARef(Integer refId)

@@ -146,9 +146,9 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
     }
 
     @Override
-    public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, Collection<SequenceOutputFile> componentOutputs)
+    public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, List<SequenceOutputFile> inputFiles)
     {
-        return ProcessVariantsHandler.createSequenceOutput(job, processed, componentOutputs, VCF_CATEGORY);
+        return ProcessVariantsHandler.createSequenceOutput(job, processed, inputFiles, VCF_CATEGORY);
     }
 
     @Override
@@ -163,6 +163,21 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
             ProcessVariantsHandler.initVariantProcessing(job, support, inputFiles, outputDir);
+
+            Set<Integer> genomeIds = new HashSet<>();
+            for (SequenceOutputFile so : inputFiles)
+            {
+                genomeIds.add(so.getLibrary_id());
+            }
+
+            if (genomeIds.size() > 1)
+            {
+                throw new PipelineJobException("The selected files use more than one genome");
+            }
+            else if (genomeIds.isEmpty())
+            {
+                throw new PipelineJobException("No genome ID found for inputs");
+            }
 
             if (params.get("variantCalling.GenotypeGVCFs.forceSitesFile") != null)
             {
@@ -195,6 +210,10 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             if (genomeIds.size() > 1)
             {
                 throw new PipelineJobException("The selected files use more than one genome");
+            }
+            else if (genomeIds.isEmpty())
+            {
+                throw new PipelineJobException("No genome ID found for inputs");
             }
 
             int genomeId = genomeIds.iterator().next();
@@ -302,11 +321,13 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 toolParams.add("--allow-old-rms-mapping-quality-annotation-data");
             }
 
-            Interval interval = ProcessVariantsHandler.getInterval(ctx);
-            if (interval != null)
+            List<Interval> intervals = ProcessVariantsHandler.getIntervals(ctx);
+            if (intervals != null)
             {
-                toolParams.add("-L");
-                toolParams.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+                intervals.forEach(interval -> {
+                    toolParams.add("-L");
+                    toolParams.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+                });
             }
 
             boolean doCopyInputs = ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.doCopyInputs", false);

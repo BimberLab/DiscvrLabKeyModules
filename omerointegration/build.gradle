@@ -10,7 +10,7 @@ repositories {
 
 //excludes based on: https://github.com/glencoesoftware/omero-ms-core/blob/master/build.gradle
 dependencies {
-   external (group: 'omero', name: 'blitz', version: '5.2.8-ice35-b57') {
+   external (group: 'omero', name: 'blitz', version: '5.5.0-m2-ice36-b103') {
       exclude group: 'OME'
       exclude group: 'antlr'
       exclude group: 'asm'

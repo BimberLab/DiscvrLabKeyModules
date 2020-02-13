@@ -520,10 +520,10 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     }
 
     @Override
-    public File runCiteSeqCount(PipelineStepOutput output, String outputCategory, Readset htoReadset, File htoList, File cellBarcodeList, File outputDir, String basename, Logger log, List<String> extraArgs, boolean doHtoFiltering, File localPipelineDir, @Nullable Integer editDistance, boolean scanEditDistances, Readset parentReadset, @Nullable Integer genomeId) throws PipelineJobException
+    public File runCiteSeqCount(PipelineStepOutput output, @Nullable String outputCategory, Readset htoReadset, File htoList, File cellBarcodeList, File outputDir, String basename, Logger log, List<String> extraArgs, boolean doHtoFiltering, @Nullable Integer minCountPerCell, File localPipelineDir, @Nullable Integer editDistance, boolean scanEditDistances, Readset parentReadset, @Nullable Integer genomeId) throws PipelineJobException
     {
         CellHashingHandler handler = new CellHashingHandler();
 
-        return handler.runCiteSeqCount(output, outputCategory, htoReadset, htoList, cellBarcodeList, outputDir, basename, log, extraArgs, doHtoFiltering, localPipelineDir, editDistance, scanEditDistances, parentReadset, genomeId);
+        return handler.runCiteSeqCount(output, outputCategory, htoReadset, htoList, cellBarcodeList, outputDir, basename, log, extraArgs, doHtoFiltering, minCountPerCell, localPipelineDir, editDistance, scanEditDistances, parentReadset, genomeId);
     }
 }

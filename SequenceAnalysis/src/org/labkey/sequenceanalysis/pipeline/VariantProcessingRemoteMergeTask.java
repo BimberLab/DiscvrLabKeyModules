@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import htsjdk.samtools.util.Interval;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
@@ -10,6 +11,7 @@ import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.FileType;
 
@@ -68,7 +70,7 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
         {
             if (job instanceof VariantProcessingJob)
             {
-                if (!((VariantProcessingJob)job).isDoScatterByContig())
+                if (!((VariantProcessingJob)job).isScatterJob())
                 {
                     job.getLogger().info("skipping VCF merge task");
                     return false;
@@ -101,21 +103,21 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
 
         TaskFileManagerImpl manager = new TaskFileManagerImpl(getPipelineJob(), _wd.getDir(), _wd);
 
-        List<String> contigs = getPipelineJob().getAllContigs();
-        getJob().setStatus(PipelineJob.TaskStatus.running, "Combining Per Contig VFCs: " + contigs.size());
+        Map<String, List<Interval>> jobToIntervalMap = getPipelineJob().getJobToIntervalMap();
+        getJob().setStatus(PipelineJob.TaskStatus.running, "Combining Per-Contig VCFs: " + jobToIntervalMap.size());
 
         RecordedAction action = new RecordedAction(ACTION_NAME);
 
         Map<String, File> finalVcfs = getPipelineJob().getFinalVCFs();
         List<File> toConcat = new ArrayList<>();
-        for (String contig : getPipelineJob().getAllContigs())
+        for (String name : jobToIntervalMap.keySet())
         {
-            if (!finalVcfs.containsKey(contig))
+            if (!finalVcfs.containsKey(name))
             {
-                throw new PipelineJobException("Missing VCF for contig: " + contig);
+                throw new PipelineJobException("Missing VCF for interval/contig: " + name);
             }
 
-            File vcf = finalVcfs.get(contig);
+            File vcf = finalVcfs.get(name);
             if (!vcf.exists())
             {
                 throw new PipelineJobException("Missing VCF: " + vcf.getPath());
@@ -128,8 +130,26 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
         }
 
         String basename = SequenceAnalysisService.get().getUnzippedBaseName(toConcat.get(0).getName());
-        File combined = SequenceAnalysisService.get().combineVcfs(toConcat, getPipelineJob().getAnalysisDirectory(), basename, getJob().getLogger());
+        File combined = new File(getPipelineJob().getAnalysisDirectory(), basename + ".vcf.gz");
+        File combinedIdx = new File(combined.getPath() + ".tbi");
+        if (combinedIdx.exists())
+        {
+            getJob().getLogger().info("VCF exists, will not recreate: " + combined.getPath());
+        }
+        else
+        {
+            if (getPipelineJob().getSequenceSupport().getCachedGenomes().size() != 1)
+            {
+                throw new PipelineJobException("Expected a single genome, found: " + getPipelineJob().getSequenceSupport().getCachedGenomes().size());
+            }
+
+            ReferenceGenome genome = getPipelineJob().getSequenceSupport().getCachedGenomes().iterator().next();
+            combined = SequenceAnalysisService.get().combineVcfs(toConcat, combined, genome, getJob().getLogger());
+        }
         manager.addOutput(action, "Merged VCF", combined);
+
+        //TODO: run tasks after merge?
+
 
         SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler = getPipelineJob().getHandler();
         if (handler instanceof SequenceOutputHandler.TracksVCF)
@@ -140,7 +160,7 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
             getPipelineJob().getOutputsToCreate().removeAll(outputs);
             getJob().getLogger().debug("Total SequenceOutputFiles on job after remove: " + getPipelineJob().getOutputsToCreate().size());
 
-            SequenceOutputFile finalOutput = ((SequenceOutputHandler.TracksVCF)getPipelineJob().getHandler()).createFinalSequenceOutput(getJob(), combined, outputs);
+            SequenceOutputFile finalOutput = ((SequenceOutputHandler.TracksVCF)getPipelineJob().getHandler()).createFinalSequenceOutput(getJob(), combined, getPipelineJob().getFiles());
             manager.addSequenceOutput(finalOutput);
         }
         else
