@@ -706,7 +706,7 @@ then
     echo "Compressing TAR"
     bzip2 htslib-1.10.2.tar
     chmod 755 htslib-1.10.2
-    cd htslib-1.10.2.tar
+    cd htslib-1.10.2
     ./configure
     make
 
