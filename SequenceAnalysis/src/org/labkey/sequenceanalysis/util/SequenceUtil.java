@@ -227,7 +227,8 @@ public class SequenceUtil
         }
     }
 
-    public static void bgzip(File input, File output)
+    @Deprecated
+    private static void bgzip(File input, File output)
     {
         try (FileInputStream i = new FileInputStream(input); BlockCompressedOutputStream o = new BlockCompressedOutputStream(new FileOutputStream(output), output))
         {
@@ -498,7 +499,14 @@ public class SequenceUtil
                 writer.write("set -e\n");
                 writer.write("{\n");
                 bashCommands.forEach(x -> writer.write(x + '\n'));
-                writer.write("} | bgzip > " + outputGzip + "\n");
+
+                Integer threads = SequencePipelineService.get().getMaxThreads(log);
+                if (threads != null)
+                {
+                    threads = Math.max(1, threads - 1);
+                }
+
+                writer.write("} | bgzip -f" + (threads == null ? "" : " --threads " + threads) + " > " + outputGzip + "\n");
             }
 
             SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
