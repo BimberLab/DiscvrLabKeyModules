@@ -55,7 +55,7 @@ public class ClusterModule extends ExtendedSimpleModule
     }
 
     @Override
-    public double getVersion()
+    public Double getSchemaVersion()
     {
         return 15.23;
     }
