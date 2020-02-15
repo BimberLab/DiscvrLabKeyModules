@@ -90,11 +90,13 @@ abstract public class SequenceAnalysisService
 
     abstract public File getPicardJar();
 
-    abstract public File writeAllCellHashingBarcodes(File webserverDir) throws PipelineJobException;
+    abstract public File writeAllCellHashingBarcodes(File webserverDir, User u, Container c) throws PipelineJobException;
 
     abstract public String createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String assemblyId, String description, boolean skipCacheIndexes, boolean skipTriggers) throws IOException;
 
     abstract public String createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String assemblyId, String description, boolean skipCacheIndexes, boolean skipTriggers, Set<GenomeTrigger> extraTriggers) throws IOException;
 
-    abstract public File combineVcfs(List<File> files, File outputDirectory, String outputBasename, Logger log) throws PipelineJobException;
+    abstract public File combineVcfs(List<File> files, File outputGz, ReferenceGenome genome, Logger log) throws PipelineJobException;
+
+    abstract public String getScriptPath(String moduleName, String path) throws PipelineJobException;
 }

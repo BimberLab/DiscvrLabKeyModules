@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -41,14 +42,12 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
 
     public CombineGVCFsHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), NAME, "This will run GATK\'s CombineGVCFs on a set of GVCF files.  Note: this cannot work against any VCF file - these are primarily VCFs created using GATK\'s HaplotypeCaller.", null, Arrays.asList(
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), NAME, "This will run GATK\'s CombineGVCFs on a set of GVCF files.  Note: this cannot work against any VCF file - these are primarily VCFs created using GATK\'s HaplotypeCaller.", new LinkedHashSet<>(Arrays.asList("sequenceanalysis/panel/VariantScatterGatherPanel.js")), Arrays.asList(
                 ToolParameterDescriptor.create("fileBaseName", "Filename", "This is the basename that will be used for the output gzipped VCF", "textfield", null, "CombinedGenotypes"),
                 ToolParameterDescriptor.create("doCopyLocal", "Copy gVCFs To Working Directory", "If selected, the gVCFs will be copied to the working directory first, which can improve performance when working with a large set of files.", "checkbox", new JSONObject(){{
                     put("checked", true);
                 }}, true),
-                ToolParameterDescriptor.create("scatterGather", "Process Chromosomes in Parallel", "If selected, this job will be divided to run job per chromosome.  The final step will take the VCF from each intermediate step and combined to make a final VCF file.", "checkbox", new JSONObject(){{
-                    put("checked", false);
-                }}, false)
+                ToolParameterDescriptor.create("scatterGather", "Scatter/Gather Options", "If selected, this job will be divided to run job per chromosome.  The final step will take the VCF from each intermediate step and combined to make a final VCF file.", "sequenceanalysis-variantscattergatherpanel", null, false)
         ));
     }
 
@@ -83,9 +82,9 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
     }
 
     @Override
-    public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, Collection<SequenceOutputFile> componentOutputs)
+    public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, List<SequenceOutputFile> inputFiles)
     {
-        return ProcessVariantsHandler.createSequenceOutput(job, processed, componentOutputs, COMBINED_CATEGORY);
+        return ProcessVariantsHandler.createSequenceOutput(job, processed, inputFiles, COMBINED_CATEGORY);
     }
 
     public class Processor implements SequenceOutputProcessor
@@ -161,10 +160,13 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
                 if (ctx.getJob() instanceof VariantProcessingJob)
                 {
                     VariantProcessingJob job = (VariantProcessingJob)ctx.getJob();
-                    if (job.getContigForTask() != null)
+                    if (job.getIntervalsForTask() != null)
                     {
-                        options.add("-L");
-                        options.add(job.getContigForTask());
+                        job.getIntervalsForTask().forEach(interval -> {
+                            options.add("-L");
+                            options.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+                        });
+
                     }
                 }
 
@@ -192,14 +194,14 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
             if (ctx.getJob() instanceof VariantProcessingJob)
             {
                 VariantProcessingJob job = (VariantProcessingJob) ctx.getJob();
-                if (job.getContigForTask() != null)
+                if (job.getIntervalsForTask() != null)
                 {
                     //NOTE: the VCF was copied back to the source dir, so translate paths
                     try
                     {
                         String path = ctx.getWorkDir().getRelativePath(outputFile);
                         File movedOutputFile = new File(ctx.getSourceDirectory(), path);
-                        job.getFinalVCFs().put(job.getContigForTask(), movedOutputFile);
+                        job.getFinalVCFs().put(job.getIntervalSetName(), movedOutputFile);
                     }
                     catch (IOException e)
                     {

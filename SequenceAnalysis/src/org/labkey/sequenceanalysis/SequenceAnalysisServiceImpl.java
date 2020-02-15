@@ -32,6 +32,7 @@ import org.labkey.api.sequenceanalysis.PedigreeRecord;
 import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceDataProvider;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
@@ -436,6 +437,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         return SequenceAnalysisManager.getPicardJar();
     }
 
+    @Override
     public String getScriptPath(String moduleName, String path) throws PipelineJobException
     {
         Module module = ModuleLoader.getInstance().getModule(moduleName);
@@ -451,9 +453,9 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     }
 
     @Override
-    public File writeAllCellHashingBarcodes(File webserverDir) throws PipelineJobException
+    public File writeAllCellHashingBarcodes(File webserverDir, User u, Container c) throws PipelineJobException
     {
-        return CellHashingHandler.writeAllBarcodes(webserverDir);
+        return CellHashingHandler.writeAllBarcodes(webserverDir, u, c);
     }
 
     @Override
@@ -471,8 +473,8 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     }
 
     @Override
-    public File combineVcfs(List<File> files, File outputDirectory, String outputBasename, Logger log) throws PipelineJobException
+    public File combineVcfs(List<File> files, File outputGz, ReferenceGenome genome, Logger log) throws PipelineJobException
     {
-        return SequenceUtil.combineVcfs(files, outputDirectory, outputBasename, log);
+        return SequenceUtil.combineVcfs(files, genome, outputGz, log);
     }
 }

@@ -52,7 +52,7 @@ public class OpenLdapSyncModule extends SpringModule
     }
 
     @Override
-    public double getVersion()
+    public Double getSchemaVersion()
     {
         return 18.21;
     }

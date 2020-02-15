@@ -49,7 +49,7 @@ public class BLASTModule extends ExtendedSimpleModule
     }
 
     @Override
-    public double getVersion()
+    public Double getSchemaVersion()
     {
         return 13.33;
     }

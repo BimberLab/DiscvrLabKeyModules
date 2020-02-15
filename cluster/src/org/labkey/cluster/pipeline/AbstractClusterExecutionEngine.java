@@ -588,12 +588,19 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
         ClusterJob clusterJob = getMostRecentClusterSubmission(jobId, false);
         if (clusterJob == null)
         {
-            _log.error("unable to find active cluster submission for jobId: " + jobId, new Exception());
+            //NOTE: if this is the parent of a split job, it was never actually submitted to the cluster
             PipelineStatusFile sf = PipelineService.get().getStatusFile(jobId);
+            PipelineJob pj = sf == null ? null : sf.createJobInstance();
+            if (pj != null && pj.isSplitWaiting())
+            {
+                pj.setStatus(PipelineJob.TaskStatus.cancelled);
+                return;
+            }
+
+            _log.error("unable to find active cluster submission for jobId: " + jobId, new Exception());
             if (sf != null)
             {
                 _log.error("status: " + sf.getStatus());
-                PipelineJob pj = sf.createJobInstance();
                 if  (pj != null)
                 {
                     pj.getLogger().error("unable to find active cluster submission for jobId: " + jobId + ", current status: " + sf.getStatus(), new Exception());

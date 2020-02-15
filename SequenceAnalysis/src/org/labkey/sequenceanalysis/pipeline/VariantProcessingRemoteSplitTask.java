@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import htsjdk.samtools.util.Interval;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
@@ -15,9 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class VariantProcessingRemoteSplitTask extends WorkDirectoryTask<VariantProcessingRemoteSplitTask.Factory>
 {
@@ -95,10 +94,16 @@ public class VariantProcessingRemoteSplitTask extends WorkDirectoryTask<VariantP
         SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler = getPipelineJob().getHandler();
         JobContextImpl ctx = new JobContextImpl(getPipelineJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), _wd.getDir(), new TaskFileManagerImpl(getPipelineJob(), _wd.getDir(), _wd), _wd);
 
+        List<Interval> intervals = getPipelineJob().getIntervalsForTask();
+        if (intervals != null)
+        {
+            getJob().getLogger().info("Using intervals: " + getPipelineJob().getIntervalSetName() + ", total: " + intervals.size());
+        }
+
         getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + handler.getName());
         handler.getProcessor().processFilesRemote(getPipelineJob().getFiles(), ctx);
 
-        if (getPipelineJob().getContigForTask() != null)
+        if (intervals != null)
         {
             if (handler instanceof SequenceOutputHandler.TracksVCF)
             {
@@ -108,7 +113,7 @@ public class VariantProcessingRemoteSplitTask extends WorkDirectoryTask<VariantP
                     //NOTE: the VCF was copied back to the source dir, so translate paths
                     String path = _wd.getRelativePath(vcf);
                     vcf = new File(ctx.getSourceDirectory(), path);
-                    getPipelineJob().getFinalVCFs().put(getPipelineJob().getContigForTask(), vcf);
+                    getPipelineJob().getFinalVCFs().put(getPipelineJob().getIntervalSetName(), vcf);
                 }
                 catch (IOException e)
                 {

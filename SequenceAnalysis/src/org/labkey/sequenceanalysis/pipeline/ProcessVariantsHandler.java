@@ -146,18 +146,26 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
     }
 
     @Override
-    public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, Collection<SequenceOutputFile> componentOutputs)
+    public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, List<SequenceOutputFile> inputFiles)
     {
-        return createSequenceOutput(job, processed, componentOutputs, VCF_CATEGORY);
+        return createSequenceOutput(job, processed, inputFiles, VCF_CATEGORY);
     }
 
-    public static SequenceOutputFile createSequenceOutput(PipelineJob job, File processed, Collection<SequenceOutputFile> componentOutputs, String category)
+    public static SequenceOutputFile createSequenceOutput(PipelineJob job, File processed, List<SequenceOutputFile> inputFiles, String category)
     {
         Set<Integer> libraryIds = new HashSet<>();
-        componentOutputs.forEach(x -> libraryIds.add(x.getLibrary_id()));
+        inputFiles.forEach(x -> {
+            if (x.getLibrary_id() != null)
+                libraryIds.add(x.getLibrary_id());
+        });
+
+        if (libraryIds.isEmpty())
+        {
+            throw new IllegalArgumentException("No library ID defined for VCFs");
+        }
 
         Set<Integer> readsetIds = new HashSet<>();
-        componentOutputs.forEach(x -> readsetIds.add(x.getReadset()));
+        inputFiles.forEach(x -> readsetIds.add(x.getReadset()));
 
         int sampleCount;
         try (VCFFileReader reader = new VCFFileReader(processed))
@@ -169,7 +177,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         SequenceOutputFile so1 = new SequenceOutputFile();
         so1.setName(processed.getName());
         so1.setFile(processed);
-        so1.setLibrary_id((libraryIds.isEmpty() ? null : libraryIds.iterator().next()));
+        so1.setLibrary_id(libraryIds.iterator().next());
         so1.setCategory(category);
         so1.setContainer(job.getContainerId());
         so1.setCreated(new Date());
@@ -227,7 +235,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         List<PipelineStepCtx<VariantProcessingStep>> providers = SequencePipelineService.get().getSteps(job, VariantProcessingStep.class);
         boolean requiresPedigree = false;
         VariantProcessingJob vj = getVariantPipelineJob(job);
-        boolean useScatterGather = vj != null && vj.isDoScatterByContig();
+        boolean useScatterGather = vj != null && vj.isScatterJob();
         Set<String> stepsNotScatterGather = new HashSet<>();
 
         for (PipelineStepCtx<VariantProcessingStep> stepCtx : providers)
@@ -332,19 +340,18 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         return new File(outputDir, "gatk.ped");
     }
 
-    public static Interval getInterval(JobContext ctx)
+    public static List<Interval> getIntervals(JobContext ctx)
     {
         PipelineJob pj = ctx.getJob();
         if (pj instanceof VariantProcessingJob)
         {
             VariantProcessingJob vpj = (VariantProcessingJob)pj;
-            if (vpj.isDoScatterByContig())
+            if (vpj.isScatterJob())
             {
-                String contig = vpj.getContigForTask();
-                ctx.getLogger().debug("This job will process contig: " + contig);
+                List<Interval> intervals = vpj.getIntervalsForTask();
+                ctx.getLogger().debug("This job will process " + intervals.size() + " intervals: " + vpj.getIntervalSetName());
 
-                SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(vpj.getDictFile().toPath());
-                return new Interval(contig, 1, dict.getSequence(contig).getSequenceLength());
+                return intervals;
             }
         }
 
@@ -405,9 +412,9 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             VariantProcessingStep step = stepCtx.getProvider().create(ctx);
             step.setStepIdx(stepCtx.getStepIdx());
 
-            Interval interval = getInterval(ctx);
+            List<Interval> intervals = getIntervals(ctx);
 
-            VariantProcessingStep.Output output = step.processVariants(currentVCF, ctx.getOutputDir(), genome, interval);
+            VariantProcessingStep.Output output = step.processVariants(currentVCF, ctx.getOutputDir(), genome, intervals);
             resumer.getFileManager().addStepOutputs(action, output);
 
             if (output.getVCF() != null)
@@ -546,11 +553,14 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                     args.add("-genotypeMergeOptions");
                     args.add("PRIORITIZE");
 
-                    Interval interval = getInterval(ctx);
-                    if (interval != null)
+                    List<Interval> intervals = getIntervals(ctx);
+                    if (intervals != null)
                     {
-                        args.add("-L");
-                        args.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+                        for (Interval interval : intervals)
+                        {
+                            args.add("-L");
+                            args.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+                        }
                     }
 
                     cv.execute(rg.getWorkingFastaFile(), vcfsInPriority, outFile, args, true);

@@ -61,7 +61,7 @@ public class SampleRenameStep extends AbstractCommandPipelineStep<VariantFiltrat
     }
 
     @Override
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable Interval interval) throws PipelineJobException
+    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable List<Interval> intervals) throws PipelineJobException
     {
         boolean enforceChangeAll = getProvider().getParameterByName("enforceChangeAll").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
         String sampleMapString = getProvider().getParameterByName("sampleMap").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
@@ -105,18 +105,28 @@ public class SampleRenameStep extends AbstractCommandPipelineStep<VariantFiltrat
             }
 
             writer.writeHeader(new VCFHeader(header.getMetaDataInInputOrder(), remappedSamples));
-            try (CloseableIterator<VariantContext> it = (interval == null ? reader.iterator() : reader.query(interval.getContig(), interval.getStart(), interval.getEnd())))
-            {
-                int i = 0;
-                while (it.hasNext())
-                {
-                    i++;
-                    if (i % 100000 == 0)
-                    {
-                        getPipelineCtx().getLogger().info("processed " + i + " variants");
-                    }
 
-                    writer.add(it.next());
+            List<Interval> queryIntervals = intervals;
+            if (queryIntervals == null || queryIntervals.isEmpty())
+            {
+                queryIntervals.add(null);
+            }
+
+            int i = 0;
+            for (Interval interval : queryIntervals)
+            {
+                try (CloseableIterator<VariantContext> it = (interval == null ? reader.iterator() : reader.query(interval.getContig(), interval.getStart(), interval.getEnd())))
+                {
+                    while (it.hasNext())
+                    {
+                        i++;
+                        if (i % 100000 == 0)
+                        {
+                            getPipelineCtx().getLogger().info("processed " + i + " variants");
+                        }
+
+                        writer.add(it.next());
+                    }
                 }
             }
         }

@@ -19,6 +19,7 @@
     "@gmod/jbrowse": "github:GMOD/jbrowse#1.12.4-release",
     "rimraf": "~2.6.2",
     "lodash": ">=4.17.12",
-    "growl": ">=1.10.0"
+    "growl": ">=1.10.0",
+    "dojox": ">=1.15.2"
   }
 }

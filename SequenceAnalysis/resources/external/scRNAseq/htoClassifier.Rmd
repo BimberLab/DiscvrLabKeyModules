@@ -1,3 +1,7 @@
+---
+title: 'Cell Hashing'
+---
+
 ```{r}
 
 library(OOSAP)
@@ -8,7 +12,7 @@ library(OOSAP)
 
 ```{r QC}
 
-barcodeData <- ProcessCiteSeqCount(bFile = barcodeDir, doRowFilter = doHtoFilter)
+barcodeData <- ProcessCiteSeqCount(bFile = barcodeDir, doRowFilter = doHtoFilter, maxValueForColSumFilter = maxValueForColSumFilter)
 if (nrow(barcodeData) == 0) {
   print('No passing HTOs')
 }

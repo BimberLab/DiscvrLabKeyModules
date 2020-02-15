@@ -10,6 +10,7 @@ import org.json.JSONObject;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
@@ -28,6 +29,7 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -220,6 +222,29 @@ public class StarWrapper extends AbstractCommandWrapper
             }
 
             output.addOutput(out, AlignmentOutputImpl.BAM_ROLE);
+
+            File log = new File(outputDirectory, basename + "Log.final.out");
+            if (log.exists())
+            {
+                getPipelineCtx().getLogger().info("STAR log:");
+                try (BufferedReader reader = Readers.getReader(log))
+                {
+                    String line;
+                    while ((line = reader.readLine()) != null)
+                    {
+                        getPipelineCtx().getLogger().info(line);
+                    }
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+
+            }
+            else
+            {
+                getPipelineCtx().getLogger().error("STAR log not found:" + log.getPath());
+            }
 
             if (hasGtf)
             {
@@ -428,7 +453,15 @@ public class StarWrapper extends AbstractCommandWrapper
                     }}, null),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--outFilterMultimapNmax"), "outFilterMultimapNmax", "Max Number of Alignments", "Maximum number of loci the read is allowed to map to. Alignments (all of them) will be output only if the read maps to no more loci than this value.", "ldk-integerfield", new JSONObject(){{
                     put("minValue", 0);
-                }}, 10)
+                }}, 10),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--outFilterScoreMinOverLread"), "outFilterScoreMinOverLread", "Filter Score Min (Over Read Length)", "Alignment will be output only if its score is higher than or equal to this value, normalized to read length (or sum of paired read length). Defaults to 0.66", "ldk-numberfield", new JSONObject(){{
+                    put("minValue", 0);
+                    put("maxValue", 1);
+                }}, null),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--outFilterMatchNminOverLread"), "outFilterMatchNminOverLread", "Min Matched Based (Over Read Length)", "Alignment will be output only if the number of matched bases is higher than or equal to this value, normalized to read length (or sum of paired read length).  Defaults to 0.66", "ldk-numberfield", new JSONObject(){{
+                    put("minValue", 0);
+                    put("maxValue", 1);
+                }}, null)
             ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "https://github.com/alexdobin/STAR/", true, true, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
 
             setAlwaysCacheIndex(true);

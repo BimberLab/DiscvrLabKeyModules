@@ -9,11 +9,12 @@ if [ -e travisSettings.sh ];then
 fi
 
 BASE_VERSION=`echo $TRAVIS_BRANCH | grep -E -o '[0-9\.]{4,8}'`
-BASE_VERSION_SHORT=`echo $BASE_VERSION | awk '{ print substr($0,1,4) }'`
 
 if [[ -z $BASE_VERSION ]];then
     BASE_VERSION='develop'
     BASE_VERSION_SHORT='develop'
+else
+    BASE_VERSION_SHORT=`echo $BASE_VERSION | awk '{ print substr($0,1,4) }'`
 fi
 
 echo "Base version inferred from branch: "$BASE_VERSION

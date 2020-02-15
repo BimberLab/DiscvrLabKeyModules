@@ -15,9 +15,16 @@ import java.util.List;
  */
 public class BgzipRunner extends AbstractCommandWrapper
 {
+    private int _maxThreads = -1;
+
     public BgzipRunner(@Nullable Logger logger)
     {
         super(logger);
+    }
+
+    public void setMaxThreads(int maxThreads)
+    {
+        _maxThreads = maxThreads;
     }
 
     public File execute(File input) throws PipelineJobException
@@ -43,6 +50,23 @@ public class BgzipRunner extends AbstractCommandWrapper
         List<String> params = new ArrayList<>();
         params.add(getExe().getPath());
         params.add("-f");
+
+        Integer threads;
+        if (_maxThreads == -1)
+        {
+            threads = SequencePipelineService.get().getMaxThreads(getLogger());
+        }
+        else
+        {
+            Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
+            threads = maxThreads == null ? _maxThreads : Math.min(_maxThreads, maxThreads);
+        }
+
+        if (threads != null)
+        {
+            params.add("--threads");
+            params.add(threads.toString());
+        }
 
         params.add(input.getPath());
 

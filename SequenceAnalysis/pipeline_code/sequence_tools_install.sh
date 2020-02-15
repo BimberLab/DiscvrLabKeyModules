@@ -670,15 +670,15 @@ then
     rm -Rf $LKTOOLS_DIR/samtools
     rm -Rf $LKTOOLS_DIR/bcftools
 
-    wget $WGET_OPTS https://github.com/samtools/samtools/releases/download/1.5/samtools-1.5.tar.bz2
-    bunzip2 samtools-1.5.tar.bz2
-    tar -xf samtools-1.5.tar
+    wget $WGET_OPTS https://github.com/samtools/samtools/releases/download/1.10/samtools-1.10.tar.bz2
+    bunzip2 samtools-1.10.tar.bz2
+    tar -xf samtools-1.10.tar
     echo "Compressing TAR"
-    bzip2 samtools-1.5.tar
-    cd samtools-1.5
-    #note: this is used later by Bio::DB::Samtools
-    make CXXFLAGS=-fPIC CFLAGS=-fPIC CPPFLAGS=-fPIC
-    install samtools ${LKTOOLS_DIR}/samtools
+    bzip2 samtools-1.10.tar
+    cd samtools-1.10
+    ./configure
+    make
+    install ./samtools ${LKTOOLS_DIR}/samtools
 else
     echo "Already installed"
 fi
@@ -689,7 +689,7 @@ fi
 echo ""
 echo ""
 echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install tabix"
+echo "Install tabix/htslib"
 echo ""
 cd $LKSRC_DIR
 
@@ -700,13 +700,14 @@ then
     rm -Rf $LKTOOLS_DIR/tabix
     rm -Rf $LKTOOLS_DIR/bgzip
 
-    wget $WGET_OPTS https://downloads.sourceforge.net/project/samtools/tabix/tabix-0.2.6.tar.bz2
-    bunzip2 tabix-0.2.6.tar.bz2
-    tar -xf tabix-0.2.6.tar
+    wget $WGET_OPTS https://github.com/samtools/htslib/releases/download/1.10.2/htslib-1.10.2.tar.bz2
+    bunzip2 htslib-1.10.2.tar.bz2
+    tar -xf htslib-1.10.2.tar
     echo "Compressing TAR"
-    bzip2 tabix-0.2.6.tar
-    chmod 755 tabix-0.2.6
-    cd tabix-0.2.6
+    bzip2 htslib-1.10.2.tar
+    chmod 755 htslib-1.10.2
+    cd htslib-1.10.2
+    ./configure
     make
 
     install ./tabix $LKTOOLS_DIR

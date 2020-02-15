@@ -163,6 +163,7 @@ import org.labkey.sequenceanalysis.run.analysis.NtSnpByPosAggregator;
 import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.util.ChainFileValidator;
 import org.labkey.sequenceanalysis.util.FastqUtils;
+import org.labkey.sequenceanalysis.util.ScatterGatherUtils;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 import org.labkey.sequenceanalysis.visualization.VariationChart;
 import org.springframework.beans.PropertyValues;
@@ -4006,7 +4007,17 @@ public class SequenceAnalysisController extends SpringActionController
     {
         protected PipelineJob createOutputJob(RunSequenceHandlerForm form, Container targetContainer, String jobName, PipeRoot pr1, SequenceOutputHandler handler, List<SequenceOutputFile> inputs, JSONObject json) throws PipelineJobException, IOException
         {
-            return new VariantProcessingJob(targetContainer, getUser(), jobName, pr1, handler, inputs, json, form.isScatterGather());
+            String method = json.getString("scatterGatherMethod");
+            try
+            {
+                ScatterGatherUtils.ScatterGatherMethod scatterMethod = ScatterGatherUtils.ScatterGatherMethod.valueOf(method);
+
+                return new VariantProcessingJob(targetContainer, getUser(), jobName, pr1, handler, inputs, json, scatterMethod);
+            }
+            catch (IllegalArgumentException e)
+            {
+                throw new IllegalArgumentException("Unknown scatter method: " + method);
+            }
         }
     }
 

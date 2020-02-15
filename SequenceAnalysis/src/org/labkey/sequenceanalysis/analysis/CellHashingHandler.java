@@ -11,7 +11,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
+import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Sort;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -21,9 +23,11 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryService;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.Resource;
+import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -81,6 +85,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                     put("checked", true);
                 }}, true),
                 ToolParameterDescriptor.create("editDistance", "Edit Distance", null, "ldk-integerfield", null, 1),
+                ToolParameterDescriptor.create("minCountPerCell", "Min Reads/Cell", null, "ldk-integerfield", null, 5),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-cells"), "cells", "Expected Cells", null, "ldk-integerfield", null, 20000),
                 ToolParameterDescriptor.create("tagGroup", "Tag List", null, "ldk-simplelabkeycombo", new JSONObject(){{
                     put("schemaName", "sequenceanalysis");
@@ -138,7 +143,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         {
             String tagGroup = params.getString("tagGroup");
 
-            writeAllBarcodes(outputDir, tagGroup);
+            writeAllBarcodes(outputDir, tagGroup, job.getUser(), job.getContainer());
         }
 
         @Override
@@ -200,6 +205,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                 Integer highestSinglet = 0;
                 Integer bestEditDistance = null;
 
+                Integer minCountPerCell = ctx.getParams().optInt("minCountPerCell", 5);
                 boolean scanEditDistances = ctx.getParams().optBoolean("scanEditDistances", false);
                 if (scanEditDistances)
                 {
@@ -216,7 +222,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
 
                 for (Integer editDistance : editDistances)
                 {
-                    Map<String, Object> callMap = executeCiteSeqCount(ctx, action, rs, editDistance);
+                    Map<String, Object> callMap = executeCiteSeqCount(ctx, action, rs, editDistance, minCountPerCell);
                     results.put(editDistance, callMap);
 
                     int singlet = Integer.parseInt(callMap.get("singlet").toString());
@@ -233,7 +239,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                     ctx.getLogger().info("Using edit distance: " + bestEditDistance + ", singlet: " + highestSinglet);
 
                     Map<String, Object> callMap = results.get(bestEditDistance);
-                    String description = String.format("Edit Distance: %,d\nTotal Singlet: %,d\nDoublet: %,d\nSeurat Called: %,d\nNegative: %,d\nUnique HTOs: %s", bestEditDistance, callMap.get("singlet"), callMap.get("doublet"), callMap.get("seuratCalled"), callMap.get("negative"), callMap.get("UniqueHtos"));
+                    String description = String.format("Edit Distance: %,d\nMin Reads/Cell: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nSeurat Called: %,d\nNegative: %,d\nUnique HTOs: %s", bestEditDistance, minCountPerCell, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("seuratSinglet"), callMap.get("negative"), callMap.get("UniqueHtos"));
                     File htoCalls = (File)callMap.get("htoCalls");
                     File html = (File)callMap.get("html");
 
@@ -265,7 +271,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         }
     }
 
-    private Map<String, Object> executeCiteSeqCount(JobContext ctx, RecordedAction action, Readset rs, int editDistance) throws PipelineJobException
+    private Map<String, Object> executeCiteSeqCount(JobContext ctx, RecordedAction action, Readset rs, int editDistance, int minCountPerCell) throws PipelineJobException
     {
         CiteSeqCountWrapper wrapper = new CiteSeqCountWrapper(ctx.getLogger());
         ReadData rd = rs.getReadData().get(0);
@@ -318,7 +324,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         }
         ctx.getFileManager().addIntermediateFile(doneFile);
 
-        File htoCalls = generalFinalCalls(outputMatrix.getParentFile(), ctx.getOutputDir(), outputBasename, ctx.getLogger(), null, true, ctx.getSourceDirectory());
+        File htoCalls = generateFinalCalls(outputMatrix.getParentFile(), ctx.getOutputDir(), outputBasename, ctx.getLogger(), null, true, minCountPerCell, ctx.getSourceDirectory());
         File html = new File(htoCalls.getParentFile(), outputBasename + ".html");
 
         if (!html.exists())
@@ -350,9 +356,10 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
     {
         long singlet = 0L;
         long doublet = 0L;
+        long discordant = 0L;
         long negative = 0L;
-        long seuratCalled = 0L;
-        long multiSeqCalled = 0L;
+        long seuratSinglet = 0L;
+        long multiSeqSinglet = 0L;
         Set<String> uniqueHTOs = new TreeSet<>();
 
         try (CSVReader reader = new CSVReader(Readers.getReader(htoCalls), '\t'))
@@ -386,32 +393,38 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                 {
                     doublet++;
                 }
+                else if ("Discordant".equals(line[htoClassIdx]))
+                {
+                    discordant++;
+                }
                 else if ("Negative".equals(line[htoClassIdx]))
                 {
                     negative++;
                 }
 
-                if (!"Doublet".equals(line[htoIdx]) && !"Negative".equals(line[htoIdx])) {
+                if ("Singlet".equals(line[htoClassIdx]))
+                {
                     uniqueHTOs.add(line[htoIdx]);
-                }
 
-                if ("TRUE".equals(line[seuratIdx]))
-                {
-                    seuratCalled++;
-                }
+                    if ("TRUE".equals(line[seuratIdx]))
+                    {
+                        seuratSinglet++;
+                    }
 
-                if ("TRUE".equals(line[multiSeqIdx]))
-                {
-                    multiSeqCalled++;
+                    if ("TRUE".equals(line[multiSeqIdx]))
+                    {
+                        multiSeqSinglet++;
+                    }
                 }
             }
 
             Map<String, Object> ret = new HashMap<>();
             ret.put("singlet", singlet);
             ret.put("doublet", doublet);
+            ret.put("discordant", discordant);
             ret.put("negative", negative);
-            ret.put("seuratCalled", seuratCalled);
-            ret.put("multiSeqCalled", multiSeqCalled);
+            ret.put("seuratSinglet", seuratSinglet);
+            ret.put("multiSeqSinglet", multiSeqSinglet);
             List<String> uniqueHTOSorted = new ArrayList<>(uniqueHTOs);
             Collections.sort(uniqueHTOSorted, ComparatorUtils.naturalComparator());
             ret.put("UniqueHtos", StringUtils.join(uniqueHTOSorted, ","));
@@ -533,7 +546,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         return input;
     }
 
-    public File generalFinalCalls(File citeSeqCountOutDir, File outputDir, String basename, Logger log, @Nullable File cellBarcodeWhitelist, boolean doHtoFiltering, File localPipelineDir) throws PipelineJobException
+    public File generateFinalCalls(File citeSeqCountOutDir, File outputDir, String basename, Logger log, @Nullable File cellBarcodeWhitelist, boolean doHtoFiltering, Integer minCountPerCell, File localPipelineDir) throws PipelineJobException
     {
         log.debug("generating final calls from folder: " + citeSeqCountOutDir.getPath());
 
@@ -560,7 +573,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         File callsFile = new File(outputDir, basename + CALL_EXTENSION);
         File rawCallsFile = new File(outputDir, basename + ".raw.txt");
         File metricsFile = getMetricsFile(callsFile);
-        List<String> args = new ArrayList<>(Arrays.asList("/bin/bash", scriptWrapper, citeSeqCountOutDir.getName(), htmlFile.getName(), callsFile.getName(), rawCallsFile.getName(), (doHtoFiltering ? "T" : "F"), metricsFile.getName()));
+        List<String> args = new ArrayList<>(Arrays.asList("/bin/bash", scriptWrapper, citeSeqCountOutDir.getName(), htmlFile.getName(), callsFile.getName(), rawCallsFile.getName(), (doHtoFiltering ? "T" : "F"), (minCountPerCell == null ? "0" : minCountPerCell.toString()), metricsFile.getName()));
         if (cellBarcodeWhitelist != null)
         {
             args.add(cellBarcodeWhitelist.getName());
@@ -719,7 +732,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         return ret;
     }
 
-    public File runCiteSeqCount(PipelineStepOutput output, String category, Readset htoReadset, File htoList, File cellBarcodeList, File outputDir, String basename, Logger log, List<String> extraArgs, boolean doHtoFiltering, File localPipelineDir, @Nullable Integer editDistance, boolean scanEditDistances, Readset parentReadset, @Nullable Integer genomeId) throws PipelineJobException
+    public File runCiteSeqCount(PipelineStepOutput output, String category, Readset htoReadset, File htoList, File cellBarcodeList, File outputDir, String basename, Logger log, List<String> extraArgs, boolean doHtoFiltering, @Nullable Integer minCountPerCell, File localPipelineDir, @Nullable Integer editDistance, boolean scanEditDistances, Readset parentReadset, @Nullable Integer genomeId) throws PipelineJobException
     {
         HtoMergeResult htoFastqs = possiblyMergeHtoFastqs(htoReadset, outputDir, log);
         if (!htoFastqs.intermediateFiles.isEmpty())
@@ -801,7 +814,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
 
             File citeSeqCountOutDir = new File(outputDir, basename + ".citeSeqCounts." + ed);
             String outputBasename = basename + "." + ed;
-            Map<String, Object> callMap = executeCiteSeqCountWithJobCtx(outputDir, outputBasename, citeSeqCountOutDir, htoFastqs.files.getLeft(), htoFastqs.files.getRight(), toolArgs, ed, log, cellBarcodeList, doHtoFiltering, localPipelineDir, unknownBarcodeFile);
+            Map<String, Object> callMap = executeCiteSeqCountWithJobCtx(outputDir, outputBasename, citeSeqCountOutDir, htoFastqs.files.getLeft(), htoFastqs.files.getRight(), toolArgs, ed, log, cellBarcodeList, doHtoFiltering, minCountPerCell, localPipelineDir, unknownBarcodeFile);
             results.put(ed, callMap);
 
             int singlet = Integer.parseInt(callMap.get("singlet").toString());
@@ -821,7 +834,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
             log.info("Using edit distance: " + bestEditDistance + ", singlet: " + highestSinglet);
 
             Map<String, Object> callMap = results.get(bestEditDistance);
-            String description = String.format("Edit Distance: %,d\nTotal Singlet: %,d\nDoublet: %,d\nSeurat Called: %,d\nMultiSeq Called: %,d\nNegative: %,d\nUnique HTOs: %s", bestEditDistance, callMap.get("singlet"), callMap.get("doublet"), callMap.get("seuratCalled"), callMap.get("multiSeqCalled"), callMap.get("negative"), callMap.get("UniqueHtos"));
+            String description = String.format("Edit Distance: %,d\nMin Reads/Cell: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nSeurat Singlet: %,d\nMultiSeq Singlet: %,d\nNegative: %,d\nUnique HTOs: %s", bestEditDistance, minCountPerCell, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("seuratSinglet"), callMap.get("multiSeqSinglet"), callMap.get("negative"), callMap.get("UniqueHtos"));
             File htoCalls = (File) callMap.get("htoCalls");
             if (htoCalls == null)
             {
@@ -852,8 +865,11 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                 throw new PipelineJobException(e);
             }
 
-            output.addSequenceOutput(htoCalls, parentReadset.getName() + ": Cell Hashing Calls", category, parentReadset.getReadsetId(), null, genomeId, description);
-            output.addSequenceOutput(html, parentReadset.getName() + ": Cell Hashing Report", category + ": Report", parentReadset.getReadsetId(), null, genomeId, description);
+            if (category != null)
+            {
+                output.addSequenceOutput(htoCalls, parentReadset.getName() + ": Cell Hashing Calls", category, parentReadset.getReadsetId(), null, genomeId, description);
+                output.addSequenceOutput(html, parentReadset.getName() + ": Cell Hashing Report", category + ": Report", parentReadset.getReadsetId(), null, genomeId, description);
+            }
 
             return htoCalls;
         }
@@ -863,7 +879,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         }
     }
 
-    private Map<String, Object> executeCiteSeqCountWithJobCtx(File outputDir, String basename, File citeSeqCountOutDir, File fastq1, File fastq2, List<String> baseArgs, Integer ed, Logger log, File cellBarcodeList, boolean doHtoFiltering, File localPipelineDir, File unknownBarcodeFile) throws PipelineJobException
+    private Map<String, Object> executeCiteSeqCountWithJobCtx(File outputDir, String basename, File citeSeqCountOutDir, File fastq1, File fastq2, List<String> baseArgs, Integer ed, Logger log, File cellBarcodeList, boolean doHtoFiltering, Integer minCountPerCell, File localPipelineDir, File unknownBarcodeFile) throws PipelineJobException
     {
         CellHashingHandler.CiteSeqCountWrapper wrapper = new CellHashingHandler.CiteSeqCountWrapper(log);
         File doneFile = new File(citeSeqCountOutDir, "citeSeqCount.done");
@@ -899,7 +915,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
             throw new PipelineJobException(e);
         }
 
-        File outputFile = generalFinalCalls(outputMatrix.getParentFile(), outputDir, basename, log, cellBarcodeList, doHtoFiltering, localPipelineDir);
+        File outputFile = generateFinalCalls(outputMatrix.getParentFile(), outputDir, basename, log, cellBarcodeList, doHtoFiltering, minCountPerCell, localPipelineDir);
         if (!outputFile.exists())
         {
             throw new PipelineJobException("missing expected file: " + outputFile.getPath());
@@ -965,17 +981,18 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         return new File(webserverDir, "allHTOBarcodes.txt");
     }
 
-    public static File writeAllBarcodes(File webserverDir) throws PipelineJobException
+    public static File writeAllBarcodes(File webserverDir, User u, Container c) throws PipelineJobException
     {
-        return writeAllBarcodes(webserverDir, DEFAULT_TAG_GROUP);
+        return writeAllBarcodes(webserverDir, DEFAULT_TAG_GROUP, u, c);
     }
 
-    public static File writeAllBarcodes(File webserverDir, String groupName) throws PipelineJobException
+    public static File writeAllBarcodes(File webserverDir, String groupName, User u, Container c) throws PipelineJobException
     {
         File out = getAllBarcodesFile(webserverDir);
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(out), ',', CSVWriter.NO_QUOTE_CHARACTER))
         {
-            TableSelector ts = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_BARCODES), PageFlowUtil.set("sequence", "tag_name"), new SimpleFilter(FieldKey.fromString("group_name"), groupName), null);
+            TableInfo ti = QueryService.get().getUserSchema(u, c, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_BARCODES, null);
+            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("sequence", "tag_name"), new SimpleFilter(FieldKey.fromString("group_name"), groupName), new Sort("tag_name"));
             ts.forEachResults(rs -> {
                 writer.writeNext(new String[]{rs.getString(FieldKey.fromString("sequence")), rs.getString(FieldKey.fromString("tag_name"))});
             });
