@@ -19,6 +19,7 @@ cache:
 
 install: skip
 script:
+  - wget -O ./travis.sh https://github.com/bimberlabinternal/DevOps/raw/master/travisci/travis.sh
   - bash ./travis.sh
 
 before_deploy:
