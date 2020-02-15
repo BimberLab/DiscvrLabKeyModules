@@ -8,10 +8,9 @@ if [ -e travisSettings.sh ];then
     source travisSettings.sh
 fi
 
-BASE_VERSION=`echo $TRAVIS_BRANCH | grep -E -o '[0-9\.]{4,8}'`
+BASE_VERSION=`echo $TRAVIS_BRANCH | grep -E -o '[0-9\.]{4,8}' || echo 'develop'`
 
-if [[ -z $BASE_VERSION ]];then
-    BASE_VERSION='develop'
+if [ $BASE_VERSION == 'develop' ];then
     BASE_VERSION_SHORT='develop'
 else
     BASE_VERSION_SHORT=`echo $BASE_VERSION | awk '{ print substr($0,1,4) }'`
