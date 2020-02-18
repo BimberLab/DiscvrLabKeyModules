@@ -10,15 +10,15 @@ import java.util.regex.Matcher
 repositories {
    jcenter()
    maven {
-      url "http://clojars.org/repo"
+      url "https://clojars.org/repo"
    }
 }
 
 dependencies {
-   apiCompile "com.github.samtools:htsjdk:${htsjdkVersion}"
+   apiImplementation "com.github.samtools:htsjdk:${htsjdkVersion}"
    external "com.github.samtools:htsjdk:${htsjdkVersion}"
-   BuildUtils.addLabKeyDependency(project: project, config: "compile", depProjectPath: ":server:modules:LabDevKitModules:laboratory", depProjectConfig: "apiCompile")
-   BuildUtils.addLabKeyDependency(project: project, config: "compile", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "apiCompile")
+   BuildUtils.addLabKeyDependency(project: project, config: "implementation", depProjectPath: ":server:modules:LabDevKitModules:laboratory", depProjectConfig: "apiJarFile")
+   BuildUtils.addLabKeyDependency(project: project, config: "implementation", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "apiJarFile")
    external 'org.biojava:biojava3-core:3.0.7'
    external 'org.biojava:biojava3-genome:3.0.7'
    external 'org.itadaki:bzip2:0.9.1'

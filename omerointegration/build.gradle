@@ -4,7 +4,7 @@ repositories {
    mavenLocal()
    mavenCentral()
    maven {
-      url 'http://artifacts.openmicroscopy.org/artifactory/maven/'
+      url 'https://artifacts.openmicroscopy.org/artifactory/maven/'
    }
 }
 
@@ -74,5 +74,5 @@ dependencies {
 
    }
 
-   BuildUtils.addLabKeyDependency(project: project, config: "compile", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "apiCompile")
+   BuildUtils.addLabKeyDependency(project: project, config: "implementation", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "apiJarFile")
 }

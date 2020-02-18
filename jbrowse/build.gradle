@@ -3,14 +3,15 @@ import org.labkey.gradle.util.BuildUtils;
 repositories {
    jcenter()
    maven {
-      url "http://clojars.org/repo"
+      url "https://clojars.org/repo"
    }
 }
 
 dependencies {
-   BuildUtils.addLabKeyDependency(project: project, config: "compile", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "apiCompile")
-   BuildUtils.addLabKeyDependency(project: project, config: "compile", depProjectPath: ":server:modules:DiscvrLabKeyModules:SequenceAnalysis", depProjectConfig: "apiCompile")
-   BuildUtils.addLabKeyDependency(project: project, config: "compile", depProjectPath: ":server:modules:LabDevKitModules:laboratory", depProjectConfig: "apiCompile")
+   BuildUtils.addLabKeyDependency(project: project, config: "implementation", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "apiJarFile")
+   BuildUtils.addLabKeyDependency(project: project, config: "implementation", depProjectPath: ":server:modules:DiscvrLabKeyModules:SequenceAnalysis", depProjectConfig: "apiJarFile")
+   BuildUtils.addLabKeyDependency(project: project, config: "implementation", depProjectPath: ":server:modules:DiscvrLabKeyModules:SequenceAnalysis", depProjectConfig: "apiElements")
+   BuildUtils.addLabKeyDependency(project: project, config: "implementation", depProjectPath: ":server:modules:LabDevKitModules:laboratory", depProjectConfig: "apiJarFile")
 }
 
 project.task("copyJBrowse",
