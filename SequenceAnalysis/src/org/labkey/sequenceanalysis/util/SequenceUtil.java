@@ -447,7 +447,7 @@ public class SequenceUtil
         sorted.delete();
     }
 
-    public static File combineVcfs(List<File> files, ReferenceGenome genome, File outputGzip, Logger log) throws PipelineJobException
+    public static File combineVcfs(List<File> files, ReferenceGenome genome, File outputGzip, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel) throws PipelineJobException
     {
         log.info("combining VCFs: ");
 
@@ -500,13 +500,13 @@ public class SequenceUtil
                 writer.write("{\n");
                 bashCommands.forEach(x -> writer.write(x + '\n'));
 
-                Integer threads = SequencePipelineService.get().getMaxThreads(log);
+                Integer threads = multiThreaded ? SequencePipelineService.get().getMaxThreads(log) : null;
                 if (threads != null)
                 {
                     threads = Math.max(1, threads - 1);
                 }
 
-                writer.write("} | bgzip -f" + (threads == null ? "" : " --threads " + threads) + " > " + outputGzip + "\n");
+                writer.write("} | bgzip -f" + (compressionLevel == null ? "" : " --compress-level 9") + (threads == null ? "" : " --threads " + threads) + " > " + outputGzip + "\n");
             }
 
             SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);

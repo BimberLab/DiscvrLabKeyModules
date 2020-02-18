@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import htsjdk.samtools.util.Interval;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
@@ -138,13 +139,15 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
         }
         else
         {
-            if (getPipelineJob().getSequenceSupport().getCachedGenomes().size() != 1)
+            Set<Integer> genomeIds = new HashSet<>();
+            getPipelineJob().getFiles().forEach(x -> genomeIds.add(x.getLibrary_id()));
+            if (genomeIds.size() != 1)
             {
-                throw new PipelineJobException("Expected a single genome, found: " + getPipelineJob().getSequenceSupport().getCachedGenomes().size());
+                throw new PipelineJobException("Expected a single genome, found: " + StringUtils.join(genomeIds, ", "));
             }
 
-            ReferenceGenome genome = getPipelineJob().getSequenceSupport().getCachedGenomes().iterator().next();
-            combined = SequenceAnalysisService.get().combineVcfs(toConcat, combined, genome, getJob().getLogger());
+            ReferenceGenome genome = getPipelineJob().getSequenceSupport().getCachedGenome(genomeIds.iterator().next());
+            combined = SequenceAnalysisService.get().combineVcfs(toConcat, combined, genome, getJob().getLogger(), true, null);
         }
         manager.addOutput(action, "Merged VCF", combined);
 

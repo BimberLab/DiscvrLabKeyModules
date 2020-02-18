@@ -16,6 +16,7 @@ import java.util.List;
 public class BgzipRunner extends AbstractCommandWrapper
 {
     private int _maxThreads = -1;
+    private Integer _compressionLevel = null;
 
     public BgzipRunner(@Nullable Logger logger)
     {
@@ -25,6 +26,11 @@ public class BgzipRunner extends AbstractCommandWrapper
     public void setMaxThreads(int maxThreads)
     {
         _maxThreads = maxThreads;
+    }
+
+    public void setCompressionLevel(int compressionLevel)
+    {
+        _compressionLevel = compressionLevel;
     }
 
     public File execute(File input) throws PipelineJobException
@@ -66,6 +72,12 @@ public class BgzipRunner extends AbstractCommandWrapper
         {
             params.add("--threads");
             params.add(threads.toString());
+        }
+
+        if (_compressionLevel != null)
+        {
+            params.add("--compress-level");
+            params.add(_compressionLevel.toString());
         }
 
         params.add(input.getPath());
