@@ -15,6 +15,8 @@
  */
 package org.labkey.sequenceanalysis.pipeline;
 
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
@@ -193,6 +195,33 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                     File dict = new File(existingFasta.getFile().getParentFile(), basename + ".dict");
                     if (dict.exists())
                     {
+                        SAMSequenceDictionary extractor = SAMSequenceDictionaryExtractor.extractDictionary(dict.toPath());
+
+                        //ensure set of sequence names is identical:
+                        List<String> dictSequenceNames = new ArrayList<>();
+                        extractor.getSequences().forEach(x -> dictSequenceNames.add(x.getSequenceName()));
+
+                        Map<String, ReferenceLibraryMember> libraryMemberMap = new HashMap<>();
+                        libraryMembers.forEach(x -> libraryMemberMap.put(x.getHeaderName(), x));
+                        List<String> uniqueIncomingSequenceNames = new ArrayList<>(libraryMemberMap.keySet());
+                        uniqueIncomingSequenceNames.removeAll(dictSequenceNames);
+
+                        if (libraryMemberMap.size() == dictSequenceNames.size() && uniqueIncomingSequenceNames.isEmpty())
+                        {
+                            getJob().getLogger().info("Sorting output to match pre-existing dictionary file");
+
+                            List<ReferenceLibraryMember> orderedMembers = new ArrayList<>();
+                            extractor.getSequences().forEach(x -> {
+                                orderedMembers.add(libraryMemberMap.get(x.getSequenceName()));
+                            });
+
+                            libraryMembers = orderedMembers;
+                        }
+                        else
+                        {
+                            getJob().getLogger().info("An existing dictionary file was found, but the set of sequences differs.  Will not use.");
+                        }
+
                         dict.delete();
                     }
 
