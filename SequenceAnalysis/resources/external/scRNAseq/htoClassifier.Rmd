@@ -2,9 +2,18 @@
 title: 'Cell Hashing'
 ---
 
-```{r}
+```{r setup}
 
 library(OOSAP)
+
+cores <- Sys.getenv('SEQUENCEANALYSIS_MAX_THREADS')
+if (cores != ''){
+    print(paste0('Setting threads to ', cores))
+    future::plan("multiprocess", workers = as.integer(cores))
+    Sys.setenv('OMP_NUM_THREADS' = cores)
+} else {
+    print('SEQUENCEANALYSIS_MAX_THREADS not set, will not set cores')
+}
 
 ```
 
