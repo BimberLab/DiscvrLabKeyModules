@@ -250,7 +250,8 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
             return;
         }
 
-        var params = this.down('form').getForm().getValues();
+        //Note: use getFieldValues() to also include unchecked checkboxes
+        var params = this.down('form').getForm().getFieldValues();
         var json = {
             handlerType: this.handlerType,
             handlerClass: this.handlerClass,

@@ -453,7 +453,7 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 		};
 
 		//first add the general params
-		Ext4.apply(json, this.down('#runInformation').getForm().getValues());
+		Ext4.apply(json, this.down('#runInformation').getForm().getFieldValues());
 
 		//then append each section
 		var sections = this.query('sequenceanalysis-analysissectionpanel');
