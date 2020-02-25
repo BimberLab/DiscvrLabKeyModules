@@ -19,11 +19,18 @@ if [ $# -ge 8 ];then
     WHITELIST="whitelistFile<-'"${8}"';"
 fi
 
+ENV_OPTS=""
 RAM_OPTS=""
 if [ ! -z $SEQUENCEANALYSIS_MAX_RAM ];then
     RAM_OPTS=" --memory=${SEQUENCEANALYSIS_MAX_RAM}g"
+
+    ENV_OPTS=" -e SEQUENCEANALYSIS_MAX_RAM"
+fi
+
+if [ ! -z SEQUENCEANALYSIS_MAX_THREADS ];then
+    ENV_OPTS=${ENV_OPTS}" -e SEQUENCEANALYSIS_MAX_THREADS="${SEQUENCEANALYSIS_MAX_THREADS}
 fi
 
 sudo $DOCKER pull bimberlab/oosap
 
-sudo $DOCKER run --rm=true $RAM_OPTS -v "${WD}:/work" -v "${HOME}:/homeDir" -u $UID -e USERID=$UID -w /work -e HOME=/homeDir bimberlab/oosap Rscript -e "barcodeDir <- '"${CITESEQ_COUNT_DIR}"';finalCallFile <- '"${FINAL_CALLS}"';doHtoFilter <- "${DO_HTO_FILTER}";maxValueForColSumFilter <- "${MIN_READS_PER_CELL}";allCallsOutFile <- '"${RAW_CALLS}"';metricsFile <- '"${METRICS_FILE}"';"${WHITELIST}"rmarkdown::render('htoClassifier.Rmd', output_file = '"${HTML_FILE}"')"
+sudo $DOCKER run --rm=true $RAM_OPTS $ENV_OPTS -v "${WD}:/work" -v "${HOME}:/homeDir" -u $UID -e USERID=$UID -w /work -e HOME=/homeDir bimberlab/oosap Rscript -e "barcodeDir <- '"${CITESEQ_COUNT_DIR}"';finalCallFile <- '"${FINAL_CALLS}"';doHtoFilter <- "${DO_HTO_FILTER}";maxValueForColSumFilter <- "${MIN_READS_PER_CELL}";allCallsOutFile <- '"${RAW_CALLS}"';metricsFile <- '"${METRICS_FILE}"';"${WHITELIST}"rmarkdown::render('htoClassifier.Rmd', output_file = '"${HTML_FILE}"')"
