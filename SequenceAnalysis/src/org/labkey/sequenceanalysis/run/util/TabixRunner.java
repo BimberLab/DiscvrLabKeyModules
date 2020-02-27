@@ -37,6 +37,8 @@ public class TabixRunner extends AbstractCommandWrapper
         if (!output.exists())
             throw new PipelineJobException("Index not created, expected: " + output.getPath());
 
+        getLogger().info("done");
+
         return output;
     }
 

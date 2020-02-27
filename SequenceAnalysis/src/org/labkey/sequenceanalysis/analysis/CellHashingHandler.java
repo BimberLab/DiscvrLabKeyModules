@@ -85,6 +85,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                     put("checked", true);
                 }}, true),
                 ToolParameterDescriptor.create("editDistance", "Edit Distance", null, "ldk-integerfield", null, 1),
+                ToolParameterDescriptor.create("excludeFailedcDNA", "Exclude Failed cDNA", "If selected, cDNAs with non-blank status fields will be omitted", "checkbox", null, true),
                 ToolParameterDescriptor.create("minCountPerCell", "Min Reads/Cell", null, "ldk-integerfield", null, 5),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-cells"), "cells", "Expected Cells", null, "ldk-integerfield", null, 20000),
                 ToolParameterDescriptor.create("tagGroup", "Tag List", null, "ldk-simplelabkeycombo", new JSONObject(){{
@@ -276,6 +277,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         CiteSeqCountWrapper wrapper = new CiteSeqCountWrapper(ctx.getLogger());
         ReadData rd = rs.getReadData().get(0);
 
+        //ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Running CITE-seq-count with edit distance: " + editDistance);
         List<String> args = new ArrayList<>();
 
         args.addAll(getClientCommandArgs(ctx.getParams()));

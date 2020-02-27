@@ -256,7 +256,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
         };
 
         //first add the general params
-        Ext4.apply(json, this.down('#runInformation').getForm().getValues());
+        Ext4.apply(json, this.down('#runInformation').getForm().getFieldValues());
 
         json['alignment.doAlignment'] = this.down('#doAlignment').getValue();
 

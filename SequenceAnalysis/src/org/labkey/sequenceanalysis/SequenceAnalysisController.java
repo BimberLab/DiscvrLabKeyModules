@@ -3659,6 +3659,21 @@ public class SequenceAnalysisController extends SpringActionController
                             }
                         }
                     }
+
+                    File dict = new File(data.getFile().getParentFile(), FileUtil.getBaseName(data.getFile()) + ".dict");
+                    if (dict.exists())
+                    {
+                        files.add(dict);
+                    }
+                    else
+                    {
+                        //Try alternate name scheme
+                        dict = new File(data.getFile() + ".dict");
+                        if (dict.exists())
+                        {
+                            files.add(dict);
+                        }
+                    }
                 }
             }
 
