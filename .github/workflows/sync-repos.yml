@@ -5,7 +5,7 @@ on:
 jobs:
   sync-release-branches:
     # github.head_ref should only be set on forked repos, meaning this action should only run on the primary fork
-    if: !github.head_ref
+    if: github.head_ref == ''
     runs-on: ubuntu-latest
     steps:
       - name: "Sync Release Branches"
@@ -17,7 +17,7 @@ jobs:
           destination_branch_prefix: "discvr-"
           github_token: ${{ secrets.GITHUB_TOKEN }}
   sync-develop:
-    if: !github.head_ref
+    if: github.head_ref == ''
     runs-on: ubuntu-latest
     steps:
       - name: "Sync Develop Branch"
