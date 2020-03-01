@@ -29,6 +29,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractDiscvrSeqWrapper;
 import org.labkey.api.util.PageFlowUtil;
@@ -246,8 +247,10 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
             args.add(metricsTable.getPath());
 
             args.add("--primer3-path");
+            args.add(SequencePipelineService.get().getExeForPackage("PRIMER3PATH", "primer3_core").getPath());
 
             args.add("--blastn-path");
+            args.add(SequencePipelineService.get().getExeForPackage("BLASTPATH", "blastn").getPath());
 
             args.add("--blast-db-path");
             args.add(blastDbBase.getPath());
