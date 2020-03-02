@@ -81,7 +81,7 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
 
         for (ReferenceGenome rg : support.getCachedGenomes()) {
             SimpleFilter filter = new SimpleFilter(FieldKey.fromString("libraryid"), rg.getGenomeId());
-            filter.addCondition(FieldKey.fromString("datedisabled"), CompareType.ISBLANK);
+            filter.addCondition(FieldKey.fromString("datedisabled"), null, CompareType.ISBLANK);
 
             TableSelector ts = new TableSelector(ti, PageFlowUtil.set("objectid", "container"), filter, null);
             if (ts.exists())
@@ -254,6 +254,13 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
 
             args.add("--blast-db-path");
             args.add(blastDbBase.getPath());
+
+            Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
+            if (maxThreads != null)
+            {
+                args.add("--blast-threads");
+                args.add(maxThreads.toString());
+            }
 
             execute(args);
         }

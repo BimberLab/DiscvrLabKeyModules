@@ -68,6 +68,16 @@ public class BLASTWrapper extends AbstractCommandWrapper
         args.add("-index_name");
         args.add(db.getPath());
 
+        if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
+        {
+            Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
+            if (maxThreads != null)
+            {
+                args.add("-num_threads");
+                args.add(maxThreads.toString());
+            }
+        }
+
         args.add("-out");
         args.add(outputFile.getPath());
 
