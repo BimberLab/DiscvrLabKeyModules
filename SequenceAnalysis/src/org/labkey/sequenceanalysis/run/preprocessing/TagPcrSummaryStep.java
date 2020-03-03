@@ -158,6 +158,7 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
             if (totalReads > 0)
             {
                 hitRate = Integer.parseInt(metricMap.get("NumReadsSpanningJunction")) / (double) totalReads;
+                getPipelineCtx().getLogger().info("hit rate: " + hitRate);
             }
         }
         else
@@ -172,7 +173,7 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
                 referenceGenome.getGenomeId(),
                 "Reads: " + metricMap.get("NumReadsSpanningJunction") +
                         "\nJunction hit rate (of alignments): " + pf.format(Double.parseDouble(metricMap.get("PctReadsSpanningJunction")) +
-                        (hitRate == null ? "" : "\nJunction hit rate (of total reads): ") + pf.format(hitRate) +
+                        (hitRate == null ? "" : "\nJunction hit rate (of total reads): " + pf.format(hitRate)) +
                         "\nIntegration Sites: " + metricMap.get("TotalIntegrationSitesOutput") +
                         "\nAlignments Matching Insert: " + metricMap.get("FractionPrimaryAlignmentsMatchingInsert")
 
