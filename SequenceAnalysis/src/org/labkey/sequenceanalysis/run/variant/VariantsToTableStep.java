@@ -55,9 +55,9 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
                         put("style", "padding-bottom: 20px;");
                         put("isToolParam", false);
                     }}, null),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-AMD"), "amd", "Allow Missing Data", "If checked, do not require every record to contain every field", "checkbox", new JSONObject(){{
-                        put("checked", true);
-                    }}, true),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-EMD"), "emd", "Error on Missing Data", "If checked, the tool will error is any variants are missing the requested fields", "checkbox", new JSONObject(){{
+                        put("checked", false);
+                    }}, false),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--showFiltered"), "showFiltered", "Show Filtered Data", "If checked, rows that are filtered will be included", "checkbox", new JSONObject(){{
                         put("checked", false);
                     }}, false),

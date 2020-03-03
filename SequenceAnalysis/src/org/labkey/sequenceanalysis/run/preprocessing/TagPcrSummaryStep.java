@@ -20,6 +20,7 @@ import org.labkey.api.query.UserSchema;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
@@ -33,6 +34,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractDiscvrSeqWrapper;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -134,15 +136,46 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
         Map<String, String> metricMap = parseMetricFile(metrics);
 
         NumberFormat pf = NumberFormat.getPercentInstance();
-        pf.setMaximumFractionDigits(6);
+        pf.setMaximumFractionDigits(4);
+
+        Double hitRate = null;
+        if (rs.getReadData() != null)
+        {
+            getPipelineCtx().getLogger().info("Counting total input reads");
+
+            int totalReads = 0;
+            for (ReadData rd : rs.getReadData())
+            {
+                File forward = rd.getFile1();
+                if (forward != null && forward.exists())
+                {
+                    totalReads += SequenceUtil.getLineCount(forward) / 4;
+                }
+            }
+
+            getPipelineCtx().getLogger().info("initial reads: " + totalReads);
+
+            if (totalReads > 0)
+            {
+                hitRate = Integer.parseInt(metricMap.get("NumReadsSpanningJunction")) / (double) totalReads;
+            }
+        }
+        else
+        {
+            getPipelineCtx().getLogger().error("Readset did not have information on input files");
+        }
 
         output.addSequenceOutput(siteTable,
                 "Putative Integration Sites: " + rs.getName(),
                 "Tag-PCR Integration Sites", rs.getReadsetId(),
                 null,
                 referenceGenome.getGenomeId(),
-                "Records: " + Integer.parseInt(metricMap.get("NumReadsSpanningJunction")) + "\nJunction hit rate: " +
-                        pf.format(Double.parseDouble(metricMap.get("PctReadsSpanningJunction"))
+                "Reads: " + metricMap.get("NumReadsSpanningJunction") +
+                        "\nJunction hit rate (of alignments): " + pf.format(Double.parseDouble(metricMap.get("PctReadsSpanningJunction")) +
+                        (hitRate == null ? "" : "\nJunction hit rate (of total reads): ") + pf.format(hitRate) +
+                        "\nIntegration Sites: " + metricMap.get("TotalIntegrationSitesOutput") +
+                        "\nAlignments Matching Insert: " + metricMap.get("FractionPrimaryAlignmentsMatchingInsert")
+
                 )
         );
 
