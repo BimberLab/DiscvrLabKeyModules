@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.run.preprocessing;
 
 import au.com.bytecode.opencsv.CSVReader;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -172,12 +173,10 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
                 null,
                 referenceGenome.getGenomeId(),
                 "Reads: " + metricMap.get("NumReadsSpanningJunction") +
-                        "\nJunction hit rate (of alignments): " + pf.format(Double.parseDouble(metricMap.get("PctReadsSpanningJunction")) +
+                        "\nJunction hit rate (of alignments): " + pf.format(Double.parseDouble(metricMap.get("PctReadsSpanningJunction"))) +
                         (hitRate == null ? "" : "\nJunction hit rate (of total reads): " + pf.format(hitRate)) +
                         "\nIntegration Sites: " + metricMap.get("TotalIntegrationSitesOutput") +
                         "\nAlignments Matching Insert: " + metricMap.get("FractionPrimaryAlignmentsMatchingInsert")
-
-                )
         );
 
         return output;
