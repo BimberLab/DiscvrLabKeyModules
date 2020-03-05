@@ -1,17 +1,27 @@
 package org.labkey.sequenceanalysis.run.preprocessing;
 
-import au.com.bytecode.opencsv.CSVWriter;
-import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.ValidationStringency;
-import htsjdk.samtools.reference.ReferenceSequence;
-import htsjdk.samtools.reference.ReferenceSequenceFile;
-import htsjdk.samtools.reference.ReferenceSequenceFileFactory;
+import au.com.bytecode.opencsv.CSVReader;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
+import org.labkey.api.data.CompareType;
+import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Table;
+import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
+import org.labkey.api.files.FileContentService;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryService;
+import org.labkey.api.query.UserSchema;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
@@ -20,16 +30,22 @@ import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.writer.PrintWriters;
+import org.labkey.api.sequenceanalysis.run.AbstractDiscvrSeqWrapper;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisStep
 {
@@ -37,6 +53,8 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
     {
         super(provider, ctx);
     }
+
+    private static final String CACHE_KEY = "tagPcrBlastMap";
 
     private static final String MIN_ALIGNMENTS = "minAlignments";
     public static class Provider extends AbstractAnalysisStepProvider<TagPcrSummaryStep>
@@ -56,72 +74,169 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
     }
 
     @Override
+    public void init(SequenceAnalysisJobSupport support) throws PipelineJobException
+    {
+        //find/cache BLAST DB
+        UserSchema us = QueryService.get().getUserSchema(getPipelineCtx().getJob().getUser(), getPipelineCtx().getJob().getContainer(), "blast");
+        TableInfo ti = us.getTable("databases", null);
+
+        HashMap<Integer, File> blastDbMap = new HashMap<>();
+
+        for (ReferenceGenome rg : support.getCachedGenomes()) {
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("libraryid"), rg.getGenomeId());
+            filter.addCondition(FieldKey.fromString("datedisabled"), null, CompareType.ISBLANK);
+
+            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("objectid", "container"), filter, null);
+            if (ts.exists())
+            {
+                ts.forEachResults(rs -> {
+                    Container c = ContainerManager.getForId(rs.getString(FieldKey.fromString("container")));
+                    File fileRoot = FileContentService.get().getFileRoot(c, FileContentService.ContentType.files);
+                    File ret = new File(fileRoot, ".blastDB");
+                    ret = new File(ret.getPath() + "/" + rs.getString(FieldKey.fromString("objectid")));
+
+                    blastDbMap.put(rg.getGenomeId(), ret);
+                });
+            }
+            else
+            {
+                throw new PipelineJobException("Unable to find BLAST database for: " + rg.getName());
+            }
+
+            support.cacheObject(CACHE_KEY, blastDbMap);
+        }
+    }
+
+    private Map<Integer, File> getCachedBlastDbs(SequenceAnalysisJobSupport support) throws PipelineJobException
+    {
+        return support.getCachedObject(CACHE_KEY, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, Integer.class, File.class));
+    }
+
+    @Override
     public Output performAnalysisPerSampleRemote(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
     {
         AnalysisOutputImpl output = new AnalysisOutputImpl();
+
+        Map<Integer, File> blastDbs = getCachedBlastDbs(getPipelineCtx().getSequenceSupport());
+
+        TagPcrWrapper wrapper = new TagPcrWrapper(getPipelineCtx().getLogger());
+
+        String basename = SequenceAnalysisService.get().getUnzippedBaseName(inputBam.getName());
+        File siteTable = new File(outputDir, basename + ".sites.txt");
+        File primerTable = new File(outputDir, basename + ".primers.txt");
+        File genbank = new File(outputDir, basename + ".sites.gb");
+        File metrics = getMetricsFile(inputBam, getPipelineCtx().getSourceDirectory());
+
+        wrapper.execute(inputBam, referenceGenome.getWorkingFastaFile(), siteTable, primerTable, genbank, metrics, blastDbs.get(referenceGenome.getGenomeId()));
+
+        output.addOutput(siteTable, "Tag-PCR Integration Sites");
+        output.addOutput(primerTable, "Tag-PCR Primer Table");
+        output.addOutput(genbank, "Tag-PCR Genbank Summary");
+        output.addOutput(metrics, "Tag-PCR Metrics");
+
+        Map<String, String> metricMap = parseMetricFile(metrics);
+
         NumberFormat pf = NumberFormat.getPercentInstance();
-        pf.setMaximumFractionDigits(6);
+        pf.setMaximumFractionDigits(4);
 
-        File tsv = new File(outputDir, SequenceAnalysisService.get().getUnzippedBaseName(inputBam.getName()) + ".summary.txt");
-
-        SamReaderFactory fact = SamReaderFactory.makeDefault();
-        fact.validationStringency(ValidationStringency.SILENT);
-        fact.referenceSequence(referenceGenome.getWorkingFastaFile());
-        int numRecords = 0;
-        int totalOutput = 0;
-        Map<String, Integer> alignMap = new HashMap<>();
-        ReferenceSequenceFileFactory refFact = new ReferenceSequenceFileFactory();
-        try (SamReader bamReader = fact.open(inputBam); SAMRecordIterator it = bamReader.iterator(); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(tsv), '\t', CSVWriter.NO_QUOTE_CHARACTER);ReferenceSequenceFile refSeq = refFact.getReferenceSequenceFile(referenceGenome.getWorkingFastaFile()))
+        Double hitRate = null;
+        if (rs.getReadData() != null)
         {
-            while (it.hasNext())
+            getPipelineCtx().getLogger().info("Counting total input reads");
+
+            int totalReads = 0;
+            for (ReadData rd : rs.getReadData())
             {
-                SAMRecord rec = it.next();
-                if (rec.isSecondaryAlignment() || rec.getReadUnmappedFlag())
+                File forward = rd.getFile1();
+                if (forward != null && forward.exists())
                 {
-                    continue;
+                    totalReads += SequenceUtil.getLineCount(forward) / 4;
                 }
-
-                boolean isFirstMate = !(rec.getReadPairedFlag() && rec.getSecondOfPairFlag());
-                if (!isFirstMate)
-                {
-                    continue;
-                }
-
-                numRecords++;
-                String key = getAlignmentKey(rec);
-                int val = alignMap.getOrDefault(key, 0);
-                val++;
-
-                alignMap.put(key, val);
             }
 
-            writer.writeNext(new String[]{"Chr", "Position", "Strand", "Total", "RegionAfterSite", "RegionBeforeSite"});
-            Integer minAlignments = getProvider().getParameterByName(MIN_ALIGNMENTS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 2);
-            Map<String, ReferenceSequence> refMap = new HashMap<>();
-            for (String key : alignMap.keySet())
+            getPipelineCtx().getLogger().info("initial reads: " + totalReads);
+
+            if (totalReads > 0)
             {
-                int val = alignMap.get(key);
-                if (val > minAlignments)
-                {
-                    String[] vals = key.split("<>");
-                    int start = Integer.valueOf(vals[1]);
+                hitRate = Integer.parseInt(metricMap.get("NumReadsSpanningJunction")) / (double) totalReads;
+                getPipelineCtx().getLogger().info("hit rate: " + hitRate);
+            }
+        }
+        else
+        {
+            getPipelineCtx().getLogger().error("Readset did not have information on input files");
+        }
 
-                    ReferenceSequence ref = refMap.get(vals[0]);
-                    if (ref == null)
-                    {
-                        ref = refSeq.getSequence(vals[0]);
-                        refMap.put(vals[0], ref);
-                    }
+        output.addSequenceOutput(siteTable,
+                "Putative Integration Sites: " + rs.getName(),
+                "Tag-PCR Integration Sites", rs.getReadsetId(),
+                null,
+                referenceGenome.getGenomeId(),
+                "Reads: " + metricMap.get("NumReadsSpanningJunction") +
+                        "\nJunction hit rate (of alignments): " + pf.format(Double.parseDouble(metricMap.get("PctReadsSpanningJunction"))) +
+                        (hitRate == null ? "" : "\nJunction hit rate (of total reads): " + pf.format(hitRate)) +
+                        "\nIntegration Sites: " + metricMap.get("TotalIntegrationSitesOutput") +
+                        "\nAlignments Matching Insert: " + metricMap.get("FractionPrimaryAlignmentsMatchingInsert")
+        );
 
-                    totalOutput += val;
-                    String after = ref.getBaseString().substring(start, Math.min(start + 1000, ref.length()));
-                    String before = ref.getBaseString().substring(Math.max(1, start - 1000), start);
-                    writer.writeNext(new String[]{vals[0], vals[1], vals[2], String.valueOf(val), after, before});
-                }
-                else
+        return output;
+    }
+
+    private File getMetricsFile(File inputBam, File outDir)
+    {
+        return new File(outDir, SequenceAnalysisService.get().getUnzippedBaseName(inputBam.getName()) + ".metrics.txt");
+    }
+
+    @Override
+    public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta, File outDir) throws PipelineJobException
+    {
+        File metrics = getMetricsFile(inputBam, outDir);
+        if (metrics.exists())
+        {
+            getPipelineCtx().getJob().getLogger().info("Loading metrics");
+            AtomicInteger total = new AtomicInteger(0);
+            TableInfo ti = DbSchema.get("sequenceanalysis", DbSchemaType.Module).getTable("quality_metrics");
+            Map<String, String> metricsMap = parseMetricFile(metrics);
+            metricsMap.forEach((metricname, value) -> {
+                    Map<String, Object> r = new HashMap<>();
+                    r.put("category", "Tag-PCR");
+                    r.put("metricname", metricname);
+                    r.put("metricvalue", value);
+                    r.put("analysis_id", model.getRowId());
+                    //r.put("dataid", so.getDataId());
+                    r.put("readset", model.getReadset());
+                    r.put("container", model.getContainer());
+                    r.put("createdby", getPipelineCtx().getJob().getUser().getUserId());
+
+                    Table.insert(getPipelineCtx().getJob().getUser(), ti, r);
+                    total.getAndIncrement();
+                });
+
+                getPipelineCtx().getJob().getLogger().info("total metrics: " + total);
+
+        }
+        else
+        {
+            getPipelineCtx().getJob().getLogger().warn("Unable to find metrics file: " + metrics.getPath());
+        }
+
+        return null;
+    }
+
+    private Map<String, String> parseMetricFile(File metrics) throws PipelineJobException
+    {
+        Map<String, String> ret = new HashMap<>();
+        try (CSVReader reader = new CSVReader(Readers.getReader(metrics), '\t'))
+        {
+            String[]line;
+            while((line=reader.readNext())!=null)
+            {
+                if("MetricName".equals(line[0]))
                 {
-                    getPipelineCtx().getLogger().info("Skipping position: " + key + ", " + val);
+                    continue;
                 }
+
+                ret.put(line[0], line[1]);
             }
         }
         catch (IOException e)
@@ -129,24 +244,58 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
             throw new PipelineJobException(e);
         }
 
-        File fastq1 = rs.getReadData().get(0).getFile1();
-        double junctionRate = totalOutput / (double)(SequenceUtil.getLineCount(fastq1) / 4);
-
-        output.addOutput(tsv, "Tag-PCR Integration Sites");
-        output.addSequenceOutput(tsv, "Putative Integration Sites: " + rs.getName(), "Tag-PCR Integration Sites", rs.getReadsetId(), null, referenceGenome.getGenomeId(), "Records: " + numRecords + "\nJunction hit rate: " + pf.format(junctionRate));
-
-        return output;
+        return ret;
     }
 
-    private String getAlignmentKey(SAMRecord rec)
+    private static class TagPcrWrapper extends AbstractDiscvrSeqWrapper
     {
-        int start = (rec.getReadNegativeStrandFlag() ? rec.getEnd() : rec.getStart());
-        return rec.getContig() + "<>" + start + "<>" + (rec.getReadNegativeStrandFlag() ? "-" : "+");
-    }
+        public TagPcrWrapper(Logger log)
+        {
+            super(log);
+        }
 
-    @Override
-    public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta, File outDir) throws PipelineJobException
-    {
-        return null;
+        public void execute(File bamFile, File referenceFasta, File outputTable, File primerTable, File genbankOutput, File metricsTable, File blastDbBase) throws PipelineJobException
+        {
+            List<String> args = new ArrayList<>();
+            args.addAll(getBaseArgs());
+
+            args.add("TagPcrSummary");
+
+            args.add("--bam");
+            args.add(bamFile.getPath());
+
+            args.add("-R");
+            args.add(referenceFasta.getPath());
+
+            args.add("--output-table");
+            args.add(outputTable.getPath());
+
+            args.add("--primer-pair-table");
+            args.add(primerTable.getPath());
+
+            args.add("--genbank-output");
+            args.add(genbankOutput.getPath());
+
+            args.add("--metrics-table");
+            args.add(metricsTable.getPath());
+
+            args.add("--primer3-path");
+            args.add(SequencePipelineService.get().getExeForPackage("PRIMER3PATH", "primer3_core").getPath());
+
+            args.add("--blastn-path");
+            args.add(SequencePipelineService.get().getExeForPackage("BLASTPATH", "blastn").getPath());
+
+            args.add("--blast-db-path");
+            args.add(blastDbBase.getPath());
+
+            Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
+            if (maxThreads != null)
+            {
+                args.add("--blast-threads");
+                args.add(maxThreads.toString());
+            }
+
+            execute(args);
+        }
     }
 }
