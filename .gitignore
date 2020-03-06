@@ -4,4 +4,6 @@
 /intellijBuild
 /travisSettings.sh
 
-dependencies.txt
+# Created by npm install
+/jbrowse/jb_run.js
+/jbrowse/jb_setup.js
