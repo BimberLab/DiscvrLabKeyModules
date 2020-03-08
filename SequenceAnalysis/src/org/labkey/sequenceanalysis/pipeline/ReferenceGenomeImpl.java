@@ -3,11 +3,18 @@ package org.labkey.sequenceanalysis.pipeline;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.PageFlowUtil;
+import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
 import java.io.File;
 
@@ -141,5 +148,12 @@ public class ReferenceGenomeImpl implements ReferenceGenome
                 return new File(ret, name);
             }
         }
+    }
+
+    public static Container getFolderForGenome(int libraryId)
+    {
+        String containerId = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("container"), new SimpleFilter(FieldKey.fromString("rowid"), libraryId), null).getObject(String.class);
+
+        return containerId == null ? null : ContainerManager.getForId(containerId);
     }
 }
