@@ -143,6 +143,7 @@ import org.labkey.sequenceanalysis.pipeline.ImportFastaSequencesPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.ImportGenomeTrackPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.OrphanFilePipelineJob;
 import org.labkey.sequenceanalysis.pipeline.ReadsetImportJob;
+import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceConcatPipelineJob;
@@ -2808,6 +2809,22 @@ public class SequenceAnalysisController extends SpringActionController
         }
 
         @Override
+        public void validateCommand(ImportTrackForm form, Errors errors)
+        {
+            super.validateCommand(form, errors);
+
+            //ensure has write access in genome container
+            if (form.getLibraryId() != null)
+            {
+                Container genomeFolder = ReferenceGenomeImpl.getFolderForGenome(form.getLibraryId());
+                if (genomeFolder != null && !genomeFolder.hasPermission(getUser(), UpdatePermission.class))
+                {
+                    throw new UnauthorizedException("The current user does not have permission to update genome " + form.getLibraryId() + " which is saved in the folder: " + genomeFolder.getPath());
+                }
+            }
+        }
+
+        @Override
         public String getResponse(ImportTrackForm form, Map<String, Pair<File, String>> files) throws UploadException
         {
             JSONObject resp = new JSONObject();
@@ -2827,7 +2844,7 @@ public class SequenceAnalysisController extends SpringActionController
                         Container target = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
                         PipeRoot root = PipelineService.get().getPipelineRootSetting(target);
 
-                        //TODO: permissions on source container (shared)?
+                        //note: permissions on source container should be checked in validate()
                         ImportGenomeTrackPipelineJob job = new ImportGenomeTrackPipelineJob(target, getUser(), null, root, form.getLibraryId(), form.getTrackName(), file, entry.getValue().getValue(), form.getTrackDescription(), form.getDoChrTranslation() == null ? true : form.getDoChrTranslation());
                         PipelineService.get().queueJob(job);
 
@@ -4967,6 +4984,12 @@ public class SequenceAnalysisController extends SpringActionController
                 try
                 {
                     Container target = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
+                    Container genomeFolder = ReferenceGenomeImpl.getFolderForGenome(o.getInt("libraryId"));
+                    if (!genomeFolder.hasPermission(getUser(), UpdatePermission.class))
+                    {
+                        throw new UnauthorizedException("You do not have permission to update genome " + o.get("libraryId") + ", which is saved in the folder: " + genomeFolder.getPath());
+                    }
+
                     ImportGenomeTrackPipelineJob job = new ImportGenomeTrackPipelineJob(target, getUser(), null, root, o.getInt("libraryId"), o.getString("name"), file, file.getName(), o.getString("description"), form.getDoChrTranslation() == null ? true : form.getDoChrTranslation());
                     toCreate.add(job);
                 }
