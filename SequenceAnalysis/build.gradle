@@ -29,6 +29,9 @@ dependencies {
    external("com.github.broadinstitute:picard:2.18.4") {
       exclude group: "javax.servlet", module: "servlet-api"
    }
+
+   BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:LabDevKitModules:laboratory", depProjectConfig: "published", depExtension: "module")
+   BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "published", depExtension: "module")
 }
 
 if (project.findProject(BuildUtils.getTestProjectPath(project.gradle)) != null && project.hasProperty("teamcity"))
