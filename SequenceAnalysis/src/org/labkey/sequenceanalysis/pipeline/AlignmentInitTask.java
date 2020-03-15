@@ -97,6 +97,11 @@ public class AlignmentInitTask extends WorkDirectoryTask<AlignmentInitTask.Facto
 
         getJob().getLogger().info("Starting to process readset: " + getPipelineJob().getReadset().getName() + " (" + getPipelineJob().getReadset().getRowId() + ")");
 
+        if (getPipelineJob().getReadset().hasArchivedData())
+        {
+            throw new PipelineJobException("The input readset has archived read data and cannot be used for new alignments");
+        }
+
         getHelper().cacheExpDatasForParams();
 
         //build reference if needed
