@@ -407,4 +407,17 @@ public class SequenceReadsetImpl implements Readset
     {
         return getName().replaceAll("[^a-zA-Z0-9\\.\\-\\+]", "_");
     }
+
+    public boolean hasArchivedData()
+    {
+        for (ReadData rd : getReadData())
+        {
+            if (rd.isArchived())
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

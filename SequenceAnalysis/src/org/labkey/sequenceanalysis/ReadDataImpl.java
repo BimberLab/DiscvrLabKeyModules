@@ -30,6 +30,7 @@ public class ReadDataImpl implements ReadData
     private Date _modified;
     private Integer _modifiedBy;
     private Integer _runId;
+    private boolean _archived = false;
 
     private Map<Integer, File> _cachedFiles = new HashMap<>();
 
@@ -238,5 +239,16 @@ public class ReadDataImpl implements ReadData
     public boolean isPairedEnd()
     {
         return getFile2() != null;
+    }
+
+    @Override
+    public boolean isArchived()
+    {
+        return _archived;
+    }
+
+    public void setArchived(boolean archived)
+    {
+        _archived = archived;
     }
 }

@@ -77,13 +77,23 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             {
                 ExpData d = ExperimentService.get().getExpData(rd.getFileId1());
                 Container c = ContainerManager.getForId(rd.getContainer());
-                if (d == null || d.getFile() == null)
+                if (!rd.isArchived())
                 {
-                    log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId1() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
+                    if (d == null || d.getFile() == null)
+                    {
+                        log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId1() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
+                    }
+                    else if (!d.getFile().exists())
+                    {
+                        log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId1() + ", " + d.getFile().getPath() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
+                    }
                 }
-                else if (!d.getFile().exists())
+                else
                 {
-                    log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId1() + ", " + d.getFile().getPath() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
+                    if (d != null && d.getFile() != null && d.getFile().exists())
+                    {
+                        log.error("ReadData marked as archived, but file exists: " + rd.getRowid() + ", " + rd.getFileId1() + ", " + d.getFile().getPath() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
+                    }
                 }
             }
 
@@ -91,13 +101,23 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             {
                 ExpData d = ExperimentService.get().getExpData(rd.getFileId2());
                 Container c = ContainerManager.getForId(rd.getContainer());
-                if (d == null || d.getFile() == null)
+                if (!rd.isArchived())
                 {
-                    log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId2() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
+                    if (d == null || d.getFile() == null)
+                    {
+                        log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId2() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
+                    }
+                    else if (!d.getFile().exists())
+                    {
+                        log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId2() + ", " + d.getFile().getPath() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
+                    }
                 }
-                else if (!d.getFile().exists())
+                else
                 {
-                    log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId2() + ", " + d.getFile().getPath() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
+                    if (d != null && d.getFile() != null && d.getFile().exists())
+                    {
+                        log.error("ReadData marked as archived, but file exists: " + rd.getRowid() + ", " + rd.getFileId1() + ", " + d.getFile().getPath() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
+                    }
                 }
             }
         }
