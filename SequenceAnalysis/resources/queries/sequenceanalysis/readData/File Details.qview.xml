@@ -12,6 +12,7 @@
        <column name="date" />
        <column name="description" />
        <column name="sra_accession" />
+       <column name="archived" />
 
        <column name="created" />
        <column name="workbook" />
