@@ -29,46 +29,31 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
         super(log);
     }
 
-    public void execute(File referenceFasta, File outputFile, @Nullable List<String> options, boolean doCopyLocal, File... inputGVCFs) throws PipelineJobException
+    public void execute(File referenceFasta, File outputFile, @Nullable List<String> options, File inputFile) throws PipelineJobException
     {
         getLogger().info("Running GATK 4 GenotypeGVCFs");
 
         ensureDictionary(referenceFasta);
 
         //ensure indexes
-        this.ensureVCFIndexes(inputGVCFs);
-
-        Set<File> toDelete = new HashSet<>();
-        List<File> filesToProcess = new ArrayList<>();
-        if (doCopyLocal)
-        {
-            getLogger().info("making local copies of gVCF/GenomicsDB files prior to genotyping");
-            filesToProcess.addAll(copyVcfsLocally(Arrays.asList(inputGVCFs), toDelete, null, getLogger(), false));
-        }
-        else
-        {
-            filesToProcess.addAll(Arrays.asList(inputGVCFs));
-        }
+        this.ensureVCFIndexes(inputFile);
 
         List<String> args = new ArrayList<>(getBaseArgs());
         args.add("GenotypeGVCFs");
         args.add("-R");
         args.add(referenceFasta.getPath());
-        for (File f : filesToProcess)
+        args.add("--variant");
+        if (GVCF.isType(inputFile))
         {
-            args.add("--variant");
-            if (GVCF.isType(f))
-            {
-                args.add(f.getPath());
-            }
-            else if (f.isDirectory())
-            {
-                args.add("gendb://" + f.getPath());
-            }
-            else
-            {
-                throw new IllegalArgumentException("Unknown input: " + f.getPath());
-            }
+            args.add(inputFile.getPath());
+        }
+        else if (inputFile.isDirectory())
+        {
+            args.add("gendb://" + inputFile.getPath());
+        }
+        else
+        {
+            throw new IllegalArgumentException("Unknown input: " + inputFile.getPath());
         }
 
         args.add("-O");
@@ -85,15 +70,6 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
         if (!outputFile.exists())
         {
             throw new PipelineJobException("Expected output not found: " + outputFile.getPath());
-        }
-
-        if (!toDelete.isEmpty())
-        {
-            getLogger().info("deleting locally copied inputs");
-            for (File f : toDelete)
-            {
-                f.delete();
-            }
         }
     }
 
@@ -179,21 +155,18 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
         return vcfsToProcess;
     }
 
-    private void ensureVCFIndexes(File[] inputGVCFs) throws PipelineJobException
+    private void ensureVCFIndexes(File inputGVCF) throws PipelineJobException
     {
-        for (File gvcf : inputGVCFs)
+        try
         {
-            try
+            if (GVCF.isType(inputGVCF))
             {
-                if (GVCF.isType(gvcf))
-                {
-                    SequenceAnalysisService.get().ensureVcfIndex(gvcf, getLogger());
-                }
+                SequenceAnalysisService.get().ensureVcfIndex(inputGVCF, getLogger());
             }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
         }
     }
 }
