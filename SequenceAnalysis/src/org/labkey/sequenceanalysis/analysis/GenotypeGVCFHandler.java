@@ -28,6 +28,7 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.pipeline.JobContextImpl;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
+import org.labkey.sequenceanalysis.run.util.CombineGVCFsWrapper;
 import org.labkey.sequenceanalysis.run.util.GenomicsDBImportHandler;
 import org.labkey.sequenceanalysis.run.util.GenotypeGVCFsWrapper;
 
@@ -268,14 +269,53 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
 
         }
 
+        private String getBasename(JobContext ctx)
+        {
+            String basename = ctx.getParams().get("variantCalling.GenotypeGVCFs.fileBaseName") != null ? ctx.getParams().getString("variantCalling.GenotypeGVCFs.fileBaseName") : "CombinedGenotypes";
+            basename = basename.replaceAll(".vcf.gz$", "");
+            basename = basename.replaceAll(".vcf$", "");
+
+            return basename;
+        }
+
         private File runGenotypeGVCFs(PipelineJob job, JobContext ctx, ProcessVariantsHandler.Resumer resumer, List<File> inputFiles, int genomeId) throws PipelineJobException
         {
             RecordedAction action = new RecordedAction(getName());
             action.setStartTime(new Date());
 
+            File outDir = ctx.getOutputDir();
+            String basename = getBasename(ctx);
+
+            File outputVcf = new File(outDir, basename + ".vcf.gz");
+
             for (File f : inputFiles)
             {
                 action.addInput(f, "Input Variants");
+            }
+
+            boolean doCopyLocal = ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.doCopyInputs", false);
+
+            Set<File> toDelete = new HashSet<>();
+            List<File> filesToProcess = new ArrayList<>();
+            if (doCopyLocal)
+            {
+                ctx.getLogger().info("making local copies of gVCF/GenomicsDB files prior to genotyping");
+                filesToProcess.addAll(GenotypeGVCFsWrapper.copyVcfsLocally(inputFiles, toDelete, null, ctx.getLogger(), outputVcf.exists()));
+            }
+            else
+            {
+                filesToProcess.addAll(inputFiles);
+            }
+
+            //Allow CombineGVCFs to run on interval(s)
+            File inputVcf;
+            if (filesToProcess.size() > 1)
+            {
+                inputVcf = combineInputs(ctx, filesToProcess, genomeId);
+            }
+            else
+            {
+                inputVcf = filesToProcess.get(0);
             }
 
             GenotypeGVCFsWrapper wrapper = new GenotypeGVCFsWrapper(job.getLogger());
@@ -285,12 +325,6 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 throw new PipelineJobException("Unable to find cached genome for Id: " + genomeId);
             }
 
-            File outDir = ctx.getOutputDir();
-            String basename = ctx.getParams().get("variantCalling.GenotypeGVCFs.fileBaseName") != null ? ctx.getParams().getString("variantCalling.GenotypeGVCFs.fileBaseName") : "CombinedGenotypes";
-            basename = basename.replaceAll(".vcf.gz$", "");
-            basename = basename.replaceAll(".vcf$", "");
-
-            File outputVcf = new File(outDir, basename + ".vcf.gz");
             List<String> toolParams = new ArrayList<>();
             if (ctx.getParams().get("variantCalling.GenotypeGVCFs.stand_call_conf") != null)
             {
@@ -330,14 +364,62 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 });
             }
 
-            boolean doCopyInputs = ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.doCopyInputs", false);
+            wrapper.execute(genome.getSourceFastaFile(), outputVcf, toolParams, inputVcf);
 
-            wrapper.execute(genome.getSourceFastaFile(), outputVcf, toolParams, doCopyInputs, inputFiles.toArray(new File[inputFiles.size()]));
             action.addOutput(outputVcf, "VCF", outputVcf.exists(), true);
             action.setEndTime(new Date());
             resumer.setGenotypeGVCFsComplete(action, outputVcf);
 
+            if (!toDelete.isEmpty())
+            {
+                ctx.getLogger().info("deleting locally copied inputs");
+                for (File f : toDelete)
+                {
+                    if (f.exists())
+                    {
+                        f.delete();
+                    }
+                }
+            }
+
             return outputVcf;
+        }
+
+        private File combineInputs(JobContext ctx, List<File> inputFiles, int genomeId) throws PipelineJobException
+        {
+            // TODO: this should ultimately be expanded to include smarter merge with GenomicsDB
+            // Also consider allowing the input to be a folder with per-contig gVCFs
+
+            String basename = getBasename(ctx);
+            File combined = new File(ctx.getOutputDir(), basename + ".combined.gvcf.gz");
+
+            File idx = new File(combined.getPath() + ".tbi");
+            if (idx.exists())
+            {
+                ctx.getLogger().info("Index exists, resuming combine with existing file: " + combined.getPath());
+                return combined;
+            }
+
+            ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(genomeId);
+            if (genome == null)
+            {
+                throw new PipelineJobException("Unable to find cached genome for Id: " + genomeId);
+            }
+
+            List<String> toolParams = new ArrayList<>();
+            List<Interval> intervals = ProcessVariantsHandler.getIntervals(ctx);
+            if (intervals != null)
+            {
+                intervals.forEach(interval -> {
+                    toolParams.add("-L");
+                    toolParams.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+                });
+            }
+
+            CombineGVCFsWrapper wrapper = new CombineGVCFsWrapper(ctx.getLogger());
+            wrapper.execute(genome.getWorkingFastaFile(), combined, toolParams, inputFiles.toArray(new File[inputFiles.size()]));
+
+            return combined;
         }
     }
 }
