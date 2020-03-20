@@ -55,4 +55,6 @@ public interface ReadData extends Serializable
     public Date getModified();
 
     public Integer getModifiedBy();
+
+    public boolean isArchived();
 }
