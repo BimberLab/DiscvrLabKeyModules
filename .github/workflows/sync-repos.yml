@@ -4,26 +4,25 @@ on:
     - cron:  "10 */3 * * *"
 jobs:
   sync-release-branches:
-    # github.head_ref should only be set on forked repos, meaning this action should only run on the primary fork
-    if: github.head_ref == ''
+    if: github.repository == 'BimberLab/DiscvrLabKeyModules'
     runs-on: ubuntu-latest
     steps:
       - name: "Sync Release Branches"
         uses: bimberlabinternal/DevOps/githubActions/branch-create@master
         with:
-          source_repo: "labkey/DiscvrLabkeyModules"
+          source_repo: "labkey/DiscvrLabKeyModules"
           source_branch_prefix: "release"
-          destination_repo: "BimberLab/DiscvrLabkeyModules"
+          destination_repo: "BimberLab/DiscvrLabKeyModules"
           destination_branch_prefix: "discvr-"
           github_token: ${{ secrets.GITHUB_TOKEN }}
   sync-develop:
-    if: github.head_ref == ''
+    if: github.repository == 'BimberLab/DiscvrLabKeyModules'
     runs-on: ubuntu-latest
     steps:
       - name: "Sync Develop Branch"
         uses: bimberlabinternal/DevOps/githubActions/git-sync@master
         with:
-          source_repo: "labkey/DiscvrLabkeyModules"
+          source_repo: "labkey/DiscvrLabKeyModules"
           source_branch: "develop"
           destination_branch: "develop"
           github_token: ${{ secrets.GITHUB_TOKEN }}
