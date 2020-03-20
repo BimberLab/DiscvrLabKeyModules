@@ -268,6 +268,9 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                 {
                     ctx.getLogger().warn("None of the edit distances produced results");
                 }
+
+                //clear info field
+                ctx.getJob().setStatus(PipelineJob.TaskStatus.running);
             }
         }
     }
@@ -277,7 +280,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         CiteSeqCountWrapper wrapper = new CiteSeqCountWrapper(ctx.getLogger());
         ReadData rd = rs.getReadData().get(0);
 
-        //ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Running CITE-seq-count with edit distance: " + editDistance);
+        ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Running CITE-seq-count with edit distance: " + editDistance);
         List<String> args = new ArrayList<>();
 
         args.addAll(getClientCommandArgs(ctx.getParams()));
@@ -326,6 +329,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         }
         ctx.getFileManager().addIntermediateFile(doneFile);
 
+        ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Generating HTO calls for edit distance: " + editDistance);
         File htoCalls = generateFinalCalls(outputMatrix.getParentFile(), ctx.getOutputDir(), outputBasename, ctx.getLogger(), null, true, minCountPerCell, ctx.getSourceDirectory());
         File html = new File(htoCalls.getParentFile(), outputBasename + ".html");
 
