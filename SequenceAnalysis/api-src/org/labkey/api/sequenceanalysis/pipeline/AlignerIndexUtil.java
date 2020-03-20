@@ -67,6 +67,14 @@ public class AlignerIndexUtil
             {
                 ctx.getLogger().info("previously created index found, no need to recreate");
                 ctx.getLogger().debug(webserverIndexDir.getPath());
+
+                //This is going to be a really rare event, so for the time being leave this as-is.  We could consider throwing an exception and letting the job restart?
+                File lockFile = new File(webserverIndexDir.getPath() + ".copyLock");
+                if (lockFile.exists())
+                {
+                    ctx.getLogger().error("Another job is actively saving this cached index.  Will not re-created, but if this job tries to use it before copy is complete this might cause issues.");
+                }
+
                 hasCachedIndex = true;
 
                 try
@@ -129,9 +137,18 @@ public class AlignerIndexUtil
             File cachingDir = new File(genome.getSourceFastaFile().getParentFile(), INDEX_DIR + "/" + name);
             ctx.getLogger().info("caching index files for future use");
             ctx.getLogger().debug(cachingDir.getPath());
+            File lockFile = new File(cachingDir.getPath() + ".copyLock");
+            if (lockFile.exists())
+            {
+                ctx.getLogger().info("Another job is already caching this index, skipping");
+                return;
+            }
 
             try
             {
+                //use as indicator to prevent multiple concurrent jobs from interfering
+                FileUtils.touch(lockFile);
+
                 if (!cachingDir.exists())
                 {
                     cachingDir.mkdirs();
@@ -157,6 +174,8 @@ public class AlignerIndexUtil
                         FileUtils.copyFile(f, dest);
                     }
                 }
+
+                lockFile.delete();
             }
             catch (IOException e)
             {

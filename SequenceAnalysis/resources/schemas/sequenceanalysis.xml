@@ -14,6 +14,11 @@
                 <inputType>textarea</inputType>
                 <description>This should be the forward orientation of the sequence, as it appears in the adapter sequence</description>
             </column>
+            <column columnName="reverse_complement">
+                <nullable>false</nullable>
+                <inputType>textarea</inputType>
+                <description>The reverse complement of the sequence</description>
+            </column>
             <column columnName="group_name">
                 <nullable>false</nullable>
             </column>
@@ -1302,6 +1307,9 @@
                 <nullable>true</nullable>
                 <columnTitle>SRA Run</columnTitle>
                 <url>https://trace.ncbi.nlm.nih.gov/Traces/sra/?run=${sra_accession}</url>
+            </column>
+            <column columnName="archived">
+                <columnTitle>Archived to SRA?</columnTitle>
             </column>
             <column columnName="container">
             </column>
