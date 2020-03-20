@@ -3508,6 +3508,14 @@ public class SequenceAnalysisController extends SpringActionController
             o.put("totalReadData", rs.getReadData().size());
             for (ReadData rd : rs.getReadData())
             {
+                if (rd.isArchived())
+                {
+                    o.put("fileExists", false);
+                    o.put("isArchived", true);
+                    o.put("error", true);
+                    return o;
+                }
+
                 ExpData d = rd.getFileId1() == 0 ? null : ExperimentService.get().getExpData(rd.getFileId1());
                 if (d == null || d.getFile() == null || !d.getFile().exists())
                 {
