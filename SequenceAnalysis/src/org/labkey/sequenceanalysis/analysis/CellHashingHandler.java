@@ -68,23 +68,41 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
 
     public CellHashingHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "CITE-Seq Count", "This will run CITE-Seq Count to generate a table of features counts from CITE-Seq or cell hashing libraries", null, getDefaultParams());
+        this("Cell Hashing Calls", "This will run CITE-Seq Count to generate a table of features counts from CITE-Seq or cell hashing libraries. It will also run R code to generate a table of calls per cell", getDefaultParams());
+    }
+
+    protected CellHashingHandler(String name, String description, List<ToolParameterDescriptor> defaultParams)
+    {
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), name, description, null, defaultParams);
     }
 
     public static List<ToolParameterDescriptor> getDefaultParams()
     {
-        return Arrays.asList(
+        return getDefaultParams(true, DEFAULT_TAG_GROUP);
+    }
+
+    public static List<ToolParameterDescriptor> getDefaultParams(boolean allowScanningEditDistance, String defaultTagGroup)
+    {
+        List<ToolParameterDescriptor> ret = new ArrayList<>(Arrays.asList(
                 ToolParameterDescriptor.create("outputFilePrefix", "Output File Basename", null, "textfield", new JSONObject(){{
                     put("allowBlank", false);
                 }}, "cellHashingCalls"),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-cbf"), "cbf", "Cell Barcode Start", null, "ldk-integerfield", null, 1),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-cbl"), "cbl", "Cell Barcode End", null, "ldk-integerfield", null, 16),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-umif"), "umif", "UMI Start", null, "ldk-integerfield", null, 17),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-umil"), "umil", "UMI End", null, "ldk-integerfield", null, 26),
-                ToolParameterDescriptor.create("scanEditDistances", "Scan Edit Distances", "If checked, CITE-seq-count will be run using edit distances from 0-3 and the iteration with the highest singlets will be used.", "checkbox", new JSONObject(){{
-                    put("checked", true);
-                }}, true),
-                ToolParameterDescriptor.create("editDistance", "Edit Distance", null, "ldk-integerfield", null, 1),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-umil"), "umil", "UMI End", null, "ldk-integerfield", null, 26)
+        ));
+
+        if (allowScanningEditDistance)
+        {
+            ret.add(ToolParameterDescriptor.create("scanEditDistances", "Scan Edit Distances", "If checked, CITE-seq-count will be run using edit distances from 0-3 and the iteration with the highest singlets will be used.", "checkbox", new JSONObject()
+            {{
+                put("checked", true);
+            }}, true));
+        }
+
+        ret.addAll(Arrays.asList(
+                ToolParameterDescriptor.create("editDistance", "Edit Distance", null, "ldk-integerfield", null, 3),
                 ToolParameterDescriptor.create("excludeFailedcDNA", "Exclude Failed cDNA", "If selected, cDNAs with non-blank status fields will be omitted", "checkbox", null, true),
                 ToolParameterDescriptor.create("minCountPerCell", "Min Reads/Cell", null, "ldk-integerfield", null, 5),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-cells"), "cells", "Expected Cells", null, "ldk-integerfield", null, 20000),
@@ -94,11 +112,13 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                     put("displayField", "group_name");
                     put("valueField", "group_name");
                     put("allowBlank", false);
-                }}, DEFAULT_TAG_GROUP),
+                }}, defaultTagGroup),
                 ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
                     put("checked", false);
                 }}, false)
-        );
+        ));
+
+        return ret;
     }
 
     @Override
@@ -134,11 +154,18 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
     @Override
     public SequenceReadsetProcessor getProcessor()
     {
-        return new Processor();
+        return new Processor(true);
     }
 
-    protected class Processor implements SequenceReadsetProcessor
+    public class Processor implements SequenceReadsetProcessor
     {
+        private final boolean _generateHtoCalls;
+
+        public Processor(boolean generateHtoCalls)
+        {
+            _generateHtoCalls = generateHtoCalls;
+        }
+
         @Override
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<Readset> readsets, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
@@ -203,11 +230,16 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                 Set<Integer> editDistances = new TreeSet<>();
                 Map<Integer, Map<String, Object>> results = new HashMap<>();
 
-                Integer highestSinglet = 0;
+                int highestSinglet = 0;
                 Integer bestEditDistance = null;
 
                 Integer minCountPerCell = ctx.getParams().optInt("minCountPerCell", 5);
                 boolean scanEditDistances = ctx.getParams().optBoolean("scanEditDistances", false);
+                if (!_generateHtoCalls && scanEditDistances)
+                {
+                    throw new PipelineJobException("Scan edit distances should not be possible to use unless cell hashing is used");
+                }
+
                 if (scanEditDistances)
                 {
                     editDistances.add(0);
@@ -223,7 +255,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
 
                 for (Integer editDistance : editDistances)
                 {
-                    Map<String, Object> callMap = executeCiteSeqCount(ctx, action, rs, editDistance, minCountPerCell);
+                    Map<String, Object> callMap = executeCiteSeqCount(ctx, action, rs, editDistance, minCountPerCell, _generateHtoCalls);
                     results.put(editDistance, callMap);
 
                     int singlet = Integer.parseInt(callMap.get("singlet").toString());
@@ -240,9 +272,22 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                     ctx.getLogger().info("Using edit distance: " + bestEditDistance + ", singlet: " + highestSinglet);
 
                     Map<String, Object> callMap = results.get(bestEditDistance);
-                    String description = String.format("Edit Distance: %,d\nMin Reads/Cell: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nSeurat Called: %,d\nNegative: %,d\nUnique HTOs: %s", bestEditDistance, minCountPerCell, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("seuratSinglet"), callMap.get("negative"), callMap.get("UniqueHtos"));
-                    File htoCalls = (File)callMap.get("htoCalls");
-                    File html = (File)callMap.get("html");
+                    if (_generateHtoCalls)
+                    {
+                        String description = String.format("Edit Distance: %,d\nMin Reads/Cell: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nSeurat Called: %,d\nNegative: %,d\nUnique HTOs: %s", bestEditDistance, minCountPerCell, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("seuratSinglet"), callMap.get("negative"), callMap.get("UniqueHtos"));
+                        File htoCalls = (File) callMap.get("htoCalls");
+                        File html = (File) callMap.get("html");
+
+                        ctx.getFileManager().addSequenceOutput(htoCalls, rs.getName() + ": Cell Hashing Calls","Cell Hashing Calls", rs.getReadsetId(), null, null, description);
+                        ctx.getFileManager().addSequenceOutput(html, rs.getName() + ": Cell Hashing Report","Cell Hashing Report", rs.getReadsetId(), null, null, description);
+                    }
+                    else
+                    {
+                        ctx.getLogger().debug("HTO calls will not be generated");
+
+                        File citeSeqCount = (File) callMap.get("citeSeqCount");
+                        ctx.getFileManager().addSequenceOutput(citeSeqCount, rs.getName() + ": CITE-Seq Count Matrix","CITE-Seq Count Matrix", rs.getReadsetId(), null, null, null);
+                    }
 
                     File origUnknown = getCiteSeqCountUnknownOutput(ctx.getSourceDirectory(), bestEditDistance);
                     File movedUnknown = getCiteSeqCountUnknownOutput(ctx.getSourceDirectory(), null);
@@ -260,9 +305,6 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                     {
                         throw new PipelineJobException(e);
                     }
-
-                    ctx.getFileManager().addSequenceOutput(htoCalls, rs.getName() + ": Cell Hashing Calls","Cell Hashing Calls", rs.getReadsetId(), null, null, description);
-                    ctx.getFileManager().addSequenceOutput(html, rs.getName() + ": Cell Hashing Report","Cell Hashing Report", rs.getReadsetId(), null, null, description);
                 }
                 else
                 {
@@ -275,7 +317,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         }
     }
 
-    private Map<String, Object> executeCiteSeqCount(JobContext ctx, RecordedAction action, Readset rs, int editDistance, int minCountPerCell) throws PipelineJobException
+    private Map<String, Object> executeCiteSeqCount(JobContext ctx, RecordedAction action, Readset rs, int editDistance, int minCountPerCell, boolean generateHtoCalls) throws PipelineJobException
     {
         CiteSeqCountWrapper wrapper = new CiteSeqCountWrapper(ctx.getLogger());
         ReadData rd = rs.getReadData().get(0);
@@ -328,27 +370,32 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
             throw new PipelineJobException(e);
         }
         ctx.getFileManager().addIntermediateFile(doneFile);
-
-        ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Generating HTO calls for edit distance: " + editDistance);
-        File htoCalls = generateFinalCalls(outputMatrix.getParentFile(), ctx.getOutputDir(), outputBasename, ctx.getLogger(), null, true, minCountPerCell, ctx.getSourceDirectory());
-        File html = new File(htoCalls.getParentFile(), outputBasename + ".html");
-
-        if (!html.exists())
-        {
-            throw new PipelineJobException("Unable to find expected HTML file: " + html.getPath());
-        }
-
         ctx.getFileManager().addOutput(action, "Unknown barcodes", unknownBarcodes);
         ctx.getFileManager().addOutput(action, "CITE-seq Raw Counts", outputMatrix);
-        ctx.getFileManager().addOutput(action, "Cell Hashing Calls", htoCalls);
-        ctx.getFileManager().addOutput(action, "Cell Hashing Report", html);
-
         ctx.getFileManager().addIntermediateFile(unknownBarcodes);
         ctx.getFileManager().addIntermediateFile(outputDir);
 
-        Map<String, Object> callMap = parseOutputTable(ctx.getLogger(), htoCalls, unknownBarcodes, ctx.getSourceDirectory(), ctx.getWorkingDirectory(), true);
-        callMap.put("htoCalls", htoCalls);
-        callMap.put("html", html);
+        Map<String, Object> callMap = new HashMap<>();
+        callMap.put("citeSeqCount", outputMatrix);
+
+        if (generateHtoCalls)
+        {
+            ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Generating HTO calls for edit distance: " + editDistance);
+            File htoCalls = generateFinalCalls(outputMatrix.getParentFile(), ctx.getOutputDir(), outputBasename, ctx.getLogger(), null, true, minCountPerCell, ctx.getSourceDirectory());
+            File html = new File(htoCalls.getParentFile(), outputBasename + ".html");
+
+            if (!html.exists())
+            {
+                throw new PipelineJobException("Unable to find expected HTML file: " + html.getPath());
+            }
+
+            ctx.getFileManager().addOutput(action, "Cell Hashing Calls", htoCalls);
+            ctx.getFileManager().addOutput(action, "Cell Hashing Report", html);
+
+            callMap.putAll(parseOutputTable(ctx.getLogger(), htoCalls, unknownBarcodes, ctx.getSourceDirectory(), ctx.getWorkingDirectory(), true));
+            callMap.put("htoCalls", htoCalls);
+            callMap.put("html", html);
+        }
 
         return callMap;
     }

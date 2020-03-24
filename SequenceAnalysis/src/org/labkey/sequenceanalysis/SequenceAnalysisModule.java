@@ -39,25 +39,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
-import org.labkey.sequenceanalysis.analysis.BamCleanupHandler;
-import org.labkey.sequenceanalysis.analysis.BamHaplotypeHandler;
-import org.labkey.sequenceanalysis.analysis.CellHashingHandler;
-import org.labkey.sequenceanalysis.analysis.CellRangerAggrHandler;
-import org.labkey.sequenceanalysis.analysis.CellRangerRawDataHandler;
-import org.labkey.sequenceanalysis.analysis.CellRangerReanalysisHandler;
-import org.labkey.sequenceanalysis.analysis.CombineStarGeneCountsHandler;
-import org.labkey.sequenceanalysis.analysis.CombineSubreadGeneCountsHandler;
-import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
-import org.labkey.sequenceanalysis.analysis.HaplotypeCallerHandler;
-import org.labkey.sequenceanalysis.analysis.LiftoverHandler;
-import org.labkey.sequenceanalysis.analysis.ListVcfSamplesHandler;
-import org.labkey.sequenceanalysis.analysis.MultiQCBamHandler;
-import org.labkey.sequenceanalysis.analysis.MultiQCHandler;
-import org.labkey.sequenceanalysis.analysis.PicardAlignmentMetricsHandler;
-import org.labkey.sequenceanalysis.analysis.RecalculateSequenceMetricsHandler;
-import org.labkey.sequenceanalysis.analysis.RnaSeqcHandler;
-import org.labkey.sequenceanalysis.analysis.SbtGeneCountHandler;
-import org.labkey.sequenceanalysis.analysis.UnmappedSequenceBasedGenotypeHandler;
+import org.labkey.sequenceanalysis.analysis.*;
 import org.labkey.sequenceanalysis.button.AddSraRunButton;
 import org.labkey.sequenceanalysis.button.CellHashingButton;
 import org.labkey.sequenceanalysis.button.ChangeReadsetStatusButton;
@@ -339,6 +321,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
         SequenceAnalysisService.get().registerReadsetHandler(new MultiQCHandler());
         SequenceAnalysisService.get().registerReadsetHandler(new CellHashingHandler());
+        SequenceAnalysisService.get().registerReadsetHandler(new CiteSeqHandler());
 
         //ObjectFactory.Registry.register(AnalysisModelImpl.class, new UnderscoreBeanObjectFactory(AnalysisModelImpl.class));
         //ObjectFactory.Registry.register(SequenceReadsetImpl.class, new UnderscoreBeanObjectFactory(SequenceReadsetImpl.class));
