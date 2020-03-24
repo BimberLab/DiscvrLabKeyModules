@@ -19,19 +19,42 @@ dependencies {
     BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: BuildUtils.getPlatformModuleProjectPath(project.gradle, "pipeline"), depProjectConfig: "published", depExtension: "module")
 }
 
+ConfigurableFileTree copyDestination = fileTree("./resources/web/jbrowseApp/");
 project.task("copyJBrowse",
         type: Copy,
         group: "Build",
         description: "Copy jbrowse app into webapp directory",
         { CopySpec copy ->
             copy.from fileTree("./node_modules/@gmod/jbrowse").exclude('css/main.css')
-            copy.into new File("./resources/web/jbrowseApp/")
+            copy.into copyDestination.getDir()
         }
 ).doFirst({
     File f = project.file('./node_modules/@gmod/jbrowse');
     if (!f.exists()){
         throw new GradleException("Input source for copyJBrowse doesn't exist: " + f.getAbsolutePath())
     }
+}).onlyIf({
+    //this is a very expensive step and the input should rarely change
+    if (copyDestination.getDir().exists()) {
+        File firstModifiedCopiedFile = copyDestination.exclude("./resources/web/jbrowseApp/css/").sort {it.lastModified()}.first()
+        File lastModifiedSourceFile = fileTree('./node_modules/@gmod/jbrowse').exclude('package.json').sort {it.lastModified()}.last()
+        if (firstModifiedCopiedFile.lastModified() < lastModifiedSourceFile.lastModified()) {
+            println("Source has been modified, need to copy again")
+            println("Copy last copied: " + new Date(firstModifiedCopiedFile.lastModified()))
+            println("First modified file: " + firstModifiedCopiedFile.getPath())
+
+            println("Source last modified: " + new Date(lastModifiedSourceFile.lastModified()))
+            println("Last modified file: " + lastModifiedSourceFile.getPath())
+
+            return true;
+        }
+        else {
+            println("Up to date, no need to copy")
+            return false;
+        }
+    }
+
+    return true;
 })
 
 project.task("copyJBrowseCss",
