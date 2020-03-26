@@ -17,7 +17,7 @@ public class CellHashingButton extends SimpleButtonConfigFactory
 {
     public CellHashingButton()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Generate CITE-seq-Counts", "SequenceAnalysis.window.OutputHandlerWindow.readsetButtonHandler(dataRegionName, '" + CellHashingHandler.class.getName() + "');", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromModuleName("ldk"), ClientDependency.fromModuleName("laboratory"), ClientDependency.fromPath("sequenceanalysis/window/OutputHandlerWindow.js"))));
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Generate Cell Hashing Calls", "SequenceAnalysis.window.OutputHandlerWindow.readsetButtonHandler(dataRegionName, '" + CellHashingHandler.class.getName() + "');", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromModuleName("ldk"), ClientDependency.fromModuleName("laboratory"), ClientDependency.fromPath("sequenceanalysis/window/OutputHandlerWindow.js"))));
         setPermission(UpdatePermission.class);
     }
 }
