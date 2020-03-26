@@ -242,10 +242,16 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
 
                 if (scanEditDistances)
                 {
-                    editDistances.add(0);
-                    editDistances.add(1);
-                    editDistances.add(2);
-                    editDistances.add(3);
+                    //account for total length of barcode.  shorter barcode should allow fewer edits
+                    Integer minLength = readAllBarcodes(ctx.getSourceDirectory()).keySet().stream().map(String::length).min(Integer::compareTo).get();
+                    int maxEdit = Math.min(3, minLength - 6);
+                    ctx.getLogger().debug("Scanning edit distances, up to: " + maxEdit);
+                    int i = 0;
+                    while (i <= maxEdit)
+                    {
+                        editDistances.add(i);
+                        i++;
+                    }
                 }
                 else
                 {
