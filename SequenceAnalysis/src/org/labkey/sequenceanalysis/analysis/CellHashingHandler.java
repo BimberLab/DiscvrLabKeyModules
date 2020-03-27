@@ -276,7 +276,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                     }
                 }
 
-                if (editDistances.size() == 0)
+                if (editDistances.size() == 1)
                 {
                     bestEditDistance = editDistances.iterator().next();
                 }
