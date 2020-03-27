@@ -264,18 +264,26 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                     Map<String, Object> callMap = executeCiteSeqCount(ctx, action, rs, editDistance, minCountPerCell, _generateHtoCalls);
                     results.put(editDistance, callMap);
 
-                    int singlet = Integer.parseInt(callMap.get("singlet").toString());
-                    ctx.getLogger().info("Edit distance: " + editDistance + ", singlet: " + singlet + ", doublet: " + callMap.get("doublet"));
-                    if (singlet > highestSinglet)
+                    if (_generateHtoCalls)
                     {
-                        highestSinglet = singlet;
-                        bestEditDistance = editDistance;
+                        int singlet = Integer.parseInt(callMap.get("singlet").toString());
+                        ctx.getLogger().info("Edit distance: " + editDistance + ", singlet: " + singlet + ", doublet: " + callMap.get("doublet"));
+                        if (singlet > highestSinglet)
+                        {
+                            highestSinglet = singlet;
+                            bestEditDistance = editDistance;
+                        }
                     }
+                }
+
+                if (editDistances.size() == 0)
+                {
+                    bestEditDistance = editDistances.iterator().next();
                 }
 
                 if (bestEditDistance != null)
                 {
-                    ctx.getLogger().info("Using edit distance: " + bestEditDistance + ", singlet: " + highestSinglet);
+                    ctx.getLogger().info("Using edit distance: " + bestEditDistance + (_generateHtoCalls ? ", singlet: " + highestSinglet : ""));
 
                     Map<String, Object> callMap = results.get(bestEditDistance);
                     if (_generateHtoCalls)
