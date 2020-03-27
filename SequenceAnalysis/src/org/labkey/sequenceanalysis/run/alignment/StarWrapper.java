@@ -461,6 +461,9 @@ public class StarWrapper extends AbstractCommandWrapper
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--outFilterMatchNminOverLread"), "outFilterMatchNminOverLread", "Min Matched Based (Over Read Length)", "Alignment will be output only if the number of matched bases is higher than or equal to this value, normalized to read length (or sum of paired read length).  Defaults to 0.66", "ldk-numberfield", new JSONObject(){{
                     put("minValue", 0);
                     put("maxValue", 1);
+                }}, null),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--limitBAMsortRAM"), "limitBAMsortRAM", "The maximum available RAM (bytes) for sorting BAM.  This should generally be left blank, where it will be automatically set.  In certain cases, such as genomes with extremely high coverage contigs, jobs will error and require a higher value for this. ", "", "ldk-integerfield", new JSONObject(){{
+                    put("minValue", 0);
                 }}, null)
             ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "https://github.com/alexdobin/STAR/", true, true, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
 
