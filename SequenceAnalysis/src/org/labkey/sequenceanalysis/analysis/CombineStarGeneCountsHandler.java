@@ -62,7 +62,7 @@ public class CombineStarGeneCountsHandler extends AbstractCombineGeneCountsHandl
                 while ((line = reader.readLine()) != null)
                 {
                     line = line.trim();
-                    String[] cells = line.split("\\s+");
+                    String[] cells = line.split("\t");
                     String geneId = cells[0];
                     if (OTHER_IDS.contains(geneId))
                     {
