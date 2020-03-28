@@ -54,7 +54,7 @@ public class CombineSubreadGeneCountsHandler extends AbstractCombineGeneCountsHa
                         continue;
                     }
 
-                    String[] cells = line.split("\\s+");
+                    String[] cells = line.split("\t");
                     String geneId = cells[0];
                     if (OTHER_IDS.contains(geneId))
                     {
