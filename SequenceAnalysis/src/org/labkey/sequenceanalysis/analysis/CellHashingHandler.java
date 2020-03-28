@@ -299,8 +299,11 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                     {
                         ctx.getLogger().debug("HTO calls will not be generated");
 
-                        File citeSeqCount = (File) callMap.get("citeSeqCount");
+                        File citeSeqCount = (File) callMap.get("citeSeqCountMatrix");
                         ctx.getFileManager().addSequenceOutput(citeSeqCount, rs.getName() + ": CITE-Seq Count Matrix","CITE-Seq Count Matrix", rs.getReadsetId(), null, null, null);
+
+                        File outDir = (File) callMap.get("outDir");
+                        ctx.getFileManager().removeIntermediateFile(outDir);
                     }
 
                     File origUnknown = getCiteSeqCountUnknownOutput(ctx.getSourceDirectory(), bestEditDistance);
@@ -390,7 +393,8 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         ctx.getFileManager().addIntermediateFile(outputDir);
 
         Map<String, Object> callMap = new HashMap<>();
-        callMap.put("citeSeqCount", outputMatrix);
+        callMap.put("citeSeqCountMatrix", outputMatrix);
+        callMap.put("outputDir", outputDir);
 
         if (generateHtoCalls)
         {

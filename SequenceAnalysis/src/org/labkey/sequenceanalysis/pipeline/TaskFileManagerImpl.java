@@ -692,6 +692,12 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
 
                 if (f.getParentFile().listFiles().length == 0)
                 {
+                    //Do not delete the primary working directory
+                    if (_wd != null && _wd.getDir().equals(f.getParentFile()))
+                    {
+                        continue;
+                    }
+
                     _job.getLogger().debug("\talso deleting empty parent folder: " + f.getParentFile().getPath());
                     f.getParentFile().delete();
                 }
