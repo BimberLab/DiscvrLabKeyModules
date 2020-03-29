@@ -92,7 +92,7 @@ public class RefNtSequenceModel implements Serializable
 
     public static RefNtSequenceModel getForRowId(int rowId)
     {
-        return new TableSelector(DbSchema.get("sequenceanalysis").getTable("ref_nt_sequences")).getObject(rowId, RefNtSequenceModel.class);
+        return new TableSelector(DbSchema.get("sequenceanalysis", null).getTable("ref_nt_sequences")).getObject(rowId, RefNtSequenceModel.class);
     }
 
     public int getRowid()
@@ -429,7 +429,7 @@ public class RefNtSequenceModel implements Serializable
         setSeqLength(sequence.length());
         setSequenceFile(d.getRowId());
 
-        TableInfo ti = DbSchema.get("sequenceanalysis").getTable("ref_nt_sequences");
+        TableInfo ti = DbSchema.get("sequenceanalysis", null).getTable("ref_nt_sequences");
 
         Table.update(u, ti, this, _rowid);
     }

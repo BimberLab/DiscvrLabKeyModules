@@ -233,6 +233,10 @@ public class SequenceIntegrationTests
             if (project == null)
             {
                 project = ContainerManager.createContainer(ContainerManager.getRoot(), projectName);
+
+                //disable search so we dont get conflicts when deleting folder quickly
+                ContainerManager.updateSearchable(project, false, TestContext.get().getUser());
+
                 Set<Module> modules = new HashSet<>();
                 modules.addAll(project.getActiveModules());
                 modules.add(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME));
