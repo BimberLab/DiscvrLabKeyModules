@@ -276,11 +276,11 @@ public class SequenceIntegrationTests
         private File getSampleDataDir()
         {
             Module module = ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class);
-            DirectoryResource resource = (DirectoryResource)module.getModuleResolver().lookup(Path.parse("sampledata"));
+            DirectoryResource resource = (DirectoryResource) module.getModuleResolver().lookup(Path.parse("sampledata"));
             File file = null;
             for (Resource r : resource.list())
             {
-                if(r instanceof FileResource)
+                if (r instanceof FileResource)
                 {
                     file = ((FileResource) r).getFile().getParentFile();
                     break;
@@ -357,7 +357,7 @@ public class SequenceIntegrationTests
         {
             //decompress and remove trailing /1 from readnames, as these
             FastqWriterFactory fact = new FastqWriterFactory();
-            try (FastqReader reader = new FastqReader(input);FastqWriter writer = fact.newWriter(output))
+            try (FastqReader reader = new FastqReader(input); FastqWriter writer = fact.newWriter(output))
             {
                 while (reader.hasNext())
                 {
@@ -413,12 +413,15 @@ public class SequenceIntegrationTests
 
         protected void verifyFileOutputs(File basedir, Set<File> expectedOutputs)
         {
-            IOFileFilter filter = new IOFileFilter(){
-                public boolean accept(File file){
+            IOFileFilter filter = new IOFileFilter()
+            {
+                public boolean accept(File file)
+                {
                     return true;
                 }
 
-                public boolean accept(File dir, String name){
+                public boolean accept(File dir, String name)
+                {
                     return true;
                 }
             };
@@ -490,7 +493,7 @@ public class SequenceIntegrationTests
             assert guidList.length() >= 1;
 
             Set<PipelineJob> ret = new HashSet<>();
-            for (int i=0;i<guidList.length();i++)
+            for (int i = 0; i < guidList.length(); i++)
             {
                 ret.add(PipelineJobService.get().getJobStore().getJob(guidList.getString(i)));
             }
