@@ -49,10 +49,8 @@ if (project.findProject(BuildUtils.getTestProjectPath(project.gradle)) != null &
             String newLine = line
             while (matcher.find())
             {
-               if (matcher.group(1).equals("SEQUENCEANALYSIS_CODELOCATION") || matcher.group(1).equals("SEQUENCEANALYSIS_TOOLS"))
+               if (matcher.group(1).equals("SEQUENCEANALYSIS_TOOLS"))
                   newLine = newLine.replace(matcher.group(), extension.getTeamCityProperty("additional.pipeline.tools"))
-               else if (matcher.group(1).equals("SEQUENCEANALYSIS_EXTERNALDIR"))
-                  newLine = newLine.replace(matcher.group(), project.file("pipeline_code/external").getAbsolutePath())
             }
             return newLine
 
