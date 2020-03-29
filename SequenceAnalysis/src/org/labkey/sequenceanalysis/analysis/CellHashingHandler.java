@@ -302,7 +302,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                         File citeSeqCount = (File) callMap.get("citeSeqCountMatrix");
                         ctx.getFileManager().addSequenceOutput(citeSeqCount, rs.getName() + ": CITE-Seq Count Matrix","CITE-Seq Count Matrix", rs.getReadsetId(), null, null, null);
 
-                        File outDir = (File) callMap.get("outDir");
+                        File outDir = (File) callMap.get("outputDir");
                         ctx.getFileManager().removeIntermediateFile(outDir);
                     }
 
