@@ -402,22 +402,16 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 action.addInput(vcfIdx, "Input VCF Index");
             }
 
-            if (!currentVCF.equals(input))
+            if (!URIUtil.isDescendant(ctx.getOutputDir().toURI(), currentVCF.toURI()))
             {
-                if (!URIUtil.isDescendant(ctx.getOutputDir().toURI(), currentVCF.toURI()))
-                {
-                    ctx.getLogger().info("VCF is not a descendent of the output directory, will not add as intermediate file: " + currentVCF.getPath());
-                }
-                else
-                {
-                    resumer.getFileManager().addIntermediateFile(currentVCF);
-                    resumer.getFileManager().addIntermediateFile(vcfIdx);
-                }
+                ctx.getLogger().info("VCF is not a descendent of the output directory, will not add as intermediate file: " + currentVCF.getPath());
             }
             else
             {
-                ctx.getLogger().info("ending VCF same as input, will not add as intermediate file: " + input.getPath());
+                resumer.getFileManager().addIntermediateFile(currentVCF);
+                resumer.getFileManager().addIntermediateFile(vcfIdx);
             }
+
             ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(libraryId);
             action.addInput(genome.getSourceFastaFile(), "Reference FASTA");
 
