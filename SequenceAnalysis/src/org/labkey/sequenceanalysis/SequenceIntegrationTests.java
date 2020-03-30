@@ -3137,7 +3137,7 @@ public class SequenceIntegrationTests
 
     public static void ensureSivMac239Sequence(Container c, Logger log) throws IOException
     {
-        TableInfo ti = QueryService.get().getUserSchema(TestContext.get().getUser(), c, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
+        TableInfo ti = QueryService.get().getUserSchema(TestContext.get().getUser(), c, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES, null);
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("name"), "SIVmac239_Test");
         //note: dont use container filter so this could include /shared
         //filter.addCondition(FieldKey.fromString("container"), c.getId());

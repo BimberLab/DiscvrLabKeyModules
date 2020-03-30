@@ -423,7 +423,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
             //SequenceIntegrationTests.SequenceAnalysisPipelineTestCase3.class,
             SequenceIntegrationTests.SequenceAnalysisPipelineTestCase1.class,
             SequenceIntegrationTests.SequenceAnalysisPipelineTestCase2.class,
-            OutputIntegrationTests.VariantProcessingTest.class
+            OutputIntegrationTests.VariantProcessingTest.class,
+            SequenceRemoteIntegrationTests.class
         ));
 
         return testClasses;

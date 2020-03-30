@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+    <bean id="pipelineJobService" class="org.labkey.pipeline.api.PipelineJobServiceImpl">
+        <property name="appProperties">
+            <bean class="org.labkey.pipeline.api.properties.ApplicationPropertiesImpl">
+                <property name="toolsDirectory" value="@@SEQUENCEANALYSIS_TOOLS@@" />
+            </bean>
+        </property>
+        <property name="remoteServerProperties">
+            <bean class="org.labkey.pipeline.api.properties.RemoteServerPropertiesImpl">
+                <property name="location" value="MockCluster"/>
+            </bean>
+        </property>
+        <property name="statusWriter">
+            <bean class="org.labkey.pipeline.cluster.NoOpPipelineStatusWriter"/>
+        </property>
+        <property name="jobStore">
+            <bean class="org.labkey.pipeline.api.PipelineJobMarshaller"/>
+        </property>
+        <property name="workDirFactory">
+            <bean class="org.labkey.pipeline.api.WorkDirectoryRemote$Factory">
+                <property name="tempDirectory" value="@@WORK_DIR@@"/>
+            </bean>
+        </property>
+    </bean>
+</beans>    
