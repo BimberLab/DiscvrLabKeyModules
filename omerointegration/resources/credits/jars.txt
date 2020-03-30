@@ -1,4 +1,4 @@
 {table}
 Filename|Component|Version|Source|License|LabKey Dev|Purpose
-blitz-5.2.8-ice35-b57.jar|OMERO Client|5.2.8|{link:OMERO Client|https://www.openmicroscopy.org/site/support/omero5.2/developers/Java.html}|{link:GNU GPL, version 2|https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html}|bbimber|Used to interact with OMERO Servers
+blitz-5.5.0-m2-ice36-b103.jar|OMERO Client|5.5.0|{link:OMERO Client|https://www.openmicroscopy.org/site/support/omero5.2/developers/Java.html}|{link:GNU GPL, version 2|https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html}|bbimber|Used to interact with OMERO Servers
 {table}
