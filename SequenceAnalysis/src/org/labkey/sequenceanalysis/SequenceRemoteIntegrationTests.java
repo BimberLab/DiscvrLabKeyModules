@@ -57,7 +57,17 @@ public class SequenceRemoteIntegrationTests extends SequenceIntegrationTests.Abs
 
         baseDir.mkdirs();
 
+        if (_sampleData == null)
+        {
+            throw new IOException("_sampleData was null");
+        }
+
         File source = new File(_sampleData, "remotePipeline");
+        if (!source.exists())
+        {
+            throw new IOException("Unable to find file: " + source.getPath());
+        }
+
         FileUtils.copyFile(new File(source, "sequenceanalysisConfig.xml"), new File(baseDir, "sequenceanalysisConfig.xml"));
 
         try (PrintWriter writer = PrintWriters.getPrintWriter(new File(baseDir, "pipelineConfig.xml")); BufferedReader reader = Readers.getReader(new File(source, "pipelineConfig.xml")))
@@ -179,6 +189,7 @@ public class SequenceRemoteIntegrationTests extends SequenceIntegrationTests.Abs
         args.add("org.labkey.bootstrap.ClusterBootstrap");
 
         File webappDir = new File(ModuleLoader.getServletContext().getRealPath(""));
+
         args.add("-modulesdir=" + new File(webappDir.getParentFile(), "modules").getPath());
         args.add("-webappdir=" + webappDir.getPath());
 
