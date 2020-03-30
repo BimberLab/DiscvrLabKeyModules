@@ -690,12 +690,12 @@ public class SequenceIntegrationTests
             Container project = ContainerManager.getForPath(projectName);
             if (project != null)
             {
-                File _pipelineRoot = PipelineService.get().getPipelineRootSetting(project).getRootPath();
+                File pipelineRoot = PipelineService.get().getPipelineRootSetting(project).getRootPath();
                 try
                 {
-                    if (_pipelineRoot.exists())
+                    if (pipelineRoot.exists())
                     {
-                        File[] contents = _pipelineRoot.listFiles();
+                        File[] contents = pipelineRoot.listFiles();
                         for (File f : contents)
                         {
                             if (f.exists())

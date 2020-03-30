@@ -26,6 +26,7 @@ import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.data.Transient;
 import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
@@ -116,8 +117,8 @@ public class RefNtSequenceModel implements Serializable
         _name = name;
     }
 
-    public @Nullable
-    InputStream getSequenceInputStream() throws IOException
+    @Nullable @Transient
+    public InputStream getSequenceInputStream() throws IOException
     {
         if (_sequenceFile != null)
         {
@@ -150,6 +151,7 @@ public class RefNtSequenceModel implements Serializable
         return _sequence;
     }
 
+    @Transient
     public String getSequence()
     {
         //resolve from cached file
@@ -388,6 +390,7 @@ public class RefNtSequenceModel implements Serializable
         _disabledby = disabledby;
     }
 
+    @Transient
     public byte[] getSequenceBases()
     {
         if (_sequenceBytes == null)
