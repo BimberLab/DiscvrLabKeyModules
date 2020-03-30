@@ -184,13 +184,21 @@ public class SequenceRemoteIntegrationTests extends SequenceIntegrationTests.Abs
         args.add(System.getProperty("java.home") + "/bin/java" + (SystemUtils.IS_OS_WINDOWS ? ".exe" : ""));
 
         File labkeyBootstrap = new File(System.getProperty("catalina.home"), "lib/labkeyBootstrap.jar");
+        if (!labkeyBootstrap.exists())
+        {
+            throw new IOException("Unable to find labkeyBootstrap.jar, expected: " + labkeyBootstrap.getPath());
+        }
+
         args.add("-cp");
         args.add(labkeyBootstrap.getPath());
         args.add("org.labkey.bootstrap.ClusterBootstrap");
 
         File webappDir = new File(ModuleLoader.getServletContext().getRealPath(""));
+        if (!webappDir.exists())
+        {
+            throw new IOException("Unable to find webappdir, expected: " + webappDir.getPath());
+        }
 
-        args.add("-modulesdir=" + new File(webappDir.getParentFile(), "modules").getPath());
         args.add("-webappdir=" + webappDir.getPath());
 
         File configDir = setupConfigDir(workDir);
