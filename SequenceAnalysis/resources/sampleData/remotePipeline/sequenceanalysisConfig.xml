@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+    <bean class="org.labkey.api.pipeline.TaskPipelineRegistrar">
+        <property name="factoryImpls">
+            <list>
+                <bean class="org.labkey.sequenceanalysis.pipeline.SequenceAlignmentTask$Factory">
+                    <property name="location" value="MockCluster" />
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.SequenceNormalizationTask$Factory">
+                    <property name="location" value="MockCluster" />
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.PrepareAlignerIndexesTask$Factory">
+                    <property name="location" value="MockCluster" />
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisRemoteWorkTask$Factory">
+                    <property name="location" value="MockCluster" />
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerRemoteTask$Factory">
+                    <property name="location" value="MockCluster" />
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerRemoteTask$Factory">
+                    <property name="location" value="MockCluster" />
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.AlignmentNormalizationTask$Factory">
+                    <property name="location" value="MockCluster" />
+                </bean>
+            </list>
+        </property>
+    </bean>
+</beans>
