@@ -252,10 +252,6 @@ public class SequenceIntegrationTests
         {
             _context = TestContext.get();
             _sampleData = getSampleDataDir();
-            if (_sampleData == null || !_sampleData.exists())
-            {
-                throw new Exception("sampledata folder does not exist: " + _sampleData.getPath());
-            }
 
             _project = ContainerManager.getForPath(getProjectName());
             _pipelineRoot = PipelineService.get().getPipelineRootSetting(_project).getRootPath();
@@ -277,7 +273,7 @@ public class SequenceIntegrationTests
             }
         }
 
-        private File getSampleDataDir()
+        private File getSampleDataDir() throws Exception
         {
             Module module = ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class);
             DirectoryResource resource = (DirectoryResource) module.getModuleResolver().lookup(Path.parse("sampledata"));
@@ -294,6 +290,11 @@ public class SequenceIntegrationTests
             if (file == null || !file.exists())
             {
                 _log.error("unable to find sampledata directory");
+            }
+
+            if (file == null || !file.exists())
+            {
+                throw new Exception("sampledata folder does not exist: " + (file == null ? "null" : file.getPath()));
             }
 
             return file;
@@ -1446,10 +1447,10 @@ public class SequenceIntegrationTests
         @Override
         public void setUp() throws Exception
         {
+            super.setUp();
+
             if (isExternalPipelineEnabled())
             {
-                super.setUp();
-
                 if (!_hasPerformedSetup)
                 {
                     copyInputFiles();
