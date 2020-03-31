@@ -6,7 +6,9 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.RemoteExecutionEngine;
 import org.labkey.api.pipeline.TaskId;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * CluterResourceAllocator typically serves two functions.  First, it allows code to be written to automatically adjust job resource settings
@@ -58,5 +60,11 @@ public interface ClusterResourceAllocator
     default void processJavaOpts(PipelineJob job, RemoteExecutionEngine engine, @NotNull List<String> existingJavaOpts)
     {
 
+    }
+
+    @NotNull
+    default Map<String, Object> getEnvironmentVars(PipelineJob job, RemoteExecutionEngine engine)
+    {
+        return Collections.emptyMap();
     }
 }
