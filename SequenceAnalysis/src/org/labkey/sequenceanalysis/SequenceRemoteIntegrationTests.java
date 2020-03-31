@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.labkey.api.module.ModuleLoader;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.pipeline.WorkDirectory;
@@ -19,12 +20,12 @@ import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.pipeline.AlignmentInitTask;
 import org.labkey.sequenceanalysis.pipeline.PrepareAlignerIndexesTask;
 import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentJob;
+import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentTask;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -174,8 +175,12 @@ public class SequenceRemoteIntegrationTests extends SequenceIntegrationTests.Abs
 
         executeJobRemote(outDir, jobFile);
 
-        //TODO: check outputs
-        Assert.assertEquals(1, 1);
+        //check outputs
+        PipelineJob job2 = PipelineJob.readFromFile(jobFile);
+        Assert.assertEquals("Incorrect taskId", new TaskId(SequenceAlignmentTask.class), job2.getActiveTaskId());
+        File workingFasta = job.getTargetGenome().getWorkingFastaFile();
+        Assert.assertNotNull("Genome FASTA not set", workingFasta);
+        Assert.assertTrue("Dictionary file not created", new File(workingFasta.getPath() + ".dict").exists());
     }
 
     protected void executeJobRemote(File workDir, @Nullable File jobJson) throws IOException
