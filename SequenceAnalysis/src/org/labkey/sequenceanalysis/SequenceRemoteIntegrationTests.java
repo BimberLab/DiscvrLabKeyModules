@@ -16,11 +16,11 @@ import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.reader.Readers;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.pipeline.AlignmentInitTask;
 import org.labkey.sequenceanalysis.pipeline.PrepareAlignerIndexesTask;
 import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentJob;
-import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentTask;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -180,7 +180,8 @@ public class SequenceRemoteIntegrationTests extends SequenceIntegrationTests.Abs
         Assert.assertEquals("Incorrect status", PipelineJob.TaskStatus.complete, job2.getActiveTaskStatus());
         File workingFasta = job.getTargetGenome().getWorkingFastaFile();
         Assert.assertNotNull("Genome FASTA not set", workingFasta);
-        Assert.assertTrue("Dictionary file not created", new File(workingFasta.getPath() + ".dict").exists());
+        File dict = new File(workingFasta.getParentFile(), FileUtil.getBaseName(workingFasta.getName()) + ".dict");
+        Assert.assertTrue("Dictionary file not created, expected: " + dict.getPath(), dict.exists());
     }
 
     protected void executeJobRemote(File workDir, @Nullable File jobJson) throws IOException
