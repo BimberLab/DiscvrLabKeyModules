@@ -74,6 +74,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -592,20 +593,7 @@ public class SequenceIntegrationTests
                 //on failure, append contents of pipeline job file to primary error log
                 if (job.getLogFile() != null)
                 {
-                    StringBuilder sb = new StringBuilder();
-                    try (BufferedReader reader = Readers.getReader(job.getLogFile()))
-                    {
-                        sb.append("*******************\n");
-                        sb.append("Error running sequence junit tests.  Pipeline log:\n");
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            sb.append(line).append('\n');
-                        }
-
-                        sb.append("*******************\n");
-                    }
-
-                    _log.error(sb.toString());
+                    writeJobLogToLog(job);
                 }
                 else
                 {
@@ -618,9 +606,27 @@ public class SequenceIntegrationTests
             return false; //job != null && job.getActiveTaskId() != null;
         }
 
+        protected void writeJobLogToLog(PipelineJob job) throws IOException
+        {
+            StringBuilder sb = new StringBuilder();
+            try (BufferedReader reader = Readers.getReader(job.getLogFile()))
+            {
+                sb.append("*******************\n");
+                sb.append("Error running sequence junit tests.  Pipeline log:\n");
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line).append('\n');
+                }
+
+                sb.append("*******************\n");
+            }
+
+            _log.error(sb.toString());
+        }
+
         protected JSONObject substituteParams(File xml, String jobName) throws IOException
         {
-            String content = FileUtils.readFileToString(xml);
+            String content = FileUtils.readFileToString(xml, Charset.defaultCharset());
             content = content.replaceAll("@@BASEURL@@", AppProps.getInstance().getBaseServerUrl() + AppProps.getInstance().getContextPath());
             content = content.replaceAll("@@CONTAINERID@@", _project.getPath());
             content = content.replaceAll("@@CONTAINERPATH@@", _project.getPath());
