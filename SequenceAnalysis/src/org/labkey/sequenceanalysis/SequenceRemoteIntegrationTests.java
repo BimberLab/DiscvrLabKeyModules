@@ -177,7 +177,7 @@ public class SequenceRemoteIntegrationTests extends SequenceIntegrationTests.Abs
 
         //check outputs
         PipelineJob job2 = PipelineJob.readFromFile(jobFile);
-        Assert.assertEquals("Incorrect taskId", new TaskId(SequenceAlignmentTask.class), job2.getActiveTaskId());
+        Assert.assertEquals("Incorrect status", PipelineJob.TaskStatus.complete, job2.getActiveTaskStatus());
         File workingFasta = job.getTargetGenome().getWorkingFastaFile();
         Assert.assertNotNull("Genome FASTA not set", workingFasta);
         Assert.assertTrue("Dictionary file not created", new File(workingFasta.getPath() + ".dict").exists());
