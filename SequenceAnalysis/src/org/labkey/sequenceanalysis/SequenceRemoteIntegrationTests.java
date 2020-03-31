@@ -199,6 +199,15 @@ public class SequenceRemoteIntegrationTests extends SequenceIntegrationTests.Abs
             throw new IOException("Unable to find webappdir, expected: " + webappDir.getPath());
         }
 
+        for (String sysProp : new String[]{"labkey.externalModulesDir", "labkey.modulesDir", "cpas.modulesDir"})
+        {
+            String sysPropValue = StringUtils.trimToNull(System.getProperty(sysProp));
+            if (sysPropValue != null)
+            {
+                args.add("-D" + sysProp +"=" + sysPropValue);
+            }
+        }
+
         args.add("-webappdir=" + webappDir.getPath());
 
         File configDir = setupConfigDir(workDir);
