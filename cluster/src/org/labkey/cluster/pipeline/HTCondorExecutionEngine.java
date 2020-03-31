@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -181,6 +182,7 @@ public class HTCondorExecutionEngine extends AbstractClusterExecutionEngine<HTCo
                     Integer maxCpus = null;
                     Integer maxRam = null;
                     List<String> extraLines = new ArrayList<>(getConfig().getExtraSubmitLines());
+                    Map<String, Object> extraEnvironmentVars = new HashMap<>();
 
                     if (job.getActiveTaskId() != null)
                     {
@@ -204,6 +206,8 @@ public class HTCondorExecutionEngine extends AbstractClusterExecutionEngine<HTCo
                             }
 
                             allocator.addExtraSubmitScriptLines(job, this, extraLines);
+
+                            extraEnvironmentVars.putAll(allocator.getEnvironmentVars(job, this));
                         }
                     }
 
@@ -244,6 +248,10 @@ public class HTCondorExecutionEngine extends AbstractClusterExecutionEngine<HTCo
                     {
                         environment.addAll(getConfig().getEnvironmentVars());
                     }
+
+                    extraEnvironmentVars.forEach((name, val) -> {
+                        environment.add(name + "=" + val);
+                    });
 
                     if (!environment.isEmpty())
                     {
