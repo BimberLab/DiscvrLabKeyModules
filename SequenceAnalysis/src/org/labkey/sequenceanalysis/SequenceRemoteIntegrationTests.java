@@ -176,12 +176,27 @@ public class SequenceRemoteIntegrationTests extends SequenceIntegrationTests.Abs
         executeJobRemote(outDir, jobFile);
 
         //check outputs
-        PipelineJob job2 = PipelineJob.readFromFile(jobFile);
-        Assert.assertEquals("Incorrect status", PipelineJob.TaskStatus.complete, job2.getActiveTaskStatus());
-        File workingFasta = job.getTargetGenome().getWorkingFastaFile();
-        Assert.assertNotNull("Genome FASTA not set", workingFasta);
-        File dict = new File(workingFasta.getParentFile(), FileUtil.getBaseName(workingFasta.getName()) + ".dict");
-        Assert.assertTrue("Dictionary file not created, expected: " + dict.getPath(), dict.exists());
+        try
+        {
+            PipelineJob job2 = PipelineJob.readFromFile(jobFile);
+            Assert.assertEquals("Incorrect status", PipelineJob.TaskStatus.complete, job2.getActiveTaskStatus());
+            File workingFasta = job.getTargetGenome().getWorkingFastaFile();
+            Assert.assertNotNull("Genome FASTA not set", workingFasta);
+            File idx = new File(workingFasta.getPath() + ".fai");
+            Assert.assertTrue("FASTA index not created, expected: " + idx.getPath(), idx.exists());
+        }
+        catch (AssertionError e)
+        {
+            writeJobLogToLog(job);
+
+            _log.info("Files in job folder: " + job.getLogFile().getParentFile().getPath());
+            for (File f : job.getLogFile().getParentFile().listFiles())
+            {
+                _log.info(f.getName());
+            }
+
+            throw e;
+        }
     }
 
     protected void executeJobRemote(File workDir, @Nullable File jobJson) throws IOException
