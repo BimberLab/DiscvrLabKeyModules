@@ -77,7 +77,7 @@ public class SampleRenameStep extends AbstractCommandPipelineStep<VariantFiltrat
         try (VCFFileReader reader = new VCFFileReader(inputVCF); VariantContextWriter writer = builder.build())
         {
             VCFHeader header = reader.getFileHeader();
-            List<String> samples = header.getSampleNamesInOrder();
+            List<String> samples = header.getGenotypeSamples();
             List<String> remappedSamples = new ArrayList<>();
 
             int totalRenamed = 0;

@@ -16,10 +16,8 @@
 package org.labkey.sequenceanalysis;
 
 import htsjdk.samtools.SAMException;
-import htsjdk.tribble.AbstractFeatureReader;
-import htsjdk.tribble.FeatureReader;
 import htsjdk.tribble.TribbleException;
-import htsjdk.variant.vcf.VCFCodec;
+import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -5115,13 +5113,13 @@ public class SequenceAnalysisController extends SpringActionController
             return new ApiSimpleResponse(ret);
         }
 
-        public List<String> getSamplesForVcf(File vcf) throws IOException
+        public List<String> getSamplesForVcf(File vcf)
         {
-            try (FeatureReader reader = AbstractFeatureReader.getFeatureReader(vcf.getPath(), new VCFCodec(), false))
+            try (VCFFileReader reader = new VCFFileReader(vcf))
             {
-                VCFHeader header = (VCFHeader)reader.getHeader();
+                VCFHeader header = reader.getFileHeader();
 
-                return header.getSampleNamesInOrder();
+                return header.getGenotypeSamples();
             }
         }
     }
