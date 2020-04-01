@@ -382,6 +382,16 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
         for (PipelineStepCtx<VariantProcessingStep> stepCtx : providers)
         {
+            ctx.getLogger().info("Starting to run: " + stepCtx.getProvider().getLabel());
+
+            //To debug sample name issue:
+            try (VCFFileReader reader = new VCFFileReader(input))
+            {
+                VCFHeader header = reader.getFileHeader();
+                ctx.getLogger().info("Total samples: " + header.getSampleNamesInOrder().size());
+                ctx.getLogger().info("Sample names: " + StringUtils.join(header.getSampleNamesInOrder(), ","));
+            }
+
             ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + stepCtx.getProvider().getLabel());
             stepIdx++;
 
@@ -430,6 +440,14 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 ctx.getJob().getLogger().info("total variants: " + getVCFLineCount(currentVCF, ctx.getJob().getLogger(), false));
                 ctx.getJob().getLogger().info("passing variants: " + getVCFLineCount(currentVCF, ctx.getJob().getLogger(), true));
                 ctx.getJob().getLogger().debug("index exists: " + (new File(currentVCF.getPath() + ".tbi")).exists());
+
+                //To debug sample name issue:
+                try (VCFFileReader reader = new VCFFileReader(input))
+                {
+                    VCFHeader header = reader.getFileHeader();
+                    ctx.getLogger().debug("Total samples in output: " + header.getSampleNamesInOrder().size());
+                    ctx.getLogger().debug("Sample names in output: " + StringUtils.join(header.getSampleNamesInOrder(), ","));
+                }
 
                 try
                 {
