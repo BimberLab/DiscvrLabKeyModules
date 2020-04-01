@@ -462,9 +462,9 @@ public class SequenceUtil
 
                 if (samples.isEmpty())
                 {
-                    samples.addAll(header.getSampleNamesInOrder());
+                    samples.addAll(header.getGenotypeSamples());
                 }
-                else if (!samples.equals(header.getSampleNamesInOrder()))
+                else if (!samples.equals(header.getGenotypeSamples()))
                 {
                     throw new IllegalArgumentException("Samples list different between VCF headers!  Encountered for: " + x.getPath());
                 }
