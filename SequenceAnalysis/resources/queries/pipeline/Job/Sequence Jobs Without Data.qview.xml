@@ -8,12 +8,10 @@
         <column name="totalReadsets"/>
         <column name="totalAnalyses"/>
         <column name="totalOutputs"/>
-        <column name="hasSequenceData"/>
+        <column name="sequenceJobWithoutData"/>
     </columns>
     <filters>
-        <filter column="hasSequenceData" operator="eq" value="false"/>
-        <filter column="Provider" operator="in" value="sequenceOutputHandler;Sequence Pipeline;sequenceReadsetHandler"/>
-        <filter column="Status" operator="eq" value="COMPLETE"/>
+        <filter column="sequenceJobWithoutData" operator="eq" value="true"/>
     </filters>
     <sorts>
         <sort column="Created" descending="true"/>
