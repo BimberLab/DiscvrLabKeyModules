@@ -6,7 +6,6 @@ import org.labkey.api.view.template.ClientDependency;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 
 import java.util.Arrays;
-import java.util.LinkedHashSet;
 
 /**
  * User: bimber
@@ -17,6 +16,6 @@ public class ReprocessLibraryButton extends SimpleButtonConfigFactory
 {
     public ReprocessLibraryButton()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Re-process Selected", "SequenceAnalysis.window.ReprocessLibraryWindow.buttonHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromPath("sequenceanalysis/window/ReprocessLibraryWindow.js"))));
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Re-process Selected", "SequenceAnalysis.window.ReprocessLibraryWindow.buttonHandler(dataRegionName);", Arrays.asList(ClientDependency.supplierFromPath("sequenceanalysis/window/ReprocessLibraryWindow.js")));
     }
 }

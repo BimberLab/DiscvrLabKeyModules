@@ -7,7 +7,6 @@ import org.labkey.api.view.template.ClientDependency;
 import org.labkey.jbrowse.JBrowseModule;
 
 import java.util.Arrays;
-import java.util.LinkedHashSet;
 
 /**
  * User: bimber
@@ -18,7 +17,7 @@ public class AddLibraryButton extends SimpleButtonConfigFactory
 {
     public AddLibraryButton()
     {
-        super(ModuleLoader.getInstance().getModule(JBrowseModule.class), "Create JBrowse Session", "JBrowse.window.DatabaseWindow.libraryHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromPath("jbrowse/window/DatabaseWindow.js"))));
+        super(ModuleLoader.getInstance().getModule(JBrowseModule.class), "Create JBrowse Session", "JBrowse.window.DatabaseWindow.libraryHandler(dataRegionName);", Arrays.asList(ClientDependency.supplierFromPath("jbrowse/window/DatabaseWindow.js")));
         setPermission(UpdatePermission.class);
     }
 }

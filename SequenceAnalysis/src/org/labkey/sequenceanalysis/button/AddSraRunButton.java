@@ -7,7 +7,6 @@ import org.labkey.api.view.template.ClientDependency;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 
 import java.util.Arrays;
-import java.util.LinkedHashSet;
 
 /**
  * Created by bimber on 7/12/2017.
@@ -16,7 +15,7 @@ public class AddSraRunButton extends SimpleButtonConfigFactory
 {
     public AddSraRunButton()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Add/Update SRA Run", "SequenceAnalysis.window.AddSraRunWindow.buttonHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromModuleName("ldk"), ClientDependency.fromModuleName("laboratory"), ClientDependency.fromPath("sequenceanalysis/window/AddSraRunWindow.js"))));
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Add/Update SRA Run", "SequenceAnalysis.window.AddSraRunWindow.buttonHandler(dataRegionName);", Arrays.asList(ClientDependency.supplierFromModuleName("ldk"), ClientDependency.supplierFromModuleName("laboratory"), ClientDependency.supplierFromPath("sequenceanalysis/window/AddSraRunWindow.js")));
         setPermission(UpdatePermission.class);
     }
 }

@@ -6,7 +6,6 @@ import org.labkey.api.view.template.ClientDependency;
 import org.labkey.blast.BLASTModule;
 
 import java.util.Arrays;
-import java.util.LinkedHashSet;
 
 /**
  * User: bimber
@@ -17,6 +16,6 @@ public class BlastOligosButton extends SimpleButtonConfigFactory
 {
     public BlastOligosButton()
     {
-        super(ModuleLoader.getInstance().getModule(BLASTModule.class), "BLAST Oligos", "BLAST.window.BlastOligosWindow.buttonHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromPath("laboratory.context"), ClientDependency.fromPath("blast/window/BlastOligosWindow.js"))));
+        super(ModuleLoader.getInstance().getModule(BLASTModule.class), "BLAST Oligos", "BLAST.window.BlastOligosWindow.buttonHandler(dataRegionName);", Arrays.asList(ClientDependency.supplierFromPath("laboratory.context"), ClientDependency.supplierFromPath("blast/window/BlastOligosWindow.js")));
     }
 }

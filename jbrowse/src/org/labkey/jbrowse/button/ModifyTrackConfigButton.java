@@ -7,7 +7,6 @@ import org.labkey.api.view.template.ClientDependency;
 import org.labkey.jbrowse.JBrowseModule;
 
 import java.util.Arrays;
-import java.util.LinkedHashSet;
 
 /**
  * User: bimber
@@ -18,7 +17,7 @@ public class ModifyTrackConfigButton extends SimpleButtonConfigFactory
 {
     public ModifyTrackConfigButton()
     {
-        super(ModuleLoader.getInstance().getModule(JBrowseModule.class), "Modify Track Config", "JBrowse.window.ModifyJsonConfigWindow.buttonHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromPath("jbrowse/window/ModifyJsonConfigWindow.js"))));
+        super(ModuleLoader.getInstance().getModule(JBrowseModule.class), "Modify Track Config", "JBrowse.window.ModifyJsonConfigWindow.buttonHandler(dataRegionName);", Arrays.asList(ClientDependency.supplierFromPath("jbrowse/window/ModifyJsonConfigWindow.js")));
         setPermission(UpdatePermission.class);
     }
 }

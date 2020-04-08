@@ -7,7 +7,6 @@ import org.labkey.api.view.template.ClientDependency;
 import org.labkey.jbrowse.JBrowseModule;
 
 import java.util.Arrays;
-import java.util.LinkedHashSet;
 
 /**
  * User: bimber
@@ -18,7 +17,7 @@ public class ReprocessSessionsButton extends SimpleButtonConfigFactory
 {
     public ReprocessSessionsButton()
     {
-        super(ModuleLoader.getInstance().getModule(JBrowseModule.class), "Re-process Selected", "JBrowse.window.ReprocessResourcesWindow.sessionHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromPath("jbrowse/window/ReprocessResourcesWindow.js"))));
+        super(ModuleLoader.getInstance().getModule(JBrowseModule.class), "Re-process Selected", "JBrowse.window.ReprocessResourcesWindow.sessionHandler(dataRegionName);", Arrays.asList(ClientDependency.supplierFromPath("jbrowse/window/ReprocessResourcesWindow.js")));
         setPermission(UpdatePermission.class);
     }
 }

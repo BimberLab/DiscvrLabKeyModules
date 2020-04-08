@@ -7,7 +7,6 @@ import org.labkey.api.view.template.ClientDependency;
 import org.labkey.blast.BLASTModule;
 
 import java.util.Arrays;
-import java.util.LinkedHashSet;
 
 /**
  * User: bimber
@@ -18,7 +17,7 @@ public class ReprocessDatabaseButton extends SimpleButtonConfigFactory
 {
     public ReprocessDatabaseButton()
     {
-        super(ModuleLoader.getInstance().getModule(BLASTModule.class), "Re-process Selected", "BLAST.window.ReprocessDatabaseWindow.buttonHandler(dataRegionName);", new LinkedHashSet<>(Arrays.asList(ClientDependency.fromModuleName("ldk"), ClientDependency.fromPath("blast/window/ReprocessDatabaseWindow.js"))));
+        super(ModuleLoader.getInstance().getModule(BLASTModule.class), "Re-process Selected", "BLAST.window.ReprocessDatabaseWindow.buttonHandler(dataRegionName);", Arrays.asList(ClientDependency.supplierFromModuleName("ldk"), ClientDependency.supplierFromPath("blast/window/ReprocessDatabaseWindow.js")));
         setPermission(UpdatePermission.class);
     }
 }
