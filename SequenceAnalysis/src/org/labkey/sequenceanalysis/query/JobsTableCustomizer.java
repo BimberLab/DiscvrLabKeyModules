@@ -6,6 +6,7 @@ import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.ldk.LDKService;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.query.ExprColumn;
 
 /**
@@ -58,22 +59,27 @@ public class JobsTableCustomizer implements TableCustomizer
                 ((AbstractTableInfo)ti).addColumn(newCol);
             }
 
-            String hasSequenceData = "hasSequenceData";
-            if (ti.getColumn(hasSequenceData) == null)
+            String sequenceJobWithoutData = "sequenceJobWithoutData";
+            if (ti.getColumn(sequenceJobWithoutData) == null)
             {
-                SQLFragment sql = new SQLFragment("(SELECT CASE " +
-                        "WHEN sum(CASE WHEN (rs.RowId IS NULL AND rd.RowId IS NULL AND sa.RowId IS NULL AND o.RowId IS NULL) THEN 0 ELSE 1 END) = 0 THEN " + ti.getSqlDialect().getBooleanFALSE() + "\n" +
-                        "WHEN sum(CASE WHEN (rs.RowId IS NULL AND rd.RowId IS NULL AND sa.RowId IS NULL AND o.RowId IS NULL) THEN 0 ELSE 1 END) IS NULL THEN " + ti.getSqlDialect().getBooleanFALSE() + "\n" +
-                        "ELSE " + ti.getSqlDialect().getBooleanTRUE() + " END as expr\n" +
-                        "FROM exp.experimentrun r\n" +
-                        "LEFT JOIN sequenceanalysis.sequence_readsets rs ON (r.RowId = rs.runid)\n" +
-                        "LEFT JOIN sequenceanalysis.readdata rd on (r.RowId = rd.runid)\n" +
-                        "LEFT JOIN sequenceanalysis.sequence_analyses sa ON (r.RowId = sa.runid)\n" +
-                        "LEFT JOIN sequenceanalysis.outputfiles o ON (r.RowId = o.runid)\n" +
-                        "WHERE (r.jobid = " + ExprColumn.STR_TABLE_ALIAS + ".RowId OR r.jobid = (SELECT p.RowId FROM pipeline.statusfiles p WHERE " + ExprColumn.STR_TABLE_ALIAS + ".jobparent = p.job))\n" +
-                        ")");
-                ExprColumn newCol = new ExprColumn(ti, hasSequenceData, sql, JdbcType.BOOLEAN, ti.getColumn("RowId"));
-                newCol.setLabel("Has Sequence Data?");
+                //Jobs from all exp runs connected to sequence data
+                String runSubquery = "(SELECT DISTINCT r.jobid FROM exp.experimentrun r\n" +
+                        "WHERE\n" +
+                        "r.jobid IS NOT NULL AND (\n" +
+                        "EXISTS (SELECT rs.rowid FROM sequenceanalysis.sequence_readsets rs WHERE (r.RowId = rs.runid)) OR\n" +
+                        "EXISTS (SELECT rd.rowid FROM sequenceanalysis.readdata rd WHERE (r.RowId = rd.runid)) OR\n" +
+                        "EXISTS (SELECT sa.rowid FROM sequenceanalysis.sequence_analyses sa WHERE (r.RowId = sa.runid)) OR\n" +
+                        "EXISTS (SELECT o.runid FROM sequenceanalysis.outputfiles o WHERE (r.RowId = o.runid))\n" +
+                        "))";
+
+                SQLFragment sql = new SQLFragment("(CASE " +
+                        "WHEN " + ExprColumn.STR_TABLE_ALIAS + ".status IS NULL OR " + ExprColumn.STR_TABLE_ALIAS + ".status != '"+ PipelineJob.TaskStatus.complete.name().toUpperCase() + "' THEN " + ti.getSqlDialect().getBooleanFALSE() + "\n" +
+                        "WHEN " + ExprColumn.STR_TABLE_ALIAS + ".provider IS NULL OR " + ExprColumn.STR_TABLE_ALIAS + ".provider NOT IN ('sequenceOutputHandler', 'Sequence Pipeline', 'sequenceReadsetHandler') THEN " + ti.getSqlDialect().getBooleanFALSE() + "\n" +
+                        "WHEN " + ExprColumn.STR_TABLE_ALIAS + ".RowId IN " + runSubquery + " THEN " + ti.getSqlDialect().getBooleanFALSE() + "\n" +
+                        "WHEN " + ExprColumn.STR_TABLE_ALIAS + ".jobparent IS NOT NULL AND (SELECT p.RowId FROM pipeline.statusfiles p WHERE " + ExprColumn.STR_TABLE_ALIAS + ".jobparent = p.job) IN " + runSubquery + " THEN " + ti.getSqlDialect().getBooleanFALSE() + "\n" +
+                        "ELSE " + ti.getSqlDialect().getBooleanTRUE() + " END)");
+                ExprColumn newCol = new ExprColumn(ti, sequenceJobWithoutData, sql, JdbcType.BOOLEAN, ti.getColumn("RowId"));
+                newCol.setLabel("Sequence Job Without Data?");
                 ((AbstractTableInfo)ti).addColumn(newCol);
             }
 

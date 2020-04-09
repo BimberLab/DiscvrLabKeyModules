@@ -1,19 +1,14 @@
 <customView xmlns="http://labkey.org/data/xml/queryCustomView" containerFilter="CurrentAndSubfolders">
     <columns>
+        <column name="RowId" />
         <column name="Status" />
         <column name="Description" />
-        <column name="ActiveHostName"/>
         <column name="Created" />
         <column name="Provider"/>
-        <column name="totalReadsets"/>
-        <column name="totalAnalyses"/>
-        <column name="totalOutputs"/>
-        <column name="hasSequenceData"/>
+        <column name="Folder/Path"/>
     </columns>
     <filters>
-        <filter column="hasSequenceData" operator="eq" value="false"/>
-        <filter column="Provider" operator="in" value="sequenceOutputHandler;Sequence Pipeline;sequenceReadsetHandler"/>
-        <filter column="Status" operator="eq" value="COMPLETE"/>
+        <filter column="sequenceJobWithoutData" operator="eq" value="true"/>
     </filters>
     <sorts>
         <sort column="Created" descending="true"/>
