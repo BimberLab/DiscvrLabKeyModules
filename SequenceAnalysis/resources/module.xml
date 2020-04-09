@@ -3,6 +3,6 @@
         <dependency path="sequenceanalysis/sequenceAnalysis.lib.xml"/>
     </clientDependencies>
     <requiredModuleContext>
-        <requiredModule name="laboratory"/>
+        <module name="laboratory"/>
     </requiredModuleContext>
 </module>
