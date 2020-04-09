@@ -8,7 +8,7 @@
         <column name="totalReadsets"/>
         <column name="totalAnalyses"/>
         <column name="totalOutputs"/>
-        <column name="hasSequenceData"/>
+        <column name="sequenceJobWithoutData"/>
     </columns>
     <filters>
         <!--<filter column="Provider" operator="neqornull" value="ETL"/>-->

@@ -18,6 +18,7 @@ import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineStatusFile;
@@ -33,11 +34,14 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.ResultSet;
@@ -131,7 +135,7 @@ public class OrphanFilePipelineJob extends PipelineJob
         }
 
         @Override
-        public RecordedActionSet run()
+        public RecordedActionSet run() throws PipelineJobException
         {
             getJob().getLogger().info("## The following sections list any files or pipeline jobs that appear to be orphans, not connected to any imported readsets or sequence outputs:");
 
@@ -205,8 +209,25 @@ public class OrphanFilePipelineJob extends PipelineJob
             if (!probableDeletes.isEmpty())
             {
                 StringBuilder sb = new StringBuilder();
+                File output = new File(getJob().getLogFile().getParentFile(), "toRemove.sh");
+                try (PrintWriter writer = PrintWriters.getPrintWriter(output))
+                {
+                    writer.println("#!/bin/bash");
+                    writer.println("");
+                    writer.println("set -e");
+                    writer.println("set -x");
+                    writer.println("");
+                    probableDeletes.forEach(f -> writer.println("rm -Rf " + f.getPath()));
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+
                 probableDeletes.forEach(f -> sb.append("\n").append(f.getPath()));
-                getJob().getLogger().info("## The following files can almost certainly be deleted; however, please exercise caution:" + sb.toString());
+                getJob().getLogger().info("## The following files can almost certainly be deleted; however, please exercise caution. Note: the file toRemove.sh has been written and can be executed to remove these:" + sb.toString());
+
+
             }
 
             return new RecordedActionSet();
