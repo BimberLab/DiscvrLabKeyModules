@@ -460,6 +460,12 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     }
 
     @Override
+    public File writeAllBarcodes(File output, User u, Container c, String tagGroup) throws PipelineJobException
+    {
+        return CellHashingHandler.writeAllBarcodes(tagGroup, u, c, output);
+    }
+
+    @Override
     public String createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String assemblyId, String description, boolean skipCacheIndexes, boolean skipTriggers) throws IOException
     {
         return createReferenceLibrary(sequenceIds, c, u, name, assemblyId, description, skipCacheIndexes, skipTriggers, null);
