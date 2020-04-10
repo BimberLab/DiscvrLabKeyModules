@@ -1016,7 +1016,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
 
         Map<String, Object> callMap = new HashMap<>();
         callMap.put("citeSeqCountMatrix", outputMatrix);
-        callMap.put("outputDir", outputDir);
+        callMap.put("outputDir", citeSeqCountOutDir);
 
         if (generateHtoCalls)
         {
