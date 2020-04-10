@@ -967,7 +967,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                 output.addSequenceOutput(citeSeqCount, htoReadset.getName() + ": CITE-Seq Count Matrix", (category == null ? "CITE-Seq Count Matrix" : category), htoReadset.getReadsetId(), null, null, null);
 
                 File outDir = (File) callMap.get("outputDir");
-                output.getIntermediateFiles().remove(outDir);
+                output.removeIntermediateFiles(outDir);
 
                 return citeSeqCount;
             }
