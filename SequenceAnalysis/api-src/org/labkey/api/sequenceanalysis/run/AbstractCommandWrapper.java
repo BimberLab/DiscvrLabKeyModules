@@ -154,7 +154,7 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
             try (BufferedReader procReader = new BufferedReader(new InputStreamReader(redirect == null ? p.getInputStream() : p.getErrorStream(), StringUtilsLabKey.DEFAULT_CHARSET)))
             {
                 String line;
-                while ((line = procReader.readLine()) != null)
+                while (p.isAlive() && (line = procReader.readLine()) != null)
                 {
                     if (output != null)
                     {
