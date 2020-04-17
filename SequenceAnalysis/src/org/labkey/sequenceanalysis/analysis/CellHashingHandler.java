@@ -1110,7 +1110,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         }
         else if (type == BARCODE_TYPE.citeseq)
         {
-            writeAllBarcodes(tagGroup, u, c, getAllCiteSeqBarcodesFile(webserverDir));
+            return writeAllBarcodes(tagGroup, u, c, getAllCiteSeqBarcodesFile(webserverDir));
         }
 
         throw new IllegalArgumentException("Unknown barcode type");
