@@ -44,6 +44,6 @@ public class CiteSeqHandler extends CellHashingHandler
     @Override
     public SequenceReadsetProcessor getProcessor()
     {
-        return new Processor(false);
+        return new Processor(BARCODE_TYPE.citeseq);
     }
 }

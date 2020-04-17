@@ -456,13 +456,13 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     @Override
     public File writeAllCellHashingBarcodes(File webserverDir, User u, Container c) throws PipelineJobException
     {
-        return CellHashingHandler.writeAllBarcodes(webserverDir, u, c);
+        return CellHashingHandler.writeAllBarcodes(CellHashingHandler.BARCODE_TYPE.hashing, webserverDir, u, c);
     }
 
     @Override
-    public File writeAllBarcodes(File output, User u, Container c, String tagGroup) throws PipelineJobException
+    public File writeAllCiteSeqBarcodes(File webserverDir, User u, Container c) throws PipelineJobException
     {
-        return CellHashingHandler.writeAllBarcodes(tagGroup, u, c, output);
+        return CellHashingHandler.writeAllBarcodes(CellHashingHandler.BARCODE_TYPE.citeseq, webserverDir, u, c);
     }
 
     @Override

@@ -524,6 +524,6 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     {
         CellHashingHandler handler = new CellHashingHandler();
 
-        return handler.runCiteSeqCount(output, outputCategory, htoReadset, htoList, cellBarcodeList, outputDir, basename, log, extraArgs, doHtoFiltering, minCountPerCell, localPipelineDir, editDistance, scanEditDistances, parentReadset, genomeId, generateHtoCalls);
+        return handler.runCiteSeqCount(output, outputCategory, htoReadset, htoList, cellBarcodeList, outputDir, basename, log, extraArgs, doHtoFiltering, minCountPerCell, localPipelineDir, editDistance, scanEditDistances, parentReadset, genomeId, generateHtoCalls ? CellHashingHandler.BARCODE_TYPE.hashing : CellHashingHandler.BARCODE_TYPE.citeseq);
     }
 }
