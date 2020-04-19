@@ -48,12 +48,12 @@ import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.util.FastqMerger;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -385,6 +385,21 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         {
             throw new PipelineJobException(e);
         }
+
+        File log = new File(outputDir, "run_report.yml");
+        try (BufferedReader reader = Readers.getReader(log))
+        {
+            String line;
+            while ((line = reader.readLine()) != null)
+            {
+                ctx.getLogger().info(line);
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
         ctx.getFileManager().addIntermediateFile(doneFile);
         ctx.getFileManager().addOutput(action, "Unknown barcodes", unknownBarcodes);
         ctx.getFileManager().addOutput(action, StringUtils.capitalize(type.name()) + " Raw Counts", outputMatrix);
@@ -394,6 +409,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         Map<String, Object> callMap = new HashMap<>();
         callMap.put("citeSeqCountMatrix", outputMatrix);
         callMap.put("outputDir", outputDir);
+        callMap.put("logFile", log);
 
         if (type.doGenerateCalls())
         {
@@ -539,7 +555,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                 });
 
                 toAdd.sort(SortHelpers.getNaturalOrderStringComparator());
-                ret.put("UnknownHtoMatchingKnown", StringUtils.join(toAdd, ","));
+                ret.put("UnknownTagMatchingKnown", StringUtils.join(toAdd, ","));
 
                 if (!metricsFile.exists())
                 {
@@ -555,7 +571,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                 {
                     try (BufferedWriter writer = IOUtil.openFileForBufferedWriting(metricsFile, true))
                     {
-                        writer.write(StringUtils.join(new String[]{"Cell Hashing", "UnknownHtoMatchingKnown", (String)ret.get("UnknownHtoMatchingKnown")}, "\t") + "\n");
+                        writer.write(StringUtils.join(new String[]{type.getLabel(), "UnknownTagMatchingKnown", (String)ret.get("UnknownTagMatchingKnown")}, "\t") + "\n");
                     }
                     catch (IOException e)
                     {
@@ -1013,9 +1029,24 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
             throw new PipelineJobException(e);
         }
 
+        File logFile = new File(outputDir, "run_report.yml");
+        try (BufferedReader reader = Readers.getReader(logFile))
+        {
+            String line;
+            while ((line = reader.readLine()) != null)
+            {
+                log.info(line);
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
         Map<String, Object> callMap = new HashMap<>();
         callMap.put("citeSeqCountMatrix", outputMatrix);
         callMap.put("outputDir", citeSeqCountOutDir);
+        callMap.put("logFile", logFile);
 
         if (type.doGenerateCalls())
         {
@@ -1136,15 +1167,17 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
 
     public enum BARCODE_TYPE
     {
-        hashing(true, true),
-        citeseq(false, false);
+        hashing(true, true, "Cell Hashing"),
+        citeseq(false, false, "CITE-Seq");
 
         private final boolean _supportsScan;
         private final boolean _doGenerateCalls;
+        private final String _label;
 
-        BARCODE_TYPE(boolean supportsScan, boolean doGenerateCalls) {
+        BARCODE_TYPE(boolean supportsScan, boolean doGenerateCalls, String label) {
             _supportsScan = supportsScan;
             _doGenerateCalls = doGenerateCalls;
+            _label = label;
         }
 
         public boolean isSupportsScan()
@@ -1155,6 +1188,11 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         public boolean doGenerateCalls()
         {
             return _doGenerateCalls;
+        }
+
+        public String getLabel()
+        {
+            return _label;
         }
     }
 
