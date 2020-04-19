@@ -182,7 +182,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                 job.getLogger().info("Saving quality metrics for: " + so.getName());
                 if (so.getFile().getName().endsWith(CALL_EXTENSION))
                 {
-                    Map<String, Object> counts = parseOutputTable(job.getLogger(), so.getFile(), getCiteSeqCountUnknownOutput(so.getFile().getParentFile(), _type, null), so.getFile().getParentFile(), null, false, BARCODE_TYPE.hashing);
+                    Map<String, Object> counts = parseOutputTable(job.getLogger(), so.getFile(), getCiteSeqCountUnknownOutput(so.getFile().getParentFile(), _type, null), so.getFile().getParentFile(), null, false, _type);
                     for (String name : counts.keySet())
                     {
                         String valueField = (counts.get(name) instanceof String) ? "qualvalue" : "metricvalue";
@@ -242,7 +242,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                 if (scanEditDistances)
                 {
                     //account for total length of barcode.  shorter barcode should allow fewer edits
-                    Integer minLength = readAllBarcodes(ctx.getSourceDirectory(), BARCODE_TYPE.hashing).keySet().stream().map(String::length).min(Integer::compareTo).get();
+                    Integer minLength = readAllBarcodes(ctx.getSourceDirectory(), _type).keySet().stream().map(String::length).min(Integer::compareTo).get();
                     int maxEdit = Math.min(3, minLength - 6);
                     ctx.getLogger().debug("Scanning edit distances, up to: " + maxEdit);
                     int i = 0;
@@ -260,7 +260,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
 
                 for (Integer editDistance : editDistances)
                 {
-                    Map<String, Object> callMap = executeCiteSeqCount(ctx, action, rs, editDistance, minCountPerCell, BARCODE_TYPE.hashing);
+                    Map<String, Object> callMap = executeCiteSeqCount(ctx, action, rs, editDistance, minCountPerCell, _type);
                     results.put(editDistance, callMap);
 
                     if (_type.doGenerateCalls())
