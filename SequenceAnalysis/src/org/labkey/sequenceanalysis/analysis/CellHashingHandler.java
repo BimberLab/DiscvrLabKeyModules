@@ -1043,7 +1043,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
 
         Map<String, Object> callMap = new HashMap<>();
 
-        File logFile = new File(outputDir, "run_report.yml");
+        File logFile = new File(citeSeqCountOutDir, "run_report.yml");
         try (BufferedReader reader = Readers.getReader(logFile))
         {
             String line;
