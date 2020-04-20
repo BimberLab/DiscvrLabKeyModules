@@ -78,19 +78,20 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
 
     public static List<ToolParameterDescriptor> getDefaultParams()
     {
-        return getDefaultParams(true, DEFAULT_TAG_GROUP);
+        return getDefaultParams(true, DEFAULT_TAG_GROUP, "cellHashingCalls", null);
     }
 
-    public static List<ToolParameterDescriptor> getDefaultParams(boolean allowScanningEditDistance, String defaultTagGroup)
+    public static List<ToolParameterDescriptor> getDefaultParams(boolean allowScanningEditDistance, String defaultTagGroup, String defaultName, Integer defaultTrim)
     {
         List<ToolParameterDescriptor> ret = new ArrayList<>(Arrays.asList(
                 ToolParameterDescriptor.create("outputFilePrefix", "Output File Basename", null, "textfield", new JSONObject(){{
                     put("allowBlank", false);
-                }}, "cellHashingCalls"),
+                }}, defaultName),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-cbf"), "cbf", "Cell Barcode Start", null, "ldk-integerfield", null, 1),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-cbl"), "cbl", "Cell Barcode End", null, "ldk-integerfield", null, 16),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-umif"), "umif", "UMI Start", null, "ldk-integerfield", null, 17),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-umil"), "umil", "UMI End", null, "ldk-integerfield", null, 26)
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-umil"), "umil", "UMI End", null, "ldk-integerfield", null, 26),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-trim"), "trim", "Trim", null, "ldk-integerfield", null, defaultTrim)
         ));
 
         if (allowScanningEditDistance)

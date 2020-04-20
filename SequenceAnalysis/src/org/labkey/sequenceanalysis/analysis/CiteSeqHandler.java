@@ -8,7 +8,7 @@ public class CiteSeqHandler extends CellHashingHandler
 
     public CiteSeqHandler()
     {
-        super("CITE-Seq Count", "This will run CITE-Seq Count to generate a table of features counts from CITE-Seq", CellHashingHandler.getDefaultParams(false, DEFAULT_TAG_GROUP));
+        super("CITE-Seq Count", "This will run CITE-Seq Count to generate a table of features counts from CITE-Seq", CellHashingHandler.getDefaultParams(false, DEFAULT_TAG_GROUP, "citeSeqCounts", 10));
     }
 
     @Override
