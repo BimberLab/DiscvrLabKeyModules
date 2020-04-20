@@ -992,7 +992,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
 
                 String description = String.format("%% Mapped: %s\n%% Unmapped: %s", callMap.get("PercentageMapped"), callMap.get("PercentageUnmapped"));
                 File citeSeqCount = (File) callMap.get("citeSeqCountMatrix");
-                output.addSequenceOutput(citeSeqCount, parentReadset.getName() + ": CITE-Seq Count Matrix", (category == null ? "CITE-Seq Count Matrix" : category), parentReadset.getReadsetId(), null, null, description);
+                output.addSequenceOutput(citeSeqCount, parentReadset.getName() + ": CITE-Seq Count Matrix", (category == null ? "CITE-Seq Count Matrix" : category), parentReadset.getReadsetId(), null, genomeId, description);
 
                 File outDir = (File) callMap.get("outputDir");
                 output.removeIntermediateFiles(outDir);
