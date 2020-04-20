@@ -288,7 +288,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                     Map<String, Object> callMap = results.get(bestEditDistance);
                     if (_type.doGenerateCalls())
                     {
-                        String description = String.format("%% Mapped: %d\n%% Unmapped: %d\nEdit Distance: %,d\nMin Reads/Cell: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nSeurat Called: %,d\nNegative: %,d\nUnique HTOs: %s", callMap.get("PercentageMapped"), callMap.get("PercentageUnmapped"), bestEditDistance, minCountPerCell, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("seuratSinglet"), callMap.get("negative"), callMap.get("UniqueHtos"));
+                        String description = String.format("%% Mapped: %s\n%% Unmapped: %s\nEdit Distance: %,d\nMin Reads/Cell: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nSeurat Called: %,d\nNegative: %,d\nUnique HTOs: %s", callMap.get("PercentageMapped"), callMap.get("PercentageUnmapped"), bestEditDistance, minCountPerCell, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("seuratSinglet"), callMap.get("negative"), callMap.get("UniqueHtos"));
                         File htoCalls = (File) callMap.get("htoCalls");
                         File html = (File) callMap.get("html");
 
@@ -299,7 +299,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
                     {
                         ctx.getLogger().debug("HTO calls will not be generated");
 
-                        String description = String.format("%% Mapped: %d\n%% Unmapped: %d", callMap.get("PercentageMapped"), callMap.get("PercentageUnmapped"));
+                        String description = String.format("%% Mapped: %s\n%% Unmapped: %s", callMap.get("PercentageMapped"), callMap.get("PercentageUnmapped"));
                         File citeSeqCount = (File) callMap.get("citeSeqCountMatrix");
                         ctx.getFileManager().addSequenceOutput(citeSeqCount, rs.getName() + ": CITE-Seq Count Matrix","CITE-Seq Count Matrix", rs.getReadsetId(), null, null, description);
 
@@ -965,7 +965,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
             Map<String, Object> callMap = results.get(bestEditDistance);
             if (type.doGenerateCalls())
             {
-                String description = String.format("%% Mapped: %d\n%% Unmapped: %d\nEdit Distance: %,d\nMin Reads/Cell: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nSeurat Singlet: %,d\nMultiSeq Singlet: %,d\nNegative: %,d\nUnique HTOs: %s", callMap.get("PercentageMapped"), callMap.get("PercentageUnmapped"), bestEditDistance, minCountPerCell, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("seuratSinglet"), callMap.get("multiSeqSinglet"), callMap.get("negative"), callMap.get("UniqueHtos"));
+                String description = String.format("%% Mapped: %s\n%% Unmapped: %s\nEdit Distance: %,d\nMin Reads/Cell: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nSeurat Singlet: %,d\nMultiSeq Singlet: %,d\nNegative: %,d\nUnique HTOs: %s", callMap.get("PercentageMapped"), callMap.get("PercentageUnmapped"), bestEditDistance, minCountPerCell, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("seuratSinglet"), callMap.get("multiSeqSinglet"), callMap.get("negative"), callMap.get("UniqueHtos"));
                 File htoCalls = (File) callMap.get("htoCalls");
                 if (htoCalls == null)
                 {
@@ -990,7 +990,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
             {
                 log.debug("HTO calls will not be generated");
 
-                String description = String.format("%% Mapped: %d\n%% Unmapped: %d", callMap.get("PercentageMapped"), callMap.get("PercentageUnmapped"));
+                String description = String.format("%% Mapped: %s\n%% Unmapped: %s", callMap.get("PercentageMapped"), callMap.get("PercentageUnmapped"));
                 File citeSeqCount = (File) callMap.get("citeSeqCountMatrix");
                 output.addSequenceOutput(citeSeqCount, parentReadset.getName() + ": CITE-Seq Count Matrix", (category == null ? "CITE-Seq Count Matrix" : category), parentReadset.getReadsetId(), null, null, description);
 
