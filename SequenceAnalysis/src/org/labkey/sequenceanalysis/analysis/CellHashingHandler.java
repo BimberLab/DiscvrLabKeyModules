@@ -68,7 +68,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
 
     public CellHashingHandler()
     {
-        this("Cell Hashing Calls", "This will run CITE-Seq Count to generate a table of features counts from CITE-Seq or cell hashing libraries. It will also run R code to generate a table of calls per cell", getDefaultParams());
+        this("Cell Hashing Calls", "This will run CITE-Seq Count to generate a table of features counts from CITE-Seq or cell hashing libraries. It will also run R code to generate a table of calls per cell", getDefaultParams(BARCODE_TYPE.hashing));
     }
 
     protected CellHashingHandler(String name, String description, List<ToolParameterDescriptor> defaultParams)
@@ -76,22 +76,22 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), name, description, null, defaultParams);
     }
 
-    public static List<ToolParameterDescriptor> getDefaultParams()
+    public static List<ToolParameterDescriptor> getDefaultParams(BARCODE_TYPE type)
     {
-        return getDefaultParams(true, DEFAULT_TAG_GROUP, "cellHashingCalls", null);
+        return getDefaultParams(true, DEFAULT_TAG_GROUP, type);
     }
 
-    public static List<ToolParameterDescriptor> getDefaultParams(boolean allowScanningEditDistance, String defaultTagGroup, String defaultName, Integer defaultTrim)
+    public static List<ToolParameterDescriptor> getDefaultParams(boolean allowScanningEditDistance, String defaultTagGroup, BARCODE_TYPE type)
     {
         List<ToolParameterDescriptor> ret = new ArrayList<>(Arrays.asList(
                 ToolParameterDescriptor.create("outputFilePrefix", "Output File Basename", null, "textfield", new JSONObject(){{
                     put("allowBlank", false);
-                }}, defaultName),
+                }}, type.getDefaultName()),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-cbf"), "cbf", "Cell Barcode Start", null, "ldk-integerfield", null, 1),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-cbl"), "cbl", "Cell Barcode End", null, "ldk-integerfield", null, 16),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-umif"), "umif", "UMI Start", null, "ldk-integerfield", null, 17),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-umil"), "umil", "UMI End", null, "ldk-integerfield", null, 26),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-trim"), "trim", "Trim", null, "ldk-integerfield", null, defaultTrim)
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-trim"), "trim", "Trim", null, "ldk-integerfield", null, type.getDefaultTrim())
         ));
 
         if (allowScanningEditDistance)
@@ -865,7 +865,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
             baseArgs.add(cores.toString());
         }
 
-        for (ToolParameterDescriptor param : CellHashingHandler.getDefaultParams())
+        for (ToolParameterDescriptor param : CellHashingHandler.getDefaultParams(type))
         {
             if (cellBarcodeList != null && param.getName().equals("cells"))
             {
@@ -1190,17 +1190,21 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
 
     public enum BARCODE_TYPE
     {
-        hashing(true, true, "Cell Hashing"),
-        citeseq(false, false, "CITE-Seq");
+        hashing(true, true, "Cell Hashing", "cellHashingCalls", null),
+        citeseq(false, false, "CITE-Seq", "citeSeqCounts", 10);
 
         private final boolean _supportsScan;
         private final boolean _doGenerateCalls;
         private final String _label;
+        private final String _defaultName;
+        private final Integer _defaultTrim;
 
-        BARCODE_TYPE(boolean supportsScan, boolean doGenerateCalls, String label) {
+        BARCODE_TYPE(boolean supportsScan, boolean doGenerateCalls, String label, String defaultName, Integer defaultTrim) {
             _supportsScan = supportsScan;
             _doGenerateCalls = doGenerateCalls;
             _label = label;
+            _defaultName = defaultName;
+            _defaultTrim = defaultTrim;
         }
 
         public boolean isSupportsScan()
@@ -1216,6 +1220,16 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         public String getLabel()
         {
             return _label;
+        }
+
+        public String getDefaultName()
+        {
+            return _defaultName;
+        }
+
+        public Integer getDefaultTrim()
+        {
+            return _defaultTrim;
         }
     }
 
