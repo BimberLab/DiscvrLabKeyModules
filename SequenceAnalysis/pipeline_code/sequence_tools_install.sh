@@ -1365,6 +1365,33 @@ else
     echo "Already installed"
 fi
 
+
+#
+#lofreq
+#
+
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Installing Trimmomatic"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/trimmomatic.jar || ! -z $FORCE_REINSTALL ]];
+then
+    rm -Rf lofreq_star*
+    rm -Rf $LKTOOLS_DIR/lofreq_star*
+
+    wget https://github.com/CSB5/lofreq/raw/master/dist/lofreq_star-2.1.4_linux-x86-64.tgz
+    tar -xf lofreq_star-2.1.4_linux-x86-64.tgz
+
+    install ./lofreq_star-2.1.4_linux-x86-64/bin/lofreq* $LKTOOLS_DIR/
+
+else
+    echo "Already installed"
+fi
+
+
 #
 #CITE-seq-count
 #
@@ -1404,6 +1431,4 @@ echo ""
 echo ""
 echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 echo "Installation is complete"
-
-
 

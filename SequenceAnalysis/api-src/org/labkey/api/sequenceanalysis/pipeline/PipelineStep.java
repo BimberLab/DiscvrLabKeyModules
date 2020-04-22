@@ -28,7 +28,7 @@ public interface PipelineStep
 {
     public PipelineContext getPipelineCtx();
 
-    public PipelineStepProvider getProvider();
+    public PipelineStepProvider<?> getProvider();
 
     public int getStepIdx();
 
