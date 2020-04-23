@@ -94,7 +94,6 @@ import org.labkey.sequenceanalysis.run.bampostprocessing.FixMateInformationStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.IndelRealignerStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.MarkDuplicatesStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.MarkDuplicatesWithMateCigarStep;
-import org.labkey.sequenceanalysis.run.bampostprocessing.RecalibrateBamStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.RnaSeQCStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SortSamStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SplitNCigarReadsStep;
@@ -261,7 +260,6 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new DiscardUnmappedReadsStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new MarkDuplicatesStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new MarkDuplicatesWithMateCigarStep.Provider());
-        SequencePipelineService.get().registerPipelineStep(new RecalibrateBamStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SortSamStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SplitNCigarReadsStep.Provider());
 
