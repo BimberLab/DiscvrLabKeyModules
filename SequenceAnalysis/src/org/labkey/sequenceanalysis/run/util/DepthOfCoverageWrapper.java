@@ -7,6 +7,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -20,6 +21,11 @@ public class DepthOfCoverageWrapper extends AbstractGatkWrapper
     }
 
     public void run(List<File> inputBams, String outputBaseName, File referenceFasta, @Nullable List<String> options) throws PipelineJobException
+    {
+        run(inputBams, outputBaseName, referenceFasta, options, false);
+    }
+
+    public void run(List<File> inputBams, String outputBaseName, File referenceFasta, @Nullable List<String> options, boolean deleteExtraFiles) throws PipelineJobException
     {
         List<String> args = new ArrayList<>(getBaseArgs());
         args.add("-T");
@@ -39,5 +45,22 @@ public class DepthOfCoverageWrapper extends AbstractGatkWrapper
         }
 
         execute(args);
+
+        if (!new File(outputBaseName).exists())
+        {
+            throw new PipelineJobException("Unable to find file: " + outputBaseName);
+        }
+
+        if (deleteExtraFiles)
+        {
+            for (String suffix : Arrays.asList("_summary", "_statistics", "_interval_summary", "_interval_statistics", "_gene_summary", "_gene_statistics", "_cumulative_coverage_counts", "_cumulative_coverage_proportions"))
+            {
+                File f = new File(outputBaseName + suffix);
+                if (f.exists())
+                {
+                    f.delete();
+                }
+            }
+        }
     }
 }

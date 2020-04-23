@@ -436,13 +436,13 @@ cd $LKSRC_DIR
 if [[ ! -e ${LKTOOLS_DIR}/GenomeAnalysisTK4.jar || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf gatk-4.1.4.1*
+    rm -Rf gatk-4*
     rm -Rf $LKTOOLS_DIR/GenomeAnalysisTK4.jar
 
-    wget $WGET_OPTS https://github.com/broadinstitute/gatk/releases/download/4.1.4.1/gatk-4.1.4.1.zip
-    unzip gatk-4.1.4.1.zip
+    wget $WGET_OPTS https://github.com/broadinstitute/gatk/releases/download/4.1.6.0/gatk-4.1.6.0.zip
+    unzip gatk-4.1.6.0.zip
 
-    cp ./gatk-4.1.4.1/gatk-package-4.1.4.1-local.jar $LKTOOLS_DIR/GenomeAnalysisTK4.jar
+    cp ./gatk-4.1.6.0/gatk-package-4.1.6.0-local.jar $LKTOOLS_DIR/GenomeAnalysisTK4.jar
 else
     echo "Already installed"
 fi

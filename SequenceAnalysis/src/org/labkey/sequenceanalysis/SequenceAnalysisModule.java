@@ -77,6 +77,7 @@ import org.labkey.sequenceanalysis.run.analysis.BamIterator;
 import org.labkey.sequenceanalysis.run.analysis.ExportOverlappingReadsAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.HaplotypeCallerAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.ImmunoGenotypingAnalysis;
+import org.labkey.sequenceanalysis.run.analysis.LofreqAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.PARalyzerAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SnpCountAnalysis;
@@ -85,6 +86,7 @@ import org.labkey.sequenceanalysis.run.analysis.UnmappedReadExportHandler;
 import org.labkey.sequenceanalysis.run.analysis.ViralAnalysis;
 import org.labkey.sequenceanalysis.run.assembly.TrinityRunner;
 import org.labkey.sequenceanalysis.run.bampostprocessing.AddOrReplaceReadGroupsStep;
+import org.labkey.sequenceanalysis.run.bampostprocessing.BaseQualityScoreRecalibrator;
 import org.labkey.sequenceanalysis.run.bampostprocessing.CallMdTagsStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.CleanSamStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.DiscardUnmappedReadsStep;
@@ -255,6 +257,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new CleanSamStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new FixMateInformationStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new IndelRealignerStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new BaseQualityScoreRecalibrator.BaseQualityScoreRecalibratorStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new DiscardUnmappedReadsStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new MarkDuplicatesStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new MarkDuplicatesWithMateCigarStep.Provider());
@@ -271,6 +274,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new ExportOverlappingReadsAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new SubreadAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new TagPcrSummaryStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new LofreqAnalysis.Provider());
 
         //SequencePipelineService.get().registerPipelineStep(new BlastUnmappedReadAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new PARalyzerAnalysis.Provider());
