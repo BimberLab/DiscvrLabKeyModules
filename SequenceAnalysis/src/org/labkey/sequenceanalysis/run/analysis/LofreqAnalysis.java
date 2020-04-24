@@ -150,9 +150,9 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             args.add(fasta.getPath());
 
             args.add("-o");
-            args.add(input.getPath());
-
             args.add(outputVcf.getPath());
+
+            args.add(input.getPath());
 
             execute(args);
 
