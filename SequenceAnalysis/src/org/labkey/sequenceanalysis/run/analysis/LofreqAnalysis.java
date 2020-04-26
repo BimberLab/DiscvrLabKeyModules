@@ -1,12 +1,17 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
+import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Interval;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -53,7 +58,11 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                         put("extensions", Arrays.asList("gtf", "gff"));
                         put("width", 400);
                         put("allowBlank", false);
-                    }}, null)
+                    }}, null),
+                    ToolParameterDescriptor.create("minCoverage", "Min Coverage For Consensus", "If provided, a consensus will only be called over regions with at least this depth", "ldk-integerfield", new JSONObject(){{
+                        put("minValue", 0);
+                    }}, 25)
+
             ), null, "http://csb5.github.io/lofreq/");
         }
 
@@ -127,22 +136,85 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         }
 
         //generate consensus
-//        File script = new File(SequenceAnalysisService.get().getScriptPath(SequenceAnalysisModule.NAME, "external/viral_consensus.sh"));
-//        if (!script.exists())
-//        {
-//            throw new PipelineJobException("Unable to find script: " + script.getPath());
-//        }
-//
-//        SimpleScriptWrapper consensusWrapper = new SimpleScriptWrapper(getPipelineCtx().getLogger());
-//        consensusWrapper.setWorkingDir(getPipelineCtx().getWorkingDirectory());
-//
-//        Integer maxThreads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
-//        if (maxThreads != null)
-//        {
-//            consensusWrapper.addToEnvironment("SEQUENCEANALYSIS_MAX_THREADS", maxThreads.toString());
-//        }
-//
-//        consensusWrapper.execute(Arrays.asList("/bin/bash", script.getName(), inputBam.getPath(), referenceGenome.getWorkingFastaFile().getPath()));
+        File script = new File(SequenceAnalysisService.get().getScriptPath(SequenceAnalysisModule.NAME, "external/viral_consensus.sh"));
+        if (!script.exists())
+        {
+            throw new PipelineJobException("Unable to find script: " + script.getPath());
+        }
+
+        SimpleScriptWrapper consensusWrapper = new SimpleScriptWrapper(getPipelineCtx().getLogger());
+        consensusWrapper.setWorkingDir(getPipelineCtx().getWorkingDirectory());
+
+        Integer maxThreads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
+        if (maxThreads != null)
+        {
+            consensusWrapper.addToEnvironment("SEQUENCEANALYSIS_MAX_THREADS", maxThreads.toString());
+        }
+
+        //Create a BED file with all regions of coverage below MIN_COVERAGE:
+        int minCoverage = getProvider().getParameterByName("minCoverage").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
+        int positionsSkipped = 0;
+        int gapIntervals = 0;
+
+        File mask = new File(outputDir, "mask.bed");
+        try (CSVReader reader = new CSVReader(Readers.getReader(coverageOut), '\t');CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(mask), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+        {
+            String[] line;
+
+            Interval intervalOfCurrentGap = null;
+
+            while ((line = reader.readNext()) != null)
+            {
+                String[] tokens = line[0].split(":");
+                int depth = Integer.parseInt(line[1]);
+
+                if (depth < minCoverage)
+                {
+                    positionsSkipped++;
+
+                    if (intervalOfCurrentGap != null)
+                    {
+                        if (intervalOfCurrentGap.getContig().equals(tokens[0]))
+                        {
+                            //extend
+                            intervalOfCurrentGap = new Interval(intervalOfCurrentGap.getContig(), intervalOfCurrentGap.getStart(), Integer.parseInt(tokens[1]));
+                        }
+                        else
+                        {
+                            //switched contigs, write and make new:
+                            writer.writeNext(new String[]{intervalOfCurrentGap.getContig(), String.valueOf(intervalOfCurrentGap.getStart()-1), String.valueOf(intervalOfCurrentGap.getEnd())});
+                            gapIntervals++;
+                            intervalOfCurrentGap = new Interval(tokens[0], Integer.parseInt(tokens[1]), Integer.parseInt(tokens[1]));
+                        }
+                    }
+                    else
+                    {
+                        //Not existing gap, just start one:
+                        intervalOfCurrentGap = new Interval(tokens[0], Integer.parseInt(tokens[1]), Integer.parseInt(tokens[1]));
+                    }
+                }
+                else
+                {
+                    //We just existed a gap, so write:
+                    if (intervalOfCurrentGap != null)
+                    {
+                        writer.writeNext(new String[]{intervalOfCurrentGap.getContig(), String.valueOf(intervalOfCurrentGap.getStart()-1), String.valueOf(intervalOfCurrentGap.getEnd())});
+                        gapIntervals++;
+                    }
+
+                    intervalOfCurrentGap = null;
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        getPipelineCtx().getLogger().info("Total positions with coverage below threshold (" + minCoverage + "): " + positionsSkipped);
+        getPipelineCtx().getLogger().info("Total intervals of these gaps: " + gapIntervals);
+
+        consensusWrapper.execute(Arrays.asList("/bin/bash", script.getName(), inputBam.getPath(), referenceGenome.getWorkingFastaFile().getPath(), mask.getPath()));
 
         String description = String.format("Total Variants: %s\nTotal GT 1 PCT: %s\nTotal Indel GT 1 PCT: %s", totalVariants, totalGT1, totalIndelGT1);
         output.addSequenceOutput(outputVcfSnpEff, "LoFreq: " + rs.getName(), CATEGORY, rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
