@@ -89,6 +89,7 @@ import org.labkey.sequenceanalysis.run.bampostprocessing.AddOrReplaceReadGroupsS
 import org.labkey.sequenceanalysis.run.bampostprocessing.BaseQualityScoreRecalibrator;
 import org.labkey.sequenceanalysis.run.bampostprocessing.CallMdTagsStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.CleanSamStep;
+import org.labkey.sequenceanalysis.run.bampostprocessing.ClipOverlappingAlignmentsWrapper;
 import org.labkey.sequenceanalysis.run.bampostprocessing.DiscardUnmappedReadsStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.FixMateInformationStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.IndelRealignerStep;
@@ -262,6 +263,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new MarkDuplicatesWithMateCigarStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SortSamStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SplitNCigarReadsStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new ClipOverlappingAlignmentsWrapper.ClipOverlappingAlignmentsStep.Provider());
 
         //analysis
         SequencePipelineService.get().registerPipelineStep(new SequenceBasedTypingAnalysis.Provider());

@@ -1,5 +1,8 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.vcf.VCFFileReader;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -17,7 +20,9 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
+import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileUtil;
+import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.run.util.DepthOfCoverageWrapper;
 import org.labkey.sequenceanalysis.run.variant.SNPEffStep;
 import org.labkey.sequenceanalysis.run.variant.SnpEffWrapper;
@@ -101,8 +106,47 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         output.addIntermediateFile(outputVcf);
         output.addIntermediateFile(new File(outputVcf.getPath() + ".tbi"));
 
-        output.addSequenceOutput(outputVcfSnpEff, "LoFreq: " + rs.getName(), CATEGORY, rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
-        output.addSequenceOutput(coverageOut, "Depth of Coverage: " + rs.getName(), "Depth of Coverage", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+        int totalVariants = 0;
+        int totalGT1 = 0;
+        int totalIndelGT1 = 0;
+        try (VCFFileReader reader = new VCFFileReader(outputVcfSnpEff);CloseableIterator<VariantContext> it = reader.iterator())
+        {
+            while (it.hasNext())
+            {
+                VariantContext vc = it.next();
+                totalVariants++;
+                if (vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) >= 0.01)
+                {
+                    totalGT1++;
+                    if (vc.hasAttribute("INDEL"))
+                    {
+                        totalIndelGT1++;
+                    }
+                }
+            }
+        }
+
+        //generate consensus
+//        File script = new File(SequenceAnalysisService.get().getScriptPath(SequenceAnalysisModule.NAME, "external/viral_consensus.sh"));
+//        if (!script.exists())
+//        {
+//            throw new PipelineJobException("Unable to find script: " + script.getPath());
+//        }
+//
+//        SimpleScriptWrapper consensusWrapper = new SimpleScriptWrapper(getPipelineCtx().getLogger());
+//        consensusWrapper.setWorkingDir(getPipelineCtx().getWorkingDirectory());
+//
+//        Integer maxThreads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
+//        if (maxThreads != null)
+//        {
+//            consensusWrapper.addToEnvironment("SEQUENCEANALYSIS_MAX_THREADS", maxThreads.toString());
+//        }
+//
+//        consensusWrapper.execute(Arrays.asList("/bin/bash", script.getName(), inputBam.getPath(), referenceGenome.getWorkingFastaFile().getPath()));
+
+        String description = String.format("Total Variants: %s\nTotal GT 1 PCT: %s\nTotal Indel GT 1 PCT: %s", totalVariants, totalGT1, totalIndelGT1);
+        output.addSequenceOutput(outputVcfSnpEff, "LoFreq: " + rs.getName(), CATEGORY, rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
+        output.addSequenceOutput(coverageOut, "Depth of Coverage: " + rs.getName(), "Depth of Coverage", rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
 
         return output;
     }
