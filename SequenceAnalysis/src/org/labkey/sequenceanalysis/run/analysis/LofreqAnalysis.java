@@ -227,7 +227,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         getPipelineCtx().getLogger().info("Total positions with coverage below threshold (" + minCoverage + "): " + positionsSkipped);
         getPipelineCtx().getLogger().info("Total intervals of these gaps: " + gapIntervals);
 
-        consensusWrapper.execute(Arrays.asList("/bin/bash", script.getName(), inputBam.getPath(), referenceGenome.getWorkingFastaFile().getPath(), mask.getPath()));
+        consensusWrapper.execute(Arrays.asList("/bin/bash", script.getPath(), inputBam.getPath(), referenceGenome.getWorkingFastaFile().getPath(), mask.getPath()));
 
         String description = String.format("Total Variants: %s\nTotal GT 1 PCT: %s\nTotal GT 50 PCT: %s\nTotal Indel GT 1 PCT: %s", totalVariants, totalGT1, totalGT50, totalIndelGT1);
         output.addSequenceOutput(outputVcfSnpEff, "LoFreq: " + rs.getName(), CATEGORY, rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
