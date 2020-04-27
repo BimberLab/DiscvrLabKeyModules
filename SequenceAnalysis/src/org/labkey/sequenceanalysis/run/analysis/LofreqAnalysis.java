@@ -117,6 +117,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
         int totalVariants = 0;
         int totalGT1 = 0;
+        int totalGT50 = 0;
         int totalIndelGT1 = 0;
         try (VCFFileReader reader = new VCFFileReader(outputVcfSnpEff);CloseableIterator<VariantContext> it = reader.iterator())
         {
@@ -124,13 +125,18 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             {
                 VariantContext vc = it.next();
                 totalVariants++;
-                if (vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) >= 0.01)
+                if (vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) > 0.01)
                 {
                     totalGT1++;
                     if (vc.hasAttribute("INDEL"))
                     {
                         totalIndelGT1++;
                     }
+                }
+
+                if (vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) > 0.5)
+                {
+                    totalGT50++;
                 }
             }
         }
@@ -163,8 +169,15 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
             Interval intervalOfCurrentGap = null;
 
+            int i = 0;
             while ((line = reader.readNext()) != null)
             {
+                i++;
+                if (i == 1)
+                {
+                    continue;
+                }
+
                 String[] tokens = line[0].split(":");
                 int depth = Integer.parseInt(line[1]);
 
@@ -216,7 +229,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
         consensusWrapper.execute(Arrays.asList("/bin/bash", script.getName(), inputBam.getPath(), referenceGenome.getWorkingFastaFile().getPath(), mask.getPath()));
 
-        String description = String.format("Total Variants: %s\nTotal GT 1 PCT: %s\nTotal Indel GT 1 PCT: %s", totalVariants, totalGT1, totalIndelGT1);
+        String description = String.format("Total Variants: %s\nTotal GT 1 PCT: %s\nTotal GT 50 PCT: %s\nTotal Indel GT 1 PCT: %s", totalVariants, totalGT1, totalGT50, totalIndelGT1);
         output.addSequenceOutput(outputVcfSnpEff, "LoFreq: " + rs.getName(), CATEGORY, rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
         output.addSequenceOutput(coverageOut, "Depth of Coverage: " + rs.getName(), "Depth of Coverage", rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
 
