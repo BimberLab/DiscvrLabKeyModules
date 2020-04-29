@@ -13,7 +13,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.util.FileUtil;
-import org.labkey.sequenceanalysis.run.util.MarkDuplicatesWrapper;
+import org.labkey.sequenceanalysis.run.util.MarkDuplicatesWithMateCigarWrapper;
 
 import java.io.File;
 import java.util.Arrays;
@@ -23,11 +23,11 @@ import java.util.Arrays;
  * Date: 6/15/2014
  * Time: 4:44 PM
  */
-public class MarkDuplicatesWithMateCigarStep extends AbstractCommandPipelineStep<MarkDuplicatesWrapper> implements BamProcessingStep
+public class MarkDuplicatesWithMateCigarStep extends AbstractCommandPipelineStep<MarkDuplicatesWithMateCigarWrapper> implements BamProcessingStep
 {
     public MarkDuplicatesWithMateCigarStep(PipelineStepProvider provider, PipelineContext ctx)
     {
-        super(provider, ctx, new MarkDuplicatesWrapper(ctx.getLogger()));
+        super(provider, ctx, new MarkDuplicatesWithMateCigarWrapper(ctx.getLogger()));
     }
 
     public static class Provider extends AbstractPipelineStepProvider<MarkDuplicatesWithMateCigarStep>
