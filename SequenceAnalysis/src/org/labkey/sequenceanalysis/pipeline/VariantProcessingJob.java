@@ -108,10 +108,11 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
         {
             int basesPerJob = getParameterJson().getInt("scatterGather.basesPerJob");
             boolean allowSplitChromosomes = getParameterJson().optBoolean("scatterGather.allowSplitChromosomes", true);
-            getLogger().info("Creating jobs with target bp size: " + basesPerJob + " mbp.  allow splitting configs: " + allowSplitChromosomes);
+            int maxContigsPerJob = getParameterJson().optInt("scatterGather.maxContigsPerJob", -1);
+            getLogger().info("Creating jobs with target bp size: " + basesPerJob + " mbp.  allow splitting configs: " + allowSplitChromosomes + ", max contigs per job: " + maxContigsPerJob);
 
             basesPerJob = basesPerJob * 1000000;
-            ret = ScatterGatherUtils.divideGenome(dict, basesPerJob, allowSplitChromosomes);
+            ret = ScatterGatherUtils.divideGenome(dict, basesPerJob, allowSplitChromosomes, maxContigsPerJob);
 
         }
         else if (_scatterGatherMethod == ScatterGatherUtils.ScatterGatherMethod.fixedJobs)
@@ -120,7 +121,7 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
             int numJobs = getParameterJson().getInt("scatterGather.totalJobs");
             int jobSize = (int)Math.ceil(totalSize / (double)numJobs);
             getLogger().info("Creating " + numJobs + " jobs with approximate size: " + jobSize + " bp.");
-            ret = ScatterGatherUtils.divideGenome(dict, jobSize, true);
+            ret = ScatterGatherUtils.divideGenome(dict, jobSize, true, -1);
         }
         else
         {
