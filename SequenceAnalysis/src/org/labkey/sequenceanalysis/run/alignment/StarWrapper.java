@@ -94,6 +94,8 @@ public class StarWrapper extends AbstractCommandWrapper
         @Override
         public AlignmentOutput performAlignment(Readset rs, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException
         {
+            getWrapper().logVersionString();
+
             AlignmentOutputImpl output = new AlignmentOutputImpl();
             AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, getProvider().getName(), referenceGenome);
             StarWrapper wrapper = getWrapper();
@@ -478,6 +480,16 @@ public class StarWrapper extends AbstractCommandWrapper
 
     protected File getExe(boolean longReads)
     {
-            return SequencePipelineService.get().getExeForPackage("STARPATH", (longReads ? "STARlong" : "STAR"));
+        return SequencePipelineService.get().getExeForPackage("STARPATH", (longReads ? "STARlong" : "STAR"));
+    }
+
+    public void logVersionString() throws PipelineJobException
+    {
+        List<String> args = new ArrayList<>();
+        args.add(getExe(false).getPath());
+        args.add("--version");
+
+        execute(args);
+
     }
 }
