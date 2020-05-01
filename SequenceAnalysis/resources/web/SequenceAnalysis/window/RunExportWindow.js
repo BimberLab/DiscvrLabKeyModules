@@ -20,6 +20,7 @@ Ext4.define('SequenceAnalysis.window.RunExportWindow', {
             Ext4.Msg.wait('Loading...');
 
             LABKEY.Query.selectRows({
+                containerPath: Laboratory.Utils.getQueryContainerPath(),
                 schemaName: 'sequenceanalysis',
                 queryName: 'readdata',
                 filterArray: [
@@ -61,6 +62,7 @@ Ext4.define('SequenceAnalysis.window.RunExportWindow', {
             Ext4.Msg.wait('Loading...');
 
             LABKEY.Query.selectRows({
+                containerPath: Laboratory.Utils.getQueryContainerPath(),
                 schemaName: 'sequenceanalysis',
                 queryName: 'sequence_analyses',
                 filterArray: [
