@@ -489,7 +489,7 @@ public class StarWrapper extends AbstractCommandWrapper
         args.add(getExe(false).getPath());
         args.add("--version");
 
-        execute(args);
-
+        String version = executeWithOutput(args);
+        getLogger().info("STAR version: " + version);
     }
 }
