@@ -4,6 +4,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -489,7 +490,11 @@ public class StarWrapper extends AbstractCommandWrapper
         args.add(getExe(false).getPath());
         args.add("--version");
 
-        String version = executeWithOutput(args);
-        getLogger().info("STAR version: " + version);
+        getLogger().info("STAR version: ");
+
+        Level origLavel = getLogLevel();
+        setLogLevel(Level.INFO);
+        execute(args);
+        setLogLevel(origLavel);
     }
 }

@@ -263,6 +263,11 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
         _logLevel = logLevel;
     }
 
+    public Level getLogLevel()
+    {
+        return _logLevel;
+    }
+
     public void setWarnNonZeroExits(boolean warnNonZeroExits)
     {
         _warnNonZeroExits = warnNonZeroExits;
