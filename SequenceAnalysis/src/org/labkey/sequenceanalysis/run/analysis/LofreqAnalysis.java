@@ -9,6 +9,12 @@ import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.apache.log4j.Logger;
+import org.biojava3.core.sequence.DNASequence;
+import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
+import org.biojava3.core.sequence.compound.NucleotideCompound;
+import org.biojava3.core.sequence.io.DNASequenceCreator;
+import org.biojava3.core.sequence.io.FastaReader;
+import org.biojava3.core.sequence.io.GenericFastaHeaderParser;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -35,14 +41,17 @@ import org.labkey.sequenceanalysis.run.variant.SnpEffWrapper;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.LofreqWrapper> implements AnalysisStep
@@ -160,7 +169,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         }
 
         SimpleScriptWrapper consensusWrapper = new SimpleScriptWrapper(getPipelineCtx().getLogger());
-        consensusWrapper.setWorkingDir(getPipelineCtx().getWorkingDirectory());
+        consensusWrapper.setWorkingDir(inputBam.getParentFile());
 
         Integer maxThreads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
         if (maxThreads != null)
@@ -278,11 +287,38 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             description += "\n" + "WARNING: " + alleleToAF.size() + " variants detected in lofreq and not bcftools";
         }
 
+        File consensusFasta = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam.getName()) + ".consensus.fasta");
+        if (!consensusFasta.exists())
+        {
+            throw new PipelineJobException("Expected file not found: " + consensusFasta.getPath());
+        }
+
+        try (InputStream is = IOUtil.openFileForReading(consensusFasta))
+        {
+            FastaReader<DNASequence, NucleotideCompound> fastaReader = new FastaReader<>(is, new GenericFastaHeaderParser<>(), new DNASequenceCreator(AmbiguityDNACompoundSet.getDNACompoundSet()));
+            LinkedHashMap<String, DNASequence> fastaData = fastaReader.process();
+
+            for (String fastaHeader : fastaData.keySet())
+            {
+                AtomicInteger totalN = new AtomicInteger();
+                DNASequence seq = fastaData.get(fastaHeader);
+                seq.forEach(nt -> {
+                    if (nt.getUpperedBase().equals("N")) {
+                        totalN.getAndIncrement();
+                    }
+                });
+
+                description += "\nConsensus Ns: " + totalN.get();
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
 
         output.addSequenceOutput(outputVcfSnpEff, "LoFreq: " + rs.getName(), CATEGORY, rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
         output.addSequenceOutput(coverageOut, "Depth of Coverage: " + rs.getName(), "Depth of Coverage", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
 
-        File consensusFasta = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam.getName()) + ".consensus.fasta");
         output.addSequenceOutput(consensusFasta, "Consensus: " + rs.getName(), "Viral Consensus Sequence", rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
 
         return output;

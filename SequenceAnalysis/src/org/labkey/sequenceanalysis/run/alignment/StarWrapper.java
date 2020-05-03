@@ -490,11 +490,7 @@ public class StarWrapper extends AbstractCommandWrapper
         args.add(getExe(false).getPath());
         args.add("--version");
 
-        getLogger().info("STAR version: ");
-
-        Level origLavel = getLogLevel();
-        setLogLevel(Level.INFO);
-        execute(args);
-        setLogLevel(origLavel);
+        getLogger().info("STAR version: " + executeWithOutput(args));
+        getLogger().debug("last exit code: " + getLastReturnCode());
     }
 }
