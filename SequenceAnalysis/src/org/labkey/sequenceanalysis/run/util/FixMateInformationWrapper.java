@@ -36,8 +36,7 @@ public class FixMateInformationWrapper extends PicardWrapper
 
         if (so != null)
         {
-            params.add("-SO");
-            params.add(so.name());
+            params.add("SO=" + so.name());
         }
 
         execute(params);
