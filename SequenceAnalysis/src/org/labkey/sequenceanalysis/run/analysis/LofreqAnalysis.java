@@ -5,6 +5,7 @@ import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
+import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.apache.log4j.Logger;
@@ -37,7 +38,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.LofreqWrapper> implements AnalysisStep
 {
@@ -118,6 +124,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         int totalVariants = 0;
         int totalGT1 = 0;
         int totalGT50 = 0;
+        Map<String, Double> alleleToAF = new HashMap<>();
         int totalIndelGT1 = 0;
         try (VCFFileReader reader = new VCFFileReader(outputVcfSnpEff);CloseableIterator<VariantContext> it = reader.iterator())
         {
@@ -137,6 +144,10 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                 if (vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) > 0.5)
                 {
                     totalGT50++;
+                    String key = getHashKey(vc);
+                    Double af = alleleToAF.getOrDefault(key, 0.0);
+                    af = Math.max(af, vc.getAttributeAsDouble("AF", 0.0));
+                    alleleToAF.put(key, af);
                 }
             }
         }
@@ -228,10 +239,51 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         getPipelineCtx().getLogger().info("Total intervals of these gaps: " + gapIntervals);
 
         consensusWrapper.execute(Arrays.asList("/bin/bash", script.getPath(), inputBam.getPath(), referenceGenome.getWorkingFastaFile().getPath(), mask.getPath()));
+        File calls = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + ".calls.vcf.gz");
+
+        Set<VariantContext> variantsBcftoolsOnly = new HashSet<>();
+        try (VCFFileReader reader = new VCFFileReader(calls);CloseableIterator<VariantContext> it = reader.iterator())
+        {
+            while (it.hasNext())
+            {
+                VariantContext vc = it.next();
+                String key = getHashKey(vc);
+                if (alleleToAF.containsKey(key))
+                {
+                    //Variant shared
+                    alleleToAF.remove(key);
+                }
+                else
+                {
+                    variantsBcftoolsOnly.add(vc);
+                }
+            }
+        }
 
         String description = String.format("Total Variants: %s\nTotal GT 1 PCT: %s\nTotal GT 50 PCT: %s\nTotal Indel GT 1 PCT: %s", totalVariants, totalGT1, totalGT50, totalIndelGT1);
+
+        if (!variantsBcftoolsOnly.isEmpty())
+        {
+            getPipelineCtx().getLogger().error("The following variants were in bcftools, but not GT50% in lofreq: ");
+            variantsBcftoolsOnly.forEach(vc -> getPipelineCtx().getLogger().error(getHashKey(vc)));
+
+            description += "\n" + "WARNING: " + variantsBcftoolsOnly.size() + " variants detected in bcftools and not lofreq";
+        }
+
+        if (!alleleToAF.isEmpty())
+        {
+            getPipelineCtx().getLogger().error("The following variants were GT50% in lofreq, but not in bcftools: ");
+            alleleToAF.keySet().forEach(vc -> getPipelineCtx().getLogger().error(vc));
+
+            description += "\n" + "WARNING: " + alleleToAF.size() + " variants detected in lofreq and not bcftools";
+        }
+
+
         output.addSequenceOutput(outputVcfSnpEff, "LoFreq: " + rs.getName(), CATEGORY, rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
-        output.addSequenceOutput(coverageOut, "Depth of Coverage: " + rs.getName(), "Depth of Coverage", rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
+        output.addSequenceOutput(coverageOut, "Depth of Coverage: " + rs.getName(), "Depth of Coverage", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+
+        File consensusFasta = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam.getName()) + ".consensus.fasta");
+        output.addSequenceOutput(consensusFasta, "Consensus: " + rs.getName(), "Viral Consensus Sequence", rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
 
         return output;
     }
@@ -240,6 +292,11 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
     public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta, File outDir) throws PipelineJobException
     {
         return null;
+    }
+
+    private String getHashKey(VariantContext vc)
+    {
+        return vc.getContig() + "<>" + vc.getStart() + vc.getAlternateAlleles().stream().map(Allele::getBaseString).collect(Collectors.joining(";"));
     }
 
     public static class LofreqWrapper extends AbstractCommandWrapper
