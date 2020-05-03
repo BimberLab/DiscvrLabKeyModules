@@ -564,13 +564,13 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
             params.add("-phred" +  FastqUtils.getQualityOffset(encoding));
         }
 
-        //NOTE: the tool auto-detects
-        //Integer threads = SequenceTaskHelper.getMaxThreads(job);
-        //if (threads != null)
-        //{
-        //    params.add("-threads"); //multi-threaded
-        //    params.add(threads.toString());
-        //}
+        Integer threads = SequenceTaskHelper.getMaxThreads(getLogger());
+        if (threads != null)
+        {
+            threads = Math.min(1, threads - 1); //account for reading of log
+            params.add("-threads");
+            params.add(threads.toString());
+        }
 
         params.add(input.getPath());
         if (input2 != null)
@@ -673,7 +673,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                     boolean haveReportedInvalidHeader = false;
 
                     String line;
-                    while (p.isAlive() && (line = reader.readLine()) != null)
+                    while ((line = reader.readLine()) != null)
                     {
                         String[] cells = line.split(" ");
                         if (cells.length < 4)
