@@ -271,7 +271,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             }
         }
 
-        String description = String.format("Total Variants: %s\nTotal GT 1 PCT: %s\nTotal GT 50 PCT: %s\nTotal Indel GT 1 PCT: %s\tPositions Below Coverage: %s", totalVariants, totalGT1, totalGT50, totalIndelGT1, positionsSkipped);
+        String description = String.format("Total Variants: %s\nTotal GT 1 PCT: %s\nTotal GT 50 PCT: %s\nTotal Indel GT 1 PCT: %s\nPositions Below Coverage: %s", totalVariants, totalGT1, totalGT50, totalIndelGT1, positionsSkipped);
 
         if (!variantsBcftoolsOnly.isEmpty())
         {
