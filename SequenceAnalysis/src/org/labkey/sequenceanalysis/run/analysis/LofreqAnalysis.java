@@ -34,6 +34,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.run.util.DepthOfCoverageWrapper;
 import org.labkey.sequenceanalysis.run.variant.SNPEffStep;
@@ -42,6 +43,7 @@ import org.labkey.sequenceanalysis.run.variant.SnpEffWrapper;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -247,7 +249,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         getPipelineCtx().getLogger().info("Total positions with coverage below threshold (" + minCoverage + "): " + positionsSkipped);
         getPipelineCtx().getLogger().info("Total intervals of these gaps: " + gapIntervals);
 
-        consensusWrapper.execute(Arrays.asList("/bin/bash", script.getPath(), inputBam.getPath(), referenceGenome.getWorkingFastaFile().getPath(), mask.getPath()));
+        consensusWrapper.execute(Arrays.asList("/bin/bash", script.getPath(), inputBam.getPath(), referenceGenome.getWorkingFastaFile().getPath(), mask.getPath(), String.valueOf(minCoverage)));
         File calls = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + ".calls.vcf.gz");
 
         Set<VariantContext> variantsBcftoolsOnly = new HashSet<>();
@@ -269,12 +271,12 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             }
         }
 
-        String description = String.format("Total Variants: %s\nTotal GT 1 PCT: %s\nTotal GT 50 PCT: %s\nTotal Indel GT 1 PCT: %s", totalVariants, totalGT1, totalGT50, totalIndelGT1);
+        String description = String.format("Total Variants: %s\nTotal GT 1 PCT: %s\nTotal GT 50 PCT: %s\nTotal Indel GT 1 PCT: %s\tPositions Below Coverage: %s", totalVariants, totalGT1, totalGT50, totalIndelGT1, positionsSkipped);
 
         if (!variantsBcftoolsOnly.isEmpty())
         {
             getPipelineCtx().getLogger().error("The following variants were in bcftools, but not GT50% in lofreq: ");
-            variantsBcftoolsOnly.forEach(vc -> getPipelineCtx().getLogger().error(getHashKey(vc)));
+            variantsBcftoolsOnly.forEach(vc -> getPipelineCtx().getLogger().error(getHashKey(vc) + ", DP=" + vc.getAttribute("DP")));
 
             description += "\n" + "WARNING: " + variantsBcftoolsOnly.size() + " variants detected in bcftools and not lofreq";
         }
@@ -282,7 +284,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         if (!alleleToAF.isEmpty())
         {
             getPipelineCtx().getLogger().error("The following variants were GT50% in lofreq, but not in bcftools: ");
-            alleleToAF.keySet().forEach(vc -> getPipelineCtx().getLogger().error(vc));
+            alleleToAF.keySet().forEach(vc -> getPipelineCtx().getLogger().error(vc + ", AF=" + alleleToAF.get(vc)));
 
             description += "\n" + "WARNING: " + alleleToAF.size() + " variants detected in lofreq and not bcftools";
         }
@@ -293,23 +295,44 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             throw new PipelineJobException("Expected file not found: " + consensusFasta.getPath());
         }
 
+        DNASequence seq;
         try (InputStream is = IOUtil.openFileForReading(consensusFasta))
         {
             FastaReader<DNASequence, NucleotideCompound> fastaReader = new FastaReader<>(is, new GenericFastaHeaderParser<>(), new DNASequenceCreator(AmbiguityDNACompoundSet.getDNACompoundSet()));
             LinkedHashMap<String, DNASequence> fastaData = fastaReader.process();
 
-            for (String fastaHeader : fastaData.keySet())
-            {
-                AtomicInteger totalN = new AtomicInteger();
-                DNASequence seq = fastaData.get(fastaHeader);
-                seq.forEach(nt -> {
-                    if (nt.getUpperedBase().equals("N")) {
-                        totalN.getAndIncrement();
-                    }
-                });
+            AtomicInteger totalN = new AtomicInteger();
+            seq = fastaData.values().iterator().next();
+            seq.forEach(nt -> {
+                if (nt.getUpperedBase().equals("N")) {
+                    totalN.getAndIncrement();
+                }
+            });
 
-                description += "\nConsensus Ns: " + totalN.get();
+            description += "\nConsensus Ns: " + totalN.get();
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        //Replace FASTA header:
+        try (PrintWriter writer = PrintWriters.getPrintWriter(consensusFasta))
+        {
+            StringBuilder header = new StringBuilder();
+            if (rs.getSubjectId() != null)
+            {
+                header.append(rs.getSubjectId()).append("|");
             }
+            else
+            {
+                header.append(rs.getName()).append("|");
+            }
+
+            header.append(rs.getLibraryType() == null ? rs.getApplication() : rs.getLibraryType());
+
+            writer.println(">" + header);
+            writer.println(seq.getSequenceAsString());
         }
         catch (IOException e)
         {
