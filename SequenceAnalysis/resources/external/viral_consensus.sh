@@ -23,7 +23,7 @@ OUT_IUPAC=`basename $BAM .bam`".consensus.iupac.fasta"
 
 # call variants
 echo 'Calling variants'
-$BCFTOOLS mpileup -Ou -d 20000 -f $FASTA $BAM | $BCFTOOLS call -c --ploidy 1 --threads $THREADS -mv -Oz -o $VCF_CALLS
+$BCFTOOLS mpileup -Ou -d 20000 -f $FASTA $BAM | $BCFTOOLS call -c --ploidy 1 --threads $THREADS -v -Oz -o $VCF_CALLS
 $BCFTOOLS index -t $VCF_CALLS
 COUNT1=`$BCFTOOLS view -H $VCF_CALLS | wc -l`
 echo 'Variants called: '$COUNT1
