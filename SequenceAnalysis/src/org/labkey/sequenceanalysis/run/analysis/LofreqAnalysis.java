@@ -514,6 +514,32 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             return outputVcf;
         }
 
+        public File addIndelQuals(File inputBam, File outputBam, File fasta) throws PipelineJobException
+        {
+            List<String> args = new ArrayList<>();
+            args.add(getExe().getPath());
+            args.add("indelqual");
+
+            args.add("--dindel");
+
+            args.add("--ref");
+            args.add(fasta.getPath());
+
+            args.add("--out");
+            args.add(outputBam.getPath());
+
+            args.add(inputBam.getPath());
+
+            execute(args);
+
+            if (!outputBam.exists())
+            {
+                throw new PipelineJobException("Unable to find file: " + outputBam.getPath());
+            }
+
+            return outputBam;
+        }
+
         private File getExe()
         {
             return SequencePipelineService.get().getExeForPackage("LOFREQPATH", "lofreq");
