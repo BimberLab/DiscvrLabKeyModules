@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.run.analysis;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
+import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
@@ -11,6 +12,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.biojava3.core.sequence.DNASequence;
@@ -48,6 +50,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -152,10 +155,13 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         int totalIndelGT2 = 0;
 
         File loFreqConsensusVcf = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.consensus.vcf.gz");
-        VariantContextWriterBuilder writerBuiler = new VariantContextWriterBuilder().setOutputFile(loFreqConsensusVcf).setReferenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(referenceGenome.getSequenceDictionary().toPath()));
+        SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(referenceGenome.getSequenceDictionary().toPath());
+        VariantContextWriterBuilder writerBuiler = new VariantContextWriterBuilder().setOutputFile(loFreqConsensusVcf).setReferenceDictionary(dict);
         try (VCFFileReader reader = new VCFFileReader(outputVcfSnpEff);CloseableIterator<VariantContext> it = reader.iterator();VariantContextWriter writer = writerBuiler.build())
         {
-            writer.writeHeader(reader.getFileHeader());
+            VCFHeader header = reader.getFileHeader();
+            header.setSequenceDictionary(dict);
+            writer.writeHeader(header);
 
             while (it.hasNext())
             {
@@ -251,14 +257,25 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                     intervalOfCurrentGap = null;
                 }
             }
+
+            //Ensure we count final gap
+            if (intervalOfCurrentGap != null)
+            {
+                writer.writeNext(new String[]{intervalOfCurrentGap.getContig(), String.valueOf(intervalOfCurrentGap.getStart()-1), String.valueOf(intervalOfCurrentGap.getEnd())});
+                gapIntervals++;
+            }
         }
         catch (IOException e)
         {
             throw new PipelineJobException(e);
         }
 
-        getPipelineCtx().getLogger().info("Total positions with coverage below threshold (" + minCoverage + "): " + positionsSkipped);
-        getPipelineCtx().getLogger().info("Total intervals of these gaps: " + gapIntervals);
+        NumberFormat fmt = NumberFormat.getPercentInstance();
+        fmt.setMaximumFractionDigits(2);
+
+        double pctNoCover = positionsSkipped / (double)dict.getReferenceLength();
+        getPipelineCtx().getLogger().info("Total positions with coverage below threshold (" + minCoverage + "): " + positionsSkipped + "(" + fmt.format(pctNoCover) + ")");
+        getPipelineCtx().getLogger().info("Total # gap intervals: " + gapIntervals);
 
         //generate bcftools consensus
         File script = new File(SequenceAnalysisService.get().getScriptPath(SequenceAnalysisModule.NAME, "external/viral_consensus.sh"));
@@ -330,6 +347,12 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         File consensusFastaLoFreq = generateConsensus(loFreqConsensusVcf, referenceGenome.getWorkingFastaFile(), mask);
         int lofreqConsensusNs = replaceFastHeader(consensusFastaLoFreq, rs, "Lofreq|Variants:" + totalGTThreshold);
         description += "\nConsensus Ns: " + lofreqConsensusNs;
+
+        if (lofreqConsensusNs < positionsSkipped)
+        {
+            getPipelineCtx().getLogger().error("Problem with masking of the genome. Insufficient non-covered positions");
+        }
+
 
         if (bcfToolsConsensusNs != lofreqConsensusNs)
         {

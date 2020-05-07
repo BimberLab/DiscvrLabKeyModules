@@ -83,7 +83,7 @@ public class ProcessUtils
                     try (BufferedReader procReader = new BufferedReader(new InputStreamReader(_readStdErr ? tmpProcess.getErrorStream() : tmpProcess.getInputStream(), StringUtilsLabKey.DEFAULT_CHARSET)))
                     {
                         String line;
-                        while (tmpProcess.isAlive() && (line = procReader.readLine()) != null)
+                        while ((line = procReader.readLine()) != null)
                         {
                             if (_writeOutputToLog)
                                 _log.log(Level.DEBUG, "\t" + line);

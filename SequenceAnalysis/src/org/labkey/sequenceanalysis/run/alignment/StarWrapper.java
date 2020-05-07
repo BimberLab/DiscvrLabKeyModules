@@ -491,6 +491,5 @@ public class StarWrapper extends AbstractCommandWrapper
         args.add("--version");
 
         getLogger().info("STAR version: " + executeWithOutput(args));
-        getLogger().debug("last exit code: " + getLastReturnCode());
     }
 }
