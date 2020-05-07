@@ -338,14 +338,14 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
         output.addSequenceOutput(outputVcfSnpEff, "LoFreq: " + rs.getName(), CATEGORY, rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
         output.addSequenceOutput(coverageOut, "Depth of Coverage: " + rs.getName(), "Depth of Coverage", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
-        output.addSequenceOutput(consensusFastaBcfTools, "Consensus: " + rs.getName(), "Viral Consensus Sequence", rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
+        output.addSequenceOutput(consensusFastaLoFreq, "Consensus: " + rs.getName(), "Viral Consensus Sequence", rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
 
         return output;
     }
 
     private File generateConsensus(File loFreqConsensusVcf, File fasta, File maskBed) throws PipelineJobException
     {
-        File ret = new File(loFreqConsensusVcf.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(loFreqConsensusVcf.getName()) + ".lofreq.consensus.fasta");
+        File ret = new File(loFreqConsensusVcf.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(loFreqConsensusVcf.getName()) + ".fasta");
         List<String> args = new ArrayList<>();
 
         args.add(SequencePipelineService.get().getExeForPackage("BCFTOOLS", "bcftools").getPath());
