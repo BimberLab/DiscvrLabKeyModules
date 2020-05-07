@@ -18,8 +18,8 @@ fi
 REPORT=`basename $BAM .bam`".consensus.report.txt"
 truncate -s 0 $REPORT
 
-OUT=`basename $BAM .bam`".consensus.fasta"
-OUT_IUPAC=`basename $BAM .bam`".consensus.iupac.fasta"
+OUT=`basename $BAM .bam`".bcftools.consensus.fasta"
+OUT_IUPAC=`basename $BAM .bam`".bcftools.consensus.iupac.fasta"
 
 # call variants
 echo 'Calling variants'
@@ -62,7 +62,9 @@ mv $VCF_DEPTH_FILTER $VCF_FOR_CONSENSUS
 mv ${VCF_DEPTH_FILTER}.tbi ${VCF_FOR_CONSENSUS}.tbi
 
 $BCFTOOLS consensus -f $FASTA -m $MASK_BED -o $OUT $VCF_FOR_CONSENSUS
-$BCFTOOLS consensus -f $FASTA -m $MASK_BED -o $OUT_IUPAC --iupac-codes $VCF_FOR_CONSENSUS
+
+#Could be considered:
+#$BCFTOOLS consensus -f $FASTA -m $MASK_BED -o $OUT_IUPAC --iupac-codes $VCF_FOR_CONSENSUS
 
 rm $VCF_CALLS
 rm ${VCF_CALLS}.tbi

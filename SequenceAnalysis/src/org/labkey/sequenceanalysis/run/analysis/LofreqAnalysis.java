@@ -5,9 +5,13 @@ import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.writer.VariantContextWriter;
+import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.biojava3.core.sequence.DNASequence;
 import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
@@ -78,7 +82,12 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                     }}, null),
                     ToolParameterDescriptor.create("minCoverage", "Min Coverage For Consensus", "If provided, a consensus will only be called over regions with at least this depth", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, 25)
+                    }}, 25),
+                    ToolParameterDescriptor.create("minFractionForConsensus", "Min AF For Consensus", "Any LoFreq variant greater than this threshold will be used as the consensus base.", "ldk-numberfield", new JSONObject(){{
+                        put("minValue", 0.5);
+                        put("maxValue", 1.0);
+                        put("decimalPrecision", 2);
+                    }}, 0.5)
 
             ), null, "http://csb5.github.io/lofreq/");
         }
@@ -132,51 +141,53 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         output.addIntermediateFile(outputVcf);
         output.addIntermediateFile(new File(outputVcf.getPath() + ".tbi"));
 
+        double minFractionForConsensus = getProvider().getParameterByName("minFractionForConsensus").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class, 0.0);
+
         int totalVariants = 0;
         int totalGT1 = 0;
         int totalGT50 = 0;
-        Map<String, Double> alleleToAF = new HashMap<>();
-        int totalIndelGT1 = 0;
-        try (VCFFileReader reader = new VCFFileReader(outputVcfSnpEff);CloseableIterator<VariantContext> it = reader.iterator())
+        int totalGTThreshold = 0;
+
+        Map<String, List<String>> expectedLoFreq = new HashMap<>();
+        int totalIndelGT2 = 0;
+
+        File loFreqConsensusVcf = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.consensus.vcf.gz");
+        VariantContextWriterBuilder writerBuiler = new VariantContextWriterBuilder().setOutputFile(loFreqConsensusVcf).setReferenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(referenceGenome.getSequenceDictionary().toPath()));
+        try (VCFFileReader reader = new VCFFileReader(outputVcfSnpEff);CloseableIterator<VariantContext> it = reader.iterator();VariantContextWriter writer = writerBuiler.build())
         {
+            writer.writeHeader(reader.getFileHeader());
+
             while (it.hasNext())
             {
                 VariantContext vc = it.next();
                 totalVariants++;
-                if (vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) > 0.01)
+                if (vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) > 0.02)
                 {
                     totalGT1++;
                     if (vc.hasAttribute("INDEL"))
                     {
-                        totalIndelGT1++;
+                        totalIndelGT2++;
                     }
                 }
 
                 if (vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) > 0.5)
                 {
                     totalGT50++;
+                }
+
+                if (vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) > minFractionForConsensus)
+                {
+                    totalGTThreshold++;
                     String key = getHashKey(vc);
-                    Double af = alleleToAF.getOrDefault(key, 0.0);
-                    af = Math.max(af, vc.getAttributeAsDouble("AF", 0.0));
-                    alleleToAF.put(key, af);
+                    List<String> line = expectedLoFreq.getOrDefault(key, new ArrayList<>());
+
+                    line.add("AF:" + vc.getAttribute("AF") + "/" + "DP:" + vc.getAttribute("DP"));
+
+                    expectedLoFreq.put(key, line);
+
+                    writer.add(vc);
                 }
             }
-        }
-
-        //generate consensus
-        File script = new File(SequenceAnalysisService.get().getScriptPath(SequenceAnalysisModule.NAME, "external/viral_consensus.sh"));
-        if (!script.exists())
-        {
-            throw new PipelineJobException("Unable to find script: " + script.getPath());
-        }
-
-        SimpleScriptWrapper consensusWrapper = new SimpleScriptWrapper(getPipelineCtx().getLogger());
-        consensusWrapper.setWorkingDir(inputBam.getParentFile());
-
-        Integer maxThreads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
-        if (maxThreads != null)
-        {
-            consensusWrapper.addToEnvironment("SEQUENCEANALYSIS_MAX_THREADS", maxThreads.toString());
         }
 
         //Create a BED file with all regions of coverage below MIN_COVERAGE:
@@ -249,20 +260,38 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         getPipelineCtx().getLogger().info("Total positions with coverage below threshold (" + minCoverage + "): " + positionsSkipped);
         getPipelineCtx().getLogger().info("Total intervals of these gaps: " + gapIntervals);
 
+        //generate bcftools consensus
+        File script = new File(SequenceAnalysisService.get().getScriptPath(SequenceAnalysisModule.NAME, "external/viral_consensus.sh"));
+        if (!script.exists())
+        {
+            throw new PipelineJobException("Unable to find script: " + script.getPath());
+        }
+
+        SimpleScriptWrapper consensusWrapper = new SimpleScriptWrapper(getPipelineCtx().getLogger());
+        consensusWrapper.setWorkingDir(inputBam.getParentFile());
+
+        Integer maxThreads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
+        if (maxThreads != null)
+        {
+            consensusWrapper.addToEnvironment("SEQUENCEANALYSIS_MAX_THREADS", maxThreads.toString());
+        }
         consensusWrapper.execute(Arrays.asList("/bin/bash", script.getPath(), inputBam.getPath(), referenceGenome.getWorkingFastaFile().getPath(), mask.getPath(), String.valueOf(minCoverage)));
         File calls = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + ".calls.vcf.gz");
 
+        int totalBcfToolsVariants = 0;
         Set<VariantContext> variantsBcftoolsOnly = new HashSet<>();
         try (VCFFileReader reader = new VCFFileReader(calls);CloseableIterator<VariantContext> it = reader.iterator())
         {
             while (it.hasNext())
             {
                 VariantContext vc = it.next();
+                totalBcfToolsVariants++;
+
                 String key = getHashKey(vc);
-                if (alleleToAF.containsKey(key))
+                if (expectedLoFreq.containsKey(key))
                 {
                     //Variant shared
-                    alleleToAF.remove(key);
+                    expectedLoFreq.remove(key);
                 }
                 else
                 {
@@ -271,45 +300,89 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             }
         }
 
-        String description = String.format("Total Variants: %s\nTotal GT 1 PCT: %s\nTotal GT 50 PCT: %s\nTotal Indel GT 1 PCT: %s\nPositions Below Coverage: %s", totalVariants, totalGT1, totalGT50, totalIndelGT1, positionsSkipped);
+        String description = String.format("Total Variants: %s\nTotal GT 1 PCT: %s\nTotal GT 50 PCT: %s\nTotal Indel GT 1 PCT: %s\nPositions Below Coverage: %s\nTotal In LoFreq Consensus: %s", totalVariants, totalGT1, totalGT50, totalIndelGT2, positionsSkipped, totalGTThreshold);
 
         if (!variantsBcftoolsOnly.isEmpty())
         {
-            getPipelineCtx().getLogger().error("The following variants were in bcftools, but not GT50% in lofreq: ");
+            getPipelineCtx().getLogger().error("The following variants were in bcftools, but not above AF threshold (" + minFractionForConsensus + ") in lofreq: ");
             variantsBcftoolsOnly.forEach(vc -> getPipelineCtx().getLogger().error(getHashKey(vc) + ", DP=" + vc.getAttribute("DP")));
 
-            description += "\n" + "WARNING: " + variantsBcftoolsOnly.size() + " variants detected in bcftools and not lofreq";
+            description += "\n" + "WARNING: " + variantsBcftoolsOnly.size() + " variants detected in bcftools consensus and not lofreq";
         }
 
-        if (!alleleToAF.isEmpty())
+        if (!expectedLoFreq.isEmpty())
         {
             getPipelineCtx().getLogger().error("The following variants were GT50% in lofreq, but not in bcftools: ");
-            alleleToAF.keySet().forEach(vc -> getPipelineCtx().getLogger().error(vc + ", AF=" + alleleToAF.get(vc)));
+            expectedLoFreq.keySet().forEach(vc -> getPipelineCtx().getLogger().error(vc + ", " + StringUtils.join(expectedLoFreq.get(vc), ",")));
 
-            description += "\n" + "WARNING: " + alleleToAF.size() + " variants detected in lofreq and not bcftools";
+            description += "\n" + "WARNING: " + expectedLoFreq.size() + " variants detected in lofreq consensus but not bcftools";
         }
 
-        File consensusFasta = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam.getName()) + ".consensus.fasta");
-        if (!consensusFasta.exists())
+        File consensusFastaBcfTools = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam.getName()) + ".bcftools.consensus.fasta");
+        if (!consensusFastaBcfTools.exists())
         {
-            throw new PipelineJobException("Expected file not found: " + consensusFasta.getPath());
+            throw new PipelineJobException("Expected file not found: " + consensusFastaBcfTools.getPath());
         }
 
+        int bcfToolsConsensusNs = replaceFastHeader(consensusFastaBcfTools, rs, "bcftools|Variants:" + totalBcfToolsVariants);
+
+        //Make consensus using lofreq:
+        File consensusFastaLoFreq = generateConsensus(loFreqConsensusVcf, referenceGenome.getWorkingFastaFile(), mask);
+        int lofreqConsensusNs = replaceFastHeader(consensusFastaLoFreq, rs, "Lofreq|Variants:" + totalGTThreshold);
+        description += "\nConsensus Ns: " + lofreqConsensusNs;
+
+        if (bcfToolsConsensusNs != lofreqConsensusNs)
+        {
+            getPipelineCtx().getLogger().warn("Consensus ambiguities from bcftools and lofreq did not match: " + bcfToolsConsensusNs + " / " + lofreqConsensusNs);
+        }
+
+        output.addSequenceOutput(outputVcfSnpEff, "LoFreq: " + rs.getName(), CATEGORY, rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
+        output.addSequenceOutput(coverageOut, "Depth of Coverage: " + rs.getName(), "Depth of Coverage", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+        output.addSequenceOutput(consensusFastaBcfTools, "Consensus: " + rs.getName(), "Viral Consensus Sequence", rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
+
+        return output;
+    }
+
+    private File generateConsensus(File loFreqConsensusVcf, File fasta, File maskBed) throws PipelineJobException
+    {
+        File ret = new File(loFreqConsensusVcf.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(loFreqConsensusVcf.getName()) + ".lofreq.consensus.fasta");
+        List<String> args = new ArrayList<>();
+
+        args.add(SequencePipelineService.get().getExeForPackage("BCFTOOLS", "bcftools").getPath());
+        args.add("consensus");
+        args.add("-f");
+        args.add(fasta.getPath());
+        args.add("-m");
+        args.add(maskBed.getPath());
+        args.add("-o");
+        args.add(ret.getPath());
+        args.add(loFreqConsensusVcf.getPath());
+
+        new SimpleScriptWrapper(getPipelineCtx().getLogger()).execute(args);
+
+        if (!ret.exists())
+        {
+            throw new PipelineJobException("Unable to find expected file: " + ret.getPath());
+        }
+
+        return ret;
+    }
+
+    private int replaceFastHeader(File consensusFasta, Readset rs, String suffix) throws PipelineJobException
+    {
+        AtomicInteger totalN = new AtomicInteger();
         DNASequence seq;
         try (InputStream is = IOUtil.openFileForReading(consensusFasta))
         {
             FastaReader<DNASequence, NucleotideCompound> fastaReader = new FastaReader<>(is, new GenericFastaHeaderParser<>(), new DNASequenceCreator(AmbiguityDNACompoundSet.getDNACompoundSet()));
             LinkedHashMap<String, DNASequence> fastaData = fastaReader.process();
 
-            AtomicInteger totalN = new AtomicInteger();
             seq = fastaData.values().iterator().next();
             seq.forEach(nt -> {
                 if (nt.getUpperedBase().equals("N")) {
                     totalN.getAndIncrement();
                 }
             });
-
-            description += "\nConsensus Ns: " + totalN.get();
         }
         catch (IOException e)
         {
@@ -331,6 +404,11 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
             header.append(rs.getLibraryType() == null ? rs.getApplication() : rs.getLibraryType());
 
+            if (suffix != null)
+            {
+                header.append("|").append(suffix);
+            }
+
             writer.println(">" + header);
             writer.println(seq.getSequenceAsString());
         }
@@ -339,12 +417,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             throw new PipelineJobException(e);
         }
 
-        output.addSequenceOutput(outputVcfSnpEff, "LoFreq: " + rs.getName(), CATEGORY, rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
-        output.addSequenceOutput(coverageOut, "Depth of Coverage: " + rs.getName(), "Depth of Coverage", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
-
-        output.addSequenceOutput(consensusFasta, "Consensus: " + rs.getName(), "Viral Consensus Sequence", rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
-
-        return output;
+        return totalN.get();
     }
 
     @Override
