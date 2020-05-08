@@ -152,7 +152,8 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         int totalGTThreshold = 0;
 
         Map<String, List<String>> expectedLoFreq = new HashMap<>();
-        int totalIndelGT2 = 0;
+        int totalIndelGT1 = 0;
+        int totalIndelGTThreshold = 0;
 
         File loFreqConsensusVcf = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.consensus.vcf.gz");
         SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(referenceGenome.getSequenceDictionary().toPath());
@@ -167,12 +168,12 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             {
                 VariantContext vc = it.next();
                 totalVariants++;
-                if (vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) > 0.02)
+                if (vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) > 0.01)
                 {
                     totalGT1++;
                     if (vc.hasAttribute("INDEL"))
                     {
-                        totalIndelGT2++;
+                        totalIndelGT1++;
                     }
                 }
 
@@ -184,6 +185,10 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                 if (vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) > minFractionForConsensus)
                 {
                     totalGTThreshold++;
+                    if (vc.hasAttribute("INDEL"))
+                    {
+                        totalIndelGTThreshold++;
+                    }
                     String key = getHashKey(vc);
                     List<String> line = expectedLoFreq.getOrDefault(key, new ArrayList<>());
 
@@ -317,7 +322,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             }
         }
 
-        String description = String.format("Total Variants: %s\nTotal GT 1 PCT: %s\nTotal GT 50 PCT: %s\nTotal Indel GT 1 PCT: %s\nPositions Below Coverage: %s\nTotal In LoFreq Consensus: %s", totalVariants, totalGT1, totalGT50, totalIndelGT2, positionsSkipped, totalGTThreshold);
+        String description = String.format("Total Variants: %s\nTotal GT 1 PCT: %s\nTotal GT 50 PCT: %s\nTotal Indel GT 1 PCT: %s\nPositions Below Coverage: %s\nTotal In LoFreq Consensus: %s\nTotal Indel In LoFreq Consensus: %s", totalVariants, totalGT1, totalGT50, totalIndelGT1, positionsSkipped, totalGTThreshold, totalIndelGTThreshold);
 
         if (!variantsBcftoolsOnly.isEmpty())
         {
