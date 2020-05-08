@@ -23,17 +23,17 @@ public class LofreqIndelQualStep extends AbstractCommandPipelineStep<LofreqAnaly
         super(provider, ctx, new LofreqAnalysis.LofreqWrapper(ctx.getLogger()));
     }
 
-    public static class Provider extends AbstractPipelineStepProvider<MarkDuplicatesStep>
+    public static class Provider extends AbstractPipelineStepProvider<LofreqIndelQualStep>
     {
         public Provider()
         {
-            super("LofreqIndelQual", "Lofreq Indelqual", "Lofreq", "This runs lofreq's indelqual, which adds indel qualities necessary to call somatic indels.", Collections.emptyList(), null, "http://csb5.github.io/lofreq/");
+            super("LofreqIndelQual", "Lofreq Indelqual", "Lofreq", "This runs lofreq indelqual, which adds indel qualities necessary to call somatic indels using lofreq", Collections.emptyList(), null, "http://csb5.github.io/lofreq/");
         }
 
         @Override
-        public MarkDuplicatesStep create(PipelineContext ctx)
+        public LofreqIndelQualStep create(PipelineContext ctx)
         {
-            return new MarkDuplicatesStep(this, ctx);
+            return new LofreqIndelQualStep(this, ctx);
         }
     }
 
