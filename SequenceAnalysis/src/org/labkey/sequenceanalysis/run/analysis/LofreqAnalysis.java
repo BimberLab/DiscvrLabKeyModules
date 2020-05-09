@@ -119,7 +119,17 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         File coverageOut = new File(outputDir, SequenceAnalysisService.get().getUnzippedBaseName(outputVcf.getName()) + ".coverage");
 
         DepthOfCoverageWrapper wrapper = new DepthOfCoverageWrapper(getPipelineCtx().getLogger());
-        wrapper.run(Collections.singletonList(inputBam), coverageOut.getPath(), referenceGenome.getWorkingFastaFile(), null, true);
+        List<String> extraArgs = new ArrayList<>();
+        extraArgs.add("--includeDeletions");
+
+        //GATK4 only:
+        //extraArgs.add("--include-deletions");
+        //extraArgs.add("--omit-per-sample-statistics");
+        //extraArgs.add("--omit-interval-statistics");
+        //extraArgs.add("--min-base-quality");
+        //extraArgs.add("15");
+
+        wrapper.run(Collections.singletonList(inputBam), coverageOut.getPath(), referenceGenome.getWorkingFastaFile(), extraArgs, true);
         if (!coverageOut.exists())
         {
             throw new PipelineJobException("Unable to find file: " + coverageOut.getPath());

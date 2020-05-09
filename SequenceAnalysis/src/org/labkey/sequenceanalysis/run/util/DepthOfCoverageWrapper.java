@@ -53,13 +53,18 @@ public class DepthOfCoverageWrapper extends AbstractGatkWrapper
 
         if (deleteExtraFiles)
         {
-            for (String suffix : Arrays.asList("_summary", "_statistics", "_interval_summary", "_interval_statistics", "_gene_summary", "_gene_statistics", "_cumulative_coverage_counts", "_cumulative_coverage_proportions"))
+            deleteExtraFiles(outputBaseName);
+        }
+    }
+
+    public void deleteExtraFiles(String outputBaseName)
+    {
+        for (String suffix : Arrays.asList("_summary", "_statistics", "_interval_summary", "_interval_statistics", "_gene_summary", "_gene_statistics", "_cumulative_coverage_counts", "_cumulative_coverage_proportions"))
+        {
+            File f = new File(outputBaseName + suffix);
+            if (f.exists())
             {
-                File f = new File(outputBaseName + suffix);
-                if (f.exists())
-                {
-                    f.delete();
-                }
+                f.delete();
             }
         }
     }
