@@ -714,6 +714,10 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                         //getJob().getLogger().info("\ttotal alignments in processed BAM: " + SequenceUtil.getAlignmentCount(bam));
                         getJob().getLogger().info("\tfile size: " + FileUtils.byteCountToDisplaySize(bam.length()));
                     }
+                    else if (step.expectToCreateNewBam())
+                    {
+                        throw new PipelineJobException("The BAM processing step should have created a new BAM, no BAM was specified. This is possible a coding error on this step");
+                    }
                     else
                     {
                         getJob().getLogger().info("no BAM created by step, using output from previous step");

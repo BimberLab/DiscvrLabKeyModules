@@ -110,6 +110,7 @@ public class ClipOverlappingAlignmentsWrapper extends AbstractDiscvrSeqWrapper
             getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), bedFile, outputBam, reportFile);
 
             output.addSequenceOutput(reportFile, rs.getName() + ": alignment clipping report", "Alignment Clipping Report", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+            output.setBAM(outputBam);
 
             return output;
         }

@@ -140,6 +140,8 @@ public class BaseQualityScoreRecalibrator extends AbstractGatk4Wrapper
 
             getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputBam, knownVariants);
 
+            output.setBAM(outputBam);
+
             return output;
         }
     }
