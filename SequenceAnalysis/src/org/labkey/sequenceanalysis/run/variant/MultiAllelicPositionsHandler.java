@@ -125,13 +125,6 @@ public class MultiAllelicPositionsHandler extends AbstractParameterizedOutputHan
                 options.add(minDepth.toString());
             }
 
-            Integer maxThreads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
-            if (maxThreads != null)
-            {
-                options.add("-nt");
-                options.add(maxThreads.toString());
-            }
-
             MultiAllelicPositionWrapper wrapper = new MultiAllelicPositionWrapper(ctx.getLogger());
             wrapper.run(inputBams, outputFile, rg.getWorkingFastaFile(), options);
             if (!outputFile.exists())
