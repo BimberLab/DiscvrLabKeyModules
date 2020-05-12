@@ -4,6 +4,7 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -94,6 +95,8 @@ public class StarWrapper extends AbstractCommandWrapper
         @Override
         public AlignmentOutput performAlignment(Readset rs, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException
         {
+            getWrapper().logVersionString();
+
             AlignmentOutputImpl output = new AlignmentOutputImpl();
             AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, getProvider().getName(), referenceGenome);
             StarWrapper wrapper = getWrapper();
@@ -433,7 +436,7 @@ public class StarWrapper extends AbstractCommandWrapper
                 ToolParameterDescriptor.create(LONG_READS, "Reads >500bp", "If the reads are expected to exceed 500bp (per pair), this will use STARlong instead of STAR.", "checkbox", new JSONObject(){{
                     put("checked", false);
                 }}, false),
-                ToolParameterDescriptor.create("sjdbGTFtagExonParentTranscript", "Exon Parent Transcript", "This is only required for GFF3 files.  It is the annotation used to assign exons to transcripts.  For GFF3 files this is usually Parent.  It will be ignored if a GTF file is used.", "textfield", null, "Parent"),
+                ToolParameterDescriptor.create("sjdbGTFtagExonParentTranscript", "Exon Parent Transcript", "This is only required for GFF3 files.  It is the annotation used to assign exons to transcripts.  For GFF3 files this is usually Parent.  It will be ignored if a GTF file is used (since the default is transcript_id).", "textfield", null, "Parent"),
                 ToolParameterDescriptor.create("addSAMStrandField", "Add SAM Strand Field", "If you have unstranded data and plan to use cufflinks, this should be checked.  It will add the XS tag to the output BAM file.", "checkbox", new JSONObject(){{
                     put("checked", false);
                 }}, true),
@@ -462,7 +465,7 @@ public class StarWrapper extends AbstractCommandWrapper
                     put("minValue", 0);
                     put("maxValue", 1);
                 }}, null),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--limitBAMsortRAM"), "limitBAMsortRAM", "The maximum available RAM (bytes) for sorting BAM.  This should generally be left blank, where it will be automatically set.  In certain cases, such as genomes with extremely high coverage contigs, jobs will error and require a higher value for this. ", "", "ldk-integerfield", new JSONObject(){{
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--limitBAMsortRAM"), "limitBAMsortRAM", "Mam RAM For Sorting (bytes)", "The maximum available RAM (bytes) for sorting BAM.  This should generally be left blank, where it will be automatically set.  In certain cases, such as genomes with extremely high coverage contigs, jobs will error and require a higher value for this. ", "ldk-integerfield", new JSONObject(){{
                     put("minValue", 0);
                 }}, null)
             ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "https://github.com/alexdobin/STAR/", true, true, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
@@ -478,6 +481,15 @@ public class StarWrapper extends AbstractCommandWrapper
 
     protected File getExe(boolean longReads)
     {
-            return SequencePipelineService.get().getExeForPackage("STARPATH", (longReads ? "STARlong" : "STAR"));
+        return SequencePipelineService.get().getExeForPackage("STARPATH", (longReads ? "STARlong" : "STAR"));
+    }
+
+    public void logVersionString() throws PipelineJobException
+    {
+        List<String> args = new ArrayList<>();
+        args.add(getExe(false).getPath());
+        args.add("--version");
+
+        getLogger().info("STAR version: " + executeWithOutput(args));
     }
 }

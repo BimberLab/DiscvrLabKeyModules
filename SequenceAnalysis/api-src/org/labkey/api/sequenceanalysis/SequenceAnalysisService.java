@@ -91,6 +91,8 @@ abstract public class SequenceAnalysisService
 
     abstract public File writeAllCellHashingBarcodes(File webserverDir, User u, Container c) throws PipelineJobException;
 
+    abstract public File writeAllCiteSeqBarcodes(File webserverDir, User u, Container c) throws PipelineJobException;
+
     abstract public String createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String assemblyId, String description, boolean skipCacheIndexes, boolean skipTriggers) throws IOException;
 
     abstract public String createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String assemblyId, String description, boolean skipCacheIndexes, boolean skipTriggers, Set<GenomeTrigger> extraTriggers) throws IOException;

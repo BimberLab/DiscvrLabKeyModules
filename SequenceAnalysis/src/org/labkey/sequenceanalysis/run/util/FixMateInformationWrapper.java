@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.util;
 
+import htsjdk.samtools.SAMFileHeader;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -23,7 +24,7 @@ public class FixMateInformationWrapper extends PicardWrapper
     /**
      * If the output file is null, the original will be deleted and replaced by the fixed BAM
      */
-    public File executeCommand(File inputFile, @Nullable File outputFile) throws PipelineJobException
+    public File executeCommand(File inputFile, @Nullable File outputFile, @Nullable SAMFileHeader.SortOrder so) throws PipelineJobException
     {
         getLogger().info("Fixing Mate Information: " + inputFile.getPath());
 
@@ -32,6 +33,11 @@ public class FixMateInformationWrapper extends PicardWrapper
         params.add("INPUT=" + inputFile.getPath());
         if (outputFile != null)
             params.add("OUTPUT=" + outputFile.getPath());
+
+        if (so != null)
+        {
+            params.add("SO=" + so.name());
+        }
 
         execute(params);
 

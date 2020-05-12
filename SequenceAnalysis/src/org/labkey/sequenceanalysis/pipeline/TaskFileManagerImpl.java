@@ -85,6 +85,9 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     {
         _outputsToCreate.add(o);
 
+        // just in case..
+        _intermediateFiles.remove(o.getFile());
+
         //this should only occur in test scenarios
         if (_job != null)
         {

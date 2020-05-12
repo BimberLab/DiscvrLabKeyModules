@@ -61,6 +61,16 @@ Ext4.define('SequenceAnalysis.panel.VariantScatterGatherPanel', {
                                 inputValue: true,
                                 helpPopup: 'If true, a given chromosome/contig can be split between jobs.  Otherwise chromosomes are always intact across jobs.'
                             });
+
+                            toAdd.push({
+                                xtype: 'ldk-integerfield',
+                                labelWidth: this.labelWidth,
+                                name: 'scatterGather.maxContigsPerJob',
+                                fieldLabel: 'Max Contigs/Job',
+                                minValue: -1,
+                                helpPopup: 'The maximum number of contigs allowed per job.  Leave blank or enter -1 for no limit.',
+                                value: 200
+                            });
                         }
                         else if (val === 'fixedJobs') {
                             toAdd.push({

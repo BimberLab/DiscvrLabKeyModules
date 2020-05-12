@@ -28,6 +28,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
 import org.junit.Test;
+import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.pipeline.ObjectKeySerialization;
 import org.labkey.api.pipeline.PairSerializer;
@@ -294,6 +295,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         Map<ReadData, Pair<File, File>> toAlign = new LinkedHashMap<>();
         int i = 0;
+        Set<String> basenamesUsed = new CaseInsensitiveHashSet();
         for (ReadData d : rs.getReadData())
         {
             i++;
@@ -334,7 +336,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 getJob().getLogger().debug("Will not copy inputs to working directory");
             }
 
-            pair = preprocessFastq(pair.first, pair.second, preprocessingActions, suffix);
+            pair = preprocessFastq(pair.first, pair.second, preprocessingActions, suffix, basenamesUsed);
             toAlign.put(d, pair);
         }
 
@@ -460,7 +462,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
     /**
      * Attempt to normalize FASTQ files and perform preprocessing such as trimming.
      */
-    public Pair<File, File> preprocessFastq(File inputFile1, @Nullable File inputFile2, List<RecordedAction> actions, String statusSuffix) throws PipelineJobException, IOException
+    public Pair<File, File> preprocessFastq(File inputFile1, @Nullable File inputFile2, List<RecordedAction> actions, String statusSuffix, Set<String> basenamesUsed) throws PipelineJobException, IOException
     {
         getJob().setStatus(PipelineJob.TaskStatus.running, PREPROCESS_FASTQ_STATUS);
         getJob().getLogger().info("Beginning preprocessing for file: " + inputFile1.getName());
@@ -504,6 +506,13 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             steps = combinedSteps;
 
             String originalbaseName = SequenceTaskHelper.getMinimalBaseName(inputFile1.getName());
+            int i = 0;
+            while (basenamesUsed.contains(originalbaseName))
+            {
+                i++;
+                originalbaseName = originalbaseName + "." + i;
+            }
+            basenamesUsed.add(originalbaseName);
             String originalbaseName2 = null;
 
             //log read count:
@@ -511,13 +520,20 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
             if (inputFile2 != null)
             {
-                originalbaseName2 = SequenceTaskHelper.getMinimalBaseName(inputFile2.getName());
+                originalbaseName2 = SequenceTaskHelper.getUnzippedBaseName(inputFile2.getName());
+                i = 0;
+                while (basenamesUsed.contains(originalbaseName2))
+                {
+                    i++;
+                    originalbaseName2 = originalbaseName2 + "." + i;
+                }
+                basenamesUsed.add(originalbaseName2);
 
                 if (originalbaseName.equalsIgnoreCase(originalbaseName2))
                 {
-                    getJob().getLogger().debug("Forward and reverse FASTQs have the same basename.  Appending .1 and .2 as suffixes.");
-                    originalbaseName = originalbaseName + ".1";
-                    originalbaseName2 = originalbaseName2 + ".2";
+                    getJob().getLogger().debug("Forward and reverse FASTQs have the same basename.  Appending .R1 and .R2 as suffixes.");
+                    originalbaseName = originalbaseName + ".R1";
+                    originalbaseName2 = originalbaseName2 + ".R2";
                 }
             }
 
@@ -697,6 +713,10 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                         //can take a long time to execute
                         //getJob().getLogger().info("\ttotal alignments in processed BAM: " + SequenceUtil.getAlignmentCount(bam));
                         getJob().getLogger().info("\tfile size: " + FileUtils.byteCountToDisplaySize(bam.length()));
+                    }
+                    else if (step.expectToCreateNewBam())
+                    {
+                        throw new PipelineJobException("The BAM processing step should have created a new BAM, no BAM was specified. This is possible a coding error on this step");
                     }
                     else
                     {

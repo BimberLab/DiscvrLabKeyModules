@@ -7,9 +7,11 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ScatterGatherUtils
 {
@@ -28,27 +30,35 @@ public class ScatterGatherUtils
         private final int _optimalBasesPerJob;
         private final LinkedHashMap<String, List<Interval>> _results;
         private final boolean _allowSplitChromosomes;
+        private final int _maxContigsPerJob;
 
         private List<Interval> _intervalList = new ArrayList<>();
         private int _basesPerActiveIntervalList = 0;
+        private Set<String> _contigsInActiveIntervalList = new HashSet<>();
         private int _activeJobId = 1;
 
-        public ActiveIntervalSet(int optimalBasesPerJob, boolean allowSplitChromosomes)
+        public ActiveIntervalSet(int optimalBasesPerJob, boolean allowSplitChromosomes, int maxContigsPerJob)
         {
             _optimalBasesPerJob = optimalBasesPerJob;
             _results = new LinkedHashMap<>();
             _allowSplitChromosomes = allowSplitChromosomes;
+            _maxContigsPerJob = maxContigsPerJob;
         }
 
         private void possiblyEndSet()
         {
             int basesRemaining = getBasesRemainingForInterval();
-            if (basesRemaining <= 0)
+            if (basesRemaining <= 0 || exceedsAllowableContigs())
             {
                 closeSet();
             }
         }
 
+        private boolean exceedsAllowableContigs()
+        {
+            return _maxContigsPerJob != -1 && _contigsInActiveIntervalList.size() >= _maxContigsPerJob;    
+        }
+        
         public void closeSet()
         {
             if (!_intervalList.isEmpty())
@@ -56,6 +66,7 @@ public class ScatterGatherUtils
                 _results.put("Job" + _activeJobId, new ArrayList<>(_intervalList));
                 _intervalList.clear();
                 _basesPerActiveIntervalList = 0;
+                _contigsInActiveIntervalList.clear();
                 _activeJobId++;
             }
         }
@@ -101,14 +112,15 @@ public class ScatterGatherUtils
         {
             _intervalList.add(new Interval(refName, start, end));
             _basesPerActiveIntervalList += (end - start + 1);
+            _contigsInActiveIntervalList.add(refName);
 
             possiblyEndSet();
         }
     }
 
-    public static LinkedHashMap<String, List<Interval>> divideGenome(SAMSequenceDictionary dict, int optimalBasesPerJob, boolean allowSplitChromosomes)
+    public static LinkedHashMap<String, List<Interval>> divideGenome(SAMSequenceDictionary dict, int optimalBasesPerJob, boolean allowSplitChromosomes, int maxContigsPerJob)
     {
-        ActiveIntervalSet ais = new ActiveIntervalSet(optimalBasesPerJob, allowSplitChromosomes);
+        ActiveIntervalSet ais = new ActiveIntervalSet(optimalBasesPerJob, allowSplitChromosomes, maxContigsPerJob);
         for (SAMSequenceRecord rec : dict.getSequences())
         {
             ais.add(rec);
@@ -141,13 +153,13 @@ public class ScatterGatherUtils
         public void testScatter()
         {
             SAMSequenceDictionary dict = getDict();
-            Map<String, List<Interval>> ret = divideGenome(dict, 1000, true);
+            Map<String, List<Interval>> ret = divideGenome(dict, 1000, true, -1);
             assertEquals("Incorrect number of jobs", 8, ret.size());
             assertEquals("Incorrect interval end", 2000, ret.get("Job3").get(0).getEnd());
             assertEquals("Incorrect start", 1001, ret.get("Job3").get(0).getStart());
             assertEquals("Incorrect interval end", 4, ret.get("Job8").size());
 
-            Map<String, List<Interval>> ret2 = divideGenome(dict, 3000, false);
+            Map<String, List<Interval>> ret2 = divideGenome(dict, 3000, false, -1);
             assertEquals("Incorrect number of jobs", 3, ret2.size());
             for (String jobName : ret2.keySet())
             {
@@ -157,7 +169,7 @@ public class ScatterGatherUtils
                 }
             }
 
-            Map<String, List<Interval>> ret3 = divideGenome(dict, 3002, false);
+            Map<String, List<Interval>> ret3 = divideGenome(dict, 3002, false, -1);
             assertEquals("Incorrect number of jobs", 3, ret3.size());
             for (String jobName : ret3.keySet())
             {
@@ -167,7 +179,7 @@ public class ScatterGatherUtils
                 }
             }
 
-            Map<String, List<Interval>> ret4 = divideGenome(dict, 2999, false);
+            Map<String, List<Interval>> ret4 = divideGenome(dict, 2999, false, -1);
             assertEquals("Incorrect number of jobs", 3, ret4.size());
             for (String jobName : ret4.keySet())
             {
@@ -177,13 +189,16 @@ public class ScatterGatherUtils
                 }
             }
 
-            Map<String, List<Interval>> ret5 = divideGenome(dict, 750, true);
+            Map<String, List<Interval>> ret5 = divideGenome(dict, 750, true, -1);
             assertEquals("Incorrect number of jobs", 10, ret5.size());
             assertEquals("Incorrect interval end", 1000, ret5.get("Job1").get(0).getEnd());
             assertEquals("Incorrect interval end", 4, ret5.get("Job10").size());
 
             assertEquals("Incorrect interval start", 751, ret5.get("Job3").get(0).getStart());
             assertEquals("Incorrect interval start", 1501, ret5.get("Job8").get(0).getStart());
+
+            Map<String, List<Interval>> ret6 = divideGenome(dict, 5000, false, 2);
+            assertEquals("Incorrect number of jobs", 5, ret6.size());
         }
     }
 }

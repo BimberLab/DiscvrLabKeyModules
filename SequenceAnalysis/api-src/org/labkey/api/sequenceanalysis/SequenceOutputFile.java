@@ -222,7 +222,7 @@ public class SequenceOutputFile implements Serializable
             throw new IllegalAccessError("This method should only be called from the webserver");
         }
 
-        return _dataId > 0 ? ExperimentService.get().getExpData(_dataId) : null;
+        return _dataId != null && _dataId > 0 ? ExperimentService.get().getExpData(_dataId) : null;
     }
 
     public File getFile()
