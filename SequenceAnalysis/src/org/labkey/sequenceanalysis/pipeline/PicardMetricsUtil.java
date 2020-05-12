@@ -9,9 +9,9 @@ import org.apache.log4j.Logger;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.pipeline.PipelineJobException;
 import picard.analysis.AlignmentSummaryMetrics;
-import picard.analysis.CollectWgsMetrics;
 import picard.analysis.CollectWgsMetricsWithNonZeroCoverage;
 import picard.analysis.InsertSizeMetrics;
+import picard.analysis.WgsMetrics;
 import picard.sam.DuplicationMetrics;
 
 import java.io.BufferedReader;
@@ -56,7 +56,7 @@ public class PicardMetricsUtil
                 log.info("Importing Picard AlignmentSummaryMetricsCollector metrics from: " + f.getName());
                 return processAlignmentSummaryMetrics(metricsFile, log);
             }
-            else if (metrics.get(0).getClass() == CollectWgsMetrics.WgsMetrics.class)
+            else if (metrics.get(0).getClass() == WgsMetrics.class)
             {
                 log.info("Importing Picard WgsMetrics for: " + f.getName());
                 return processWgsMetrics(metricsFile, log);
@@ -92,9 +92,9 @@ public class PicardMetricsUtil
     private static List<Map<String, Object>> processWgsMetricsBase(MetricsFile mf, Logger log, String category) throws PipelineJobException
     {
         List<Map<String, Object>> ret = new ArrayList<>();
-        List<CollectWgsMetrics.WgsMetrics> metrics = mf.getMetrics();
+        List<WgsMetrics> metrics = mf.getMetrics();
 
-        for (CollectWgsMetrics.WgsMetrics m : metrics)
+        for (WgsMetrics m : metrics)
         {
             Map<String, Object> metricNames = new HashMap<>();
 

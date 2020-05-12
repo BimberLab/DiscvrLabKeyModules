@@ -25,21 +25,23 @@ import org.labkey.api.pipeline.PipelineJobException;
 abstract public class AbstractPipelineStep implements PipelineStep
 {
     private PipelineContext _ctx;
-    private PipelineStepProvider _provider;
+    private PipelineStepProvider<?> _provider;
     private int _stepIdx = 0;
 
-    public AbstractPipelineStep(PipelineStepProvider provider, PipelineContext ctx)
+    public AbstractPipelineStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         _ctx = ctx;
         _provider = provider;
     }
 
+    @Override
     public PipelineContext getPipelineCtx()
     {
         return _ctx;
     }
 
-    public PipelineStepProvider getProvider()
+    @Override
+    public PipelineStepProvider<?> getProvider()
     {
         return _provider;
     }

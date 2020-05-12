@@ -58,8 +58,6 @@ import org.labkey.api.query.QueryUpdateServiceException;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.reader.FastaDataLoader;
 import org.labkey.api.reader.FastaLoader;
-import org.labkey.api.resource.FileResource;
-import org.labkey.api.resource.Resource;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
 import org.labkey.api.security.permissions.DeletePermission;
@@ -70,7 +68,6 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.Job;
 import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.util.Path;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
 import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
@@ -522,38 +519,6 @@ public class SequenceAnalysisManager
         }
     }
 
-    private static final String htsjdkVersion = "2.14.3";
-    private static final String picardVersion = "2.18.4";
-
-    public static File getHtsJdkJar()
-    {
-        return getJar("htsjdk-" + htsjdkVersion);
-    }
-
-    public static File getPicardJar()
-    {
-        return getJar("picard-" + picardVersion);
-    }
-
-    private static File getJar(String name)
-    {
-        Resource r = ModuleLoader.getInstance().getResource(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), Path.parse("lib/" + name + ".jar"));
-        if (r == null)
-        {
-            throw new IllegalArgumentException("Unable to find JAR file: " + name);
-        }
-        else if (!(r instanceof FileResource))
-        {
-            throw new IllegalArgumentException("resource not instance of FileResource: " + r.getClass().getName());
-        }
-
-        File jar = ((FileResource) r).getFile();
-        if (!jar.exists())
-            throw new RuntimeException("Not found: " + jar.getPath());
-
-        return jar;
-    }
-
     public static void cascadeDelete(int userId, String containerId, String schemaName, String queryName, String keyField, Object keyValue) throws SQLException
     {
         cascadeDelete(userId, containerId, schemaName, queryName, keyField, keyValue, null);
@@ -905,14 +870,6 @@ public class SequenceAnalysisManager
         @Test
         public void testJars()
         {
-            File htsjdkJar = SequenceAnalysisManager.getHtsJdkJar();
-            assertNotNull("Unble to find HTSJDK jar", htsjdkJar);
-            assertTrue("JAR does not exist: " + htsjdkJar.getPath(), htsjdkJar.exists());
-
-            File picardJar = SequenceAnalysisManager.getPicardJar();
-            assertNotNull("Unable to find picard jar", picardJar);
-            assertTrue("JAR does not exist: " + picardJar.getPath(), picardJar.exists());
-
             File libDir = new File(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getExplodedPath(), "lib");
             assertNotNull("Unable to find SequenceAnalysis lib dir", libDir);
             assertTrue("SequenceAnalysis lib dir does not exist: " + libDir.getPath(), libDir.exists());

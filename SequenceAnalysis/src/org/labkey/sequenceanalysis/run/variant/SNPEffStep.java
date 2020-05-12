@@ -30,6 +30,8 @@ import java.util.List;
  */
 public class SNPEffStep extends AbstractCommandPipelineStep<SnpEffWrapper> implements VariantProcessingStep
 {
+    public static final String GENE_PARAM = "gene_file";
+
     public SNPEffStep(PipelineStepProvider provider, PipelineContext ctx)
     {
         super(provider, ctx, new SnpEffWrapper(ctx.getLogger()));
@@ -40,7 +42,7 @@ public class SNPEffStep extends AbstractCommandPipelineStep<SnpEffWrapper> imple
         public Provider()
         {
             super("SNPEffStep", "SNPEff", "SNPEff", "Annotate predicted functional effects using SNPEff", Arrays.asList(
-                    ToolParameterDescriptor.createExpDataParam("gene_file", "Gene File", "This is the ID of a GTF or GFF3 file containing genes from this genome.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
+                    ToolParameterDescriptor.createExpDataParam(GENE_PARAM, "Gene File", "This is the ID of a GTF or GFF3 file containing genes from this genome.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
                     {{
                         put("extensions", Arrays.asList("gtf", "gff"));
                         put("width", 400);
@@ -55,7 +57,32 @@ public class SNPEffStep extends AbstractCommandPipelineStep<SnpEffWrapper> imple
         }
     }
 
-    private final String NAME = "snpEff";
+    private static final String NAME = "snpEff";
+
+    public static File checkOrCreateIndex(PipelineContext ctx, ReferenceGenome genome, Integer geneFileId) throws PipelineJobException
+    {
+        ctx.getLogger().debug("checking for index");
+
+        File snpEffBaseDir = AlignerIndexUtil.getWebserverIndexDir(genome, NAME);
+        File geneFile = ctx.getSequenceSupport().getCachedData(geneFileId);
+        if (geneFile == null || !geneFile.exists())
+        {
+            throw new PipelineJobException("Unable to find file: " + geneFileId + "/" + geneFile);
+        }
+
+        SnpEffWrapper wrapper = new SnpEffWrapper(ctx.getLogger());
+        File snpEffIndexDir = wrapper.getExpectedIndexDir(snpEffBaseDir, genome.getGenomeId(), geneFileId);
+        if (!snpEffIndexDir.exists())
+        {
+            wrapper.buildIndex(snpEffBaseDir, genome, geneFile, geneFileId);
+        }
+        else
+        {
+            ctx.getLogger().debug("previously created index found, re-using: " + snpEffIndexDir.getPath());
+        }
+
+        return snpEffBaseDir;
+    }
 
     @Override
     public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable List<Interval> intervals) throws PipelineJobException
@@ -63,26 +90,8 @@ public class SNPEffStep extends AbstractCommandPipelineStep<SnpEffWrapper> imple
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
         getPipelineCtx().getLogger().info("Running SNPEff");
 
-        getPipelineCtx().getLogger().debug("checking for index");
-
-        File snpEffBaseDir = AlignerIndexUtil.getWebserverIndexDir(genome, NAME);
-        Integer geneFileId = getProvider().getParameterByName("gene_file").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
-        File geneFile = getPipelineCtx().getSequenceSupport().getCachedData(geneFileId);
-        if (geneFile == null || !geneFile.exists())
-        {
-            throw new PipelineJobException("Unable to find file: " + geneFileId + "/" + geneFile);
-        }
-
-        File snpEffIndexDir = getWrapper().getExpectedIndexDir(snpEffBaseDir, genome.getGenomeId(), geneFileId);
-        if (!snpEffIndexDir.exists())
-        {
-            getWrapper().buildIndex(snpEffBaseDir, genome, geneFile, geneFileId);
-        }
-        else
-        {
-            getPipelineCtx().getLogger().debug("previously created index found, re-using: " + snpEffIndexDir.getPath());
-        }
-
+        Integer geneFileId = getProvider().getParameterByName(GENE_PARAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
+        File snpEffBaseDir = checkOrCreateIndex(getPipelineCtx(), genome, geneFileId);
 
         File outputVcf = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".snpEff.vcf.gz");
         if (outputVcf.exists())

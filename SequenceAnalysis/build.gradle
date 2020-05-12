@@ -26,8 +26,9 @@ dependencies {
    external "org.apache.commons:commons-math3:${commonsMath3Version}"
    // picard brings in a version of servlet-api and a very old one at that, so we excluded it
    // Note: if changing this, we might need to match the htsjdk version set in gradle.properties
-   external("com.github.broadinstitute:picard:2.18.4") {
+   external("com.github.broadinstitute:picard:2.22.4") {
       exclude group: "javax.servlet", module: "servlet-api"
+      exclude group: "org.apache.commons", module: "commons-collections4"
    }
 
    BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:LabDevKitModules:laboratory", depProjectConfig: "published", depExtension: "module")

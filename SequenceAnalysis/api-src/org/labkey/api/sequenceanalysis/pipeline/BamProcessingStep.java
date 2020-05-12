@@ -29,6 +29,16 @@ public interface BamProcessingStep extends PipelineStep
 {
     public BamProcessingStep.Output processBam(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDirectory) throws PipelineJobException;
 
+    /**
+     * The BamProcessingStep must call Output.setBam() to explicitly specify the modified file.  This method exists as a check
+     * to prevent the developer from forgetting this.  Unless this is overridden, the pipeline will error if the original BAM is returned
+     * instead.
+     */
+    default boolean expectToCreateNewBam()
+    {
+        return true;
+    }
+
     public static interface Output extends PipelineStepOutput
     {
         /**

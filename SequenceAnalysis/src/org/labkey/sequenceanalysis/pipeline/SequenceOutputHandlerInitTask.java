@@ -81,6 +81,8 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
         List<RecordedAction> actions = new ArrayList<>();
 
         SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler = getPipelineJob().getHandler();
+        getJob().getLogger().info("Handler: " + handler.getName());
+
         List<SequenceOutputFile> outputsToCreate = new ArrayList<>();
 
         for (SequenceOutputFile f : getPipelineJob().getFiles())

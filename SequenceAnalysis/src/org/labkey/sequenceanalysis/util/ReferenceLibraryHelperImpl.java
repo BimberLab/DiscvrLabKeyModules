@@ -70,7 +70,7 @@ public class ReferenceLibraryHelperImpl implements ReferenceLibraryHelper
         File ret = new File(getReferenceFasta().getParentFile(), FileUtil.getBaseName(getReferenceFasta().getName()) + ".dict");
         if (!ret.exists() && createIfDoesntExist)
         {
-            CreateSequenceDictionary.main(new String[]{"REFERENCE=" + _refFasta.getPath(), "OUTPUT=" + ret.getPath()});
+            new CreateSequenceDictionary().instanceMain(new String[]{"REFERENCE=" + _refFasta.getPath(), "OUTPUT=" + ret.getPath()});
         }
 
         return ret;

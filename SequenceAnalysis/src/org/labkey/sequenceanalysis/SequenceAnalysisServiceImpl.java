@@ -433,12 +433,6 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     }
 
     @Override
-    public File getPicardJar()
-    {
-        return SequenceAnalysisManager.getPicardJar();
-    }
-
-    @Override
     public String getScriptPath(String moduleName, String path) throws PipelineJobException
     {
         Module module = ModuleLoader.getInstance().getModule(moduleName);
@@ -456,7 +450,13 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     @Override
     public File writeAllCellHashingBarcodes(File webserverDir, User u, Container c) throws PipelineJobException
     {
-        return CellHashingHandler.writeAllBarcodes(webserverDir, u, c);
+        return CellHashingHandler.writeAllBarcodes(CellHashingHandler.BARCODE_TYPE.hashing, webserverDir, u, c);
+    }
+
+    @Override
+    public File writeAllCiteSeqBarcodes(File webserverDir, User u, Container c) throws PipelineJobException
+    {
+        return CellHashingHandler.writeAllBarcodes(CellHashingHandler.BARCODE_TYPE.citeseq, webserverDir, u, c);
     }
 
     @Override

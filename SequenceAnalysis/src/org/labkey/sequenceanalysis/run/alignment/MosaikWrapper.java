@@ -30,7 +30,6 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
-import org.labkey.sequenceanalysis.run.util.FixBAMWrapper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -388,8 +387,8 @@ public class MosaikWrapper extends AbstractCommandWrapper
             }
 
             //Note: mosaik has started to give errors about bin field
-            FixBAMWrapper fixBam = new FixBAMWrapper(getLogger());
-            fixBam.executeCommand(bam, null);
+            //FixBAMWrapper fixBam = new FixBAMWrapper(getLogger());
+            //fixBam.executeCommand(bam, null);
 
             new SamSorter(getLogger()).execute(bam, null, SAMFileHeader.SortOrder.coordinate);
 

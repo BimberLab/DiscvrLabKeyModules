@@ -177,7 +177,7 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
         getHelper().getFileManager().addInput(action, IndexOutputImpl.REFERENCE_DB_FASTA, refFasta);
 
         FastaIndexer indexer = new FastaIndexer(getJob().getLogger());
-        File refFastaIndex = indexer.getExpectedIndexName(refFasta);
+        File refFastaIndex = FastaIndexer.getExpectedIndexName(refFasta);
         if (!refFastaIndex.exists())
         {
             indexer.execute(refFasta);

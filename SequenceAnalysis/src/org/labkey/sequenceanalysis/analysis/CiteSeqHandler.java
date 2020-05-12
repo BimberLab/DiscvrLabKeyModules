@@ -8,7 +8,7 @@ public class CiteSeqHandler extends CellHashingHandler
 
     public CiteSeqHandler()
     {
-        super("CITE-Seq Count", "This will run CITE-Seq Count to generate a table of features counts from CITE-Seq", CellHashingHandler.getDefaultParams(false, DEFAULT_TAG_GROUP));
+        super("CITE-Seq Count", "This will run CITE-Seq Count to generate a table of features counts from CITE-Seq", CellHashingHandler.getDefaultParams(false, DEFAULT_TAG_GROUP, BARCODE_TYPE.citeseq));
     }
 
     @Override
@@ -44,6 +44,6 @@ public class CiteSeqHandler extends CellHashingHandler
     @Override
     public SequenceReadsetProcessor getProcessor()
     {
-        return new Processor(false);
+        return new Processor(BARCODE_TYPE.citeseq);
     }
 }
