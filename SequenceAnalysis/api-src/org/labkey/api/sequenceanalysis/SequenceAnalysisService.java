@@ -89,8 +89,6 @@ abstract public class SequenceAnalysisService
 
     abstract public String getVCFLineCount(File vcf, Logger log, boolean passOnly) throws PipelineJobException;
 
-    abstract public File getPicardJar();
-
     abstract public File writeAllCellHashingBarcodes(File webserverDir, User u, Container c) throws PipelineJobException;
 
     abstract public String createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String assemblyId, String description, boolean skipCacheIndexes, boolean skipTriggers) throws IOException;
