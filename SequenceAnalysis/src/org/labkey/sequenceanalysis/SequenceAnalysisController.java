@@ -1205,13 +1205,13 @@ public class SequenceAnalysisController extends SpringActionController
                         //forward reads
                         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("fileid1"), d.getRowId());
                         Container c = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
-                        filter.addClause(ContainerFilter.CURRENT.createFilterClause(SequenceAnalysisSchema.getInstance().getSchema(), FieldKey.fromString("container"), c));
+                        filter.addClause(ContainerFilter.current(c).createFilterClause(SequenceAnalysisSchema.getInstance().getSchema(), FieldKey.fromString("container")));
                         TableSelector ts = new TableSelector(ti, Collections.singleton("readset"), filter, null);
                         Integer[] readsets1 = ts.getArray(Integer.class);
 
                         //reverse reads
                         SimpleFilter filter2 = new SimpleFilter(FieldKey.fromString("fileid2"), d.getRowId());
-                        filter2.addClause(ContainerFilter.CURRENT.createFilterClause(SequenceAnalysisSchema.getInstance().getSchema(), FieldKey.fromString("container"), c));
+                        filter2.addClause(ContainerFilter.current(c).createFilterClause(SequenceAnalysisSchema.getInstance().getSchema(), FieldKey.fromString("container")));
                         TableSelector ts2 = new TableSelector(ti, Collections.singleton("readset"), filter2, null);
                         Integer[] readsets2 = ts2.getArray(Integer.class);
 
