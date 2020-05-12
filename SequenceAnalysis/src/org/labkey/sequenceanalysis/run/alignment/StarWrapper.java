@@ -436,7 +436,7 @@ public class StarWrapper extends AbstractCommandWrapper
                 ToolParameterDescriptor.create(LONG_READS, "Reads >500bp", "If the reads are expected to exceed 500bp (per pair), this will use STARlong instead of STAR.", "checkbox", new JSONObject(){{
                     put("checked", false);
                 }}, false),
-                ToolParameterDescriptor.create("sjdbGTFtagExonParentTranscript", "Exon Parent Transcript", "This is only required for GFF3 files.  It is the annotation used to assign exons to transcripts.  For GFF3 files this is usually Parent.  It will be ignored if a GTF file is used.", "textfield", null, "Parent"),
+                ToolParameterDescriptor.create("sjdbGTFtagExonParentTranscript", "Exon Parent Transcript", "This is only required for GFF3 files.  It is the annotation used to assign exons to transcripts.  For GFF3 files this is usually Parent.  It will be ignored if a GTF file is used (since the default is transcript_id).", "textfield", null, "Parent"),
                 ToolParameterDescriptor.create("addSAMStrandField", "Add SAM Strand Field", "If you have unstranded data and plan to use cufflinks, this should be checked.  It will add the XS tag to the output BAM file.", "checkbox", new JSONObject(){{
                     put("checked", false);
                 }}, true),
