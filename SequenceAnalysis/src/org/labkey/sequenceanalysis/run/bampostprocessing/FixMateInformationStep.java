@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.bampostprocessing;
 
+import htsjdk.samtools.SAMFileHeader;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.BamProcessingOutputImpl;
@@ -11,8 +12,10 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.sequenceanalysis.run.util.FixMateInformationWrapper;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * User: bimber
@@ -48,7 +51,16 @@ public class FixMateInformationStep extends AbstractCommandPipelineStep<FixMateI
 
         File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".fixmate.bam");
         output.addIntermediateFile(outputBam);
-        output.setBAM(getWrapper().executeCommand(inputBam, outputBam));
+
+        try
+        {
+            SAMFileHeader.SortOrder so = SequenceUtil.getBamSortOrder(inputBam);
+            output.setBAM(getWrapper().executeCommand(inputBam, outputBam, so));
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
 
         return output;
     }

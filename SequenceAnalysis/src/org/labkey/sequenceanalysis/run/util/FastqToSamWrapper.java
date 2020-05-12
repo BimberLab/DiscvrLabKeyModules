@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.run.util;
 
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.util.FastqQualityFormat;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -31,12 +32,12 @@ public class FastqToSamWrapper extends PicardWrapper
         return execute(file, file2, null, null);
     }
 
-    public File execute(File file, @Nullable File file2, @Nullable SAMFileHeader.SortOrder sortOrder, @Nullable String readGroupName) throws PipelineJobException
+    public File execute(File file, @Nullable File file2, @Nullable SAMFileHeader.SortOrder sortOrder, @Nullable SAMReadGroupRecord rg) throws PipelineJobException
     {
         getLogger().info("Converting FASTQ to BAM: " + file.getPath());
         getLogger().info("\tFastqToSam version: " + getVersion());
 
-        execute(getParams(file, file2, sortOrder, readGroupName));
+        execute(getParams(file, file2, sortOrder, rg));
         File output = new File(getOutputDir(file), getOutputFilename(file));
         if (!output.exists())
         {
@@ -51,7 +52,7 @@ public class FastqToSamWrapper extends PicardWrapper
         return "FastqToSam";
     }
 
-    private List<String> getParams(File file, File file2, SAMFileHeader.SortOrder sortOrder, String readGroupName) throws PipelineJobException
+    private List<String> getParams(File file, File file2, SAMFileHeader.SortOrder sortOrder, @Nullable SAMReadGroupRecord rg) throws PipelineJobException
     {
         List<String> params = getBaseArgs();
         inferMaxRecordsInRam(params);
@@ -64,9 +65,23 @@ public class FastqToSamWrapper extends PicardWrapper
             params.add("SORT_ORDER=" + sortOrder.name());
         }
 
-        if (readGroupName != null)
+        if (rg != null)
         {
-            params.add("READ_GROUP_NAME=" + readGroupName);
+            params.add("READ_GROUP_NAME=" + rg.getReadGroupId());
+
+            if (rg.getPlatform() != null)
+                params.add("PLATFORM=" + rg.getPlatform());
+
+            if (rg.getPlatformUnit() != null)
+                params.add("PLATFORM_UNIT=" + rg.getPlatformUnit());
+
+            if (rg.getPlatformUnit() != null)
+                params.add("SAMPLE_NAME=" + rg.getSample());
+        }
+        else
+        {
+            params.add("READ_GROUP_NAME=null");
+            params.add("SAMPLE_NAME=SAMPLE");
         }
 
         FastqQualityFormat encoding = _fastqEncoding;
@@ -85,7 +100,6 @@ public class FastqToSamWrapper extends PicardWrapper
         }
 
         params.add("QUALITY_FORMAT=" + encoding);
-        params.add("SAMPLE_NAME=SAMPLE");
         params.add("OUTPUT=" + new File(getOutputDir(file), getOutputFilename(file)).getPath());
 
         return params;

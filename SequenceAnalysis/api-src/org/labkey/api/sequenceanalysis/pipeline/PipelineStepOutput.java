@@ -55,6 +55,12 @@ public interface PipelineStepOutput
      */
     public List<File> getIntermediateFiles();
 
+    /**
+     * Remove a previously added intermediate file
+     * @param toRemove The file to remove
+     */
+    public void removeIntermediateFiles(File toRemove);
+
     public List<PicardMetricsOutput> getPicardMetricsFiles();
 
     /**

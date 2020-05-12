@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.run.util;
 
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
@@ -65,10 +66,10 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
 
             File unmappedReadsBam;
             SamReaderFactory fact = SamReaderFactory.makeDefault();
+            SAMReadGroupRecord rg = null;
             try (SamReader reader = fact.open(alignedBam))
             {
                 SAMFileHeader header = reader.getFileHeader();
-                String rgId = null;
                 if (header.getReadGroups().size() == 0)
                 {
                     getLogger().warn("No read groups found in input BAM");
@@ -79,13 +80,13 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
                 }
                 else
                 {
-                    rgId = header.getReadGroups().get(0).getId();
+                    rg = header.getReadGroups().get(0);
                 }
 
                 FastqToSamWrapper fq = new FastqToSamWrapper(getLogger());
                 fq.setOutputDir(alignedBam.getParentFile());
                 fq.setStringency(ValidationStringency.SILENT);
-                unmappedReadsBam = fq.execute(inputFastq1, inputFastq2, SAMFileHeader.SortOrder.queryname, rgId == null ? "null" : rgId);
+                unmappedReadsBam = fq.execute(inputFastq1, inputFastq2, SAMFileHeader.SortOrder.queryname, rg);
                 if (!unmappedReadsBam.exists())
                 {
                     throw new PipelineJobException("BAM file not created, expected: " + unmappedReadsBam.getPath());

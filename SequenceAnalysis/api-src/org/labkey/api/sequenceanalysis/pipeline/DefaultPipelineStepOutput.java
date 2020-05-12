@@ -78,6 +78,12 @@ public class DefaultPipelineStepOutput implements PipelineStepOutput
     }
 
     @Override
+    public void removeIntermediateFiles(File toRemove)
+    {
+        _intermediateFiles.remove(toRemove);
+    }
+
+    @Override
     public List<PicardMetricsOutput> getPicardMetricsFiles()
     {
         return Collections.unmodifiableList(_picardMetricsFiles);
