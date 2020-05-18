@@ -4939,6 +4939,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(InsertPermission.class)
     public class ImportSequenceTracksAction extends MutatingApiAction<ImportTracksForm>
     {
+        @Override
         public ApiResponse execute(ImportTracksForm form, BindException errors) throws Exception
         {
             PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());

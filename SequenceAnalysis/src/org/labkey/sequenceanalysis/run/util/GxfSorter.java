@@ -104,7 +104,7 @@ public class GxfSorter
         long countSort = SequenceUtil.getLineCount(outputFile);
         if (countOrig != countSort)
         {
-            throw new PipelineJobException("Input and sorted do not have the same line count");
+            _log.warn("Input and sorted do not have the same line count: " + countOrig + " / " + countSort);
         }
 
         if (output == null)
