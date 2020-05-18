@@ -130,6 +130,7 @@ import org.labkey.sequenceanalysis.run.variant.VariantFiltrationStep;
 import org.labkey.sequenceanalysis.run.variant.VariantQCStep;
 import org.labkey.sequenceanalysis.run.variant.VariantsToTableStep;
 import org.labkey.sequenceanalysis.util.Barcoder;
+import org.labkey.sequenceanalysis.util.ChainFileValidator;
 import org.labkey.sequenceanalysis.util.ScatterGatherUtils;
 
 import java.util.Arrays;
@@ -446,7 +447,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
                 SequenceJobSupportImpl.TestCase.class,
                 ProcessVariantsHandler.TestCase.class,
                 VariantProcessingJob.TestCase.class,
-                ScatterGatherUtils.TestCase.class
+                ScatterGatherUtils.TestCase.class,
+                ChainFileValidator.TestCase.class
         );
     }
 
