@@ -33,6 +33,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.SimpleFilter;
@@ -56,7 +57,6 @@ import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.Job;
 import org.labkey.api.util.JobRunner;
@@ -65,7 +65,7 @@ import org.labkey.api.util.Pair;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
-import org.labkey.sequenceanalysis.run.util.GFFReadWrapper;
+import org.labkey.sequenceanalysis.run.util.GxfSorter;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -323,7 +323,7 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
             return;
         }
 
-        new GFFReadWrapper(getJob().getLogger()).sortGxf(gxf, null);
+        new GxfSorter(getJob().getLogger()).sortGxf(gxf, null);
     }
     private File getOutputFile(File file, File tracksDir)
     {
