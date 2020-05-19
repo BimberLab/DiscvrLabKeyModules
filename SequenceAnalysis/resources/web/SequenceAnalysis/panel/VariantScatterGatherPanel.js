@@ -17,7 +17,7 @@ Ext4.define('SequenceAnalysis.panel.VariantScatterGatherPanel', {
                 labelWidth: this.labelWidth,
                 width: this.defaultFieldWidth,
                 expandToFitContent: true,
-                value: 'none',
+                value: this.defaultValue || 'none',
                 displayField: 'label',
                 valueField: 'value',
                 store: {

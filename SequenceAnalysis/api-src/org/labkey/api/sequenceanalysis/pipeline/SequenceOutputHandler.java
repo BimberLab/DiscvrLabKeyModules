@@ -245,8 +245,13 @@ public interface SequenceOutputHandler<T>
 
     public static interface TracksVCF
     {
-        public File getFinalVCF(JobContext ctx) throws PipelineJobException;
+        public File getScatterJobOutput(JobContext ctx) throws PipelineJobException;
 
         public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, List<SequenceOutputFile> inputFiles);
+    }
+
+    public static interface HasCustomVariantMerge
+    {
+        public File performVariantMerge(TaskFileManager manager, RecordedAction action, SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler, PipelineJob job) throws PipelineJobException;
     }
 }

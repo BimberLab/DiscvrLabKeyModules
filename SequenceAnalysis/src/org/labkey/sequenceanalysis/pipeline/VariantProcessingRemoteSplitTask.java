@@ -107,20 +107,20 @@ public class VariantProcessingRemoteSplitTask extends WorkDirectoryTask<VariantP
         {
             if (handler instanceof SequenceOutputHandler.TracksVCF)
             {
-                File vcf = ((SequenceOutputHandler.TracksVCF)handler).getFinalVCF(ctx);
+                File output = ((SequenceOutputHandler.TracksVCF)handler).getScatterJobOutput(ctx);
                 try
                 {
                     //NOTE: the VCF was copied back to the source dir, so translate paths
-                    String path = _wd.getRelativePath(vcf);
-                    vcf = new File(ctx.getSourceDirectory(), path);
-                    getPipelineJob().getFinalVCFs().put(getPipelineJob().getIntervalSetName(), vcf);
+                    String path = _wd.getRelativePath(output);
+                    output = new File(ctx.getSourceDirectory(), path);
+                    getPipelineJob().getScatterJobOutputs().put(getPipelineJob().getIntervalSetName(), output);
                 }
                 catch (IOException e)
                 {
                     throw new PipelineJobException(e);
                 }
 
-                getPipelineJob().getLogger().debug("Final VCF: " + vcf.getPath());
+                getPipelineJob().getLogger().debug("Final scatter output: " + output.getPath());
             }
             else
             {

@@ -30,7 +30,7 @@ import java.util.Set;
  */
 public class GenomicsDBImportHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
-    public static final String NAME = "GenomicsDBImport";
+    public static final String NAME = "GenomicsDB Import";
     public static final String CATEGORY = "GenomicsDB Workspace";
 
     private FileType _gvcfFileType = new FileType(Arrays.asList(".g.vcf"), ".g.vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
@@ -88,6 +88,8 @@ public class GenomicsDBImportHandler extends AbstractParameterizedOutputHandler<
         @Override
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
+            //TODO: add to existing?
+            //See: https://gatk.broadinstitute.org/hc/en-us/articles/360035891051-GenomicsDB
             boolean doCopyLocal = ctx.getParams().optBoolean("doCopyLocal", false);
 
             RecordedAction action = new RecordedAction(getName());
@@ -133,7 +135,7 @@ public class GenomicsDBImportHandler extends AbstractParameterizedOutputHandler<
             GenomicsDbImportWrapper wrapper = new GenomicsDbImportWrapper(ctx.getLogger());
             List<String> options = new ArrayList<>(getClientCommandArgs(ctx.getParams()));
 
-            wrapper.execute(genome, vcfsToProcess, outputFile, options);
+            wrapper.execute(genome, vcfsToProcess, outputFile, null, options);
 
             if (!outputFile.exists())
             {

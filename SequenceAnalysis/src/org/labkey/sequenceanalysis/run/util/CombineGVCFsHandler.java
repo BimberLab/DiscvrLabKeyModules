@@ -76,9 +76,9 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
     }
 
     @Override
-    public File getFinalVCF(JobContext ctx) throws PipelineJobException
+    public File getScatterJobOutput(JobContext ctx) throws PipelineJobException
     {
-        return ProcessVariantsHandler.getVcfOutputByCategory(ctx, COMBINED_CATEGORY);
+        return ProcessVariantsHandler.getScatterOutputByCategory(ctx, COMBINED_CATEGORY);
     }
 
     @Override
@@ -201,7 +201,7 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
                     {
                         String path = ctx.getWorkDir().getRelativePath(outputFile);
                         File movedOutputFile = new File(ctx.getSourceDirectory(), path);
-                        job.getFinalVCFs().put(job.getIntervalSetName(), movedOutputFile);
+                        job.getScatterJobOutputs().put(job.getIntervalSetName(), movedOutputFile);
                     }
                     catch (IOException e)
                     {
