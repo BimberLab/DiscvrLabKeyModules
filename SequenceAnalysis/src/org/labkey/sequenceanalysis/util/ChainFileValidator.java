@@ -265,6 +265,11 @@ public class ChainFileValidator
             refName = refName.replaceAll("_random$", "");
         }
 
+        if (refName.endsWith("_fix"))
+        {
+            refName = refName.replaceAll("_fix$", "");
+        }
+
         if (refName.startsWith("chr") && refName.contains("_"))
         {
             String[] tokens = refName.split("_");
@@ -289,6 +294,7 @@ public class ChainFileValidator
         {
             assertEquals("NW_021160495.1", translateUcscUnplaced("chrUn_NW_021160495v1"));
             assertEquals("NW_021160383.1", translateUcscUnplaced("chrX_NW_021160383v1_random"));
+            assertEquals("NW_021160383.1", translateUcscUnplaced("chrX_NW_021160383v1_fix"));
         }
     }
 }
