@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.util;
 
+import htsjdk.samtools.util.Interval;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.json.JSONObject;
@@ -13,9 +14,13 @@ import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
+import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -23,12 +28,14 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by bimber on 4/2/2017.
  */
-public class GenomicsDBImportHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
+public class GenomicsDBImportHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> implements SequenceOutputHandler.TracksVCF, SequenceOutputHandler.HasCustomVariantMerge
 {
     public static final String NAME = "GenomicsDB Import";
     public static final String CATEGORY = "GenomicsDB Workspace";
@@ -43,8 +50,58 @@ public class GenomicsDBImportHandler extends AbstractParameterizedOutputHandler<
                     put("checked", false);
                 }}, false),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--batch-size"), "batchSize", "Batch Size", "Batch size controls the number of samples for which readers are open at once and therefore provides a way to minimize memory consumption. However, it can take longer to complete. Use the consolidate flag if more than a hundred batches were used. This will improve feature read time. batchSize=0 means no batching (i.e. readers for all samples will be opened at once) Defaults to 0.", "ldk-integerfield", null, null),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--reader-threads"), "readerThreads", "Reader Threads", "How many simultaneous threads to use when opening VCFs in batches; higher values may improve performance when network latency is an issue", "ldk-integerfield", null, null)
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--reader-threads"), "readerThreads", "Reader Threads", "How many simultaneous threads to use when opening VCFs in batches; higher values may improve performance when network latency is an issue", "ldk-integerfield", null, null),
+                ToolParameterDescriptor.create("scatterGather", "Scatter/Gather Options", "If selected, this job will be divided to run job per chromosome.  The final step will take the VCF from each intermediate step and combined to make a final VCF file.", "sequenceanalysis-variantscattergatherpanel", new JSONObject(){{
+                    put("defaultValue", "chunked");
+                }}, false)
         ));
+    }
+
+    @Override
+    public File getScatterJobOutput(JobContext ctx) throws PipelineJobException
+    {
+        return ProcessVariantsHandler.getScatterOutputByCategory(ctx, GenomicsDBImportHandler.CATEGORY);
+    }
+
+    @Override
+    public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File mergedWorkspace, List<SequenceOutputFile> inputFiles)
+    {
+        Set<Integer> libraryIds = new HashSet<>();
+        inputFiles.forEach(x -> {
+            if (x.getLibrary_id() != null)
+                libraryIds.add(x.getLibrary_id());
+        });
+
+        if (libraryIds.isEmpty())
+        {
+            throw new IllegalArgumentException("No library ID defined for VCFs");
+        }
+
+        Set<Integer> readsetIds = new HashSet<>();
+        inputFiles.forEach(x -> readsetIds.add(x.getReadset()));
+
+        AtomicInteger sampleCount = new AtomicInteger();
+        for (SequenceOutputFile so : inputFiles)
+        {
+            try (VCFFileReader reader = new VCFFileReader(so.getFile()))
+            {
+                VCFHeader header = reader.getFileHeader();
+                sampleCount.getAndAdd(header.getSampleNamesInOrder().size());
+            }
+        }
+
+        SequenceOutputFile so1 = new SequenceOutputFile();
+        so1.setName(getPipelineJob(job).getParameterJson().getString("basename"));
+        so1.setFile(mergedWorkspace);
+        so1.setLibrary_id(libraryIds.iterator().next());
+        so1.setCategory(GenomicsDBImportHandler.CATEGORY);
+        so1.setContainer(job.getContainerId());
+        so1.setCreated(new Date());
+        so1.setModified(new Date());
+        so1.setReadset((readsetIds.size() != 1 ? null : readsetIds.iterator().next()));
+        so1.setDescription("Total samples: " + sampleCount.get());
+
+        return so1;
     }
 
     @Override
@@ -178,5 +235,66 @@ public class GenomicsDBImportHandler extends AbstractParameterizedOutputHandler<
                 }
             }
         }
+    }
+
+    private File getWorkspaceOutput(File outDir, String basename)
+    {
+        basename = FileUtil.makeLegalName(basename);
+        return new File(outDir, basename + (basename.endsWith(".") ? "" : ".") + "gdb");
+    }
+
+    private List<Interval> getIntervals(JobContext ctx)
+    {
+        if (ctx.getJob() instanceof VariantProcessingJob)
+        {
+            VariantProcessingJob job = (VariantProcessingJob) ctx.getJob();
+
+            return job.getIntervalsForTask();
+        }
+
+        throw new IllegalArgumentException("This job requires intervals to be set");
+    }
+
+    private VariantProcessingJob getPipelineJob(PipelineJob job)
+    {
+        return (VariantProcessingJob) job;
+    }
+
+    @Override
+    public File performVariantMerge(TaskFileManager manager, RecordedAction action, SequenceOutputHandler<SequenceOutputProcessor> handler, PipelineJob job) throws PipelineJobException
+    {
+        Map<String, List<Interval>> jobToIntervalMap = getPipelineJob(job).getJobToIntervalMap();
+        job.setStatus(PipelineJob.TaskStatus.running, "Creating merged workspace from: " + jobToIntervalMap.size());
+
+        VariantProcessingJob variantProcessingJob = getPipelineJob(job);
+        File destinationDir = getWorkspaceOutput(variantProcessingJob.getDataDirectory(), variantProcessingJob.getParameterJson().getString("basename"));
+        if (!destinationDir.exists())
+        {
+            destinationDir.mkdirs();
+        }
+
+        Map<String, File> scatterOutputs = getPipelineJob(job).getScatterJobOutputs();
+        for (String name : jobToIntervalMap.keySet())
+        {
+            if (!scatterOutputs.containsKey(name))
+            {
+                throw new PipelineJobException("Missing output for interval/contig: " + name);
+            }
+
+            File sourceWorkspace = scatterOutputs.get(name);
+            if (!sourceWorkspace.exists())
+            {
+                throw new PipelineJobException("Missing output: " + sourceWorkspace.getPath());
+            }
+
+            //TODO: copy into one dir:
+        }
+
+        return getMarkerFile(destinationDir);
+    }
+
+    private File getMarkerFile(File workspace)
+    {
+        return new File(workspace, "__tiledb_workspace.tdb");
     }
 }
