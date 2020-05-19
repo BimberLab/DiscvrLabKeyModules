@@ -56,7 +56,7 @@ Ext4.define('SequenceAnalysis.field.SequenceOutputFileSelectorField', {
                 this.updateStoreFilters(window.libraryId);
             }
             else {
-                LDK.Utils.logError('unable to find basesequencepanel in GenomeFileSelectorField');
+                LDK.Utils.logError('unable to find basesequencepanel in SequenceOutputFileSelectorField');
                 Ext4.Msg.alert('Error', 'There is no genome ID provided to this field.  This indicates an error in how the module was developed - please contact your administrator.');
             }
         }, this);
