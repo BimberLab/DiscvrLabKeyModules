@@ -239,6 +239,7 @@ public class ChainFileValidator
         }
 
         //UCSC is a main source of chain files, so deal with their quirks:
+        // https://genome.ucsc.edu/cgi-bin/hgGateway
         if (refName.startsWith("chr"))
         {
             String toTest = refName.replaceFirst("chr", "");
@@ -264,16 +265,24 @@ public class ChainFileValidator
         {
             refName = refName.replaceAll("_random$", "");
         }
-
-        if (refName.endsWith("_fix"))
+        else if (refName.endsWith("_fix"))
         {
             refName = refName.replaceAll("_fix$", "");
+        }
+        else if (refName.endsWith("_alt"))
+        {
+            refName = refName.replaceAll("_alt$", "");
         }
 
         if (refName.startsWith("chr") && refName.contains("_"))
         {
             String[] tokens = refName.split("_");
             refName = StringUtils.join(Arrays.copyOfRange(tokens, 1, tokens.length), "_");
+        }
+
+        if (refName.equals("chrM"))
+        {
+            return "MT";
         }
 
         Matcher m = _versionEnd.matcher(refName);
@@ -295,6 +304,8 @@ public class ChainFileValidator
             assertEquals("NW_021160495.1", translateUcscUnplaced("chrUn_NW_021160495v1"));
             assertEquals("NW_021160383.1", translateUcscUnplaced("chrX_NW_021160383v1_random"));
             assertEquals("NW_021160383.1", translateUcscUnplaced("chrX_NW_021160383v1_fix"));
+
+            //chrM???
         }
     }
 }
