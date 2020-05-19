@@ -2982,13 +2982,15 @@ public class SequenceAnalysisController extends SpringActionController
 
                     try
                     {
-                        File chainFile = new ChainFileValidator().validateChainFile(file, form.getGenomeId1(), form.getGenomeId2());
-                        SequenceAnalysisManager.get().addChainFile(getContainer(), getUser(), chainFile, form.getGenomeId1(), form.getGenomeId2(), form.getVersion());
+                        List<String> messages = new ArrayList<>();
+                        File chainFile = new ChainFileValidator().processChainFile(file, form.getGenomeId1(), form.getGenomeId2(), form.getAllowUnknownContig(), messages);
+                        SequenceAnalysisManager.get().addChainFile(getContainer(), getUser(), chainFile, form.getGenomeId1(), form.getGenomeId2(), form.getSource(), form.getVersion());
                         if (file.exists())
                         {
                             file.delete();
                         }
 
+                        resp.put("messages", messages);
                         resp.put("success", true);
                     }
                     catch (SAMException e)
@@ -3015,7 +3017,9 @@ public class SequenceAnalysisController extends SpringActionController
     {
         private Integer _genomeId1;
         private Integer _genomeId2;
+        private String _source;
         private Double _version;
+        private Boolean _allowUnknownContig = false;
 
         public Integer getGenomeId1()
         {
@@ -3045,6 +3049,26 @@ public class SequenceAnalysisController extends SpringActionController
         public void setVersion(Double version)
         {
             _version = version;
+        }
+
+        public Boolean getAllowUnknownContig()
+        {
+            return _allowUnknownContig;
+        }
+
+        public void setAllowUnknownContig(Boolean allowUnknownContig)
+        {
+            _allowUnknownContig = allowUnknownContig;
+        }
+
+        public String getSource()
+        {
+            return _source;
+        }
+
+        public void setSource(String source)
+        {
+            _source = source;
         }
     }
 

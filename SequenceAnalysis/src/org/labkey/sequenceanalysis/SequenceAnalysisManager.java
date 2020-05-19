@@ -775,7 +775,7 @@ public class SequenceAnalysisManager
         return sequenceIds;
     }
 
-    public void addChainFile(Container c, User u, File file, int genomeId1, int genomeId2, Double version) throws Exception
+    public void addChainFile(Container c, User u, File file, int genomeId1, int genomeId2, String source, Double version) throws Exception
     {
         TableInfo libraryTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
         TableInfo chainTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_CHAIN_FILES);
@@ -819,6 +819,7 @@ public class SequenceAnalysisManager
         CaseInsensitiveHashMap map = new CaseInsensitiveHashMap();
         map.put("genomeId1", genomeId1);
         map.put("genomeId2", genomeId2);
+        map.put("source", source);
         map.put("version", version);
         map.put("chainFile", chainFile.getRowId());
 

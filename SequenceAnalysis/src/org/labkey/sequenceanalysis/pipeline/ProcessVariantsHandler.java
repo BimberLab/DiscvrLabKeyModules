@@ -181,7 +181,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         so1.setContainer(job.getContainerId());
         so1.setCreated(new Date());
         so1.setModified(new Date());
-        so1.setReadset((readsetIds.isEmpty() ? null : readsetIds.iterator().next()));
+        so1.setReadset((readsetIds.size() != 1 ? null : readsetIds.iterator().next()));
         so1.setDescription("Total samples: " + sampleCount);
 
         return so1;

@@ -19,9 +19,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -42,7 +44,7 @@ public class ChainFileValidator
 
     }
 
-    public File validateChainFile(File chainFile, int sourceGenome, int targetGenome) throws IllegalArgumentException
+    public File processChainFile(File chainFile, int sourceGenome, int targetGenome, boolean allowUnknownContigs, List<String> messages) throws IllegalArgumentException
     {
         // known issues are:
         // HTS-JDK does not accept comment lines
@@ -57,9 +59,15 @@ public class ChainFileValidator
         boolean hasChanges = false;
         Map<String, String> sourceTranslations = new HashMap<>();
         Map<String, String> targetTranslations = new HashMap<>();
+        Set<String> sourceBlacklist = new HashSet<>();
+        Set<String> targetBlacklist = new HashSet<>();
+
+        Set<String> unknownSource = new HashSet<>();
+        Set<String> unknownTarget = new HashSet<>();
         try (BufferedLineReader reader = new BufferedLineReader(IOUtil.openFileForReading(chainFile)))
         {
             String line;
+            List<String> errors = new ArrayList<>();
             while ((line = reader.readLine()) != null)
             {
                 if (line.equals("") || line.startsWith("#"))
@@ -89,8 +97,16 @@ public class ChainFileValidator
                         String sourceResolved = resolveSequenceId(sourceSeq, sourceGenome);
                         if (sourceResolved == null)
                         {
-                            throw new IllegalArgumentException("Line " + reader.getLineNumber() + ": unable to resolve sequence with name " + sourceSeq + " in reference genome: " + sourceGenome + ".  There names of the contigs in the chain file must match the names used for the sequences within the site.");
+                            if (allowUnknownContigs)
+                            {
+                                sourceBlacklist.add(sourceSeq);
+                            }
+                            else
+                            {
+                                unknownSource.add(sourceSeq);
+                            }
                         }
+
                         if (!sourceSeq.equals(sourceResolved))
                         {
                             sourceTranslations.put(sourceSeq, sourceResolved);
@@ -101,8 +117,16 @@ public class ChainFileValidator
                         String targetResolved = resolveSequenceId(targetSeq, targetGenome);
                         if (targetResolved == null)
                         {
-                            throw new IllegalArgumentException("Line " + reader.getLineNumber() + ": unable to resolve sequence with name " + targetSeq + " in reference genome: " + targetGenome + ".  There names of the contigs in the chain file must match the names used for the sequences within the site.");
+                            if (allowUnknownContigs)
+                            {
+                                targetBlacklist.add(targetSeq);
+                            }
+                            else
+                            {
+                                unknownTarget.add(targetSeq);
+                            }
                         }
+
                         if (!targetSeq.equals(targetResolved))
                         {
                             targetTranslations.put(targetSeq, targetResolved);
@@ -114,6 +138,21 @@ public class ChainFileValidator
                     }
                 }
             }
+
+            if (!unknownSource.isEmpty() || !unknownTarget.isEmpty())
+            {
+                if (!unknownSource.isEmpty())
+                {
+                    errors.add("Unable to resolve contigs in source genome: " + StringUtils.join(unknownSource, "; "));
+                }
+
+                if (!unknownTarget.isEmpty())
+                {
+                    errors.add("Unable to resolve contigs in target genome: " + StringUtils.join(unknownTarget, "; "));
+                }
+
+                throw new IllegalArgumentException(StringUtils.join(errors, ",\n"));
+            }
         }
 
         //step 2: iterate lines, write new file
@@ -124,12 +163,16 @@ public class ChainFileValidator
         }
         else
         {
+            int totalChainSkipped = 0;
+            int totalChainIdUpdated = 0;
+            int totalPassing = 0;
             File output = new File(chainFile.getParentFile(), FileUtil.getBaseName(chainFile) + "-cleaned." + FileUtil.getExtension(chainFile));
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(output, true)))
             {
                 try (BufferedLineReader reader = new BufferedLineReader(IOUtil.openFileForReading(chainFile)))
                 {
                     String line;
+                    boolean skipCurrentChain = false;
                     while ((line = reader.readLine()) != null)
                     {
                         line = StringUtils.trimToEmpty(line);
@@ -143,6 +186,7 @@ public class ChainFileValidator
                                 if (encounteredIds.contains(chainId))
                                 {
                                     chainId = getNextChainId(chainId, uniqueIds);
+                                    totalChainIdUpdated++;
                                 }
 
                                 encounteredIds.add(chainId);
@@ -165,15 +209,44 @@ public class ChainFileValidator
                                 chainFields[7] = targetTranslations.get(targetSeq);
                             }
 
+                            if (sourceBlacklist.contains(sourceSeq) || targetBlacklist.contains(targetSeq))
+                            {
+                                skipCurrentChain = true;
+                                totalChainSkipped++;
+                                continue;
+                            }
+
+                            skipCurrentChain = false;
+                            totalPassing++;
                             writer.write(StringUtils.join(chainFields, " "));
                             writer.write('\n');
                         }
                         else
                         {
-                            writer.write(line);
-                            writer.write('\n');
+                            if (!skipCurrentChain)
+                            {
+                                writer.write(line);
+                                writer.write('\n');
+                            }
                         }
                     }
+                }
+
+                if (totalPassing == 0)
+                {
+                    throw new IllegalArgumentException("No lines passed in this chain file");
+                }
+
+                messages.add("Total passing chains: " + totalPassing);
+
+                if (totalChainSkipped > 0)
+                {
+                    messages.add("Chains Skipped Due to Unknown Contigs: " + totalChainSkipped);
+                }
+
+                if (totalChainIdUpdated > 0)
+                {
+                    messages.add("Duplicates Chain Ids Updated: " + totalChainIdUpdated);
                 }
             }
             catch (IOException e)

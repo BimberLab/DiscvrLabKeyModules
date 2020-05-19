@@ -117,8 +117,7 @@ public class GenomicsDBImportHandler extends AbstractParameterizedOutputHandler<
             }
 
             //TODO: consider whether we can do some kind of local resume, based on whether files exist in the workspace
-            String basename = ctx.getParams().getString("fileBaseName");
-            File outputFile = new File(ctx.getOutputDir(), basename + (basename.endsWith(".") ? "" : ".") + "gdb");
+            File outputFile = getWorkspaceOutput(ctx.getOutputDir(), ctx.getParams().getString("fileBaseName"));
 
             Set<File> toDelete = new HashSet<>();
             List<File> vcfsToProcess = new ArrayList<>();
@@ -135,7 +134,8 @@ public class GenomicsDBImportHandler extends AbstractParameterizedOutputHandler<
             GenomicsDbImportWrapper wrapper = new GenomicsDbImportWrapper(ctx.getLogger());
             List<String> options = new ArrayList<>(getClientCommandArgs(ctx.getParams()));
 
-            wrapper.execute(genome, vcfsToProcess, outputFile, null, options);
+            List<Interval> intervals = getIntervals(ctx);
+            wrapper.execute(genome, vcfsToProcess, outputFile, intervals, options);
 
             if (!outputFile.exists())
             {

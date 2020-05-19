@@ -20,7 +20,7 @@ Ext4.define('SequenceAnalysis.window.ImportChainFileWindow', {
                 width: 450
             },
             items: [{
-                html: 'This will import a chain file, which is used to liftover variants or annotations from one reference genome to another.',
+                html: 'This will import a chain file, which is used to liftover variants or annotations from one reference genome to another. Note: because UCSC is a common source of chain files and they use non-standard contig names, the server-side code will attempt to parse any non-standard names in the chain file, match them with the genomes, and write an updated chain file.',
                 style: 'padding-bottom: 10px;',
                 width: null
             },{
@@ -59,10 +59,22 @@ Ext4.define('SequenceAnalysis.window.ImportChainFileWindow', {
                     name: 'chainFile',
                     allowBlank: false
                 },{
+                    xtype: 'textfield',
+                    fieldLabel: 'Source',
+                    name: 'source',
+                    allowBlank: false
+                },{
                     xtype: 'ldk-numberfield',
                     fieldLabel: 'Version',
+                    helpPopup: 'This field is used by the system - when a chain file is being selected automatically it will choose the one with the highest version',
                     name: 'version',
                     allowBlank: false
+                },{
+                    xtype: 'checkbox',
+                    fieldLabel: 'Allow Unknown Contigs',
+                    helpPopup: 'By default, if the chain file contains contigs that cannot be mapped to contigs in the genomes, it will fail. If this is checked, these chains will simply be discarded.',
+                    name: 'allowUnknownContig',
+                    checked: false
                 },{
                     xtype: 'hidden', name: 'X-LABKEY-CSRF', value: LABKEY.CSRF
                 }]
@@ -103,12 +115,24 @@ Ext4.define('SequenceAnalysis.window.ImportChainFileWindow', {
         this.down('form').submit({
             scope: this,
             timeout: 999999999,
-            success: function(){
+            success: function(form, action){
                 Ext4.Msg.hide();
+
+                var msg = null;
+                if (action && action.response && action.response.responseText){
+                    if (Ext4.String.startsWith(action.response.responseText, '{')) {
+                        action.response.responseJSON = Ext4.decode(action.response.responseText);
+                    }
+
+                    if (action.response.responseJSON && action.response.responseJSON.messages) {
+                        console.log(action.response.responseJSON.messages);
+                        msg = action.response.responseJSON.messages.join('<br>');
+                    }
+                }
 
                 this.close();
 
-                Ext4.Msg.alert('Success', 'Chain File Imported!', function(){
+                Ext4.Msg.alert('Success', 'Chain File Imported!' + (msg ? ' Notes:<br><br>' + msg : ''), function(){
                     var dataRegion = LABKEY.DataRegions[this.dataRegionName];
                     dataRegion.refresh();
                 }, this);
@@ -118,7 +142,16 @@ Ext4.define('SequenceAnalysis.window.ImportChainFileWindow', {
                 var msg;
                 var serverMsg = [];
                 if (action && action.response && action.response.responseText){
-                    msg = action.response.responseText;
+                    if (Ext4.String.startsWith(action.response.responseText, '{')) {
+                        action.response.responseJSON = Ext4.decode(action.response.responseText);
+                    }
+
+                    if (action.response.responseJSON && action.response.responseJSON.exception) {
+                        msg = action.response.responseJSON.exception;
+                    }
+                    else {
+                        msg = action.response.responseText;
+                    }
                     serverMsg.push(action.response.responseText);
                 }
 

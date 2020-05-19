@@ -14,6 +14,7 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.log4j.Logger;
 import org.biojava3.core.sequence.DNASequence;
 import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
@@ -23,6 +24,10 @@ import org.biojava3.core.sequence.io.FastaReader;
 import org.biojava3.core.sequence.io.GenericFastaHeaderParser;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
+import org.labkey.api.data.Table;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
@@ -378,6 +383,23 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         output.addSequenceOutput(coverageOut, "Depth of Coverage: " + rs.getName(), "Depth of Coverage", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
         output.addSequenceOutput(consensusFastaLoFreq, "Consensus: " + rs.getName(), "Viral Consensus Sequence", rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
 
+        //write metrics:
+        try (CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(getMetricsFile(getPipelineCtx().getSourceDirectory()))))
+        {
+            writer.writeNext(new String[]{"Category", "MetricName", "Value"});
+            writer.writeNext(new String[]{"LoFreq Analysis", "CoverageThreshold", String.valueOf(minCoverage)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "TotalConsensusN", String.valueOf(lofreqConsensusNs)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "LowCoverPositionsSkipped", String.valueOf(positionsSkipped)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "VariantGTThreshold", String.valueOf(totalGTThreshold)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "VariantGT1", String.valueOf(totalGT1)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "VariantGT50", String.valueOf(totalGT50)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "IndelsGTThreshold", String.valueOf(totalIndelGTThreshold)});
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
         return output;
     }
 
@@ -458,9 +480,65 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         return totalN.get();
     }
 
+    private File getMetricsFile(File outDir)
+    {
+        return new File(outDir, "metrics.txt");
+    }
+
     @Override
     public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta, File outDir) throws PipelineJobException
     {
+        Map<String, String> valueMap = new HashMap<>();
+
+        File metrics = getMetricsFile(outDir);
+        if (metrics.exists())
+        {
+            getPipelineCtx().getLogger().info("Loading metrics");
+            int total = 0;
+            TableInfo ti = DbSchema.get("sequenceanalysis", DbSchemaType.Module).getTable("quality_metrics");
+            try (CSVReader reader = new CSVReader(Readers.getReader(metrics), '\t'))
+            {
+                String[] line;
+                while ((line = reader.readNext()) != null)
+                {
+                    if ("Category".equals(line[0]))
+                    {
+                        continue;
+                    }
+
+                    Map<String, Object> r = new HashMap<>();
+                    r.put("category", line[0]);
+                    r.put("metricname", line[1]);
+
+                    String value = line[2];
+
+                    String fieldName = NumberUtils.isCreatable(value) ? "metricvalue" : "qualvalue";
+                    r.put(fieldName, value);
+
+                    r.put("analysis_id", model.getRowId());
+                    r.put("dataid", model.getAlignmentFile());
+                    r.put("readset", model.getReadset());
+                    r.put("container", getPipelineCtx().getJob().getContainer());
+                    r.put("createdby", getPipelineCtx().getJob().getUser().getUserId());
+
+                    Table.insert(getPipelineCtx().getJob().getUser(), ti, r);
+                    total++;
+
+                    valueMap.put(line[1], value);
+                }
+
+                getPipelineCtx().getJob().getLogger().info("total metrics: " + total);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+        else
+        {
+            getPipelineCtx().getJob().getLogger().warn("Unable to find metrics file: " + metrics.getPath());
+        }
+
         return null;
     }
 
