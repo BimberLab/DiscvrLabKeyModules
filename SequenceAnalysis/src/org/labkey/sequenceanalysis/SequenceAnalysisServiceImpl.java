@@ -46,6 +46,7 @@ import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.BgzipRunner;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
+import org.labkey.sequenceanalysis.run.util.GxfSorter;
 import org.labkey.sequenceanalysis.run.util.TabixRunner;
 import org.labkey.sequenceanalysis.util.ReferenceLibraryHelperImpl;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
@@ -483,5 +484,11 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     public File combineVcfs(List<File> files, File outputGz, ReferenceGenome genome, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel) throws PipelineJobException
     {
         return SequenceUtil.combineVcfs(files, genome, outputGz, log, multiThreaded, compressionLevel);
+    }
+
+    @Override
+    public void sortGxf(Logger log, File input, @Nullable File output) throws PipelineJobException
+    {
+        new GxfSorter(log).sortGxf(input, output);
     }
 }

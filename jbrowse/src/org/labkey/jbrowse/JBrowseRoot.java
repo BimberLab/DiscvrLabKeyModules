@@ -1652,7 +1652,7 @@ public class JBrowseRoot
         o.put("type", "AnnotatedVariants/View/Track/VCFVariants");
         o.put("key", featureLabel);
         o.put("hideNotFilterPass", true);
-        o.put("chunkSizeLimit", 5000000);
+        o.put("chunkSizeLimit", 10000000);
 
         String relPath = FileUtil.relativePath(getBaseDir(data.getContainer()).getPath(), outDir.getPath());
         getLogger().debug("using relative path: " + relPath);
