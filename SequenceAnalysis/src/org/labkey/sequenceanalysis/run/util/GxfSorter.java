@@ -47,11 +47,13 @@ public class GxfSorter
         try (PrintWriter writer = PrintWriters.getPrintWriter(script))
         {
             writer.println("#!/bin/bash");
+            writer.println("set -x");
+            writer.println("set -e");
             writer.println("GFF=" + input.getPath());
             writer.println("OUT_GFF=" + outputFile.getPath());
 
             writer.println("awk '{ if ($1 ~ \"^#\" ) print $0; else exit; }' $GFF > $OUT_GFF");
-            writer.println("(grep -v '#' | grep -v \"Parent=\" $GFF | sort -V -k1,1 -k4,4n -k5,5n; grep -v '#' | grep -e \"Parent=\" $GFF | sort -V -k1,1 -k4,4n -k5,5n)| sort -V -k1,1 -k4,4n -s >> $OUT_GFF");
+            writer.println("(grep -v '#' $GFF | grep -v \"Parent=\" | sort -V -k1,1 -k4,4n -k5,5n; grep -v '#' $GFF | grep -e \"Parent=\" | sort -V -k1,1 -k4,4n -k5,5n)| sort -V -k1,1 -k4,4n -s >> $OUT_GFF");
         }
         catch (IOException e)
         {
@@ -70,6 +72,8 @@ public class GxfSorter
         try (PrintWriter writer = PrintWriters.getPrintWriter(script))
         {
             writer.println("#!/bin/bash");
+            writer.println("set -x");
+            writer.println("set -e");
             writer.println("GTF=" + input.getPath());
             writer.println("OUT_GTF=" + outputFile.getPath());
 

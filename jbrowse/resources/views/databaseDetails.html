@@ -13,7 +13,9 @@
         Ext4.get(webpart.wrapperDivId).update(
             '<div id="details_'+webpart.wrapperDivId+'"></div>' +
             '<br>' +
-            '<div id="members_'+webpart.wrapperDivId+'"></div>'
+            '<div id="members_'+webpart.wrapperDivId+'"></div>' +
+            '<br>' +
+            '<div id="jsonfiles_'+webpart.wrapperDivId+'"></div>'
         );
 
         Ext4.create('LDK.panel.DetailsPanel', {
@@ -35,6 +37,30 @@
             containerPath: Laboratory.Utils.getQueryContainerPath(),
             filterArray: [LABKEY.Filter.create('database', objectid, LABKEY.Filter.Types.EQUAL)]
         }).render('members_'+webpart.wrapperDivId);
+
+        LABKEY.Query.selectRows({
+            containerPath: Laboratory.Utils.getQueryContainerPath(),
+            schemaName: 'jbrowse',
+            queryName: 'databases',
+            columns: 'rowid,libraryId,container',
+            filterArray: [LABKEY.Filter.create('objectid', objectid, LABKEY.Filter.Types.EQUAL)],
+            scope: this,
+            error: LDK.Utils.getErrorCallback(),
+            success: function (results) {
+                if (results.rows && results.rows.length) {
+                    var genomeId = results.rows[0].libraryId;
+                    var container = results.rows[0].container;
+
+                    LDK.Utils.getReadOnlyQWP({
+                        title: 'Additional Tracks Provided By The Base Genome',
+                        schemaName: 'jbrowse',
+                        queryName: 'jsonfiles',
+                        containerPath: container,
+                        filterArray: [LABKEY.Filter.create('trackid/library_id', genomeId, LABKEY.Filter.Types.EQUAL)]
+                    }).render('jsonfiles_' + webpart.wrapperDivId);
+                }
+            }
+        });
     });
 
 </script>
