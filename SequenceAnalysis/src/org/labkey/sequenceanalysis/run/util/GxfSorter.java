@@ -74,7 +74,7 @@ public class GxfSorter
             writer.println("OUT_GTF=" + outputFile.getPath());
 
             writer.println("awk '{ if ($1 ~ \"^#\" ) print $0; else exit; }' $GTF > $OUT_GTF");
-            writer.println("cat $GTF | awk -v OFS='\\t' ' {");
+            writer.println("cat $GTF | grep -v '#' | awk -v OFS='\\t' ' {");
             writer.println("so = 3");
             writer.println("if (tolower($3) == \"gene\")");
             writer.println("    so = 1");
