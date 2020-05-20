@@ -240,7 +240,8 @@ public class CellRangerWrapper extends AbstractCommandWrapper
                             continue;
                         }
 
-                        if (!line[0].startsWith("#") && (!line[8].contains("gene_id") || !line[8].contains("transcript_id")))
+                        //Drop lines lacking gene_id/transcript, or with empty gene_id:
+                        if (!line[0].startsWith("#") && (!line[8].contains("gene_id") || !line[8].contains("transcript_id") || line[8].contains("gene_id \"\"") || line[8].contains("transcript_id \"\"")))
                         {
                             linesDropped++;
                             continue;
@@ -262,7 +263,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
 
                 if (linesDropped > 0)
                 {
-                    getPipelineCtx().getLogger().info("dropped " + linesDropped + " lines lacking gene_id or transcript_id");
+                    getPipelineCtx().getLogger().info("dropped " + linesDropped + " lines lacking gene_id, transcript_id, or with an empty value for gene_id/transcript_id");
                 }
 
                 if (premrna)
