@@ -1731,7 +1731,7 @@ public class JBrowseRoot
             attrs.add("id");
             attrs.addAll(nameAttributes);
 
-            args.add(StringUtils.join(nameAttributes, ","));
+            args.add(StringUtils.join(attrs, ","));
         }
 
         //to avoid issues w/ perl and escaping characters, just set the working directory to the output folder
