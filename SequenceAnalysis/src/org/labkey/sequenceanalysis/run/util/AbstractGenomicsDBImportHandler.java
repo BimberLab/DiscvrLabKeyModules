@@ -87,7 +87,8 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
 
     private Collection<String> getSamplesForWorkspace(File workspace) throws PipelineJobException
     {
-        try (BufferedReader reader = IOUtil.openFileForBufferedUtf8Reading(new File(workspace, "callsets.json")))
+        //See: https://github.com/GenomicsDB/GenomicsDB/wiki/Importing-VCF-data-into-GenomicsDB
+        try (BufferedReader reader = IOUtil.openFileForBufferedUtf8Reading(new File(workspace, "callset.json")))
         {
             JSONParser jsonParser = new JSONParser();
             JSONObject obj = (JSONObject)jsonParser.parse(reader);
