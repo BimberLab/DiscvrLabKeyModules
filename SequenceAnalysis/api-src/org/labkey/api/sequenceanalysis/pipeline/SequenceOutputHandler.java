@@ -247,7 +247,7 @@ public interface SequenceOutputHandler<T>
     {
         public File getScatterJobOutput(JobContext ctx) throws PipelineJobException;
 
-        public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, List<SequenceOutputFile> inputFiles);
+        public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, List<SequenceOutputFile> inputFiles) throws PipelineJobException;
     }
 
     public static interface HasCustomVariantMerge

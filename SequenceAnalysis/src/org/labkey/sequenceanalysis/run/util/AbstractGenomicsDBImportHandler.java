@@ -2,14 +2,16 @@ package org.labkey.sequenceanalysis.run.util;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.vcf.VCFFileReader;
-import htsjdk.variant.vcf.VCFHeader;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.labkey.api.module.Module;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -26,10 +28,12 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -49,7 +53,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
     }
 
     @Override
-    public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File mergedWorkspace, List<SequenceOutputFile> inputFiles)
+    public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File mergedWorkspace, List<SequenceOutputFile> inputFiles) throws PipelineJobException
     {
         Set<Integer> libraryIds = new HashSet<>();
         inputFiles.forEach(x -> {
@@ -65,12 +69,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         Set<Integer> readsetIds = new HashSet<>();
         inputFiles.forEach(x -> readsetIds.add(x.getReadset()));
 
-        int sampleCount;
-        try (VCFFileReader reader = new VCFFileReader(new File(mergedWorkspace, "vcfheader.vcf")))
-        {
-            VCFHeader header = reader.getFileHeader();
-            sampleCount = header.getSampleNamesInOrder().size();
-        }
+        int sampleCount = getSamplesForWorkspace(mergedWorkspace).size();
 
         SequenceOutputFile so1 = new SequenceOutputFile();
         so1.setName(getPipelineJob(job).getParameterJson().getString("basename"));
@@ -84,6 +83,21 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         so1.setDescription("Total samples: " + sampleCount);
 
         return so1;
+    }
+
+    private Collection<String> getSamplesForWorkspace(File workspace) throws PipelineJobException
+    {
+        try (BufferedReader reader = IOUtil.openFileForBufferedUtf8Reading(new File(workspace, "callsets.json")))
+        {
+            JSONParser jsonParser = new JSONParser();
+            JSONObject obj = (JSONObject)jsonParser.parse(reader);
+
+            return obj.getJSONObject("callsets").keySet();
+        }
+        catch (IOException | ParseException e)
+        {
+            throw new PipelineJobException(e);
+        }
     }
 
     @Override
@@ -272,11 +286,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             if (_append)
             {
                 File workspace = getSourceWorkspace(params, support);
-                try (VCFFileReader reader = new VCFFileReader(new File(workspace, "vcfheader.vcf")))
-                {
-                    VCFHeader header = reader.getFileHeader();
-                    uniqueSamples.addAll(header.getSampleNamesInOrder());
-                }
+                uniqueSamples.addAll(getSamplesForWorkspace(workspace));
             }
 
             for (SequenceOutputFile so : inputFiles)
@@ -455,21 +465,11 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             SequenceOutputFile so1 = new SequenceOutputFile();
             so1.setName(destinationWorkspaceFolder.getName());
 
-            int sampleCount;
-            try (VCFFileReader reader = new VCFFileReader(new File(destinationWorkspaceFolder, "vcfheader.vcf")))
-            {
-                VCFHeader header = reader.getFileHeader();
-                sampleCount = header.getSampleNamesInOrder().size();
-            }
+            int sampleCount = getSamplesForWorkspace(destinationWorkspaceFolder).size();
 
             if (_append)
             {
-                int initialSampleCount;
-                try (VCFFileReader reader = new VCFFileReader(new File(getSourceWorkspace(ctx.getParams(), ctx.getSequenceSupport()), "vcfheader.vcf")))
-                {
-                    VCFHeader header = reader.getFileHeader();
-                    initialSampleCount = header.getSampleNamesInOrder().size();
-                }
+                int initialSampleCount = getSamplesForWorkspace(getSourceWorkspace(ctx.getParams(), ctx.getSequenceSupport())).size();
 
                 so1.setDescription("GATK GenomicsDB, original samples: " + initialSampleCount + ", appended " + inputFiles.size() + " gVCFs, final samples: " + sampleCount + ".  GATK Version: " + wrapper.getVersionString());
             }
