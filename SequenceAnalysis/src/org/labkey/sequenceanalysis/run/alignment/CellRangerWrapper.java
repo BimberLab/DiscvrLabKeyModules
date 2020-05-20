@@ -229,7 +229,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
                     getPipelineCtx().getLogger().debug("Creating a pre-mRNA version of the GTF");
                 }
 
-                try (CSVReader reader = new CSVReader(Readers.getReader(gtfFile), '\t'); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(gtfEdit), '\t', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER))
+                try (CSVReader reader = new CSVReader(Readers.getReader(gtfFile), '\t', CSVWriter.NO_QUOTE_CHARACTER); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(gtfEdit), '\t', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER))
                 {
                     String[] line;
                     while ((line = reader.readNext()) != null)
