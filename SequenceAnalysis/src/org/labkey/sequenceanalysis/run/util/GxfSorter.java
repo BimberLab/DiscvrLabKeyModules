@@ -51,7 +51,7 @@ public class GxfSorter
             writer.println("OUT_GFF=" + outputFile.getPath());
 
             writer.println("awk '{ if ($1 ~ \"^#\" ) print $0; else exit; }' $GFF > $OUT_GFF");
-            writer.println("(grep -v \"Parent=\" $GFF | sort -V -k1,1 -k4,4n -k5,5n; grep -e \"Parent=\" $GFF | sort -V -k1,1 -k4,4n -k5,5n)| sort -V -k1,1 -k4,4n -s >> $OUT_GFF");
+            writer.println("(grep -v '#' | grep -v \"Parent=\" $GFF | sort -V -k1,1 -k4,4n -k5,5n; grep -v '#' | grep -e \"Parent=\" $GFF | sort -V -k1,1 -k4,4n -k5,5n)| sort -V -k1,1 -k4,4n -s >> $OUT_GFF");
         }
         catch (IOException e)
         {
