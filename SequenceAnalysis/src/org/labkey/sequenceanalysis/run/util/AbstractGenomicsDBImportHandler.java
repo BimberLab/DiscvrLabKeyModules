@@ -90,12 +90,14 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         //See: https://github.com/GenomicsDB/GenomicsDB/wiki/Importing-VCF-data-into-GenomicsDB
         try (BufferedReader reader = IOUtil.openFileForBufferedUtf8Reading(new File(workspace, "callset.json")))
         {
-            JSONParser jsonParser = new JSONParser();
-            JSONObject obj = (JSONObject)jsonParser.parse(reader);
+            StringBuilder contentBuilder = new StringBuilder();
+            reader.lines().forEach(s -> contentBuilder.append(s).append("\n"));
 
-            return obj.getJSONObject("callsets").keySet();
+            JSONObject json = new JSONObject(contentBuilder.toString());
+
+            return json.getJSONObject("callsets").keySet();
         }
-        catch (IOException | ParseException e)
+        catch (IOException e)
         {
             throw new PipelineJobException(e);
         }
