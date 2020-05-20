@@ -9,9 +9,8 @@ import htsjdk.variant.vcf.VCFFileReader;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
 import org.json.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.labkey.api.module.Module;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -95,7 +94,15 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
 
             JSONObject json = new JSONObject(contentBuilder.toString());
 
-            return json.getJSONObject("callsets").keySet();
+            List<String> ret = new ArrayList<>();
+            JSONArray samples = json.getJSONArray("callsets");
+            for (int i = 1; i < samples.length();i++)
+            {
+                ret.add(samples.getJSONObject(i).getString("sample_name"));
+            }
+
+            return ret;
+
         }
         catch (IOException e)
         {
@@ -373,9 +380,13 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             Set<File> toDelete = new HashSet<>();
             File doneFile = new File(destinationWorkspaceFolder, "genomicsdb.done");
             boolean isResume = doneFile.exists();
-
-            if (!isResume && _append)
+            if (_append)
             {
+                if (isResume)
+                {
+                    ctx.getLogger().debug("GenomicsDB previously completed, resuming");
+                }
+
                 if (!destinationWorkspaceFolder.exists())
                 {
                     destinationWorkspaceFolder.mkdirs();
@@ -395,6 +406,13 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                         if (copyDone.exists())
                         {
                             ctx.getLogger().info("has been copied, skipping");
+                            continue;
+                        }
+
+                        //Allow the above to complete so we track the .done files
+                        if (isResume)
+                        {
+                            continue;
                         }
 
                         if (!copiedTopLevelFiles)
@@ -423,6 +441,28 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                     }
                 }
             }
+            else
+            {
+                if (isResume)
+                {
+                    ctx.getLogger().debug("GenomicsDB previously completed, resuming");
+                }
+                else
+                {
+                    if (destinationWorkspaceFolder.exists())
+                    {
+                        ctx.getLogger().info("Deleting existing output folder: " + destinationWorkspaceFolder.getPath());
+                        try
+                        {
+                            FileUtils.deleteDirectory(destinationWorkspaceFolder);
+                        }
+                        catch (IOException e)
+                        {
+                            throw new PipelineJobException(e);
+                        }
+                    }
+                }
+            }
 
             List<File> vcfsToProcess = new ArrayList<>();
             if (doCopyGVcfLocal)
@@ -446,6 +486,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 try
                 {
                     FileUtils.touch(doneFile);
+                    ctx.getLogger().debug("GenomicsDB complete, touching file: " + doneFile.getPath());
                 }
                 catch (IOException e)
                 {
