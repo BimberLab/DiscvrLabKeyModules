@@ -36,6 +36,9 @@ Ext4.define('SequenceAnalysis.panel.VariantScatterGatherPanel', {
                 allowBlank: false,
                 listeners: {
                     scope: this,
+                    render: function(){
+                        this.fireEvent('change', this, this.getValue());
+                    },
                     change: function(field, val) {
                         var panel = this.down('#scatterGatherMethodOptions');
                         panel.removeAll();
