@@ -219,6 +219,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                     if (copyDone.exists())
                     {
                         job.getLogger().info("has been copied, skipping");
+                        continue;
                     }
 
                     if (!copiedTopLevelFiles)
