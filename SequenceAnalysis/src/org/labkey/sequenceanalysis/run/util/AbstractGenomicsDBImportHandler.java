@@ -270,8 +270,10 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             Set<String> ret = new HashSet<>();
             for (File f : inputVCFs)
             {
-                ret.addAll(SequenceUtil.getContigsInVcf(f, log));
+                ret.addAll(SequenceUtil.getContigsInVcf(f));
             }
+
+            log.info("Total contigs in input VCFs: " + ret.size());
 
             _contigsInInputs = ret;
         }
