@@ -1417,7 +1417,7 @@ public class JBrowseRoot
         try
         {
             SimpleScriptWrapper wrapper = new SimpleScriptWrapper(getLogger());
-            wrapper.execute(Arrays.asList(gffread.getPath(), gtf.getPath(), "-E", "-F", "-o", gff.getPath()));
+            wrapper.execute(Arrays.asList(gffread.getPath(), gtf.getPath(), "-E", "-F", "-O", "-o", gff.getPath()));
 
             return gff;
         }
