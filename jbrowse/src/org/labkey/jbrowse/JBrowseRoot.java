@@ -672,7 +672,7 @@ public class JBrowseRoot
                     trackList.put("tracks", existingTracks);
                 }
 
-                //even through we're loading the raw data based on urlTemplate, make a symlink from this location into our DB so help generate-names.pl work properly
+                //even through we're loading the raw data based on urlTemplate, make a symlink from this location into our DB so generate-names.pl works properly
                 File sourceFile = f.expectDataSubdirForTrack() ? new File(f.getTrackRootDir(), "tracks/track-" + f.getTrackId()) : f.getTrackRootDir();
                 File targetFile = new File(outDir, "tracks/track-" + f.getTrackId());
 
@@ -822,7 +822,7 @@ public class JBrowseRoot
                         {
                             getLogger().debug("updating urlTemplate");
                             getLogger().debug("old: " + o.getString("urlTemplate"));
-                            o.put("urlTemplate", o.getString("urlTemplate").replaceAll("^data/data-" + f.getOutputFile(), outDirPrefix));
+                            o.put("urlTemplate", o.getString("urlTemplate").replaceAll("^tracks/data-" + f.getOutputFile() + "/data/", ""));
                             getLogger().debug("new: " + o.getString("urlTemplate"));
                         }
 
@@ -830,8 +830,7 @@ public class JBrowseRoot
                         trackList.put("tracks", existingTracks);
 
                         // Note: this previously used this logic:
-                        // f.expectDataSubdirForTrack() ? new File(f.getTrackRootDir(), "tracks/data-" + f.getOutputFile()) : f.getTrackRootDir();
-                        File sourceFile = f.getTrackRootDir();
+                        File sourceFile = f.expectDataSubdirForTrack() ? new File(f.getTrackRootDir(), "tracks/track-" + f.getTrackId()) : f.getTrackRootDir();
                         File targetFile = new File(outDir, outDirPrefix);
                         if (!targetFile.getParentFile().exists())
                         {

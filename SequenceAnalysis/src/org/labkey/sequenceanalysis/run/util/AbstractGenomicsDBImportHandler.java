@@ -9,6 +9,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.module.Module;
@@ -26,6 +27,7 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -189,6 +191,8 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         }
 
         Map<String, File> scatterOutputs = getPipelineJob(job).getScatterJobOutputs();
+        boolean copiedTopLevelFiles = false;
+        Set<File> toDelete = new HashSet<>();
         for (String name : jobToIntervalMap.keySet())
         {
             if (!scatterOutputs.containsKey(name))
@@ -205,12 +209,11 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             //Iterate the contig folders we expect:
             try
             {
-                boolean copiedTopLevelFiles = false;
-                Set<File> toDelete = new HashSet<>();
                 for (Interval i : jobToIntervalMap.get(name))
                 {
-                    job.getLogger().info("Copying contig folder for job: " + name);
-                    File copyDone = new File(destinationWorkspace, name + ".copy.done");
+                    String contigFolder = getFolderNameFromInterval(i);
+                    job.getLogger().info("Copying contig folder: " + contigFolder);
+                    File copyDone = new File(destinationWorkspace, contigFolder + ".copy.done");
                     toDelete.add(copyDone);
 
                     if (copyDone.exists())
@@ -224,24 +227,28 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                         copiedTopLevelFiles = true;
                     }
 
-                    File expectedFolder = new File(sourceWorkspace, getFolderNameFromInterval(i));
-                    if (!expectedFolder.exists())
+                    File sourceFolder = new File(sourceWorkspace, contigFolder);
+                    if (!sourceFolder.exists())
                     {
-                        throw new PipelineJobException("Unable to find expected file: " + expectedFolder.getPath());
+                        Set<String> contigsInInput = getContigsInInputs(variantProcessingJob.getInputFiles(), job.getLogger());
+                        if (!contigsInInput.contains(i.getContig()))
+                        {
+                            job.getLogger().info("Contig not present in the input gVCFs, skipping: " + i.getContig());
+                            continue;
+                        }
+
+                        throw new PipelineJobException("Unable to find expected file: " + sourceFolder.getPath());
                     }
 
-                    File destContigFolder = new File(destinationWorkspace, expectedFolder.getName());
+                    File destContigFolder = new File(destinationWorkspace, sourceFolder.getName());
                     if (destContigFolder.exists())
                     {
-                        job.getLogger().info("Target exists, deleting: " + destContigFolder.getPath());
-                        FileUtils.deleteDirectory(destContigFolder);
+                        throw new PipelineJobException("Target exists, perhaps it was already copied: " + destContigFolder.getPath() + ".  Expected to find marker file: " + copyDone.getPath());
                     }
 
-                    FileUtils.moveDirectory(expectedFolder, destContigFolder);
+                    FileUtils.moveDirectory(sourceFolder, destContigFolder);
                     FileUtils.touch(copyDone);
                 }
-
-                toDelete.forEach(File::delete);
             }
             catch (IOException e)
             {
@@ -249,7 +256,27 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             }
         }
 
+        toDelete.forEach(File::delete);
+
         return getMarkerFile(destinationWorkspace);
+    }
+
+    private Set<String> _contigsInInputs = null;
+
+    Set<String> getContigsInInputs(List<File> inputVCFs, Logger log) throws PipelineJobException
+    {
+        if (_contigsInInputs == null)
+        {
+            Set<String> ret = new HashSet<>();
+            for (File f : inputVCFs)
+            {
+                ret.addAll(SequenceUtil.getContigsInVcf(f, log));
+            }
+
+            _contigsInInputs = ret;
+        }
+
+        return _contigsInInputs;
     }
 
     private void copyToLevelFiles(PipelineJob job, File sourceWorkspace, File destinationWorkspace) throws IOException
