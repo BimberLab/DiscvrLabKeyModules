@@ -508,6 +508,12 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             GenomicsDbImportWrapper wrapper = new GenomicsDbImportWrapper(ctx.getLogger());
             List<String> options = new ArrayList<>(getClientCommandArgs(ctx.getParams()));
 
+            if (ctx.getParams().optBoolean("disableFileLocking", false))
+            {
+                ctx.getLogger().debug("Disabling file locking for TileDB");
+                wrapper.addToEnvironment("TILEDB_DISABLE_FILE_LOCKING", "1");
+            }
+
             if (!isResume)
             {
                 List<Interval> intervals = getIntervals(ctx);
