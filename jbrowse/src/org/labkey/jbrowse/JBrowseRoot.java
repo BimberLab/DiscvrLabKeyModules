@@ -829,7 +829,9 @@ public class JBrowseRoot
                         existingTracks.put(o);
                         trackList.put("tracks", existingTracks);
 
-                        File sourceFile = f.expectDataSubdirForTrack() ? new File(f.getTrackRootDir(), "tracks/data-" + f.getOutputFile()) : f.getTrackRootDir();
+                        // Note: this previously used this logic:
+                        // f.expectDataSubdirForTrack() ? new File(f.getTrackRootDir(), "tracks/data-" + f.getOutputFile()) : f.getTrackRootDir();
+                        File sourceFile = f.getTrackRootDir();
                         File targetFile = new File(outDir, outDirPrefix);
                         if (!targetFile.getParentFile().exists())
                         {
