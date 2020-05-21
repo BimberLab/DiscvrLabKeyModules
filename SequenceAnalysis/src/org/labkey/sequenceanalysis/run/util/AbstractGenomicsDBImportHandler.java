@@ -71,7 +71,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         int sampleCount = getSamplesForWorkspace(mergedWorkspace).size();
 
         SequenceOutputFile so1 = new SequenceOutputFile();
-        so1.setName(getPipelineJob(job).getParameterJson().getString("basename"));
+        so1.setName(getPipelineJob(job).getParameterJson().getString("fileBaseName"));
         so1.setFile(mergedWorkspace);
         so1.setLibrary_id(libraryIds.iterator().next());
         so1.setCategory(GenomicsDBImportHandler.CATEGORY);
@@ -182,7 +182,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         job.setStatus(PipelineJob.TaskStatus.running, "Creating merged workspace from " + jobToIntervalMap.size() + " jobs");
 
         VariantProcessingJob variantProcessingJob = getPipelineJob(job);
-        File destinationWorkspace = getWorkspaceOutput(variantProcessingJob.getDataDirectory(), variantProcessingJob.getParameterJson().getString("basename"));
+        File destinationWorkspace = getWorkspaceOutput(variantProcessingJob.getDataDirectory(), variantProcessingJob.getParameterJson().getString("fileBaseName"));
         if (!destinationWorkspace.exists())
         {
             destinationWorkspace.mkdirs();
