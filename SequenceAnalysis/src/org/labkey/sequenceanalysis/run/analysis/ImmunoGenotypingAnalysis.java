@@ -129,7 +129,7 @@ public class ImmunoGenotypingAnalysis extends AbstractCommandPipelineStep<Immuno
         }
         else
         {
-            getPipelineCtx().getLogger().warn("SBT output not found: " + outputTxt.getPath());
+            getPipelineCtx().getLogger().error("SBT output not found: " + outputTxt.getPath());
         }
 
         File summary = new File(outputPrefix.getPath() + ".summary.txt");

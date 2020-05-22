@@ -384,7 +384,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         output.addSequenceOutput(consensusFastaLoFreq, "Consensus: " + rs.getName(), "Viral Consensus Sequence", rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
 
         //write metrics:
-        try (CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(getMetricsFile(getPipelineCtx().getSourceDirectory()))))
+        try (CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(getMetricsFile(outputDir)), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
             writer.writeNext(new String[]{"Category", "MetricName", "Value"});
             writer.writeNext(new String[]{"LoFreq Analysis", "CoverageThreshold", String.valueOf(minCoverage)});
@@ -536,7 +536,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         }
         else
         {
-            getPipelineCtx().getJob().getLogger().warn("Unable to find metrics file: " + metrics.getPath());
+            throw new PipelineJobException("Unable to find metrics file: " + metrics.getPath());
         }
 
         return null;
