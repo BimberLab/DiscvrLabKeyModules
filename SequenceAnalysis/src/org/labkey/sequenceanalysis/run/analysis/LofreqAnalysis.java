@@ -201,7 +201,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         Map<String, List<String>> expectedLoFreq = new HashMap<>();
         int totalIndelGT1 = 0;
         int totalIndelGTThreshold = 0;
-        int totalConsensusInPBS= 1;
+        int totalConsensusInPBS= 0;
 
         File loFreqConsensusVcf = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.consensus.vcf.gz");
         File loFreqAllVcf = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.all.vcf.gz");
@@ -261,7 +261,12 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                 if (vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) > minFractionForConsensus)
                 {
                     totalGTThreshold++;
-                    totalConsensusInPBS+= 1;
+
+                    if (withinPrimer)
+                    {
+                        totalConsensusInPBS++;
+                    }
+
                     vcb.attribute("IN_CONSENSUS", 1);
 
                     if (vc.hasAttribute("INDEL"))
