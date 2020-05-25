@@ -70,7 +70,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         Set<Integer> readsetIds = new HashSet<>();
         inputFiles.forEach(x -> readsetIds.add(x.getReadset()));
 
-        int sampleCount = getSamplesForWorkspace(mergedWorkspace).size();
+        int sampleCount = getSamplesForWorkspace(mergedWorkspace.getParentFile()).size();
 
         SequenceOutputFile so1 = new SequenceOutputFile();
         so1.setName(getPipelineJob(job).getParameterJson().getString("fileBaseName"));
