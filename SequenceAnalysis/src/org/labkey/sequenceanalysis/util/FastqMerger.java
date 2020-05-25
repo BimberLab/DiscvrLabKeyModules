@@ -33,7 +33,7 @@ public class FastqMerger
 
     public void mergeFiles(File output, List<File> inputs) throws PipelineJobException
     {
-        _logger.info("merging FASTQ files");
+        _logger.info("merging FASTQ files: " + inputs.size());
 
         FileType gz = new FileType(".gz");
         try (PrintWriter writer = PrintWriters.getPrintWriter(gz.isType(output) ? new GZIPOutputStream(new FileOutputStream(output)) : new FileOutputStream(output)))
