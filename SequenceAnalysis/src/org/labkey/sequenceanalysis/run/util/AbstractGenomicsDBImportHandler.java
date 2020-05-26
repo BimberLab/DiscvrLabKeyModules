@@ -98,7 +98,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
 
             List<String> ret = new ArrayList<>();
             JSONArray samples = json.getJSONArray("callsets");
-            for (int i = 1; i < samples.length();i++)
+            for (int i = 0; i < samples.length();i++)
             {
                 ret.add(samples.getJSONObject(i).getString("sample_name"));
             }
