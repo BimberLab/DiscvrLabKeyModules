@@ -177,6 +177,33 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         return (VariantProcessingJob) job;
     }
 
+    private void deleteSourceWorkspaces(VariantProcessingJob variantProcessingJob) throws PipelineJobException
+    {
+        Map<String, File> scatterOutputs = variantProcessingJob.getScatterJobOutputs();
+        Map<String, List<Interval>> jobToIntervalMap = variantProcessingJob.getJobToIntervalMap();
+
+        for (String name : jobToIntervalMap.keySet())
+        {
+            if (!scatterOutputs.containsKey(name))
+            {
+                throw new PipelineJobException("Missing output for interval/contig: " + name);
+            }
+
+            File sourceWorkspace = scatterOutputs.get(name).getParentFile();
+            if (sourceWorkspace.exists())
+            {
+                try
+                {
+                    FileUtils.deleteDirectory(sourceWorkspace);
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
+        }
+    }
+
     @Override
     public File performVariantMerge(TaskFileManager manager, RecordedAction action, SequenceOutputHandler<SequenceOutputProcessor> handler, PipelineJob job) throws PipelineJobException
     {
@@ -188,6 +215,13 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         if (!destinationWorkspace.exists())
         {
             destinationWorkspace.mkdirs();
+        }
+
+        File overallDone = new File(destinationWorkspace, "merge.done");
+        if (overallDone.exists())
+        {
+            job.getLogger().info("workspace has already been merged, resuming");
+            return getMarkerFile(destinationWorkspace);
         }
 
         Map<String, File> scatterOutputs = getPipelineJob(job).getScatterJobOutputs();
@@ -258,6 +292,16 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         }
 
         toDelete.forEach(File::delete);
+        deleteSourceWorkspaces(variantProcessingJob);
+
+        try
+        {
+            FileUtils.touch(overallDone);
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
 
         return getMarkerFile(destinationWorkspace);
     }
