@@ -8,7 +8,7 @@ Ext4.define('SequenceAnalysis.field.SequenceOutputFileSelectorField', {
         Ext4.apply(this, {
             forceSelection: true,
             displayField: 'name',
-            valueField: 'fileid',
+            valueField: 'dataid',
             listConfig: {
                 innerTpl: ['{name} ({[values["rowid"]]})']
             },
@@ -20,7 +20,7 @@ Ext4.define('SequenceAnalysis.field.SequenceOutputFileSelectorField', {
                 autoLoad: true,
                 filterArray: this.getFilterArray(),
                 sort: 'name',
-                columns: 'library_id,name,fileid,category'
+                columns: 'library_id,name,dataid,category'
             }
         });
 
