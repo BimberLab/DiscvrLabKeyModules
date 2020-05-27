@@ -136,17 +136,7 @@ public class DepthOfCoverageHandler extends AbstractParameterizedOutputHandler<S
                 //GATK4 now requires intervals:
                 File intervalList = new File(ctx.getOutputDir(), "depthOfCoverageIntervals.intervals");
                 ctx.getFileManager().addIntermediateFile(intervalList);
-                try (PrintWriter writer = PrintWriters.getPrintWriter(intervalList))
-                {
-                    SAMSequenceDictionaryExtractor.extractDictionary(rg.getSequenceDictionary().toPath()).getSequences().forEach(x -> writer.println(x.getSequenceName()));
-                }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
-                }
-
-                extraArgs.add("-L");
-                extraArgs.add(intervalList.getPath());
+                extraArgs.addAll(DepthOfCoverageWrapper.generateIntervalArgsForFullGenome(rg, intervalList));
             }
 
             Integer mmq = ctx.getParams().optInt("mmq");

@@ -142,6 +142,10 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         extraArgs.add("--omit-per-sample-statistics");
         extraArgs.add("--omit-interval-statistics");
 
+        File intervalList = new File(outputDir, "depthOfCoverageIntervals.intervals");
+        output.addIntermediateFile(intervalList);
+        extraArgs.addAll(DepthOfCoverageWrapper.generateIntervalArgsForFullGenome(referenceGenome, intervalList));
+
         wrapper.run(Collections.singletonList(inputBam), coverageOut.getPath(), referenceGenome.getWorkingFastaFile(), extraArgs, true);
         if (!coverageOut.exists())
         {
