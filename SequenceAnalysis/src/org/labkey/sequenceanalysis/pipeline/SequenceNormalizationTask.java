@@ -53,6 +53,7 @@ import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.run.util.SamToFastqWrapper;
 import org.labkey.sequenceanalysis.util.Barcoder;
 import org.labkey.sequenceanalysis.util.FastaToFastqConverter;
+import org.labkey.sequenceanalysis.util.FastqMerger;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.NucleotideSequenceFileType;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
@@ -382,24 +383,21 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
                         File merged2 = fg.filePairs.get(0).file2 == null ? null : new File(normalizationDir, SequenceTaskHelper.getUnzippedBaseName(fg.filePairs.get(0).file2.getName()) + ".merged.fastq.gz");
 
+                        List<File> toMerge1 = new ArrayList<>();
+                        List<File> toMerge2 = new ArrayList<>();
                         for (FileGroup.FilePair fp : fg.filePairs)
                         {
-                            try (GZIPOutputStream os = new GZIPOutputStream(new FileOutputStream(merged1, true)); InputStream is = IOUtil.openFileForReading(fp.file1))
-                            {
-                                getJob().getLogger().debug("appending file: " + fp.file1.getName());
-                                getHelper().getFileManager().addInput(mergeAction, "FASTQ File", fp.file1);
-                                IOUtils.copyLarge(is, os);
-                            }
-
+                            toMerge1.add(fp.file1);
                             if (fp.file2 != null)
                             {
-                                try (GZIPOutputStream os = new GZIPOutputStream(new FileOutputStream(merged2, true)); InputStream is = IOUtil.openFileForReading(fp.file2))
-                                {
-                                    getJob().getLogger().debug("appending file: " + fp.file2.getName());
-                                    getHelper().getFileManager().addInput(mergeAction, "FASTQ File", fp.file2);
-                                    IOUtils.copyLarge(is, os);
-                                }
+                                toMerge2.add(fp.file2);
                             }
+                        }
+
+                        new FastqMerger(getJob().getLogger()).mergeFiles(merged1, toMerge1);
+                        if (!toMerge2.isEmpty())
+                        {
+                            new FastqMerger(getJob().getLogger()).mergeFiles(merged2, toMerge2);
                         }
 
                         FileGroup.FilePair fp = new FileGroup.FilePair();

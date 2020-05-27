@@ -46,7 +46,7 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
 {
     private ScatterGatherUtils.ScatterGatherMethod _scatterGatherMethod = ScatterGatherUtils.ScatterGatherMethod.none;
     File _dictFile = null;
-    Map<String, File> _finalVCFs = new HashMap<>();
+    Map<String, File> _scatterOutputs = new HashMap<>();
     private transient LinkedHashMap<String, List<Interval>> _jobToIntervalMap;
 
     private String _intervalSetName = null;
@@ -273,19 +273,19 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
         if (job instanceof VariantProcessingJob)
         {
             VariantProcessingJob childJob = (VariantProcessingJob)job;
-            getLogger().debug("Merging child job VCFs.  total: " + childJob.getFinalVCFs().size());
-            _finalVCFs.putAll(childJob.getFinalVCFs());
+            getLogger().debug("Merging child job VCFs.  total: " + childJob.getScatterJobOutputs().size());
+            _scatterOutputs.putAll(childJob.getScatterJobOutputs());
         }
     }
 
-    public Map<String, File> getFinalVCFs()
+    public Map<String, File> getScatterJobOutputs()
     {
-        return _finalVCFs;
+        return _scatterOutputs;
     }
 
-    public void setFinalVCFs(Map<String, File> finalVCFs)
+    public void setScatterJobOutputs(Map<String, File> scatterOutputs)
     {
-        _finalVCFs = finalVCFs;
+        _scatterOutputs = scatterOutputs;
     }
 
     @Override

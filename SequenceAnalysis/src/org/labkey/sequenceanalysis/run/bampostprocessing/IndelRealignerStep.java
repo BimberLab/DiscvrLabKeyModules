@@ -84,7 +84,9 @@ public class IndelRealignerStep extends AbstractCommandPipelineStep<IndelRealign
         }
         else
         {
-            //NOTE: not setting an output should result in the next step using the input from this step
+            // NOTE: this indicates no realignment intervals were found and therefore the skip was skipped.
+            // If this occurs, we still need to set a return BAM so the downstream checks pass.
+            output.setBAM(inputBam);
         }
 
         output.addIntermediateFile(getWrapper().getExpectedIntervalsFile(inputBam), "Realigner Intervals File");

@@ -199,6 +199,11 @@ public class ReadDataImpl implements ReadData
     @Transient
     private File getFile(int fileIdx, Integer fileId)
     {
+        if (isArchived())
+        {
+            return null;
+        }
+
         if (_cachedFiles.containsKey(fileIdx))
         {
             return _cachedFiles.get(fileIdx);

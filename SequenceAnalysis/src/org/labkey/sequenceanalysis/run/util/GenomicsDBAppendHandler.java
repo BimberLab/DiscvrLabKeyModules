@@ -4,20 +4,25 @@ import org.json.JSONObject;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 
-/**
- * Created by bimber on 4/2/2017.
- */
-public class GenomicsDBImportHandler extends AbstractGenomicsDBImportHandler
+//See: https://gatk.broadinstitute.org/hc/en-us/articles/360035891051-GenomicsDB
+
+public class GenomicsDBAppendHandler extends AbstractGenomicsDBImportHandler
 {
-    public static final String NAME = "GenomicsDB Import";
+    public static final String NAME = "GenomicsDB Append/Merge";
 
-    public GenomicsDBImportHandler()
+    public GenomicsDBAppendHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), NAME, "This will run GATK\'s GenomicsDBImport on a set of GVCF files.  Note: this cannot work against any VCF file - these are primarily VCFs created using GATK\'s HaplotypeCaller.", null, Arrays.asList(
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), NAME, "This will run GATK\'s GenomicsDBImport on a set of GVCF files.  Note: this cannot work against any VCF file - these are primarily VCFs created using GATK\'s HaplotypeCaller.", new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/SequenceOutputFileSelectorField.js")), Arrays.asList(
+                ToolParameterDescriptor.createExpDataParam(EXISTING_WORKSPACE, "Existing Workspace", "This is the workspace into which new samples will be merged", "sequenceanalysis-sequenceoutputfileselectorfield", new JSONObject(){{
+                    put("allowBlank", false);
+                    put("category", CATEGORY);
+                }}, null),
                 ToolParameterDescriptor.create("fileBaseName", "Filename", "This is the basename that will be used for the output gzipped VCF", "textfield", null, "CombinedGenotypes"),
                 ToolParameterDescriptor.create("doCopyGVcfLocal", "Copy gVCFs To Working Directory", "If selected, the gVCFs will be copied to the working directory first, which can improve performance when working with a large set of files.", "checkbox", new JSONObject(){{
                     put("checked", false);
@@ -36,6 +41,6 @@ public class GenomicsDBImportHandler extends AbstractGenomicsDBImportHandler
     @Override
     public SequenceOutputProcessor getProcessor()
     {
-        return new Processor(false);
+        return new Processor(true);
     }
 }

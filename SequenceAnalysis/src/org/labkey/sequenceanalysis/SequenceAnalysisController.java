@@ -2842,6 +2842,12 @@ public class SequenceAnalysisController extends SpringActionController
                         Container target = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
                         PipeRoot root = PipelineService.get().getPipelineRootSetting(target);
 
+                        Container genomeFolder = ReferenceGenomeImpl.getFolderForGenome(form.getLibraryId());
+                        if (!genomeFolder.hasPermission(getUser(), UpdatePermission.class))
+                        {
+                            throw new UnauthorizedException("You do not have permission to update genome " + form.getLibraryId() + ", which is saved in the folder: " + genomeFolder.getPath());
+                        }
+
                         //note: permissions on source container should be checked in validate()
                         ImportGenomeTrackPipelineJob job = new ImportGenomeTrackPipelineJob(target, getUser(), null, root, form.getLibraryId(), form.getTrackName(), file, entry.getValue().getValue(), form.getTrackDescription(), form.getDoChrTranslation() == null ? true : form.getDoChrTranslation());
                         PipelineService.get().queueJob(job);
@@ -2982,13 +2988,15 @@ public class SequenceAnalysisController extends SpringActionController
 
                     try
                     {
-                        File chainFile = new ChainFileValidator().validateChainFile(file, form.getGenomeId1(), form.getGenomeId2());
-                        SequenceAnalysisManager.get().addChainFile(getContainer(), getUser(), chainFile, form.getGenomeId1(), form.getGenomeId2(), form.getVersion());
+                        List<String> messages = new ArrayList<>();
+                        File chainFile = new ChainFileValidator().processChainFile(file, form.getGenomeId1(), form.getGenomeId2(), form.getAllowUnknownContig(), messages);
+                        SequenceAnalysisManager.get().addChainFile(getContainer(), getUser(), chainFile, form.getGenomeId1(), form.getGenomeId2(), form.getSource(), form.getVersion());
                         if (file.exists())
                         {
                             file.delete();
                         }
 
+                        resp.put("messages", messages);
                         resp.put("success", true);
                     }
                     catch (SAMException e)
@@ -3015,7 +3023,9 @@ public class SequenceAnalysisController extends SpringActionController
     {
         private Integer _genomeId1;
         private Integer _genomeId2;
+        private String _source;
         private Double _version;
+        private Boolean _allowUnknownContig = false;
 
         public Integer getGenomeId1()
         {
@@ -3045,6 +3055,26 @@ public class SequenceAnalysisController extends SpringActionController
         public void setVersion(Double version)
         {
             _version = version;
+        }
+
+        public Boolean getAllowUnknownContig()
+        {
+            return _allowUnknownContig;
+        }
+
+        public void setAllowUnknownContig(Boolean allowUnknownContig)
+        {
+            _allowUnknownContig = allowUnknownContig;
+        }
+
+        public String getSource()
+        {
+            return _source;
+        }
+
+        public void setSource(String source)
+        {
+            _source = source;
         }
     }
 
@@ -4939,6 +4969,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(InsertPermission.class)
     public class ImportSequenceTracksAction extends MutatingApiAction<ImportTracksForm>
     {
+        @Override
         public ApiResponse execute(ImportTracksForm form, BindException errors) throws Exception
         {
             PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());

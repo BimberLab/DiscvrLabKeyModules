@@ -17,7 +17,7 @@ Ext4.define('SequenceAnalysis.panel.VariantScatterGatherPanel', {
                 labelWidth: this.labelWidth,
                 width: this.defaultFieldWidth,
                 expandToFitContent: true,
-                value: 'none',
+                value: this.defaultValue || 'none',
                 displayField: 'label',
                 valueField: 'value',
                 store: {
@@ -36,6 +36,9 @@ Ext4.define('SequenceAnalysis.panel.VariantScatterGatherPanel', {
                 allowBlank: false,
                 listeners: {
                     scope: this,
+                    render: function(field){
+                        field.fireEvent('change', field, field.getValue());
+                    },
                     change: function(field, val) {
                         var panel = this.down('#scatterGatherMethodOptions');
                         panel.removeAll();

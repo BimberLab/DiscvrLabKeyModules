@@ -151,10 +151,10 @@ public class OrphanFilePipelineJob extends PipelineJob
             Container parent = getJob().getContainer().isWorkbook() ? getJob().getContainer().getParent() : getJob().getContainer();
             UserSchema us = QueryService.get().getUserSchema(getJob().getUser(), parent, SequenceAnalysisSchema.SCHEMA_NAME);
 
-            knownExpDatas.addAll(new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_READ_DATA), PageFlowUtil.set("fileid1"),null, null).getArrayList(Integer.class));
-            knownExpDatas.addAll(new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_READ_DATA), PageFlowUtil.set("fileid2"),null, null).getArrayList(Integer.class));
-            knownExpDatas.addAll(new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_ANALYSES), PageFlowUtil.set("alignmentfile"),null, null).getArrayList(Integer.class));
-            knownExpDatas.addAll(new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), PageFlowUtil.set("dataId"),null, null).getArrayList(Integer.class));
+            knownExpDatas.addAll(new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_READ_DATA, null), PageFlowUtil.set("fileid1"),null, null).getArrayList(Integer.class));
+            knownExpDatas.addAll(new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_READ_DATA, null), PageFlowUtil.set("fileid2"),null, null).getArrayList(Integer.class));
+            knownExpDatas.addAll(new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_ANALYSES, null), PageFlowUtil.set("alignmentfile"),null, null).getArrayList(Integer.class));
+            knownExpDatas.addAll(new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES, null), PageFlowUtil.set("dataId"),null, null).getArrayList(Integer.class));
             knownExpDatas = Collections.unmodifiableSet(knownExpDatas);
             //messages.add("## total registered sequence ExpData: " + knownExpDatas.size());
 
@@ -243,16 +243,16 @@ public class OrphanFilePipelineJob extends PipelineJob
             //Note: these can cut across workbooks, so search using the parent container
             Set<Integer> knownPipelineJobs = new HashSet<>();
             UserSchema us = QueryService.get().getUserSchema(u, c, SequenceAnalysisSchema.SCHEMA_NAME);
-            TableInfo rd = us.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
+            TableInfo rd = us.getTable(SequenceAnalysisSchema.TABLE_READ_DATA, null);
             knownPipelineJobs.addAll(new TableSelector(rd, new HashSet<ColumnInfo>(QueryService.get().getColumns(rd, PageFlowUtil.set(FieldKey.fromString("runId/jobId"))).values()), new SimpleFilter(FieldKey.fromString("runId/jobId"), null, CompareType.NONBLANK), null).getArrayList(Integer.class));
 
-            TableInfo rs = us.getTable(SequenceAnalysisSchema.TABLE_READSETS);
+            TableInfo rs = us.getTable(SequenceAnalysisSchema.TABLE_READSETS, null);
             knownPipelineJobs.addAll(new TableSelector(rs, new HashSet<ColumnInfo>(QueryService.get().getColumns(rs, PageFlowUtil.set(FieldKey.fromString("runId/jobId"))).values()), new SimpleFilter(FieldKey.fromString("runId/jobId"), null, CompareType.NONBLANK), null).getArrayList(Integer.class));
 
-            TableInfo a = us.getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
+            TableInfo a = us.getTable(SequenceAnalysisSchema.TABLE_ANALYSES, null);
             knownPipelineJobs.addAll(new TableSelector(a, new HashSet<ColumnInfo>(QueryService.get().getColumns(a, PageFlowUtil.set(FieldKey.fromString("runId/jobId"))).values()), new SimpleFilter(FieldKey.fromString("runId/jobId"), null, CompareType.NONBLANK), null).getArrayList(Integer.class));
 
-            TableInfo of = us.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
+            TableInfo of = us.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES, null);
             knownPipelineJobs.addAll(new TableSelector(of, new HashSet<ColumnInfo>(QueryService.get().getColumns(of, PageFlowUtil.set(FieldKey.fromString("runId/jobId"))).values()), new SimpleFilter(FieldKey.fromString("runId/jobId"), null, CompareType.NONBLANK), null).getArrayList(Integer.class));
 
             knownPipelineJobs.addAll(new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES), PageFlowUtil.set("jobId"), new SimpleFilter(FieldKey.fromString("jobId"), null, CompareType.NONBLANK), null).getArrayList(Integer.class));
@@ -522,6 +522,18 @@ public class OrphanFilePipelineJob extends PipelineJob
 
                     //orphan copy file:
                     if (f.getName().endsWith(".copy"))
+                    {
+                        orphanSequenceFiles.add(f);
+                    }
+
+                    //heapdump:
+                    if (f.getName().endsWith(".hprof"))
+                    {
+                        orphanSequenceFiles.add(f);
+                    }
+
+                    //core dump:
+                    if (f.getName().matches("core.[0-9]+"))
                     {
                         orphanSequenceFiles.add(f);
                     }

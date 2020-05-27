@@ -60,6 +60,12 @@ Ext4.define('JBrowse.window.ModifyJsonConfigWindow', {
                             this.addAttribute('category', null, 'STRING');
                         }
                     },{
+                        text: 'Chunk Size Limit',
+                        scope: this,
+                        handler: function (gridBtn) {
+                            this.addAttribute('chunkSizeLimit ', null, 'INT');
+                        }
+                    },{
                         text: 'XY Plot',
                         scope: this,
                         handler: function (gridBtn) {

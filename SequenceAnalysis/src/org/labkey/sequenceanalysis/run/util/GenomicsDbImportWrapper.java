@@ -2,8 +2,10 @@ package org.labkey.sequenceanalysis.run.util;
 
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.util.Interval;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.run.AbstractGatk4Wrapper;
@@ -22,7 +24,7 @@ public class GenomicsDbImportWrapper extends AbstractGatk4Wrapper
         super(log);
     }
 
-    public void execute(ReferenceGenome genome, List<File> inputGvcfs, File outputFile, List<String> options) throws PipelineJobException
+    public void execute(ReferenceGenome genome, List<File> inputGvcfs, File outputFile, @Nullable List<Interval> intervals, @Nullable List<String> options, boolean append) throws PipelineJobException
     {
         getLogger().info("Running GATK 4 GenomicsDBImport");
 
@@ -34,8 +36,21 @@ public class GenomicsDbImportWrapper extends AbstractGatk4Wrapper
             args.add(f.getPath());
         });
 
-        args.add("--genomicsdb-workspace-path");
-        args.add(outputFile.getPath());
+        if (!append)
+        {
+            args.add("--genomicsdb-workspace-path");
+            args.add(outputFile.getPath());
+        }
+        else
+        {
+            if (!outputFile.exists())
+            {
+                throw new PipelineJobException("Existing workspace not found: " + outputFile.getPath());
+            }
+
+            args.add("--genomicsdb-update-workspace-path");
+            args.add(outputFile.getPath());
+        }
 
         if (options != null)
         {
@@ -43,22 +58,34 @@ public class GenomicsDbImportWrapper extends AbstractGatk4Wrapper
         }
 
         //NOTE: GenomicsDBImport requires explicit intervals
-        File intervalList = new File(outputFile.getParentFile(), "intervals.list");
-        try (PrintWriter writer = PrintWriters.getPrintWriter(intervalList))
+        if (!append)
         {
-            SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath());
-            for (SAMSequenceRecord rec : dict.getSequences())
+            File intervalList = new File(outputFile.getParentFile(), "intervals.list");
+            try (PrintWriter writer = PrintWriters.getPrintWriter(intervalList))
             {
-                writer.println(rec.getSequenceName());
+                if (intervals == null)
+                {
+                    SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath());
+                    for (SAMSequenceRecord rec : dict.getSequences())
+                    {
+                        writer.println(rec.getSequenceName());
+                    }
+                }
+                else
+                {
+                    intervals.forEach(interval -> {
+                        writer.println(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+                    });
+                }
             }
-        }
-        catch (FileNotFoundException e)
-        {
-            throw new PipelineJobException(e);
-        }
+            catch (FileNotFoundException e)
+            {
+                throw new PipelineJobException(e);
+            }
 
-        args.add("-L");
-        args.add(intervalList.getPath());
+            args.add("-L");
+            args.add(intervalList.getPath());
+        }
 
         execute(args);
 
