@@ -66,6 +66,12 @@ Ext4.define('JBrowse.window.ModifyJsonConfigWindow', {
                             this.addAttribute('chunkSizeLimit', null, 'INT');
                         }
                     },{
+                        text: 'Max Track Height',
+                        scope: this,
+                        handler: function (gridBtn) {
+                            this.addAttribute('maxHeight', 1000, 'INT');
+                        }
+                    },{
                         text: 'XY Plot',
                         scope: this,
                         handler: function (gridBtn) {
