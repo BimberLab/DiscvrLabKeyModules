@@ -36,6 +36,9 @@ public class DepthOfCoverageWrapper extends AbstractGatk4Wrapper
             args.add("-I");
             args.add(f.getPath());
         }
+        args.add("--output-format");
+        args.add("TABLE");
+
         args.add("-O");
         args.add(outputBaseName);
         if (options != null)
