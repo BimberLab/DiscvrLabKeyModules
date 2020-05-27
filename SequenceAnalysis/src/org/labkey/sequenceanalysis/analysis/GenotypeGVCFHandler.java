@@ -141,9 +141,9 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
     }
 
     @Override
-    public File getFinalVCF(JobContext ctx) throws PipelineJobException
+    public File getScatterJobOutput(JobContext ctx) throws PipelineJobException
     {
-        return ProcessVariantsHandler.getVcfOutputByCategory(ctx, VCF_CATEGORY);
+        return ProcessVariantsHandler.getScatterOutputByCategory(ctx, VCF_CATEGORY);
     }
 
     @Override

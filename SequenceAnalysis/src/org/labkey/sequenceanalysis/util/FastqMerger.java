@@ -1,9 +1,11 @@
 package org.labkey.sequenceanalysis.util;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.reader.Readers;
+import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.writer.PrintWriters;
 
@@ -13,6 +15,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -33,23 +37,65 @@ public class FastqMerger
 
     public void mergeFiles(File output, List<File> inputs) throws PipelineJobException
     {
-        _logger.info("merging FASTQ files");
+        _logger.info("merging FASTQ files: " + inputs.size());
 
         FileType gz = new FileType(".gz");
-        try (PrintWriter writer = PrintWriters.getPrintWriter(gz.isType(output) ? new GZIPOutputStream(new FileOutputStream(output)) : new FileOutputStream(output)))
+        if (gz.isType(output) && !SystemUtils.IS_OS_WINDOWS)
         {
-            for (File f : inputs)
+            mergeUsingCat(output, inputs);
+        }
+        else
+        {
+            try (PrintWriter writer = PrintWriters.getPrintWriter(gz.isType(output) ? new GZIPOutputStream(new FileOutputStream(output)) : new FileOutputStream(output)))
             {
-                _logger.info("reading file: " + f.getPath());
-                try (BufferedReader reader = Readers.getReader(gz.isType(f) ? new GZIPInputStream(new FileInputStream(f)) : new FileInputStream(f)))
+                for (File f : inputs)
                 {
-                    IOUtils.copyLarge(reader, writer);
+                    _logger.info("reading file: " + f.getPath());
+                    try (BufferedReader reader = Readers.getReader(gz.isType(f) ? new GZIPInputStream(new FileInputStream(f)) : new FileInputStream(f)))
+                    {
+                        IOUtils.copyLarge(reader, writer);
+                    }
                 }
             }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+    }
+
+    private void mergeUsingCat(File output, List<File> inputs) throws PipelineJobException
+    {
+        List<String> bashCommands = new ArrayList<>();
+        for (File f : inputs)
+        {
+            String cat = f.getName().toLowerCase().endsWith(".gz") ? "zcat" : "cat";
+            bashCommands.add(cat + " " + f.getPath());
+        }
+
+        try
+        {
+            File bashTmp = new File(output.getParentFile(), "fastqMerge.sh");
+            try (PrintWriter writer = PrintWriters.getPrintWriter(bashTmp))
+            {
+                writer.write("#!/bin/bash\n");
+                writer.write("set -x\n");
+                writer.write("set -e\n");
+                writer.write("{\n");
+                bashCommands.forEach(x -> writer.write(x + '\n'));
+
+                writer.write("} | gzip -c > " + output + "\n");
+            }
+
+            SimpleScriptWrapper wrapper = new SimpleScriptWrapper(_logger);
+            wrapper.execute(Arrays.asList("/bin/bash", bashTmp.getPath()));
+
+            bashTmp.delete();
         }
         catch (IOException e)
         {
             throw new PipelineJobException(e);
         }
+
     }
 }

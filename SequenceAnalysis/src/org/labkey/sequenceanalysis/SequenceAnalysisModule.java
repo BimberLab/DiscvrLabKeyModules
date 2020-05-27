@@ -111,6 +111,7 @@ import org.labkey.sequenceanalysis.run.reference.DNAReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.SavedReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.VirusReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.util.CombineGVCFsHandler;
+import org.labkey.sequenceanalysis.run.util.GenomicsDBAppendHandler;
 import org.labkey.sequenceanalysis.run.util.GenomicsDBImportHandler;
 import org.labkey.sequenceanalysis.run.variant.CombineVariantsHandler;
 import org.labkey.sequenceanalysis.run.variant.DepthOfCoverageHandler;
@@ -130,6 +131,7 @@ import org.labkey.sequenceanalysis.run.variant.VariantFiltrationStep;
 import org.labkey.sequenceanalysis.run.variant.VariantQCStep;
 import org.labkey.sequenceanalysis.run.variant.VariantsToTableStep;
 import org.labkey.sequenceanalysis.util.Barcoder;
+import org.labkey.sequenceanalysis.util.ChainFileValidator;
 import org.labkey.sequenceanalysis.util.ScatterGatherUtils;
 
 import java.util.Arrays;
@@ -157,7 +159,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
     @Override
     public Double getSchemaVersion()
     {
-        return 12.320;
+        return 12.321;
     }
 
     @Override
@@ -325,6 +327,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new ListVcfSamplesHandler());
         SequenceAnalysisService.get().registerFileHandler(new MultiQCBamHandler());
         SequenceAnalysisService.get().registerFileHandler(new GenomicsDBImportHandler());
+        SequenceAnalysisService.get().registerFileHandler(new GenomicsDBAppendHandler());
 
         SequenceAnalysisService.get().registerReadsetHandler(new MultiQCHandler());
         SequenceAnalysisService.get().registerReadsetHandler(new CellHashingHandler());
@@ -446,7 +449,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
                 SequenceJobSupportImpl.TestCase.class,
                 ProcessVariantsHandler.TestCase.class,
                 VariantProcessingJob.TestCase.class,
-                ScatterGatherUtils.TestCase.class
+                ScatterGatherUtils.TestCase.class,
+                ChainFileValidator.TestCase.class
         );
     }
 

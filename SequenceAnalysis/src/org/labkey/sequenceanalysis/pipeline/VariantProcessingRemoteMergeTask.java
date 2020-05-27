@@ -101,24 +101,60 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
     public @NotNull RecordedActionSet run() throws PipelineJobException
     {
         SequenceTaskHelper.logModuleVersions(getJob().getLogger());
-
+        RecordedAction action = new RecordedAction(ACTION_NAME);
         TaskFileManagerImpl manager = new TaskFileManagerImpl(getPipelineJob(), _wd.getDir(), _wd);
 
+        File finalOut;
+        SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler = getPipelineJob().getHandler();
+        if (handler instanceof SequenceOutputHandler.HasCustomVariantMerge)
+        {
+            finalOut = ((SequenceOutputHandler.HasCustomVariantMerge)handler).performVariantMerge(manager, action, handler, getJob());
+        }
+        else
+        {
+            finalOut = runDefaultVariantMerge(manager, action, handler);
+        }
+
+        //TODO: run tasks after merge?
+
+        Map<String, File> scatterOutputs = getPipelineJob().getScatterJobOutputs();
+        if (handler instanceof SequenceOutputHandler.TracksVCF)
+        {
+            Set<SequenceOutputFile> outputs = new HashSet<>();
+            scatterOutputs.values().forEach(f -> outputs.addAll(getPipelineJob().getOutputsToCreate().stream().filter(x -> f.equals(x.getFile())).collect(Collectors.toSet())));
+            getJob().getLogger().debug("Total component outputs created: " + outputs.size());
+            getPipelineJob().getOutputsToCreate().removeAll(outputs);
+            getJob().getLogger().debug("Total SequenceOutputFiles on job after remove: " + getPipelineJob().getOutputsToCreate().size());
+
+            SequenceOutputFile finalOutput = ((SequenceOutputHandler.TracksVCF)getPipelineJob().getHandler()).createFinalSequenceOutput(getJob(), finalOut, getPipelineJob().getFiles());
+            manager.addSequenceOutput(finalOutput);
+        }
+        else
+        {
+            throw new PipelineJobException("Handler does not support TracksVCF: " + handler.getName());
+        }
+
+        manager.deleteIntermediateFiles();
+        manager.cleanup(Collections.singleton(action));
+
+        return new RecordedActionSet(action);
+    }
+
+    private File runDefaultVariantMerge(TaskFileManagerImpl manager, RecordedAction action, SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler) throws PipelineJobException
+    {
         Map<String, List<Interval>> jobToIntervalMap = getPipelineJob().getJobToIntervalMap();
         getJob().setStatus(PipelineJob.TaskStatus.running, "Combining Per-Contig VCFs: " + jobToIntervalMap.size());
 
-        RecordedAction action = new RecordedAction(ACTION_NAME);
-
-        Map<String, File> finalVcfs = getPipelineJob().getFinalVCFs();
+        Map<String, File> scatterOutputs = getPipelineJob().getScatterJobOutputs();
         List<File> toConcat = new ArrayList<>();
         for (String name : jobToIntervalMap.keySet())
         {
-            if (!finalVcfs.containsKey(name))
+            if (!scatterOutputs.containsKey(name))
             {
                 throw new PipelineJobException("Missing VCF for interval/contig: " + name);
             }
 
-            File vcf = finalVcfs.get(name);
+            File vcf = scatterOutputs.get(name);
             if (!vcf.exists())
             {
                 throw new PipelineJobException("Missing VCF: " + vcf.getPath());
@@ -151,29 +187,6 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
         }
         manager.addOutput(action, "Merged VCF", combined);
 
-        //TODO: run tasks after merge?
-
-
-        SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler = getPipelineJob().getHandler();
-        if (handler instanceof SequenceOutputHandler.TracksVCF)
-        {
-            Set<SequenceOutputFile> outputs = new HashSet<>();
-            toConcat.forEach(f -> outputs.addAll(getPipelineJob().getOutputsToCreate().stream().filter(x -> f.equals(x.getFile())).collect(Collectors.toSet())));
-            getJob().getLogger().debug("Total component outputs created: " + outputs.size());
-            getPipelineJob().getOutputsToCreate().removeAll(outputs);
-            getJob().getLogger().debug("Total SequenceOutputFiles on job after remove: " + getPipelineJob().getOutputsToCreate().size());
-
-            SequenceOutputFile finalOutput = ((SequenceOutputHandler.TracksVCF)getPipelineJob().getHandler()).createFinalSequenceOutput(getJob(), combined, getPipelineJob().getFiles());
-            manager.addSequenceOutput(finalOutput);
-        }
-        else
-        {
-            throw new PipelineJobException("Handler does not support TracksVCF: " + handler.getName());
-        }
-
-        manager.deleteIntermediateFiles();
-        manager.cleanup(Collections.singleton(action));
-
-        return new RecordedActionSet(action);
+        return combined;
     }
 }

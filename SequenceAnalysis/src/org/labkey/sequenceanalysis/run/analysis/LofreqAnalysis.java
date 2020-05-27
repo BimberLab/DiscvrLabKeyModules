@@ -6,14 +6,19 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
+import htsjdk.samtools.util.IntervalUtil;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFHeaderLineType;
+import htsjdk.variant.vcf.VCFInfoHeaderLine;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.log4j.Logger;
 import org.biojava3.core.sequence.DNASequence;
 import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
@@ -23,6 +28,10 @@ import org.biojava3.core.sequence.io.FastaReader;
 import org.biojava3.core.sequence.io.GenericFastaHeaderParser;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
+import org.labkey.api.data.Table;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
@@ -86,6 +95,10 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                     ToolParameterDescriptor.create("minCoverage", "Min Coverage For Consensus", "If provided, a consensus will only be called over regions with at least this depth", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, 25),
+                    ToolParameterDescriptor.createExpDataParam("primerBedFile", "Primer Sites (BED File)", "This is a BED file specifying the primer binding sites, which will be used to flag variants.  Strandedness is ignored.", "ldk-expdatafield", new JSONObject()
+                    {{
+                        put("allowBlank", false);
+                    }}, null),
                     ToolParameterDescriptor.create("minFractionForConsensus", "Min AF For Consensus", "Any LoFreq variant greater than this threshold will be used as the consensus base.", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0.5);
                         put("maxValue", 1.0);
@@ -156,6 +169,30 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
         double minFractionForConsensus = getProvider().getParameterByName("minFractionForConsensus").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class, 0.0);
 
+        Integer primerDataId = getProvider().getParameterByName("primerBedFile").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
+        List<Interval> primerIntervals = new ArrayList<>();
+        if (primerDataId != null)
+        {
+            File primerFile = getPipelineCtx().getSequenceSupport().getCachedData(primerDataId);
+            try (CSVReader reader = new CSVReader(Readers.getReader(primerFile), '\t'))
+            {
+                String[] line;
+                while ((line = reader.readNext()) != null)
+                {
+                    if (line[0].startsWith("#"))
+                    {
+                        continue;
+                    }
+
+                    primerIntervals.add(new Interval(line[0], Integer.parseInt(line[1]) + 1, Integer.parseInt(line[2])));
+                }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+
         int totalVariants = 0;
         int totalGT1 = 0;
         int totalGT50 = 0;
@@ -164,19 +201,30 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         Map<String, List<String>> expectedLoFreq = new HashMap<>();
         int totalIndelGT1 = 0;
         int totalIndelGTThreshold = 0;
+        int totalConsensusInPBS= 0;
 
         File loFreqConsensusVcf = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.consensus.vcf.gz");
+        File loFreqAllVcf = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.all.vcf.gz");
         SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(referenceGenome.getSequenceDictionary().toPath());
-        VariantContextWriterBuilder writerBuiler = new VariantContextWriterBuilder().setOutputFile(loFreqConsensusVcf).setReferenceDictionary(dict);
-        try (VCFFileReader reader = new VCFFileReader(outputVcfSnpEff);CloseableIterator<VariantContext> it = reader.iterator();VariantContextWriter writer = writerBuiler.build())
+        VariantContextWriterBuilder writerBuilder1 = new VariantContextWriterBuilder().setOutputFile(loFreqConsensusVcf).setReferenceDictionary(dict);
+        VariantContextWriterBuilder writerBuilder2 = new VariantContextWriterBuilder().setOutputFile(loFreqAllVcf).setReferenceDictionary(dict);
+        try (VCFFileReader reader = new VCFFileReader(outputVcfSnpEff);CloseableIterator<VariantContext> it = reader.iterator();VariantContextWriter writer1 = writerBuilder1.build();VariantContextWriter writer2 = writerBuilder2.build())
         {
             VCFHeader header = reader.getFileHeader();
+
+            //Add INFO annotations
+            header.addMetaDataLine(new VCFInfoHeaderLine("IN_CONSENSUS", 1, VCFHeaderLineType.Flag, "A flag to indicate whether this variant appears in the consensus"));
+            header.addMetaDataLine(new VCFInfoHeaderLine("WITHIN_PBS", 1, VCFHeaderLineType.Flag, "A flag to indicate whether this variant is located in primer binding sites"));
+
             header.setSequenceDictionary(dict);
-            writer.writeHeader(header);
+            writer1.writeHeader(header);
+            writer2.writeHeader(header);
 
             while (it.hasNext())
             {
                 VariantContext vc = it.next();
+                VariantContextBuilder vcb = new VariantContextBuilder(vc);
+
                 totalVariants++;
                 if (vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) > 0.01)
                 {
@@ -192,9 +240,35 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                     totalGT50++;
                 }
 
+                boolean withinPrimer = false;
+                if (!primerIntervals.isEmpty())
+                {
+                    for (Interval i : primerIntervals)
+                    {
+                        if (IntervalUtil.contains(i, vc.getContig(), vc.getStart()))
+                        {
+                            withinPrimer = true;
+                            break;
+                        }
+                    }
+
+                    if (withinPrimer)
+                    {
+                        vcb.attribute("WITHIN_PBS", 1);
+                    }
+                }
+
                 if (vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) > minFractionForConsensus)
                 {
                     totalGTThreshold++;
+
+                    if (withinPrimer)
+                    {
+                        totalConsensusInPBS++;
+                    }
+
+                    vcb.attribute("IN_CONSENSUS", 1);
+
                     if (vc.hasAttribute("INDEL"))
                     {
                         totalIndelGTThreshold++;
@@ -206,7 +280,13 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
                     expectedLoFreq.put(key, line);
 
-                    writer.add(vc);
+                    vc = vcb.make();
+                    writer1.add(vc);
+                    writer2.add(vc);
+                }
+                else
+                {
+                    writer2.add(vcb.make());
                 }
             }
         }
@@ -332,7 +412,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             }
         }
 
-        String description = String.format("Total Variants: %s\nTotal GT 1 PCT: %s\nTotal GT 50 PCT: %s\nTotal Indel GT 1 PCT: %s\nPositions Below Coverage: %s\nTotal In LoFreq Consensus: %s\nTotal Indel In LoFreq Consensus: %s", totalVariants, totalGT1, totalGT50, totalIndelGT1, positionsSkipped, totalGTThreshold, totalIndelGTThreshold);
+        String description = String.format("Total Variants: %s\nTotal GT 1 PCT: %s\nTotal GT 50 PCT: %s\nTotal Indel GT 1 PCT: %s\nPositions Below Coverage: %s\nTotal In LoFreq Consensus: %s\nTotal Indel In LoFreq Consensus: %s\nTotal Consensus Variant in PBS: %s", totalVariants, totalGT1, totalGT50, totalIndelGT1, positionsSkipped, totalGTThreshold, totalIndelGTThreshold, totalConsensusInPBS);
 
         if (!variantsBcftoolsOnly.isEmpty())
         {
@@ -377,6 +457,24 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         output.addSequenceOutput(outputVcfSnpEff, "LoFreq: " + rs.getName(), CATEGORY, rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
         output.addSequenceOutput(coverageOut, "Depth of Coverage: " + rs.getName(), "Depth of Coverage", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
         output.addSequenceOutput(consensusFastaLoFreq, "Consensus: " + rs.getName(), "Viral Consensus Sequence", rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
+
+        //write metrics:
+        try (CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(getMetricsFile(outputDir)), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+        {
+            writer.writeNext(new String[]{"Category", "MetricName", "Value"});
+            writer.writeNext(new String[]{"LoFreq Analysis", "CoverageThreshold", String.valueOf(minCoverage)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "TotalConsensusN", String.valueOf(lofreqConsensusNs)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "LowCoverPositionsSkipped", String.valueOf(positionsSkipped)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "VariantGTThreshold", String.valueOf(totalGTThreshold)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "VariantGT1", String.valueOf(totalGT1)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "VariantGT50", String.valueOf(totalGT50)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "IndelsGTThreshold", String.valueOf(totalIndelGTThreshold)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "TotalConsensusVariantsInPBS", String.valueOf(totalConsensusInPBS)});
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
 
         return output;
     }
@@ -458,9 +556,65 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         return totalN.get();
     }
 
+    private File getMetricsFile(File outDir)
+    {
+        return new File(outDir, "metrics.txt");
+    }
+
     @Override
     public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta, File outDir) throws PipelineJobException
     {
+        Map<String, String> valueMap = new HashMap<>();
+
+        File metrics = getMetricsFile(outDir);
+        if (metrics.exists())
+        {
+            getPipelineCtx().getLogger().info("Loading metrics");
+            int total = 0;
+            TableInfo ti = DbSchema.get("sequenceanalysis", DbSchemaType.Module).getTable("quality_metrics");
+            try (CSVReader reader = new CSVReader(Readers.getReader(metrics), '\t'))
+            {
+                String[] line;
+                while ((line = reader.readNext()) != null)
+                {
+                    if ("Category".equals(line[0]))
+                    {
+                        continue;
+                    }
+
+                    Map<String, Object> r = new HashMap<>();
+                    r.put("category", line[0]);
+                    r.put("metricname", line[1]);
+
+                    String value = line[2];
+
+                    String fieldName = NumberUtils.isCreatable(value) ? "metricvalue" : "qualvalue";
+                    r.put(fieldName, value);
+
+                    r.put("analysis_id", model.getRowId());
+                    r.put("dataid", model.getAlignmentFile());
+                    r.put("readset", model.getReadset());
+                    r.put("container", getPipelineCtx().getJob().getContainer());
+                    r.put("createdby", getPipelineCtx().getJob().getUser().getUserId());
+
+                    Table.insert(getPipelineCtx().getJob().getUser(), ti, r);
+                    total++;
+
+                    valueMap.put(line[1], value);
+                }
+
+                getPipelineCtx().getJob().getLogger().info("total metrics: " + total);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+        else
+        {
+            throw new PipelineJobException("Unable to find metrics file: " + metrics.getPath());
+        }
+
         return null;
     }
 

@@ -672,7 +672,7 @@ public class JBrowseRoot
                     trackList.put("tracks", existingTracks);
                 }
 
-                //even through we're loading the raw data based on urlTemplate, make a symlink from this location into our DB so help generate-names.pl work properly
+                //even through we're loading the raw data based on urlTemplate, make a symlink from this location into our DB so generate-names.pl works properly
                 File sourceFile = f.expectDataSubdirForTrack() ? new File(f.getTrackRootDir(), "tracks/track-" + f.getTrackId()) : f.getTrackRootDir();
                 File targetFile = new File(outDir, "tracks/track-" + f.getTrackId());
 
@@ -822,13 +822,14 @@ public class JBrowseRoot
                         {
                             getLogger().debug("updating urlTemplate");
                             getLogger().debug("old: " + o.getString("urlTemplate"));
-                            o.put("urlTemplate", o.getString("urlTemplate").replaceAll("^data/data-" + f.getOutputFile(), outDirPrefix));
+                            o.put("urlTemplate", o.getString("urlTemplate").replaceAll("^tracks/data-" + f.getOutputFile() + "/data/", ""));
                             getLogger().debug("new: " + o.getString("urlTemplate"));
                         }
 
                         existingTracks.put(o);
                         trackList.put("tracks", existingTracks);
 
+                        // Note: this previously used this logic:
                         File sourceFile = f.expectDataSubdirForTrack() ? new File(f.getTrackRootDir(), "tracks/data-" + f.getOutputFile()) : f.getTrackRootDir();
                         File targetFile = new File(outDir, outDirPrefix);
                         if (!targetFile.getParentFile().exists())
@@ -1415,7 +1416,7 @@ public class JBrowseRoot
         try
         {
             SimpleScriptWrapper wrapper = new SimpleScriptWrapper(getLogger());
-            wrapper.execute(Arrays.asList(gffread.getPath(), gtf.getPath(), "-E", "-F", "-o", gff.getPath()));
+            wrapper.execute(Arrays.asList(gffread.getPath(), gtf.getPath(), "-E", "-F", "-O", "-o", gff.getPath()));
 
             return gff;
         }
@@ -1652,7 +1653,7 @@ public class JBrowseRoot
         o.put("type", "AnnotatedVariants/View/Track/VCFVariants");
         o.put("key", featureLabel);
         o.put("hideNotFilterPass", true);
-        o.put("chunkSizeLimit", 5000000);
+        o.put("chunkSizeLimit", 10000000);
 
         String relPath = FileUtil.relativePath(getBaseDir(data.getContainer()).getPath(), outDir.getPath());
         getLogger().debug("using relative path: " + relPath);
@@ -1731,7 +1732,7 @@ public class JBrowseRoot
             attrs.add("id");
             attrs.addAll(nameAttributes);
 
-            args.add(StringUtils.join(nameAttributes, ","));
+            args.add(StringUtils.join(attrs, ","));
         }
 
         //to avoid issues w/ perl and escaping characters, just set the working directory to the output folder

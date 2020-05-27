@@ -175,17 +175,15 @@ cd $LKSRC_DIR
 if [[ ! -e ${LKTOOLS_DIR}/bwa || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf bwa-0.6.2*
-    rm -Rf bwa-0.7.9a*
-    rm -Rf bwa-0.7.12*
+    rm -Rf bwa-0.*
     rm -Rf $LKTOOLS_DIR/bwa
 
-    wget $WGET_OPTS https://downloads.sourceforge.net/project/bio-bwa/bwa-0.7.12.tar.bz2
-    bunzip2 bwa-0.7.12.tar.bz2
-    tar -xf bwa-0.7.12.tar
-    bzip2 bwa-0.7.12.tar
-    cd bwa-0.7.12
-    make CFLAGS=-msse2
+    wget $WGET_OPTS https://downloads.sourceforge.net/project/bio-bwa/bwa-0.7.17.tar.bz2
+    bunzip2 bwa-0.7.17.tar.bz2
+    tar -xf bwa-0.7.17.tar
+    bzip2 bwa-0.7.17.tar
+    cd bwa-0.7.17
+    make
     install bwa $LKTOOLS_DIR/
 else
     echo "Already installed"

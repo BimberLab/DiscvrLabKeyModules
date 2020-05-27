@@ -139,9 +139,9 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
     }
 
     @Override
-    public File getFinalVCF(JobContext ctx) throws PipelineJobException
+    public File getScatterJobOutput(JobContext ctx) throws PipelineJobException
     {
-        return getVcfOutputByCategory(ctx, VCF_CATEGORY);
+        return getScatterOutputByCategory(ctx, VCF_CATEGORY);
     }
 
     @Override
@@ -181,34 +181,34 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         so1.setContainer(job.getContainerId());
         so1.setCreated(new Date());
         so1.setModified(new Date());
-        so1.setReadset((readsetIds.isEmpty() ? null : readsetIds.iterator().next()));
+        so1.setReadset((readsetIds.size() != 1 ? null : readsetIds.iterator().next()));
         so1.setDescription("Total samples: " + sampleCount);
 
         return so1;
     }
 
-    public static File getVcfOutputByCategory(JobContext ctx, final String category) throws PipelineJobException
+    public static File getScatterOutputByCategory(JobContext ctx, final String category) throws PipelineJobException
     {
-        Set<File> finalVcfs = new HashSet<>();
+        Set<File> scatterOutputs = new HashSet<>();
         TaskFileManagerImpl manager = (TaskFileManagerImpl)ctx.getFileManager();
         ctx.getLogger().debug("Inspecting " + manager.getOutputsToCreate().size() + " outputs for category: " + category);
         manager.getOutputsToCreate().forEach(x ->  {
             if (category.equals(x.getCategory()))
             {
-                finalVcfs.add(x.getFile());
+                scatterOutputs.add(x.getFile());
             }
         });
 
-        if (finalVcfs.isEmpty())
+        if (scatterOutputs.isEmpty())
         {
             throw new PipelineJobException("Unable to find final VCF");
         }
-        else if (finalVcfs.size() > 1)
+        else if (scatterOutputs.size() > 1)
         {
             throw new PipelineJobException("More than one output tagged as final VCF");
         }
 
-        return finalVcfs.iterator().next();
+        return scatterOutputs.iterator().next();
     }
 
     @Override
@@ -651,7 +651,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         public static final String JSON_NAME = "processVariantsCheckpoint.json";
         private static final String GENOTYPE_GVCFS = "GENOTYPE_GVCFS";
 
-        private Map<String, File> _finalVcfs = new HashMap<>();
+        private Map<String, File> _scatterOutputs = new HashMap<>();
 
         //for serialization
         public Resumer()
@@ -755,9 +755,9 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             return JSON_NAME;
         }
 
-        public void setStepComplete(int stepIdx, String inputFilePath, RecordedAction action, File finalVCF) throws PipelineJobException
+        public void setStepComplete(int stepIdx, String inputFilePath, RecordedAction action, File scatterOutput) throws PipelineJobException
         {
-            _finalVcfs.put(getKey(stepIdx, inputFilePath), finalVCF);
+            _scatterOutputs.put(getKey(stepIdx, inputFilePath), scatterOutput);
             _recordedActions.add(action);
             saveState();
         }
@@ -769,39 +769,39 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
         public boolean isStepComplete(int stepIdx, String inputFilePath)
         {
-            return _finalVcfs.containsKey(getKey(stepIdx, inputFilePath));
+            return _scatterOutputs.containsKey(getKey(stepIdx, inputFilePath));
         }
 
         public File getVcfFromStep(int stepIdx, String inputFilePath)
         {
-            return _finalVcfs.get(getKey(stepIdx, inputFilePath));
+            return _scatterOutputs.get(getKey(stepIdx, inputFilePath));
         }
 
-        public Map<String, File> getFinalVcfs()
+        public Map<String, File> getScatterOutputs()
         {
-            return _finalVcfs;
+            return _scatterOutputs;
         }
 
-        public void setFinalVcfs(Map<String, File> finalVcfs)
+        public void setScatterOutputs(Map<String, File> scatterOutputs)
         {
-            _finalVcfs = finalVcfs;
+            _scatterOutputs = scatterOutputs;
         }
 
-        public void setGenotypeGVCFsComplete(RecordedAction action, File finalVCF) throws PipelineJobException
+        public void setGenotypeGVCFsComplete(RecordedAction action, File scatterOutput) throws PipelineJobException
         {
             getRecordedActions().add(action);
-            _finalVcfs.put(GENOTYPE_GVCFS, finalVCF);
+            _scatterOutputs.put(GENOTYPE_GVCFS, scatterOutput);
             saveState();
         }
 
         public boolean isGenotypeGVCFsComplete()
         {
-            return _finalVcfs.containsKey(GENOTYPE_GVCFS);
+            return _scatterOutputs.containsKey(GENOTYPE_GVCFS);
         }
 
         public File getGenotypeGVCFsFile()
         {
-            return _finalVcfs.get(GENOTYPE_GVCFS);
+            return _scatterOutputs.get(GENOTYPE_GVCFS);
         }
     }
 

@@ -50,7 +50,9 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -532,5 +534,30 @@ public class SequenceUtil
         }
 
         return outputGzip;
+    }
+
+    public static Set<String> getContigsInVcf(File vcf) throws PipelineJobException
+    {
+        try
+        {
+            File script = File.createTempFile("script", "sh");
+            try (PrintWriter writer = PrintWriters.getPrintWriter(script))
+            {
+                writer.println("#!/bin/bash");
+                String cat = vcf.getPath().toLowerCase().endsWith(".gz") ? "zcat" : "cat";
+                writer.println(cat + " " + vcf.getPath() + " | grep -v '#' | awk ' { print $1 } ' | sort | uniq");
+            }
+
+            SimpleScriptWrapper wrapper = new SimpleScriptWrapper(null);
+            String list = wrapper.executeWithOutput(Arrays.asList("/bin/bash", script.getPath()));
+
+            script.delete();
+
+            return new HashSet<>(Arrays.asList(list.split("\n")));
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
     }
 }

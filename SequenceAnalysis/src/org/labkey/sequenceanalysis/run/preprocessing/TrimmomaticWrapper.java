@@ -567,7 +567,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         Integer threads = SequenceTaskHelper.getMaxThreads(getLogger());
         if (threads != null)
         {
-            threads = Math.min(1, threads - 1); //account for reading of log
+            threads = Math.max(1, threads - 1); //account for reading of log
             params.add("-threads");
             params.add(threads.toString());
         }

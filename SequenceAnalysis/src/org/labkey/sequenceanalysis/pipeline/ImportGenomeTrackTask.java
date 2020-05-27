@@ -33,8 +33,10 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
+import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -51,21 +53,22 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.reader.Readers;
+import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.sequenceanalysis.GenomeTrigger;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.Job;
 import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
+import org.labkey.api.view.UnauthorizedException;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
-import org.labkey.sequenceanalysis.run.util.GFFReadWrapper;
+import org.labkey.sequenceanalysis.run.util.GxfSorter;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -131,6 +134,13 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
 
         try
         {
+            final int libraryId = getPipelineJob().getLibraryId();
+            final Container genomeContainer = ReferenceGenomeImpl.getFolderForGenome(libraryId);
+            if (!genomeContainer.hasPermission(getJob().getUser(), InsertPermission.class))
+            {
+                throw new UnauthorizedException("User cannot does not have update permissionin folder: " + genomeContainer.getPath());
+            }
+
             final int trackId = addTrackForLibrary(getPipelineJob().getTrack(), getPipelineJob().getTrackName(), getPipelineJob().getTrackDescription(), action);
 
             Set<GenomeTrigger> triggers = SequenceAnalysisServiceImpl.get().getGenomeTriggers();
@@ -139,16 +149,15 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
                 JobRunner jr = JobRunner.getDefault();
                 for (final GenomeTrigger t : triggers)
                 {
-                    if (t.isAvailable(getJob().getContainer()))
+                    if (t.isAvailable(genomeContainer))
                     {
                         getJob().getLogger().info("running genome trigger: " + t.getName());
-                        final int libraryId = getPipelineJob().getLibraryId();
                         jr.execute(new Job()
                         {
                             @Override
                             public void run()
                             {
-                                t.onTrackAdd(getJob().getContainer(), getJob().getUser(), getJob().getLogger(), libraryId, trackId);
+                                t.onTrackAdd(genomeContainer, getJob().getUser(), getJob().getLogger(), libraryId, trackId);
                             }
                         });
                     }
@@ -206,7 +215,7 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
         getJob().getLogger().info("input track: " + file.getPath());
         getJob().getLogger().info("writing output to: "+ outputFile.getPath());
 
-        Map<String, String> knownChrs = new CaseInsensitiveHashMap();
+        Map<String, String> knownChrs = new CaseInsensitiveHashMap<>();
         for (RefNtSequenceModel m : refNtModels)
         {
             knownChrs.put(m.getName(), m.getName());
@@ -285,23 +294,24 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
             throw new PipelineJobException("Unsupported filetype: " + file.getName());
         }
 
-        ExpData trackData = ExperimentService.get().createData(getJob().getContainer(), new DataType("Sequence Track"));
+        Container genomeContainer = ReferenceGenomeImpl.getFolderForGenome(getPipelineJob().getLibraryId());
+
+        ExpData trackData = ExperimentService.get().createData(genomeContainer, new DataType("Sequence Track"));
         trackData.setName(outputFile.getName());
         trackData.setDataFileURI(outputFile.toURI());
         trackData.save(getJob().getUser());
-
         //create row
         CaseInsensitiveHashMap<Object> map = new CaseInsensitiveHashMap<>();
         map.put("name", trackName);
         map.put("description", trackDescription);
         map.put("library_id", getPipelineJob().getLibraryId());
-        map.put("container", getJob().getContainer());
+        map.put("container", genomeContainer);
         map.put("created", new Date());
         map.put("createdby", getJob().getUser().getUserId());
         map.put("modified", new Date());
         map.put("modifiedby", getJob().getUser().getUserId());
         map.put("fileid", trackData.getRowId());
-        Integer jobId = PipelineService.get().getJobId(getJob().getUser(), getJob().getContainer(), getJob().getJobGUID());
+        Integer jobId = PipelineService.get().getJobId(getJob().getUser(), genomeContainer, getJob().getJobGUID());
         map.put("jobId", jobId);
 
         TableInfo trackTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_LIBRARY_TRACKS);
@@ -323,7 +333,7 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
             return;
         }
 
-        new GFFReadWrapper(getJob().getLogger()).sortGxf(gxf, null);
+        new GxfSorter(getJob().getLogger()).sortGxf(gxf, null);
     }
     private File getOutputFile(File file, File tracksDir)
     {

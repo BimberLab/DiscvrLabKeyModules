@@ -2608,6 +2608,9 @@
                     <fkColumnName>RowId</fkColumnName>
                 </fk>
             </column>
+            <column columnName="source">
+
+            </column>
             <column columnName="version">
 
             </column>
