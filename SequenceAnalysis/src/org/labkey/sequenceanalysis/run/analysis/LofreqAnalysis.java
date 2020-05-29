@@ -230,6 +230,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
         //Optional: amplicons/depth:
         NumberFormat decimal = DecimalFormat.getNumberInstance();
+        decimal.setGroupingUsed(false);
         decimal.setMaximumFractionDigits(2);
         Integer ampliconBedId = getProvider().getParameterByName("ampliconBedFile").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
         if (ampliconBedId != null)
