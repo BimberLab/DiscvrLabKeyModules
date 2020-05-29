@@ -17,8 +17,10 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.log4j.Logger;
 import org.biojava3.core.sequence.DNASequence;
 import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
@@ -238,7 +240,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             File ampliconDepths = new File(outputDir, "ampliconDepths.txt");
             try (CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(ampliconDepths), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
-                writer.writeNext(new String[]{"AmpliconName", "Length", "TotalDepth", "AvgDepth"});
+                writer.writeNext(new String[]{"AmpliconName", "Length", "TotalDepth", "AvgDepth", "MedianDepth"});
                 File primerFile = getPipelineCtx().getSequenceSupport().getCachedData(ampliconBedId);
                 try (CSVReader reader = new CSVReader(Readers.getReader(primerFile), '\t'))
                 {
@@ -256,6 +258,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                         String name = line[3];
 
                         int totalDepth = 0;
+                        List<Double> depths = new ArrayList<>();
                         for (int i = start;i<=end;i++)
                         {
                             String key = contig + ":" + i;
@@ -266,11 +269,14 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                             }
 
                             totalDepth += gatkDepth.get(key);
+                            depths.add(gatkDepth.get(key).doubleValue());
                         }
 
                         int length = (end - start + 1);
                         Double avg = (double)totalDepth / length;
-                        writer.writeNext(new String[]{name, String.valueOf(length), String.valueOf(totalDepth), decimal.format(avg)});
+                        Median median = new Median();
+                        double medianValue = median.evaluate(ArrayUtils.toPrimitive(depths.toArray(new Double[0])));
+                        writer.writeNext(new String[]{name, String.valueOf(length), String.valueOf(totalDepth), decimal.format(avg), decimal.format(medianValue)});
                     }
                 }
             }
