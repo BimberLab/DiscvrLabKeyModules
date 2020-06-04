@@ -371,6 +371,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             {
                 File workspace = getSourceWorkspace(params, support);
                 uniqueSamples.addAll(getSamplesForWorkspace(workspace));
+                job.getLogger().info("Samples in the existing workspace: " + uniqueSamples.size());
             }
 
             for (SequenceOutputFile so : inputFiles)
@@ -453,10 +454,14 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
 
             Set<File> toDelete = new HashSet<>();
             File doneFile = new File(destinationWorkspaceFolder, "genomicsdb.done");
-            boolean isResume = doneFile.exists();
+            File startedFile = new File(destinationWorkspaceFolder, "genomicsdb.started");
+            boolean genomicsDbCompleted = doneFile.exists();
+            boolean genomicsDbStarted = startedFile.exists();
+            ctx.getFileManager().addIntermediateFile(doneFile);
+            ctx.getFileManager().addIntermediateFile(startedFile);
             if (_append)
             {
-                if (isResume)
+                if (genomicsDbCompleted)
                 {
                     ctx.getLogger().debug("GenomicsDB previously completed, resuming");
                 }
@@ -477,14 +482,16 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                         File destContigFolder = new File(destinationWorkspaceFolder, sourceFolder.getName());
                         File copyDone = new File(destContigFolder.getPath() + ".copy.done");
                         toDelete.add(copyDone);
-                        if (copyDone.exists())
+
+                        //NOTE: if GenomicsDB has started, but dies mid-job, the resulting workspace probably cannot be resumed
+                        if (!genomicsDbStarted && copyDone.exists())
                         {
                             ctx.getLogger().info("has been copied, skipping");
                             continue;
                         }
 
                         //Allow the above to complete so we track the .done files
-                        if (isResume)
+                        if (genomicsDbCompleted)
                         {
                             continue;
                         }
@@ -517,7 +524,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             }
             else
             {
-                if (isResume)
+                if (genomicsDbCompleted)
                 {
                     ctx.getLogger().debug("GenomicsDB previously completed, resuming");
                 }
@@ -542,7 +549,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             if (doCopyGVcfLocal)
             {
                 ctx.getLogger().info("making local copies of gVCFs");
-                vcfsToProcess.addAll(GenotypeGVCFsWrapper.copyVcfsLocally(inputVcfs, toDelete, null, ctx.getLogger(), isResume));
+                vcfsToProcess.addAll(GenotypeGVCFsWrapper.copyVcfsLocally(inputVcfs, toDelete, null, ctx.getLogger(), genomicsDbCompleted));
             }
             else
             {
@@ -558,13 +565,15 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 wrapper.addToEnvironment("TILEDB_DISABLE_FILE_LOCKING", "1");
             }
 
-            if (!isResume)
+            if (!genomicsDbCompleted)
             {
-                List<Interval> intervals = getIntervals(ctx);
-                wrapper.execute(genome, vcfsToProcess, destinationWorkspaceFolder, intervals, options, _append);
-
                 try
                 {
+                    FileUtils.touch(startedFile);
+
+                    List<Interval> intervals = getIntervals(ctx);
+                    wrapper.execute(genome, vcfsToProcess, destinationWorkspaceFolder, intervals, options, _append);
+
                     FileUtils.touch(doneFile);
                     ctx.getLogger().debug("GenomicsDB complete, touching file: " + doneFile.getPath());
                 }
