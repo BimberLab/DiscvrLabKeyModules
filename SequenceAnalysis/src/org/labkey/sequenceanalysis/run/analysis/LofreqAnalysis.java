@@ -17,8 +17,10 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.log4j.Logger;
 import org.biojava3.core.sequence.DNASequence;
 import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
@@ -59,6 +61,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -97,7 +100,11 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                     }}, 25),
                     ToolParameterDescriptor.createExpDataParam("primerBedFile", "Primer Sites (BED File)", "This is a BED file specifying the primer binding sites, which will be used to flag variants.  Strandedness is ignored.", "ldk-expdatafield", new JSONObject()
                     {{
-                        put("allowBlank", false);
+                        put("allowBlank", true);
+                    }}, null),
+                    ToolParameterDescriptor.createExpDataParam("ampliconBedFile", "Amplicons (BED File)", "This is a BED file specifying the amplicons used for amplification (or any named regions of interest).  If provided, depth will be summarized across them.", "ldk-expdatafield", new JSONObject()
+                    {{
+                        put("allowBlank", true);
                     }}, null),
                     ToolParameterDescriptor.create("minFractionForConsensus", "Min AF For Consensus", "Any LoFreq variant greater than this threshold will be used as the consensus base.", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0.5);
@@ -133,162 +140,18 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
         DepthOfCoverageWrapper wrapper = new DepthOfCoverageWrapper(getPipelineCtx().getLogger());
         List<String> extraArgs = new ArrayList<>();
-        extraArgs.add("--includeDeletions");
+        extraArgs.add("--include-deletions");
+        extraArgs.add("--omit-per-sample-statistics");
+        extraArgs.add("--omit-interval-statistics");
 
-        //GATK4 only:
-        //extraArgs.add("--include-deletions");
-        //extraArgs.add("--omit-per-sample-statistics");
-        //extraArgs.add("--omit-interval-statistics");
-        //extraArgs.add("--min-base-quality");
-        //extraArgs.add("15");
+        File intervalList = new File(outputDir, "depthOfCoverageIntervals.intervals");
+        output.addIntermediateFile(intervalList);
+        extraArgs.addAll(DepthOfCoverageWrapper.generateIntervalArgsForFullGenome(referenceGenome, intervalList));
 
         wrapper.run(Collections.singletonList(inputBam), coverageOut.getPath(), referenceGenome.getWorkingFastaFile(), extraArgs, true);
         if (!coverageOut.exists())
         {
             throw new PipelineJobException("Unable to find file: " + coverageOut.getPath());
-        }
-
-        //SnpEff:
-        Integer geneFileId = getProvider().getParameterByName(SNPEffStep.GENE_PARAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
-        File snpEffBaseDir = SNPEffStep.checkOrCreateIndex(getPipelineCtx(), referenceGenome, geneFileId);
-
-        SnpEffWrapper snpEffWrapper = new SnpEffWrapper(getPipelineCtx().getLogger());
-        snpEffWrapper.runSnpEff(referenceGenome.getGenomeId(), geneFileId, snpEffBaseDir, outputVcf, outputVcfSnpEff, null);
-
-        try
-        {
-            SequenceAnalysisService.get().ensureVcfIndex(outputVcfSnpEff, getPipelineCtx().getLogger());
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
-
-        output.addIntermediateFile(outputVcf);
-        output.addIntermediateFile(new File(outputVcf.getPath() + ".tbi"));
-
-        double minFractionForConsensus = getProvider().getParameterByName("minFractionForConsensus").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class, 0.0);
-
-        Integer primerDataId = getProvider().getParameterByName("primerBedFile").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
-        List<Interval> primerIntervals = new ArrayList<>();
-        if (primerDataId != null)
-        {
-            File primerFile = getPipelineCtx().getSequenceSupport().getCachedData(primerDataId);
-            try (CSVReader reader = new CSVReader(Readers.getReader(primerFile), '\t'))
-            {
-                String[] line;
-                while ((line = reader.readNext()) != null)
-                {
-                    if (line[0].startsWith("#"))
-                    {
-                        continue;
-                    }
-
-                    primerIntervals.add(new Interval(line[0], Integer.parseInt(line[1]) + 1, Integer.parseInt(line[2])));
-                }
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-        }
-
-        int totalVariants = 0;
-        int totalGT1 = 0;
-        int totalGT50 = 0;
-        int totalGTThreshold = 0;
-
-        Map<String, List<String>> expectedLoFreq = new HashMap<>();
-        int totalIndelGT1 = 0;
-        int totalIndelGTThreshold = 0;
-        int totalConsensusInPBS= 0;
-
-        File loFreqConsensusVcf = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.consensus.vcf.gz");
-        File loFreqAllVcf = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.all.vcf.gz");
-        SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(referenceGenome.getSequenceDictionary().toPath());
-        VariantContextWriterBuilder writerBuilder1 = new VariantContextWriterBuilder().setOutputFile(loFreqConsensusVcf).setReferenceDictionary(dict);
-        VariantContextWriterBuilder writerBuilder2 = new VariantContextWriterBuilder().setOutputFile(loFreqAllVcf).setReferenceDictionary(dict);
-        try (VCFFileReader reader = new VCFFileReader(outputVcfSnpEff);CloseableIterator<VariantContext> it = reader.iterator();VariantContextWriter writer1 = writerBuilder1.build();VariantContextWriter writer2 = writerBuilder2.build())
-        {
-            VCFHeader header = reader.getFileHeader();
-
-            //Add INFO annotations
-            header.addMetaDataLine(new VCFInfoHeaderLine("IN_CONSENSUS", 1, VCFHeaderLineType.Flag, "A flag to indicate whether this variant appears in the consensus"));
-            header.addMetaDataLine(new VCFInfoHeaderLine("WITHIN_PBS", 1, VCFHeaderLineType.Flag, "A flag to indicate whether this variant is located in primer binding sites"));
-
-            header.setSequenceDictionary(dict);
-            writer1.writeHeader(header);
-            writer2.writeHeader(header);
-
-            while (it.hasNext())
-            {
-                VariantContext vc = it.next();
-                VariantContextBuilder vcb = new VariantContextBuilder(vc);
-
-                totalVariants++;
-                if (vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) > 0.01)
-                {
-                    totalGT1++;
-                    if (vc.hasAttribute("INDEL"))
-                    {
-                        totalIndelGT1++;
-                    }
-                }
-
-                if (vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) > 0.5)
-                {
-                    totalGT50++;
-                }
-
-                boolean withinPrimer = false;
-                if (!primerIntervals.isEmpty())
-                {
-                    for (Interval i : primerIntervals)
-                    {
-                        if (IntervalUtil.contains(i, vc.getContig(), vc.getStart()))
-                        {
-                            withinPrimer = true;
-                            break;
-                        }
-                    }
-
-                    if (withinPrimer)
-                    {
-                        vcb.attribute("WITHIN_PBS", 1);
-                    }
-                }
-
-                if (vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) > minFractionForConsensus)
-                {
-                    totalGTThreshold++;
-
-                    if (withinPrimer)
-                    {
-                        totalConsensusInPBS++;
-                    }
-
-                    vcb.attribute("IN_CONSENSUS", 1);
-
-                    if (vc.hasAttribute("INDEL"))
-                    {
-                        totalIndelGTThreshold++;
-                    }
-                    String key = getHashKey(vc);
-                    List<String> line = expectedLoFreq.getOrDefault(key, new ArrayList<>());
-
-                    line.add("AF:" + vc.getAttribute("AF") + "/" + "DP:" + vc.getAttribute("DP"));
-
-                    expectedLoFreq.put(key, line);
-
-                    vc = vcb.make();
-                    writer1.add(vc);
-                    writer2.add(vc);
-                }
-                else
-                {
-                    writer2.add(vcb.make());
-                }
-            }
         }
 
         //Create a BED file with all regions of coverage below MIN_COVERAGE:
@@ -297,6 +160,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         int gapIntervals = 0;
 
         File mask = new File(outputDir, "mask.bed");
+        Map<String, Integer> gatkDepth = new HashMap<>();
         try (CSVReader reader = new CSVReader(Readers.getReader(coverageOut), '\t');CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(mask), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
             String[] line;
@@ -314,6 +178,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
                 String[] tokens = line[0].split(":");
                 int depth = Integer.parseInt(line[1]);
+                gatkDepth.put(line[0], depth);
 
                 if (depth < minCoverage)
                 {
@@ -363,6 +228,217 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         catch (IOException e)
         {
             throw new PipelineJobException(e);
+        }
+
+        //Optional: amplicons/depth:
+        NumberFormat decimal = DecimalFormat.getNumberInstance();
+        decimal.setGroupingUsed(false);
+        decimal.setMaximumFractionDigits(2);
+        Integer ampliconBedId = getProvider().getParameterByName("ampliconBedFile").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
+        if (ampliconBedId != null)
+        {
+            File ampliconDepths = new File(outputDir, "ampliconDepths.txt");
+            try (CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(ampliconDepths), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+            {
+                writer.writeNext(new String[]{"AmpliconName", "Length", "TotalDepth", "AvgDepth", "MedianDepth"});
+                File primerFile = getPipelineCtx().getSequenceSupport().getCachedData(ampliconBedId);
+                try (CSVReader reader = new CSVReader(Readers.getReader(primerFile), '\t'))
+                {
+                    String[] line;
+                    while ((line = reader.readNext()) != null)
+                    {
+                        if (line[0].startsWith("#"))
+                        {
+                            continue;
+                        }
+
+                        String contig = line[0];
+                        int start = Integer.parseInt(line[1]) + 1;
+                        int end = Integer.parseInt(line[2]);
+                        String name = line[3];
+
+                        int totalDepth = 0;
+                        List<Double> depths = new ArrayList<>();
+                        for (int i = start;i<=end;i++)
+                        {
+                            String key = contig + ":" + i;
+                            if (!gatkDepth.containsKey(key))
+                            {
+                                getPipelineCtx().getLogger().error("Missing depth: " + key);
+                                continue;
+                            }
+
+                            totalDepth += gatkDepth.get(key);
+                            depths.add(gatkDepth.get(key).doubleValue());
+                        }
+
+                        int length = (end - start + 1);
+                        Double avg = (double)totalDepth / length;
+                        Median median = new Median();
+                        double medianValue = median.evaluate(ArrayUtils.toPrimitive(depths.toArray(new Double[0])));
+                        writer.writeNext(new String[]{name, String.valueOf(length), String.valueOf(totalDepth), decimal.format(avg), decimal.format(medianValue)});
+                    }
+                }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+        else
+        {
+            getPipelineCtx().getLogger().info("No amplicon BED provided, skipping");
+        }
+
+        //SnpEff:
+        Integer geneFileId = getProvider().getParameterByName(SNPEffStep.GENE_PARAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
+        File snpEffBaseDir = SNPEffStep.checkOrCreateIndex(getPipelineCtx(), referenceGenome, geneFileId);
+
+        SnpEffWrapper snpEffWrapper = new SnpEffWrapper(getPipelineCtx().getLogger());
+        snpEffWrapper.runSnpEff(referenceGenome.getGenomeId(), geneFileId, snpEffBaseDir, outputVcf, outputVcfSnpEff, null);
+
+        try
+        {
+            SequenceAnalysisService.get().ensureVcfIndex(outputVcfSnpEff, getPipelineCtx().getLogger());
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        output.addIntermediateFile(outputVcf);
+        output.addIntermediateFile(new File(outputVcf.getPath() + ".tbi"));
+
+        double minFractionForConsensus = getProvider().getParameterByName("minFractionForConsensus").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class, 0.0);
+
+        Integer primerDataId = getProvider().getParameterByName("primerBedFile").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
+        List<Interval> primerIntervals = new ArrayList<>();
+        if (primerDataId != null)
+        {
+            File primerFile = getPipelineCtx().getSequenceSupport().getCachedData(primerDataId);
+            try (CSVReader reader = new CSVReader(Readers.getReader(primerFile), '\t'))
+            {
+                String[] line;
+                while ((line = reader.readNext()) != null)
+                {
+                    if (line[0].startsWith("#"))
+                    {
+                        continue;
+                    }
+
+                    primerIntervals.add(new Interval(line[0], Integer.parseInt(line[1]) + 1, Integer.parseInt(line[2])));
+                }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+        else
+        {
+            getPipelineCtx().getLogger().info("No primer BED provided, skipping");
+        }
+
+        int totalVariants = 0;
+        int totalGT1 = 0;
+        int totalGT50 = 0;
+        int totalGTThreshold = 0;
+
+        Map<String, List<String>> expectedLoFreq = new HashMap<>();
+        int totalIndelGT1 = 0;
+        int totalIndelGTThreshold = 0;
+        int totalConsensusInPBS= 0;
+
+        File loFreqConsensusVcf = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.consensus.vcf.gz");
+        File loFreqAllVcf = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.all.vcf.gz");
+        SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(referenceGenome.getSequenceDictionary().toPath());
+        VariantContextWriterBuilder writerBuilder1 = new VariantContextWriterBuilder().setOutputFile(loFreqConsensusVcf).setReferenceDictionary(dict);
+        VariantContextWriterBuilder writerBuilder2 = new VariantContextWriterBuilder().setOutputFile(loFreqAllVcf).setReferenceDictionary(dict);
+        try (VCFFileReader reader = new VCFFileReader(outputVcfSnpEff);CloseableIterator<VariantContext> it = reader.iterator();VariantContextWriter writer1 = writerBuilder1.build();VariantContextWriter writer2 = writerBuilder2.build())
+        {
+            VCFHeader header = reader.getFileHeader();
+
+            //Add INFO annotations
+            header.addMetaDataLine(new VCFInfoHeaderLine("IN_CONSENSUS", 1, VCFHeaderLineType.Flag, "A flag to indicate whether this variant appears in the consensus"));
+            header.addMetaDataLine(new VCFInfoHeaderLine("WITHIN_PBS", 1, VCFHeaderLineType.Flag, "A flag to indicate whether this variant is located in primer binding sites"));
+            header.addMetaDataLine(new VCFInfoHeaderLine("GATK_DP", 1, VCFHeaderLineType.Integer, "The depth of coverage provided by GATK DepthOfCoverage"));
+
+            header.setSequenceDictionary(dict);
+            writer1.writeHeader(header);
+            writer2.writeHeader(header);
+
+            while (it.hasNext())
+            {
+                VariantContext vc = it.next();
+                VariantContextBuilder vcb = new VariantContextBuilder(vc);
+
+                totalVariants++;
+                if (vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) > 0.01)
+                {
+                    totalGT1++;
+                    if (vc.hasAttribute("INDEL"))
+                    {
+                        totalIndelGT1++;
+                    }
+                }
+
+                if (vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) > 0.5)
+                {
+                    totalGT50++;
+                }
+
+                int gDepth = gatkDepth.get(vc.getContig() + ":" + vc.getStart());
+                vcb.attribute("GATK_DP", gDepth);
+
+                boolean withinPrimer = false;
+                if (!primerIntervals.isEmpty())
+                {
+                    for (Interval i : primerIntervals)
+                    {
+                        if (IntervalUtil.contains(i, vc.getContig(), vc.getStart()))
+                        {
+                            withinPrimer = true;
+                            break;
+                        }
+                    }
+
+                    if (withinPrimer)
+                    {
+                        vcb.attribute("WITHIN_PBS", 1);
+                    }
+                }
+
+                if (gDepth >= minCoverage && vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) > minFractionForConsensus)
+                {
+                    totalGTThreshold++;
+
+                    if (withinPrimer)
+                    {
+                        totalConsensusInPBS++;
+                    }
+
+                    vcb.attribute("IN_CONSENSUS", 1);
+
+                    if (vc.hasAttribute("INDEL"))
+                    {
+                        totalIndelGTThreshold++;
+                    }
+                    String key = getHashKey(vc);
+                    List<String> line = expectedLoFreq.getOrDefault(key, new ArrayList<>());
+
+                    line.add("AF:" + vc.getAttribute("AF") + "/" + "DP:" + vc.getAttribute("DP"));
+
+                    expectedLoFreq.put(key, line);
+
+                    vc = vcb.make();
+                    writer1.add(vc);
+                    writer2.add(vc);
+                }
+                else
+                {
+                    writer2.add(vcb.make());
+                }
+            }
         }
 
         NumberFormat fmt = NumberFormat.getPercentInstance();
@@ -454,7 +530,9 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             getPipelineCtx().getLogger().warn("Consensus ambiguities from bcftools and lofreq did not match: " + bcfToolsConsensusNs + " / " + lofreqConsensusNs);
         }
 
-        output.addSequenceOutput(outputVcfSnpEff, "LoFreq: " + rs.getName(), CATEGORY, rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
+        output.addIntermediateFile(outputVcfSnpEff);
+        output.addIntermediateFile(new File(outputVcfSnpEff.getPath() + ".tbi"));
+        output.addSequenceOutput(loFreqAllVcf, "LoFreq: " + rs.getName(), CATEGORY, rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
         output.addSequenceOutput(coverageOut, "Depth of Coverage: " + rs.getName(), "Depth of Coverage", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
         output.addSequenceOutput(consensusFastaLoFreq, "Consensus: " + rs.getName(), "Viral Consensus Sequence", rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
 

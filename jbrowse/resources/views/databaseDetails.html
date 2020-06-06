@@ -15,6 +15,8 @@
             '<br>' +
             '<div id="members_'+webpart.wrapperDivId+'"></div>' +
             '<br>' +
+            '<div id="jsonfiles2_'+webpart.wrapperDivId+'"></div>' +
+            '<br>' +
             '<div id="jsonfiles_'+webpart.wrapperDivId+'"></div>'
         );
 
@@ -30,7 +32,7 @@
             }
         });
 
-        LDK.Utils.getReadOnlyQWP({
+        LDK.Utils.getBasicQWP({
             title: 'Resources Displayed In This Session',
             schemaName: 'jbrowse',
             queryName: 'database_members',
@@ -51,7 +53,7 @@
                     var genomeId = results.rows[0].libraryId;
                     var container = results.rows[0].container;
 
-                    LDK.Utils.getReadOnlyQWP({
+                    LDK.Utils.getBasicQWP({
                         title: 'Additional Tracks Provided By The Base Genome',
                         schemaName: 'jbrowse',
                         queryName: 'jsonfiles',
@@ -61,6 +63,39 @@
                 }
             }
         });
+
+        LABKEY.Query.selectRows({
+            containerPath: Laboratory.Utils.getQueryContainerPath(),
+            schemaName: 'jbrowse',
+            queryName: 'database_members',
+            columns: 'jsonfile,container',
+            filterArray: [LABKEY.Filter.create('database', objectid, LABKEY.Filter.Types.EQUAL)],
+            scope: this,
+            error: LDK.Utils.getErrorCallback(),
+            success: function (results) {
+                if (results.rows && results.rows.length) {
+                    var jsonFiles = [];
+                    var containers = [];
+                    Ext4.Array.forEach(results.rows, function(r){
+                        jsonFiles.push(r.jsonfile);
+                        containers.push(r.container);
+                    }, this);
+
+                    jsonFiles = Ext4.unique(jsonFiles);
+                    containers = Ext4.unique(containers);
+                    var container = containers[0];
+
+                    LDK.Utils.getReadOnlyQWP({
+                        title: 'Tracks Provided By This Session',
+                        schemaName: 'jbrowse',
+                        queryName: 'jsonfiles',
+                        containerPath: container,
+                        filterArray: [LABKEY.Filter.create('objectid', jsonFiles.join(';'), LABKEY.Filter.Types.IN)]
+                    }).render('jsonfiles2_' + webpart.wrapperDivId);
+                }
+            }
+        });
+
     });
 
 </script>

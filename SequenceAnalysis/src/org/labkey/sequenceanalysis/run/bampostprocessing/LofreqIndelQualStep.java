@@ -45,6 +45,17 @@ public class LofreqIndelQualStep extends AbstractCommandPipelineStep<LofreqAnaly
 
         File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".lofreqindel.bam");
         output.addIntermediateFile(outputBam);
+        if (outputBam.exists())
+        {
+            outputBam.delete();
+        }
+
+        File bamIdx = new File(outputBam.getPath() + ".bai");
+        if (bamIdx.exists())
+        {
+            bamIdx.delete();
+        }
+
         output.setBAM(getWrapper().addIndelQuals(inputBam, outputBam, referenceGenome.getWorkingFastaFile()));
 
         SequencePipelineService.get().ensureBamIndex(outputBam, getPipelineCtx().getLogger(), false);

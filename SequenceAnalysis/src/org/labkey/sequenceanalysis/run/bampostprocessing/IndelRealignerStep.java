@@ -38,6 +38,10 @@ public class IndelRealignerStep extends AbstractCommandPipelineStep<IndelRealign
                     {{
                         put("checked", false);
                     }}, false),
+                    //TODO: consider supporting:
+                    //--maxReadsForRealignment
+                    //--maxReadsForConsensuses
+
                     ToolParameterDescriptor.create("minRamPerQueueJob", "Min RAM Per Queue Job", "This only applies if queue is checked.  If provided, the scatter count (number of jobs) for queue will be adjusted to ensure at least this amount of RAM, in GB, is available for each job", "ldk-integerfield", null, null)
             ), null, "http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walkers_indels_IndelRealigner.html");
         }

@@ -3,7 +3,7 @@ package org.labkey.sequenceanalysis.run.util;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
+import org.labkey.api.sequenceanalysis.run.AbstractGatk4Wrapper;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * Created by bimber on 4/24/2017.
  */
-public class DepthOfCoverageWrapper extends AbstractGatkWrapper
+public class DepthOfCoverageWrapper extends AbstractGatk4Wrapper
 {
     public DepthOfCoverageWrapper(Logger log)
     {
@@ -28,7 +28,6 @@ public class DepthOfCoverageWrapper extends AbstractGatkWrapper
     public void run(List<File> inputBams, String outputBaseName, File referenceFasta, @Nullable List<String> options, boolean deleteExtraFiles) throws PipelineJobException
     {
         List<String> args = new ArrayList<>(getBaseArgs());
-        args.add("-T");
         args.add("DepthOfCoverage");
         args.add("-R");
         args.add(referenceFasta.getPath());
@@ -37,7 +36,10 @@ public class DepthOfCoverageWrapper extends AbstractGatkWrapper
             args.add("-I");
             args.add(f.getPath());
         }
-        args.add("-o");
+        args.add("--output-format");
+        args.add("TABLE");
+
+        args.add("-O");
         args.add(outputBaseName);
         if (options != null)
         {

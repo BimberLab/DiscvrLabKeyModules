@@ -2,7 +2,7 @@ package org.labkey.sequenceanalysis.run.variant;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
-import htsjdk.samtools.util.Interval;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.labkey.api.module.ModuleLoader;
@@ -15,7 +15,6 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandl
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
-import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
@@ -25,9 +24,9 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -107,44 +106,6 @@ public class DepthOfCoverageHandler extends AbstractParameterizedOutputHandler<S
                 throw new PipelineJobException("No basename was provided");
             }
 
-            String intervalString = StringUtils.trimToNull(ctx.getParams().optString("intervals"));
-            if (intervalString != null)
-            {
-                String[] intervals = intervalString.split(";");
-                validateIntervals(intervals);
-                for (String i : intervals)
-                {
-                    extraArgs.add("-L");
-                    extraArgs.add(i);
-                }
-            }
-
-            Integer mmq = ctx.getParams().optInt("mmq");
-            if (mmq > 0)
-            {
-                extraArgs.add("-mmq");
-                extraArgs.add(mmq.toString());
-            }
-
-            Integer mbq = ctx.getParams().optInt("mbq");
-            if (mbq > 0)
-            {
-                extraArgs.add("-mbq");
-                extraArgs.add(mbq.toString());
-            }
-
-            extraArgs.add("-omitLocusTable");
-            extraArgs.add("-omitIntervals");
-
-            if (SequencePipelineService.get().getMaxThreads(ctx.getLogger()) != null)
-            {
-                extraArgs.add("-nt");
-                extraArgs.add(SequencePipelineService.get().getMaxThreads(ctx.getLogger()).toString());
-            }
-
-            extraArgs.add("-U");
-            extraArgs.add("ALLOW_N_CIGAR_READS");
-
             List<File> inputBams = new ArrayList<>();
             Set<Integer> libraryIds = new HashSet<>();
             for (SequenceOutputFile so : inputFiles)
@@ -158,6 +119,44 @@ public class DepthOfCoverageHandler extends AbstractParameterizedOutputHandler<S
                 throw new PipelineJobException("Not all files use the same reference library");
             }
             ReferenceGenome rg = ctx.getSequenceSupport().getCachedGenome(libraryIds.iterator().next());
+
+            String intervalString = StringUtils.trimToNull(ctx.getParams().optString("intervals"));
+            if (intervalString != null)
+            {
+                String[] intervals = intervalString.split(";");
+                validateIntervals(intervals);
+                for (String i : intervals)
+                {
+                    extraArgs.add("-L");
+                    extraArgs.add(i);
+                }
+            }
+            else
+            {
+                //GATK4 now requires intervals:
+                File intervalList = new File(ctx.getOutputDir(), "depthOfCoverageIntervals.intervals");
+                ctx.getFileManager().addIntermediateFile(intervalList);
+                extraArgs.addAll(DepthOfCoverageWrapper.generateIntervalArgsForFullGenome(rg, intervalList));
+            }
+
+            Integer mmq = ctx.getParams().optInt("mmq");
+            if (mmq > 0)
+            {
+                extraArgs.add("--read-filter");
+                extraArgs.add("MappingQualityReadFilter");
+                extraArgs.add("--minimum-mapping-quality");
+                extraArgs.add(mmq.toString());
+            }
+
+            Integer mbq = ctx.getParams().optInt("mbq");
+            if (mbq > 0)
+            {
+                extraArgs.add("--min-base-quality");
+                extraArgs.add(mbq.toString());
+            }
+
+            extraArgs.add("--omit-locus-table");
+            extraArgs.add("--omit-interval-statistics");
 
             File outputFile = new File(ctx.getOutputDir(), basename + ".coverage");
 

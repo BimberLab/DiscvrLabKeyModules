@@ -708,6 +708,13 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
                     if (output.getBAM() != null)
                     {
+                        //If we have change the BAM, mark the previous for deletion
+                        if (!bam.equals(output.getBAM()))
+                        {
+                            getHelper().getFileManager().addIntermediateFile(bam);
+                            getHelper().getFileManager().addIntermediateFile(new File(bam.getPath() + ".bai"));
+                        }
+
                         bam = output.getBAM();
 
                         //can take a long time to execute
