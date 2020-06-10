@@ -1440,6 +1440,7 @@ public class JBrowseRoot
         {
             File temp = null;
             Set<String> nameAttrs = new HashSet<>();
+            nameAttrs.add("gene_id");
             nameAttrs.add("gene_name");
             nameAttrs.add("ncbi_geneid");
             nameAttrs.add("ensembl_geneid");
