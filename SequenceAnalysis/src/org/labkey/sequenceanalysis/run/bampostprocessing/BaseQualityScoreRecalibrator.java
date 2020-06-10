@@ -15,6 +15,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractGatk4Wrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.writer.PrintWriters;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -70,27 +71,37 @@ public class BaseQualityScoreRecalibrator extends AbstractGatk4Wrapper
         argsRecal.add(recalTable.getPath());
         execute(argsRecal);
 
-        List<String> argsApply = new ArrayList<>(getBaseArgs());
-        argsApply.add("ApplyBQSR");
-        argsApply.add("-I");
-        argsApply.add(bam.getPath());
-        argsApply.add("-R");
-        argsApply.add(fasta.getPath());
-        argsApply.add("--bqsr-recal-file");
-        argsApply.add(recalTable.getPath());
-        argsApply.add("-O");
-        argsApply.add(output.getPath());
-        execute(argsApply);
+        // If there is not recal possible, the output has 132 lines.
+        long lineCount = SequenceUtil.getLineCount(recalTable);
+        if (lineCount > 132)
+        {
+            List<String> argsApply = new ArrayList<>(getBaseArgs());
+            argsApply.add("ApplyBQSR");
+            argsApply.add("-I");
+            argsApply.add(bam.getPath());
+            argsApply.add("-R");
+            argsApply.add(fasta.getPath());
+            argsApply.add("--bqsr-recal-file");
+            argsApply.add(recalTable.getPath());
+            argsApply.add("-O");
+            argsApply.add(output.getPath());
+            execute(argsApply);
+
+            if (!output.exists())
+            {
+                throw new PipelineJobException("Expected output not created: " + output.getPath());
+            }
+        }
+        else
+        {
+            getLogger().info("No recalibration was possible, skipping ApplyBQSR");
+            output = bam;
+        }
 
         if (deleteKnownVariantFile)
         {
             knownVariants.delete();
             new File(knownVariants.getPath() + ".idx").delete();
-        }
-
-        if (!output.exists())
-        {
-            throw new PipelineJobException("Expected output not created: " + output.getPath());
         }
 
         return output;
@@ -138,7 +149,7 @@ public class BaseQualityScoreRecalibrator extends AbstractGatk4Wrapper
                 }
             }
 
-            getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputBam, knownVariants);
+            outputBam = getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputBam, knownVariants);
 
             output.setBAM(outputBam);
 
