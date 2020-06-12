@@ -13,6 +13,8 @@ Ext4.define('SequenceAnalysis.window.AddFileSetsWindow', {
             dr.getSelected({
                 scope: this,
                 success: function(results, response) {
+                    Ext4.Msg.hide();
+
                     if (!results || !results.selected || !results.selected.length) {
                         Ext4.Msg.alert('Error', 'No rows selected');
                         return;
