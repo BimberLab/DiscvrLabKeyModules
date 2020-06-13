@@ -454,7 +454,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
 
             Set<File> toDelete = new HashSet<>();
             File doneFile = new File(destinationWorkspaceFolder, "genomicsdb.done");
-            File startedFile = new File(destinationWorkspaceFolder, "genomicsdb.started");
+            File startedFile = new File(destinationWorkspaceFolder.getParentFile(), "genomicsdb.started");
             boolean genomicsDbCompleted = doneFile.exists();
             boolean genomicsDbStarted = startedFile.exists();
             ctx.getFileManager().addIntermediateFile(doneFile);
