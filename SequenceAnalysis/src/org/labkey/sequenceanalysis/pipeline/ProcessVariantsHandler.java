@@ -859,7 +859,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 throw new PipelineJobException(e);
             }
         }
-        else if (input.getName().toLowerCase().endsWith(".tdb"))
+        else if (AbstractGenomicsDBImportHandler.TILE_DB_FILETYPE.isType(input))
         {
             return AbstractGenomicsDBImportHandler.getSamplesForWorkspace(input.getParentFile());
         }

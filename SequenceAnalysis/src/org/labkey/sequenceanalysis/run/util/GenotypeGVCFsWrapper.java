@@ -47,6 +47,10 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
         {
             args.add(inputFile.getPath());
         }
+        else if (AbstractGenomicsDBImportHandler.TILE_DB_FILETYPE.isType(inputFile))
+        {
+            args.add("gendb://" + inputFile.getParentFile().getPath());
+        }
         else if (inputFile.isDirectory())
         {
             args.add("gendb://" + inputFile.getPath());

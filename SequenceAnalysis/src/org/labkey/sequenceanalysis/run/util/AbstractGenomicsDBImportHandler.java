@@ -45,6 +45,8 @@ import java.util.Set;
 abstract public class AbstractGenomicsDBImportHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> implements SequenceOutputHandler.TracksVCF, SequenceOutputHandler.HasCustomVariantMerge
 {
     protected FileType _gvcfFileType = new FileType(Arrays.asList(".g.vcf"), ".g.vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
+    public static final FileType TILE_DB_FILETYPE = new FileType(Arrays.asList(".tdb"), ".tdb", false, FileType.gzSupportLevel.NO_GZ);
+
     public static final String CATEGORY = "GenomicsDB Workspace";
     public static final String EXISTING_WORKSPACE = "existingWorkspaceId";
 
