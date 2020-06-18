@@ -1,4 +1,4 @@
-Ext4.define('SequenceBasedGenotyping.window.ChangeReadsetStatusWindow', {
+Ext4.define('SequenceAnalysis.window.ChangeReadsetStatusWindow', {
     extend: 'Ext.window.Window',
 
     statics: {
@@ -12,7 +12,7 @@ Ext4.define('SequenceBasedGenotyping.window.ChangeReadsetStatusWindow', {
                 return;
             }
 
-            Ext4.create('SequenceBasedGenotyping.window.ChangeReadsetStatusWindow', {
+            Ext4.create('SequenceAnalysis.window.ChangeReadsetStatusWindow', {
                 targetQuery: 'sequence_analyses',
                 targetColumns: 'readset/rowid,readset/container',
                 readsetField: 'readset/rowid',
@@ -32,7 +32,7 @@ Ext4.define('SequenceBasedGenotyping.window.ChangeReadsetStatusWindow', {
                 return;
             }
 
-            Ext4.create('SequenceBasedGenotyping.window.ChangeReadsetStatusWindow', {
+            Ext4.create('SequenceAnalysis.window.ChangeReadsetStatusWindow', {
                 targetQuery: 'sequence_readsets',
                 targetColumns: 'rowid,container',
                 readsetField: 'rowid',
