@@ -144,11 +144,6 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
             addDeferredIntermediateFile(file);
         }
 
-        for (File file : output.getDeferredDeleteIntermediateFiles())
-        {
-            addDeferredIntermediateFile(file);
-        }
-
         for (PipelineStepOutput.SequenceOutput o : output.getSequenceOutputs())
         {
             addSequenceOutput(o.getFile(), o.getLabel(), o.getCategory(), o.getReadsetId(), o.getAnalysisId(), o.getGenomeId(), o.getDescription());
