@@ -194,7 +194,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     {
         String path = FilenameUtils.normalize(file.getPath());
         String relPath = FileUtil.relativePath(_workLocation.getPath(), path);
-        _job.getLogger().debug("Adding deferred intermediate file: " + relPath + " || " + path);
+        _job.getLogger().debug("Adding deferred intermediate file.  relative path: " + relPath + ", path: " + path);
         if (relPath == null)
         {
             relPath = file.getPath();
