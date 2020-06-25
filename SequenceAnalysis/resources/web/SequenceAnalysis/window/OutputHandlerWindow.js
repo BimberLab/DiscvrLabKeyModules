@@ -161,7 +161,7 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
                         var val = i.additionalExtConfig[prop];
                         if (Ext4.isString(val) && val.match(/^js:/)){
                             val = val.replace(/^js:/, '');
-                            val = eval(val);
+                            val = eval("false || " + val);
 
                             i.additionalExtConfig[prop] = val;
                         }

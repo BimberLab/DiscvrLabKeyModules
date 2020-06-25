@@ -2,40 +2,32 @@ Ext4.define('SequenceAnalysis.window.VisualizeDataWindow', {
     extend: 'Ext.window.Window',
     statics: {
         buttonHandler: function(dataRegionName){
-            var dataRegion = LABKEY.DataRegions[dataRegionName];
-            dataRegion.getSelected({
-                scope: this,
-                success: function (results, response) {
-                    if (!results || !results.selected || !results.selected.length) {
-                        Ext4.Msg.alert('Error', 'No rows selected');
-                        return;
-                    }
+            var checked = LABKEY.DataRegions[dataRegionName].getChecked();
+            if (!checked.length) {
+                Ext4.Msg.alert('Error', 'No rows selected');
+                return;
+            }
 
-                    var checked = LABKEY.DataRegions[dataRegionName].getChecked();
-
-                    Ext4.Msg.wait('Loading...');
-                    LABKEY.Ajax.request({
-                        method: 'POST',
-                        url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'getAvailableHandlers', null),
-                        params: {
-                            handlerType: 'OutputFile',
-                            outputFileIds: checked
-                        },
-                        scope: this,
-                        failure: LDK.Utils.getErrorCallback(),
-                        success: LABKEY.Utils.getCallbackWrapper(function (results) {
-                            Ext4.Msg.hide();
-
-                            Ext4.create('SequenceAnalysis.window.VisualizeDataWindow', {
-                                dataRegionName: dataRegionName,
-                                handlers: results.handlers,
-                                partialHandlers: results.partialHandlers,
-                                outputFileIds: checked
-                            }).show();
-                        }, this)
-                    });
+            Ext4.Msg.wait('Loading...');
+            LABKEY.Ajax.request({
+                method: 'POST',
+                url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'getAvailableHandlers', null),
+                params: {
+                    handlerType: 'OutputFile',
+                    outputFileIds: checked
                 },
-                failure: LDK.Utils.getErrorCallback()
+                scope: this,
+                failure: LDK.Utils.getErrorCallback(),
+                success: LABKEY.Utils.getCallbackWrapper(function (results) {
+                    Ext4.Msg.hide();
+
+                    Ext4.create('SequenceAnalysis.window.VisualizeDataWindow', {
+                        dataRegionName: dataRegionName,
+                        handlers: results.handlers,
+                        partialHandlers: results.partialHandlers,
+                        outputFileIds: checked
+                    }).show();
+                }, this)
             });
         }
     },

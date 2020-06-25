@@ -213,6 +213,10 @@ public class StarWrapper extends AbstractCommandWrapper
                 args.add("--quantMode");
                 args.add("GeneCounts");
             }
+            else
+            {
+                getPipelineCtx().getLogger().info("No GTF was provided, so gene counts will not be created");
+            }
 
             addThreadArgs(args);
             getWrapper().execute(args);
@@ -432,7 +436,11 @@ public class StarWrapper extends AbstractCommandWrapper
                     put("extensions", Arrays.asList("gtf", "gff"));
                     put("width", 400);
                     put("allowBlank", true);
+                    put("getErrors", "js:function(){var errors = [];var val = this.getValue();var countField = this.up('panel').down('field[name=\"alignment.STAR.generateCounts\"]');if (!val && countField && countField.getValue()) { errors.push('Must select a GTF when Generate Counts is selected') } return errors;}");
                 }}, null),
+                ToolParameterDescriptor.create("generateCounts", "Generate Counts", "There are rare cases when STAR is used without a GTF, so this field is not required.  If that field is left blank, counts are not generated.  Checking this field prevents job submission unless a GTF is provided.  Uncheck to allow running without a GTF.", "checkbox", new JSONObject(){{
+                    put("checked", true);
+                }}, false),
                 ToolParameterDescriptor.create(LONG_READS, "Reads >500bp", "If the reads are expected to exceed 500bp (per pair), this will use STARlong instead of STAR.", "checkbox", new JSONObject(){{
                     put("checked", false);
                 }}, false),

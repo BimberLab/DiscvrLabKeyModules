@@ -47,9 +47,16 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
         {
             args.add(inputFile.getPath());
         }
+        else if (AbstractGenomicsDBImportHandler.TILE_DB_FILETYPE.isType(inputFile))
+        {
+            args.add("gendb://" + inputFile.getParentFile().getPath());
+            //See: https://github.com/broadinstitute/gatk/issues/6667
+            args.add("--genomicsdb-use-vcf-codec");
+        }
         else if (inputFile.isDirectory())
         {
             args.add("gendb://" + inputFile.getPath());
+            args.add("--genomicsdb-use-vcf-codec");
         }
         else
         {

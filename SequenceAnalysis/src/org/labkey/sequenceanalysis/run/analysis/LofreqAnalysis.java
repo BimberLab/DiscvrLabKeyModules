@@ -158,6 +158,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         int minCoverage = getProvider().getParameterByName("minCoverage").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
         int positionsSkipped = 0;
         int gapIntervals = 0;
+        double avgDepth;
 
         File mask = new File(outputDir, "mask.bed");
         Map<String, Integer> gatkDepth = new HashMap<>();
@@ -166,6 +167,8 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             String[] line;
 
             Interval intervalOfCurrentGap = null;
+            double totalDepth = 0;
+            double totalPositions = 0;
 
             int i = 0;
             while ((line = reader.readNext()) != null)
@@ -179,6 +182,9 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                 String[] tokens = line[0].split(":");
                 int depth = Integer.parseInt(line[1]);
                 gatkDepth.put(line[0], depth);
+
+                totalPositions++;
+                totalDepth += depth;
 
                 if (depth < minCoverage)
                 {
@@ -224,6 +230,8 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                 writer.writeNext(new String[]{intervalOfCurrentGap.getContig(), String.valueOf(intervalOfCurrentGap.getStart()-1), String.valueOf(intervalOfCurrentGap.getEnd())});
                 gapIntervals++;
             }
+
+            avgDepth = totalDepth / totalPositions;
         }
         catch (IOException e)
         {
@@ -548,6 +556,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             writer.writeNext(new String[]{"LoFreq Analysis", "VariantGT50", String.valueOf(totalGT50)});
             writer.writeNext(new String[]{"LoFreq Analysis", "IndelsGTThreshold", String.valueOf(totalIndelGTThreshold)});
             writer.writeNext(new String[]{"LoFreq Analysis", "TotalConsensusVariantsInPBS", String.valueOf(totalConsensusInPBS)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "MeanCoverage", String.valueOf(avgDepth)});
         }
         catch (IOException e)
         {

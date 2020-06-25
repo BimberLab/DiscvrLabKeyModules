@@ -8,26 +8,18 @@ Ext4.define('SequenceAnalysis.window.AddFileSetsWindow', {
 
     statics: {
         buttonHandlerForOutputFiles: function(dataRegionName){
-            var dr = LABKEY.DataRegions[dataRegionName];
-            Ext4.Msg.wait('Loading...');
-            dr.getSelected({
-                scope: this,
-                success: function(results, response) {
-                    if (!results || !results.selected || !results.selected.length) {
-                        Ext4.Msg.alert('Error', 'No rows selected');
-                        return;
-                    }
+            var checked = LABKEY.DataRegions[dataRegionName].getChecked();
+            if (!checked.length) {
+                Ext4.Msg.alert('Error', 'No rows selected');
+                return;
+            }
 
-                    var checked = LABKEY.DataRegions[dataRegionName].getChecked();
-                    Ext4.create('SequenceAnalysis.window.AddFileSetsWindow', {
-                        targetTable: 'outputfiles',
-                        targetField: 'outputFileId',
-                        dataRegionName: dataRegionName,
-                        pks: checked
-                    }).show();
-                },
-                failure: LDK.Utils.getErrorCallback()
-            });
+            Ext4.create('SequenceAnalysis.window.AddFileSetsWindow', {
+                targetTable: 'outputfiles',
+                targetField: 'outputFileId',
+                dataRegionName: dataRegionName,
+                pks: checked
+            }).show();
         }
     },
 

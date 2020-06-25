@@ -40,7 +40,9 @@ import org.labkey.api.util.URIUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.run.util.AbstractGenomicsDBImportHandler;
 import org.labkey.sequenceanalysis.run.util.CombineVariantsWrapper;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -275,15 +277,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             for (SequenceOutputFile so : inputFiles)
             {
                 job.getLogger().info("reading file: " + so.getFile().getName());
-                try (FeatureReader reader = AbstractFeatureReader.getFeatureReader(so.getFile().getPath(), new VCFCodec(), false))
-                {
-                    VCFHeader header = (VCFHeader)reader.getHeader();
-                    sampleNames.addAll(header.getSampleNamesInOrder());
-                }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
-                }
+                sampleNames.addAll(getSamples(so.getFile()));
             }
 
             job.getLogger().info("total samples: " + sampleNames.size());
@@ -848,6 +842,30 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             assertEquals(f, r2.getFileManager().getOutputsToCreate().iterator().next().getFile());
 
             f.delete();
+        }
+    }
+
+    private static Collection<String> getSamples(File input) throws PipelineJobException
+    {
+        if (SequenceUtil.FILETYPE.vcf.getFileType().isType(input))
+        {
+            try (FeatureReader reader = AbstractFeatureReader.getFeatureReader(input.getPath(), new VCFCodec(), false))
+            {
+                VCFHeader header = (VCFHeader) reader.getHeader();
+                return header.getSampleNamesInOrder();
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+        else if (AbstractGenomicsDBImportHandler.TILE_DB_FILETYPE.isType(input))
+        {
+            return AbstractGenomicsDBImportHandler.getSamplesForWorkspace(input.getParentFile());
+        }
+        else
+        {
+            throw new PipelineJobException("Unknown file type: " + input.getPath());
         }
     }
 }

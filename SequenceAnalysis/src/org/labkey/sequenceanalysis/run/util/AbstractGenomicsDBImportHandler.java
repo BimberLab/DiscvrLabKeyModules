@@ -45,6 +45,8 @@ import java.util.Set;
 abstract public class AbstractGenomicsDBImportHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> implements SequenceOutputHandler.TracksVCF, SequenceOutputHandler.HasCustomVariantMerge
 {
     protected FileType _gvcfFileType = new FileType(Arrays.asList(".g.vcf"), ".g.vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
+    public static final FileType TILE_DB_FILETYPE = new FileType(Arrays.asList(".tdb"), ".tdb", false, FileType.gzSupportLevel.NO_GZ);
+
     public static final String CATEGORY = "GenomicsDB Workspace";
     public static final String EXISTING_WORKSPACE = "existingWorkspaceId";
 
@@ -86,7 +88,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         return so1;
     }
 
-    private Collection<String> getSamplesForWorkspace(File workspace) throws PipelineJobException
+    public static Collection<String> getSamplesForWorkspace(File workspace) throws PipelineJobException
     {
         //See: https://github.com/GenomicsDB/GenomicsDB/wiki/Importing-VCF-data-into-GenomicsDB
         try (BufferedReader reader = IOUtil.openFileForBufferedUtf8Reading(new File(workspace, "callset.json")))
@@ -454,7 +456,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
 
             Set<File> toDelete = new HashSet<>();
             File doneFile = new File(destinationWorkspaceFolder, "genomicsdb.done");
-            File startedFile = new File(destinationWorkspaceFolder, "genomicsdb.started");
+            File startedFile = new File(destinationWorkspaceFolder.getParentFile(), "genomicsdb.started");
             boolean genomicsDbCompleted = doneFile.exists();
             boolean genomicsDbStarted = startedFile.exists();
             ctx.getFileManager().addIntermediateFile(doneFile);
