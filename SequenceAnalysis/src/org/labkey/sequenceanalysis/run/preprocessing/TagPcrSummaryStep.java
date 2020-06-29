@@ -1,8 +1,9 @@
 package org.labkey.sequenceanalysis.run.preprocessing;
 
 import au.com.bytecode.opencsv.CSVReader;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -57,12 +58,21 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
     private static final String CACHE_KEY = "tagPcrBlastMap";
 
     private static final String MIN_ALIGNMENTS = "minAlignments";
+    private static final String OUTPUT_GENBANK = "outputGenbank";
+    private static final String DESIGN_PRIMERS = "designPrimers";
+
     public static class Provider extends AbstractAnalysisStepProvider<TagPcrSummaryStep>
     {
         public Provider()
         {
             super("Tag-PCR", "Tag-PCR Integration Sites", null, "This will produce a table summarizing unique alignments in this BAM.  It was originally created to summarize genomic insertions.", Arrays.asList(
-                    ToolParameterDescriptor.create(MIN_ALIGNMENTS, "Min Alignments", "The minimum number of alignments to export a position", "ldk-integerfield", null, 2)
+                    ToolParameterDescriptor.create(MIN_ALIGNMENTS, "Min Alignments", "The minimum number of alignments to export a position", "ldk-integerfield", null, 2),
+                    ToolParameterDescriptor.create(OUTPUT_GENBANK, "Create Genbank Output", "If selected, this will output a genbank file summarizing amplicons and primers", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, true),
+                    ToolParameterDescriptor.create(DESIGN_PRIMERS, "Design Primers", "If selected, Primer3 will be used to design primers to flank integration sites", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, true)
             ), null, null);
         }
 
@@ -119,12 +129,25 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
 
         Map<Integer, File> blastDbs = getCachedBlastDbs(getPipelineCtx().getSequenceSupport());
 
+        boolean designPrimers = getProvider().getParameterByName(DESIGN_PRIMERS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true);
+        boolean outputGenbank = getProvider().getParameterByName(OUTPUT_GENBANK).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true);
+
         TagPcrWrapper wrapper = new TagPcrWrapper(getPipelineCtx().getLogger());
 
         String basename = SequenceAnalysisService.get().getUnzippedBaseName(inputBam.getName());
         File siteTable = new File(outputDir, basename + ".sites.txt");
-        File primerTable = new File(outputDir, basename + ".primers.txt");
-        File genbank = new File(outputDir, basename + ".sites.gb");
+
+        File primerTable = null;
+        if (designPrimers)
+        {
+            primerTable = new File(outputDir, basename + ".primers.txt");
+        }
+
+        File genbank = null;
+        if (outputGenbank)
+        {
+            genbank = new File(outputDir, basename + ".sites.gb");
+        }
         File metrics = getMetricsFile(inputBam, getPipelineCtx().getSourceDirectory());
 
         wrapper.execute(inputBam, referenceGenome.getWorkingFastaFile(), siteTable, primerTable, genbank, metrics, blastDbs.get(referenceGenome.getGenomeId()));
@@ -254,7 +277,7 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
             super(log);
         }
 
-        public void execute(File bamFile, File referenceFasta, File outputTable, File primerTable, File genbankOutput, File metricsTable, File blastDbBase) throws PipelineJobException
+        public void execute(File bamFile, File referenceFasta, File outputTable, @Nullable File primerTable, @Nullable File genbankOutput, File metricsTable, File blastDbBase) throws PipelineJobException
         {
             List<String> args = new ArrayList<>();
             args.addAll(getBaseArgs());
@@ -270,11 +293,17 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
             args.add("--output-table");
             args.add(outputTable.getPath());
 
-            args.add("--primer-pair-table");
-            args.add(primerTable.getPath());
+            if (primerTable != null)
+            {
+                args.add("--primer-pair-table");
+                args.add(primerTable.getPath());
+            }
 
-            args.add("--genbank-output");
-            args.add(genbankOutput.getPath());
+            if (genbankOutput != null)
+            {
+                args.add("--genbank-output");
+                args.add(genbankOutput.getPath());
+            }
 
             args.add("--metrics-table");
             args.add(metricsTable.getPath());
