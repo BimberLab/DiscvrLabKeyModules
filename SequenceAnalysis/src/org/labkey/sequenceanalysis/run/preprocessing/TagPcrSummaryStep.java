@@ -152,7 +152,11 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
 
         wrapper.execute(inputBam, referenceGenome.getWorkingFastaFile(), siteTable, primerTable, genbank, metrics, blastDbs.get(referenceGenome.getGenomeId()));
 
-        output.addOutput(siteTable, "Tag-PCR Integration Sites");
+        if (siteTable.exists())
+        {
+            output.addOutput(siteTable, "Tag-PCR Integration Sites");
+        }
+
         if (designPrimers)
         {
             output.addOutput(primerTable, "Tag-PCR Primer Table");
@@ -198,17 +202,24 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
             getPipelineCtx().getLogger().error("Readset did not have information on input files");
         }
 
-        output.addSequenceOutput(siteTable,
-                "Putative Integration Sites: " + rs.getName(),
-                "Tag-PCR Integration Sites", rs.getReadsetId(),
-                null,
-                referenceGenome.getGenomeId(),
-                "Reads: " + metricMap.get("NumReadsSpanningJunction") +
-                        "\nJunction hit rate (of alignments): " + pf.format(Double.parseDouble(metricMap.get("PctReadsSpanningJunction"))) +
-                        (hitRate == null ? "" : "\nJunction hit rate (of total reads): " + pf.format(hitRate)) +
-                        "\nIntegration Sites: " + metricMap.get("TotalIntegrationSitesOutput") +
-                        "\nAlignments Matching Insert: " + metricMap.get("FractionPrimaryAlignmentsMatchingInsert")
-        );
+        if (siteTable.exists())
+        {
+            output.addSequenceOutput(siteTable,
+                    "Putative Integration Sites: " + rs.getName(),
+                    "Tag-PCR Integration Sites", rs.getReadsetId(),
+                    null,
+                    referenceGenome.getGenomeId(),
+                    "Reads: " + metricMap.get("NumReadsSpanningJunction") +
+                            "\nJunction hit rate (of alignments): " + pf.format(Double.parseDouble(metricMap.get("PctReadsSpanningJunction"))) +
+                            (hitRate == null ? "" : "\nJunction hit rate (of total reads): " + pf.format(hitRate)) +
+                            "\nIntegration Sites: " + metricMap.get("TotalIntegrationSitesOutput") +
+                            "\nAlignments Matching Insert: " + metricMap.get("FractionPrimaryAlignmentsMatchingInsert")
+            );
+        }
+        else
+        {
+            getPipelineCtx().getLogger().info("Site output not found");
+        }
 
         return output;
     }
