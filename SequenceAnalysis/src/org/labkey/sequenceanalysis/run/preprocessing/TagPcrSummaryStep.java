@@ -153,8 +153,16 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
         wrapper.execute(inputBam, referenceGenome.getWorkingFastaFile(), siteTable, primerTable, genbank, metrics, blastDbs.get(referenceGenome.getGenomeId()));
 
         output.addOutput(siteTable, "Tag-PCR Integration Sites");
-        output.addOutput(primerTable, "Tag-PCR Primer Table");
-        output.addOutput(genbank, "Tag-PCR Genbank Summary");
+        if (designPrimers)
+        {
+            output.addOutput(primerTable, "Tag-PCR Primer Table");
+        }
+
+        if (outputGenbank)
+        {
+            output.addOutput(genbank, "Tag-PCR Genbank Summary");
+        }
+
         output.addOutput(metrics, "Tag-PCR Metrics");
 
         Map<String, String> metricMap = parseMetricFile(metrics);
