@@ -312,6 +312,8 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             if (filesToProcess.size() > 1)
             {
                 inputVcf = combineInputs(ctx, filesToProcess, genomeId);
+                ctx.getFileManager().addIntermediateFile(inputVcf);
+                ctx.getFileManager().addIntermediateFile(new File(inputVcf.getPath() + ".tbi"));
             }
             else
             {
@@ -387,8 +389,13 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
 
         private File combineInputs(JobContext ctx, List<File> inputFiles, int genomeId) throws PipelineJobException
         {
-            // TODO: this should ultimately be expanded to include smarter merge with GenomicsDB
-            // Also consider allowing the input to be a folder with per-contig gVCFs
+            for (File f : inputFiles)
+            {
+                if (!GenotypeGVCFsWrapper.GVCF.isType(f))
+                {
+                    throw new PipelineJobException("If multiple inputs are used, all must be gVCFs: " + f.getName());
+                }
+            }
 
             String basename = getBasename(ctx);
             File combined = new File(ctx.getOutputDir(), basename + ".combined.gvcf.gz");

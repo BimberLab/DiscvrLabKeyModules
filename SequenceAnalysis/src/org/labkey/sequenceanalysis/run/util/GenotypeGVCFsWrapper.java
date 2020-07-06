@@ -80,7 +80,7 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
         }
     }
 
-    private static FileType GVCF = new FileType(".g.vcf", FileType.gzSupportLevel.SUPPORT_GZ);
+    public static FileType GVCF = new FileType(Arrays.asList(".g.vcf", ".gvcf"), ".g.vcf", FileType.gzSupportLevel.SUPPORT_GZ);
 
     public static List<File> copyVcfsLocally(Collection<File> inputGVCFs, Collection<File> toDelete, File localWorkDir, Logger log, boolean isResume) throws PipelineJobException
     {
