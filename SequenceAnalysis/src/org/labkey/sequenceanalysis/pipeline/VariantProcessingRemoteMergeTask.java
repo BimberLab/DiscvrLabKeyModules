@@ -134,6 +134,12 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
             throw new PipelineJobException("Handler does not support TracksVCF: " + handler.getName());
         }
 
+        File cacheDir = getPipelineJob().getLocationForCachedInputs(_wd, false);
+        if (cacheDir.exists())
+        {
+            manager.addIntermediateFile(cacheDir);
+        }
+
         manager.deleteIntermediateFiles();
         manager.cleanup(Collections.singleton(action));
 

@@ -52,4 +52,11 @@ public interface VariantProcessingStep extends PipelineStep
     {
 
     }
+
+    public static interface MayRequirePrepareTask
+    {
+        public boolean isRequired(PipelineJob job);
+
+        public void doWork(List<SequenceOutputFile> inputFiles, SequenceOutputHandler.JobContext ctx) throws PipelineJobException;
+    }
 }

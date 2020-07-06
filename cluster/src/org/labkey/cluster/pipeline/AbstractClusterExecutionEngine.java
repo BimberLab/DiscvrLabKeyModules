@@ -584,6 +584,12 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
     @Override
     public void cancelJob(String jobId) throws PipelineJobException
     {
+        if (ClusterManager.get().isPreventClusterInteraction())
+        {
+            _log.info("Cluster interaction disabled, cannot cancel job");
+            return;
+        }
+
         //find cluster Id for Job Id
         ClusterJob clusterJob = getMostRecentClusterSubmission(jobId, false);
         if (clusterJob == null)

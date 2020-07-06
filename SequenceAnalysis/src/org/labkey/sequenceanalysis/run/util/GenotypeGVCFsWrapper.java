@@ -101,6 +101,8 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
         {
             File origIdx = null;
             File movedIdx = null;
+            File doneFile = new File(f.getPath() + ".copyDone");
+
             if (GVCF.isType(f))
             {
                 origIdx = new File(f.getPath() + ".tbi");
@@ -119,6 +121,10 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
                 {
                     log.debug("moved index exists, skipping file: " + f.getName());
                 }
+                else if (f.isDirectory() && doneFile.exists())
+                {
+                    log.debug("copied folder exists, skipping file: " + f.getName());
+                }
                 else
                 {
                     long size = f.isDirectory() ? FileUtils.sizeOfDirectory(f) : FileUtils.sizeOf(f);
@@ -132,6 +138,7 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
                                 FileUtils.deleteDirectory(movedFile);
                             }
                             FileUtils.copyDirectory(f, movedFile);
+                            FileUtils.touch(doneFile);
                         }
                         else
                         {
@@ -155,6 +162,10 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
 
             toDelete.add(movedFile);
             toDelete.add(movedIdx);
+            if (doneFile.exists())
+            {
+                toDelete.add(doneFile);
+            }
 
             vcfsToProcess.add(movedFile);
         }

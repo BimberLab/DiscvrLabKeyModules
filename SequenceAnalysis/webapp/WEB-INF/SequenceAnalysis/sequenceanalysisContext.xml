@@ -120,7 +120,9 @@
                 <bean class="org.labkey.sequenceanalysis.pipeline.VariantProcessingRemoteMergeTask$Factory">
                     <property name="join" value="true"/>
                 </bean>
-
+                <bean class="org.labkey.sequenceanalysis.pipeline.VariantProcessingScatterRemotePrepareTask$Factory">
+                    <property name="join" value="true"/>
+                </bean>
             </list>
         </property>
         <property name="pipelines">
@@ -175,6 +177,7 @@
                     <property name="taskProgressionSpec">
                         <list>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerInitTask</value>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.VariantProcessingScatterRemotePrepareTask</value>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.VariantProcessingRemoteSplitTask</value>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.VariantProcessingRemoteMergeTask</value>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerWebserverTask</value>

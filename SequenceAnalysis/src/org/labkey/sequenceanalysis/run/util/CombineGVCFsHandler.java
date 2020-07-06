@@ -14,8 +14,10 @@ import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 
@@ -33,7 +35,7 @@ import java.util.Set;
 /**
  * Created by bimber on 4/2/2017.
  */
-public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> implements SequenceOutputHandler.TracksVCF
+public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> implements SequenceOutputHandler.TracksVCF, VariantProcessingStep.MayRequirePrepareTask
 {
     public static final String NAME = "Combine GVCFs";
     private static final String COMBINED_CATEGORY = "Combined gVCF File";
@@ -104,7 +106,7 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
         @Override
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
-            boolean doCopyLocal = ctx.getParams().optBoolean("doCopyLocal", false);
+            boolean doCopyLocal = doCopyLocal(ctx.getParams());
 
             RecordedAction action = new RecordedAction(getName());
             action.setStartTime(new Date());
@@ -146,7 +148,7 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
             if (doCopyLocal)
             {
                 ctx.getLogger().info("making local copies of gVCFs");
-                vcfsToProcess.addAll(GenotypeGVCFsWrapper.copyVcfsLocally(inputVcfs, toDelete, null, ctx.getLogger(), isResume));
+                vcfsToProcess.addAll(GenotypeGVCFsWrapper.copyVcfsLocally(inputVcfs, toDelete, GenotypeGVCFHandler.getLocalCopyDir(ctx, true), ctx.getLogger(), isResume));
             }
             else
             {
@@ -239,5 +241,29 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
                 }
             }
         }
+    }
+
+    private boolean doCopyLocal(JSONObject params)
+    {
+        return params.optBoolean("doCopyLocal", false);
+    }
+
+    @Override
+    public boolean isRequired(PipelineJob job)
+    {
+        if (job instanceof VariantProcessingJob)
+        {
+            VariantProcessingJob vpj = (VariantProcessingJob)job;
+
+            return doCopyLocal(vpj.getParameterJson());
+        }
+
+        return false;
+    }
+
+    @Override
+    public void doWork(List<SequenceOutputFile> inputFiles, JobContext ctx) throws PipelineJobException
+    {
+        GenotypeGVCFHandler.doCopyGvcfLocally(inputFiles, ctx);
     }
 }
