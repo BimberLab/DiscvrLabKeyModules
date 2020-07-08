@@ -28,12 +28,14 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
+import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractDiscvrSeqWrapper;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
@@ -48,11 +50,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisStep
+public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummaryStep.TagPcrWrapper> implements AnalysisStep
 {
     public TagPcrSummaryStep(PipelineStepProvider provider, PipelineContext ctx)
     {
-        super(provider, ctx);
+        super(provider, ctx, new TagPcrWrapper(ctx.getLogger()));
     }
 
     private static final String CACHE_KEY = "tagPcrBlastMap";
@@ -72,7 +74,16 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
                     }}, true),
                     ToolParameterDescriptor.create(DESIGN_PRIMERS, "Design Primers", "If selected, Primer3 will be used to design primers to flank integration sites", "checkbox", new JSONObject(){{
                         put("checked", true);
-                    }}, true)
+                    }}, true),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--reads-to-output"), "readsToOutput", "Reads To Output Per Site", "If this is non-zero, up to this many reads per integration site will be written to a FASTA file.  This can serve as a way to verify the actual junction border.", "ldk-integerfield", new JSONObject(){{
+                        put("minValue", 0);
+                    }}, 25),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-mf"), "minFraction", "Min Faction To Output", "Only sites with at least this fraction of reads will be output.", "ldk-integerfield", new JSONObject(){{
+                        put("minValue", 0);
+                    }}, 0),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-ma"), "minAlignment", "Min Alignments To Output", "Only sites with at least this many alignments will be output.", "ldk-integerfield", new JSONObject(){{
+                        put("minValue", 0);
+                    }}, 3)
             ), null, null);
         }
 
@@ -132,8 +143,6 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
         boolean designPrimers = getProvider().getParameterByName(DESIGN_PRIMERS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true);
         boolean outputGenbank = getProvider().getParameterByName(OUTPUT_GENBANK).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true);
 
-        TagPcrWrapper wrapper = new TagPcrWrapper(getPipelineCtx().getLogger());
-
         String basename = SequenceAnalysisService.get().getUnzippedBaseName(inputBam.getName());
         File siteTable = new File(outputDir, basename + ".sites.txt");
 
@@ -150,7 +159,7 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
         }
         File metrics = getMetricsFile(inputBam, getPipelineCtx().getSourceDirectory());
 
-        wrapper.execute(inputBam, referenceGenome.getWorkingFastaFile(), siteTable, primerTable, genbank, metrics, blastDbs.get(referenceGenome.getGenomeId()));
+        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), siteTable, primerTable, genbank, metrics, blastDbs.get(referenceGenome.getGenomeId()), getClientCommandArgs());
 
         if (siteTable.exists())
         {
@@ -289,14 +298,14 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
         return ret;
     }
 
-    private static class TagPcrWrapper extends AbstractDiscvrSeqWrapper
+    public static class TagPcrWrapper extends AbstractDiscvrSeqWrapper
     {
         public TagPcrWrapper(Logger log)
         {
             super(log);
         }
 
-        public void execute(File bamFile, File referenceFasta, File outputTable, @Nullable File primerTable, @Nullable File genbankOutput, File metricsTable, File blastDbBase) throws PipelineJobException
+        public void execute(File bamFile, File referenceFasta, File outputTable, @Nullable File primerTable, @Nullable File genbankOutput, File metricsTable, File blastDbBase, @Nullable List<String> extraArgs) throws PipelineJobException
         {
             List<String> args = new ArrayList<>();
             args.addAll(getBaseArgs());
@@ -341,6 +350,11 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
             {
                 args.add("--blast-threads");
                 args.add(maxThreads.toString());
+            }
+
+            if (extraArgs != null)
+            {
+                args.addAll(extraArgs);
             }
 
             execute(args);
