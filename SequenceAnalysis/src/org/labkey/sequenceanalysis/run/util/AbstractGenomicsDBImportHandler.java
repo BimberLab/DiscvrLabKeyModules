@@ -563,6 +563,11 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             GenomicsDbImportWrapper wrapper = new GenomicsDbImportWrapper(ctx.getLogger());
             List<String> options = new ArrayList<>(getClientCommandArgs(ctx.getParams()));
 
+            if (ctx.getParams().optBoolean("sharedPosixOptimizations", false))
+            {
+                options.add("--genomicsdb-shared-posixfs-optimizations");
+            }
+
             if (ctx.getParams().optBoolean("disableFileLocking", false))
             {
                 ctx.getLogger().debug("Disabling file locking for TileDB");

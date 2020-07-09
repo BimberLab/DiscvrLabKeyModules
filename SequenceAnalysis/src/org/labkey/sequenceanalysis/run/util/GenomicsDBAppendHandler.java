@@ -32,6 +32,9 @@ public class GenomicsDBAppendHandler extends AbstractGenomicsDBImportHandler
                 ToolParameterDescriptor.create("disableFileLocking", "Disable File Locking", "Certain filesystems do not support file locking, including NFS and Lustre.  If your data will be processed on a filesystem that does not support locking, check this.", "checkbox", new JSONObject(){{
                     put("checked", true);
                 }}, true),
+                ToolParameterDescriptor.create("sharedPosixOptimizations", "Use Shared Posix Optimizations", "This enabled optimizations for large shared filesystems, such as lustre.", "checkbox", new JSONObject(){{
+                    put("checked", true);
+                }}, true),
                 ToolParameterDescriptor.create("scatterGather", "Scatter/Gather Options", "If selected, this job will be divided to run job per chromosome.  The final step will take the VCF from each intermediate step and combined to make a final VCF file.", "sequenceanalysis-variantscattergatherpanel", new JSONObject(){{
                     put("defaultValue", "chunked");
                 }}, false)
