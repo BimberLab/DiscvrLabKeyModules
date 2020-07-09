@@ -21,6 +21,7 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandl
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
@@ -581,6 +582,21 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                     FileUtils.touch(startedFile);
 
                     List<Interval> intervals = getIntervals(ctx);
+
+                    Integer maxRam = SequencePipelineService.get().getMaxRam();
+                    Integer nativeMemoryBuffer = ctx.getParams().optInt("nativeMemoryBuffer", 0);
+                    if (maxRam != null && nativeMemoryBuffer > 0)
+                    {
+                        ctx.getLogger().info("Adjusting RAM based on memory buffer (" + nativeMemoryBuffer + ")");
+                        maxRam = maxRam - nativeMemoryBuffer;
+
+                        if (maxRam < 1)
+                        {
+                            throw new PipelineJobException("After adjusting for nativeMemoryBuffer, maxRam is less than 1: " + maxRam);
+                        }
+                        wrapper.setMaxRamOverride(maxRam);
+                    }
+
                     wrapper.execute(genome, vcfsToProcess, destinationWorkspaceFolder, intervals, options, _append);
 
                     FileUtils.touch(doneFile);
