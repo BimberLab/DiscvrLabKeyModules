@@ -326,6 +326,11 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
 
     public synchronized void updateStatusForAll(Collection<String> extraJobIds) throws PipelineJobException
     {
+        if (ClusterManager.get().isPreventClusterInteraction())
+        {
+            return;
+        }
+
         Collection<ClusterJob> jobs = getJobsToCheck(true, extraJobIds);
         if (jobs.isEmpty())
         {
