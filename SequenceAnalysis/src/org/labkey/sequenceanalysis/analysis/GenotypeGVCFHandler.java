@@ -28,6 +28,7 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.pipeline.JobContextImpl;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
+import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 import org.labkey.sequenceanalysis.run.util.CombineGVCFsWrapper;
 import org.labkey.sequenceanalysis.run.util.GenomicsDBImportHandler;
 import org.labkey.sequenceanalysis.run.util.GenotypeGVCFsWrapper;
@@ -47,7 +48,7 @@ import static org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler.VCF_CA
 /**
  * Created by bimber on 8/26/2014.
  */
-public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, SequenceOutputHandler.HasActionNames, SequenceOutputHandler.TracksVCF
+public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, SequenceOutputHandler.HasActionNames, SequenceOutputHandler.TracksVCF, VariantProcessingStep.MayRequirePrepareTask
 {
     private FileType _gvcfFileType = new FileType(Arrays.asList(".g.vcf"), ".g.vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
 
@@ -293,14 +294,14 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 action.addInput(f, "Input Variants");
             }
 
-            boolean doCopyLocal = ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.doCopyInputs", false);
+            boolean doCopyLocal = doCopyLocal(ctx.getParams());
 
             Set<File> toDelete = new HashSet<>();
             List<File> filesToProcess = new ArrayList<>();
             if (doCopyLocal)
             {
                 ctx.getLogger().info("making local copies of gVCF/GenomicsDB files prior to genotyping");
-                filesToProcess.addAll(GenotypeGVCFsWrapper.copyVcfsLocally(inputFiles, toDelete, null, ctx.getLogger(), outputVcf.exists()));
+                filesToProcess.addAll(GenotypeGVCFsWrapper.copyVcfsLocally(inputFiles, toDelete, GenotypeGVCFHandler.getLocalCopyDir(ctx, true), ctx.getLogger(), outputVcf.exists()));
             }
             else
             {
@@ -312,6 +313,8 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             if (filesToProcess.size() > 1)
             {
                 inputVcf = combineInputs(ctx, filesToProcess, genomeId);
+                ctx.getFileManager().addIntermediateFile(inputVcf);
+                ctx.getFileManager().addIntermediateFile(new File(inputVcf.getPath() + ".tbi"));
             }
             else
             {
@@ -387,8 +390,13 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
 
         private File combineInputs(JobContext ctx, List<File> inputFiles, int genomeId) throws PipelineJobException
         {
-            // TODO: this should ultimately be expanded to include smarter merge with GenomicsDB
-            // Also consider allowing the input to be a folder with per-contig gVCFs
+            for (File f : inputFiles)
+            {
+                if (!GenotypeGVCFsWrapper.GVCF.isType(f))
+                {
+                    throw new PipelineJobException("If multiple inputs are used, all must be gVCFs: " + f.getName());
+                }
+            }
 
             String basename = getBasename(ctx);
             File combined = new File(ctx.getOutputDir(), basename + ".combined.gvcf.gz");
@@ -421,5 +429,49 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
 
             return combined;
         }
+    }
+
+    private boolean doCopyLocal(JSONObject params)
+    {
+        return params.optBoolean("variantCalling.GenotypeGVCFs.doCopyInputs", false);
+    }
+
+    @Override
+    public boolean isRequired(PipelineJob job)
+    {
+        if (job instanceof VariantProcessingJob)
+        {
+            VariantProcessingJob vpj = (VariantProcessingJob)job;
+
+            return doCopyLocal(vpj.getParameterJson());
+        }
+
+        return false;
+    }
+
+    @Override
+    public void doWork(List<SequenceOutputFile> inputFiles, JobContext ctx) throws PipelineJobException
+    {
+        doCopyGvcfLocally(inputFiles, ctx);
+    }
+
+    public static void doCopyGvcfLocally(List<SequenceOutputFile> inputFiles, JobContext ctx) throws PipelineJobException
+    {
+        VariantProcessingJob vpj = (VariantProcessingJob)ctx.getJob();
+        List<File> inputVCFs = new ArrayList<>();
+        inputFiles.forEach(f -> inputVCFs.add(f.getFile()));
+
+        ctx.getLogger().info("making local copies of gVCFs");
+        GenotypeGVCFsWrapper.copyVcfsLocally(inputVCFs, new ArrayList<>(), getLocalCopyDir(ctx, true), ctx.getLogger(), false);
+    }
+
+    public static File getLocalCopyDir(JobContext ctx, boolean createIfDoesntExist)
+    {
+        if (ctx.getJob() instanceof VariantProcessingJob)
+        {
+            return ((VariantProcessingJob)ctx.getJob()).getLocationForCachedInputs(ctx.getWorkDir(), createIfDoesntExist);
+        }
+
+        return ctx.getOutputDir();
     }
 }

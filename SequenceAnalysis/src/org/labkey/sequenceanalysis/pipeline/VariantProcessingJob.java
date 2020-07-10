@@ -3,13 +3,12 @@ package org.labkey.sequenceanalysis.pipeline;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.util.Interval;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
-import org.apache.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.junit.Assert;
@@ -21,6 +20,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.pipeline.TaskPipeline;
+import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
@@ -306,8 +306,6 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
 
     public static class TestCase extends Assert
     {
-        private static final Logger _log = Logger.getLogger(SequenceAlignmentTask.TestCase.class);
-
         @Test
         public void serializeTest() throws Exception
         {
@@ -353,5 +351,35 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
             Map<String, List<Interval>> intervalMap2 = job1.getJobToIntervalMap();
             assertEquals(intervalMap, intervalMap2);
         }
+    }
+
+    public File getLocationForCachedInputs(WorkDirectory wd, boolean createIfDoesntExist)
+    {
+        File ret;
+
+        String localDir = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("LOCAL_DATA_CACHE_DIR");
+        if (localDir == null)
+        {
+            localDir = StringUtils.trimToNull(System.getenv("LOCAL_DATA_CACHE_DIR"));
+        }
+
+        if (localDir == null)
+        {
+            ret = new File(wd.getDir(), "cachedData");
+        }
+        else
+        {
+            String guid = getParentGUID() == null ? getJobGUID() : getParentGUID();
+            ret = new File(localDir, guid);
+
+            getLogger().debug("Using local directory to cache data: " + ret.getPath());
+        }
+
+        if (createIfDoesntExist && !ret.exists())
+        {
+            ret.mkdirs();
+        }
+
+        return ret;
     }
 }

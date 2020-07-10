@@ -21,10 +21,13 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandl
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
@@ -42,7 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-abstract public class AbstractGenomicsDBImportHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> implements SequenceOutputHandler.TracksVCF, SequenceOutputHandler.HasCustomVariantMerge
+abstract public class AbstractGenomicsDBImportHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> implements SequenceOutputHandler.TracksVCF, SequenceOutputHandler.HasCustomVariantMerge, VariantProcessingStep.MayRequirePrepareTask
 {
     protected FileType _gvcfFileType = new FileType(Arrays.asList(".g.vcf"), ".g.vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
     public static final FileType TILE_DB_FILETYPE = new FileType(Arrays.asList(".tdb"), ".tdb", false, FileType.gzSupportLevel.NO_GZ);
@@ -426,7 +429,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         @Override
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
-            boolean doCopyGVcfLocal = ctx.getParams().optBoolean("doCopyGVcfLocal", false);
+            boolean doCopyGVcfLocal = doCopyLocal(ctx.getParams());
 
             RecordedAction action = new RecordedAction(getName());
             action.setStartTime(new Date());
@@ -551,7 +554,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             if (doCopyGVcfLocal)
             {
                 ctx.getLogger().info("making local copies of gVCFs");
-                vcfsToProcess.addAll(GenotypeGVCFsWrapper.copyVcfsLocally(inputVcfs, toDelete, null, ctx.getLogger(), genomicsDbCompleted));
+                vcfsToProcess.addAll(GenotypeGVCFsWrapper.copyVcfsLocally(inputVcfs, toDelete, GenotypeGVCFHandler.getLocalCopyDir(ctx, true), ctx.getLogger(), genomicsDbCompleted));
             }
             else
             {
@@ -560,6 +563,11 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
 
             GenomicsDbImportWrapper wrapper = new GenomicsDbImportWrapper(ctx.getLogger());
             List<String> options = new ArrayList<>(getClientCommandArgs(ctx.getParams()));
+
+            if (ctx.getParams().optBoolean("sharedPosixOptimizations", false))
+            {
+                options.add("--genomicsdb-shared-posixfs-optimizations");
+            }
 
             if (ctx.getParams().optBoolean("disableFileLocking", false))
             {
@@ -574,6 +582,21 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                     FileUtils.touch(startedFile);
 
                     List<Interval> intervals = getIntervals(ctx);
+
+                    Integer maxRam = SequencePipelineService.get().getMaxRam();
+                    Integer nativeMemoryBuffer = ctx.getParams().optInt("nativeMemoryBuffer", 0);
+                    if (maxRam != null && nativeMemoryBuffer > 0)
+                    {
+                        ctx.getLogger().info("Adjusting RAM based on memory buffer (" + nativeMemoryBuffer + ")");
+                        maxRam = maxRam - nativeMemoryBuffer;
+
+                        if (maxRam < 1)
+                        {
+                            throw new PipelineJobException("After adjusting for nativeMemoryBuffer, maxRam is less than 1: " + maxRam);
+                        }
+                        wrapper.setMaxRamOverride(maxRam);
+                    }
+
                     wrapper.execute(genome, vcfsToProcess, destinationWorkspaceFolder, intervals, options, _append);
 
                     FileUtils.touch(doneFile);
@@ -634,5 +657,29 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 }
             }
         }
+    }
+
+    private boolean doCopyLocal(JSONObject params)
+    {
+        return params.optBoolean("doCopyGVcfLocal", false);
+    }
+
+    @Override
+    public boolean isRequired(PipelineJob job)
+    {
+        if (job instanceof VariantProcessingJob)
+        {
+            VariantProcessingJob vpj = (VariantProcessingJob)job;
+
+            return doCopyLocal(vpj.getParameterJson());
+        }
+
+        return false;
+    }
+
+    @Override
+    public void doWork(List<SequenceOutputFile> inputFiles, JobContext ctx) throws PipelineJobException
+    {
+        GenotypeGVCFHandler.doCopyGvcfLocally(inputFiles, ctx);
     }
 }

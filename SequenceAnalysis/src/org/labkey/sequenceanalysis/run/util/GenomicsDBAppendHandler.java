@@ -32,6 +32,12 @@ public class GenomicsDBAppendHandler extends AbstractGenomicsDBImportHandler
                 ToolParameterDescriptor.create("disableFileLocking", "Disable File Locking", "Certain filesystems do not support file locking, including NFS and Lustre.  If your data will be processed on a filesystem that does not support locking, check this.", "checkbox", new JSONObject(){{
                     put("checked", true);
                 }}, true),
+                ToolParameterDescriptor.create("sharedPosixOptimizations", "Use Shared Posix Optimizations", "This enabled optimizations for large shared filesystems, such as lustre.", "checkbox", new JSONObject(){{
+                    put("checked", true);
+                }}, true),
+                ToolParameterDescriptor.create("nativeMemoryBuffer", "C++ Memory Buffer", "By default, the pipeline java processes are allocated nearly all of the requested RAM.  GenomicsDB requires memory for the C++ layer - this value (in GB) will be reserved for this.  We recommend about 15-25% of the total job RAM", "checkbox", new JSONObject(){{
+                    put("minValue", 0);
+                }}, 24),
                 ToolParameterDescriptor.create("scatterGather", "Scatter/Gather Options", "If selected, this job will be divided to run job per chromosome.  The final step will take the VCF from each intermediate step and combined to make a final VCF file.", "sequenceanalysis-variantscattergatherpanel", new JSONObject(){{
                     put("defaultValue", "chunked");
                 }}, false)
