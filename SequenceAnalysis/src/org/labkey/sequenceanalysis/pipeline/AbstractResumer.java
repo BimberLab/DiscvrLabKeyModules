@@ -116,7 +116,7 @@ abstract public class AbstractResumer implements Serializable
             if (deleteFile)
                 file.delete();
             else
-                _log.debug("delete of file will be deferred");
+                _log.debug("delete of file will be deferred: " + file.getPath());
         }
     }
 
