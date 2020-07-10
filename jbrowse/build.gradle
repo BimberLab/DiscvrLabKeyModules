@@ -36,7 +36,12 @@ project.task("copyJBrowse",
 }).onlyIf({
     //this is a very expensive step and the input should rarely change
     if (copyDestination.getDir().exists()) {
-        File firstModifiedCopiedFile = copyDestination.exclude("./resources/web/jbrowseApp/css/").sort {it.lastModified()}.first()
+        List<File> copiedFiles = copyDestination.exclude("./resources/web/jbrowseApp/css/").sort {it.lastModified()};
+        if (copiedFiles.isEmpty()) {
+            return true;
+        }
+        
+        File firstModifiedCopiedFile = copiedFiles.first()
         File lastModifiedSourceFile = fileTree('./node_modules/@gmod/jbrowse').exclude('package.json').sort {it.lastModified()}.last()
         if (firstModifiedCopiedFile.lastModified() < lastModifiedSourceFile.lastModified()) {
             println("Source has been modified, need to copy again")
