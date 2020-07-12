@@ -59,7 +59,6 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
 
     private static final String CACHE_KEY = "tagPcrBlastMap";
 
-    private static final String MIN_ALIGNMENTS = "minAlignments";
     private static final String OUTPUT_GENBANK = "outputGenbank";
     private static final String DESIGN_PRIMERS = "designPrimers";
 
@@ -68,7 +67,6 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
         public Provider()
         {
             super("Tag-PCR", "Tag-PCR Integration Sites", null, "This will produce a table summarizing unique alignments in this BAM.  It was originally created to summarize genomic insertions.", Arrays.asList(
-                    ToolParameterDescriptor.create(MIN_ALIGNMENTS, "Min Alignments", "The minimum number of alignments to export a position", "ldk-integerfield", null, 2),
                     ToolParameterDescriptor.create(OUTPUT_GENBANK, "Create Genbank Output", "If selected, this will output a genbank file summarizing amplicons and primers", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true),
