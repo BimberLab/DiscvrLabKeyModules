@@ -101,6 +101,8 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
         }
 
+        private static final double NO_DATA_VAL = -1.0;
+
         @Override
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
@@ -144,8 +146,11 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                         {
                             Set<Allele> alleles = siteToAllele.getOrDefault(getCacheKey(vc.getContig(), vc.getStart()), new LinkedHashSet<>());
                             alleles.addAll(vc.getAlleles());
+                            if (!siteToAllele.containsKey(getCacheKey(vc.getContig(), vc.getStart())))
+                            {
+                                whitelistSites.add(Pair.of(vc.getContig(), vc.getStart()));
+                            }
                             siteToAllele.put(getCacheKey(vc.getContig(), vc.getStart()), alleles);
-                            whitelistSites.add(Pair.of(vc.getContig(), vc.getStart()));
                         }
                     }
                 }
@@ -162,7 +167,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
             File output = new File(ctx.getOutputDir(), basename + "txt");
             int idx = 0;
-            try (CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(output)))
+            try (CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(output), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
                 writer.writeNext(new String[]{"OutputFileId", "ReadsetId", "Contig", "Start", "Ref", "AltAlleles", "Depth", "RefAF", "AltAFs"});
 
@@ -171,6 +176,8 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                     for (SequenceOutputFile so : inputFiles)
                     {
                         VCFFileReader reader = getReader(so.getFile());
+
+                        //NOTE: LoFreq should output one VCF line per allele:
                         try (CloseableIterator<VariantContext> it = reader.query(site.getLeft(), site.getRight(), site.getRight()))
                         {
                             List<String> line = new ArrayList<>();
@@ -185,7 +192,9 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                             line.add(refAllele.getBaseString());
 
                             Set<Allele> alleles = siteToAllele.get(key);
-                            line.add(alleles.stream().map(Allele::getBaseString).collect(Collectors.joining(";")));
+
+                            //Drop the ref (first) element.
+                            line.add(alleles.stream().map(Allele::getBaseString).skip(1).collect(Collectors.joining(";")));
 
                             if (!it.hasNext())
                             {
@@ -201,7 +210,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                 {
                                     line.add(String.valueOf(depth));
                                     line.add("1");
-                                    line.add(",0".repeat(alleles.size() - 1).substring(1));
+                                    line.add(";0".repeat(alleles.size() - 1).substring(1));
                                 }
 
                                 writer.writeNext(line.toArray(new String[]{}));
@@ -209,8 +218,9 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                             }
                             else
                             {
-                                List<String> toWrite = new ArrayList<>(line);
-
+                                Integer depth = null;
+                                Double totalAltAf = 0.0;
+                                Map<Allele, Double> alleleToAf = new HashMap<>();
                                 while (it.hasNext())
                                 {
                                     VariantContext vc = it.next();
@@ -224,50 +234,49 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                         throw new PipelineJobException("Expected AF annotation on line " + key + " in file: " + so.getFile().getPath());
                                     }
 
-                                    int depth = vc.getAttributeAsInt("GATK_DP", 0);
-                                    toWrite.add(String.valueOf(depth));
-
+                                    depth = vc.getAttributeAsInt("GATK_DP", 0);
                                     if (depth < minDepth)
                                     {
-                                        toWrite.add("ND");
-                                        toWrite.add("ND");
+                                        vc.getAlternateAlleles().forEach(a -> {
+                                            alleleToAf.put(a, NO_DATA_VAL);
+                                        });
                                     }
                                     else
                                     {
                                         List<Double> afs = vc.getAttributeAsDoubleList("AF", 0);
                                         if (afs.size() != vc.getAlternateAlleles().size())
                                         {
-                                            throw new PipelineJobException("Expected AF annotation on line " + key + " in file: " + so.getFile().getPath());
+                                            throw new PipelineJobException("Expected AF annotation on line " + key + " in file: " + so.getFile().getPath() + " to be of length: " + vc.getAlternateAlleles().size());
                                         }
 
-                                        double refAf = 1 - afs.stream().reduce(0.0, Double::sum);
-                                        toWrite.add(String.valueOf(refAf));
-
-                                        List<Double> toAdd = new ArrayList<>();
-                                        for (Allele a : alleles)
-                                        {
-                                            if (a.isReference())
-                                            {
-                                                continue;
-                                            }
-
+                                        totalAltAf += afs.stream().reduce(0.0, Double::sum);
+                                        vc.getAlternateAlleles().forEach(a -> {
                                             int aIdx = vc.getAlternateAlleles().indexOf(a);
-                                            if (aIdx == -1)
-                                            {
-                                                toAdd.add(0.0);
-                                            }
-                                            else
-                                            {
-                                                toAdd.add(afs.get(aIdx));
-                                            }
-                                        }
+                                            alleleToAf.put(a, afs.get(aIdx));
+                                        });
+                                    }
+                                }
 
-                                        toWrite.add(toAdd.stream().map(String::valueOf).collect(Collectors.joining(";")));
+                                List<String> toWrite = new ArrayList<>(line);
+                                toWrite.add(String.valueOf(depth));
+                                toWrite.add(String.valueOf(1 - totalAltAf));
+
+                                //Add AFs in order:
+                                List<Object> toAdd = new ArrayList<>();
+                                for (Allele a : alleles)
+                                {
+                                    if (a.isReference())
+                                    {
+                                        continue;
                                     }
 
-                                    writer.writeNext(toWrite.toArray(new String[]{}));
-                                    idx++;
+                                    double af = alleleToAf.getOrDefault(a, 0.0);
+                                    toAdd.add(af == NO_DATA_VAL ? "ND" : af);
                                 }
+                                toWrite.add(toAdd.stream().map(String::valueOf).collect(Collectors.joining(";")));
+
+                                writer.writeNext(toWrite.toArray(new String[]{}));
+                                idx++;
                             }
                         }
 
@@ -294,6 +303,8 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                     ctx.getLogger().error("Unable to close reader: " + e.getMessage());
                 }
             }
+
+            ctx.getFileManager().addSequenceOutput(output, "Merged LoFreq Variants: " + inputFiles.size() + " VCFs", "Merged LoFreq Variant Table", null, null, genome.getGenomeId(), null);
         }
 
         private String getCacheKey(String contig, int start)
