@@ -4,18 +4,22 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.run.AbstractGatk4Wrapper;
 import org.labkey.api.util.FileType;
+import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -82,55 +86,90 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
 
     public static FileType GVCF = new FileType(Arrays.asList(".g.vcf", ".gvcf"), ".g.vcf", FileType.gzSupportLevel.SUPPORT_GZ);
 
-    public static List<File> copyVcfsLocally(Collection<File> inputGVCFs, Collection<File> toDelete, File localWorkDir, Logger log, boolean isResume) throws PipelineJobException
+    public static List<File> copyVcfsLocally(SequenceOutputHandler.JobContext ctx, Collection<File> inputGVCFs, Collection<File> toDelete, boolean isResume) throws PipelineJobException
     {
-        if (localWorkDir == null)
+        try
         {
-            String tmpDir = StringUtils.trimToNull(PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_TMP_DIR"));
-            if (tmpDir == null)
+            //Note: because we cannot be certain names are unique, inspect:
+            HashMap<File, String> inputToDest = new LinkedHashMap<>();
+            Set<String> uniqueDistNames = new CaseInsensitiveHashSet();
+
+            inputGVCFs.forEach(x -> {
+                String fn = x.getName();
+
+                int i = 1;
+                while (uniqueDistNames.contains(fn))
+                {
+                    String basename = SequenceAnalysisService.get().getUnzippedBaseName(x.getName());
+                    String ext = x.getName().replaceAll(SequenceAnalysisService.get().getUnzippedBaseName(x.getName()), "");
+
+                    fn = basename + "." + i + ext;
+                    i++;
+                }
+
+                if (!fn.equals(x.getName()))
+                {
+                    ctx.getLogger().info("Renaming cached file from: " + x.getName() + " to " + fn);
+                }
+
+                uniqueDistNames.add(fn);
+                inputToDest.put(x, fn);
+            });
+
+            File localWorkDir = GenotypeGVCFHandler.getLocalCopyDir(ctx, true);
+
+            // If the cache directory is under the current working dir, mark to delete when done.
+            // If localWorkDir is null, this indicates we're using /tmp, so also delete.
+            // Otherwise this indicates a shared cache dir probably used by multiple scatter/gather jobs, and allow the merge task to do cleanup
+            boolean reportFilesForDeletion = localWorkDir == null || ctx.getWorkDir().getRelativePath(localWorkDir) != null;
+
+            if (localWorkDir == null)
             {
-                tmpDir = System.getProperty("java.io.tmpdir");
+                String tmpDir = StringUtils.trimToNull(PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_TMP_DIR"));
+                if (tmpDir == null)
+                {
+                    tmpDir = System.getProperty("java.io.tmpdir");
+                }
+
+                ctx.getLogger().debug("Copying files to temp directory: " + tmpDir);
+                localWorkDir = new File(tmpDir);
             }
 
-            log.debug("Copying files to temp directory: " + tmpDir);
-            localWorkDir = new File(tmpDir);
-        }
-
-        List<File> vcfsToProcess = new ArrayList<>();
-        for (File f : inputGVCFs)
-        {
-            File origIdx = null;
-            File movedIdx = null;
-            File doneFile = new File(f.getPath() + ".copyDone");
-
-            if (GVCF.isType(f))
+            List<File> vcfsToProcess = new ArrayList<>();
+            for (File f : inputGVCFs)
             {
-                origIdx = new File(f.getPath() + ".tbi");
-                if (!origIdx.exists())
-                {
-                    throw new PipelineJobException("expected index doesn't exist: " + origIdx.getPath());
-                }
+                File destFile = new File(inputToDest.get(f));
 
-                movedIdx = new File(localWorkDir, f.getName() + ".tbi");
-            }
+                File origIdx = null;
+                File movedIdx = null;
+                File doneFile = new File(localWorkDir, destFile.getName() + ".copyDone");
 
-            File movedFile = new File(localWorkDir, f.getName());
-            if (!isResume)
-            {
-                if (movedIdx != null && movedIdx.exists())
+                if (GVCF.isType(f))
                 {
-                    log.debug("moved index exists, skipping file: " + f.getName());
-                }
-                else if (f.isDirectory() && doneFile.exists())
-                {
-                    log.debug("copied folder exists, skipping file: " + f.getName());
-                }
-                else
-                {
-                    long size = f.isDirectory() ? FileUtils.sizeOfDirectory(f) : FileUtils.sizeOf(f);
-                    log.debug("copying file: " + f.getName() + ", size: " + FileUtils.byteCountToDisplaySize(size));
-                    try
+                    origIdx = new File(f.getPath() + ".tbi");
+                    if (!origIdx.exists())
                     {
+                        throw new PipelineJobException("expected index doesn't exist: " + origIdx.getPath());
+                    }
+
+                    movedIdx = new File(localWorkDir, destFile.getName() + ".tbi");
+                }
+
+                File movedFile = new File(localWorkDir, destFile.getName());
+                if (!isResume)
+                {
+                    if (movedIdx != null && movedIdx.exists())
+                    {
+                        ctx.getLogger().debug("moved index exists, skipping file: " + f.getName());
+                    }
+                    else if (f.isDirectory() && doneFile.exists())
+                    {
+                        ctx.getLogger().debug("copied folder exists, skipping file: " + f.getName());
+                    }
+                    else
+                    {
+                        long size = f.isDirectory() ? FileUtils.sizeOfDirectory(f) : FileUtils.sizeOf(f);
+                        ctx.getLogger().debug("copying file: " + f.getName() + ", size: " + FileUtils.byteCountToDisplaySize(size));
                         if (f.isDirectory())
                         {
                             if (movedFile.exists())
@@ -153,24 +192,31 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
                             }
                         }
                     }
-                    catch (IOException e)
+                }
+
+                if (reportFilesForDeletion)
+                {
+                    toDelete.add(movedFile);
+                    toDelete.add(movedIdx);
+                    if (doneFile.exists())
                     {
-                        throw new PipelineJobException(e);
+                        toDelete.add(doneFile);
                     }
                 }
+                else
+                {
+                    ctx.getLogger().info("Cached files will not be deleted after this step, instead the final merge task should delete them");
+                }
+
+                vcfsToProcess.add(movedFile);
             }
 
-            toDelete.add(movedFile);
-            toDelete.add(movedIdx);
-            if (doneFile.exists())
-            {
-                toDelete.add(doneFile);
-            }
-
-            vcfsToProcess.add(movedFile);
+            return vcfsToProcess;
         }
-
-        return vcfsToProcess;
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
     }
 
     private void ensureVCFIndexes(File inputGVCF) throws PipelineJobException
