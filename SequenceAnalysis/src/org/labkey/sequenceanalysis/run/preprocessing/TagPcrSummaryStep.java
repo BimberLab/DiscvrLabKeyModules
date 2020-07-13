@@ -76,7 +76,7 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--reads-to-output"), "readsToOutput", "Reads To Output Per Site", "If this is non-zero, up to this many reads per integration site will be written to a FASTA file.  This can serve as a way to verify the actual junction border.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, 25),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-mf"), "minFraction", "Min Faction To Output", "Only sites with at least this fraction of reads will be output.", "ldk-integerfield", new JSONObject(){{
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-mf"), "minFraction", "Min Fraction To Output", "Only sites with at least this fraction of reads will be output.", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                         put("decimalPrecision", 5);
                     }}, 0),
