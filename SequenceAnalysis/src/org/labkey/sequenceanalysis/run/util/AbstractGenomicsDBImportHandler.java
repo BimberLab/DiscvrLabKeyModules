@@ -650,9 +650,10 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
 
             if (!toDelete.isEmpty())
             {
-                ctx.getLogger().info("deleting locally copied gVCFs");
+                ctx.getLogger().info("deleting locally copied gVCFs: " + toDelete.size());
                 for (File f : toDelete)
                 {
+                    ctx.getLogger().debug(f.getPath());
                     f.delete();
                 }
             }
