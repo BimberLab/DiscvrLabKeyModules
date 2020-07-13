@@ -316,7 +316,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             return ret;
         }
 
-        private int getReadDepth(File vcf, Map<String, Integer> contigToOffset, String contig, int position) throws PipelineJobException
+        private int getReadDepth(File vcf, Map<String, Integer> contigToOffset, String contig, int position1) throws PipelineJobException
         {
             File gatkDepth = new File(vcf.getParentFile(), vcf.getName().replaceAll(".all.vcf.gz", ".coverage"));
             if (!gatkDepth.exists())
@@ -326,12 +326,12 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
             try (Stream<String> lines = Files.lines(gatkDepth.toPath()))
             {
-                int lineNo = contigToOffset.get(contig) + position;
-                String[] line = lines.skip(lineNo).findFirst().get().split("\t");
+                int lineNo = contigToOffset.get(contig) + position1;
+                String[] line = lines.skip(lineNo - 1).findFirst().get().split("\t");
 
-                if (!line[0].equals(contig + ":" + position))
+                if (!line[0].equals(contig + ":" + position1))
                 {
-                    throw new PipelineJobException("Incorrect line at " + lineNo + ", expected " + contig + ":" + position + ", but was: " + line[0]);
+                    throw new PipelineJobException("Incorrect line at " + lineNo + ", expected " + contig + ":" + position1 + ", but was: " + line[0]);
                 }
 
                 return Integer.parseInt(line[1]);

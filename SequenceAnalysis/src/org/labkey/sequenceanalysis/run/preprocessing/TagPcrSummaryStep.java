@@ -78,6 +78,7 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
                     }}, 25),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-mf"), "minFraction", "Min Faction To Output", "Only sites with at least this fraction of reads will be output.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
+                        put("decimalPrecision", 5);
                     }}, 0),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-ma"), "minAlignment", "Min Alignments To Output", "Only sites with at least this many alignments will be output.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
