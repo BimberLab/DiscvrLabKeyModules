@@ -49,7 +49,8 @@ public class CombineSubreadGeneCountsHandler extends AbstractCombineGeneCountsHa
                 String line;
                 while ((line = reader.readLine()) != null)
                 {
-                    line = line.trim();
+                    //NOTE: if gene name is null, element 0 can be empty string
+                    //line = line.trim();
                     if (line.startsWith("#") || line.startsWith("Geneid") || line.isEmpty())
                     {
                         continue;
@@ -62,6 +63,12 @@ public class CombineSubreadGeneCountsHandler extends AbstractCombineGeneCountsHa
                     }
 
                     String geneId = cells[0];
+                    if (geneId.isEmpty())
+                    {
+                        job.getLogger().info("Feature lacks gene ID: [" + line + "]");
+                        continue;
+                    }
+
                     if (OTHER_IDS.contains(geneId))
                     {
                         continue;
