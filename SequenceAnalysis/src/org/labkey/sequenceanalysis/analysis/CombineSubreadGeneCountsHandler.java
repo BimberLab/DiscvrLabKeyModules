@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.analysis;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -49,12 +50,17 @@ public class CombineSubreadGeneCountsHandler extends AbstractCombineGeneCountsHa
                 while ((line = reader.readLine()) != null)
                 {
                     line = line.trim();
-                    if (line.startsWith("#") || line.startsWith("Geneid"))
+                    if (line.startsWith("#") || line.startsWith("Geneid") || line.isEmpty())
                     {
                         continue;
                     }
 
                     String[] cells = line.split("\t");
+                    if (cells.length < 7)
+                    {
+                        throw new PipelineJobException("Line too short, was " + cells.length + ": [" + StringUtils.join(cells, "<>") + "]");
+                    }
+
                     String geneId = cells[0];
                     if (OTHER_IDS.contains(geneId))
                     {
