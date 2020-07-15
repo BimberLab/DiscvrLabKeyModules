@@ -1,8 +1,9 @@
 package org.labkey.sequenceanalysis.run.preprocessing;
 
 import au.com.bytecode.opencsv.CSVReader;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -27,12 +28,14 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
+import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractDiscvrSeqWrapper;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
@@ -47,22 +50,40 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisStep
+public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummaryStep.TagPcrWrapper> implements AnalysisStep
 {
     public TagPcrSummaryStep(PipelineStepProvider provider, PipelineContext ctx)
     {
-        super(provider, ctx);
+        super(provider, ctx, new TagPcrWrapper(ctx.getLogger()));
     }
 
     private static final String CACHE_KEY = "tagPcrBlastMap";
 
     private static final String MIN_ALIGNMENTS = "minAlignments";
+    private static final String OUTPUT_GENBANK = "outputGenbank";
+    private static final String DESIGN_PRIMERS = "designPrimers";
+
     public static class Provider extends AbstractAnalysisStepProvider<TagPcrSummaryStep>
     {
         public Provider()
         {
             super("Tag-PCR", "Tag-PCR Integration Sites", null, "This will produce a table summarizing unique alignments in this BAM.  It was originally created to summarize genomic insertions.", Arrays.asList(
-                    ToolParameterDescriptor.create(MIN_ALIGNMENTS, "Min Alignments", "The minimum number of alignments to export a position", "ldk-integerfield", null, 2)
+                    ToolParameterDescriptor.create(MIN_ALIGNMENTS, "Min Alignments", "The minimum number of alignments to export a position", "ldk-integerfield", null, 2),
+                    ToolParameterDescriptor.create(OUTPUT_GENBANK, "Create Genbank Output", "If selected, this will output a genbank file summarizing amplicons and primers", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, true),
+                    ToolParameterDescriptor.create(DESIGN_PRIMERS, "Design Primers", "If selected, Primer3 will be used to design primers to flank integration sites", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, true),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--reads-to-output"), "readsToOutput", "Reads To Output Per Site", "If this is non-zero, up to this many reads per integration site will be written to a FASTA file.  This can serve as a way to verify the actual junction border.", "ldk-integerfield", new JSONObject(){{
+                        put("minValue", 0);
+                    }}, 25),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-mf"), "minFraction", "Min Faction To Output", "Only sites with at least this fraction of reads will be output.", "ldk-integerfield", new JSONObject(){{
+                        put("minValue", 0);
+                    }}, 0),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-ma"), "minAlignment", "Min Alignments To Output", "Only sites with at least this many alignments will be output.", "ldk-integerfield", new JSONObject(){{
+                        put("minValue", 0);
+                    }}, 3)
             ), null, null);
         }
 
@@ -119,19 +140,42 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
 
         Map<Integer, File> blastDbs = getCachedBlastDbs(getPipelineCtx().getSequenceSupport());
 
-        TagPcrWrapper wrapper = new TagPcrWrapper(getPipelineCtx().getLogger());
+        boolean designPrimers = getProvider().getParameterByName(DESIGN_PRIMERS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true);
+        boolean outputGenbank = getProvider().getParameterByName(OUTPUT_GENBANK).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true);
 
         String basename = SequenceAnalysisService.get().getUnzippedBaseName(inputBam.getName());
         File siteTable = new File(outputDir, basename + ".sites.txt");
-        File primerTable = new File(outputDir, basename + ".primers.txt");
-        File genbank = new File(outputDir, basename + ".sites.gb");
+
+        File primerTable = null;
+        if (designPrimers)
+        {
+            primerTable = new File(outputDir, basename + ".primers.txt");
+        }
+
+        File genbank = null;
+        if (outputGenbank)
+        {
+            genbank = new File(outputDir, basename + ".sites.gb");
+        }
         File metrics = getMetricsFile(inputBam, getPipelineCtx().getSourceDirectory());
 
-        wrapper.execute(inputBam, referenceGenome.getWorkingFastaFile(), siteTable, primerTable, genbank, metrics, blastDbs.get(referenceGenome.getGenomeId()));
+        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), siteTable, primerTable, genbank, metrics, blastDbs.get(referenceGenome.getGenomeId()), getClientCommandArgs());
 
-        output.addOutput(siteTable, "Tag-PCR Integration Sites");
-        output.addOutput(primerTable, "Tag-PCR Primer Table");
-        output.addOutput(genbank, "Tag-PCR Genbank Summary");
+        if (siteTable.exists())
+        {
+            output.addOutput(siteTable, "Tag-PCR Integration Sites");
+        }
+
+        if (designPrimers)
+        {
+            output.addOutput(primerTable, "Tag-PCR Primer Table");
+        }
+
+        if (outputGenbank)
+        {
+            output.addOutput(genbank, "Tag-PCR Genbank Summary");
+        }
+
         output.addOutput(metrics, "Tag-PCR Metrics");
 
         Map<String, String> metricMap = parseMetricFile(metrics);
@@ -167,17 +211,24 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
             getPipelineCtx().getLogger().error("Readset did not have information on input files");
         }
 
-        output.addSequenceOutput(siteTable,
-                "Putative Integration Sites: " + rs.getName(),
-                "Tag-PCR Integration Sites", rs.getReadsetId(),
-                null,
-                referenceGenome.getGenomeId(),
-                "Reads: " + metricMap.get("NumReadsSpanningJunction") +
-                        "\nJunction hit rate (of alignments): " + pf.format(Double.parseDouble(metricMap.get("PctReadsSpanningJunction"))) +
-                        (hitRate == null ? "" : "\nJunction hit rate (of total reads): " + pf.format(hitRate)) +
-                        "\nIntegration Sites: " + metricMap.get("TotalIntegrationSitesOutput") +
-                        "\nAlignments Matching Insert: " + metricMap.get("FractionPrimaryAlignmentsMatchingInsert")
-        );
+        if (siteTable.exists())
+        {
+            output.addSequenceOutput(siteTable,
+                    "Putative Integration Sites: " + rs.getName(),
+                    "Tag-PCR Integration Sites", rs.getReadsetId(),
+                    null,
+                    referenceGenome.getGenomeId(),
+                    "Reads: " + metricMap.get("NumReadsSpanningJunction") +
+                            "\nJunction hit rate (of alignments): " + pf.format(Double.parseDouble(metricMap.get("PctReadsSpanningJunction"))) +
+                            (hitRate == null ? "" : "\nJunction hit rate (of total reads): " + pf.format(hitRate)) +
+                            "\nIntegration Sites: " + metricMap.get("TotalIntegrationSitesOutput") +
+                            "\nAlignments Matching Insert: " + metricMap.get("FractionPrimaryAlignmentsMatchingInsert")
+            );
+        }
+        else
+        {
+            getPipelineCtx().getLogger().info("Site output not found");
+        }
 
         return output;
     }
@@ -247,14 +298,14 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
         return ret;
     }
 
-    private static class TagPcrWrapper extends AbstractDiscvrSeqWrapper
+    public static class TagPcrWrapper extends AbstractDiscvrSeqWrapper
     {
         public TagPcrWrapper(Logger log)
         {
             super(log);
         }
 
-        public void execute(File bamFile, File referenceFasta, File outputTable, File primerTable, File genbankOutput, File metricsTable, File blastDbBase) throws PipelineJobException
+        public void execute(File bamFile, File referenceFasta, File outputTable, @Nullable File primerTable, @Nullable File genbankOutput, File metricsTable, File blastDbBase, @Nullable List<String> extraArgs) throws PipelineJobException
         {
             List<String> args = new ArrayList<>();
             args.addAll(getBaseArgs());
@@ -270,11 +321,17 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
             args.add("--output-table");
             args.add(outputTable.getPath());
 
-            args.add("--primer-pair-table");
-            args.add(primerTable.getPath());
+            if (primerTable != null)
+            {
+                args.add("--primer-pair-table");
+                args.add(primerTable.getPath());
+            }
 
-            args.add("--genbank-output");
-            args.add(genbankOutput.getPath());
+            if (genbankOutput != null)
+            {
+                args.add("--genbank-output");
+                args.add(genbankOutput.getPath());
+            }
 
             args.add("--metrics-table");
             args.add(metricsTable.getPath());
@@ -293,6 +350,11 @@ public class TagPcrSummaryStep extends AbstractPipelineStep implements AnalysisS
             {
                 args.add("--blast-threads");
                 args.add(maxThreads.toString());
+            }
+
+            if (extraArgs != null)
+            {
+                args.addAll(extraArgs);
             }
 
             execute(args);

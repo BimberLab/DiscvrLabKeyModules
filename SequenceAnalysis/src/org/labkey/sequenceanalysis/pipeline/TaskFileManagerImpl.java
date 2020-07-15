@@ -144,11 +144,6 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
             addDeferredIntermediateFile(file);
         }
 
-        for (File file : output.getDeferredDeleteIntermediateFiles())
-        {
-            addDeferredIntermediateFile(file);
-        }
-
         for (PipelineStepOutput.SequenceOutput o : output.getSequenceOutputs())
         {
             addSequenceOutput(o.getFile(), o.getLabel(), o.getCategory(), o.getReadsetId(), o.getAnalysisId(), o.getGenomeId(), o.getDescription());
@@ -199,7 +194,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     {
         String path = FilenameUtils.normalize(file.getPath());
         String relPath = FileUtil.relativePath(_workLocation.getPath(), path);
-        _job.getLogger().debug("Adding deferred intermediate file: " + relPath + " || " + path);
+        _job.getLogger().debug("Adding deferred intermediate file.  relative path: " + relPath + ", path: " + path);
         if (relPath == null)
         {
             relPath = file.getPath();
