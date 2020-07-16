@@ -255,6 +255,16 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
             siteToAllele.forEach((x, y) -> {
                 y.doFinalize();
+
+                if (y._alternates.isEmpty())
+                {
+                    ctx.getLogger().error("No alternate alleles found: " + y._contig + "/" + y._start + "/" + y._ref);
+                    y._encounteredAlleles.forEach((a, b) -> {
+                        ctx.getLogger().error(a.getBaseString() + ": " + b.stream().map(Allele::getBaseString).collect(Collectors.joining(",")));
+                    });
+
+                    throw new IllegalArgumentException("No alternate alleles found: " + y._contig + "/" + y._start + "/" + y._ref);
+                }
             });
 
             ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(genomeIds.iterator().next());
