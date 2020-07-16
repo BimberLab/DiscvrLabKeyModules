@@ -70,6 +70,10 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
                     ToolParameterDescriptor.create(OUTPUT_GENBANK, "Create Genbank Output", "If selected, this will output a genbank file summarizing amplicons and primers", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--insert-type"), "insertType", "Insert Type", "The type of insert to detect.", "ldk-simplecombo", new JSONObject(){{
+                        put("storeValues", "PiggyBac;Lentivirus");
+                        put("allowBlank", false);
+                    }}, "PiggyBac"),
                     ToolParameterDescriptor.create(DESIGN_PRIMERS, "Design Primers", "If selected, Primer3 will be used to design primers to flank integration sites", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true),
