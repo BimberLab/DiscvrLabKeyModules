@@ -320,7 +320,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                     line.add("");
                                     line.add(String.valueOf(depth));
                                     line.add("1");
-                                    line.add(";0".repeat(siteDef._alternates.size() - 1).substring(1));
+                                    line.add(";0".repeat(siteDef._alternates.size()).substring(1));
                                 }
 
                                 writer.writeNext(line.toArray(new String[]{}));
