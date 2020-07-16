@@ -173,7 +173,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                     }
                     else
                     {
-                        Map<Allele, Allele> alleleMap = createAlleleMapping(_ref, ref, _encounteredAlleles.get(finalRef));
+                        Map<Allele, Allele> alleleMap = createAlleleMapping(_ref, ref, _encounteredAlleles.get(ref));
                         for (Allele a : _encounteredAlleles.get(ref))
                         {
                             a = alleleMap.getOrDefault(a, a);
@@ -521,7 +521,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
     private static Map<Allele, Allele> createAlleleMapping(final Allele refAllele, final Allele inputRef, final List<Allele> inputAlts)
     {
-        if (refAllele.length() > inputRef.length())
+        if (refAllele.length() < inputRef.length())
         {
             throw new IllegalArgumentException("BUG: inputRef=" + inputRef + " is longer than refAllele=" + refAllele);
         }
