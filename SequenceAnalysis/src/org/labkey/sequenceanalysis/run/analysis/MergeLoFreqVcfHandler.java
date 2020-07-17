@@ -346,6 +346,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                     if (vc.getStart() < siteDef._start)
                                     {
                                         ctx.getLogger().info("Variant start less than site def, probably indicates an upstream deletion: " + siteDef._start + " / " + vc.getStart() + " / " + so.getFile().getPath());
+                                        continue;
                                     }
                                     else if (vc.getStart() > siteDef._start)
                                     {
@@ -410,6 +411,11 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                         toWrite.add(refs.stream().map(Allele::getBaseString).collect(Collectors.joining(";")));
                                         List<String> alleleSets = new ArrayList<>();
                                         refs.forEach(r -> {
+                                            if (!siteDef._encounteredAlleles.containsKey(r))
+                                            {
+                                                throw new IllegalArgumentException("Reference not found: " + r.getBaseString() + ", at site: " + siteDef._start + ", allowable: " + refs.stream().map(Allele::getBaseString).collect(Collectors.joining(",")));
+                                            }
+
                                             alleleSets.add(siteDef._encounteredAlleles.get(r).stream().map(Allele::getBaseString).collect(Collectors.joining(",")));
                                         });
                                         toWrite.add(alleleSets.stream().collect(Collectors.joining(";")));
