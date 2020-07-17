@@ -11,6 +11,7 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.log4j.Logger;
 import org.json.JSONObject;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -142,7 +143,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                 if (_encounteredAlleles.keySet().size() == 1)
                 {
                     _ref = _encounteredAlleles.keySet().iterator().next();
-                    _alternates = new ArrayList<>(_encounteredAlleles.get(_ref));
+                    _alternates = Collections.unmodifiableList(_encounteredAlleles.get(_ref));
                     _renamedAlleles = Collections.emptyMap();
 
                     return;
@@ -186,12 +187,25 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                         _renamedAlleles.put(ref, alleleMap);
                     }
                 }
-                _alternates = finalAlleles;
+                _alternates = Collections.unmodifiableList(finalAlleles);
             }
 
             public boolean isMergedRef()
             {
                 return _encounteredAlleles.size() > 1;
+            }
+
+            public void checkValid(Logger log)
+            {
+                if (_alternates.isEmpty())
+                {
+                    log.error("No alternate alleles found: " + _contig + "/" + _start + "/" + _ref);
+                    _encounteredAlleles.forEach((a, b) -> {
+                        log.error(a.getBaseString() + ": " + b.stream().map(Allele::getBaseString).collect(Collectors.joining(",")));
+                    });
+
+                    throw new IllegalArgumentException("No alternate alleles found: " + _contig + "/" + _start + "/" + _ref);
+                }
             }
         }
 
@@ -255,16 +269,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
             siteToAllele.forEach((x, y) -> {
                 y.doFinalize();
-
-                if (y._alternates.isEmpty())
-                {
-                    ctx.getLogger().error("No alternate alleles found: " + y._contig + "/" + y._start + "/" + y._ref);
-                    y._encounteredAlleles.forEach((a, b) -> {
-                        ctx.getLogger().error(a.getBaseString() + ": " + b.stream().map(Allele::getBaseString).collect(Collectors.joining(",")));
-                    });
-
-                    throw new IllegalArgumentException("No alternate alleles found: " + y._contig + "/" + y._start + "/" + y._ref);
-                }
+                y.checkValid(ctx.getLogger());
             });
 
             ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(genomeIds.iterator().next());
@@ -300,7 +305,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                             line.add(String.valueOf(site.getRight() + siteDef._ref.length() - 1));
 
                             line.add(siteDef._ref.getBaseString());
-                            line.add(siteDef._alternates.stream().map(Allele::getBaseString).skip(1).collect(Collectors.joining(";")));
+                            line.add(siteDef._alternates.stream().map(Allele::getBaseString).collect(Collectors.joining(";")));
 
                             if (!it.hasNext())
                             {
@@ -336,9 +341,15 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                 while (it.hasNext())
                                 {
                                     VariantContext vc = it.next();
-                                    if (vc.getStart() != siteDef._start)
+
+                                    //This could occur with a deletion from the prior position
+                                    if (vc.getStart() < siteDef._start)
                                     {
-                                        throw new PipelineJobException("Iterating incorrect start: " + siteDef._start + " / " + vc.getStart() + " / " + so.getFile().getPath());
+                                        ctx.getLogger().info("Variant start less than site def, probably indicates an upstream deletion: " + siteDef._start + " / " + vc.getStart() + " / " + so.getFile().getPath());
+                                    }
+                                    else if (vc.getStart() > siteDef._start)
+                                    {
+                                        throw new PipelineJobException("Unexpected variant start.  site: " + siteDef._start + " / vc: " + vc.getStart() + " / " + so.getFile().getPath());
                                     }
 
                                     refs.add(vc.getReference());
