@@ -204,10 +204,6 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
                         toDelete.add(doneFile);
                     }
                 }
-                else
-                {
-                    ctx.getLogger().info("Cached files will not be deleted after this step, instead the final merge task should delete them");
-                }
 
                 vcfsToProcess.add(movedFile);
             }
