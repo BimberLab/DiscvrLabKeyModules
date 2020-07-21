@@ -156,7 +156,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
             protected Allele extractAlleleForPosition(VariantContext vc, Allele a, Logger log)
             {
-                int offset = vc.getStart() - _start;
+                int offset = _start - vc.getStart();
                 if (offset < 0)
                 {
                     log.error("Site located after vc start: " + _start);
