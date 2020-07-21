@@ -132,11 +132,11 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                 return start + ":" + ref.getBaseString();
             }
 
-            public void addSite(VariantContext vc)
+            public void addSite(VariantContext vc, Logger log)
             {
                 Map<Allele, Allele> alleles = _encounteredAlleles.getOrDefault(getEncounteredKey(vc.getStart(), vc.getReference()), new HashMap<>());
                 vc.getAlternateAlleles().forEach(a -> {
-                    Allele translated = extractAlleleForPosition(vc, a);
+                    Allele translated = extractAlleleForPosition(vc, a, log);
                     if (translated != null)
                     {
                         if (!alleles.containsKey(a))
@@ -154,9 +154,15 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                 return _encounteredAlleles.size() > 1;
             }
 
-            protected Allele extractAlleleForPosition(VariantContext vc, Allele a)
+            protected Allele extractAlleleForPosition(VariantContext vc, Allele a, Logger log)
             {
                 int offset = vc.getStart() - _start;
+                if (offset < 0)
+                {
+                    log.error("Site located after vc start: " + _start);
+                    log.error(vc.toStringWithoutGenotypes());
+                    log.error(a.getBaseString());
+                }
 
                 //deletion
                 if (a.length() <= offset)
@@ -264,7 +270,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                             }
 
                             //NOTE: the start position of this SiteAndAlleles might differ from the VC
-                            siteToAllele.get(key).addSite(vc);
+                            siteToAllele.get(key).addSite(vc, ctx.getLogger());
                         }
                     }
                 }
