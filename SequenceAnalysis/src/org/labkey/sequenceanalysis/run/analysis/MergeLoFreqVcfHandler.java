@@ -111,7 +111,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             private final Allele _ref;
 
             Map<String, Map<Allele, Allele>> _encounteredAlleles = new HashMap<>();
-            List<Allele> _alternates;
+            List<Allele> _alternates = new ArrayList<>();
 
             public SiteAndAlleles(String contig, int start, Allele ref)
             {
