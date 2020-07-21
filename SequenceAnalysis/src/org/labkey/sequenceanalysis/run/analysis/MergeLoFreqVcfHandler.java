@@ -256,6 +256,11 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                         //NOTE: deletions spanning this site can also be included, with a start position ahead of this.
                         try (CloseableIterator<VariantContext> it = reader.query(site.getLeft(), site.getRight(), site.getRight()))
                         {
+                            if (!it.hasNext())
+                            {
+                                continue;
+                            }
+
                             VariantContext vc = it.next();
                             if (vc.getAttribute("AF") == null)
                             {
