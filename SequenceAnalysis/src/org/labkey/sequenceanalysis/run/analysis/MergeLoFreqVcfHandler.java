@@ -256,6 +256,13 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                 continue;
                             }
 
+                            if (vc.getStart() > site.getRight())
+                            {
+                                ctx.getLogger().error("Site located after start: " + site.getRight());
+                                ctx.getLogger().error(vc.toStringWithoutGenotypes());
+                                ctx.getLogger().error(so.getFile().getPath());
+                            }
+
                             //NOTE: the start position of this SiteAndAlleles might differ from the VC
                             siteToAllele.get(key).addSite(vc);
                         }
