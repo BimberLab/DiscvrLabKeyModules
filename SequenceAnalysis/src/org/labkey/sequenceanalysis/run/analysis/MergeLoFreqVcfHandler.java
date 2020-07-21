@@ -308,6 +308,10 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
                             String key = getCacheKey(site.getLeft(), site.getRight());
                             SiteAndAlleles siteDef = siteToAllele.get(key);
+                            if (siteDef._alternates.isEmpty())
+                            {
+                                continue;
+                            }
 
                             line.add(site.getLeft());
                             line.add(String.valueOf(site.getRight()));
