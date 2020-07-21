@@ -1331,7 +1331,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         grid.getPlugin('cellediting').completeEdit( );
                         var s = grid.getSelectionModel().getSelection();
 
-                        if (!s.length){
+                        if (!s.length) {
                             Ext4.Msg.hide();
                             Ext4.Msg.alert('Error', 'No records selected');
                             return;
@@ -1344,7 +1344,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                             }
 
                             var originals = [];
-                            for (var i = 0, r; r = s[i]; i++){
+                            for (var i = 0; i < s.length; i++){
+                                var r = s[i];
                                 if (r.get('fileGroupId'))
                                     originals.push(r.get('fileGroupId'));
 
@@ -1393,11 +1394,207 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         }, this, null, defaultVal);
                     }
                 },{
+                    text: 'Regroup By Regex (Advanced)',
+                    scope: this,
+                    handler: function (btn) {
+                        var grid = btn.up('grid');
+                        grid.getPlugin('cellediting').completeEdit();
+                        var s = grid.getSelectionModel().getSelection();
+                        if (!s.length){
+                            Ext4.Msg.hide();
+                            Ext4.Msg.alert('Error', 'No records selected');
+                            return;
+                        }
+
+                        Ext4.create('Ext.window.Window', {
+                            title: 'Regroup Selected Records By RegExp',
+                            bodyStyle: 'padding: 10px;',
+                            width: 500,
+                            items: [{
+                                html: 'This helper allows you to provide a regular expression to extract the file group, and a second expression to extract platformUnit. Any file pairs with the same group will be imported as a single readset. Any files with the same non-null platform unit will be merged. Specifying different platform units can be important for read groups, and downstream operations like MarkDuplicates. Regular expressions will be tested against the first filename in each pair only. For each regex, if not match is found, the original group or platformUnit values is retained.',
+                                border: false
+                            },{
+                                xtype: 'textfield',
+                                fieldLabel: 'Group RegEx',
+                                itemId: 'groupEx',
+                                value: '(.*)_'
+                            },{
+                                xtype: 'ldk-integerfield',
+                                fieldLabel: 'Group Index',
+                                itemId: 'groupNum',
+                                value: 1,
+                                minValue: 0
+                            },{
+                                xtype: 'textfield',
+                                fieldLabel: 'Platform Unit RegEx',
+                                itemId: 'platformEx',
+                                value: '(.*)_'
+                            },{
+                                xtype: 'ldk-integerfield',
+                                fieldLabel: 'Platform Index',
+                                itemId: 'platformNum',
+                                value: 2,
+                                minValue: 0
+                            }],
+                            buttons: [{
+                                text: 'Test',
+                                scope: this,
+                                handler: function (btn) {
+                                    var groupEx = btn.up('window').down('#groupEx').getValue();
+                                    var groupNum = btn.up('window').down('#groupNum').getValue();
+
+                                    var platformEx = btn.up('window').down('#platformEx').getValue();
+                                    var platformNum = btn.up('window').down('#platformNum').getValue();
+
+                                    if (groupEx) {
+                                        groupEx = new RegExp(groupEx);
+                                    }
+
+                                    if (platformEx) {
+                                        platformEx = new RegExp(platformEx);
+                                    }
+
+                                    var rows = [];
+                                    Ext4.Array.forEach(s, function(record){
+                                        var recId = record.get('fileRecord1');
+                                        var data = this.fileNameStore.snapshot || this.fileNameStore.data;
+                                        var fileDataRecIdx = data.findIndexBy(function(r){
+                                            return r.get('id') === recId;
+                                        });
+                                        var fileDataRec = data.getAt(fileDataRecIdx);
+                                        if (!fileDataRec) {
+                                            return;
+                                        }
+
+                                        var val = fileDataRec.get('fileName');
+                                        var row = [val, null, null, record];
+                                        if (groupEx) {
+                                            var m = val.match(groupEx);
+                                            if (m && m.length) {
+                                                if (groupNum && groupNum < m.length) {
+                                                    row[1] = m[groupNum];
+                                                }
+                                            }
+                                        }
+
+                                        if (platformEx) {
+                                            var m = val.match(platformEx);
+                                            if (m && m.length) {
+                                                if (platformNum && platformNum < m.length) {
+                                                    row[2] = m[platformNum];
+                                                }
+                                            }
+                                        }
+
+                                        rows.push(row);
+                                    }, this);
+
+                                    rows.sort(function(a, b){
+                                        if (a[1] > b[1]) return 1;
+                                        if (b[1] > a[1]) return -1;
+
+                                        return 0;
+                                    });
+
+                                    var dataItems = [{
+                                        html: 'File'
+                                    },{
+                                        html: 'Updated Group'
+                                    },{
+                                        html: 'Updated Platform Unit'
+                                    }];
+
+                                    Ext4.Array.forEach(rows, function(r){
+                                        dataItems.push({
+                                            html: r[0]
+                                        });
+
+                                        dataItems.push({
+                                            html: r[1] || ''
+                                        });
+
+                                        dataItems.push({
+                                            html: r[2] || ''
+                                        });
+                                    }, this);
+                                    Ext4.create('Ext.window.Window', {
+                                        title: 'Preview',
+                                        parentWindow: btn.up('window'),
+                                        width: 800,
+                                        bodyStyle: 'padding: 5px',
+                                        defaults: {
+                                            style: 'padding: 5px;',
+                                            border: false
+                                        },
+                                        layout: {
+                                            type: 'table',
+                                            columns: 3
+                                        },
+                                        items: dataItems,
+                                        buttons: [{
+                                            text: 'Make Changes',
+                                            scope: this,
+                                            handler: function (btn) {
+                                                var win = btn.up('window');
+                                                var parentWindow = win.parentWindow;
+                                                win.close();
+
+                                                Ext4.Array.forEach(rows, function(row){
+                                                    if (row[2]) {
+                                                        row[3].set('platformUnit', row[2]);
+                                                    }
+
+                                                    if (row[1]) {
+                                                        row[3].set('fileGroupId', row[1]);
+                                                    }
+                                                }, this);
+
+                                                //clear/populate readsetStore
+                                                var fileGroupIds = [];
+                                                this.readDataStore.each(function(r){
+                                                    fileGroupIds.push(r.get('fileGroupId'));
+                                                }, this);
+                                                fileGroupIds = Ext4.unique(fileGroupIds);
+
+                                                this.readsetStore.removeAll();
+
+                                                if (fileGroupIds.length){
+                                                    var toAdd = [];
+                                                    Ext4.Array.forEach(fileGroupIds, function(id){
+                                                        toAdd.push(this.readsetStore.createModel({
+                                                            fileGroupId: id
+                                                        }));
+                                                    }, this);
+
+                                                    this.readsetStore.add(toAdd);
+                                                }
+
+                                                parentWindow.close();
+                                            }
+                                        },{
+                                            text: 'Abort',
+                                            scope: this,
+                                            handler: function (btn) {
+                                                btn.up('window').close();
+                                            }
+                                        }]
+
+                                    }).show();
+                                }
+                            },{
+                                text: 'Close',
+                                scope: this,
+                                handler: function (btn) {
+                                    btn.up('window').close();
+                                }
+                            }]
+                        }).show();
+                    }
+                },{
                     text: 'Add Missing Readsets',
                     scope: this,
                     handler : function(btn) {
                         var grid = btn.up('grid');
-
 
                         var fileGroupIds = [];
                         this.readDataStore.each(function(r){
