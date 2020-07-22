@@ -125,7 +125,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                 Map<Allele, Allele> map = _encounteredAlleles.get(getEncounteredKey(vc.getStart(), vc.getReference()));
                 if (map == null)
                 {
-                    throw new IllegalArgumentException("Ref not found: " + vc.toStringWithoutGenotypes());
+                    throw new IllegalArgumentException("Ref not found at pos " + _start + ": " + vc.toStringWithoutGenotypes() + ", existing: " + StringUtils.join(_encounteredAlleles.keySet(), ";"));
                 }
 
                 Allele ret = map.get(toCheck);
@@ -149,11 +149,6 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                         _alternates.add(translated);
                 });
                 _encounteredAlleles.put(getEncounteredKey(vc.getStart(), vc.getReference()), alleles);
-            }
-
-            public boolean isMergedRef()
-            {
-                return _encounteredAlleles.size() > 1;
             }
 
             protected Allele extractAlleleForPosition(VariantContext vc, Allele a, Logger log)
@@ -293,7 +288,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             int idx = 0;
             try (CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(output), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
-                writer.writeNext(new String[]{"OutputFileId", "ReadsetId", "Contig", "Start", "End", "Ref", "AltAlleles", "OrigRef", "OrigAlts", "Depth", "RefAF", "AltAFs", "NonRefCount", "AltCounts"});
+                writer.writeNext(new String[]{"OutputFileId", "ReadsetId", "Contig", "Start", "End", "Ref", "AltAlleles", "Depth", "RefAF", "AltAFs", "NonRefCount", "AltCounts"});
 
                 for (Pair<String, Integer> site : whitelistSites)
                 {
@@ -328,8 +323,6 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                 int depth = getReadDepth(so.getFile(), contigToOffset, site.getLeft(), site.getRight());
                                 if (depth < minDepth)
                                 {
-                                    line.add("");
-                                    line.add("");
                                     line.add(String.valueOf(depth));
                                     line.add("ND");
                                     line.add("ND");
@@ -338,8 +331,6 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                 }
                                 else
                                 {
-                                    line.add("");
-                                    line.add("");
                                     line.add(String.valueOf(depth));
                                     line.add("1");
                                     line.add(";0".repeat(siteDef._alternates.size()).substring(1));
@@ -355,10 +346,9 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                             {
                                 Integer siteDepth = null;
                                 Double totalAltAf = 0.0;
-                                Integer totalAltDepth = 0;
+                                int totalAltDepth = 0;
                                 Map<Allele, Double> alleleToAf = new HashMap<>();
                                 Map<Allele, Integer> alleleToDp = new HashMap<>();
-                                Set<Allele> refs = new HashSet<>();
 
                                 while (it.hasNext())
                                 {
@@ -438,35 +428,6 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                 }
 
                                 List<String> toWrite = new ArrayList<>(line);
-                                if (!siteDef.isMergedRef())
-                                {
-                                    toWrite.add("");
-                                    toWrite.add("");
-                                }
-                                else
-                                {
-                                    refs.remove(siteDef._ref);
-                                    if (refs.isEmpty())
-                                    {
-                                        toWrite.add("");
-                                        toWrite.add("");
-                                    }
-                                    else
-                                    {
-                                        toWrite.add(refs.stream().map(Allele::getBaseString).collect(Collectors.joining(";")));
-                                        List<String> alleleSets = new ArrayList<>();
-                                        refs.forEach(r -> {
-                                            if (!siteDef._encounteredAlleles.containsKey(r))
-                                            {
-                                                throw new IllegalArgumentException("Reference not found: " + r.toString() + ", at site: " + siteDef._start + ", all refs: " + refs.stream().map(Allele::toString).collect(Collectors.joining(",")) + ", allowed: " + StringUtils.join(siteDef._encounteredAlleles.keySet(), ","));
-                                            }
-
-                                            alleleSets.add(StringUtils.join(siteDef._encounteredAlleles.get(r).keySet(), ","));
-                                        });
-                                        toWrite.add(StringUtils.join(alleleSets, ";"));
-                                    }
-                                }
-
                                 toWrite.add(String.valueOf(siteDepth));
                                 toWrite.add(String.valueOf(1 - totalAltAf));
 
