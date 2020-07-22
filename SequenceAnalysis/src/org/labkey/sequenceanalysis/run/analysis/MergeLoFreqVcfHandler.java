@@ -128,8 +128,12 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                     throw new IllegalArgumentException("Ref not found at pos " + _start + ": " + vc.toStringWithoutGenotypes() + ", existing: " + StringUtils.join(_encounteredAlleles.keySet(), ";"));
                 }
 
-                Allele ret = map.get(toCheck);
-                return ret == null ? toCheck : ret;
+                if (!map.containsKey(toCheck))
+                {
+                    throw new IllegalArgumentException("Allele not found at pos " + _start + ": " + vc.toStringWithoutGenotypes() + " for allele: " + toCheck.getBaseString() + ", existing: " + map.keySet().stream().map(x -> x.getBaseString() + "-" + map.get(x).getBaseString()).collect(Collectors.joining(";")));
+                }
+
+                return map.get(toCheck);
             }
 
             private String getEncounteredKey(int start, Allele ref)
@@ -142,8 +146,12 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                 Map<Allele, Allele> alleles = _encounteredAlleles.getOrDefault(getEncounteredKey(vc.getStart(), vc.getReference()), new HashMap<>());
                 vc.getAlternateAlleles().forEach(a -> {
                     Allele translated = extractAlleleForPosition(vc, a, log);
-                    if (!alleles.containsKey(a))
-                        alleles.put(a, translated);
+                    if (alleles.containsKey(a) && alleles.get(a) != null && !alleles.get(a).equals(translated))
+                    {
+                        throw new IllegalArgumentException("Translated allele does not match at pos " + _start + ": " + vc.toStringWithoutGenotypes() + " for allele: " + a.getBaseString() + ", existing: " + alleles.keySet().stream().map(x -> x.getBaseString() + "-" + alleles.get(x).getBaseString()).collect(Collectors.joining(";")));
+                    }
+
+                    alleles.put(a, translated);
 
                     if (translated != null && !_alternates.contains(translated))
                         _alternates.add(translated);
