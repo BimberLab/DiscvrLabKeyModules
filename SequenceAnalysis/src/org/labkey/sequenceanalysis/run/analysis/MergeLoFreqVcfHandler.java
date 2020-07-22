@@ -122,8 +122,13 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
             public Allele getRenamedAllele(VariantContext vc, Allele toCheck)
             {
-                Allele ret = _encounteredAlleles.get(getEncounteredKey(vc.getStart(), vc.getReference())).get(toCheck);
+                Map<Allele, Allele> map = _encounteredAlleles.get(getEncounteredKey(vc.getStart(), vc.getReference()));
+                if (map == null)
+                {
+                    throw new IllegalArgumentException("Ref not found: " + vc.toStringWithoutGenotypes());
+                }
 
+                Allele ret = map.get(toCheck);
                 return ret == null ? toCheck : ret;
             }
 
@@ -137,14 +142,11 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                 Map<Allele, Allele> alleles = _encounteredAlleles.getOrDefault(getEncounteredKey(vc.getStart(), vc.getReference()), new HashMap<>());
                 vc.getAlternateAlleles().forEach(a -> {
                     Allele translated = extractAlleleForPosition(vc, a, log);
-                    if (translated != null)
-                    {
-                        if (!alleles.containsKey(a))
-                            alleles.put(a, translated);
+                    if (!alleles.containsKey(a))
+                        alleles.put(a, translated);
 
-                        if (!_alternates.contains(translated))
-                            _alternates.add(translated);
-                    }
+                    if (translated != null && !_alternates.contains(translated))
+                        _alternates.add(translated);
                 });
                 _encounteredAlleles.put(getEncounteredKey(vc.getStart(), vc.getReference()), alleles);
             }
@@ -291,7 +293,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             int idx = 0;
             try (CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(output), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
-                writer.writeNext(new String[]{"OutputFileId", "ReadsetId", "Contig", "Start", "End", "Ref", "AltAlleles", "OrigRef", "OrigAlts", "Depth", "RefAF", "AltAFs"});
+                writer.writeNext(new String[]{"OutputFileId", "ReadsetId", "Contig", "Start", "End", "Ref", "AltAlleles", "OrigRef", "OrigAlts", "Depth", "RefAF", "AltAFs", "NonRefCount", "AltCounts"});
 
                 for (Pair<String, Integer> site : whitelistSites)
                 {
@@ -331,6 +333,8 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                     line.add(String.valueOf(depth));
                                     line.add("ND");
                                     line.add("ND");
+                                    line.add("ND");
+                                    line.add("ND");
                                 }
                                 else
                                 {
@@ -339,6 +343,9 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                     line.add(String.valueOf(depth));
                                     line.add("1");
                                     line.add(";0".repeat(siteDef._alternates.size()).substring(1));
+
+                                    line.add("0");
+                                    line.add(";0".repeat(siteDef._alternates.size()).substring(1));
                                 }
 
                                 writer.writeNext(line.toArray(new String[]{}));
@@ -346,9 +353,11 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                             }
                             else
                             {
-                                Integer depth = null;
+                                Integer siteDepth = null;
                                 Double totalAltAf = 0.0;
+                                Integer totalAltDepth = 0;
                                 Map<Allele, Double> alleleToAf = new HashMap<>();
+                                Map<Allele, Integer> alleleToDp = new HashMap<>();
                                 Set<Allele> refs = new HashSet<>();
 
                                 while (it.hasNext())
@@ -360,9 +369,19 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                         throw new PipelineJobException("Unexpected variant start.  site: " + siteDef._start + " / vc: " + vc.getStart() + " / " + so.getFile().getPath());
                                     }
 
+                                    if (vc.getAlternateAlleles().size() > 1)
+                                    {
+                                        throw new PipelineJobException("Expected LoFreq VCFs to have only one alternate allele per line.  line " + key + " in file: " + so.getFile().getPath());
+                                    }
+
                                     if (vc.getAttribute("GATK_DP") == null)
                                     {
                                         throw new PipelineJobException("Expected GATK_DP annotation on line " + key + " in file: " + so.getFile().getPath());
+                                    }
+
+                                    if (vc.getAttribute("DP") == null)
+                                    {
+                                        throw new PipelineJobException("Expected DP annotation on line " + key + " in file: " + so.getFile().getPath());
                                     }
 
                                     if (vc.getAttribute("AF") == null)
@@ -370,8 +389,9 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                         throw new PipelineJobException("Expected AF annotation on line " + key + " in file: " + so.getFile().getPath());
                                     }
 
-                                    depth = vc.getAttributeAsInt("GATK_DP", 0);
-                                    if (depth < minDepth)
+                                    siteDepth = vc.getAttributeAsInt("GATK_DP", 0);
+                                    int aDepth = vc.getAttributeAsInt("DP", 0);
+                                    if (siteDepth < minDepth)
                                     {
                                         vc.getAlternateAlleles().forEach(a -> {
                                             Allele translatedAllele = siteDef.getRenamedAllele(vc, a);
@@ -379,31 +399,41 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                             {
                                                 double val = alleleToAf.getOrDefault(a, NO_DATA_VAL);
                                                 alleleToAf.put(a, val);
+
+                                                int val1 = alleleToDp.getOrDefault(a, (int)NO_DATA_VAL);
+                                                alleleToDp.put(a, val1);
                                             }
                                         });
                                     }
                                     else
                                     {
-                                        List<Double> afs = vc.getAttributeAsDoubleList("AF", 0);
-                                        if (afs.size() != vc.getAlternateAlleles().size())
+                                        Double af = vc.getAttributeAsDouble("AF", 0.0);
+
+                                        Allele a = vc.getAlternateAlleles().get(0);
+                                        a = siteDef.getRenamedAllele(vc, a);
+                                        if (a != null)
                                         {
-                                            throw new PipelineJobException("Expected AF annotation on line " + key + " in file: " + so.getFile().getPath() + " to be of length: " + vc.getAlternateAlleles().size());
-                                        }
+                                            totalAltAf += af;
+                                            totalAltDepth += aDepth;
 
-                                        totalAltAf += afs.stream().reduce(0.0, Double::sum);
-                                        vc.getAlternateAlleles().forEach(a -> {
-                                            int aIdx = vc.getAlternateAlleles().indexOf(a);
-
-                                            a = siteDef.getRenamedAllele(vc, a);
                                             double val = alleleToAf.getOrDefault(a, 0.0);
                                             if (val == NO_DATA_VAL)
                                             {
                                                 val = 0;
                                             }
 
-                                            val = val + afs.get(aIdx);
+                                            val = val + af;
                                             alleleToAf.put(a, val);
-                                        });
+
+                                            int val1 = alleleToDp.getOrDefault(a, 0);
+                                            if (val1 == NO_DATA_VAL)
+                                            {
+                                                val1 = 0;
+                                            }
+
+                                            val1 = val1 + aDepth;
+                                            alleleToDp.put(a, val1);
+                                        }
                                     }
                                 }
 
@@ -433,21 +463,28 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
                                             alleleSets.add(StringUtils.join(siteDef._encounteredAlleles.get(r).keySet(), ","));
                                         });
-                                        toWrite.add(alleleSets.stream().collect(Collectors.joining(";")));
+                                        toWrite.add(StringUtils.join(alleleSets, ";"));
                                     }
                                 }
 
-                                toWrite.add(String.valueOf(depth));
+                                toWrite.add(String.valueOf(siteDepth));
                                 toWrite.add(String.valueOf(1 - totalAltAf));
 
                                 //Add AFs in order:
                                 List<Object> toAdd = new ArrayList<>();
+                                List<Object> toAddDp = new ArrayList<>();
                                 for (Allele a : siteDef._alternates)
                                 {
                                     double af = alleleToAf.getOrDefault(a, 0.0);
                                     toAdd.add(af == NO_DATA_VAL ? "ND" : af);
+
+                                    int dp = alleleToDp.getOrDefault(a, 0);
+                                    toAddDp.add(dp == NO_DATA_VAL ? "ND" : dp);
                                 }
                                 toWrite.add(toAdd.stream().map(String::valueOf).collect(Collectors.joining(";")));
+
+                                toWrite.add(String.valueOf(totalAltDepth));
+                                toWrite.add(toAddDp.stream().map(String::valueOf).collect(Collectors.joining(";")));
 
                                 writer.writeNext(toWrite.toArray(new String[]{}));
                                 idx++;
