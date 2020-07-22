@@ -261,26 +261,24 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                         //NOTE: deletions spanning this site can also be included, with a start position ahead of this.
                         try (CloseableIterator<VariantContext> it = reader.query(site.getLeft(), site.getRight(), site.getRight()))
                         {
-                            if (!it.hasNext())
+                            while (it.hasNext())
                             {
-                                continue;
-                            }
+                                VariantContext vc = it.next();
+                                if (vc.getAttribute("AF") == null)
+                                {
+                                    continue;
+                                }
 
-                            VariantContext vc = it.next();
-                            if (vc.getAttribute("AF") == null)
-                            {
-                                continue;
-                            }
+                                if (vc.getStart() > site.getRight())
+                                {
+                                    ctx.getLogger().error("Site located after start: " + site.getRight());
+                                    ctx.getLogger().error(vc.toStringWithoutGenotypes());
+                                    ctx.getLogger().error(so.getFile().getPath());
+                                }
 
-                            if (vc.getStart() > site.getRight())
-                            {
-                                ctx.getLogger().error("Site located after start: " + site.getRight());
-                                ctx.getLogger().error(vc.toStringWithoutGenotypes());
-                                ctx.getLogger().error(so.getFile().getPath());
+                                //NOTE: the start position of this SiteAndAlleles might differ from the VC
+                                siteToAllele.get(key).addSite(vc, ctx.getLogger());
                             }
-
-                            //NOTE: the start position of this SiteAndAlleles might differ from the VC
-                            siteToAllele.get(key).addSite(vc, ctx.getLogger());
                         }
                     }
                 }
