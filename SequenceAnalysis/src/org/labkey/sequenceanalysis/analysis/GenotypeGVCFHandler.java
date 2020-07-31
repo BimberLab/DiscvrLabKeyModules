@@ -367,6 +367,12 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 });
             }
 
+            if (ctx.getParams().optBoolean("disableFileLocking", false))
+            {
+                ctx.getLogger().debug("Disabling file locking for TileDB");
+                wrapper.addToEnvironment("TILEDB_DISABLE_FILE_LOCKING", "1");
+            }
+
             wrapper.execute(genome.getSourceFastaFile(), outputVcf, toolParams, inputVcf);
 
             action.addOutput(outputVcf, "VCF", outputVcf.exists(), true);

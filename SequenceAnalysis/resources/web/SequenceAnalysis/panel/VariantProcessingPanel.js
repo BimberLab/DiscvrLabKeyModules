@@ -238,6 +238,12 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 				defaultValue: false
 			},{
 				fieldXtype: 'checkbox',
+				name: 'disableFileLocking',
+				label: 'Disable File Locking',
+				description: 'This applies to GenomicsDB inputs only. Certain filesystems do not support file locking, including NFS and Lustre.  If your data will be processed on a filesystem that does not support locking, check this.',
+				defaultValue: true
+			},{
+				fieldXtype: 'checkbox',
 				name: 'doCopyInputs',
 				label: 'Copy gVCFs Locally',
 				description: 'If checked, the gVCFs will be copied to the local working directory prior to running GenotypeVCFs.  This can be a good idea if a large number of input files are used.',
