@@ -415,9 +415,9 @@ public class JBrowseController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
-            return root.addChild(_title);
+            root.addChild(_title);
         }
     }
 

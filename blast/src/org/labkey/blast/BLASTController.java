@@ -88,6 +88,7 @@ public class BLASTController extends SpringActionController
     @RequiresPermission(AdminPermission.class)
     public class GetSettingsAction extends ReadOnlyApiAction<Object>
     {
+        @Override
         public ApiResponse execute(Object form, BindException errors)
         {
             Map<String, Object> resultProperties = new HashMap<>();
@@ -208,7 +209,6 @@ public class BLASTController extends SpringActionController
 
         protected File getTargetFile(String filename) throws IOException
         {
-
             AssayFileWriter writer = new AssayFileWriter();
             try
             {
@@ -547,9 +547,8 @@ public class BLASTController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
-            return root;
         }
     }
 
