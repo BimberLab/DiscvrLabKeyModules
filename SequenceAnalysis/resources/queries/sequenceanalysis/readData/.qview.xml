@@ -13,9 +13,13 @@
        <column name="description" />
        <column name="sra_accession" />
        <column name="archived" />
-
+       <column name="runid/JobId">
+           <properties>
+               <property name="columnTitle" value="Job Id"/>
+           </properties>
+       </column>
        <column name="created" />
-       <column name="workbook" />
+       <column name="readset/workbook" />
    </columns>
    <sorts>
        <sort column="readset" />

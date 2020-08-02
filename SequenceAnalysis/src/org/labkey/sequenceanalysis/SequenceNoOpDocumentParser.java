@@ -44,7 +44,8 @@ public class SequenceNoOpDocumentParser extends AbstractDocumentParser
                 SequenceUtil.FILETYPE.vcf.getFileType().isType(resource.getFile()) ||
                 SequenceUtil.FILETYPE.bam.getFileType().isType(resource.getFile()) ||
                 RDataType.isType(resource.getFile()) ||
-                isUnderAnalysisDir(resource);
+                isUnderAnalysisDir(resource) ||
+                isTileDB(resource);
     }
 
     private boolean isUnderAnalysisDir(WebdavResource resource)
@@ -59,6 +60,11 @@ public class SequenceNoOpDocumentParser extends AbstractDocumentParser
                 resource.getFile().getPath().contains("/.referenceLibraries/") ||
                 resource.getFile().getPath().contains("/refSequenceImport/") ||
                 resource.getFile().getPath().contains("/sequenceOutputPipeline/"));
+    }
+
+    private boolean isTileDB(WebdavResource resource)
+    {
+        return resource.getFile() != null && resource.getFile().getPath().contains(".tbd") && resource.getFile().getPath().contains(".gbd");
     }
 }
 

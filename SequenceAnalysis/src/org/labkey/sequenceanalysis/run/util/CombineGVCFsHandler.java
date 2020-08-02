@@ -148,7 +148,7 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
             if (doCopyLocal)
             {
                 ctx.getLogger().info("making local copies of gVCFs");
-                vcfsToProcess.addAll(GenotypeGVCFsWrapper.copyVcfsLocally(inputVcfs, toDelete, GenotypeGVCFHandler.getLocalCopyDir(ctx, true), ctx.getLogger(), isResume));
+                vcfsToProcess.addAll(GenotypeGVCFsWrapper.copyVcfsLocally(ctx, inputVcfs, toDelete, isResume));
             }
             else
             {

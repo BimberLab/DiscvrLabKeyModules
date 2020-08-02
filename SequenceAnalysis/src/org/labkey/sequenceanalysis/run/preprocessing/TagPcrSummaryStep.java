@@ -59,7 +59,6 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
 
     private static final String CACHE_KEY = "tagPcrBlastMap";
 
-    private static final String MIN_ALIGNMENTS = "minAlignments";
     private static final String OUTPUT_GENBANK = "outputGenbank";
     private static final String DESIGN_PRIMERS = "designPrimers";
 
@@ -68,18 +67,22 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
         public Provider()
         {
             super("Tag-PCR", "Tag-PCR Integration Sites", null, "This will produce a table summarizing unique alignments in this BAM.  It was originally created to summarize genomic insertions.", Arrays.asList(
-                    ToolParameterDescriptor.create(MIN_ALIGNMENTS, "Min Alignments", "The minimum number of alignments to export a position", "ldk-integerfield", null, 2),
                     ToolParameterDescriptor.create(OUTPUT_GENBANK, "Create Genbank Output", "If selected, this will output a genbank file summarizing amplicons and primers", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--insert-type"), "insertType", "Insert Type", "The type of insert to detect.", "ldk-simplecombo", new JSONObject(){{
+                        put("storeValues", "PiggyBac;Lentivirus");
+                        put("allowBlank", false);
+                    }}, "PiggyBac"),
                     ToolParameterDescriptor.create(DESIGN_PRIMERS, "Design Primers", "If selected, Primer3 will be used to design primers to flank integration sites", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--reads-to-output"), "readsToOutput", "Reads To Output Per Site", "If this is non-zero, up to this many reads per integration site will be written to a FASTA file.  This can serve as a way to verify the actual junction border.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, 25),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-mf"), "minFraction", "Min Faction To Output", "Only sites with at least this fraction of reads will be output.", "ldk-integerfield", new JSONObject(){{
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-mf"), "minFraction", "Min Fraction To Output", "Only sites with at least this fraction of reads will be output.", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
+                        put("decimalPrecision", 5);
                     }}, 0),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-ma"), "minAlignment", "Min Alignments To Output", "Only sites with at least this many alignments will be output.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
