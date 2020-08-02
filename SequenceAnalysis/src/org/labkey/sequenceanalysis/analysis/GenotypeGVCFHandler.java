@@ -301,7 +301,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             if (doCopyLocal)
             {
                 ctx.getLogger().info("making local copies of gVCF/GenomicsDB files prior to genotyping");
-                filesToProcess.addAll(GenotypeGVCFsWrapper.copyVcfsLocally(inputFiles, toDelete, GenotypeGVCFHandler.getLocalCopyDir(ctx, true), ctx.getLogger(), outputVcf.exists()));
+                filesToProcess.addAll(GenotypeGVCFsWrapper.copyVcfsLocally(ctx, inputFiles, toDelete, outputVcf.exists()));
             }
             else
             {
@@ -365,6 +365,12 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                     toolParams.add("-L");
                     toolParams.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
                 });
+            }
+
+            if (ctx.getParams().optBoolean("disableFileLocking", false))
+            {
+                ctx.getLogger().debug("Disabling file locking for TileDB");
+                wrapper.addToEnvironment("TILEDB_DISABLE_FILE_LOCKING", "1");
             }
 
             wrapper.execute(genome.getSourceFastaFile(), outputVcf, toolParams, inputVcf);
@@ -457,12 +463,11 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
 
     public static void doCopyGvcfLocally(List<SequenceOutputFile> inputFiles, JobContext ctx) throws PipelineJobException
     {
-        VariantProcessingJob vpj = (VariantProcessingJob)ctx.getJob();
         List<File> inputVCFs = new ArrayList<>();
         inputFiles.forEach(f -> inputVCFs.add(f.getFile()));
 
         ctx.getLogger().info("making local copies of gVCFs");
-        GenotypeGVCFsWrapper.copyVcfsLocally(inputVCFs, new ArrayList<>(), getLocalCopyDir(ctx, true), ctx.getLogger(), false);
+        GenotypeGVCFsWrapper.copyVcfsLocally(ctx, inputVCFs, new ArrayList<>(), false);
     }
 
     public static File getLocalCopyDir(JobContext ctx, boolean createIfDoesntExist)
