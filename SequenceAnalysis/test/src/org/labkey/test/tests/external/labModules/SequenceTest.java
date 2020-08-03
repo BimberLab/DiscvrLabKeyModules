@@ -1541,7 +1541,7 @@ public class SequenceTest extends BaseWebDriverTest
             String line;
             while ((line = reader.readLine()) != null)
             {
-                writer.println(line.replaceAll("SIVmac239", "SIVmac239_Test"));
+                writer.println(line.replaceAll("SIVmac239", genomeName));
             }
         }
 
