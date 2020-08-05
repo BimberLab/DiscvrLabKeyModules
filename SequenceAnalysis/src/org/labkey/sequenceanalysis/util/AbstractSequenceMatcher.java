@@ -4,7 +4,8 @@ import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.fastq.FastqWriter;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.model.SequenceTag;
 

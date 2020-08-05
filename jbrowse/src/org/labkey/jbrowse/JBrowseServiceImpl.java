@@ -1,6 +1,7 @@
 package org.labkey.jbrowse;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.Container;
@@ -27,7 +28,7 @@ import java.util.Set;
 public class JBrowseServiceImpl extends JBrowseService
 {
     private static final JBrowseServiceImpl _instance = new JBrowseServiceImpl();
-    private final Logger _log = Logger.getLogger(JBrowseServiceImpl.class);
+    private final Logger _log = LogManager.getLogger(JBrowseServiceImpl.class);
 
     private Set<DemographicsSource> _sources = new HashSet<>();
 

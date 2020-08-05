@@ -18,7 +18,8 @@ package org.labkey.blast;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -214,7 +215,7 @@ public class BLASTManager
             Container dbContainer = getContainerForDatabase(job.getDatabaseId());
             try
             {
-                BLASTWrapper wrapper = new BLASTWrapper(Logger.getLogger(BLASTManager.class));
+                BLASTWrapper wrapper = new BLASTWrapper(LogManager.getLogger(BLASTManager.class));
                 wrapper.runBlastN(job.getDatabaseId(), job.getExpectedInputFile(), job.getExpectedOutputFile(), job.getParamMap(), null, BLASTManager.get().getDatabaseDir(dbContainer, false));
                 job.setComplete(u, null);
             }

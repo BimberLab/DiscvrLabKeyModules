@@ -1,6 +1,7 @@
 package org.labkey.jbrowse.model;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;

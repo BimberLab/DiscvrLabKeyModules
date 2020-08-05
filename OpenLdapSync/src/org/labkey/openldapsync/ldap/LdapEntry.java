@@ -4,7 +4,8 @@ import org.apache.directory.api.ldap.model.entry.Attribute;
 import org.apache.directory.api.ldap.model.entry.Entry;
 import org.apache.directory.api.ldap.model.exception.LdapInvalidAttributeValueException;
 import org.apache.directory.api.ldap.model.name.Dn;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.labkey.api.security.ValidEmail;
 
 /**
@@ -15,7 +16,7 @@ import org.labkey.api.security.ValidEmail;
  */
 public class LdapEntry
 {
-    private static final Logger _log = Logger.getLogger(LdapEntry.class);
+    private static final Logger _log = LogManager.getLogger(LdapEntry.class);
 
     private Entry _entry;
     protected LdapSettings _settings;

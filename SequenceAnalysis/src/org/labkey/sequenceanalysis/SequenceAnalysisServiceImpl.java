@@ -6,7 +6,8 @@ import htsjdk.tribble.index.IndexFactory;
 import htsjdk.variant.vcf.VCFCodec;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -73,7 +74,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
 {
     private static SequenceAnalysisServiceImpl _instance = new SequenceAnalysisServiceImpl();
 
-    private final Logger _log = Logger.getLogger(SequenceAnalysisServiceImpl.class);
+    private final Logger _log = LogManager.getLogger(SequenceAnalysisServiceImpl.class);
     private Set<GenomeTrigger> _genomeTriggers = new HashSet<>();
     private Set<SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>> _fileHandlers = new HashSet<>();
     private Set<SequenceOutputHandler<SequenceOutputHandler.SequenceReadsetProcessor>> _readsetHandlers = new HashSet<>();

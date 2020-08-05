@@ -2,7 +2,8 @@ package org.labkey.sequenceanalysis.run.analysis;
 
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.reference.ReferenceSequence;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.security.User;

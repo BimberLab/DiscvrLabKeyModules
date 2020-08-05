@@ -8,6 +8,8 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.util.Interval;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -306,6 +308,8 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
 
     public static class TestCase extends Assert
     {
+        private static final Logger _log = LogManager.getLogger(SequenceAlignmentTask.TestCase.class);
+
         @Test
         public void serializeTest() throws Exception
         {

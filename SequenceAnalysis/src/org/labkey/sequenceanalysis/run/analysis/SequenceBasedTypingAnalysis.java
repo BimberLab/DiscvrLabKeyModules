@@ -2,7 +2,8 @@ package org.labkey.sequenceanalysis.run.analysis;
 
 import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.filter.DuplicateReadFilter;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.json.JSONObject;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SQLFragment;

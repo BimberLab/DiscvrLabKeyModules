@@ -1,7 +1,8 @@
 package org.labkey.sequenceanalysis.query;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.biojava3.core.sequence.DNASequence;
 import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
 import org.biojava3.core.sequence.compound.AmbiguityRNACompoundSet;
@@ -33,7 +34,7 @@ public class SequenceTriggerHelper
 {
     private Container _container = null;
     private User _user = null;
-    private static final Logger _log = Logger.getLogger(SequenceTriggerHelper.class);
+    private static final Logger _log = LogManager.getLogger(SequenceTriggerHelper.class);
     private TableInfo _refNts = null;
 
     private static final TranscriptionEngine _engine = new TranscriptionEngine.Builder().dnaCompounds(AmbiguityDNACompoundSet.getDNACompoundSet()).rnaCompounds(AmbiguityRNACompoundSet.getRNACompoundSet()).initMet(false).trimStop(false).build();

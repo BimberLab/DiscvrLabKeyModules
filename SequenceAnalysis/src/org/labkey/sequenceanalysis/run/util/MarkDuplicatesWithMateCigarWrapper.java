@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.run.util;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 /**
  * Created by bimber on 5/5/2016.

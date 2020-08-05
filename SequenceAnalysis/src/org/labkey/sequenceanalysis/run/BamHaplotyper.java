@@ -9,7 +9,8 @@ import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.Interval;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.data.CompareType;
@@ -46,7 +47,7 @@ import java.util.TreeSet;
  */
 public class BamHaplotyper
 {
-    private static final Logger _log = Logger.getLogger(BamHaplotyper.class);
+    private static final Logger _log = LogManager.getLogger(BamHaplotyper.class);
     private User _u;
 
     public BamHaplotyper(User u)

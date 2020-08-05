@@ -13,7 +13,8 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.AfterClass;
@@ -218,7 +219,7 @@ public class SequenceIntegrationTests
 
         protected Boolean _isExternalPipelineEnabled = null;
 
-        protected static final Logger _log = Logger.getLogger(AbstractPipelineTestCase.class);
+        protected static final Logger _log = LogManager.getLogger(AbstractPipelineTestCase.class);
 
         protected static boolean doSkipCleanup()
         {

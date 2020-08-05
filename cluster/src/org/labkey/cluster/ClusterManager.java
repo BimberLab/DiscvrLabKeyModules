@@ -17,7 +17,8 @@
 package org.labkey.cluster;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.module.Module;
@@ -38,7 +39,7 @@ import org.quartz.impl.StdSchedulerFactory;
 public class ClusterManager
 {
     private static final ClusterManager _instance = new ClusterManager();
-    private static final Logger _log = Logger.getLogger(ClusterManager.class);
+    private static final Logger _log = LogManager.getLogger(ClusterManager.class);
     private JobDetail _job = null;
 
     public final static String PREVENT_CLUSTER_INTERACTION = "PreventClusterInteraction";

@@ -9,7 +9,8 @@ import htsjdk.variant.vcf.VCFHeader;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
@@ -801,7 +802,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
     public static class TestCase extends Assert
     {
-        private static final Logger _log = Logger.getLogger(ProcessVariantsHandler.TestCase.class);
+        private static final Logger _log = LogManager.getLogger(ProcessVariantsHandler.TestCase.class);
 
         @Test
         public void serializeTest() throws Exception

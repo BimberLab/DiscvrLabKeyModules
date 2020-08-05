@@ -6,7 +6,8 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeaderLine;
 import htsjdk.variant.vcf.VCFHeaderLineType;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.broadinstitute.gatk.engine.GenomeAnalysisEngine;
 import org.broadinstitute.gatk.engine.samples.SampleDB;
 import org.broadinstitute.gatk.engine.walkers.Walker;
@@ -23,7 +24,7 @@ import java.util.*;
  * Created by bimber on 3/13/2017.
  */
 public class MendelianViolationBySample extends GenotypeAnnotation {
-    private final static Logger logger = Logger.getLogger(MendelianViolationBySample.class);
+    private final static Logger logger = LogManager.getLogger(MendelianViolationBySample.class);
     private double minGenotypeQuality = 10.0;
     private SampleDB sampleDB = null;
     private Boolean isVariantAnnotator = null;

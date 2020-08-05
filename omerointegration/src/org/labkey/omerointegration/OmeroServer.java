@@ -14,7 +14,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.util.Path;
@@ -29,7 +30,7 @@ import java.net.URL;
  */
 public class OmeroServer
 {
-    private static final Logger _log = Logger.getLogger(OmeroServer.class);
+    private static final Logger _log = LogManager.getLogger(OmeroServer.class);
     private Container _container;
     private static final HttpClientConnectionManager _connectionManager = new PoolingHttpClientConnectionManager();
 

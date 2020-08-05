@@ -1,7 +1,8 @@
 package org.labkey.cluster.pipeline;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.cluster.ClusterResourceAllocator;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
@@ -32,7 +33,7 @@ import java.util.Set;
 public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmExecutionEngineConfig>
 {
     public static String TYPE = "SlurmEngine";
-    protected static final Logger _log = Logger.getLogger(SlurmExecutionEngine.class);
+    protected static final Logger _log = LogManager.getLogger(SlurmExecutionEngine.class);
 
     public SlurmExecutionEngine(SlurmExecutionEngineConfig config)
     {

@@ -7,7 +7,8 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.broadinstitute.gatk.tools.walkers.annotator.interfaces.AnnotatorCompatible;
 import org.broadinstitute.gatk.tools.walkers.annotator.interfaces.GenotypeAnnotation;
 import org.broadinstitute.gatk.tools.walkers.annotator.interfaces.InfoFieldAnnotation;
@@ -24,7 +25,7 @@ import java.util.*;
  * Created by bimber on 4/20/2017.
  */
 public class GenotypeConcordanceBySite extends InfoFieldAnnotation implements RodRequiringAnnotation {
-    private final static Logger logger = Logger.getLogger(GenotypeConcordanceBySite.class);
+    private final static Logger logger = LogManager.getLogger(GenotypeConcordanceBySite.class);
 
     private boolean foundRodBinding = false;
     private RodBinding<VariantContext> rodBinding = null;

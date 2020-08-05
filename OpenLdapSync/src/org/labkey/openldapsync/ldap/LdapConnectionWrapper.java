@@ -14,7 +14,8 @@ import org.apache.directory.api.ldap.model.name.Rdn;
 import org.apache.directory.ldap.client.api.DefaultPoolableLdapConnectionFactory;
 import org.apache.directory.ldap.client.api.LdapConnection;
 import org.apache.directory.ldap.client.api.LdapConnectionConfig;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,7 +35,7 @@ public class LdapConnectionWrapper
     private LdapConnectionConfig _cfg = null;
     private LdapConnection _connection = null;
     private LdapSettings _settings;
-    private static final Logger _log = Logger.getLogger(LdapConnectionWrapper.class);
+    private static final Logger _log = LogManager.getLogger(LdapConnectionWrapper.class);
     private boolean doLog = false;
 
     public LdapConnectionWrapper() throws LdapException

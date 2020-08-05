@@ -2,7 +2,8 @@ package org.labkey.sequenceanalysis;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DeferredUpgrade;
@@ -26,7 +27,7 @@ import java.util.Map;
  */
 public class SequenceAnalysisUpgradeCode implements UpgradeCode
 {
-    private static final Logger _log = Logger.getLogger(SequenceAnalysisUpgradeCode.class);
+    private static final Logger _log = LogManager.getLogger(SequenceAnalysisUpgradeCode.class);
 
     /** called at 12.277-12.278 */
     @SuppressWarnings({"UnusedDeclaration"})

@@ -8,7 +8,8 @@ import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFHeaderLine;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.broadinstitute.gatk.engine.GenomeAnalysisEngine;
 import org.broadinstitute.gatk.engine.samples.Gender;
 import org.broadinstitute.gatk.engine.samples.Sample;
@@ -42,7 +43,7 @@ import java.util.*;
 
 public class MendelianViolationCount extends InfoFieldAnnotation implements RodRequiringAnnotation {
 
-    private final static Logger logger = Logger.getLogger(MendelianViolationCount.class);
+    private final static Logger logger = LogManager.getLogger(MendelianViolationCount.class);
     public static final String MV_NUM = "MV_NUM";
     public static final String MV_SAMPLES = "MV_SAMPLES";
     private double minGenotypeQuality = 10.0;

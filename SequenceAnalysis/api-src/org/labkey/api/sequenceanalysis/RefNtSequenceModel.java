@@ -17,7 +17,8 @@ package org.labkey.api.sequenceanalysis;
 
 import htsjdk.samtools.util.StringUtil;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -54,7 +55,7 @@ import java.util.zip.GZIPOutputStream;
  */
 public class RefNtSequenceModel implements Serializable
 {
-    private static final Logger _log = Logger.getLogger(RefNtSequenceModel.class);
+    private static final Logger _log = LogManager.getLogger(RefNtSequenceModel.class);
 
     private int _rowid;
     private String _name;

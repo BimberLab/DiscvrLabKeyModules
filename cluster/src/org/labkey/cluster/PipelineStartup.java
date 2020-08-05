@@ -1,6 +1,7 @@
 package org.labkey.cluster;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.labkey.api.cluster.ClusterService;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.RemoteExecutionEngine;
@@ -12,7 +13,7 @@ import org.labkey.cluster.pipeline.ClusterPipelineJob;
  */
 public class PipelineStartup
 {
-    private static final Logger _log = Logger.getLogger(PipelineStartup.class);
+    private static final Logger _log = LogManager.getLogger(PipelineStartup.class);
     private static boolean _hasRegistered = false;
 
     public PipelineStartup()

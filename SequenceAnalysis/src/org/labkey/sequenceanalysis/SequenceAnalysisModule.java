@@ -15,7 +15,8 @@
 
 package org.labkey.sequenceanalysis;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
@@ -144,7 +145,7 @@ import java.util.Set;
 
 public class SequenceAnalysisModule extends ExtendedSimpleModule
 {
-    private static final Logger _log = Logger.getLogger(SequenceAnalysisModule.class);
+    private static final Logger _log = LogManager.getLogger(SequenceAnalysisModule.class);
 
     public static final String NAME = "SequenceAnalysis";
     public static final String CONTROLLER_NAME = "sequenceanalysis";

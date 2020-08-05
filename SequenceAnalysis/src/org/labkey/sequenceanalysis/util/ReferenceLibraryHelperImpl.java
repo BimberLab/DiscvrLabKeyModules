@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.util;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;

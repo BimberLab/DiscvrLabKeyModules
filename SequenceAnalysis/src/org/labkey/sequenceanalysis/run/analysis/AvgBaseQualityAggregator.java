@@ -24,7 +24,8 @@ import htsjdk.samtools.filter.SamRecordFilter;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.SamLocusIterator;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.labkey.api.pipeline.PipelineJobException;
 
 import java.io.File;

@@ -1,7 +1,8 @@
 package org.labkey.cluster.pipeline;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.cluster.ClusterResourceAllocator;
 import org.labkey.api.data.Container;
@@ -29,7 +30,7 @@ import java.util.Set;
 public class HTCondorExecutionEngine extends AbstractClusterExecutionEngine<HTCondorExecutionEngineConfig>
 {
     public static String TYPE = "HTCondorEngine";
-    protected static final Logger _log = Logger.getLogger(HTCondorExecutionEngine.class);
+    protected static final Logger _log = LogManager.getLogger(HTCondorExecutionEngine.class);
 
     public HTCondorExecutionEngine(HTCondorExecutionEngineConfig config)
     {

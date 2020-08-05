@@ -23,7 +23,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.biojava3.core.sequence.DNASequence;
 import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
 import org.biojava3.core.sequence.compound.NucleotideCompound;
@@ -204,7 +205,7 @@ import static org.labkey.sequenceanalysis.SequenceIntegrationTests.PIPELINE_PROP
 
 public class SequenceAnalysisController extends SpringActionController
 {
-    private static final Logger _log = Logger.getLogger(SequenceAnalysisController.class);
+    private static final Logger _log = LogManager.getLogger(SequenceAnalysisController.class);
     private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(SequenceAnalysisController.class);
 
     public final static String CONFIG_PROPERTY_DOMAIN_IMPORT = "org.labkey.sequenceanalysis.importsettings";
@@ -1280,7 +1281,7 @@ public class SequenceAnalysisController extends SpringActionController
                 return null;
             }
 
-            Logger log = Logger.getLogger(SequenceAnalysisController.class);
+            Logger log = LogManager.getLogger(SequenceAnalysisController.class);
 
             for (AnalysisModel m : models)
             {
@@ -1524,7 +1525,7 @@ public class SequenceAnalysisController extends SpringActionController
                 return new ApiSimpleResponse(resultProperties);
             }
 
-            Logger log = Logger.getLogger(BamIterator.class);
+            Logger log = LogManager.getLogger(BamIterator.class);
             BamIterator bi = new BamIterator(bam.getFile(), ref.getFile(), log);
 
             Map<String, String> params = new HashMap<>();

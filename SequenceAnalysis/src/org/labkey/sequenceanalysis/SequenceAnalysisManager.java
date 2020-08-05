@@ -19,7 +19,8 @@ import htsjdk.samtools.util.StringUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
 import org.junit.Test;
@@ -94,7 +95,7 @@ public class SequenceAnalysisManager
 {
     private static final SequenceAnalysisManager _instance = new SequenceAnalysisManager();
 
-    private static final Logger _log = Logger.getLogger(SequenceAnalysisManager.class);
+    private static final Logger _log = LogManager.getLogger(SequenceAnalysisManager.class);
 
     private List<String> _platforms = null;
 

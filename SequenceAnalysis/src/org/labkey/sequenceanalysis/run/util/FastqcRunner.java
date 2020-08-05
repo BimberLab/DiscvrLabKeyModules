@@ -17,7 +17,8 @@ package org.labkey.sequenceanalysis.run.util;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
@@ -68,7 +69,7 @@ public class FastqcRunner
     {
         if (log == null)
         {
-            _logger = Logger.getLogger(FastqcRunner.class);
+            _logger = LogManager.getLogger(FastqcRunner.class);
         }
         else
         {

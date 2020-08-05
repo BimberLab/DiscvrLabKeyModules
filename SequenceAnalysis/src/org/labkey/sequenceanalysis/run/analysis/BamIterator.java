@@ -24,7 +24,8 @@ import htsjdk.samtools.reference.FastaSequenceIndex;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.lib.legacy.ClassImposteriser;
@@ -245,7 +246,7 @@ public class BamIterator
     public static class TestCase extends Assert
     {
         private static final String PROJECT_NAME = "BAMIteratorTestProject";
-        private final Logger _log = Logger.getLogger(TestCase.class);
+        private final Logger _log = LogManager.getLogger(TestCase.class);
         private Container _project;
         private File _pipelineRoot;
         private File _sampleData;

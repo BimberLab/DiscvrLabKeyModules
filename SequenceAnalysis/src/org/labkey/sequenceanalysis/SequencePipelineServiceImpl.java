@@ -4,7 +4,8 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -59,7 +60,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
 {
     private static SequencePipelineServiceImpl _instance = new SequencePipelineServiceImpl();
 
-    private static final Logger _log = Logger.getLogger(SequencePipelineServiceImpl.class);
+    private static final Logger _log = LogManager.getLogger(SequencePipelineServiceImpl.class);
     private Set<PipelineStepProvider> _providers = new HashSet<>();
     private Set<JobResourceSettings> _resourceSettings = new HashSet<>();
 

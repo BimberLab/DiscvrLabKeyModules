@@ -20,7 +20,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.directory.api.ldap.model.exception.LdapException;
 import org.apache.directory.api.ldap.model.exception.LdapOperationException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.action.ApiResponse;
@@ -48,7 +49,7 @@ public class OpenLdapSyncController extends SpringActionController
     private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(OpenLdapSyncController.class);
     public static final String NAME = "openldapsync";
 
-    private static Logger _log = Logger.getLogger(OpenLdapSyncController.class);
+    private static Logger _log = LogManager.getLogger(OpenLdapSyncController.class);
 
     public OpenLdapSyncController()
     {

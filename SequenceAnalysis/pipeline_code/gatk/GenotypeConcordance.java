@@ -5,7 +5,8 @@ import htsjdk.variant.variantcontext.GenotypeBuilder;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFormatHeaderLine;
 import htsjdk.variant.vcf.VCFHeaderLineType;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.broadinstitute.gatk.tools.walkers.annotator.interfaces.AnnotatorCompatible;
 import org.broadinstitute.gatk.tools.walkers.annotator.interfaces.GenotypeAnnotation;
 import org.broadinstitute.gatk.utils.commandline.RodBinding;
@@ -21,7 +22,7 @@ import java.util.List;
  * Created by bimber on 4/20/2017.
  */
 public class GenotypeConcordance extends GenotypeAnnotation {
-    private final static Logger logger = Logger.getLogger(GenotypeConcordance.class);
+    private final static Logger logger = LogManager.getLogger(GenotypeConcordance.class);
     public final static String BINDING_NAME = "GT_SOURCE";
     private boolean foundRodBinding = false;
     private RodBinding<VariantContext> rodBinding = null;

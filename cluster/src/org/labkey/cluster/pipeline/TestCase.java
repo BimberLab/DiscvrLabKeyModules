@@ -1,7 +1,8 @@
 package org.labkey.cluster.pipeline;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -39,7 +40,7 @@ import java.util.Set;
  */
 public class TestCase extends Assert
 {
-    protected static final Logger _log = Logger.getLogger(TestCase.class);
+    protected static final Logger _log = LogManager.getLogger(TestCase.class);
     private static final String PROJECT_NAME = "ClusterTestProject";
 
     @BeforeClass

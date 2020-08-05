@@ -4,7 +4,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.directory.api.ldap.model.exception.LdapException;
 import org.apache.directory.api.ldap.model.exception.LdapInvalidDnException;
 import org.apache.directory.api.ldap.model.name.Dn;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -68,7 +69,7 @@ import static org.labkey.openldapsync.ldap.LdapSettings.FIRSTNAME_FIELD_PROP;
  */
 public class LdapSyncRunner implements Job
 {
-    private static final Logger _log = Logger.getLogger(LdapSyncRunner.class);
+    private static final Logger _log = LogManager.getLogger(LdapSyncRunner.class);
     private LdapSettings _settings;
     private LdapConnectionWrapper _wrapper;
     private Map<String, LdapSyncModel> _syncedRecordMap = new HashMap<>();

@@ -4,7 +4,8 @@ import htsjdk.samtools.util.BlockCompressedOutputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -76,7 +77,7 @@ import java.util.Set;
  */
 public class JBrowseRoot
 {
-    private static final Logger _log = Logger.getLogger(JBrowseRoot.class);
+    private static final Logger _log = LogManager.getLogger(JBrowseRoot.class);
     private Logger _customLogger = null;
 
     public JBrowseRoot(@Nullable Logger log)

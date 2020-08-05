@@ -15,7 +15,8 @@
  */
 package org.labkey.sequenceanalysis.run.util;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.biojava3.core.sequence.DNASequence;
 import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
 import org.biojava3.core.sequence.compound.AmbiguityRNACompoundSet;
@@ -31,7 +32,7 @@ import java.util.List;
  */
 public class AASnp
 {
-    private static final Logger _log = Logger.getLogger(AASnp.class);
+    private static final Logger _log = LogManager.getLogger(AASnp.class);
 
     private NTSnp _ntSnp;
     private SequenceModel _aaRef;

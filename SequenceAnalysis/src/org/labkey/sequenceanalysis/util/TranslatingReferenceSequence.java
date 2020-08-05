@@ -15,7 +15,8 @@
  */
 package org.labkey.sequenceanalysis.util;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -44,7 +45,7 @@ public class TranslatingReferenceSequence
     RefNtSequenceModel _nt;
     SequenceModel[] _peptides;
 
-    private final static Logger _log = Logger.getLogger(TranslatingReferenceSequence.class);
+    private final static Logger _log = LogManager.getLogger(TranslatingReferenceSequence.class);
 
     public TranslatingReferenceSequence(int id)
     {

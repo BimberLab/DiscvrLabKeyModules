@@ -16,9 +16,9 @@
 package org.labkey.api.sequenceanalysis.run;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.NOPLoggerRepository;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
@@ -252,7 +252,7 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
     {
         if (_log == null)
         {
-            return new org.apache.log4j.spi.NOPLogger(new NOPLoggerRepository(), "null");
+              return  LogManager.getLogger("NoOpLogger");
         }
 
         return _log;

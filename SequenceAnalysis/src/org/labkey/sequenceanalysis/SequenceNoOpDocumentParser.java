@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.labkey.api.search.AbstractDocumentParser;
 import org.labkey.api.util.FileType;
 import org.labkey.api.webdav.WebdavResource;
@@ -18,7 +19,7 @@ import java.util.Arrays;
  */
 public class SequenceNoOpDocumentParser extends AbstractDocumentParser
 {
-    private static final Logger _log = Logger.getLogger(SequenceNoOpDocumentParser.class);
+    private static final Logger _log = LogManager.getLogger(SequenceNoOpDocumentParser.class);
 
     private final static FileType RDataType = new FileType(Arrays.asList(".rData", ".rds"), ".rData", false);
 

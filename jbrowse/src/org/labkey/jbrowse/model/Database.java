@@ -1,7 +1,8 @@
 package org.labkey.jbrowse.model;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -25,7 +26,7 @@ import java.util.List;
  */
 public class Database
 {
-    private static final Logger _log = Logger.getLogger(Database.class);
+    private static final Logger _log = LogManager.getLogger(Database.class);
 
     private int _rowId;
     private String _name;

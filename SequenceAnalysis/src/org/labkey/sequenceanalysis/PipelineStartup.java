@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 
@@ -11,7 +12,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
  */
 public class PipelineStartup
 {
-    private static final Logger _log = Logger.getLogger(PipelineStartup.class);
+    private static final Logger _log = LogManager.getLogger(PipelineStartup.class);
     private static boolean _hasRegistered = false;
 
     public PipelineStartup()

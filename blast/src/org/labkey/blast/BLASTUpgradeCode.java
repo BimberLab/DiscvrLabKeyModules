@@ -1,7 +1,8 @@
 package org.labkey.blast;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
@@ -30,7 +31,7 @@ import java.util.Map;
  */
 public class BLASTUpgradeCode implements UpgradeCode
 {
-    private static final Logger _log = Logger.getLogger(BLASTUpgradeCode.class);
+    private static final Logger _log = LogManager.getLogger(BLASTUpgradeCode.class);
 
     /**
      * called at 13.32-13.33

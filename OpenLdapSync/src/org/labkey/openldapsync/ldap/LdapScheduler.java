@@ -1,7 +1,8 @@
 package org.labkey.openldapsync.ldap;
 
 import org.apache.directory.api.ldap.model.exception.LdapException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.quartz.DailyTimeIntervalScheduleBuilder;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -18,7 +19,7 @@ import org.quartz.impl.StdSchedulerFactory;
 public class LdapScheduler
 {
     private static final LdapScheduler _instance = new LdapScheduler();
-    private static final Logger _log = Logger.getLogger(LdapScheduler.class);
+    private static final Logger _log = LogManager.getLogger(LdapScheduler.class);
     private static JobDetail _job = null;
     private Integer _frequency = null;
 

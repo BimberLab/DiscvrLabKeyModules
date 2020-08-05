@@ -9,7 +9,8 @@ import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.fastq.FastqWriter;
 import htsjdk.samtools.fastq.FastqWriterFactory;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.junit.After;
 import org.junit.Assert;
@@ -583,7 +584,7 @@ public class Barcoder extends AbstractSequenceMatcher
         public void test() throws Exception
         {
             //TODO: can I make a fake logger?
-            Logger log = Logger.getLogger(Barcoder.class);
+            Logger log = LogManager.getLogger(Barcoder.class);
             testBarcoder(log, 0, 0, 0);
             testBarcoder(log, 1, 0, 0);
             testBarcoder(log, 1, 1, 0);

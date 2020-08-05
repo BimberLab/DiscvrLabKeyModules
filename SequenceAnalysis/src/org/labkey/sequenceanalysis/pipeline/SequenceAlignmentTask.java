@@ -23,7 +23,8 @@ import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
@@ -1695,7 +1696,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
     public static class TestCase extends Assert
     {
-        private static final Logger _log = Logger.getLogger(TestCase.class);
+        private static final Logger _log = LogManager.getLogger(TestCase.class);
 
         @Test
         public void serializeRecordedActionTest() throws Exception

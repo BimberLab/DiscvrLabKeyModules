@@ -16,7 +16,8 @@
 
 package org.labkey.cluster;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -44,7 +45,7 @@ import java.util.Set;
 
 public class ClusterModule extends ExtendedSimpleModule
 {
-    private static final Logger _log = Logger.getLogger(ClusterModule.class);
+    private static final Logger _log = LogManager.getLogger(ClusterModule.class);
 
     public static final String NAME = "Cluster";
 
