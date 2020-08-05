@@ -218,7 +218,14 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
                 commandLineParam: '--max_alternate_alleles',
                 defaultValue: 12
             },{
-                fieldXtype: 'checkbox',
+				fieldXtype: 'checkbox',
+				name: 'sharedPosixOptimizations',
+				label: 'Use Shared Posix Optimizations',
+				description: 'This enabled optimizations for large shared filesystems, such as lustre.',
+				commandLineParam: '--genomicsdb-shared-posixfs-optimizations',
+				defaultValue: true
+			},{
+            	fieldXtype: 'checkbox',
                 name: 'includeNonVariantSites',
                 label: 'Include Non-Variant Sites',
                 description: 'If checked, all sites will be output into the VCF, instead of just those where variants are detected.  This can dramatically increase the size of the VCF.',

@@ -121,6 +121,9 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
 //                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-stand_call_conf"), "stand_call_conf", "Threshold For Calling Variants", "The minimum phred-scaled confidence threshold at which variants should be called", "ldk-numberfield", null, 30),
 //                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--max_alternate_alleles"), "max_alternate_alleles", "Max Alternate Alleles", "Maximum number of alternate alleles to genotype", "ldk-integerfield", null, 12),
 //                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--includeNonVariantSites"), "includeNonVariantSites", "Include Non-Variant Sites", "If checked, all sites will be output into the VCF, instead of just those where variants are detected.  This can dramatically increase the size of the VCF.", "checkbox", null, false)
+//                ToolParameterDescriptor.create("sharedPosixOptimizations", "Use Shared Posix Optimizations", "This enabled optimizations for large shared filesystems, such as lustre.", "checkbox", new JSONObject(){{
+//                    put("checked", true);
+//                }}, true),
     }
 
     @Override
@@ -367,10 +370,15 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 });
             }
 
-            if (ctx.getParams().optBoolean("disableFileLocking", false))
+            if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.disableFileLocking", false))
             {
                 ctx.getLogger().debug("Disabling file locking for TileDB");
                 wrapper.addToEnvironment("TILEDB_DISABLE_FILE_LOCKING", "1");
+            }
+
+            if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.sharedPosixOptimizations", false))
+            {
+                toolParams.add("--genomicsdb-shared-posixfs-optimizations");
             }
 
             wrapper.execute(genome.getSourceFastaFile(), outputVcf, toolParams, inputVcf);
