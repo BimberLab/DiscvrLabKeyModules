@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis;
 
+import htsjdk.samtools.util.FileExtensions;
 import htsjdk.tribble.Tribble;
 import htsjdk.tribble.index.Index;
 import htsjdk.tribble.index.IndexFactory;
@@ -47,6 +48,7 @@ import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.BgzipRunner;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 import org.labkey.sequenceanalysis.run.util.GxfSorter;
+import org.labkey.sequenceanalysis.run.util.IndexFeatureFileWrapper;
 import org.labkey.sequenceanalysis.run.util.TabixRunner;
 import org.labkey.sequenceanalysis.util.ReferenceLibraryHelperImpl;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
@@ -484,5 +486,37 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     public void sortGxf(Logger log, File input, @Nullable File output) throws PipelineJobException
     {
         new GxfSorter(log).sortGxf(input, output);
+    }
+
+    @Override
+    public void ensureFeatureFileIndex(File input, Logger log) throws PipelineJobException
+    {
+        if (SequenceUtil.FILETYPE.bed.getFileType().isType(input))
+        {
+            File expected = new File(input.getPath() + FileExtensions.TRIBBLE_INDEX);
+            if (expected.exists())
+            {
+                log.debug("index exists: " + expected.getPath());
+            }
+            else
+            {
+                new IndexFeatureFileWrapper(log).ensureFeatureFileIndex(input);
+            }
+        }
+        else if (SequenceUtil.FILETYPE.vcf.getFileType().isType(input))
+        {
+            try
+            {
+                ensureVcfIndex(input, log);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+        else
+        {
+            throw new IllegalArgumentException("Unexpected input file type, cannot index: " + input.getName());
+        }
     }
 }

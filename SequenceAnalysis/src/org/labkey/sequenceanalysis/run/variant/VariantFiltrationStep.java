@@ -7,6 +7,7 @@ import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
@@ -115,6 +116,9 @@ public class VariantFiltrationStep extends AbstractCommandPipelineStep<VariantFi
             {
                 throw new PipelineJobException("file not found for dataId: " + mask.opt("fileId"));
             }
+
+            SequenceAnalysisService.get().ensureFeatureFileIndex(maskData, getPipelineCtx().getLogger());
+
             params.add(maskData.getPath());
         }
 
