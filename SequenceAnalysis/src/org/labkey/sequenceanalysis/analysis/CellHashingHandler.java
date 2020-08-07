@@ -99,8 +99,8 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         {
             ret.add(ToolParameterDescriptor.create("scanEditDistances", "Scan Edit Distances", "If checked, CITE-seq-count will be run using edit distances from 0-3 and the iteration with the highest singlets will be used.", "checkbox", new JSONObject()
             {{
-                put("checked", true);
-            }}, true));
+                put("checked", false);
+            }}, false));
         }
 
         ret.addAll(Arrays.asList(
