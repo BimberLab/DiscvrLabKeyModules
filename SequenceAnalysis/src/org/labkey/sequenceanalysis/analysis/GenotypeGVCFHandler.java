@@ -368,6 +368,8 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                     toolParams.add("-L");
                     toolParams.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
                 });
+
+                toolParams.add("--only-output-calls-starting-in-intervals");
             }
 
             if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.disableFileLocking", false))
