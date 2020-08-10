@@ -429,6 +429,8 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         @Override
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
+            ctx.getLogger().info("Starting GenomicsDbImport: " + (_append ? "append" : "import"));
+
             boolean doCopyGVcfLocal = doCopyLocal(ctx.getParams());
 
             RecordedAction action = new RecordedAction(getName());
@@ -462,6 +464,11 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             File startedFile = new File(destinationWorkspaceFolder.getParentFile(), "genomicsdb.started");
             boolean genomicsDbCompleted = doneFile.exists();
             boolean genomicsDbStarted = startedFile.exists();
+            if (genomicsDbStarted)
+            {
+                ctx.getLogger().info("GenomicsDB has previously started in this folder");
+            }
+
             ctx.getFileManager().addIntermediateFile(doneFile);
             ctx.getFileManager().addIntermediateFile(startedFile);
             if (_append)
@@ -491,13 +498,14 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                         //NOTE: if GenomicsDB has started, but dies mid-job, the resulting workspace probably cannot be resumed
                         if (!genomicsDbStarted && copyDone.exists())
                         {
-                            ctx.getLogger().info("has been copied, skipping");
+                            ctx.getLogger().info("has been copied, skipping: " + i.getContig());
                             continue;
                         }
 
                         //Allow the above to complete so we track the .done files
                         if (genomicsDbCompleted)
                         {
+                            ctx.getLogger().info("has completed, skipping: " + i.getContig());
                             continue;
                         }
 
@@ -518,6 +526,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                             FileUtils.deleteDirectory(destContigFolder);
                         }
 
+                        ctx.getLogger().info("copying contig folder: " + i.getContig());
                         FileUtils.copyDirectory(sourceFolder, destContigFolder);
                         FileUtils.touch(copyDone);
                     }
