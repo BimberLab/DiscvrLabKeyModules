@@ -1,1 +1,1 @@
-SELECT core.executeJavaUpgradeCode('updateBarcodeRC');
+EXEC core.executeJavaUpgradeCode 'updateBarcodeRC';
