@@ -476,7 +476,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
         List<File> inputVCFs = new ArrayList<>();
         inputFiles.forEach(f -> inputVCFs.add(f.getFile()));
 
-        ctx.getLogger().info("making local copies of gVCFs");
+        ctx.getLogger().info("making local copies of gVCFs/GenomicsDB");
         GenotypeGVCFsWrapper.copyVcfsLocally(ctx, inputVCFs, new ArrayList<>(), false);
     }
 
