@@ -23,6 +23,7 @@ import org.labkey.serverapi.reader.Readers;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.TestTimeoutException;
+import org.labkey.test.components.ext4.Window;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.ext4cmp.Ext4ComboRef;
@@ -230,11 +231,11 @@ public class JBrowseTest extends BaseWebDriverTest
         dr.clickHeaderMenu("More Actions", false, "View In JBrowse");
 
         String sessionName = "TestSession1";
-        waitForElement(Ext4Helper.Locators.window("Create/Modify JBrowse Session"));
+        new Window.WindowFinder(getDriver()).withTitle("Create/Modify JBrowse Session").waitFor();
         Ext4FieldRef.getForLabel(this, "Name").setValue(sessionName);
         Ext4FieldRef.getForLabel(this, "Description").setValue("This is the first session");
         waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
-        waitForElement(Ext4Helper.Locators.window("Success"));
+        new Window.WindowFinder(getDriver()).withTitle("Success").waitFor();
         waitAndClickAndWait(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
         _completedPipelineJobs++;
         waitForPipelineJobsToComplete(_completedPipelineJobs, "Create New Session", false);
@@ -250,12 +251,12 @@ public class JBrowseTest extends BaseWebDriverTest
         dr.checkCheckbox(1);
         dr.checkCheckbox(2);
         dr.clickHeaderMenu("More Actions", false, "View In JBrowse");
-        waitForElement(Ext4Helper.Locators.window("Create/Modify JBrowse Session"));
+        new Window.WindowFinder(getDriver()).withTitle("Create/Modify JBrowse Session").waitFor();
         Ext4FieldRef.getForBoxLabel(this, "Add To Existing Session").setChecked(true);
         Ext4FieldRef.waitForField(this, "Session");
         Ext4ComboRef.getForLabel(this, "Session").setComboByDisplayValue(sessionName);
         waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
-        waitForElement(Ext4Helper.Locators.window("Success"));
+        new Window.WindowFinder(getDriver()).withTitle("Success").waitFor();
         waitAndClickAndWait(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
         _completedPipelineJobs++;
         waitForPipelineJobsToComplete(_completedPipelineJobs, "Add To Existing Session", false);

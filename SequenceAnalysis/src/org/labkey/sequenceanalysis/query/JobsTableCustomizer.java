@@ -76,6 +76,7 @@ public class JobsTableCustomizer implements TableCustomizer
                         "WHEN " + ExprColumn.STR_TABLE_ALIAS + ".status IS NULL OR " + ExprColumn.STR_TABLE_ALIAS + ".status != '"+ PipelineJob.TaskStatus.complete.name().toUpperCase() + "' THEN " + ti.getSqlDialect().getBooleanFALSE() + "\n" +
                         "WHEN " + ExprColumn.STR_TABLE_ALIAS + ".provider IS NULL OR " + ExprColumn.STR_TABLE_ALIAS + ".provider NOT IN ('sequenceOutputHandler', 'Sequence Pipeline', 'sequenceReadsetHandler') THEN " + ti.getSqlDialect().getBooleanFALSE() + "\n" +
                         "WHEN " + ExprColumn.STR_TABLE_ALIAS + ".RowId IN " + runSubquery + " THEN " + ti.getSqlDialect().getBooleanFALSE() + "\n" +
+                        "WHEN " + ExprColumn.STR_TABLE_ALIAS + ".jobparent IS NOT NULL AND (SELECT p.status FROM pipeline.statusfiles p WHERE " + ExprColumn.STR_TABLE_ALIAS + ".jobparent = p.job) != '" + PipelineJob.TaskStatus.complete.name().toUpperCase() + "' " + " THEN " + ti.getSqlDialect().getBooleanFALSE() + "\n" +
                         "WHEN " + ExprColumn.STR_TABLE_ALIAS + ".jobparent IS NOT NULL AND (SELECT p.RowId FROM pipeline.statusfiles p WHERE " + ExprColumn.STR_TABLE_ALIAS + ".jobparent = p.job) IN " + runSubquery + " THEN " + ti.getSqlDialect().getBooleanFALSE() + "\n" +
                         "ELSE " + ti.getSqlDialect().getBooleanTRUE() + " END)");
                 ExprColumn newCol = new ExprColumn(ti, sequenceJobWithoutData, sql, JdbcType.BOOLEAN, ti.getColumn("RowId"));

@@ -49,3 +49,12 @@ if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
 }
 
 ```
+
+## Print Session Info
+
+```{r SessionInfo}
+
+sessionInfo()
+
+```
+

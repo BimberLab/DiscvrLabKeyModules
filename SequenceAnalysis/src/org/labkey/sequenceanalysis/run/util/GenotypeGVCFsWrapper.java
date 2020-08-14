@@ -87,19 +87,25 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
 
     public static FileType GVCF = new FileType(Arrays.asList(".g.vcf", ".gvcf"), ".g.vcf", FileType.gzSupportLevel.SUPPORT_GZ);
 
+    private static File convertInput(File f)
+    {
+        return AbstractGenomicsDBImportHandler.TILE_DB_FILETYPE.isType(f) ? f.getParentFile() : f;
+    }
+
     public static List<File> copyVcfsLocally(SequenceOutputHandler.JobContext ctx, Collection<File> inputGVCFs, Collection<File> toDelete, boolean isResume) throws PipelineJobException
     {
         try
         {
             //Note: because we cannot be certain names are unique, inspect:
             HashMap<File, String> inputToDest = new LinkedHashMap<>();
-            Set<String> uniqueDistNames = new CaseInsensitiveHashSet();
+            Set<String> uniqueDestNames = new CaseInsensitiveHashSet();
 
             inputGVCFs.forEach(x -> {
+                x = convertInput(x);
                 String fn = x.getName();
 
                 int i = 1;
-                while (uniqueDistNames.contains(fn))
+                while (uniqueDestNames.contains(fn))
                 {
                     String basename = SequenceAnalysisService.get().getUnzippedBaseName(x.getName());
                     String ext = x.getName().replaceAll(SequenceAnalysisService.get().getUnzippedBaseName(x.getName()), "");
@@ -113,7 +119,7 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
                     ctx.getLogger().info("Renaming cached file from: " + x.getName() + " to " + fn);
                 }
 
-                uniqueDistNames.add(fn);
+                uniqueDestNames.add(fn);
                 inputToDest.put(x, fn);
             });
 
@@ -139,6 +145,7 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
             List<File> vcfsToProcess = new ArrayList<>();
             for (File f : inputGVCFs)
             {
+                f = convertInput(f);
                 File destFile = new File(inputToDest.get(f));
 
                 File origIdx = null;

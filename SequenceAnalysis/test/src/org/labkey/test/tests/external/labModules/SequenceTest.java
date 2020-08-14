@@ -40,6 +40,7 @@ import org.labkey.test.TestTimeoutException;
 import org.labkey.test.WebTestHelper;
 import org.labkey.test.categories.External;
 import org.labkey.test.categories.LabModule;
+import org.labkey.test.components.ext4.Window;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.PasswordUtil;
@@ -172,7 +173,7 @@ public class SequenceTest extends BaseWebDriverTest
         //create readset records for illumina run
         goToProjectHome();
         waitAndClick(Locator.linkWithText("Plan Sequence Run (Create Readsets)"));
-        waitForElement(Ext4Helper.Locators.window("Create Readsets"));
+        new Window.WindowFinder(getDriver()).withTitle("Create Readsets").waitFor();
         waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Submit"));
 
         _helper.waitForField("Sample Id", WAIT_FOR_PAGE);
@@ -182,7 +183,7 @@ public class SequenceTest extends BaseWebDriverTest
         setFormElementJS(Locator.name("text"), getIlluminaNames());
 
         waitAndClick(Ext4Helper.Locators.ext4Button("Upload"));
-        waitForElement(Ext4Helper.Locators.window("Success"));
+        new Window.WindowFinder(getDriver()).withTitle("Success").waitFor();
         _readsetCt += 14;
         assertTextPresent("Success!");
         waitAndClickAndWait(Ext4Helper.Locators.ext4Button("OK"));
@@ -419,7 +420,7 @@ public class SequenceTest extends BaseWebDriverTest
         dr = new DataRegionTable("query", this);
         dr.checkAllOnPage();
         dr.clickHeaderMenu("More Actions", false, "Download Sequence Files");
-        waitForElement(Ext4Helper.Locators.window("Export Files"));
+        new Window.WindowFinder(getDriver()).withTitle("Export Files").waitFor();
         waitForText("Export Files As");
         Ext4CmpRef window = _ext4Helper.queryOne("#exportFilesWin", Ext4CmpRef.class);
         String fileName = "MyFile";
@@ -449,7 +450,7 @@ public class SequenceTest extends BaseWebDriverTest
         assertEquals("Incorrect number of rows selected", 1, dr.getCheckedCount(this));
 
         dr.clickHeaderMenu("More Actions", false, "View FASTQC Report");
-        waitForElement(Ext4Helper.Locators.window("FastQC"));
+        new Window.WindowFinder(getDriver()).withTitle("FastQC").waitFor();
         waitAndClickAndWait(Ext4Helper.Locators.ext4Button("OK"));
 
         waitForText("File Summary");
@@ -468,7 +469,7 @@ public class SequenceTest extends BaseWebDriverTest
         Ext4FieldRef.getForLabel(this, "Name").setValue(newName);
         sleep(250); //wait for value to save
         clickButton("Submit", 0);
-        waitForElement(Ext4Helper.Locators.window("Success"));
+        new Window.WindowFinder(getDriver()).withTitle("Success").waitFor();
         assertTextPresent("Your upload was successful!");
         clickButton("OK");
 
@@ -500,7 +501,7 @@ public class SequenceTest extends BaseWebDriverTest
         rowIds.add(dr.getDataAsText(6, "Readset Id"));
 
         dr.clickHeaderMenu("More Actions", false, "Align/Analyze Selected");
-        waitForElement(Ext4Helper.Locators.window("Import Data"));
+        new Window.WindowFinder(getDriver()).withTitle("Import Data").waitFor();
         waitForText("Description");
         waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Submit"));
 
@@ -516,7 +517,7 @@ public class SequenceTest extends BaseWebDriverTest
         String[][] rocheAdapters = {{"Roche-454 FLX Amplicon A", "GCCTCCCTCGCGCCATCAG"}, {"Roche-454 FLX Amplicon B", "GCCTTGCCAGCCCGCTCAG"}};
 
         waitForText("Readset Name");
-        waitForElement(Ext4Helper.Locators.window("Copy Previous Run?"));
+        new Window.WindowFinder(getDriver()).withTitle("Copy Previous Run?").waitFor();
         waitAndClick(Ext4Helper.Locators.window("Copy Previous Run?").append(Ext4Helper.Locators.ext4Button("Cancel")));
         waitForElementToDisappear(Ext4Helper.Locators.window("Copy Previous Run?"));
 
@@ -534,7 +535,7 @@ public class SequenceTest extends BaseWebDriverTest
         waitForElement(win);
 
         waitAndClick(Locator.id(_ext4Helper.queryOne("window ldk-linkbutton[text='View Description']", Ext4CmpRef.class).getId()).append(Locator.tag("a")));
-        waitForElement(Ext4Helper.Locators.window("Tool Details"));
+        new Window.WindowFinder(getDriver()).withTitle("Tool Details").waitFor();
         waitAndClick(Ext4Helper.Locators.window("Tool Details").append(Ext4Helper.Locators.ext4Button("Done")));
 
         List<Ext4CmpRef> btns = _ext4Helper.componentQuery("window ldk-linkbutton[text='Add']", Ext4CmpRef.class);
@@ -578,7 +579,7 @@ public class SequenceTest extends BaseWebDriverTest
 
         waitForText("Adapters");
         waitAndClick(Ext4Helper.Locators.ext4Button("Common Adapters").index(1));
-        waitForElement(Ext4Helper.Locators.window("Choose Adapters"));
+        new Window.WindowFinder(getDriver()).withTitle("Choose Adapters").waitFor();
         waitForText("Choose Adapter Group");
         Ext4FieldRef.getForLabel(this, "Choose Adapter Group").setValue("Roche-454 FLX Amplicon");
         waitAndClick(Ext4Helper.Locators.ext4Button("Submit"));
@@ -770,7 +771,7 @@ public class SequenceTest extends BaseWebDriverTest
         Assert.assertEquals("Incorrect starting value for input file-handling field", "delete", treatmentField.getValue());
 
         waitAndClick(Ext4Helper.Locators.ext4Button("Import Data"));
-        waitForElement(Ext4Helper.Locators.window("Error"));
+        new Window.WindowFinder(getDriver()).withTitle("Error").waitFor();
         waitForElement(Locator.tagContainingText("div", "There are 4 errors.  Please review the cells highlighted in red."));
         click(Ext4Helper.Locators.ext4Button("OK"));
 
@@ -808,7 +809,7 @@ public class SequenceTest extends BaseWebDriverTest
         assertNull("genome field not set, except params to be null", panel.getEval("getJsonParams()"));
 
         //close alert
-        waitForElement(Ext4Helper.Locators.window("Error"));
+        new Window.WindowFinder(getDriver()).withTitle("Error").waitFor();
         click(Ext4Helper.Locators.ext4Button("OK"));
 
         //set genome field
@@ -949,7 +950,7 @@ public class SequenceTest extends BaseWebDriverTest
         //then split groups
         waitAndClick(readDataGrid.getRow(2));
         readDataGrid.clickTbarButton("Split/Regroup Selected");
-        waitForElement(Ext4Helper.Locators.window("Split/Regroup Files"));
+        new Window.WindowFinder(getDriver()).withTitle("Split/Regroup Files").waitFor();
         String groupName = "NewGroup";
         _ext4Helper.queryOne("window textfield", Ext4FieldRef.class).setValue(groupName);
         waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
@@ -1000,7 +1001,7 @@ public class SequenceTest extends BaseWebDriverTest
         assertTrue("3' barcode column should be hidden", (Boolean) readsetGrid.getEval("columns[3].hidden"));
 
         waitAndClick(Ext4Helper.Locators.ext4Button("Import Data"));
-        waitForElement(Ext4Helper.Locators.window("Error"));
+        new Window.WindowFinder(getDriver()).withTitle("Error").waitFor();
         Locator errorEl = Locator.tagContainingText("div", "There are 12 errors.  Please review the cells highlighted in red.").notHidden();
         waitForElement(errorEl);
         click(Ext4Helper.Locators.ext4Button("OK"));
@@ -1011,7 +1012,7 @@ public class SequenceTest extends BaseWebDriverTest
         readsetGrid.setGridCell(2, "readsetname", "Readset1"); //duplicate name
 
         waitAndClick(Ext4Helper.Locators.ext4Button("Import Data"));
-        waitForElement(Ext4Helper.Locators.window("Error"));
+        new Window.WindowFinder(getDriver()).withTitle("Error").waitFor();
         waitForElement(Locator.tagContainingText("div", "There are 2 errors.  Please review the cells highlighted in red.  Note: you can hover over the cell for more information on the issue."));
         waitAndClick(Ext4Helper.Locators.ext4Button("OK"));
 
@@ -1022,7 +1023,7 @@ public class SequenceTest extends BaseWebDriverTest
         readsetGrid.setGridCellJS(1, "barcode5", barcode);
         readsetGrid.setGridCellJS(2, "barcode3", barcode);
         waitAndClick(Ext4Helper.Locators.ext4Button("Import Data"));
-        waitForElement(Ext4Helper.Locators.window("Error"));
+        new Window.WindowFinder(getDriver()).withTitle("Error").waitFor();
 
         waitForElement(Locator.tagContainingText("div", "There are 4 errors.  Please review the cells highlighted in red."));
         click(Ext4Helper.Locators.ext4Button("OK"));
@@ -1291,7 +1292,7 @@ public class SequenceTest extends BaseWebDriverTest
         goToProjectHome();
         _helper.initiatePipelineJob(_readsetPipelineName, Arrays.asList(filename1, filename2), getProjectName());
         waitForText("Job Name");
-        waitForElement(Ext4Helper.Locators.window("Error"));
+        new Window.WindowFinder(getDriver()).withTitle("Error").waitFor();
         waitForElement(Locator.tagContainingText("div", "There are errors with the input files"));
         isTextPresent("File is already used in existing readsets')]");
         waitAndClick(Ext4Helper.Locators.ext4Button("OK"));
@@ -1437,13 +1438,13 @@ public class SequenceTest extends BaseWebDriverTest
         dr.setFilter("name", "Equals", "SIVmac239_Test");
         dr.checkCheckbox(0);
         dr.clickHeaderMenu("More Actions", false, "Create Reference Genome");
-        test.waitForElement(Ext4Helper.Locators.window("Create Reference Genome"));
+        new Window.WindowFinder(test.getDriver()).withTitle("Create Reference Genome").waitFor();
         Ext4FieldRef.getForLabel(test, "Name").setValue(TEST_GENOME_NAME);
         String description = "This is a reference genome description";
         Ext4FieldRef.getForLabel(test, "Description").setValue(description);
         Ext4FieldRef.getForLabel(test, "Skip Aligner Index Creation").setChecked(true);  //skip this since it requires sequence tools
         test.waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
-        test.waitForElement(Ext4Helper.Locators.window("Success"));
+        new Window.WindowFinder(test.getDriver()).withTitle("Success").waitFor();
         test.waitAndClickAndWait(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
         test.waitForPipelineJobsToComplete(previouslyStartedPipelineJobs + 1, "Create Reference Genome", false);
         test.goToProjectHome();
@@ -1481,14 +1482,14 @@ public class SequenceTest extends BaseWebDriverTest
         test.log("adding track: " + f.getName());
         DataRegionTable dr2 = DataRegionTable.findDataRegionWithinWebpart(test, "Annotations/Tracks");
         dr2.clickHeaderButton("Add Annotation");
-        test.waitForElement(Ext4Helper.Locators.window("Import Annotations/Tracks"));
+        new Window.WindowFinder(test.getDriver()).withTitle("Import Annotations/Tracks").waitFor();
         Ext4FieldRef.getForLabel(test, "Track Name").setValue(LabModuleHelper.getBaseName(f.getName()));
         Ext4FieldRef.getForLabel(test, "Description").setValue("This is the track description");
         Ext4FileFieldRef fileField = test._ext4Helper.queryOne("field[fieldLabel=File]", Ext4FileFieldRef.class);
         fileField.setToFile(f);
 
         test.waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
-        test.waitForElement(Ext4Helper.Locators.window("Success"));
+        new Window.WindowFinder(test.getDriver()).withTitle("Success").waitFor();
         test.waitAndClickAndWait(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
         test.waitAndClickAndWait(Locator.tagWithText("a", "All"));
 
@@ -1517,14 +1518,14 @@ public class SequenceTest extends BaseWebDriverTest
         grid.setGridCellJS(1, "libraryId", genomeId);
 
         test.waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
-        test.waitForElement(Ext4Helper.Locators.window("Error"));
+        new Window.WindowFinder(test.getDriver()).withTitle("Error").waitFor();
         test.waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
 
         grid.setGridCellJS(2, "name", "Track2");
         grid.setGridCellJS(2, "libraryId", genomeId);
 
         test.waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
-        test.waitForElement(Ext4Helper.Locators.window("Success"));
+        new Window.WindowFinder(test.getDriver()).withTitle("Success").waitFor();
         test.waitAndClickAndWait(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
         test.waitAndClickAndWait(Locator.tagWithText("a", "All"));
 
@@ -1541,7 +1542,7 @@ public class SequenceTest extends BaseWebDriverTest
             String line;
             while ((line = reader.readLine()) != null)
             {
-                writer.println(line.replaceAll("SIVmac239", "SIVmac239_Test"));
+                writer.println(line.replaceAll("SIVmac239", genomeName));
             }
         }
 
@@ -1557,11 +1558,11 @@ public class SequenceTest extends BaseWebDriverTest
         dr.clickHeaderButton("Import Files");
         if (!isWorkbook)
         {
-            test.waitForElement(Ext4Helper.Locators.window("Import Sequence Output File"));
+            new Window.WindowFinder(test.getDriver()).withTitle("Import Sequence Output File").waitFor();
             test.waitAndClick(Ext4Helper.Locators.ext4Button("Submit"));
         }
 
-        test.waitForElement(Ext4Helper.Locators.window("Import Output File"));
+        new Window.WindowFinder(test.getDriver()).withTitle("Import Output File").waitFor();
         Ext4FieldRef.getForLabel(test, "Name").setValue(name);
         Ext4ComboRef.getForLabel(test, "Category").setValue(category);
         Ext4FieldRef.getForLabel(test, "Description").setValue(description);
@@ -1571,7 +1572,7 @@ public class SequenceTest extends BaseWebDriverTest
         fileField.setToFile(toAdd);
 
         test.waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
-        test.waitForElement(Ext4Helper.Locators.window("Success"));
+        new Window.WindowFinder(test.getDriver()).withTitle("Success").waitFor();
         test.waitAndClickAndWait(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
     }
 
@@ -1606,7 +1607,7 @@ public class SequenceTest extends BaseWebDriverTest
         dr.clickHeaderButton("Visualize/Analyze Data");
 
         //verify some of the handlers present
-        waitForElement(Ext4Helper.Locators.window("Visualize/Analyze Files"));
+        new Window.WindowFinder(getDriver()).withTitle("Visualize/Analyze Files").waitFor();
         waitForElement(Locator.tagWithText("div", "Calculate Local Haplotypes"));
         assertElementPresent(Locator.tagWithText("div", "Cleanup BAM File"));
         assertElementPresent(Locator.tagWithText("div", "Picard Metrics"));
@@ -1616,11 +1617,11 @@ public class SequenceTest extends BaseWebDriverTest
         waitAndClick(Ext4Helper.Locators.ext4Button("Submit"));
 
         //workbook window
-        waitForElement(Ext4Helper.Locators.window("Create New Workbook or Add To Existing?"));
+        new Window.WindowFinder(getDriver()).withTitle("Create New Workbook or Add To Existing?").waitFor();
         waitAndClick(Ext4Helper.Locators.ext4Button("Submit"));
 
         //tool window
-        waitForElement(Ext4Helper.Locators.window("Picard Metrics"));
+        new Window.WindowFinder(getDriver()).withTitle("Picard Metrics").waitFor();
 
         if (sequencePipelineEnabled)
         {

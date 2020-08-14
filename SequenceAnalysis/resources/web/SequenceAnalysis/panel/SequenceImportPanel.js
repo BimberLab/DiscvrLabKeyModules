@@ -472,7 +472,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     m.set('fileRecord1', rec.get('id'));
                     var fileArr = rec.get('fileName').replace(/\.gz$/, '').split('.');
                     fileArr.pop();
-                    var fileGroupId = fileArr.length == 1 ? fileArr[0] : fileArr.join('.');
+                    var fileGroupId = fileArr.length === 1 ? fileArr[0] : fileArr.join('.');
                     m.set('fileGroupId', fileGroupId);
                     //m.set('platformUnit', fileGroupId);
 
@@ -607,6 +607,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         map[sample] = map[sample] || {};
         map[sample][setId] = map[sample][setId] || [];
 
+        //NOTE: this likely will be a string
         if (readSet == 1){
             var m = Ext4.create('SequenceAnalysis.model.ReadsetDataModel', {});
             m.set('fileRecord1', rec.get('id'));
