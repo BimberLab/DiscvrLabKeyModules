@@ -604,7 +604,7 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
             ['Sample_Well', ''],
             ['Sample_Project', ''],
             ['I7_Index_ID', 'barcode5'],
-            ['index', 'barcode5/sequence'],
+            ['index', 'barcode5/reverse_complement'],
             ['I5_Index_ID', 'barcode3'],
             ['index2', 'barcode3/sequence'],
             ['Description', ''],

@@ -4,19 +4,26 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.biojava3.core.sequence.DNASequence;
+import org.labkey.api.collections.CaseInsensitiveHashMap;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DeferredUpgrade;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.util.PageFlowUtil;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -177,5 +184,29 @@ public class SequenceAnalysisUpgradeCode implements UpgradeCode
             return;
 
         SequenceAnalysisManager.get().apppendSequenceLength(moduleContext.getUpgradeUser(), _log);
+    }
+
+    /** called at 12.321-12.322*/
+    @SuppressWarnings({"UnusedDeclaration"})
+    @DeferredUpgrade
+    public void updateBarcodeRC(final ModuleContext moduleContext)
+    {
+        TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_BARCODES);
+        TableSelector ts = new TableSelector(ti, PageFlowUtil.set("tag_name", "sequence"), new SimpleFilter(FieldKey.fromString("reverse_complement"), null, CompareType.ISBLANK), null);
+        if (ts.exists())
+        {
+            List<Map<String, Object>> toUpdate = new ArrayList<>();
+            ts.forEachResults(rs -> {
+                Map<String, Object> r = new CaseInsensitiveHashMap<>();
+                r.put("tag_name", rs.getString(FieldKey.fromString("tag_name")));
+                DNASequence seq = new DNASequence(rs.getString(FieldKey.fromString("sequence")));
+                r.put("reverse_complement", seq.getReverseComplement().getSequenceAsString());
+                toUpdate.add(r);
+            });
+
+            toUpdate.forEach(row -> {
+                Table.update(moduleContext.getUpgradeUser(), ti, row, row.get("tag_name"));
+            });
+        }
     }
 }

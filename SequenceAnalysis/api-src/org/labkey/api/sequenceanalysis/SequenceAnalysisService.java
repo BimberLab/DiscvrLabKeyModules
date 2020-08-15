@@ -62,8 +62,6 @@ abstract public class SequenceAnalysisService
 
     abstract public void registerReadsetHandler(SequenceOutputHandler<SequenceOutputHandler.SequenceReadsetProcessor> handler);
 
-    //abstract public File createTabixIndex(File input, @Nullable Logger log) throws PipelineJobException;
-
     abstract public void registerDataProvider(SequenceDataProvider p);
 
     abstract public List<NavItem> getNavItems(Container c, User u, SequenceDataProvider.SequenceNavItemCategory category);
@@ -103,4 +101,6 @@ abstract public class SequenceAnalysisService
     abstract public String getScriptPath(String moduleName, String path) throws PipelineJobException;
 
     abstract public void sortGxf(Logger log, File input, @Nullable File output) throws PipelineJobException;
+
+    abstract public void ensureFeatureFileIndex(File input, Logger log) throws PipelineJobException;
 }

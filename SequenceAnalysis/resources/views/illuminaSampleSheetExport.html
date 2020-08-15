@@ -14,7 +14,7 @@ Ext4.onReady(function(){
              LABKEY.Filter.create('rowid', pks.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)
          ],
          sort: 'rowid,barcode5,barcode3',
-         columns: 'rowid,name,barcode5,barcode3,barcode5/sequence,barcode3/sequence,platform,sampleid',
+         columns: 'rowid,name,barcode5,barcode3,barcode5/sequence,barcode5/reverse_complement,barcode3/sequence,platform,sampleid',
          scope: this,
          success: function(result){
              if(result && result.rows.length){

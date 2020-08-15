@@ -42,6 +42,7 @@ public class ReferenceGenomeImpl implements ReferenceGenome
         _name = name;
     }
 
+    @Override
     public boolean isTemporaryGenome() {
         return null == getGenomeId();
     }
@@ -116,6 +117,7 @@ public class ReferenceGenomeImpl implements ReferenceGenome
         return _expDataId;
     }
 
+    @Override
     @JsonIgnore
     public File getAlignerIndexDir(String name)
     {

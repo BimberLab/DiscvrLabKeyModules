@@ -117,7 +117,7 @@ public class BlastDatabasePipelineJob extends PipelineJob
 
         TableInfo referenceLibraries = DbSchema.get(BLASTManager.SEQUENCE_ANALYSIS).getTable("reference_libraries");
         TableSelector ts = new TableSelector(referenceLibraries, PageFlowUtil.set("name", "description", "fasta_file"), new SimpleFilter(FieldKey.fromString("rowid"), getLibraryId()), null);
-        Map<String, Object> libraryMap = ts.getObject(Map.class);
+        Map<String, Object> libraryMap = ts.getMap();
         Integer dataId = (Integer)libraryMap.get("fasta_file");
         if (dataId == null)
         {

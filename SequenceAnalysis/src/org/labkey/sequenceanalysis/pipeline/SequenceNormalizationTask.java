@@ -504,7 +504,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                             }
                         }
 
-                        outputs = barcoder.demultiplexPairs(fastqPairs, new ArrayList<Readset>(readsetsForGroup), barcodeModels, outputDir);
+                        outputs = barcoder.demultiplexPairs(fastqPairs, new ArrayList<>(readsetsForGroup), barcodeModels, outputDir);
                         for (File output : outputs)
                         {
                             getHelper().getFileManager().addOutput(barcodeAction, SequenceTaskHelper.BARCODED_FASTQ_OUTPUTNAME, output);
@@ -845,7 +845,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
         getJob().getLogger().info("Normalizing to Gzipped FASTQ: " + input.getName());
 
-        getHelper().getFileManager().addInput(action, getHelper().SEQUENCE_DATA_INPUT_NAME, input);
+        getHelper().getFileManager().addInput(action, SequenceTaskHelper.SEQUENCE_DATA_INPUT_NAME, input);
         String basename = SequenceTaskHelper.getUnzippedBaseName(input.getName());
 
         SequenceUtil.FILETYPE type = SequenceUtil.inferType(input);
@@ -990,17 +990,21 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
         if (!input.getPath().equals(output.getPath()))
         {
-            if (getHelper().getSettings().isDoBarcode())
+            if (getHelper().getFileManager().getInputFileTreatment() == TaskFileManager.InputFileTreatment.delete)
             {
-                if (getHelper().getFileManager().getInputFileTreatment() == TaskFileManager.InputFileTreatment.delete)
+                if (!getHelper().getSettings().isDoBarcode())
                 {
                     getJob().getLogger().debug("Marking input as intermediate file: " + input.getPath());
                     getHelper().getFileManager().addIntermediateFile(input);
                 }
                 else
                 {
-                    getJob().getLogger().debug("Inputs were not selected for deletion, not marking as intermediate: " + input.getPath());
+                    getJob().getLogger().info("Because demultiplexing was used, the original input files will not be deleted: " + input.getPath());
                 }
+            }
+            else
+            {
+                getJob().getLogger().debug("Inputs were not selected for deletion, not marking as intermediate: " + input.getPath());
             }
         }
 

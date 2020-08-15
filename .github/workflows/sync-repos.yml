@@ -1,5 +1,8 @@
 # Designed to keep develop branch as a perfect copy of LabKey fork
+name: Sync Repos
+
 on:
+  workflow_dispatch:
   schedule:
     - cron:  "10 */3 * * *"
 jobs:
