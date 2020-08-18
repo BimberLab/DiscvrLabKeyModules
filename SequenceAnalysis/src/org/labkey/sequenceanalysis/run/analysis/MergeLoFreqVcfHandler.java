@@ -464,7 +464,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                             }
                         }
 
-                        if (idx % 500 == 0)
+                        if (idx % 100000 == 0)
                         {
                             ctx.getLogger().info("Total sites written: " + idx);
                         }
