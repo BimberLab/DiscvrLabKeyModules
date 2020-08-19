@@ -355,8 +355,6 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                             {
                                 Integer gatkDepth = null;
                                 Integer lofreqDepth = null;
-                                Double totalAltAf = 0.0;
-                                int totalAltDepth = 0;
                                 Map<String, Double> alleleToAf = new HashMap<>();
                                 Map<String, Integer> alleleToDp = new HashMap<>();
 
@@ -414,9 +412,6 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                         String a = siteDef.getRenamedAllele(vc, vc.getAlternateAlleles().get(0));
                                         if (a != null)
                                         {
-                                            totalAltAf += af;
-                                            totalAltDepth += alleleDepth;
-
                                             double val = alleleToAf.getOrDefault(a, 0.0);
                                             if (val == NO_DATA_VAL)
                                             {
@@ -441,7 +436,40 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                 List<String> toWrite = new ArrayList<>(line);
                                 toWrite.add(String.valueOf(gatkDepth));
                                 toWrite.add(String.valueOf(lofreqDepth));
-                                toWrite.add(String.valueOf(1 - totalAltAf));
+
+                                //NOTE: because an upstream deletion could be merged with this site (and their depths / AFs computed slightly differently), recalculate here:
+
+                                //First establish true ALT depth, which could include upstream deletions:
+                                int totalAltDepth = 0;
+                                double totalAltAf = 0.0;
+                                for (String a : siteDef._alternates)
+                                {
+                                    double af = alleleToAf.getOrDefault(a, 0.0);
+                                    int dp = alleleToDp.getOrDefault(a, 0);
+
+                                    if (dp == (int)NO_DATA_VAL)
+                                    {
+                                        continue;
+                                    }
+
+                                    totalAltDepth += dp;
+
+                                    double adjAF = (double)dp / lofreqDepth;
+                                    if (Math.abs(adjAF - af) > 0.01)
+                                    {
+                                        ctx.getLogger().error("Significant AF adjustment: " + line.get(0) + "/" + line.get(4) + "/" + a + "/" + af + "/" + adjAF);
+                                    }
+
+                                    totalAltAf += adjAF;
+                                    alleleToAf.put(a, adjAF);
+                                }
+
+                                double refAF = 1 - totalAltAf;
+                                toWrite.add(String.valueOf(refAF));
+                                if (refAF < 0)
+                                {
+                                    ctx.getLogger().error("Negative REF AF: " + line.get(0) + "/" + line.get(4) + "/" + refAF);
+                                }
 
                                 //Add AFs in order:
                                 List<Object> toAdd = new ArrayList<>();
