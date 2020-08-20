@@ -250,8 +250,15 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             Collections.sort(whitelistSites);
 
             ctx.getLogger().info("Pass 2: establish alleles per site");
+            int fileNo = 0;
             for (SequenceOutputFile so : inputFiles)
             {
+                fileNo++;
+                if (fileNo % 100 == 0)
+                {
+                    ctx.getLogger().info("Processed " +  fileNo + " files");
+                }
+
                 try (VCFFileReader reader = new VCFFileReader(so.getFile()))
                 {
                     for (Pair<String, Integer> site : whitelistSites)
@@ -289,7 +296,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath());
             Map<String, Integer> contigToOffset = getContigToOffset(dict);
 
-            ctx.getLogger().info("Building merged table");
+            ctx.getLogger().info("Pass 3: Building merged table");
 
             File output = new File(ctx.getOutputDir(), basename + "txt");
             int idx = 0;
@@ -328,7 +335,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                             if (!it.hasNext())
                             {
                                 //No variant was called, so this is either considered all WT, or no-call
-                                int depth = getReadDepth(so.getFile(), contigToOffset, site.getLeft(), site.getRight());
+                                int depth = getReadDepth(so.getFile(), contigToOffset, site.getLeft(), site.getRight(), ctx);
                                 if (depth < minDepth)
                                 {
                                     line.add(String.valueOf(depth));
@@ -539,7 +546,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             return ret;
         }
 
-        private int getReadDepth(File vcf, Map<String, Integer> contigToOffset, String contig, int position1) throws PipelineJobException
+        private int getReadDepth(File vcf, Map<String, Integer> contigToOffset, String contig, int position1, JobContext ctx) throws PipelineJobException
         {
             File gatkDepth = new File(vcf.getParentFile(), vcf.getName().replaceAll(".all.vcf.gz", ".coverage"));
             if (!gatkDepth.exists())
@@ -547,9 +554,9 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                 throw new PipelineJobException("File not found: " + gatkDepth.getPath());
             }
 
+            int lineNo = contigToOffset.get(contig) + position1;
             try (Stream<String> lines = Files.lines(gatkDepth.toPath()))
             {
-                int lineNo = contigToOffset.get(contig) + position1;
                 String[] line = lines.skip(lineNo - 1).findFirst().get().split("\t");
 
                 if (!line[0].equals(contig + ":" + position1))
@@ -561,6 +568,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             }
             catch (IOException e)
             {
+                ctx.getLogger().error("Error parsing GATK depth: " + vcf.getName() + " / " + gatkDepth.getPath() + " / " + lineNo);
                 throw new PipelineJobException(e);
             }
         }
