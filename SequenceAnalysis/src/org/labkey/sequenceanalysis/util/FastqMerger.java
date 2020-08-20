@@ -84,7 +84,7 @@ public class FastqMerger
                 writer.write("{\n");
                 bashCommands.forEach(x -> writer.write(x + '\n'));
 
-                writer.write("} | gzip -c > " + output + "\n");
+                writer.write("} | gzip -c > " + output.getPath() + "\n");
             }
 
             SimpleScriptWrapper wrapper = new SimpleScriptWrapper(_logger);

@@ -805,7 +805,11 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
         File file1;
         File file2;
 
-        if (htoReadset.getReadData().size() != 1)
+        if (htoReadset.getReadData().isEmpty())
+        {
+            throw new PipelineJobException("No HTO fastqs exist for readset: " + htoReadset.getName());
+        }
+        else if (htoReadset.getReadData().size() != 1)
         {
             log.info("Merging HTO data");
             file1 = new File(outdir, FileUtil.makeLegalName(htoReadset.getName() + "hto.R1.fastq.gz"));
