@@ -566,7 +566,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
                 return Integer.parseInt(line[1]);
             }
-            catch (IOException e)
+            catch (Exception e)
             {
                 ctx.getLogger().error("Error parsing GATK depth: " + vcf.getName() + " / " + gatkDepth.getPath() + " / " + lineNo);
                 throw new PipelineJobException(e);
