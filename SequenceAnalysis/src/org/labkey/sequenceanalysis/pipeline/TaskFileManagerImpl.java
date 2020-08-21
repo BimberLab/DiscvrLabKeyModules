@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -51,6 +52,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * User: bimber
@@ -420,12 +422,56 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     @Override
     public void addPicardMetricsFiles(List<PipelineStepOutput.PicardMetricsOutput> files)
     {
+        //Note: in case there is a restarted job, inspect file for redundancy, and remove previous:
+        Set<String> filePaths = files.stream().map(PipelineStepOutput.PicardMetricsOutput::getMetricFile).map(File::getPath).collect(Collectors.toSet());
+
+        File metricLog = getMetricsLog(false);
+        if (metricLog.exists())
+        {
+            _job.getLogger().info("Inspecting existing metrics file for redundancy");
+
+            List<String[]> lines = new ArrayList<>();
+            boolean needToReplace = false;
+            try (CSVReader reader = new CSVReader(Readers.getReader(metricLog), '\t'))
+            {
+                String[] line;
+                while ((line = reader.readNext()) != null)
+                {
+                    if (filePaths.contains(line[6]))
+                    {
+                        needToReplace = true;
+                    }
+                    else
+                    {
+                        lines.add(line);
+                    }
+                }
+            }
+            catch (IOException e)
+            {
+                throw new RuntimeException(e);
+            }
+
+            if (needToReplace)
+            {
+                _job.getLogger().info("Replacing previously written metrics for these files, which probably indicates this job was restarted:");
+                try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(metricLog), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+                {
+                    lines.forEach(writer::writeNext);
+                }
+                catch (IOException e)
+                {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
         for (PipelineStepOutput.PicardMetricsOutput mf : files)
         {
             _job.getLogger().debug("adding picard metrics file: " + mf.getMetricFile().getPath());
 
             //write to log
-            File metricLog = getMetricsLog(true);
+            metricLog = getMetricsLog(true);
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(metricLog, true)))
             {
                 String bamRelPath = mf.getInputFile() == null ? "" : FilenameUtils.normalize(_wd.getRelativePath(mf.getInputFile()));
@@ -434,7 +480,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
                 List<Map<String, Object>> metricLines = PicardMetricsUtil.processFile(mf.getMetricFile(), _job.getLogger());
                 for (Map<String, Object> line : metricLines)
                 {
-                    writer.write(StringUtils.join(Arrays.asList(mf.getReadsetId(), bamRelPath, type, line.get("category"), line.get("metricname"), line.get("metricvalue")), "\t"));
+                    writer.write(StringUtils.join(Arrays.asList(mf.getReadsetId(), bamRelPath, type, line.get("category"), line.get("metricname"), line.get("metricvalue"), mf.getMetricFile().getPath()), "\t"));
                     writer.write('\n');
                 }
             }
@@ -471,9 +517,9 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
                         continue; //header
                     }
 
-                    if (line.length != 6)
+                    if (line.length != 7)
                     {
-                        throw new RuntimeException("Line length is not 6: " + i + "[" + StringUtils.join(line, ";") + "]");
+                        throw new RuntimeException("Line length is not 7: " + i + "[" + StringUtils.join(line, ";") + "]");
                     }
 
                     Map<String, Object> toInsert = new HashMap<>();

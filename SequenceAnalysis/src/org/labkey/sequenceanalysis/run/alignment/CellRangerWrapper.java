@@ -8,15 +8,19 @@ import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbSchemaType;
+import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.ReadData;
@@ -636,6 +640,22 @@ public class CellRangerWrapper extends AbstractCommandWrapper
                     }
 
                     TableInfo ti = DbSchema.get("sequenceanalysis", DbSchemaType.Module).getTable("quality_metrics");
+
+                    //NOTE: if this job errored and restarted, we may have duplicate records:
+                    SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), model.getReadset());
+                    filter.addCondition(FieldKey.fromString("analysis_id"), model.getRowId(), CompareType.EQUAL);
+                    filter.addCondition(FieldKey.fromString("dataid"), model.getAlignmentFile(), CompareType.EQUAL);
+                    filter.addCondition(FieldKey.fromString("category"), "Cell Ranger", CompareType.EQUAL);
+                    filter.addCondition(FieldKey.fromString("container"), getPipelineCtx().getJob().getContainer().getId(), CompareType.EQUAL);
+                    TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid"), filter, null);
+                    if (ts.exists())
+                    {
+                        getPipelineCtx().getLogger().info("Deleting existing QC metrics (probably from prior restarted job)");
+                        ts.getArrayList(Integer.class).forEach(rowid -> {
+                            Table.delete(ti, rowid);
+                        });
+                    }
+
                     for (int j = 0; j < header.length; j++)
                     {
                         Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();

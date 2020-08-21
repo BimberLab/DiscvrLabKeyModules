@@ -30,11 +30,15 @@ import org.biojava3.core.sequence.io.FastaReader;
 import org.biojava3.core.sequence.io.GenericFastaHeaderParser;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbSchemaType;
+import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
@@ -51,6 +55,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.run.util.DepthOfCoverageWrapper;
@@ -659,6 +664,21 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             getPipelineCtx().getLogger().info("Loading metrics");
             int total = 0;
             TableInfo ti = DbSchema.get("sequenceanalysis", DbSchemaType.Module).getTable("quality_metrics");
+
+            //NOTE: if this job errored and restarted, we may have duplicate records:
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), model.getReadset());
+            filter.addCondition(FieldKey.fromString("dataid"), model.getAlignmentFile(), CompareType.EQUAL);
+            filter.addCondition(FieldKey.fromString("analysis_id"), model.getRowId(), CompareType.EQUAL);
+            filter.addCondition(FieldKey.fromString("container"), getPipelineCtx().getJob().getContainer().getId(), CompareType.EQUAL);
+            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid"), filter, null);
+            if (ts.exists())
+            {
+                getPipelineCtx().getLogger().info("Deleting existing QC metrics (probably from prior restarted job)");
+                ts.getArrayList(Integer.class).forEach(rowid -> {
+                    Table.delete(ti, rowid);
+                });
+            }
+
             try (CSVReader reader = new CSVReader(Readers.getReader(metrics), '\t'))
             {
                 String[] line;

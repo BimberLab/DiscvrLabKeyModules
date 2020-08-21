@@ -420,6 +420,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
             for (String metricName : metricsMap.keySet())
             {
                 Map<String, Object> r = new HashMap<>();
+                r.put("category", "Readset");
                 r.put("metricname", metricName);
                 r.put("metricvalue", metricsMap.get(metricName));
                 r.put("dataid", d.getRowId());

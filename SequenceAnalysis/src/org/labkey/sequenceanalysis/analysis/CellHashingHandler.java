@@ -11,6 +11,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
@@ -182,6 +183,21 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
             for (SequenceOutputFile so : outputsCreated)
             {
                 job.getLogger().info("Saving quality metrics for: " + so.getName());
+
+                //NOTE: if this job errored and restarted, we may have duplicate records:
+                SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), so.getReadset());
+                filter.addCondition(FieldKey.fromString("category"), "Cell Hashing", CompareType.EQUAL);
+                filter.addCondition(FieldKey.fromString("dataid"), so.getDataId(), CompareType.EQUAL);
+                filter.addCondition(FieldKey.fromString("container"), job.getContainer().getId(), CompareType.EQUAL);
+                TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid"), filter, null);
+                if (ts.exists())
+                {
+                    job.getLogger().info("Deleting existing QC metrics (probably from prior restarted job)");
+                    ts.getArrayList(Integer.class).forEach(rowid -> {
+                        Table.delete(ti, rowid);
+                    });
+                }
+
                 if (so.getFile().getName().endsWith(CALL_EXTENSION))
                 {
                     Map<String, Object> counts = parseOutputTable(job.getLogger(), so.getFile(), getCiteSeqCountUnknownOutput(so.getFile().getParentFile(), _type, null), so.getFile().getParentFile(), null, false, _type);
