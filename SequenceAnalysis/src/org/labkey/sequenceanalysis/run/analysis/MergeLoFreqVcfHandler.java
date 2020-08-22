@@ -205,6 +205,9 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
             for (SequenceOutputFile so : inputFiles)
             {
+                //This will error if the coverage file is not found.  Perform check now to fail fast
+                getDepthFile();
+
                 if (so.getLibrary_id() == null)
                 {
                     throw new PipelineJobException("VCF lacks library id: " + so.getRowid());
@@ -224,6 +227,12 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                         if (vc.getAttribute("AF") == null)
                         {
                             continue;
+                        }
+
+                        //Also perform santity check of VCF early
+                        if (vc.getAttribute("GATK_DP") == null)
+                        {
+                            throw new PipelineJobException("Expected GATK_DP annotation on line " + key + " in file: " + so.getFile().getPath());
                         }
 
                         double af = vc.getAttributeAsDouble("AF", 0.0);
@@ -546,15 +555,22 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             return ret;
         }
 
-        private int getReadDepth(File vcf, Map<String, Integer> contigToOffset, String contig, int position1, JobContext ctx) throws PipelineJobException
+        private File getDepthFile(File vcf) throws PipelineJobException
         {
             //NOTE: Earlier iterations used multiple VCF naming conventions
             String basename = vcf.getName().split("lofreq")[0];
             File gatkDepth = new File(vcf.getParentFile(), basename + "lofreq.coverage");
             if (!gatkDepth.exists())
             {
-                throw new PipelineJobException("File not found: " + gatkDepth.getPath());
+                throw new PipelineJobException("File not found: " + gatkDepth.getPath() + ", for VCF: " + vcf.getName());
             }
+
+            return gatkDepth;
+        }
+
+        private int getReadDepth(File vcf, Map<String, Integer> contigToOffset, String contig, int position1, JobContext ctx) throws PipelineJobException
+        {
+            File gatkDepth = getDepthFile(vcf);
 
             int lineNo = contigToOffset.get(contig) + position1;
             try (Stream<String> lines = Files.lines(gatkDepth.toPath()))
