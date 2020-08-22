@@ -548,7 +548,9 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
         private int getReadDepth(File vcf, Map<String, Integer> contigToOffset, String contig, int position1, JobContext ctx) throws PipelineJobException
         {
-            File gatkDepth = new File(vcf.getParentFile(), vcf.getName().replaceAll(".all.vcf.gz", ".coverage"));
+            //NOTE: Earlier iterations used multiple VCF naming conventions
+            String basename = vcf.getName().split("lofreq")[0];
+            File gatkDepth = new File(vcf.getParentFile(), basename + "lofreq.coverage");
             if (!gatkDepth.exists())
             {
                 throw new PipelineJobException("File not found: " + gatkDepth.getPath());
