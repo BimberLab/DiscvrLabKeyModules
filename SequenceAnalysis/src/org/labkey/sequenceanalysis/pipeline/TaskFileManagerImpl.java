@@ -249,7 +249,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         {
             try (PrintWriter writer = PrintWriters.getPrintWriter(logFile))
             {
-                writer.write(StringUtils.join(Arrays.asList("ReadsetId", "FileRelPath", "Type", "Category", "MetricName", "Value"), "\t"));
+                writer.write(StringUtils.join(Arrays.asList("ReadsetId", "FileRelPath", "Type", "Category", "MetricName", "Value", "Source"), "\t"));
                 writer.write("\n");
             }
             catch (IOException e)
@@ -435,8 +435,15 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
             try (CSVReader reader = new CSVReader(Readers.getReader(metricLog), '\t'))
             {
                 String[] line;
+                int i = 0;
                 while ((line = reader.readNext()) != null)
                 {
+                    i++;
+                    if (i == 1)
+                    {
+                        continue; //header
+                    }
+
                     if (filePaths.contains(line[6]))
                     {
                         needToReplace = true;
