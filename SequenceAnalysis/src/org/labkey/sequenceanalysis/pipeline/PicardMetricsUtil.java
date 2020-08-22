@@ -94,6 +94,10 @@ public class PicardMetricsUtil
     {
         List<Map<String, Object>> ret = new ArrayList<>();
         List<WgsMetrics> metrics = mf.getMetrics();
+        if (metrics.size() > 1)
+        {
+            log.info("More than one set of WgsMetrics, for category " + category + ": " + metrics.size());
+        }
 
         for (WgsMetrics m : metrics)
         {
