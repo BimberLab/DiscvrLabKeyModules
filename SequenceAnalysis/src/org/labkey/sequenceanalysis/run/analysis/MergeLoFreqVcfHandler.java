@@ -201,6 +201,8 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             final double minAfThreshold = ctx.getParams().optDouble(MIN_AF, 0.0);
             final int minDepth = ctx.getParams().optInt(MIN_COVERAGE, 0);
 
+            Set<String> errors = new HashSet<>();
+
             ctx.getLogger().info("Pass 1: Building whitelist of sites");
             Map<String, SiteAndAlleles> siteToAllele = new HashMap<>();
             List<Pair<String, Integer>> whitelistSites = new ArrayList<>();
@@ -210,7 +212,14 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             for (SequenceOutputFile so : inputFiles)
             {
                 //This will error if the coverage file is not found.  Perform check now to fail fast
-                getDepthFile(so.getFile());
+                try
+                {
+                    getDepthFile(so.getFile());
+                }
+                catch (PipelineJobException e)
+                {
+                    errors.add(e.getMessage());
+                }
 
                 if (so.getLibrary_id() == null)
                 {
@@ -236,7 +245,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                         //Also perform santity check of VCF early
                         if (vc.getAttribute("GATK_DP") == null)
                         {
-                            throw new PipelineJobException("Expected GATK_DP annotation on line " + getCacheKey(vc.getContig(), vc.getStart()) + " in file: " + so.getFile().getPath());
+                            errors.add("Expected GATK_DP annotation on line " + getCacheKey(vc.getContig(), vc.getStart()) + " in file: " + so.getFile().getPath());
                         }
 
                         double af = vc.getAttributeAsDouble("AF", 0.0);
@@ -257,6 +266,12 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                         }
                     }
                 }
+            }
+
+            if (!errors.isEmpty())
+            {
+                errors.forEach(ctx.getLogger()::error);
+                throw new PipelineJobException("Problems with either input VCFs or DepthOfCoverage files");
             }
 
             ctx.getLogger().info("total sites: " + whitelistSites.size());
