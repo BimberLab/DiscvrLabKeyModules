@@ -4,7 +4,6 @@ import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.util.CloseableIterator;
-import htsjdk.samtools.util.IOUtil;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
@@ -26,8 +25,12 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,6 +43,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.GZIPOutputStream;
 
 public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
@@ -206,7 +210,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             for (SequenceOutputFile so : inputFiles)
             {
                 //This will error if the coverage file is not found.  Perform check now to fail fast
-                getDepthFile();
+                getDepthFile(so.getFile());
 
                 if (so.getLibrary_id() == null)
                 {
@@ -232,7 +236,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                         //Also perform santity check of VCF early
                         if (vc.getAttribute("GATK_DP") == null)
                         {
-                            throw new PipelineJobException("Expected GATK_DP annotation on line " + key + " in file: " + so.getFile().getPath());
+                            throw new PipelineJobException("Expected GATK_DP annotation on line " + getCacheKey(vc.getContig(), vc.getStart()) + " in file: " + so.getFile().getPath());
                         }
 
                         double af = vc.getAttributeAsDouble("AF", 0.0);
@@ -307,9 +311,9 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
             ctx.getLogger().info("Pass 3: Building merged table");
 
-            File output = new File(ctx.getOutputDir(), basename + "txt");
+            File output = new File(ctx.getOutputDir(), basename + "txt.gz");
             int idx = 0;
-            try (CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(output), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+            try (CSVWriter writer = new CSVWriter(new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(output)), Charset.forName("UTF-8"))), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
                 writer.writeNext(new String[]{"ReadsetName", "OutputFileId", "ReadsetId", "Contig", "Start", "End", "Ref", "AltAlleles", "GatkDepth", "LoFreqDepth", "RefAF", "AltAFs", "NonRefCount", "AltCounts"});
 
