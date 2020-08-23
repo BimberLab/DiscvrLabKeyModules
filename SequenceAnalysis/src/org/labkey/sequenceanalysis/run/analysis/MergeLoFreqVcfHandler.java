@@ -332,8 +332,15 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             {
                 writer.writeNext(new String[]{"ReadsetName", "OutputFileId", "ReadsetId", "Contig", "Start", "End", "Ref", "AltAlleles", "GatkDepth", "LoFreqDepth", "RefAF", "AltAFs", "NonRefCount", "AltCounts"});
 
+                int siteIdx = 0;
                 for (Pair<String, Integer> site : whitelistSites)
                 {
+                    siteIdx++;
+                    if (siteIdx % 1000 == 0)
+                    {
+                        ctx.getLogger().info("positions written: " + siteIdx);
+                    }
+
                     for (SequenceOutputFile so : inputFiles)
                     {
                         VCFFileReader reader = getReader(so.getFile());
@@ -490,9 +497,10 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                     totalAltDepth += dp;
 
                                     double adjAF = (double)dp / lofreqDepth;
-                                    if (Math.abs(adjAF - af) > 0.01)
+                                    double diff = Math.abs(adjAF - af);
+                                    if (diff > 0.01)
                                     {
-                                        ctx.getLogger().error("Significant AF adjustment: " + line.get(0) + "/" + line.get(4) + "/" + a + "/" + af + "/" + adjAF);
+                                        ctx.getLogger().error("Significant AF adjustment: readset: " + line.get(0) + " / site: " + line.get(4) + " / allele: " + a + " / AF: " + af + " / New AF" + adjAF + " / diff: " + diff + " / gatk depth: " + gatkDepth + " / lofreq depth: " + lofreqDepth);
                                     }
 
                                     totalAltAf += adjAF;
