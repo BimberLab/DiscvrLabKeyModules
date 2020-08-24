@@ -101,26 +101,31 @@ public class DefaultPipelineStepOutput implements PipelineStepOutput
         return Collections.unmodifiableList(_sequenceOutputs);
     }
 
+    @Override
     public void addSequenceOutput(File file, String label, String category, @Nullable Integer readsetId, @Nullable Integer analysisId, @Nullable Integer genomeId, @Nullable String description)
     {
         _sequenceOutputs.add(new SequenceOutput(file, label, category, readsetId, analysisId, genomeId, description));
     }
 
+    @Override
     public void addInput(File input, String role)
     {
         _inputs.add(Pair.of(input, role));
     }
 
+    @Override
     public void addOutput(File output, String role)
     {
         _outputs.add(Pair.of(output, role));
     }
 
+    @Override
     public void addIntermediateFile(File file)
     {
         addIntermediateFile(file, null);
     }
 
+    @Override
     public void addIntermediateFile(File file, String role)
     {
         if (role != null)
@@ -136,6 +141,11 @@ public class DefaultPipelineStepOutput implements PipelineStepOutput
 
     public void addPicardMetricsFile(Readset rs, File metricFile, PicardMetricsOutput.TYPE type)
     {
+        if (!metricFile.exists())
+        {
+            throw new IllegalArgumentException("File does not exist: " + metricFile.getPath());
+        }
+
         _picardMetricsFiles.add(new PipelineStepOutput.PicardMetricsOutput(metricFile, type, rs.getRowId()));
     }
 

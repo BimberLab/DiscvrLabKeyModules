@@ -24,7 +24,6 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
-import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.DebugInfoDumper;
 import org.labkey.api.util.FileType;
@@ -33,6 +32,7 @@ import org.labkey.api.util.Pair;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -734,6 +734,34 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
                 else
                 {
                     f.delete();
+
+                    if (SequenceUtil.FILETYPE.bam.getFileType().isType(f))
+                    {
+                        File idx = new File(f.getPath() + ".bai");
+                        if (idx.exists())
+                        {
+                            _job.getLogger().debug("Also deleting index: " + idx.getPath());
+                            idx.delete();
+                        }
+                    }
+                    else if (SequenceUtil.FILETYPE.vcf.getFileType().isType(f))
+                    {
+                        File idx = new File(f.getPath() + ".tbi");
+                        if (idx.exists())
+                        {
+                            _job.getLogger().debug("Also deleting index: " + idx.getPath());
+                            idx.delete();
+                        }
+                    }
+                    else if (SequenceUtil.FILETYPE.bed.getFileType().isType(f))
+                    {
+                        File idx = new File(f.getPath() + ".idx");
+                        if (idx.exists())
+                        {
+                            _job.getLogger().debug("Also deleting index: " + idx.getPath());
+                            idx.delete();
+                        }
+                    }
                 }
 
                 if (f.exists())

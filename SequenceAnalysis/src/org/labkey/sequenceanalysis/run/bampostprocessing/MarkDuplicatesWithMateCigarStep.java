@@ -56,27 +56,8 @@ public class MarkDuplicatesWithMateCigarStep extends AbstractCommandPipelineStep
         File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".markduplicateswithmatecigar.bam");
         output.addIntermediateFile(outputBam);
 
-        File sortedBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".sorted.bam");
-        boolean sortedPreexisting = sortedBam.exists();
-
         output.setBAM(getWrapper().executeCommand(inputBam, outputBam, getClientCommandArgs("=")));
-
-        if (sortedBam.exists() && !sortedPreexisting)
-        {
-            output.addIntermediateFile(sortedBam);
-        }
-
-        //NOTE: depending on whether the BAM is sorted by the wrapper, the metrics file name will differ
-        if (getWrapper().getMetricsFile(sortedBam).exists())
-        {
-            output.addPicardMetricsFile(rs, getWrapper().getMetricsFile(sortedBam), PipelineStepOutput.PicardMetricsOutput.TYPE.bam);
-            output.addOutput(getWrapper().getMetricsFile(sortedBam), "MarkDuplicateMetrics");
-        }
-        else if (getWrapper().getMetricsFile(inputBam).exists())
-        {
-            output.addPicardMetricsFile(rs, getWrapper().getMetricsFile(inputBam), PipelineStepOutput.PicardMetricsOutput.TYPE.bam);
-            output.addOutput(getWrapper().getMetricsFile(inputBam), "MarkDuplicateMetrics");
-        }
+        MarkDuplicatesStep.addStepOutputs(getWrapper(), rs, inputBam, outputDirectory, output);
 
         return output;
     }
