@@ -1177,7 +1177,7 @@
                 <isHidden>true</isHidden>
             </column>
             <column columnName="instrument_run_id">
-                <columnTitle>Instrument Run</columnTitle>
+                <columnTitle>Batch/Run</columnTitle>
                 <fk>
                     <fkDbSchema>sequenceanalysis</fkDbSchema>
                     <fkTable>instrument_runs</fkTable>

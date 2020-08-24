@@ -382,7 +382,7 @@ public class SequenceTest extends BaseWebDriverTest
         dr = new DataRegionTable("query", this);
 
         log("Verifying instrument run and details page");
-        clickAndWait(dr.link(2, "Instrument Run"));
+        clickAndWait(dr.link(2, "Batch/Run"));
 
         waitForText("Instrument Run Details");
         waitForText("Run Id"); //crude proxy for loading of the details panel

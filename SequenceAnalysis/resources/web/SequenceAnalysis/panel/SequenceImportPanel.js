@@ -2335,8 +2335,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         }).show(btn);
                     }
                 }, {
-                    text: 'Assign To Instrument Run',
-                    tooltip: 'Click to assign the selected rows to an existing or new instrument run',
+                    text: 'Assign To Instrument Run/Batch',
+                    tooltip: 'Click to assign the selected rows to an existing or new instrument run or batch',
                     scope: this,
                     handler: function (btn) {
                         var grid = btn.up('grid');
