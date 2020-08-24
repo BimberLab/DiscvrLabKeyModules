@@ -500,7 +500,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                     double diff = Math.abs(adjAF - af);
                                     if (diff > 0.01)
                                     {
-                                        ctx.getLogger().error("Significant AF adjustment: readset: " + line.get(0) + " / site: " + line.get(4) + " / allele: " + a + " / AF: " + af + " / New AF" + adjAF + " / diff: " + diff + " / gatk depth: " + gatkDepth + " / lofreq depth: " + lofreqDepth);
+                                        ctx.getLogger().warn("Significant AF adjustment: readset: " + line.get(0) + " / site: " + line.get(4) + " / allele: " + a + " / AF: " + af + " / New AF" + adjAF + " / diff: " + diff + " / gatk depth: " + gatkDepth + " / lofreq depth: " + lofreqDepth);
                                     }
 
                                     totalAltAf += adjAF;

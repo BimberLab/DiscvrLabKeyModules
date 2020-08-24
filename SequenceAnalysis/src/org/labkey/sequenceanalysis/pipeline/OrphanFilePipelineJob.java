@@ -552,7 +552,7 @@ public class OrphanFilePipelineJob extends PipelineJob
                                     continue;
                                 else if (f.getPath().contains("/Normalization/") && f.getName().contains("_unknowns"))
                                     continue;
-                                else if (f.getPath().contains("/Alignment/") && (f.getName().contains("unaligned") || f.getName().contains("unmapped") || f.getName().contains(".overlapping-")))
+                                else if (f.getPath().contains("/outs/") || f.getPath().contains("/Alignment/") && (f.getName().contains("unaligned") || f.getName().contains("unmapped") || f.getName().contains(".overlapping-")))
                                     continue;
                             }
 
