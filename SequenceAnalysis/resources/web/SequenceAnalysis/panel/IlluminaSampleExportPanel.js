@@ -106,11 +106,15 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
                             columns: '*',
                             autoLoad: true,
                             listeners: {
+                                scope: this,
                                 load: function(store){
                                     var rec = LDK.StoreUtils.createModelInstance(store, {
                                         name: 'Custom'
                                     });
                                     store.add(rec);
+
+                                    var field = this.down('#application');
+                                    field.fireEvent('change', field, field.getValue());
                                 }
                             }
                         }),
