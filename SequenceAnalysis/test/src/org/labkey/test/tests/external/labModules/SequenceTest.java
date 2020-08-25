@@ -460,7 +460,7 @@ public class SequenceTest extends BaseWebDriverTest
         goToProjectHome();
         _helper.clickNavPanelItemAndWait("Readsets:", 1);
 
-        waitForText("Instrument Run"); //proxy for dataRegion loading
+        waitForText("Batch/Run"); //proxy for dataRegion loading
         dr.clickEditRow(1);
 
         waitForText("3-Barcode:");
