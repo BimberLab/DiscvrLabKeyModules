@@ -66,7 +66,7 @@ import java.util.stream.Collectors;
 public class CellHashingHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceReadsetProcessor>
 {
     private static final String CALL_EXTENSION = ".calls.txt";
-    private static final String DEFAULT_TAG_GROUP = "5p-HTOs";
+    private static final String DEFAULT_TAG_GROUP = "MultiSeq Barcodes";
 
     public CellHashingHandler()
     {
