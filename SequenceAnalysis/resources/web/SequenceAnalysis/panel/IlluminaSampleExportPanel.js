@@ -99,17 +99,22 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
                         allowBlank: false,
                         displayField: 'name',
                         valueField: 'name',
+                        value: 'FASTQ Only',
                         store: Ext4.create('LABKEY.ext4.data.Store', {
                             schemaName: 'sequenceanalysis',
                             queryName: 'illumina_applications',
                             columns: '*',
                             autoLoad: true,
                             listeners: {
+                                scope: this,
                                 load: function(store){
                                     var rec = LDK.StoreUtils.createModelInstance(store, {
                                         name: 'Custom'
                                     });
                                     store.add(rec);
+
+                                    var field = this.down('#application');
+                                    field.fireEvent('change', field, field.getValue());
                                 }
                             }
                         }),
@@ -117,7 +122,7 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
                             scope: this,
                             change: function(field, val){
                                 var kitField = field.up('panel').down('#sampleKit');
-                                if (!val || val == 'Custom'){
+                                if (!val || val === 'Custom'){
                                     kitField.setDisabled(true);
                                     return;
                                 }
@@ -171,6 +176,12 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
                         helpPopup: 'Leave blank for single-end reads',
                         itemId: 'cycles2',
                         fieldLabel: 'Cycles Read 2'
+                    },{
+                        xtype: 'checkbox',
+                        itemId: 'nameUsingRowId',
+                        fieldLabel: 'Name FASTA Using Row Id',
+                        value: true,
+                        helpPopup: 'If checked, the FASTQs will be named using the numeric rowId, which can make import more automatic.  If unchecked, they will be named using readset name.'
                     },{
                         xtype: 'combo',
                         itemId: 'genomeFolder',
@@ -591,6 +602,7 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
 
         var genomeFolder = '';
         var genomeField = this.down('#genomeFolder');
+        var nameUsingRowId = this.down('#nameUsingRowId').getValue();
         if (genomeField.getValue()){
             var recIdx = genomeField.store.find(genomeField.valueField, genomeField.getValue());
             var rec = genomeField.store.getAt(recIdx);
@@ -599,7 +611,7 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
 
         var sampleColumns = [
             ['Sample_ID', 'rowid'],
-            ['Sample_Name', 'name'],
+            ['Sample_Name', 'name', function(row) { return nameUsingRowId ? 's_' + row.rowid : row.name; }],
             ['Sample_Plate', ''],
             ['Sample_Well', ''],
             ['Sample_Project', ''],
@@ -621,7 +633,13 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
             var toAdd = [];
             Ext4.each(sampleColumns, function(col){
                 if (col.length > 2){
-                    toAdd.push(col[2]);
+                    if (Ext4.isFunction(col[2])) {
+                        toAdd.push(col[2](row));
+                    }
+                    else {
+                        toAdd.push(col[2]);
+                    }
+
                 }
                 else {
                     toAdd.push(row[col[1]]);

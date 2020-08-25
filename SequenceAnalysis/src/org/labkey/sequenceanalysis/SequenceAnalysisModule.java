@@ -161,7 +161,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
     @Override
     public Double getSchemaVersion()
     {
-        return 12.322;
+        return 12.323;
     }
 
     @Override

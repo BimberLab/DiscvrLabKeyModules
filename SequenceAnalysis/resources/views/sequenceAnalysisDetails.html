@@ -17,6 +17,7 @@ Ext4.onReady(function (){
             '<div style="margin-bottom: 10px;"></div>' +
             //'<div id="analysisNav_'+webpart.wrapperDivId+'"></div>' +
             //'<br>' +
+            '<div id="outputs_'+webpart.wrapperDivId+'"></div>' +
             '<div id="qualityMetrics_'+webpart.wrapperDivId+'"></div>' +
             '<div style="margin-bottom: 10px;"></div>' +
             '<div id="readsetDiv_'+webpart.wrapperDivId+'"/>'
@@ -51,6 +52,15 @@ Ext4.onReady(function (){
         scope: this,
         successCallback: onSuccess
     });
+
+    LDK.Utils.getReadOnlyQWP({
+        title: 'Outputs',
+        schemaName: 'sequenceanalysis',
+        queryName: 'outputfiles',
+        maxRows: 20,
+        containerPath: Laboratory.Utils.getQueryContainerPath(),
+        filterArray: [LABKEY.Filter.create('analysis_id', analysisId, LABKEY.Filter.Types.EQUAL)]
+    }).render('outputs_'+webpart.wrapperDivId);
 
     LDK.Utils.getReadOnlyQWP({
         title: 'Quality Metrics',

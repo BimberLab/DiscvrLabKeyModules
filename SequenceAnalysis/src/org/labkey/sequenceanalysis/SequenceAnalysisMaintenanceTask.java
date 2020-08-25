@@ -342,6 +342,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                     if (!d.getFile().exists())
                     {
                         log.error("expected output file does not exist: " + d.getFile().getPath());
+                        continue;
                     }
 
                     //also verify indexes

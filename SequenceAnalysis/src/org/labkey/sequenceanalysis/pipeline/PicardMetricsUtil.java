@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import org.apache.commons.beanutils.ConversionException;
@@ -94,6 +95,10 @@ public class PicardMetricsUtil
     {
         List<Map<String, Object>> ret = new ArrayList<>();
         List<WgsMetrics> metrics = mf.getMetrics();
+        if (metrics.size() > 1)
+        {
+            log.info("More than one set of WgsMetrics, for category " + category + ": " + metrics.size());
+        }
 
         for (WgsMetrics m : metrics)
         {
@@ -165,6 +170,11 @@ public class PicardMetricsUtil
         List<Map<String, Object>> ret = new ArrayList<>();
 
         List<DuplicationMetrics> metrics = metricsFile.getMetrics();
+        if (metrics.size() > 1)
+        {
+            log.info("More than one set of DuplicationMetrics: " + metrics.size());
+        }
+
         for (DuplicationMetrics m : metrics)
         {
             Map<String, Object> metricNames = new HashMap<>();
@@ -222,6 +232,14 @@ public class PicardMetricsUtil
         List<InsertSizeMetrics> metrics = metricsFile.getMetrics();
         for (InsertSizeMetrics m : metrics)
         {
+            log.info("insert size metrics pair orientation: " + m.PAIR_ORIENTATION.name());
+
+            if (m.PAIR_ORIENTATION != SamPairUtil.PairOrientation.FR)
+            {
+                log.info("skipping pair orientation: " + m.PAIR_ORIENTATION.name());
+                continue;
+            }
+
             Map<String, Object> metricNames = new HashMap<>();
             metricNames.put("Mean Insert Size", m.MEAN_INSERT_SIZE);
             metricNames.put("Median Insert Size", m.MEDIAN_INSERT_SIZE);

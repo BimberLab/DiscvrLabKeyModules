@@ -55,29 +55,33 @@ public class MarkDuplicatesStep extends AbstractCommandPipelineStep<MarkDuplicat
         File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".markduplicates.bam");
         output.addIntermediateFile(outputBam);
 
-        File sortedBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".sorted.bam");
-        boolean sortedPreexisting = sortedBam.exists();
-
         output.setBAM(getWrapper().executeCommand(inputBam, outputBam, getClientCommandArgs("=")));
+        addStepOutputs(getWrapper(), rs, inputBam, outputDirectory, output);
 
+        return output;
+    }
 
-        if (sortedBam.exists() && !sortedPreexisting)
+    public static void addStepOutputs(MarkDuplicatesWrapper wrapper, Readset rs, File inputBam, File outputDirectory, BamProcessingOutputImpl output)
+    {
+        //Note:
+        File sortedBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".sorted.bam");
+        if (sortedBam.exists() && !inputBam.equals(sortedBam))
         {
+            wrapper.getLogger().debug("Adding sorted BAM as intermediate file: " + sortedBam.getPath());
             output.addIntermediateFile(sortedBam);
+            output.addIntermediateFile(new File(sortedBam.getPath() + ".bai"));
         }
 
         //NOTE: depending on whether the BAM is sorted by the wrapper, the metrics file name will differ
-        if (getWrapper().getMetricsFile(sortedBam).exists())
+        if (wrapper.getMetricsFile(sortedBam).exists())
         {
-            output.addPicardMetricsFile(rs, getWrapper().getMetricsFile(sortedBam), PipelineStepOutput.PicardMetricsOutput.TYPE.bam);
-            output.addOutput(getWrapper().getMetricsFile(sortedBam), "MarkDuplicateMetrics");
+            output.addPicardMetricsFile(rs, wrapper.getMetricsFile(sortedBam), PipelineStepOutput.PicardMetricsOutput.TYPE.bam);
+            output.addOutput(wrapper.getMetricsFile(sortedBam), "MarkDuplicateMetrics");
         }
-        else if (getWrapper().getMetricsFile(inputBam).exists())
+        else if (wrapper.getMetricsFile(inputBam).exists())
         {
-            output.addPicardMetricsFile(rs, getWrapper().getMetricsFile(inputBam), PipelineStepOutput.PicardMetricsOutput.TYPE.bam);
-            output.addOutput(getWrapper().getMetricsFile(inputBam), "MarkDuplicateMetrics");
+            output.addPicardMetricsFile(rs, wrapper.getMetricsFile(inputBam), PipelineStepOutput.PicardMetricsOutput.TYPE.bam);
+            output.addOutput(wrapper.getMetricsFile(inputBam), "MarkDuplicateMetrics");
         }
-
-        return output;
     }
 }
