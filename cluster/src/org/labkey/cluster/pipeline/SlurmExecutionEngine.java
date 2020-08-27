@@ -211,7 +211,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                         _log.error("command: " + command);
                         continue;
                     }
-                    int statusIdx = tokens.length == 7 ? 5 : 4;
+                    int statusIdx = 5;
 
                     String id = StringUtils.trimToNull(tokens[0]);
                     if (id.equals(job.getClusterId()))

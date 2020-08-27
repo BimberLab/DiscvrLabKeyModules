@@ -24,7 +24,7 @@
         <property name="location" value="slurm" />
         <property name="submitCommand" value="/usr/bin/sbatch ${submitScript}"/>
         <property name="statusCommand" value="/usr/bin/squeue --all"/>
-        <property name="historyCommand" value="/usr/bin/sacct --allusers --jobs=${clusterId}"/>
+        <property name="historyCommand" value="/usr/bin/sacct --allusers --jobs=${clusterId} -o JobId,JobName,Partition,Account,AllocCPUS,State,ExitCode,NodeList"/>
         <property name="removeCommand" value="/usr/bin/scancel ${clusterId}"/>
 
         <!--the following are optional.  their default values are shown-->
