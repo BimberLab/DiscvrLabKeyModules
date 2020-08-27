@@ -138,22 +138,9 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         }
     }
 
-
-    @Override
-    public Output performAnalysisPerSampleRemote(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
+    public static void runDepthOfCoverage(PipelineContext ctx, AnalysisOutputImpl output, File outputDir, ReferenceGenome referenceGenome, File inputBam, File coverageOut) throws PipelineJobException
     {
-        AnalysisOutputImpl output = new AnalysisOutputImpl();
-
-        File outputVcf = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.vcf.gz");
-        File outputVcfSnpEff = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.snpeff.vcf.gz");
-
-        //LoFreq
-        getWrapper().execute(inputBam, outputVcf, referenceGenome.getWorkingFastaFile(), SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger()));
-
-        //Add depth for downstream use:
-        File coverageOut = new File(outputDir, SequenceAnalysisService.get().getUnzippedBaseName(outputVcf.getName()) + ".coverage");
-
-        DepthOfCoverageWrapper wrapper = new DepthOfCoverageWrapper(getPipelineCtx().getLogger());
+        DepthOfCoverageWrapper wrapper = new DepthOfCoverageWrapper(ctx.getLogger());
         List<String> extraArgs = new ArrayList<>();
         extraArgs.add("--include-deletions");
         extraArgs.add("--omit-per-sample-statistics");
@@ -168,6 +155,22 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         {
             throw new PipelineJobException("Unable to find file: " + coverageOut.getPath());
         }
+    }
+
+    @Override
+    public Output performAnalysisPerSampleRemote(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
+    {
+        AnalysisOutputImpl output = new AnalysisOutputImpl();
+
+        File outputVcf = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.vcf.gz");
+        File outputVcfSnpEff = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.snpeff.vcf.gz");
+
+        //LoFreq
+        getWrapper().execute(inputBam, outputVcf, referenceGenome.getWorkingFastaFile(), SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger()));
+
+        //Add depth for downstream use:
+        File coverageOut = new File(outputDir, SequenceAnalysisService.get().getUnzippedBaseName(outputVcf.getName()) + ".coverage");
+        runDepthOfCoverage(getPipelineCtx(), output, outputDir, referenceGenome, inputBam, coverageOut);
 
         //Create a BED file with all regions of coverage below MIN_COVERAGE:
         int minCoverage = getProvider().getParameterByName("minCoverage").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
@@ -580,7 +583,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
         Double minFraction = getProvider().getParameterByName("minFraction").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class, 0.0);
         int minDepth = getProvider().getParameterByName("minDepth").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 0);
-        PindelAnalysis.runPindel(output, getPipelineCtx(), rs, outputDir, inputBam, referenceGenome.getWorkingFastaFile(), minFraction, minDepth, true);
+        PindelAnalysis.runPindel(output, getPipelineCtx(), rs, outputDir, inputBam, referenceGenome.getWorkingFastaFile(), minFraction, minDepth, true, coverageOut);
 
         return output;
     }

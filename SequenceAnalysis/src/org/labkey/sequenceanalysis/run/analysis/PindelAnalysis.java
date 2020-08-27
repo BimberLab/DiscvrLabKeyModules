@@ -42,11 +42,11 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         super(provider, ctx);
     }
 
-    public static class Provider extends AbstractAnalysisStepProvider<LofreqAnalysis>
+    public static class Provider extends AbstractAnalysisStepProvider<PindelAnalysis>
     {
         public Provider()
         {
-            super("pindel", "Pindel Analysis", null, "This will run pindel on BAMs created as part of LowFreq, a tool designed to call low-frequency mutations in a sample, such as viral populations or bacteria.  It is recommended to run GATK's BQSR and IndelRealigner upstream of this tool.", Arrays.asList(
+            super("pindel", "Pindel Analysis", null, "This will run pindel on the selected BAMs.", Arrays.asList(
                     ToolParameterDescriptor.create("minFraction", "Min Fraction To Report", "Only variants representing at least this fraction of reads (based on depth at the start position) will be reported.", "ldk-numberfield", new JSONObject()
                     {{
                         put("minValue", 0.0);
@@ -61,7 +61,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
 
                     }}, false),
                     ToolParameterDescriptor.create("removeDuplicates", "Remove Duplicates", "If checked, a temporatory BAM will be treated with reads marked as duplicates dropped.", "checkbox", new JSONObject(){{
-
+                        put("checked", true);
                     }}, true)
             ), null, null);
         }
@@ -84,8 +84,11 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         Double minFraction = getProvider().getParameterByName("minFraction").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class, 0.0);
         int minDepth = getProvider().getParameterByName("minDepth").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 0);
 
+        File gatkDepth = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + ".coverage");
+        LofreqAnalysis.runDepthOfCoverage(getPipelineCtx(), output, outputDir, referenceGenome, inputBam, gatkDepth);
+
         File out = writeToBamDir ? inputBam.getParentFile() : outputDir;
-        File summary = runPindel(output, getPipelineCtx(), rs, out, inputBam, referenceGenome.getWorkingFastaFile(), minFraction, minDepth, removeDuplicates);
+        File summary = runPindel(output, getPipelineCtx(), rs, out, inputBam, referenceGenome.getWorkingFastaFile(), minFraction, minDepth, removeDuplicates, gatkDepth);
         long lineCount = SequencePipelineService.get().getLineCount(summary) - 1;
         if (lineCount > 0)
         {
@@ -130,7 +133,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         return "250";
     }
 
-    public static File runPindel(AnalysisOutputImpl output, PipelineContext ctx, Readset rs, File outDir, File bam, File fasta, double minFraction, int minDepth, boolean removeDuplicates) throws PipelineJobException
+    public static File runPindel(AnalysisOutputImpl output, PipelineContext ctx, Readset rs, File outDir, File bam, File fasta, double minFraction, int minDepth, boolean removeDuplicates, File gatkDepth) throws PipelineJobException
     {
         File bamToUse = removeDuplicates ? new File(outDir, FileUtil.getBaseName(bam) + ".rmdup.bam") : bam;
         if (removeDuplicates)
@@ -155,7 +158,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(pindelParams), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
             String insertSize = inferInsertSize(ctx, outDir);
-            writer.writeNext(new String[]{bam.getPath(), insertSize, FileUtil.makeLegalName(rs.getName())});
+            writer.writeNext(new String[]{bamToUse.getPath(), insertSize, FileUtil.makeLegalName(rs.getName())});
         }
         catch (IOException e)
         {
@@ -187,8 +190,8 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(outTsv), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
             writer.writeNext(new String[]{"Type", "Contig", "Start", "End", "Depth", "ReadSupport", "Fraction"});
-            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_D"), bam, minFraction, minDepth);
-            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_INV"), bam, minFraction, minDepth);
+            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_D"), bam, minFraction, minDepth, gatkDepth);
+            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_INV"), bam, minFraction, minDepth, gatkDepth);
         }
         catch (IOException e)
         {
@@ -198,7 +201,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         return outTsv;
     }
 
-    private static void parsePindelOutput(PipelineContext ctx, CSVWriter writer, File pindelFile, File bam, double minFraction, int minDepth) throws IOException
+    private static void parsePindelOutput(PipelineContext ctx, CSVWriter writer, File pindelFile, File bam, double minFraction, int minDepth, File gatkDepthFile) throws IOException
     {
         try (BufferedReader reader = Readers.getReader(pindelFile))
         {
@@ -217,7 +220,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                     String contig = tokens[3].split(" ")[1];
                     int start = Integer.parseInt(tokens[4].split(" ")[1]);
 
-                    int depth = getGatkDepth(ctx, bam, contig, start);
+                    int depth = getGatkDepth(ctx, gatkDepthFile, contig, start);
                     if (depth == 0)
                     {
                         continue;
@@ -235,10 +238,8 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         }
     }
 
-    private static int getGatkDepth(PipelineContext ctx, File bam, String contig, int position1) throws IOException
+    private static int getGatkDepth(PipelineContext ctx, File gatkDepth, String contig, int position1) throws IOException
     {
-        File gatkDepth = new File(bam.getParentFile(), FileUtil.getBaseName(bam) + ".lofreq.coverage");
-
         //skip header:
         int lineNo = 1 + position1;
         try (Stream<String> lines = Files.lines(gatkDepth.toPath()))
