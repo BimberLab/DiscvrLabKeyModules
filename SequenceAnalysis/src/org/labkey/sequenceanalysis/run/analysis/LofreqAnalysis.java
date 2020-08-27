@@ -115,7 +115,17 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                         put("minValue", 0.5);
                         put("maxValue", 1.0);
                         put("decimalPrecision", 2);
-                    }}, 0.5)
+                    }}, 0.5),
+                    ToolParameterDescriptor.create("minFraction", "Pindel Min Fraction To Report", "Only variants representing at least this fraction of reads (based on depth at the start position) will be reported.", "ldk-numberfield", new JSONObject()
+                    {{
+                        put("minValue", 0.0);
+                        put("maxValue", 1.0);
+                        put("decimalPrecision", 2);
+                    }}, 0.1),
+                    ToolParameterDescriptor.create("minDepth", "Pindel Min Depth To Report", "Only variants representing at least this many reads (based on depth at the start position) will be reported.", "ldk-integerfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                    }}, 10)
 
             ), null, "http://csb5.github.io/lofreq/");
         }
@@ -567,6 +577,10 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         {
             throw new PipelineJobException(e);
         }
+
+        Double minFraction = getProvider().getParameterByName("minFraction").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class, 0.0);
+        int minDepth = getProvider().getParameterByName("minDepth").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 0);
+        PindelAnalysis.runPindel(output, getPipelineCtx(), rs, outputDir, inputBam, referenceGenome.getWorkingFastaFile(), minFraction, minDepth, true);
 
         return output;
     }

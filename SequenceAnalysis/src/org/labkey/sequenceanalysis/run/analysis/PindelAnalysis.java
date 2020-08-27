@@ -15,6 +15,7 @@ import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SamtoolsRunner;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
@@ -46,15 +47,22 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         public Provider()
         {
             super("pindel", "Pindel Analysis", null, "This will run pindel on BAMs created as part of LowFreq, a tool designed to call low-frequency mutations in a sample, such as viral populations or bacteria.  It is recommended to run GATK's BQSR and IndelRealigner upstream of this tool.", Arrays.asList(
-                    ToolParameterDescriptor.create("minFraction", "Min Fraction To Report", ".", "ldk-numberfield", new JSONObject()
+                    ToolParameterDescriptor.create("minFraction", "Min Fraction To Report", "Only variants representing at least this fraction of reads (based on depth at the start position) will be reported.", "ldk-numberfield", new JSONObject()
                     {{
                         put("minValue", 0.0);
                         put("maxValue", 1.0);
                         put("decimalPrecision", 2);
                     }}, 0.1),
+                    ToolParameterDescriptor.create("minDepth", "Min Depth To Report", "Only variants representing at least this many reads (based on depth at the start position) will be reported.", "ldk-integerfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                    }}, 10),
                     ToolParameterDescriptor.create("writeToBamDir", "Write To BAM Dir", "If checked, outputs will be written to the BAM folder, as opposed to the output folder for this job.", "checkbox", new JSONObject(){{
 
-                    }}, false)
+                    }}, false),
+                    ToolParameterDescriptor.create("removeDuplicates", "Remove Duplicates", "If checked, a temporatory BAM will be treated with reads marked as duplicates dropped.", "checkbox", new JSONObject(){{
+
+                    }}, true)
             ), null, null);
         }
 
@@ -72,11 +80,12 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         AnalysisOutputImpl output = new AnalysisOutputImpl();
 
         boolean writeToBamDir = getProvider().getParameterByName("writeToBamDir").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+        boolean removeDuplicates = getProvider().getParameterByName("removeDuplicates").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
         Double minFraction = getProvider().getParameterByName("minFraction").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class, 0.0);
+        int minDepth = getProvider().getParameterByName("minDepth").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 0);
 
         File out = writeToBamDir ? inputBam.getParentFile() : outputDir;
-
-        File summary = runPindel(getPipelineCtx(), rs, out, inputBam, referenceGenome.getWorkingFastaFile(), minFraction);
+        File summary = runPindel(output, getPipelineCtx(), rs, out, inputBam, referenceGenome.getWorkingFastaFile(), minFraction, minDepth, removeDuplicates);
         long lineCount = SequencePipelineService.get().getLineCount(summary) - 1;
         if (lineCount > 0)
         {
@@ -121,12 +130,31 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         return "250";
     }
 
-    private static File runPindel(PipelineContext ctx, Readset rs, File outDir, File bam, File fasta, double minFraction) throws PipelineJobException
+    public static File runPindel(AnalysisOutputImpl output, PipelineContext ctx, Readset rs, File outDir, File bam, File fasta, double minFraction, int minDepth, boolean removeDuplicates) throws PipelineJobException
     {
+        File bamToUse = removeDuplicates ? new File(outDir, FileUtil.getBaseName(bam) + ".rmdup.bam") : bam;
+        if (removeDuplicates)
+        {
+            File bamIdx = new File(bamToUse.getPath() + ".bai");
+            if (!bamIdx.exists())
+            {
+                SamtoolsRunner runner = new SamtoolsRunner(ctx.getLogger());
+                runner.execute(Arrays.asList(runner.getSamtoolsPath().getPath(), "rmdup", bam.getPath(), bamToUse.getPath()));
+                runner.execute(Arrays.asList(runner.getSamtoolsPath().getPath(), "index", bamToUse.getPath()));
+            }
+            else
+            {
+                ctx.getLogger().debug("rmdup BAM already exists, reusing");
+            }
+
+            output.addIntermediateFile(bamToUse);
+            output.addIntermediateFile(bamIdx);
+        }
+
         File pindelParams = new File(outDir, "pindelCfg.txt");
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(pindelParams), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
-            String insertSize = inferInsertSize(ctx, bam);
+            String insertSize = inferInsertSize(ctx, outDir);
             writer.writeNext(new String[]{bam.getPath(), insertSize, FileUtil.makeLegalName(rs.getName())});
         }
         catch (IOException e)
@@ -159,8 +187,8 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(outTsv), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
             writer.writeNext(new String[]{"Type", "Contig", "Start", "End", "Depth", "ReadSupport", "Fraction"});
-            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_D"), bam, minFraction);
-            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_INV"), bam, minFraction);
+            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_D"), bam, minFraction, minDepth);
+            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_INV"), bam, minFraction, minDepth);
         }
         catch (IOException e)
         {
@@ -170,7 +198,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         return outTsv;
     }
 
-    private static void parsePindelOutput(PipelineContext ctx, CSVWriter writer, File pindelFile, File bam, double minFraction) throws IOException
+    private static void parsePindelOutput(PipelineContext ctx, CSVWriter writer, File pindelFile, File bam, double minFraction, int minDepth) throws IOException
     {
         try (BufferedReader reader = Readers.getReader(pindelFile))
         {
@@ -181,11 +209,20 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                 {
                     String[] tokens = line.split("\t");
                     int support = Integer.parseInt(tokens[8].split(" ")[1]);
+                    if (support < minDepth)
+                    {
+                        continue;
+                    }
 
                     String contig = tokens[3].split(" ")[1];
                     int start = Integer.parseInt(tokens[4].split(" ")[1]);
 
                     int depth = getGatkDepth(ctx, bam, contig, start);
+                    if (depth == 0)
+                    {
+                        continue;
+                    }
+
                     double pct = (double)support / depth;
                     if (pct >= minFraction)
                     {
