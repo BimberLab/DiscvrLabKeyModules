@@ -146,6 +146,13 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         File outPrefix = new File(outDir, FileUtil.getBaseName(bam) + ".pindel");
         args.add(outPrefix.getPath());
 
+        Integer threads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
+        if (threads != null)
+        {
+            args.add("-T");
+            args.add(threads.toString());
+        }
+
         wrapper.execute(args);
 
         File outTsv = new File(outDir, FileUtil.getBaseName(bam) + ".pindel.txt");
@@ -175,7 +182,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                     String[] tokens = line.split("\t");
                     int support = Integer.parseInt(tokens[8].split(" ")[1]);
 
-                    String contig = tokens[4].split(" ")[1];
+                    String contig = tokens[3].split(" ")[1];
                     int start = Integer.parseInt(tokens[4].split(" ")[1]);
 
                     int depth = getGatkDepth(ctx, bam, contig, start);
