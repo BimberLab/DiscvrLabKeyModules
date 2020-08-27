@@ -45,10 +45,10 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
     {
         public Provider()
         {
-            super("COVIDPindel", "COVID Pindel Analysis", null, "This will run pindel on BAMs created as part of LowFreq, a tool designed to call low-frequency mutations in a sample, such as viral populations or bacteria.  It is recommended to run GATK's BQSR and IndelRealigner upstream of this tool.", Arrays.asList(
+            super("pindel", "Pindel Analysis", null, "This will run pindel on BAMs created as part of LowFreq, a tool designed to call low-frequency mutations in a sample, such as viral populations or bacteria.  It is recommended to run GATK's BQSR and IndelRealigner upstream of this tool.", Arrays.asList(
                     ToolParameterDescriptor.create("minFraction", "Min Fraction To Report", ".", "ldk-numberfield", new JSONObject()
                     {{
-                        put("minValue", 0.5);
+                        put("minValue", 0.0);
                         put("maxValue", 1.0);
                         put("decimalPrecision", 2);
                     }}, 0.1),
