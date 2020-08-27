@@ -22,6 +22,7 @@ import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.writer.PrintWriters;
+import org.labkey.sequenceanalysis.run.util.CollectInsertSizeMetricsWrapper;
 import picard.analysis.InsertSizeMetrics;
 
 import java.io.BufferedReader;
@@ -92,7 +93,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         long lineCount = SequencePipelineService.get().getLineCount(summary) - 1;
         if (lineCount > 0)
         {
-            output.addSequenceOutput(summary, rs.getName() + ": pindel", "Pindel Variants", rs.getReadsetId(), null, referenceGenome.getGenomeId(), "Total variants: " + (lineCount - 1));
+            output.addSequenceOutput(summary, rs.getName() + ": pindel", "Pindel Variants", rs.getReadsetId(), null, referenceGenome.getGenomeId(), "Total variants: " + lineCount);
         }
         else
         {
@@ -108,41 +109,65 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         return null;
     }
 
-    private static String inferInsertSize(PipelineContext ctx, File bam) throws IOException
+    private static String parseInsertMetrics(File inputFile) throws IOException
     {
-        File expectedPicard = new File(bam.getParentFile(), FileUtil.getBaseName(bam.getName()) + ".insertsize.metrics");
-        if (expectedPicard.exists())
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), StringUtilsLabKey.DEFAULT_CHARSET)))
         {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(expectedPicard), StringUtilsLabKey.DEFAULT_CHARSET)))
+            MetricsFile metricsFile = new MetricsFile();
+            metricsFile.read(reader);
+            List<InsertSizeMetrics> metrics = metricsFile.getMetrics();
+            for (InsertSizeMetrics m : metrics)
             {
-                MetricsFile metricsFile = new MetricsFile();
-                metricsFile.read(reader);
-                List<InsertSizeMetrics> metrics = metricsFile.getMetrics();
-                for (InsertSizeMetrics m : metrics)
+                if (m.PAIR_ORIENTATION == SamPairUtil.PairOrientation.FR)
                 {
-                    if (m.PAIR_ORIENTATION == SamPairUtil.PairOrientation.FR)
-                    {
-                        return String.valueOf(Math.ceil(m.MEAN_INSERT_SIZE));
-                    }
+                    return String.valueOf(Math.ceil(m.MEAN_INSERT_SIZE));
                 }
             }
         }
 
-        ctx.getLogger().debug("Unable to parse insert size, defaulting to 250");
+        return null;
+    }
+
+    private static String inferInsertSize(PipelineContext ctx, File bam) throws PipelineJobException
+    {
+        File expectedPicard = new File(bam.getParentFile(), FileUtil.getBaseName(bam.getName()) + ".insertsize.metrics");
+        if (!expectedPicard.exists())
+        {
+            ctx.getLogger().debug("Unable to find insert metrics file, creating: " + expectedPicard.getPath());
+            CollectInsertSizeMetricsWrapper wrapper = new CollectInsertSizeMetricsWrapper(ctx.getLogger());
+            File histFile = new File(expectedPicard.getPath() + ".hist");
+            wrapper.executeCommand(bam, expectedPicard, histFile);
+            histFile.delete();
+        }
+
+        try
+        {
+            String ret = parseInsertMetrics(expectedPicard);
+            if (ret != null)
+            {
+                return ret;
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        ctx.getLogger().error("unable to infer insert size, defaulting to 250");
 
         return "250";
     }
 
-    public static File runPindel(AnalysisOutputImpl output, PipelineContext ctx, Readset rs, File outDir, File bam, File fasta, double minFraction, int minDepth, boolean removeDuplicates, File gatkDepth) throws PipelineJobException
+    public static File runPindel(AnalysisOutputImpl output, PipelineContext ctx, Readset rs, File outDir, File inputBam, File fasta, double minFraction, int minDepth, boolean removeDuplicates, File gatkDepth) throws PipelineJobException
     {
-        File bamToUse = removeDuplicates ? new File(outDir, FileUtil.getBaseName(bam) + ".rmdup.bam") : bam;
+        File bamToUse = removeDuplicates ? new File(outDir, FileUtil.getBaseName(inputBam) + ".rmdup.bam") : inputBam;
         if (removeDuplicates)
         {
             File bamIdx = new File(bamToUse.getPath() + ".bai");
             if (!bamIdx.exists())
             {
                 SamtoolsRunner runner = new SamtoolsRunner(ctx.getLogger());
-                runner.execute(Arrays.asList(runner.getSamtoolsPath().getPath(), "rmdup", bam.getPath(), bamToUse.getPath()));
+                runner.execute(Arrays.asList(runner.getSamtoolsPath().getPath(), "rmdup", inputBam.getPath(), bamToUse.getPath()));
                 runner.execute(Arrays.asList(runner.getSamtoolsPath().getPath(), "index", bamToUse.getPath()));
             }
             else
@@ -157,7 +182,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         File pindelParams = new File(outDir, "pindelCfg.txt");
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(pindelParams), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
-            String insertSize = inferInsertSize(ctx, outDir);
+            String insertSize = inferInsertSize(ctx, inputBam);
             writer.writeNext(new String[]{bamToUse.getPath(), insertSize, FileUtil.makeLegalName(rs.getName())});
         }
         catch (IOException e)
@@ -174,7 +199,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         args.add("-i");
         args.add(pindelParams.getPath());
         args.add("-o");
-        File outPrefix = new File(outDir, FileUtil.getBaseName(bam) + ".pindel");
+        File outPrefix = new File(outDir, FileUtil.getBaseName(inputBam) + ".pindel");
         args.add(outPrefix.getPath());
 
         Integer threads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
@@ -186,12 +211,12 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
 
         wrapper.execute(args);
 
-        File outTsv = new File(outDir, FileUtil.getBaseName(bam) + ".pindel.txt");
+        File outTsv = new File(outDir, FileUtil.getBaseName(inputBam) + ".pindel.txt");
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(outTsv), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
             writer.writeNext(new String[]{"Type", "Contig", "Start", "End", "Depth", "ReadSupport", "Fraction"});
-            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_D"), bam, minFraction, minDepth, gatkDepth);
-            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_INV"), bam, minFraction, minDepth, gatkDepth);
+            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_D"), minFraction, minDepth, gatkDepth);
+            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_INV"), minFraction, minDepth, gatkDepth);
         }
         catch (IOException e)
         {
@@ -201,7 +226,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         return outTsv;
     }
 
-    private static void parsePindelOutput(PipelineContext ctx, CSVWriter writer, File pindelFile, File bam, double minFraction, int minDepth, File gatkDepthFile) throws IOException
+    private static void parsePindelOutput(PipelineContext ctx, CSVWriter writer, File pindelFile, double minFraction, int minDepth, File gatkDepthFile) throws IOException
     {
         try (BufferedReader reader = Readers.getReader(pindelFile))
         {
