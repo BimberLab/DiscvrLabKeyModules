@@ -515,6 +515,12 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
                     return;
                 }
 
+                File log = new File(sf.getFilePath());
+                if (log.exists())
+                {
+                    j.setLogModified(new Date(log.lastModified()));
+                }
+
                 PipelineJob.TaskStatus taskStatus = null;
                 for (PipelineJob.TaskStatus ts : PipelineJob.TaskStatus.values())
                 {
