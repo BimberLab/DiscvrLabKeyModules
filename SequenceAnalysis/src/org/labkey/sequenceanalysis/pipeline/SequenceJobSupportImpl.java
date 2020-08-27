@@ -88,6 +88,11 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
 
     public void cacheReadset(SequenceReadsetImpl m)
     {
+        if (m.hasArchivedData())
+        {
+            throw new IllegalArgumentException("Readset has archived data, cannot be used for pipeline jobs");
+        }
+
         m.cacheForRemoteServer();
         if (m.existsInDatabase())
         {

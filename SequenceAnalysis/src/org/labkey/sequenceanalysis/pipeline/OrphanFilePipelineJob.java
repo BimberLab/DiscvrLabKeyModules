@@ -552,8 +552,21 @@ public class OrphanFilePipelineJob extends PipelineJob
                                     continue;
                                 else if (f.getPath().contains("/Normalization/") && f.getName().contains("_unknowns"))
                                     continue;
-                                else if (f.getPath().contains("/Alignment/") && (f.getName().contains("unaligned") || f.getName().contains("unmapped") || f.getName().contains(".overlapping-")))
+                                else if (f.getPath().contains("/outs/") || f.getPath().contains("/Alignment/") && (f.getName().contains("unaligned") || f.getName().contains("unmapped") || f.getName().contains(".overlapping-")))
                                     continue;
+                                else if (f.getName().contains(".overlapping-R"))
+                                {
+                                    //outputs from earlier TCR pipelines:
+                                    continue;
+                                }
+                            }
+                            else if (SequenceUtil.FILETYPE.bam.getFileType().isType(f))
+                            {
+                                //ignore 10x products:
+                                if (f.getPath().contains("/outs/"))
+                                {
+                                    continue;
+                                }
                             }
 
                             //this is too broad a net

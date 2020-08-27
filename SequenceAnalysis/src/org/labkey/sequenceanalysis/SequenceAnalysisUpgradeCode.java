@@ -2,8 +2,9 @@ package org.labkey.sequenceanalysis;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.biojava3.core.exceptions.CompoundNotFoundError;
 import org.biojava3.core.sequence.DNASequence;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
@@ -199,9 +200,28 @@ public class SequenceAnalysisUpgradeCode implements UpgradeCode
             ts.forEachResults(rs -> {
                 Map<String, Object> r = new CaseInsensitiveHashMap<>();
                 r.put("tag_name", rs.getString(FieldKey.fromString("tag_name")));
-                DNASequence seq = new DNASequence(rs.getString(FieldKey.fromString("sequence")));
-                r.put("reverse_complement", seq.getReverseComplement().getSequenceAsString());
-                toUpdate.add(r);
+                if (StringUtils.isEmpty(rs.getString(FieldKey.fromString("sequence"))))
+                {
+                    return;
+                }
+
+                try
+                {
+                    String[] sequences = rs.getString(FieldKey.fromString("sequence")).split(",");
+                    List<String> rcs = new ArrayList<>();
+                    for (String s : sequences)
+                    {
+                        DNASequence seq = new DNASequence(s);
+                        rcs.add(seq.getReverseComplement().getSequenceAsString());
+                    }
+
+                    r.put("reverse_complement", StringUtils.join(rcs, ","));
+                    toUpdate.add(r);
+                }
+                catch (CompoundNotFoundError e)
+                {
+                    _log.error("Unable to reverse complement barcode: " + rs.getString(FieldKey.fromString("sequence")), e);
+                }
             });
 
             toUpdate.forEach(row -> {

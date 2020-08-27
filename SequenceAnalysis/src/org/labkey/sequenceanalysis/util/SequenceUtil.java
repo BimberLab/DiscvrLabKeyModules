@@ -509,7 +509,7 @@ public class SequenceUtil
                     threads = Math.max(1, threads - 1);
                 }
 
-                writer.write("} | bgzip -f" + (compressionLevel == null ? "" : " --compress-level 9") + (threads == null ? "" : " --threads " + threads) + " > " + outputGzip + "\n");
+                writer.write("} | bgzip -f" + (compressionLevel == null ? "" : " --compress-level 9") + (threads == null ? "" : " --threads " + threads) + " > " + outputGzip.getPath() + "\n");
             }
 
             SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);

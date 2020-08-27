@@ -297,6 +297,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         Integer count = readCounts.get(key);
 
         Map<String, Object> r = new HashMap<>();
+        r.put("category", "Readset");
         r.put("metricname", "Total Reads");
         r.put("metricvalue", count);
         r.put("dataid", d.getRowId());

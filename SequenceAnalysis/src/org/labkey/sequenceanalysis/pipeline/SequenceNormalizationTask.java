@@ -345,6 +345,8 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                             Pair<File, File> p = extractReadGroup(fp.file1, fp.platformUnit, actions, outDir);
                             fp.file1 = p.first;
                             fp.file2 = p.second;
+                            getHelper().getFileManager().addIntermediateFile(fp.file1);
+                            getHelper().getFileManager().addIntermediateFile(fp.file2);
                         }
 
                         //NOTE: continue to normalize sequence, in case the BAM-derived data has non-standard encoding
