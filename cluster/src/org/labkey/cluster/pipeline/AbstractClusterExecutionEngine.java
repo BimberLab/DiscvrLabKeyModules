@@ -473,6 +473,16 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
         //no need to redundantly update PipelineJob
         if (!statusChanged)
         {
+            PipelineStatusFile sf = PipelineService.get().getStatusFile(j.getStatusFileId());
+            if (sf != null)
+            {
+                File log = new File(sf.getFilePath());
+                if (log.exists())
+                {
+                    j.setLogModified(new Date(log.lastModified()));
+                }
+            }
+
             Table.update(null, ClusterSchema.getInstance().getSchema().getTable(ClusterSchema.CLUSTER_JOBS), j, j.getRowId());
             return;
         }
