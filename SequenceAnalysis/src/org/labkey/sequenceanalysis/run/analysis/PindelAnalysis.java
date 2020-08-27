@@ -72,7 +72,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         AnalysisOutputImpl output = new AnalysisOutputImpl();
 
         boolean writeToBamDir = getProvider().getParameterByName("writeToBamDir").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
-        Double minFraction = getProvider().getParameterByName("writeToBamDir").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class, 0.0);
+        Double minFraction = getProvider().getParameterByName("minFraction").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class, 0.0);
 
         File out = writeToBamDir ? inputBam.getParentFile() : outputDir;
 
