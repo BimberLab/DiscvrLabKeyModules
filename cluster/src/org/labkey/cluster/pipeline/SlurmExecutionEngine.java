@@ -7,12 +7,10 @@ import org.labkey.api.cluster.ClusterResourceAllocator;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.Table;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
-import org.labkey.cluster.ClusterSchema;
 import org.labkey.cluster.ClusterServiceImpl;
 import org.quartz.JobExecutionException;
 

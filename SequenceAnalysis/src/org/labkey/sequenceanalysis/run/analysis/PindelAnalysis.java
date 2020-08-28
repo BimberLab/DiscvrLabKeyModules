@@ -138,6 +138,12 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
             File histFile = new File(expectedPicard.getPath() + ".hist");
             wrapper.executeCommand(bam, expectedPicard, histFile);
             histFile.delete();
+
+            if (!expectedPicard.exists())
+            {
+                ctx.getLogger().error("CollectInsertSizeMetrics output not found, defaulting to 100 as insert size");
+                return("100");
+            }
         }
 
         try
@@ -155,7 +161,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
 
         ctx.getLogger().error("unable to infer insert size, defaulting to 250");
 
-        return "250";
+        return "100";
     }
 
     public static File runPindel(AnalysisOutputImpl output, PipelineContext ctx, Readset rs, File outDir, File inputBam, File fasta, double minFraction, int minDepth, boolean removeDuplicates, File gatkDepth) throws PipelineJobException
