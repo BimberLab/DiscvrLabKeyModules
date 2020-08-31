@@ -127,7 +127,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                         put("minValue", 0);
                     }}, 10)
 
-            ), null, "http://csb5.github.io/lofreq/");
+            ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "http://csb5.github.io/lofreq/");
         }
 
 
@@ -318,7 +318,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
         //SnpEff:
         Integer geneFileId = getProvider().getParameterByName(SNPEffStep.GENE_PARAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
-        File snpEffBaseDir = SNPEffStep.checkOrCreateIndex(getPipelineCtx(), referenceGenome, geneFileId);
+        File snpEffBaseDir = SNPEffStep.checkOrCreateIndex(getPipelineCtx().getSequenceSupport(), getPipelineCtx().getLogger(), referenceGenome, geneFileId);
 
         SnpEffWrapper snpEffWrapper = new SnpEffWrapper(getPipelineCtx().getLogger());
         snpEffWrapper.runSnpEff(referenceGenome.getGenomeId(), geneFileId, snpEffBaseDir, outputVcf, outputVcfSnpEff, null);
