@@ -269,7 +269,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                         {
                             if (vc.isIndel())
                             {
-                                uniqueIndels.add(vc.getContig() + "<>" + vc.getStart() + "<>" + vc.getReference() + "<>" + vc.getAlternateAlleles().get(0));
+                                uniqueIndels.add(vc.getContig() + "<>" + vc.getStart() + "<>" + vc.getReference().getBaseString() + "<>" + vc.getAlternateAlleles().get(0).getBaseString());
                             }
 
                             for (int i = 0; i < vc.getLengthOnReference();i++)
