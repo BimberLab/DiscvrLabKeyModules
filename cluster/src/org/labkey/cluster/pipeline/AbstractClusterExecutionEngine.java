@@ -373,6 +373,10 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
     private boolean doSubmitJobToCluster(ClusterJob j, PipelineJob job) throws PipelineJobException
     {
         boolean success = false;
+
+        //NOTE: clear errors, since a previously failed/retried job will have non-zero errors
+        job.setErrors(0);
+
         List<String> ret = submitJobToCluster(j, job);
         if (j.getClusterId() != null)
         {

@@ -721,7 +721,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             }
 
             File snpEffBaseDir = SNPEffStep.checkOrCreateIndex(ctx.getSequenceSupport(), ctx.getLogger(), genome, geneFileId);
-            File outputVcfSnpEff = new File(ctx.getOutputDir(), basename + ".snpeff.vcf.gz");
+            File outputVcfSnpEff = new File(ctx.getOutputDir(), basename + "snpeff.vcf.gz");
             snpEffWrapper.runSnpEff(genome.getGenomeId(), geneFileId, snpEffBaseDir, vcfOut, outputVcfSnpEff, null);
         }
     }
