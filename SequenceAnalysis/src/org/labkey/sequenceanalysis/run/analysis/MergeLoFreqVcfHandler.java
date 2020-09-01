@@ -691,8 +691,11 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
                 VariantContextBuilder b = new VariantContextBuilder();
                 b.chr(tokens[0]);
-                b.start(Integer.parseInt(tokens[1]));
-                b.alleles(Arrays.asList(Allele.create(tokens[2], true), Allele.create(tokens[3])));
+                int start = Integer.parseInt(tokens[1]);
+                b.start(start);
+                List<Allele> alleles = Arrays.asList(Allele.create(tokens[2], true), Allele.create(tokens[3]));
+                b.alleles(alleles);
+                b.computeEndFromAlleles(alleles, start);
                 snpEffSites.add(b.make());
             }
 
