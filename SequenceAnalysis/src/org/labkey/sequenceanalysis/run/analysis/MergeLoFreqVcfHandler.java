@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
+import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
@@ -20,12 +21,15 @@ import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
+import org.labkey.api.reader.Readers;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
@@ -225,68 +229,111 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
             Set<Integer> genomeIds = new HashSet<>();
 
-            for (SequenceOutputFile so : inputFiles)
+            File indelOutput = new File(ctx.getOutputDir(), basename + "indels.txt.gz");
+            try (CSVWriter writer = new CSVWriter(new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(indelOutput)), StringUtilsLabKey.DEFAULT_CHARSET)), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
-                //This will error if the coverage file is not found.  Perform check now to fail fast
-                try
-                {
-                    getDepthFile(so.getFile());
-                }
-                catch (PipelineJobException e)
-                {
-                    errors.add(e.getMessage());
-                }
+                writer.writeNext(new String[]{"ReadsetName", "OutputFileId", "ReadsetId", "Source", "Contig", "Start", "End", "Ref", "AltAllele", "GatkDepth", "LoFreqDepth", "AltCount", "AltAF"});
 
-                if (so.getLibrary_id() == null)
+                for (SequenceOutputFile so : inputFiles)
                 {
-                    throw new PipelineJobException("VCF lacks library id: " + so.getRowid());
-                }
-
-                genomeIds.add(so.getLibrary_id());
-                if (genomeIds.size() > 1)
-                {
-                    throw new PipelineJobException("Samples use more than one genome.  Genome IDs: " + StringUtils.join(genomeIds, ","));
-                }
-
-                try (VCFFileReader reader = new VCFFileReader(so.getFile()); CloseableIterator<VariantContext> it = reader.iterator())
-                {
-                    while (it.hasNext())
+                    //This will error if the coverage file is not found.  Perform check now to fail fast
+                    try
                     {
-                        VariantContext vc = it.next();
-                        if (vc.getAttribute("AF") == null)
-                        {
-                            continue;
-                        }
+                        getDepthFile(so.getFile());
+                    }
+                    catch (PipelineJobException e)
+                    {
+                        errors.add(e.getMessage());
+                    }
 
-                        //Also perform santity check of VCF early
-                        if (vc.getAttribute("GATK_DP") == null)
-                        {
-                            errors.add("Expected GATK_DP annotation on line " + getCacheKey(vc.getContig(), vc.getStart()) + " in file: " + so.getFile().getPath());
-                        }
+                    if (so.getLibrary_id() == null)
+                    {
+                        throw new PipelineJobException("VCF lacks library id: " + so.getRowid());
+                    }
 
-                        double af = vc.getAttributeAsDouble("AF", 0.0);
-                        if (af >= minAfThreshold)
+                    genomeIds.add(so.getLibrary_id());
+                    if (genomeIds.size() > 1)
+                    {
+                        throw new PipelineJobException("Samples use more than one genome.  Genome IDs: " + StringUtils.join(genomeIds, ","));
+                    }
+
+                    try (VCFFileReader reader = new VCFFileReader(so.getFile()); CloseableIterator<VariantContext> it = reader.iterator())
+                    {
+                        while (it.hasNext())
                         {
-                            if (vc.isIndel())
+                            VariantContext vc = it.next();
+                            if (vc.getAttribute("AF") == null)
                             {
-                                uniqueIndels.add(vc.getContig() + "<>" + vc.getStart() + "<>" + vc.getReference().getBaseString() + "<>" + vc.getAlternateAlleles().get(0).getBaseString());
+                                continue;
                             }
 
-                            for (int i = 0; i < vc.getLengthOnReference();i++)
+                            //Also perform santity check of VCF early
+                            if (vc.getAttribute("GATK_DP") == null)
                             {
-                                int effectiveStart = vc.getStart() + i;
-                                String key = getCacheKey(vc.getContig(), effectiveStart);
-                                Allele ref = vc.getLengthOnReference() == 1 ? vc.getReference() : Allele.create(vc.getReference().getBaseString().substring(i, i + 1), true);
-                                SiteAndAlleles site = siteToAllele.containsKey(key) ? siteToAllele.get(key) : new SiteAndAlleles(vc.getContig(), effectiveStart, ref);
-                                if (!siteToAllele.containsKey(key))
+                                errors.add("Expected GATK_DP annotation on line " + getCacheKey(vc.getContig(), vc.getStart()) + " in file: " + so.getFile().getPath());
+                            }
+
+                            double af = vc.getAttributeAsDouble("AF", 0.0);
+                            if (af >= minAfThreshold)
+                            {
+                                if (vc.isIndel())
                                 {
-                                    whitelistSites.add(Pair.of(vc.getContig(), effectiveStart));
+                                    uniqueIndels.add(vc.getContig() + "<>" + vc.getStart() + "<>" + vc.getReference().getBaseString() + "<>" + vc.getAlternateAlleles().get(0).getBaseString());
+                                    List<Integer> depths = vc.getAttributeAsIntList("DP4", 0);
+                                    int alleleDepth = depths.get(2) + depths.get(3);
+
+                                    writer.writeNext(new String[]{ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName(), String.valueOf(so.getRowid()), String.valueOf(so.getReadset()), "LoFreq", vc.getContig(), String.valueOf(vc.getStart()), String.valueOf(vc.getEnd()), vc.getReference().getBaseString(), vc.getAlternateAlleles().get(0).getBaseString(), vc.getAttributeAsString("GATK_DP", "ND"), vc.getAttributeAsString("DP", "ND"), String.valueOf(alleleDepth), vc.getAttributeAsString("AF", "ND")});
                                 }
-                                siteToAllele.put(key, site);
+
+                                for (int i = 0; i < vc.getLengthOnReference(); i++)
+                                {
+                                    int effectiveStart = vc.getStart() + i;
+                                    String key = getCacheKey(vc.getContig(), effectiveStart);
+                                    Allele ref = vc.getLengthOnReference() == 1 ? vc.getReference() : Allele.create(vc.getReference().getBaseString().substring(i, i + 1), true);
+                                    SiteAndAlleles site = siteToAllele.containsKey(key) ? siteToAllele.get(key) : new SiteAndAlleles(vc.getContig(), effectiveStart, ref);
+                                    if (!siteToAllele.containsKey(key))
+                                    {
+                                        whitelistSites.add(Pair.of(vc.getContig(), effectiveStart));
+                                    }
+                                    siteToAllele.put(key, site);
+                                }
                             }
                         }
                     }
+
+                    String pindelBasename = SequenceAnalysisService.get().getUnzippedBaseName(so.getFile().getName());
+                    if (pindelBasename.endsWith("lofreq"))
+                    {
+                        pindelBasename = FileUtil.getBaseName(pindelBasename);
+                    }
+
+                    File pindelFile = new File(so.getFile().getParentFile(), pindelBasename + ".pindel.txt");
+                    if (pindelFile.exists())
+                    {
+                        try (CSVReader reader = new CSVReader(Readers.getReader(pindelFile)))
+                        {
+                            String[] line;
+                            while ((line = reader.readNext()) != null)
+                            {
+                                writer.writeNext(new String[]{"Type", "Contig", "Start", "End", "Depth", "ReadSupport", "Fraction"});
+                                if (line[0].equals("Type"))
+                                {
+                                    continue;
+                                }
+
+                                writer.writeNext(new String[]{ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName(), String.valueOf(so.getRowid()), String.valueOf(so.getReadset()), "Pindel", line[1], line[2], line[3], "", line[0], line[4], "", line[5], line[6]});
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ctx.getLogger().warn("Unable to find pindel file, expected: " + pindelFile.getPath());
+                    }
                 }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
             }
 
             if (!errors.isEmpty())
