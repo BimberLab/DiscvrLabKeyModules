@@ -315,7 +315,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                     File pindelFile = new File(so.getFile().getParentFile(), pindelBasename + ".pindel.txt");
                     if (pindelFile.exists())
                     {
-                        try (CSVReader reader = new CSVReader(Readers.getReader(pindelFile)))
+                        try (CSVReader reader = new CSVReader(Readers.getReader(pindelFile), '\t'))
                         {
                             String[] line;
                             while ((line = reader.readNext()) != null)
