@@ -302,9 +302,14 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                     }
 
                     String pindelBasename = SequenceAnalysisService.get().getUnzippedBaseName(so.getFile().getName());
-                    if (pindelBasename.endsWith("lofreq"))
+                    if (pindelBasename.contains(".all"))
                     {
-                        pindelBasename = FileUtil.getBaseName(pindelBasename);
+                        pindelBasename = pindelBasename.replaceAll("\\.all", "");
+                    }
+
+                    if (pindelBasename.contains(".lofreq"))
+                    {
+                        pindelBasename = pindelBasename.replaceAll("\\.lofreq", "");
                     }
 
                     File pindelFile = new File(so.getFile().getParentFile(), pindelBasename + ".pindel.txt");
