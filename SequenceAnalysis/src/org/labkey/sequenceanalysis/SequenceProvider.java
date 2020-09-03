@@ -219,12 +219,16 @@ public class SequenceProvider extends AbstractSequenceDataProvider
         TabbedReportItem analyses = new QueryTabbedReportItem(cache, this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, "Sequence Analyses", category);
         analyses.setSubjectIdFieldKey(FieldKey.fromString("readset/subjectid"));
         analyses.setSampleDateFieldKey(FieldKey.fromString("readset/sampledate"));
+        analyses.setAllProjectsFieldKey(FieldKey.fromString("readset/allProjectsPivot"));
+        analyses.setOverlappingProjectsFieldKey(FieldKey.fromString("readset/overlappingProjectsPivot"));
         analyses.setOwnerKey(owner.getPropertyManagerKey());
         items.add(analyses);
 
         TabbedReportItem outputs = new QueryTabbedReportItem(cache, this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES, "Sequence Outputs", category);
         outputs.setSubjectIdFieldKey(FieldKey.fromString("readset/subjectid"));
         outputs.setSampleDateFieldKey(FieldKey.fromString("readset/sampledate"));
+        outputs.setAllProjectsFieldKey(FieldKey.fromString("readset/allProjectsPivot"));
+        outputs.setOverlappingProjectsFieldKey(FieldKey.fromString("readset/overlappingProjectsPivot"));
         outputs.setOwnerKey(owner.getPropertyManagerKey());
         items.add(outputs);
 
