@@ -720,7 +720,8 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             }
 
             SimpleScriptWrapper wrapper = new SimpleScriptWrapper(ctx.getLogger());
-            wrapper.execute(Arrays.asList("/bin/bash", "script.sh"));
+            wrapper.setWorkingDir(script.getParentFile());
+            wrapper.execute(Arrays.asList("/bin/bash", script.getPath()));
 
             input.delete();
             script.delete();
