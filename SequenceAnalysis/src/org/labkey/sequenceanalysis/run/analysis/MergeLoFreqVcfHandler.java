@@ -13,6 +13,7 @@ import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
@@ -29,9 +30,10 @@ import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.util.FileUtil;
+import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.StringUtilsLabKey;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.run.variant.SNPEffStep;
 import org.labkey.sequenceanalysis.run.variant.SnpEffWrapper;
@@ -42,6 +44,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -232,7 +235,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             File indelOutput = new File(ctx.getOutputDir(), basename + "indels.txt.gz");
             try (CSVWriter writer = new CSVWriter(new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(indelOutput)), StringUtilsLabKey.DEFAULT_CHARSET)), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
-                writer.writeNext(new String[]{"ReadsetName", "OutputFileId", "ReadsetId", "Source", "Contig", "Start", "End", "Ref", "AltAllele", "GatkDepth", "LoFreqDepth", "AltCount", "AltAF"});
+                writer.writeNext(new String[]{"ReadsetName", "OutputFileId", "ReadsetId", "Source", "Contig", "Start", "End", "Length", "Ref", "AltAllele", "GatkDepth", "LoFreqDepth", "AltCount", "AltAF"});
 
                 for (SequenceOutputFile so : inputFiles)
                 {
@@ -282,7 +285,8 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                     List<Integer> depths = vc.getAttributeAsIntList("DP4", 0);
                                     int alleleDepth = depths.get(2) + depths.get(3);
 
-                                    writer.writeNext(new String[]{ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName(), String.valueOf(so.getRowid()), String.valueOf(so.getReadset()), "LoFreq", vc.getContig(), String.valueOf(vc.getStart()), String.valueOf(vc.getEnd()), vc.getReference().getBaseString(), vc.getAlternateAlleles().get(0).getBaseString(), vc.getAttributeAsString("GATK_DP", "ND"), vc.getAttributeAsString("DP", "ND"), String.valueOf(alleleDepth), vc.getAttributeAsString("AF", "ND")});
+                                    int length = vc.getLengthOnReference() - 1;  //NOTE: indels are left-padded including one ref base
+                                    writer.writeNext(new String[]{ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName(), String.valueOf(so.getRowid()), String.valueOf(so.getReadset()), "LoFreq", vc.getContig(), String.valueOf(vc.getStart()), String.valueOf(vc.getEnd()), String.valueOf(length), vc.getReference().getBaseString(), vc.getAlternateAlleles().get(0).getBaseString(), vc.getAttributeAsString("GATK_DP", "ND"), vc.getAttributeAsString("DP", "ND"), String.valueOf(alleleDepth), vc.getAttributeAsString("AF", "ND")});
                                 }
 
                                 for (int i = 0; i < vc.getLengthOnReference(); i++)
@@ -320,13 +324,13 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                             String[] line;
                             while ((line = reader.readNext()) != null)
                             {
-                                writer.writeNext(new String[]{"Type", "Contig", "Start", "End", "Depth", "ReadSupport", "Fraction"});
                                 if (line[0].equals("Type"))
                                 {
                                     continue;
                                 }
 
-                                writer.writeNext(new String[]{ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName(), String.valueOf(so.getRowid()), String.valueOf(so.getReadset()), "Pindel", line[1], line[2], line[3], "", line[0], line[4], "", line[5], line[6]});
+                                int length = Integer.parseInt(line[3]) - Integer.parseInt(line[2]) - 1;  //NOTE: pindel reports one base upstream+downstream as part of the indel
+                                writer.writeNext(new String[]{ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName(), String.valueOf(so.getRowid()), String.valueOf(so.getReadset()), "Pindel", line[1], line[2], line[3], String.valueOf(length), "", line[0], line[4], "", line[5], line[6]});
                             }
                         }
                     }
@@ -340,6 +344,8 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             {
                 throw new PipelineJobException(e);
             }
+
+            sortTsvFile(ctx, indelOutput);
 
             if (!errors.isEmpty())
             {
@@ -690,6 +696,41 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             catch (Exception e)
             {
                 ctx.getLogger().error("Error parsing GATK depth: " + vcf.getName() + " / " + gatkDepth.getPath() + " / " + lineNo);
+                throw new PipelineJobException(e);
+            }
+        }
+
+        private void sortTsvFile(JobContext ctx, File input) throws PipelineJobException
+        {
+            File output = new File(input.getPath() + ".tmp");
+            File script = new File(input.getParentFile(), "script.sh");
+            try (PrintWriter writer = PrintWriters.getPrintWriter(script))
+            {
+                writer.println("#!/bin/bash");
+                writer.println("set -x");
+                writer.println("set -e");
+                writer.println("{");
+                writer.println("zcat " + input.getPath() +" | head -n 1;");
+                writer.println("zcat " + input.getPath() +" | tail +2 | sort -k5,5 -k6,6n -k7,7n;");
+                writer.println("} | gzip -c > " + output.getPath() + "\n");
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            SimpleScriptWrapper wrapper = new SimpleScriptWrapper(ctx.getLogger());
+            wrapper.execute(Arrays.asList("/bin/bash", "script.sh"));
+
+            input.delete();
+            script.delete();
+
+            try
+            {
+                FileUtils.moveFile(output, input);
+            }
+            catch (IOException e)
+            {
                 throw new PipelineJobException(e);
             }
         }
