@@ -127,12 +127,6 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     stateIdx = header.indexOf("STATE");
                     hostnameIdx = header.indexOf("NODELIST");
 
-                    continue;
-                }
-
-                if (headerFound)
-                {
-                    String[] tokens = line.split("( )+");
                     if (stateIdx == -1)
                     {
                         _log.error("Unable to find STATE in header: " + StringUtils.join(header, ", "));
@@ -145,27 +139,41 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                         break;
                     }
 
-                    String id = StringUtils.trimToNull(tokens[jobIdx]);
-                    if (id != null)
-                    {
-                        ClusterJob j = getClusterSubmission(id);
-                        if (j == null)
-                        {
-                            //it is allowable for the same user to submit jobs outside of LK
-                            //_log.error("unable to find slurm submission matching: " + id);
-                        }
-                        else
-                        {
-                            String hostname = StringUtils.trimToNull(tokens[hostnameIdx]);
-                            if (hostname != null)
-                            {
-                                j.setHostname(hostname);
-                            }
+                    continue;
+                }
 
-                            Pair<String, String> status = translateSlurmStatusToTaskStatus(StringUtils.trimToNull(tokens[stateIdx]));
-                            updateJobStatus(status == null ? null : status.first, j, status == null ? null : status.second);
-                            jobsUpdated.add(j.getClusterId());
+                if (headerFound)
+                {
+                    try
+                    {
+                        String[] tokens = line.split("( )+");
+                        String id = StringUtils.trimToNull(tokens[jobIdx]);
+                        if (id != null)
+                        {
+                            ClusterJob j = getClusterSubmission(id);
+                            if (j == null)
+                            {
+                                //it is allowable for the same user to submit jobs outside of LK
+                                //_log.error("unable to find slurm submission matching: " + id);
+                            }
+                            else
+                            {
+                                String hostname = StringUtils.trimToNull(tokens[hostnameIdx]);
+                                if (hostname != null)
+                                {
+                                    j.setHostname(hostname);
+                                }
+
+                                Pair<String, String> status = translateSlurmStatusToTaskStatus(StringUtils.trimToNull(tokens[stateIdx]));
+                                updateJobStatus(status == null ? null : status.first, j, status == null ? null : status.second);
+                                jobsUpdated.add(j.getClusterId());
+                            }
                         }
+                    }
+                    catch (Exception e)
+                    {
+                        _log.error("Error parsing line: " + line);
+                        throw e;
                     }
                 }
             }
@@ -218,13 +226,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     jobIdx = header.indexOf("JOBID");
                     stateIdx = header.indexOf("STATE");
                     hostnameIdx = header.indexOf("NODELIST");
-                }
-                else if (foundJobLine && line.startsWith("------------"))
-                {
-                    headerFound = true;
-                }
-                else if (headerFound)
-                {
+
                     if (stateIdx == -1)
                     {
                         _log.error("Unable to find STATE in header: " + StringUtils.join(header, ", "));
@@ -236,24 +238,38 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                         _log.error("Unable to find JOBID in header: " + StringUtils.join(header, ", "));
                         break;
                     }
-
-                    String[] tokens = line.split("( )+");
-                    String id = StringUtils.trimToNull(tokens[jobIdx]);
-                    if (id.equals(job.getClusterId()))
+                }
+                else if (foundJobLine && line.startsWith("------------"))
+                {
+                    headerFound = true;
+                }
+                else if (headerFound)
+                {
+                    try
                     {
-                        statuses.add(StringUtils.trimToNull(tokens[stateIdx]));
-                    }
-
-                    if (hostnameIdx > -1)
-                    {
-                        String hostname = StringUtils.trimToNull(tokens[hostnameIdx]);
-                        if (hostname != null)
+                        String[] tokens = line.split("( )+");
+                        String id = StringUtils.trimToNull(tokens[jobIdx]);
+                        if (id.equals(job.getClusterId()))
                         {
-                            if (job.getHostname() == null || !job.getHostname().equals(hostname))
+                            statuses.add(StringUtils.trimToNull(tokens[stateIdx]));
+                        }
+
+                        if (hostnameIdx > -1)
+                        {
+                            String hostname = StringUtils.trimToNull(tokens[hostnameIdx]);
+                            if (hostname != null)
                             {
-                                job.setHostname(hostname);
+                                if (job.getHostname() == null || !job.getHostname().equals(hostname))
+                                {
+                                    job.setHostname(hostname);
+                                }
                             }
                         }
+                    }
+                    catch (Exception e)
+                    {
+                        _log.error("Error parsing line: " + line);
+                        throw e;
                     }
                 }
             }
@@ -591,12 +607,6 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     stateIdx = header.indexOf("STATE");
                     hostnameIdx = header.indexOf("NODELIST");
 
-                    continue;
-                }
-
-                if (headerFound)
-                {
-                    String[] tokens = line.split("( )+");
                     if (stateIdx == -1)
                     {
                         _log.error("Unable to find STATE in header: " + StringUtils.join(header, ", "));
@@ -609,19 +619,33 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                         break;
                     }
 
-                    String id = StringUtils.trimToNull(tokens[jobIdx]);
-                    if (job.getClusterId().equals(id))
-                    {
-                        if (hostnameIdx > -1)
-                        {
-                            String hostname = StringUtils.trimToNull(tokens[hostnameIdx]);
-                            if (hostname != null)
-                            {
-                                job.setHostname(hostname);
-                            }
-                        }
+                    continue;
+                }
 
-                        return translateSlurmStatusToTaskStatus(StringUtils.trimToNull(tokens[stateIdx]));
+                if (headerFound)
+                {
+                    try
+                    {
+                        String[] tokens = line.split("( )+");
+                        String id = StringUtils.trimToNull(tokens[jobIdx]);
+                        if (job.getClusterId().equals(id))
+                        {
+                            if (hostnameIdx > -1)
+                            {
+                                String hostname = StringUtils.trimToNull(tokens[hostnameIdx]);
+                                if (hostname != null)
+                                {
+                                    job.setHostname(hostname);
+                                }
+                            }
+
+                            return translateSlurmStatusToTaskStatus(StringUtils.trimToNull(tokens[stateIdx]));
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        _log.error("Error parsing line: " + line);
+                        throw e;
                     }
                 }
             }
