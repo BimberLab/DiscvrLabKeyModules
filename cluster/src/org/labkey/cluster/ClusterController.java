@@ -28,6 +28,7 @@ import org.labkey.api.pipeline.RemoteExecutionEngine;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.permissions.AdminPermission;
+import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.HtmlView;
@@ -95,9 +96,9 @@ public class ClusterController extends SpringActionController
 
         public ModelAndView getConfirmView(ForcePipelineCancelForm form, BindException errors) throws Exception
         {
-            return new HtmlView("This will change the status of the pipeline job with the provided ID to Cancelled.  It is intended to help the situation when the normal UI leave a job in a perpetual 'Cancelling' state." +
+            return new HtmlView(HtmlString.of("This will change the status of the pipeline job with the provided ID to Cancelled.  It is intended to help the situation when the normal UI leave a job in a perpetual 'Cancelling' state." +
                     "To continue, enter a comma-delimited list of Job IDs and hit submit:<br><br>" +
-                    "<label>Enter Job ID: </label><input name=\"jobIds\"><br>");
+                    "<label>Enter Job ID(s): </label><input name=\"jobIds\"><br>"));
         }
 
         public boolean handlePost(ForcePipelineCancelForm form, BindException errors) throws Exception
@@ -140,16 +141,16 @@ public class ClusterController extends SpringActionController
 
     public static class ForcePipelineCancelForm
     {
-        private String jobIds;
+        private String _jobIds;
 
         public String getJobIds()
         {
-            return jobIds;
+            return _jobIds;
         }
 
-        public void setJobId(String jobIds)
+        public void setJobIds(String jobIds)
         {
-            this.jobIds = jobIds;
+            _jobIds = jobIds;
         }
     }
 }
