@@ -96,7 +96,7 @@ public class ClusterController extends SpringActionController
 
         public ModelAndView getConfirmView(ForcePipelineCancelForm form, BindException errors) throws Exception
         {
-            return new HtmlView(HtmlString.of("This will change the status of the pipeline job with the provided ID to Cancelled.  It is intended to help the situation when the normal UI leave a job in a perpetual 'Cancelling' state." +
+            return new HtmlView(HtmlString.unsafe("This will change the status of the pipeline job with the provided ID to Cancelled.  It is intended to help the situation when the normal UI leave a job in a perpetual 'Cancelling' state." +
                     "To continue, enter a comma-delimited list of Job IDs and hit submit:<br><br>" +
                     "<label>Enter Job ID(s): </label><input name=\"jobIds\"><br>"));
         }
