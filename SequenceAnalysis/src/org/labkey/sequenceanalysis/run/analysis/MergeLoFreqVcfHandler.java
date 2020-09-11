@@ -29,6 +29,7 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandl
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.PageFlowUtil;
@@ -64,6 +65,7 @@ import java.util.zip.GZIPOutputStream;
 public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
     private static final String MIN_AF = "minAfThreshold";
+    private static final String MIN_AF_INDEL = "minIndelAfThreshold";
     private static final String MIN_COVERAGE = "minCoverage";
 
     public MergeLoFreqVcfHandler()
@@ -77,6 +79,11 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                     put("maxValue", 1);
                     put("decimalPrecision", 2);
                 }}, 0.10),
+                ToolParameterDescriptor.create(MIN_AF, "Min AF to Include (Indels)", "An indel will be included in the indel output if there is a passing variant above this AF in at least one sample.", "ldk-numberfield", new JSONObject(){{
+                    put("minValue", 0);
+                    put("maxValue", 1);
+                    put("decimalPrecision", 2);
+                }}, 0.05),
                 ToolParameterDescriptor.create(MIN_COVERAGE, "Min Coverage To Include", "A site will be reported as ND, unless coverage is above this threshold", "ldk-integerfield", new JSONObject(){{
                     put("minValue", 0);
                 }}, 25),
@@ -221,6 +228,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             basename = basename + (basename.endsWith(".") ? "" : ".");
 
             final double minAfThreshold = ctx.getParams().optDouble(MIN_AF, 0.0);
+            final double minIndelAfThreshold = ctx.getParams().optDouble(MIN_AF_INDEL, 0.05);
             final int minDepth = ctx.getParams().optInt(MIN_COVERAGE, 0);
 
             Set<String> errors = new HashSet<>();
@@ -279,16 +287,6 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                             double af = vc.getAttributeAsDouble("AF", 0.0);
                             if (af >= minAfThreshold)
                             {
-                                if (vc.isIndel())
-                                {
-                                    uniqueIndels.add(vc.getContig() + "<>" + vc.getStart() + "<>" + vc.getReference().getBaseString() + "<>" + vc.getAlternateAlleles().get(0).getBaseString());
-                                    List<Integer> depths = vc.getAttributeAsIntList("DP4", 0);
-                                    int alleleDepth = depths.get(2) + depths.get(3);
-
-                                    int length = vc.getLengthOnReference() - 1;  //NOTE: indels are left-padded including one ref base
-                                    writer.writeNext(new String[]{ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName(), String.valueOf(so.getRowid()), String.valueOf(so.getReadset()), "LoFreq", vc.getContig(), String.valueOf(vc.getStart()), String.valueOf(vc.getEnd()), String.valueOf(length), vc.getReference().getBaseString(), vc.getAlternateAlleles().get(0).getBaseString(), vc.getAttributeAsString("GATK_DP", "ND"), vc.getAttributeAsString("DP", "ND"), String.valueOf(alleleDepth), vc.getAttributeAsString("AF", "ND")});
-                                }
-
                                 for (int i = 0; i < vc.getLengthOnReference(); i++)
                                 {
                                     int effectiveStart = vc.getStart() + i;
@@ -301,6 +299,16 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                     }
                                     siteToAllele.put(key, site);
                                 }
+                            }
+
+                            if (af > minIndelAfThreshold && vc.isIndel())
+                            {
+                                uniqueIndels.add(vc.getContig() + "<>" + vc.getStart() + "<>" + vc.getReference().getBaseString() + "<>" + vc.getAlternateAlleles().get(0).getBaseString());
+                                List<Integer> depths = vc.getAttributeAsIntList("DP4", 0);
+                                int alleleDepth = depths.get(2) + depths.get(3);
+
+                                int length = vc.getLengthOnReference() - 1;  //NOTE: indels are left-padded including one ref base
+                                writer.writeNext(new String[]{ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName(), String.valueOf(so.getRowid()), String.valueOf(so.getReadset()), "LoFreq", vc.getContig(), String.valueOf(vc.getStart()), String.valueOf(vc.getEnd()), String.valueOf(length), vc.getReference().getBaseString(), vc.getAlternateAlleles().get(0).getBaseString(), vc.getAttributeAsString("GATK_DP", "ND"), vc.getAttributeAsString("DP", "ND"), String.valueOf(alleleDepth), vc.getAttributeAsString("AF", "ND")});
                             }
                         }
                     }
@@ -711,7 +719,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                 writer.println("set -e");
                 writer.println("{");
                 writer.println("zcat " + input.getPath() +" | head -n 1;");
-                writer.println("zcat " + input.getPath() +" | tail +2 | sort -k5,5 -k6,6n -k7,7n;");
+                writer.println("zcat " + input.getPath() +" | tail -n +2 | sort -k5,5 -k6,6n -k7,7n;");
                 writer.println("} | gzip -c > " + output.getPath() + "\n");
             }
             catch (IOException e)
@@ -722,6 +730,13 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             SimpleScriptWrapper wrapper = new SimpleScriptWrapper(ctx.getLogger());
             wrapper.setWorkingDir(script.getParentFile());
             wrapper.execute(Arrays.asList("/bin/bash", script.getPath()));
+
+            long lineCountIn = SequencePipelineService.get().getLineCount(input);
+            long lineCountOut = SequencePipelineService.get().getLineCount(output);
+            if (lineCountIn != lineCountOut)
+            {
+                throw new PipelineJobException("Error sorting file");
+            }
 
             input.delete();
             script.delete();
