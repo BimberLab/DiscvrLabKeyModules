@@ -710,7 +710,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
         private void sortTsvFile(JobContext ctx, File input) throws PipelineJobException
         {
-            File output = new File(input.getPath() + ".tmp");
+            File output = new File(input.getParentFile(), "tmpTable.txt.gz");
             File script = new File(input.getParentFile(), "script.sh");
             try (PrintWriter writer = PrintWriters.getPrintWriter(script))
             {
