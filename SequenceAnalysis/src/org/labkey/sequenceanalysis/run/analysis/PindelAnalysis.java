@@ -120,7 +120,13 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
             {
                 if (m.PAIR_ORIENTATION == SamPairUtil.PairOrientation.FR)
                 {
-                    return String.valueOf(Math.max(100, Math.ceil(m.MEAN_INSERT_SIZE)));
+                    Double insertSize = Math.ceil(m.MEAN_INSERT_SIZE);
+                    if (insertSize < 75)
+                    {
+                        insertSize = insertSize + 150;
+                    }
+
+                    return String.valueOf(Math.max(200, insertSize.intValue()));
                 }
             }
         }
