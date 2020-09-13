@@ -58,6 +58,10 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                     {{
                         put("minValue", 0);
                     }}, 10),
+                    ToolParameterDescriptor.create("minInsertSize", "Min Insert Size", "Normally this tool will use the value of Picard CollectInsertSizeMetrics as the mean insert size to pass to pindel; however, this value can be used to set a minimum.", "ldk-integerfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                    }}, 200),
                     ToolParameterDescriptor.create("writeToBamDir", "Write To BAM Dir", "If checked, outputs will be written to the BAM folder, as opposed to the output folder for this job.", "checkbox", new JSONObject(){{
 
                     }}, false),
@@ -84,12 +88,13 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         boolean removeDuplicates = getProvider().getParameterByName("removeDuplicates").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
         Double minFraction = getProvider().getParameterByName("minFraction").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class, 0.0);
         int minDepth = getProvider().getParameterByName("minDepth").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 0);
+        int minInsertSize = getProvider().getParameterByName("minInsertSize").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 200);
 
         File gatkDepth = new File(inputBam.getParentFile(), FileUtil.getBaseName(inputBam) + ".coverage");
         LofreqAnalysis.runDepthOfCoverage(getPipelineCtx(), output, outputDir, referenceGenome, inputBam, gatkDepth);
 
         File out = writeToBamDir ? inputBam.getParentFile() : outputDir;
-        File summary = runPindel(output, getPipelineCtx(), rs, out, inputBam, referenceGenome.getWorkingFastaFile(), minFraction, minDepth, removeDuplicates, gatkDepth);
+        File summary = runPindel(output, getPipelineCtx(), rs, out, inputBam, referenceGenome.getWorkingFastaFile(), minFraction, minDepth, removeDuplicates, gatkDepth, minInsertSize);
         long lineCount = SequencePipelineService.get().getLineCount(summary) - 1;
         if (lineCount > 0)
         {
@@ -109,7 +114,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         return null;
     }
 
-    private static String parseInsertMetrics(File inputFile) throws IOException
+    private static String parseInsertMetrics(File inputFile, int minInsertSize) throws IOException
     {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFile), StringUtilsLabKey.DEFAULT_CHARSET)))
         {
@@ -121,12 +126,8 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                 if (m.PAIR_ORIENTATION == SamPairUtil.PairOrientation.FR)
                 {
                     Double insertSize = Math.ceil(m.MEAN_INSERT_SIZE);
-                    if (insertSize < 75)
-                    {
-                        insertSize = insertSize + 150;
-                    }
 
-                    return String.valueOf(Math.max(200, insertSize.intValue()));
+                    return String.valueOf(Math.max(minInsertSize, insertSize.intValue()));
                 }
             }
         }
@@ -134,7 +135,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         return null;
     }
 
-    private static String inferInsertSize(PipelineContext ctx, File bam) throws PipelineJobException
+    private static String inferInsertSize(PipelineContext ctx, File bam, int minInsertSize) throws PipelineJobException
     {
         File expectedPicard = new File(bam.getParentFile(), FileUtil.getBaseName(bam.getName()) + ".insertsize.metrics");
         if (!expectedPicard.exists())
@@ -147,14 +148,14 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
 
             if (!expectedPicard.exists())
             {
-                ctx.getLogger().error("CollectInsertSizeMetrics output not found, defaulting to 100 as insert size");
-                return("100");
+                ctx.getLogger().error("CollectInsertSizeMetrics output not found, defaulting to " + minInsertSize + " as insert size");
+                return(String.valueOf(minInsertSize));
             }
         }
 
         try
         {
-            String ret = parseInsertMetrics(expectedPicard);
+            String ret = parseInsertMetrics(expectedPicard, minInsertSize);
             if (ret != null)
             {
                 return ret;
@@ -170,7 +171,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         return "100";
     }
 
-    public static File runPindel(AnalysisOutputImpl output, PipelineContext ctx, Readset rs, File outDir, File inputBam, File fasta, double minFraction, int minDepth, boolean removeDuplicates, File gatkDepth) throws PipelineJobException
+    public static File runPindel(AnalysisOutputImpl output, PipelineContext ctx, Readset rs, File outDir, File inputBam, File fasta, double minFraction, int minDepth, boolean removeDuplicates, File gatkDepth, int minInsertSize) throws PipelineJobException
     {
         File bamToUse = removeDuplicates ? new File(outDir, FileUtil.getBaseName(inputBam) + ".rmdup.bam") : inputBam;
         if (removeDuplicates)
@@ -194,7 +195,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         File pindelParams = new File(outDir, "pindelCfg.txt");
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(pindelParams), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
-            String insertSize = inferInsertSize(ctx, inputBam);
+            String insertSize = inferInsertSize(ctx, inputBam, minInsertSize);
             writer.writeNext(new String[]{bamToUse.getPath(), insertSize, FileUtil.makeLegalName(rs.getName())});
         }
         catch (IOException e)

@@ -125,9 +125,13 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                     ToolParameterDescriptor.create("minDepth", "Pindel Min Depth To Report", "Only variants representing at least this many reads (based on depth at the start position) will be reported.", "ldk-integerfield", new JSONObject()
                     {{
                         put("minValue", 0);
-                    }}, 10)
+                    }}, 10),
+                    ToolParameterDescriptor.create("minInsertSize", "Min Insert Size", "Normally this tool will use the value of Picard CollectInsertSizeMetrics as the mean insert size to pass to pindel; however, this value can be used to set a minimum.", "ldk-integerfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                    }}, 200)
 
-            ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "http://csb5.github.io/lofreq/");
+                    ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "http://csb5.github.io/lofreq/");
         }
 
 
@@ -583,7 +587,9 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
         Double minFraction = getProvider().getParameterByName("minFraction").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class, 0.0);
         int minDepth = getProvider().getParameterByName("minDepth").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 0);
-        PindelAnalysis.runPindel(output, getPipelineCtx(), rs, outputDir, inputBam, referenceGenome.getWorkingFastaFile(), minFraction, minDepth, true, coverageOut);
+        int minInsertSize = getProvider().getParameterByName("minInsertSize").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 0);
+
+        PindelAnalysis.runPindel(output, getPipelineCtx(), rs, outputDir, inputBam, referenceGenome.getWorkingFastaFile(), minFraction, minDepth, true, coverageOut, minInsertSize);
 
         return output;
     }
