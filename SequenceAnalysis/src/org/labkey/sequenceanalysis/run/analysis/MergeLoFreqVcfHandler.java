@@ -248,6 +248,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             {
                 writer.writeNext(new String[]{"ReadsetName", "OutputFileId", "ReadsetId", "Source", "Contig", "Start", "End", "Length", "Ref", "AltAllele", "GatkDepth", "LoFreqDepth", "AltCount", "AltAF"});
 
+                Set<Integer> analysesWithoutPindel = new HashSet<>();
                 for (SequenceOutputFile so : inputFiles)
                 {
                     //This will error if the coverage file is not found.  Perform check now to fail fast
@@ -337,6 +338,13 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                             {
                                 if (line[0].equals("Type"))
                                 {
+                                    if (line.length != 8)
+                                    {
+                                        ctx.getLogger().warn("Older version of pindel file found, skipping: " + pindelFile.getPath());
+                                        analysesWithoutPindel.add(so.getAnalysis_id());
+                                        break;
+                                    }
+
                                     continue;
                                 }
 
@@ -379,7 +387,13 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                     else
                     {
                         ctx.getLogger().warn("Unable to find pindel file, expected: " + pindelFile.getPath());
+                        analysesWithoutPindel.add(so.getAnalysis_id());
                     }
+                }
+
+                if (!analysesWithoutPindel.isEmpty())
+                {
+                    ctx.getLogger().error("Analysis missing pindel: " + StringUtils.join(analysesWithoutPindel, ";"));
                 }
             }
             catch (IOException e)
