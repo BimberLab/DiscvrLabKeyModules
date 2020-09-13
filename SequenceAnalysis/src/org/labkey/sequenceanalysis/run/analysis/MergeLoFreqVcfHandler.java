@@ -209,7 +209,8 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                 {
                     return Allele.SPAN_DEL.getBaseString();
                 }
-                else if (offset == 0 && a.length() == 1)
+                //simple SNP or insertion
+                else if (offset == 0 && a.length() >= vc.getReference().length())
                 {
                     return _ref.getBaseString().equals(a.getBaseString()) ? null : a.getBaseString();
                 }
