@@ -229,6 +229,8 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         {
             writer.writeNext(new String[]{"Type", "Contig", "Start", "End", "Depth", "ReadSupport", "Fraction"});
             parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_D"), minFraction, minDepth, gatkDepth);
+            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_SI"), minFraction, minDepth, gatkDepth);
+            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_LI"), minFraction, minDepth, gatkDepth);
             parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_INV"), minFraction, minDepth, gatkDepth);
         }
         catch (IOException e)
@@ -241,6 +243,11 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
 
     private static void parsePindelOutput(PipelineContext ctx, CSVWriter writer, File pindelFile, double minFraction, int minDepth, File gatkDepthFile) throws IOException
     {
+        if (!pindelFile.exists())
+        {
+            return;
+        }
+
         try (BufferedReader reader = Readers.getReader(pindelFile))
         {
             String line;

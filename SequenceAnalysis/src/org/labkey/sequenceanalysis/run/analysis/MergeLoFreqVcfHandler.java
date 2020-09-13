@@ -340,23 +340,27 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                     continue;
                                 }
 
-                                int length = Integer.parseInt(line[3]) - Integer.parseInt(line[2]) - 1;  //NOTE: pindel reports one base upstream+downstream as part of the indel
-                                writer.writeNext(new String[]{ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName(), String.valueOf(so.getRowid()), String.valueOf(so.getReadset()), "Pindel", line[1], line[2], line[3], String.valueOf(length), "", line[0], line[4], "", line[5], line[6]});
-
+                                int end1 = Integer.parseInt(line[3]) - 1;  //pindel reports the end as one bp downstream of the event, so drop 1 bp even though we're keeping 1-based
+                                int length = end1 - Integer.parseInt(line[2]);  //NOTE: pindel reports one base upstream+downstream as part of the indel
                                 if ("D".equalsIgnoreCase(line[0]))
                                 {
-                                        ReferenceSequence rs = getReferenceSequence(ctx, genomeIds.iterator().next(), line[1]);
-                                        int start0 = Integer.parseInt(line[2]) - 1;
-                                        char alt = (char)rs.getBases()[start0];
+                                    ReferenceSequence rs = getReferenceSequence(ctx, genomeIds.iterator().next(), line[1]);
+                                    int start0 = Integer.parseInt(line[2]) - 1; //for consistency with VCFs, retain the first REF base, as pindel reports
+                                    char alt = (char)rs.getBases()[start0];
 
-                                        int end1 = Integer.parseInt(line[3]) - 1;  //pindel reports the end as one bp downstream of the event, so drop 1 bp even though we're keeping 1-based
-                                        String ref = new String(Arrays.copyOfRange(rs.getBases(), start0, end1), StringUtilsLabKey.DEFAULT_CHARSET);
-                                        if (ref.length() != length + 1)
-                                        {
-                                            throw new PipelineJobException("Improper pindel parsing: " + so.getRowid() + "/" + line[2] + "/" + line[3] + "/" + ref + "/" + alt);
-                                        }
+                                    String ref = new String(Arrays.copyOfRange(rs.getBases(), start0, end1), StringUtilsLabKey.DEFAULT_CHARSET);
+                                    if (ref.length() != length + 1)
+                                    {
+                                        throw new PipelineJobException("Improper pindel parsing: " + so.getRowid() + "/" + line[2] + "/" + line[3] + "/" + ref + "/" + alt);
+                                    }
 
-                                        uniqueIndels.add(line[1] + "<>" + line[2] + "<>" + ref + "<>" + alt);
+                                    uniqueIndels.add(line[1] + "<>" + line[2] + "<>" + ref + "<>" + alt);
+
+                                    writer.writeNext(new String[]{ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName(), String.valueOf(so.getRowid()), String.valueOf(so.getReadset()), "Pindel", line[1], line[2], String.valueOf(end1), String.valueOf(length), ref, String.valueOf(alt), line[4], "", line[5], line[6]});
+                                }
+                                else
+                                {
+                                    writer.writeNext(new String[]{ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName(), String.valueOf(so.getRowid()), String.valueOf(so.getReadset()), "Pindel", line[1], line[2], String.valueOf(end1), String.valueOf(length), "", line[0], line[4], "", line[5], line[6]});
                                 }
                             }
                         }
