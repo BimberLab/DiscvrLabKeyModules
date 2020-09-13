@@ -4,6 +4,8 @@ import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.variantcontext.Allele;
@@ -340,6 +342,22 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
                                 int length = Integer.parseInt(line[3]) - Integer.parseInt(line[2]) - 1;  //NOTE: pindel reports one base upstream+downstream as part of the indel
                                 writer.writeNext(new String[]{ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName(), String.valueOf(so.getRowid()), String.valueOf(so.getReadset()), "Pindel", line[1], line[2], line[3], String.valueOf(length), "", line[0], line[4], "", line[5], line[6]});
+
+                                if ("D".equalsIgnoreCase(line[0]))
+                                {
+                                        ReferenceSequence rs = getReferenceSequence(ctx, genomeIds.iterator().next(), line[1]);
+                                        int start0 = Integer.parseInt(line[2]) - 1;
+                                        char alt = (char)rs.getBases()[start0];
+
+                                        int end1 = Integer.parseInt(line[3]) - 1;  //pindel reports the end as one bp downstream of the event, so drop 1 bp even though we're keeping 1-based
+                                        String ref = new String(Arrays.copyOfRange(rs.getBases(), start0, end1), StringUtilsLabKey.DEFAULT_CHARSET);
+                                        if (ref.length() != length + 1)
+                                        {
+                                            throw new PipelineJobException("Improper pindel parsing: " + so.getRowid() + "/" + line[2] + "/" + line[3] + "/" + ref + "/" + alt);
+                                        }
+
+                                        uniqueIndels.add(line[1] + "<>" + line[2] + "<>" + ref + "<>" + alt);
+                                }
                             }
                         }
                     }
@@ -651,6 +669,22 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             }
 
             ctx.getFileManager().addSequenceOutput(output, "Merged LoFreq Variants: " + inputFiles.size() + " VCFs", "Merged LoFreq Variant Table", null, null, genome.getGenomeId(), null);
+        }
+
+        private Map<String, ReferenceSequence> seqMap = new HashMap<>();
+
+        private ReferenceSequence getReferenceSequence(JobContext ctx, int genomeId, String name) throws IOException
+        {
+            if (!seqMap.containsKey(name))
+            {
+                ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(genomeId);
+                try (IndexedFastaSequenceFile fastaSequenceFile = new IndexedFastaSequenceFile(genome.getWorkingFastaFile()))
+                {
+                    seqMap.put(name, fastaSequenceFile.getSequence(name));
+                }
+            }
+
+            return seqMap.get(name);
         }
 
         private static String getCacheKey(String contig, int start)
