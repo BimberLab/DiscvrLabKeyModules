@@ -484,6 +484,15 @@
                 <columnTitle>SRA Run</columnTitle>
                 <url>https://trace.ncbi.nlm.nih.gov/Traces/sra/?run=${sra_accession}</url>
             </column>
+            <column columnName="metrics" wrappedColumnName="rowid">
+                <columnTitle>Quality Metrics</columnTitle>
+                <isUnselectable>true</isUnselectable>
+                <fk>
+                    <fkDbSchema>sequenceanalysis</fkDbSchema>
+                    <fkTable>quality_metrics_analyses_pivoted</fkTable>
+                    <fkColumnName>analysis_id</fkColumnName>
+                </fk>
+            </column>
         </columns>
         <buttonBarOptions includeStandardButtons="false">
             <includeScript>laboratory.context</includeScript>

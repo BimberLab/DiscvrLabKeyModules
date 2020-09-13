@@ -16,6 +16,7 @@
 
 package org.labkey.cluster;
 
+import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.action.ConfirmAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.pipeline.PipelineJob;
@@ -27,12 +28,16 @@ import org.labkey.api.pipeline.RemoteExecutionEngine;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.permissions.AdminPermission;
+import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.HtmlView;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ClusterController extends SpringActionController
 {
@@ -91,28 +96,44 @@ public class ClusterController extends SpringActionController
 
         public ModelAndView getConfirmView(ForcePipelineCancelForm form, BindException errors) throws Exception
         {
-            return new HtmlView("This will change the status of the pipeline job with the provided ID to Cancelled.  It is intended to help the situation when the normal UI leave a job in a perpetual 'Cancelling' state." +
-                    "To continue, enter the Job ID and hit submit:<br><br>" +
-                    "<label>Enter Job ID: </label><input name=\"jobId\"><br>");
+            return new HtmlView(HtmlString.unsafe("This will change the status of the pipeline job with the provided ID to Cancelled.  It is intended to help the situation when the normal UI leave a job in a perpetual 'Cancelling' state." +
+                    "To continue, enter a comma-delimited list of Job IDs and hit submit:<br><br>" +
+                    "<label>Enter Job ID(s): </label><input name=\"jobIds\"><br>"));
         }
 
         public boolean handlePost(ForcePipelineCancelForm form, BindException errors) throws Exception
         {
-            PipelineStatusFile sf = PipelineService.get().getStatusFile(form.getJobId());
-            if (sf == null)
+            String jobIDs = StringUtils.trimToNull(form.getJobIds());
+            if (jobIDs == null)
             {
-                errors.reject(ERROR_MSG, "Unable to find job: " + form.getJobId());
+                errors.reject(ERROR_MSG, "No JobIds provided");
                 return false;
             }
 
-            if (!PipelineJob.TaskStatus.cancelling.name().equalsIgnoreCase(sf.getStatus()))
+            List<PipelineStatusFile> sfs = new ArrayList<>();
+            for (String id : jobIDs.split(","))
             {
-                errors.reject(ERROR_MSG, "This should only be used on jobs with status cancelling.  Was: " + sf.getStatus());
-                return false;
+                int jobId = Integer.parseInt(StringUtils.trimToNull(id));
+                PipelineStatusFile sf = PipelineService.get().getStatusFile(jobId);
+                if (sf == null)
+                {
+                    errors.reject(ERROR_MSG, "Unable to find job: " + id);
+                    return false;
+                }
+
+                if (!PipelineJob.TaskStatus.cancelling.name().equalsIgnoreCase(sf.getStatus()))
+                {
+                    errors.reject(ERROR_MSG, "This should only be used on jobs with status cancelling.  Was: " + sf.getStatus());
+                    return false;
+                }
+
+                sfs.add(sf);
             }
 
-            sf.setStatus(PipelineJob.TaskStatus.cancelled.name().toUpperCase());
-            sf.save();
+            sfs.forEach(sf -> {
+                sf.setStatus(PipelineJob.TaskStatus.cancelled.name().toUpperCase());
+                sf.save();
+            });
 
             return true;
         }
@@ -120,16 +141,16 @@ public class ClusterController extends SpringActionController
 
     public static class ForcePipelineCancelForm
     {
-        private int jobId;
+        private String _jobIds;
 
-        public int getJobId()
+        public String getJobIds()
         {
-            return jobId;
+            return _jobIds;
         }
 
-        public void setJobId(int jobId)
+        public void setJobIds(String jobIds)
         {
-            this.jobId = jobId;
+            _jobIds = jobIds;
         }
     }
 }

@@ -374,6 +374,10 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
     private boolean doSubmitJobToCluster(ClusterJob j, PipelineJob job) throws PipelineJobException
     {
         boolean success = false;
+
+        //NOTE: clear errors, since a previously failed/retried job will have non-zero errors
+        job.setErrors(0);
+
         List<String> ret = submitJobToCluster(j, job);
         if (j.getClusterId() != null)
         {
@@ -471,6 +475,23 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
         j.setLastStatusCheck(new Date());
         j.setStatus(status);
 
+        PipelineStatusFile sf = PipelineService.get().getStatusFile(j.getStatusFileId());
+        if (sf != null)
+        {
+            File log = new File(sf.getFilePath());
+            if (log.exists())
+            {
+                j.setLogModified(new Date(log.lastModified()));
+            }
+
+            //NOTE: in rare cases the actual job and status file can get out of sync
+            if (status.equalsIgnoreCase(PipelineJob.TaskStatus.running.name()) && sf.getStatus().equalsIgnoreCase(PipelineJob.TaskStatus.error.name()))
+            {
+                _log.error("Pipeline job and cluster out of sync: " + sf.getStatus() + " / " + status + ", for job: " + sf.getRowId());
+                statusChanged = true;
+            }
+        }
+
         //no need to redundantly update PipelineJob
         if (!statusChanged)
         {
@@ -481,7 +502,6 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
         //and update the actual PipelineJob
         try
         {
-            PipelineStatusFile sf = PipelineService.get().getStatusFile(j.getStatusFileId());
             PipelineJob pj = null;
             if (sf != null && status != null)
             {

@@ -1,10 +1,10 @@
 <query xmlns="http://labkey.org/data/xml/query">
     <metadata>
         <tables xmlns="http://labkey.org/data/xml">
-            <table tableName="quality_metrics_pivoted" tableDbType="TABLE">
-                <tableTitle>Quality Metrics By File</tableTitle>
+            <table tableName="quality_metrics_analyses_pivoted" tableDbType="TABLE">
+                <tableTitle>Quality Metrics By Analysis</tableTitle>
                 <columns>
-                    <column columnName="dataId">
+                    <column columnName="analysis_id">
                         <isKeyField>true</isKeyField>
                     </column>
                 </columns>

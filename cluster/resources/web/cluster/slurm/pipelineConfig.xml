@@ -20,11 +20,12 @@
     </bean>
 
     <!--This is a fairly simple configuration, assuming your LK server is configured for remote condor submission-->
+    <!--Note that squeue and sacct specify the field list.-->
     <bean id="slurmProperties" class="org.labkey.cluster.pipeline.SlurmExecutionEngineConfig">
         <property name="location" value="slurm" />
         <property name="submitCommand" value="/usr/bin/sbatch ${submitScript}"/>
-        <property name="statusCommand" value="/usr/bin/squeue --all"/>
-        <property name="historyCommand" value="/usr/bin/sacct --allusers --jobs=${clusterId}"/>
+        <property name="statusCommand" value="/usr/bin/squeue --all -O JobId,State,NodeList"/>
+        <property name="historyCommand" value="/usr/bin/sacct --allusers --jobs=${clusterId} -o JobId,State,NodeList"/>
         <property name="removeCommand" value="/usr/bin/scancel ${clusterId}"/>
 
         <!--the following are optional.  their default values are shown-->

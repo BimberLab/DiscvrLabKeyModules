@@ -135,7 +135,7 @@ public class ClusterManager
                         }
                         catch (Exception ex)
                         {
-                            _log.error(ex);
+                            _log.error(ex.getMessage(), ex);
                         }
                     }
                 }
