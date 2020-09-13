@@ -243,11 +243,16 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
 
     private static void parsePindelOutput(PipelineContext ctx, CSVWriter writer, File pindelFile, double minFraction, int minDepth, File gatkDepthFile) throws IOException
     {
+        ctx.getLogger().info("inspecting file: " + pindelFile.getName());
+
         if (!pindelFile.exists())
         {
+            ctx.getLogger().debug("file does not exist: " + pindelFile.getPath());
             return;
         }
 
+        int totalPassing = 0;
+        int totalFiltered = 0;
         try (BufferedReader reader = Readers.getReader(pindelFile))
         {
             String line;
@@ -259,6 +264,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                     int support = Integer.parseInt(tokens[8].split(" ")[1]);
                     if (support < minDepth)
                     {
+                        totalFiltered++;
                         continue;
                     }
 
@@ -268,6 +274,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                     int depth = getGatkDepth(ctx, gatkDepthFile, contig, start);
                     if (depth == 0)
                     {
+                        totalFiltered++;
                         continue;
                     }
 
@@ -280,9 +287,17 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                         int end = Integer.parseInt(tokens[5]);
                         String type = tokens[1].split(" ")[0];
                         writer.writeNext(new String[]{type, contig, String.valueOf(start), String.valueOf(end), String.valueOf(depth), String.valueOf(support), String.valueOf(pct), alt});
+                        totalPassing++;
+                    }
+                    else
+                    {
+                        totalFiltered++;
                     }
                 }
             }
+
+            ctx.getLogger().info("total filtered: " + totalFiltered);
+            ctx.getLogger().info("total passing: " + totalPassing);
         }
     }
 
