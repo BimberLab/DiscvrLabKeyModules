@@ -340,26 +340,37 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                     continue;
                                 }
 
+                                int start0 = Integer.parseInt(line[2]) - 1; //for consistency with VCFs, retain the first REF base, as pindel reports
                                 int end1 = Integer.parseInt(line[3]) - 1;  //pindel reports the end as one bp downstream of the event, so drop 1 bp even though we're keeping 1-based
-                                int length = end1 - Integer.parseInt(line[2]);  //NOTE: pindel reports one base upstream+downstream as part of the indel
-                                if ("D".equalsIgnoreCase(line[0]))
+                                if ("D".equalsIgnoreCase(line[0]) || "I".equalsIgnoreCase(line[0]))
                                 {
                                     ReferenceSequence rs = getReferenceSequence(ctx, genomeIds.iterator().next(), line[1]);
-                                    int start0 = Integer.parseInt(line[2]) - 1; //for consistency with VCFs, retain the first REF base, as pindel reports
-                                    char alt = (char)rs.getBases()[start0];
-
+                                    int refLength = end1 - start0;
                                     String ref = new String(Arrays.copyOfRange(rs.getBases(), start0, end1), StringUtilsLabKey.DEFAULT_CHARSET);
-                                    if (ref.length() != length + 1)
+                                    if (ref.length() != refLength)
                                     {
-                                        throw new PipelineJobException("Improper pindel parsing: " + so.getRowid() + "/" + line[2] + "/" + line[3] + "/" + ref + "/" + alt);
+                                        throw new PipelineJobException("Improper pindel parsing: " + so.getRowid() + "/" + line[2] + "/" + line[3] + "/" + ref);
+                                    }
+
+                                    String alt = "";
+                                    int length = -1;
+                                    if ("D".equals(line[0]))
+                                    {
+                                        length = end1 - Integer.parseInt(line[2]);  //NOTE: pindel reports one base upstream+downstream as part of the indel
+                                        alt = String.valueOf(rs.getBases()[start0]);
+                                    }
+                                    else if ("I".equals(line[0]))
+                                    {
+                                        alt = (char)rs.getBases()[start0] + line[7];
+                                        length = alt.length();
                                     }
 
                                     uniqueIndels.add(line[1] + "<>" + line[2] + "<>" + ref + "<>" + alt);
-
-                                    writer.writeNext(new String[]{ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName(), String.valueOf(so.getRowid()), String.valueOf(so.getReadset()), "Pindel", line[1], line[2], String.valueOf(end1), String.valueOf(length), ref, String.valueOf(alt), line[4], "", line[5], line[6]});
+                                    writer.writeNext(new String[]{ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName(), String.valueOf(so.getRowid()), String.valueOf(so.getReadset()), "Pindel", line[1], line[2], String.valueOf(end1), String.valueOf(length), ref, alt, line[4], "", line[5], line[6]});
                                 }
                                 else
                                 {
+                                    int length = end1 - start0;
                                     writer.writeNext(new String[]{ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName(), String.valueOf(so.getRowid()), String.valueOf(so.getReadset()), "Pindel", line[1], line[2], String.valueOf(end1), String.valueOf(length), "", line[0], line[4], "", line[5], line[6]});
                                 }
                             }

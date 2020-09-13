@@ -227,7 +227,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         File outTsv = new File(outDir, FileUtil.getBaseName(inputBam) + ".pindel.txt");
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(outTsv), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
-            writer.writeNext(new String[]{"Type", "Contig", "Start", "End", "Depth", "ReadSupport", "Fraction"});
+            writer.writeNext(new String[]{"Type", "Contig", "Start", "End", "Depth", "ReadSupport", "Fraction", "Alt"});
             parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_D"), minFraction, minDepth, gatkDepth);
             parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_SI"), minFraction, minDepth, gatkDepth);
             parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_LI"), minFraction, minDepth, gatkDepth);
@@ -271,12 +271,15 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                         continue;
                     }
 
+                    String alt = tokens[2].split(" ")[2];
+                    alt = alt.replaceAll("\"", "");
+
                     double pct = (double)support / depth;
                     if (pct >= minFraction)
                     {
                         int end = Integer.parseInt(tokens[5]);
                         String type = tokens[1].split(" ")[0];
-                        writer.writeNext(new String[]{type, contig, String.valueOf(start), String.valueOf(end), String.valueOf(depth), String.valueOf(support), String.valueOf(pct)});
+                        writer.writeNext(new String[]{type, contig, String.valueOf(start), String.valueOf(end), String.valueOf(depth), String.valueOf(support), String.valueOf(pct), alt});
                     }
                 }
             }
