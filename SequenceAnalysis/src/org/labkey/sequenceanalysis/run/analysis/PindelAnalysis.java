@@ -166,9 +166,9 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
             throw new PipelineJobException(e);
         }
 
-        ctx.getLogger().error("unable to infer insert size, defaulting to 250");
+        ctx.getLogger().error("unable to infer insert size, defaulting to " + minInsertSize);
 
-        return "100";
+        return String.valueOf(minInsertSize);
     }
 
     public static File runPindel(AnalysisOutputImpl output, PipelineContext ctx, Readset rs, File outDir, File inputBam, File fasta, double minFraction, int minDepth, boolean removeDuplicates, File gatkDepth, int minInsertSize) throws PipelineJobException
