@@ -16,6 +16,7 @@ import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.files.FileUrls;
 import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
+import org.labkey.api.pipeline.CancelledException;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -322,6 +323,11 @@ public class OrphanFilePipelineJob extends PipelineJob
             if (root == null)
             {
                 return;
+            }
+
+            if (getJob().isCancelled())
+            {
+                throw new CancelledException();
             }
 
             messages.add("## processing container: " + c.getPath());
