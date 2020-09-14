@@ -631,15 +631,11 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
 
     public static void swapFilesInRecordedActions(Logger log, File original, File newFile, Collection<RecordedAction> actions, SequenceJob job, @Nullable AbstractResumer resumer) throws PipelineJobException
     {
-        log.debug("Swapping copied output file in actions: ");
-        log.debug("\tOriginal file: " + original.getPath());
-        log.debug("\tNew location: " + newFile.getPath());
-
         for (RecordedAction a : actions)
         {
             if (a.updateForMovedFile(original, newFile))
             {
-                log.debug("updated action: " + a.getName());
+                log.debug("updated file path in action: " + a.getName() + ", " + original.getName());
             }
         }
 
@@ -810,7 +806,6 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         }
         else
         {
-            _job.getLogger().debug("Processing file: " + moved.getName());
             swapFilesInRecordedActions(original, moved, actions, _job, resumer);
         }
     }

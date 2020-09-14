@@ -466,9 +466,10 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
             File output = new File(ctx.getOutputDir(), basename + "txt.gz");
             int idx = 0;
+            int totalAdjusted = 0;
             try (CSVWriter writer = new CSVWriter(new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(output)), StringUtilsLabKey.DEFAULT_CHARSET)), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
-                writer.writeNext(new String[]{"ReadsetName", "OutputFileId", "ReadsetId", "Contig", "Start", "End", "Ref", "AltAlleles", "GatkDepth", "LoFreqDepth", "RefAF", "AltAFs", "NonRefCount", "AltCounts"});
+                writer.writeNext(new String[]{"ReadsetName", "OutputFileId", "ReadsetId", "Contig", "Start", "End", "Ref", "AltAlleles", "GatkDepth", "LoFreqDepth", "RefAF", "AltAFs", "NonRefCount", "AltCounts", "OrigAltAFs"});
 
                 int siteIdx = 0;
                 for (Pair<String, Integer> site : whitelistSites)
@@ -513,19 +514,22 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                 {
                                     line.add(String.valueOf(depth));
                                     line.add("ND");
-                                    line.add("ND");
-                                    line.add("ND");
-                                    line.add("ND");
+                                    line.add("ND"); //RefAF
+                                    line.add("ND"); //AltAFs
+                                    line.add("ND"); //Non-Ref Count
+                                    line.add("ND"); //AltCounts
+                                    line.add("ND"); //Orig AFs
                                 }
                                 else
                                 {
                                     line.add(String.valueOf(depth));
                                     line.add("ND");
-                                    line.add("1");
-                                    line.add(";0".repeat(siteDef._alternates.size()).substring(1));
+                                    line.add("1"); //RefAF
+                                    line.add(";0".repeat(siteDef._alternates.size()).substring(1));  //AltAFs
 
-                                    line.add("0");
-                                    line.add(";0".repeat(siteDef._alternates.size()).substring(1));
+                                    line.add("0"); //NonRefCount
+                                    line.add(";0".repeat(siteDef._alternates.size()).substring(1)); //AltCounts
+                                    line.add(";0".repeat(siteDef._alternates.size()).substring(1)); //Orig AFs
                                 }
 
                                 writer.writeNext(line.toArray(new String[]{}));
@@ -620,11 +624,13 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                 //NOTE: because an upstream deletion could be merged with this site (and their depths / AFs computed slightly differently), recalculate here:
 
                                 //First establish true ALT depth, which could include upstream deletions:
+                                Map<String, Double> alleleToOrigAf = new HashMap<>();
                                 int totalAltDepth = 0;
                                 double totalAltAf = 0.0;
                                 for (String a : siteDef._alternates)
                                 {
                                     double af = alleleToAf.getOrDefault(a, 0.0);
+                                    alleleToOrigAf.put(a, af);
                                     int dp = alleleToDp.getOrDefault(a, 0);
 
                                     if (dp == (int)NO_DATA_VAL)
@@ -638,7 +644,12 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                     double diff = Math.abs(adjAF - af);
                                     if (diff > 0.01)
                                     {
-                                        ctx.getLogger().warn("Significant AF adjustment: readset: " + line.get(0) + " / site: " + line.get(4) + " / allele: " + a + " / AF: " + af + " / New AF: " + adjAF + " / diff: " + diff + " / gatk depth: " + gatkDepth + " / lofreq depth: " + lofreqDepth);
+                                        totalAdjusted++;
+
+                                        if (diff > 0.05)
+                                        {
+                                            ctx.getLogger().warn("Significant AF adjustment: readset: " + line.get(0) + " / site: " + line.get(4) + " / allele: " + a + " / AF: " + af + " / New AF: " + adjAF + " / diff: " + diff + " / gatk depth: " + gatkDepth + " / lofreq depth: " + lofreqDepth);
+                                        }
                                     }
 
                                     totalAltAf += adjAF;
@@ -655,10 +666,14 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                 //Add AFs in order:
                                 List<Object> toAdd = new ArrayList<>();
                                 List<Object> toAddDp = new ArrayList<>();
+                                List<Object> toAddAfOrig = new ArrayList<>();
                                 for (String a : siteDef._alternates)
                                 {
                                     double af = alleleToAf.getOrDefault(a, 0.0);
                                     toAdd.add(af == NO_DATA_VAL ? "ND" : af);
+
+                                    double afOrig = alleleToOrigAf.getOrDefault(a, 0.0);
+                                    toAddAfOrig.add(afOrig == NO_DATA_VAL ? "ND" : afOrig);
 
                                     int dp = alleleToDp.getOrDefault(a, 0);
                                     toAddDp.add(dp == NO_DATA_VAL ? "ND" : dp);
@@ -667,6 +682,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
                                 toWrite.add(String.valueOf(totalAltDepth));
                                 toWrite.add(toAddDp.stream().map(String::valueOf).collect(Collectors.joining(";")));
+                                toWrite.add(toAddAfOrig.stream().map(String::valueOf).collect(Collectors.joining(";")));
 
                                 writer.writeNext(toWrite.toArray(new String[]{}));
                                 idx++;
@@ -697,6 +713,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                 }
             }
 
+            ctx.getLogger().info("total sites with AF adjusted >0.01%: " + totalAdjusted);
             ctx.getFileManager().addSequenceOutput(output, "Merged LoFreq Variants: " + inputFiles.size() + " VCFs", "Merged LoFreq Variant Table", null, null, genome.getGenomeId(), null);
         }
 
