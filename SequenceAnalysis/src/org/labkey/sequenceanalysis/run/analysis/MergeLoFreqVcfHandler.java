@@ -393,7 +393,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
                 if (!analysesWithoutPindel.isEmpty())
                 {
-                    ctx.getLogger().error("Analysis missing pindel: " + StringUtils.join(analysesWithoutPindel, ";"));
+                    ctx.getLogger().warn("Analysis missing pindel: " + StringUtils.join(analysesWithoutPindel, ";"));
                 }
             }
             catch (IOException e)
