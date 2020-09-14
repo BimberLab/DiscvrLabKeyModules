@@ -900,8 +900,8 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                 snpEffSites.forEach(writer::add);
             }
 
-            ctx.getFileManager().addIntermediateFile(vcfOut);
-            ctx.getFileManager().addIntermediateFile(new File(vcfOut.getPath() + ".tbi"));
+            //ctx.getFileManager().addIntermediateFile(vcfOut);
+            //ctx.getFileManager().addIntermediateFile(new File(vcfOut.getPath() + ".tbi"));
 
             SnpEffWrapper snpEffWrapper = new SnpEffWrapper(ctx.getLogger());
             Integer geneFileId = ctx.getParams().optInt(SNPEffStep.GENE_PARAM, -1);
