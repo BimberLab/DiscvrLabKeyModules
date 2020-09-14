@@ -365,11 +365,11 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                     if ("D".equals(line[0]))
                                     {
                                         length = end1 - Integer.parseInt(line[2]);  //NOTE: pindel reports one base upstream+downstream as part of the indel
-                                        alt = String.valueOf(rs.getBases()[start0]);
+                                        alt = Character.toString(rs.getBases()[start0]);
                                     }
                                     else if ("I".equals(line[0]))
                                     {
-                                        alt = (char)rs.getBases()[start0] + line[7];
+                                        alt = Character.toString(rs.getBases()[start0]) + line[7];
                                         length = alt.length();
                                     }
 
