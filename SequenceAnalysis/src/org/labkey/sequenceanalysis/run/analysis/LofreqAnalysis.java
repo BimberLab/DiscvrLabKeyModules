@@ -591,7 +591,23 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
         PindelAnalysis.runPindel(output, getPipelineCtx(), rs, outputDir, inputBam, referenceGenome.getWorkingFastaFile(), minFraction, minDepth, true, coverageOut, minInsertSize);
 
+        runPangolin(consensusFastaLoFreq);
+
         return output;
+    }
+
+    private void runPangolin(File consensusFasta) throws PipelineJobException
+    {
+        SimpleScriptWrapper wrapper = new SimpleScriptWrapper(getPipelineCtx().getLogger());
+        wrapper.setWorkingDir(consensusFasta.getParentFile());
+
+        File pangolin = SequencePipelineService.get().getExeForPackage("PANGOLINPATH", "pangolin");
+
+        List<String> args = new ArrayList<>();
+        args.add(pangolin.getPath());
+        args.add(consensusFasta.getPath());
+
+        wrapper.execute(args);
     }
 
     private File generateConsensus(File loFreqConsensusVcf, File fasta, File maskBed) throws PipelineJobException
