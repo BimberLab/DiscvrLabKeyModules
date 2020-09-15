@@ -81,6 +81,7 @@ import org.labkey.sequenceanalysis.run.analysis.ImmunoGenotypingAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.LofreqAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.MergeLoFreqVcfHandler;
 import org.labkey.sequenceanalysis.run.analysis.PARalyzerAnalysis;
+import org.labkey.sequenceanalysis.run.analysis.PindelAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SnpCountAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SubreadAnalysis;
@@ -281,6 +282,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new SubreadAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new TagPcrSummaryStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new LofreqAnalysis.Provider());
+        SequencePipelineService.get().registerPipelineStep(new PindelAnalysis.Provider());
 
         //SequencePipelineService.get().registerPipelineStep(new BlastUnmappedReadAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new PARalyzerAnalysis.Provider());

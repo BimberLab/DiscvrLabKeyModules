@@ -19,7 +19,7 @@ if (cores != ''){
 
 ## Basic QC and Filtering on input:
 
-```{r QC}
+```{r QC, fig.width=12}
 
 barcodeData <- ProcessCiteSeqCount(bFile = barcodeDir, doRowFilter = doHtoFilter, maxValueForColSumFilter = maxValueForColSumFilter)
 if (nrow(barcodeData) == 0) {
@@ -38,7 +38,7 @@ if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
 
 ## Generate calls
 
-```{r GenerateCalls}
+```{r GenerateCalls, fig.width=12}
 
 if (nrow(barcodeData) > 0 && ncol(barcodeData) > 0){
     dt <- GenerateCellHashingCalls(barcodeData = barcodeData, outFile = finalCallFile, allCallsOutFile = allCallsOutFile)

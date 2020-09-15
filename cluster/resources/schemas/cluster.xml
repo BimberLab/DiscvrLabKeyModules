@@ -48,9 +48,11 @@
             </column>
             <column columnName="location"/>
             <column columnName="activeTaskId"/>
-            <!--TODO: remove-->
-            <column columnName="hasStarted">
-                <isHidden>true</isHidden>
+            <column columnName="hostname">
+                <columnTitle>Host Name</columnTitle>
+            </column>
+            <column columnName="logModified">
+                <columnTitle>Log Last Modified</columnTitle>
             </column>
             <column columnName="status"/>
             <column columnName="clusterUser"/>

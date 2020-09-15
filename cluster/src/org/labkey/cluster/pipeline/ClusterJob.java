@@ -23,6 +23,9 @@ public class ClusterJob
     private String _activeTaskId;
     private String _clusterUser;
 
+    private String _hostname;
+    private Date _logModified;
+
     public int getRowId()
     {
         return _rowId;
@@ -171,5 +174,25 @@ public class ClusterJob
     public void setStatusFileId(int statusFileId)
     {
         _statusFileId = statusFileId;
+    }
+
+    public String getHostname()
+    {
+        return _hostname;
+    }
+
+    public void setHostname(String hostname)
+    {
+        _hostname = hostname;
+    }
+
+    public Date getLogModified()
+    {
+        return _logModified;
+    }
+
+    public void setLogModified(Date logModified)
+    {
+        _logModified = logModified;
     }
 }

@@ -61,6 +61,8 @@ import java.util.regex.Pattern;
 
 public class CellRangerWrapper extends AbstractCommandWrapper
 {
+    public static final String GTF_FILE = "GTF File";
+
     public CellRangerWrapper(@Nullable Logger logger)
     {
         super(logger);
@@ -94,10 +96,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
                         put("extensions", Arrays.asList("gtf"));
                         put("width", 400);
                         put("allowBlank", false);
-                    }}, null),
-                    ToolParameterDescriptor.create("premrna", "Use pre-mRNA GTF", "Normally, reads are only counted if they overlap exons.  If selected, the pipeline will convert the GTF to list all transcript intervals as exon, meaning reads within introns will be counted as well.  This could be useful for single-nuclei sequencing (which captures pre-mRNA), or if your GTF exon annotations may be lacking.", "checkbox", new JSONObject(){{
-
-                    }}, false)
+                    }}, null)
             ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger", true, false, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
         }
 
@@ -138,7 +137,6 @@ public class CellRangerWrapper extends AbstractCommandWrapper
 
         protected static String getAlignDescription(PipelineStepProvider provider, PipelineContext ctx, int stepIdx, boolean addAligner)
         {
-            boolean isPreMrna = isPreMrna(provider, ctx, stepIdx);
             Integer gtfId = provider.getParameterByName("gtfFile").extractValue(ctx.getJob(), provider, stepIdx, Integer.class);
             File gtfFile = ctx.getSequenceSupport().getCachedData(gtfId);
             if (gtfFile == null)
@@ -161,11 +159,6 @@ public class CellRangerWrapper extends AbstractCommandWrapper
                 lines.add("GTF: " + gtfFile.getName());
             }
 
-            if (isPreMrna)
-            {
-                lines.add("Converted to pre-mRNA GTF");
-            }
-
             return lines.isEmpty() ? null : StringUtils.join(lines, '\n');
         }
 
@@ -178,14 +171,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
                 throw new IllegalArgumentException("Missing gtfFile parameter");
             }
 
-            boolean premrna = isPreMrna(getProvider(), getPipelineCtx(), getStepIdx());
-
-            return "cellRanger-" + gtfId + (premrna ? "-premrna" : "");
-        }
-
-        private static boolean isPreMrna(PipelineStepProvider provider, PipelineContext ctx, int stepIdx)
-        {
-            return provider.getParameterByName("premrna").extractValue(ctx.getJob(), provider, stepIdx, Boolean.class, false);
+            return "cellRanger-" + gtfId;
         }
 
         @Override
@@ -227,13 +213,6 @@ public class CellRangerWrapper extends AbstractCommandWrapper
 
                 File gtfEdit = new File(indexDir.getParentFile(), FileUtil.getBaseName(gtfFile) + ".geneId.gtf");
 
-                //See: https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/references
-                boolean premrna = getProvider().getParameterByName("premrna").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
-                if (premrna)
-                {
-                    getPipelineCtx().getLogger().debug("Creating a pre-mRNA version of the GTF");
-                }
-
                 try (CSVReader reader = new CSVReader(Readers.getReader(gtfFile), '\t', CSVWriter.NO_QUOTE_CHARACTER); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(gtfEdit), '\t', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER))
                 {
                     String[] line;
@@ -252,12 +231,6 @@ public class CellRangerWrapper extends AbstractCommandWrapper
                             continue;
                         }
 
-                        if (premrna && "transcript".equalsIgnoreCase(line[2]))
-                        {
-                            exonsAdded++;
-                            line[2] = "exon";
-                        }
-
                         writer.writeNext(line);
                     }
                 }
@@ -271,12 +244,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
                     getPipelineCtx().getLogger().info("dropped " + linesDropped + " lines lacking gene_id, transcript_id, or with an empty value for gene_id/transcript_id");
                 }
 
-                if (premrna)
-                {
-                    getPipelineCtx().getLogger().info("total transcripts converted to exon: " + exonsAdded);
-                }
-
-                boolean useAlternateGtf = linesDropped > 0 || premrna;
+                boolean useAlternateGtf = linesDropped > 0;
                 if (useAlternateGtf)
                 {
                     gtfFile = gtfEdit;
@@ -364,6 +332,10 @@ public class CellRangerWrapper extends AbstractCommandWrapper
             {
                 args.add("--sample=" + StringUtils.join(sampleNames, ","));
             }
+
+            Integer gtfId = getProvider().getParameterByName("gtfFile").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
+            File gtfFile = getPipelineCtx().getSequenceSupport().getCachedData(gtfId);
+            output.addInput(gtfFile, GTF_FILE);
 
             File indexDir = AlignerIndexUtil.getWebserverIndexDir(referenceGenome, getIndexCachedDirName(getPipelineCtx().getJob()));
             args.add("--transcriptome=" + indexDir.getPath());

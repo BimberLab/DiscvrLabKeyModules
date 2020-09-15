@@ -1,13 +1,21 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
+import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
+import htsjdk.variant.variantcontext.writer.VariantContextWriter;
+import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
 import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
@@ -16,14 +24,22 @@ import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
+import org.labkey.api.reader.Readers;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.StringUtilsLabKey;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.run.variant.SNPEffStep;
+import org.labkey.sequenceanalysis.run.variant.SnpEffWrapper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.BufferedWriter;
@@ -31,13 +47,16 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,11 +67,12 @@ import java.util.zip.GZIPOutputStream;
 public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
     private static final String MIN_AF = "minAfThreshold";
+    private static final String MIN_AF_INDEL = "minIndelAfThreshold";
     private static final String MIN_COVERAGE = "minCoverage";
 
     public MergeLoFreqVcfHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Merge LoFreq VCFs", "This will merge VCFs generate by LoFreq, considering the DepthOfCoverage data generated during those jobs.", null, Arrays.asList(
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Merge LoFreq VCFs", "This will merge VCFs generate by LoFreq, considering the DepthOfCoverage data generated during those jobs.", new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js")), Arrays.asList(
                 ToolParameterDescriptor.create("basename", "Output Name", "The basename of the output file.", "textfield", new JSONObject(){{
                     put("allowBlank", false);
                 }}, null),
@@ -60,10 +80,21 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                     put("minValue", 0);
                     put("maxValue", 1);
                     put("decimalPrecision", 2);
-                }}, 0.01),
+                }}, 0.10),
+                ToolParameterDescriptor.create(MIN_AF, "Min AF to Include (Indels)", "An indel will be included in the indel output if there is a passing variant above this AF in at least one sample.", "ldk-numberfield", new JSONObject(){{
+                    put("minValue", 0);
+                    put("maxValue", 1);
+                    put("decimalPrecision", 2);
+                }}, 0.05),
                 ToolParameterDescriptor.create(MIN_COVERAGE, "Min Coverage To Include", "A site will be reported as ND, unless coverage is above this threshold", "ldk-integerfield", new JSONObject(){{
                     put("minValue", 0);
-                }}, 10)
+                }}, 25),
+                ToolParameterDescriptor.createExpDataParam(SNPEffStep.GENE_PARAM, "Gene File", "This is the ID of a GTF or GFF3 file containing genes from this genome.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
+                {{
+                    put("extensions", Arrays.asList("gtf", "gff"));
+                    put("width", 400);
+                    put("allowBlank", false);
+                }}, null)
             )
         );
     }
@@ -180,7 +211,8 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                 {
                     return Allele.SPAN_DEL.getBaseString();
                 }
-                else if (offset == 0 && a.length() == 1)
+                //simple SNP or insertion
+                else if (offset == 0 && a.length() >= vc.getReference().length())
                 {
                     return _ref.getBaseString().equals(a.getBaseString()) ? null : a.getBaseString();
                 }
@@ -199,74 +231,163 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             basename = basename + (basename.endsWith(".") ? "" : ".");
 
             final double minAfThreshold = ctx.getParams().optDouble(MIN_AF, 0.0);
+            final double minIndelAfThreshold = ctx.getParams().optDouble(MIN_AF_INDEL, 0.05);
             final int minDepth = ctx.getParams().optInt(MIN_COVERAGE, 0);
 
             Set<String> errors = new HashSet<>();
 
             ctx.getLogger().info("Pass 1: Building whitelist of sites");
+            Set<String> uniqueIndels = new HashSet<>();
             Map<String, SiteAndAlleles> siteToAllele = new HashMap<>();
             List<Pair<String, Integer>> whitelistSites = new ArrayList<>();
 
             Set<Integer> genomeIds = new HashSet<>();
 
-            for (SequenceOutputFile so : inputFiles)
+            File indelOutput = new File(ctx.getOutputDir(), basename + "indels.txt.gz");
+            try (CSVWriter writer = new CSVWriter(new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(indelOutput)), StringUtilsLabKey.DEFAULT_CHARSET)), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
-                //This will error if the coverage file is not found.  Perform check now to fail fast
-                try
-                {
-                    getDepthFile(so.getFile());
-                }
-                catch (PipelineJobException e)
-                {
-                    errors.add(e.getMessage());
-                }
+                writer.writeNext(new String[]{"ReadsetName", "OutputFileId", "ReadsetId", "Source", "Contig", "Start", "End", "Length", "Ref", "AltAllele", "GatkDepth", "LoFreqDepth", "AltCount", "AltAF"});
 
-                if (so.getLibrary_id() == null)
+                for (SequenceOutputFile so : inputFiles)
                 {
-                    throw new PipelineJobException("VCF lacks library id: " + so.getRowid());
-                }
-
-                genomeIds.add(so.getLibrary_id());
-                if (genomeIds.size() > 1)
-                {
-                    throw new PipelineJobException("Samples use more than one genome.  Genome IDs: " + StringUtils.join(genomeIds, ","));
-                }
-
-                try (VCFFileReader reader = new VCFFileReader(so.getFile()); CloseableIterator<VariantContext> it = reader.iterator())
-                {
-                    while (it.hasNext())
+                    //This will error if the coverage file is not found.  Perform check now to fail fast
+                    try
                     {
-                        VariantContext vc = it.next();
-                        if (vc.getAttribute("AF") == null)
-                        {
-                            continue;
-                        }
+                        getDepthFile(so.getFile());
+                    }
+                    catch (PipelineJobException e)
+                    {
+                        errors.add(e.getMessage());
+                    }
 
-                        //Also perform santity check of VCF early
-                        if (vc.getAttribute("GATK_DP") == null)
-                        {
-                            errors.add("Expected GATK_DP annotation on line " + getCacheKey(vc.getContig(), vc.getStart()) + " in file: " + so.getFile().getPath());
-                        }
+                    if (so.getLibrary_id() == null)
+                    {
+                        throw new PipelineJobException("VCF lacks library id: " + so.getRowid());
+                    }
 
-                        double af = vc.getAttributeAsDouble("AF", 0.0);
-                        if (af >= minAfThreshold)
+                    genomeIds.add(so.getLibrary_id());
+                    if (genomeIds.size() > 1)
+                    {
+                        throw new PipelineJobException("Samples use more than one genome.  Genome IDs: " + StringUtils.join(genomeIds, ","));
+                    }
+
+                    try (VCFFileReader reader = new VCFFileReader(so.getFile()); CloseableIterator<VariantContext> it = reader.iterator())
+                    {
+                        while (it.hasNext())
                         {
-                            for (int i = 0; i < vc.getLengthOnReference();i++)
+                            VariantContext vc = it.next();
+                            if (vc.getAttribute("AF") == null)
                             {
-                                int effectiveStart = vc.getStart() + i;
-                                String key = getCacheKey(vc.getContig(), effectiveStart);
-                                Allele ref = vc.getLengthOnReference() == 1 ? vc.getReference() : Allele.create(vc.getReference().getBaseString().substring(i, i + 1), true);
-                                SiteAndAlleles site = siteToAllele.containsKey(key) ? siteToAllele.get(key) : new SiteAndAlleles(vc.getContig(), effectiveStart, ref);
-                                if (!siteToAllele.containsKey(key))
+                                continue;
+                            }
+
+                            //Also perform santity check of VCF early
+                            if (vc.getAttribute("GATK_DP") == null)
+                            {
+                                errors.add("Expected GATK_DP annotation on line " + getCacheKey(vc.getContig(), vc.getStart()) + " in file: " + so.getFile().getPath());
+                            }
+
+                            double af = vc.getAttributeAsDouble("AF", 0.0);
+                            if (af >= minAfThreshold)
+                            {
+                                for (int i = 0; i < vc.getLengthOnReference(); i++)
                                 {
-                                    whitelistSites.add(Pair.of(vc.getContig(), effectiveStart));
+                                    int effectiveStart = vc.getStart() + i;
+                                    String key = getCacheKey(vc.getContig(), effectiveStart);
+                                    Allele ref = vc.getLengthOnReference() == 1 ? vc.getReference() : Allele.create(vc.getReference().getBaseString().substring(i, i + 1), true);
+                                    SiteAndAlleles site = siteToAllele.containsKey(key) ? siteToAllele.get(key) : new SiteAndAlleles(vc.getContig(), effectiveStart, ref);
+                                    if (!siteToAllele.containsKey(key))
+                                    {
+                                        whitelistSites.add(Pair.of(vc.getContig(), effectiveStart));
+                                    }
+                                    siteToAllele.put(key, site);
                                 }
-                                siteToAllele.put(key, site);
+                            }
+
+                            if (af > minIndelAfThreshold && vc.isIndel())
+                            {
+                                uniqueIndels.add(vc.getContig() + "<>" + vc.getStart() + "<>" + vc.getReference().getBaseString() + "<>" + vc.getAlternateAlleles().get(0).getBaseString());
+                                List<Integer> depths = vc.getAttributeAsIntList("DP4", 0);
+                                int alleleDepth = depths.get(2) + depths.get(3);
+
+                                int length = vc.getLengthOnReference() - 1;  //NOTE: indels are left-padded including one ref base
+                                writer.writeNext(new String[]{ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName(), String.valueOf(so.getRowid()), String.valueOf(so.getReadset()), "LoFreq", vc.getContig(), String.valueOf(vc.getStart()), String.valueOf(vc.getEnd()), String.valueOf(length), vc.getReference().getBaseString(), vc.getAlternateAlleles().get(0).getBaseString(), vc.getAttributeAsString("GATK_DP", "ND"), vc.getAttributeAsString("DP", "ND"), String.valueOf(alleleDepth), vc.getAttributeAsString("AF", "ND")});
                             }
                         }
                     }
+
+                    String pindelBasename = SequenceAnalysisService.get().getUnzippedBaseName(so.getFile().getName());
+                    if (pindelBasename.contains(".all"))
+                    {
+                        pindelBasename = pindelBasename.replaceAll("\\.all", "");
+                    }
+
+                    if (pindelBasename.contains(".lofreq"))
+                    {
+                        pindelBasename = pindelBasename.replaceAll("\\.lofreq", "");
+                    }
+
+                    File pindelFile = new File(so.getFile().getParentFile(), pindelBasename + ".pindel.txt");
+                    if (pindelFile.exists())
+                    {
+                        try (CSVReader reader = new CSVReader(Readers.getReader(pindelFile), '\t'))
+                        {
+                            String[] line;
+                            while ((line = reader.readNext()) != null)
+                            {
+                                if (line[0].equals("Type"))
+                                {
+                                    continue;
+                                }
+
+                                int start0 = Integer.parseInt(line[2]) - 1; //for consistency with VCFs, retain the first REF base, as pindel reports
+                                int end1 = Integer.parseInt(line[3]) - 1;  //pindel reports the end as one bp downstream of the event, so drop 1 bp even though we're keeping 1-based
+                                if ("D".equalsIgnoreCase(line[0]) || "I".equalsIgnoreCase(line[0]))
+                                {
+                                    ReferenceSequence rs = getReferenceSequence(ctx, genomeIds.iterator().next(), line[1]);
+                                    int refLength = end1 - start0;
+                                    String ref = new String(Arrays.copyOfRange(rs.getBases(), start0, end1), StringUtilsLabKey.DEFAULT_CHARSET);
+                                    if (ref.length() != refLength)
+                                    {
+                                        throw new PipelineJobException("Improper pindel parsing: " + so.getRowid() + "/" + line[2] + "/" + line[3] + "/" + ref);
+                                    }
+
+                                    String alt = "";
+                                    int length = -1;
+                                    if ("D".equals(line[0]))
+                                    {
+                                        length = end1 - Integer.parseInt(line[2]);  //NOTE: pindel reports one base upstream+downstream as part of the indel
+                                        alt = String.valueOf(rs.getBases()[start0]);
+                                    }
+                                    else if ("I".equals(line[0]))
+                                    {
+                                        alt = (char)rs.getBases()[start0] + line[7];
+                                        length = alt.length();
+                                    }
+
+                                    uniqueIndels.add(line[1] + "<>" + line[2] + "<>" + ref + "<>" + alt);
+                                    writer.writeNext(new String[]{ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName(), String.valueOf(so.getRowid()), String.valueOf(so.getReadset()), "Pindel", line[1], line[2], String.valueOf(end1), String.valueOf(length), ref, alt, line[4], "", line[5], line[6]});
+                                }
+                                else
+                                {
+                                    int length = end1 - start0;
+                                    writer.writeNext(new String[]{ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName(), String.valueOf(so.getRowid()), String.valueOf(so.getReadset()), "Pindel", line[1], line[2], String.valueOf(end1), String.valueOf(length), "", line[0], line[4], "", line[5], line[6]});
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ctx.getLogger().warn("Unable to find pindel file, expected: " + pindelFile.getPath());
+                    }
                 }
             }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            sortTsvFile(ctx, indelOutput);
 
             if (!errors.isEmpty())
             {
@@ -323,6 +444,9 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(genomeIds.iterator().next());
             SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath());
             Map<String, Integer> contigToOffset = getContigToOffset(dict);
+
+            //Write whitelist as VCF, then run SNPEff:
+            runSnpEff(ctx, siteToAllele, whitelistSites, uniqueIndels, genome, basename);
 
             ctx.getLogger().info("Pass 3: Building merged table");
 
@@ -562,7 +686,23 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             ctx.getFileManager().addSequenceOutput(output, "Merged LoFreq Variants: " + inputFiles.size() + " VCFs", "Merged LoFreq Variant Table", null, null, genome.getGenomeId(), null);
         }
 
-        private String getCacheKey(String contig, int start)
+        private Map<String, ReferenceSequence> seqMap = new HashMap<>();
+
+        private ReferenceSequence getReferenceSequence(JobContext ctx, int genomeId, String name) throws IOException
+        {
+            if (!seqMap.containsKey(name))
+            {
+                ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(genomeId);
+                try (IndexedFastaSequenceFile fastaSequenceFile = new IndexedFastaSequenceFile(genome.getWorkingFastaFile()))
+                {
+                    seqMap.put(name, fastaSequenceFile.getSequence(name));
+                }
+            }
+
+            return seqMap.get(name);
+        }
+
+        private static String getCacheKey(String contig, int start)
         {
             return contig + "<>" + start;
         }
@@ -618,6 +758,49 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             }
         }
 
+        private void sortTsvFile(JobContext ctx, File input) throws PipelineJobException
+        {
+            File output = new File(input.getParentFile(), "tmpTable.txt.gz");
+            File script = new File(input.getParentFile(), "script.sh");
+            try (PrintWriter writer = PrintWriters.getPrintWriter(script))
+            {
+                writer.println("#!/bin/bash");
+                writer.println("set -x");
+                writer.println("set -e");
+                writer.println("{");
+                writer.println("zcat " + input.getPath() +" | head -n 1;");
+                writer.println("zcat " + input.getPath() +" | tail -n +2 | sort -k5,5 -k6,6n -k7,7n;");
+                writer.println("} | gzip -c > " + output.getPath() + "\n");
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            SimpleScriptWrapper wrapper = new SimpleScriptWrapper(ctx.getLogger());
+            wrapper.setWorkingDir(script.getParentFile());
+            wrapper.execute(Arrays.asList("/bin/bash", script.getPath()));
+
+            long lineCountIn = SequencePipelineService.get().getLineCount(input);
+            long lineCountOut = SequencePipelineService.get().getLineCount(output);
+            if (lineCountIn != lineCountOut)
+            {
+                throw new PipelineJobException("Error sorting file");
+            }
+
+            input.delete();
+            script.delete();
+
+            try
+            {
+                FileUtils.moveFile(output, input);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+
         private Map<File, VCFFileReader> readerMap = new HashMap<>();
 
         private VCFFileReader getReader(File f)
@@ -629,20 +812,91 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
             return readerMap.get(f);
         }
+
+        private void runSnpEff(JobContext ctx, Map<String, SiteAndAlleles> siteToAllele, List<Pair<String, Integer>> whitelistSites, Set<String> uniqueIndels, ReferenceGenome genome, String basename) throws PipelineJobException
+        {
+            File vcfOut = new File(ctx.getOutputDir(), "whitelistSites.vcf.gz");
+            VariantContextWriterBuilder vcb = new VariantContextWriterBuilder();
+            vcb.setOutputFile(vcfOut);
+
+            //This set shouldnt be huge, so try in memory:
+            List<VariantContext> snpEffSites = new ArrayList<>();
+            for (Pair<String, Integer> site : whitelistSites)
+            {
+                String key = getCacheKey(site.getLeft(), site.getRight());
+                Processor.SiteAndAlleles siteDef = siteToAllele.get(key);
+
+                for (String a : siteDef._alternates)
+                {
+                    //Will be captured later
+                    if (a.equals(Allele.SPAN_DEL_STRING))
+                    {
+                        continue;
+                    }
+
+                    VariantContextBuilder b = new VariantContextBuilder();
+                    b.chr(siteDef._contig);
+                    b.start(siteDef._start);
+                    List<Allele> alleles = Arrays.asList(siteDef._ref, Allele.create(a));
+                    b.alleles(alleles);
+                    b.computeEndFromAlleles(alleles, siteDef._start);
+                    snpEffSites.add(b.make());
+                }
+            }
+
+            for (String allele : uniqueIndels)
+            {
+                String[] tokens = allele.split("<>");
+
+                VariantContextBuilder b = new VariantContextBuilder();
+                b.chr(tokens[0]);
+                int start = Integer.parseInt(tokens[1]);
+                b.start(start);
+                List<Allele> alleles = Arrays.asList(Allele.create(tokens[2], true), Allele.create(tokens[3]));
+                b.alleles(alleles);
+                b.computeEndFromAlleles(alleles, start);
+                snpEffSites.add(b.make());
+            }
+
+            snpEffSites.sort(Comparator.comparingInt(VariantContext::getStart));
+
+            ctx.getLogger().info("Total sites passed to SnpEff: " + snpEffSites.size());
+            try (VariantContextWriter writer = vcb.build())
+            {
+                VCFHeader header = new VCFHeader();
+                header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath()));
+                writer.writeHeader(header);
+                snpEffSites.forEach(writer::add);
+            }
+
+            ctx.getFileManager().addIntermediateFile(vcfOut);
+            ctx.getFileManager().addIntermediateFile(new File(vcfOut.getPath() + ".tbi"));
+
+            SnpEffWrapper snpEffWrapper = new SnpEffWrapper(ctx.getLogger());
+            Integer geneFileId = ctx.getParams().optInt(SNPEffStep.GENE_PARAM, -1);
+            if (geneFileId == -1)
+            {
+                throw new PipelineJobException("Missing GTF Id");
+            }
+
+            File snpEffBaseDir = SNPEffStep.checkOrCreateIndex(ctx.getSequenceSupport(), ctx.getLogger(), genome, geneFileId);
+            File outputVcfSnpEff = new File(ctx.getOutputDir(), basename + "snpeff.vcf.gz");
+            snpEffWrapper.runSnpEff(genome.getGenomeId(), geneFileId, snpEffBaseDir, vcfOut, outputVcfSnpEff, null);
+        }
     }
 
     //Adapted from GATK's GATKVariantContextUtils
     private static Allele determineReferenceAllele(final Allele ref1, final Allele ref2)
     {
-        if ( ref1 == null || ref1.length() < ref2.length() )
+        if (ref1 == null || ref1.length() < ref2.length())
         {
             return ref2;
         }
-        else if ( ref2 == null || ref2.length() < ref1.length())
+        else if (ref2 == null || ref2.length() < ref1.length())
         {
             return ref1;
         }
-        else if ( ref1.length() == ref2.length() && ! ref1.equals(ref2) )
+        else if (ref1.length() == ref2.length() && !ref1.equals(ref2))
         {
             throw new IllegalArgumentException(String.format("The provided reference alleles do not appear to represent the same position, %s vs. %s", ref1, ref2));
         }

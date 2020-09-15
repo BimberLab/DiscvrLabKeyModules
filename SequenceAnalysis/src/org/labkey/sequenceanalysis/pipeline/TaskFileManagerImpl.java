@@ -836,6 +836,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     {
         _job.getLogger().debug("performing file cleanup");
         _job.setStatus(PipelineJob.TaskStatus.running, "PERFORMING FILE CLEANUP");
+        _job.setErrors(0);
 
         _job.getLogger().debug("transferring " + _outputsToCreate.size() + " sequence outputs to pipeline job, existing: " + _job.getOutputsToCreate().size());
         for (SequenceOutputFile so : _outputsToCreate)
