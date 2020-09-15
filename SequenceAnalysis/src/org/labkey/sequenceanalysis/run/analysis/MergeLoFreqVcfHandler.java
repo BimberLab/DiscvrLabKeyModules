@@ -477,7 +477,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                     siteIdx++;
                     if (siteIdx % 1000 == 0)
                     {
-                        ctx.getLogger().info("positions written: " + siteIdx);
+                        ctx.getLogger().info("positions written: " + siteIdx + ", current pos: " + site.getRight());
                     }
 
                     for (SequenceOutputFile so : inputFiles)

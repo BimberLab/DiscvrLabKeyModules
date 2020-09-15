@@ -172,7 +172,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     }
                     catch (Exception e)
                     {
-                        _log.error("Error parsing line: " + line);
+                        _log.error("Error parsing line: " + line, e);
                         throw e;
                     }
                 }
@@ -268,7 +268,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     }
                     catch (Exception e)
                     {
-                        _log.error("Error parsing line: " + line);
+                        _log.error("Error parsing line: " + line, e);
                         throw e;
                     }
                 }
@@ -644,7 +644,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     }
                     catch (Exception e)
                     {
-                        _log.error("Error parsing line: " + line);
+                        _log.error("Error parsing line: " + line, e);
                         throw e;
                     }
                 }
