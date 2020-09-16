@@ -289,6 +289,10 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
                 getJob().getLogger().info("skipping VCF sort");
             }
         }
+        else if (SequenceUtil.FILETYPE.gbk.getFileType().isType(file))
+        {
+            getJob().getLogger().debug("no processing needed: " + file.getName());
+        }
         else
         {
             throw new PipelineJobException("Unsupported filetype: " + file.getName());
