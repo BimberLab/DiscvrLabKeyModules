@@ -287,11 +287,13 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
             else
             {
                 getJob().getLogger().info("skipping VCF sort");
+                SequenceAnalysisService.get().ensureVcfIndex(file, getJob().getLogger());
             }
         }
         else if (SequenceUtil.FILETYPE.gbk.getFileType().isType(file))
         {
             getJob().getLogger().debug("no processing needed: " + file.getName());
+            FileUtils.moveFile(file, outputFile);
         }
         else
         {
