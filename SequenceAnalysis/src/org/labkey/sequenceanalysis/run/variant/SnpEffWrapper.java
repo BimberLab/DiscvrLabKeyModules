@@ -127,6 +127,10 @@ public class SnpEffWrapper extends AbstractCommandWrapper
         {
             params.add("-gff3");
         }
+        else if ("gbk".equalsIgnoreCase(ext))
+        {
+            params.add("-genbank");
+        }
         else
         {
             throw new PipelineJobException("unable to process extension: " + ext);

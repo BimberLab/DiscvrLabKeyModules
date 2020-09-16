@@ -91,7 +91,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                 }}, 25),
                 ToolParameterDescriptor.createExpDataParam(SNPEffStep.GENE_PARAM, "Gene File", "This is the ID of a GTF or GFF3 file containing genes from this genome.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
                 {{
-                    put("extensions", Arrays.asList("gtf", "gff"));
+                    put("extensions", Arrays.asList("gtf", "gff", "gbk"));
                     put("width", 400);
                     put("allowBlank", false);
                 }}, null)
