@@ -222,7 +222,9 @@ public class ClusterController extends SpringActionController
                 try
                 {
                     PipelineJob job = PipelineJob.readFromFile(json);
-                    job.setStatus(job.getActiveTaskStatus());
+
+                    _log.info("Submitting job: " + job.getJobGUID() + ": " + job.getActiveTaskStatus());
+                    PipelineService.get().setPipelineJobStatus(job, job.getActiveTaskStatus());
                 }
                 catch (PipelineJobException | IOException e)
                 {

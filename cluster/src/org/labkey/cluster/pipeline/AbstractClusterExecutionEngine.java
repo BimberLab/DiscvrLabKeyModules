@@ -561,8 +561,13 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
                             pj.getLogger().warn("marking job as complete, even though JSON indicates task has errors.  this might indicate the job aborted improperly?");
                         }
                     }
+                    else if (pj.getActiveTaskStatus() == PipelineJob.TaskStatus.complete)
+                    {
+                        pj.getLogger().warn("Pipeline job marked complete, but the cluster status is error");
 
-                    pj.getLogger().debug("setting active task status for job: " + j.getClusterId() + " to: " + taskStatus.name() + ". status was: " + pj.getActiveTaskStatus() + " (PipelineJob) /" + sf.getStatus() + " (StatusFile) / activeTaskId (job): " + (pj.getActiveTaskId() != null ? pj.getActiveTaskId().toString() : "no active task") + ", hostname: " + sf.getActiveHostName() + ", rowid: " + j.getRowId());
+                    }
+
+                    pj.getLogger().debug("setting active task status for job: " + j.getClusterId() + " to: " + taskStatus.name() + ". status was: " + pj.getActiveTaskStatus() + " (JSON) /" + sf.getStatus() + " (StatusFile) / " + status + " (Cluster), activeTaskId: " + (pj.getActiveTaskId() != null ? pj.getActiveTaskId().toString() : "no active task") + ", hostname: " + sf.getActiveHostName() + ", rowid: " + j.getRowId());
                     try
                     {
                         //NOTE: PipelineService.setPipelineJobStatus() is needed to requeue a job upon completion, but in all other cases go through JMS
