@@ -81,7 +81,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                     put("maxValue", 1);
                     put("decimalPrecision", 2);
                 }}, 0.10),
-                ToolParameterDescriptor.create(MIN_AF, "Min AF to Include (Indels)", "An indel will be included in the indel output if there is a passing variant above this AF in at least one sample.", "ldk-numberfield", new JSONObject(){{
+                ToolParameterDescriptor.create(MIN_AF_INDEL, "Min AF to Include (Indels)", "An indel will be included in the indel output if there is a passing variant above this AF in at least one sample.", "ldk-numberfield", new JSONObject(){{
                     put("minValue", 0);
                     put("maxValue", 1);
                     put("decimalPrecision", 2);
