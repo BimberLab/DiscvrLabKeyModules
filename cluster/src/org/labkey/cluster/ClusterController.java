@@ -201,7 +201,7 @@ public class ClusterController extends SpringActionController
                     return false;
                 }
 
-                if (!PipelineJob.TaskStatus.running.name().equalsIgnoreCase(sf.getStatus()))
+                if (PipelineJob.TaskStatus.running.name().equalsIgnoreCase(sf.getStatus()))
                 {
                     errors.reject(ERROR_MSG, "This cannot be used on actively running jobs.  Status was: " + sf.getStatus());
                     return false;
