@@ -53,7 +53,7 @@ import java.util.Set;
 /**
  * Created by bimber on 7/11/2017.
  */
-abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobService.RemoteExecutionEngineConfig> implements RemoteClusterEngine, RemoteExecutionEngine<ConfigType>
+abstract public class AbstractClusterExecutionEngine<ConfigType extends PipelineJobService.RemoteExecutionEngineConfig> implements RemoteClusterEngine, RemoteExecutionEngine<ConfigType>
 {
     private Logger _log;
     public static final String PREPARING = "PREPARING";
@@ -177,7 +177,7 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
 
     abstract protected Pair<String, String> getStatusForJob(ClusterJob job, Container c);
 
-    private File getSerializedJobFile(File jobLogFile)
+    public static File getSerializedJobFile(File jobLogFile)
     {
         if (jobLogFile == null)
         {
@@ -769,7 +769,7 @@ abstract class AbstractClusterExecutionEngine<ConfigType extends PipelineJobServ
         filter.addCondition(FieldKey.fromString("status"), PipelineJob.TaskStatus.complete.name().toUpperCase());
         if (new TableSelector(ti, filter, null).exists())
         {
-            _log.error("unable to find record of job from condor; however, the submissions table indicates it was marked as complete.  this might indicate a lost JMS message to update the job's status.", new Exception());
+            _log.error("unable to find record of job from cluster; however, the submissions table indicates it was marked as complete.  this might indicate a lost JMS message to update the job's status.", new Exception());
             //return PipelineJob.TaskStatus.complete.name().toUpperCase();
         }
     }

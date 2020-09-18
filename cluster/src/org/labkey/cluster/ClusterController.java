@@ -17,9 +17,11 @@
 package org.labkey.cluster;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.labkey.api.action.ConfirmAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineStatusFile;
@@ -32,10 +34,13 @@ import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.HtmlView;
+import org.labkey.cluster.pipeline.AbstractClusterExecutionEngine;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,6 +48,8 @@ public class ClusterController extends SpringActionController
 {
     private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(ClusterController.class);
     public static final String NAME = "cluster";
+
+    private static final Logger _log = Logger.getLogger(ClusterController.class);
 
     public ClusterController()
     {
@@ -82,26 +89,26 @@ public class ClusterController extends SpringActionController
     }
 
     @RequiresSiteAdmin
-    public class ForcePipelineCancelAction extends ConfirmAction<ForcePipelineCancelForm>
+    public class ForcePipelineCancelAction extends ConfirmAction<JobIdsForm>
     {
-        public void validateCommand(ForcePipelineCancelForm form, Errors errors)
+        public void validateCommand(JobIdsForm form, Errors errors)
         {
 
         }
 
-        public URLHelper getSuccessURL(ForcePipelineCancelForm form)
+        public URLHelper getSuccessURL(JobIdsForm form)
         {
             return PageFlowUtil.urlProvider(PipelineStatusUrls.class).urlBegin(getContainer());
         }
 
-        public ModelAndView getConfirmView(ForcePipelineCancelForm form, BindException errors) throws Exception
+        public ModelAndView getConfirmView(JobIdsForm form, BindException errors) throws Exception
         {
             return new HtmlView(HtmlString.unsafe("This will change the status of the pipeline job with the provided ID to Cancelled.  It is intended to help the situation when the normal UI leave a job in a perpetual 'Cancelling' state." +
                     "To continue, enter a comma-delimited list of Job IDs and hit submit:<br><br>" +
                     "<label>Enter Job ID(s): </label><input name=\"jobIds\"><br>"));
         }
 
-        public boolean handlePost(ForcePipelineCancelForm form, BindException errors) throws Exception
+        public boolean handlePost(JobIdsForm form, BindException errors) throws Exception
         {
             String jobIDs = StringUtils.trimToNull(form.getJobIds());
             if (jobIDs == null)
@@ -139,7 +146,7 @@ public class ClusterController extends SpringActionController
         }
     }
 
-    public static class ForcePipelineCancelForm
+    public static class JobIdsForm
     {
         private String _jobIds;
 
@@ -151,6 +158,79 @@ public class ClusterController extends SpringActionController
         public void setJobIds(String jobIds)
         {
             _jobIds = jobIds;
+        }
+    }
+
+    @RequiresSiteAdmin
+    public class RecoverCompletedJobsAction extends ConfirmAction<JobIdsForm>
+    {
+        public void validateCommand(JobIdsForm form, Errors errors)
+        {
+
+        }
+
+        public URLHelper getSuccessURL(JobIdsForm form)
+        {
+            return PageFlowUtil.urlProvider(PipelineStatusUrls.class).urlBegin(getContainer());
+        }
+
+        public ModelAndView getConfirmView(JobIdsForm form, BindException errors) throws Exception
+        {
+            return new HtmlView(HtmlString.unsafe("This will attempt to re-queue existing pipeline jobs using their serialized JSON text files.  It is intended as a workaround for the situation where a job has been marked complete." +
+                    "To continue, enter a comma-delimited list of Job IDs and hit submit:<br><br>" +
+                    "<label>Enter Job ID(s): </label><input name=\"jobIds\"><br>"));
+        }
+
+        public boolean handlePost(JobIdsForm form, BindException errors) throws Exception
+        {
+            String jobIDs = StringUtils.trimToNull(form.getJobIds());
+            if (jobIDs == null)
+            {
+                errors.reject(ERROR_MSG, "No JobIds provided");
+                return false;
+            }
+
+            List<PipelineStatusFile> sfs = new ArrayList<>();
+            for (String id : jobIDs.split(","))
+            {
+                int jobId = Integer.parseInt(StringUtils.trimToNull(id));
+                PipelineStatusFile sf = PipelineService.get().getStatusFile(jobId);
+                if (sf == null)
+                {
+                    errors.reject(ERROR_MSG, "Unable to find job: " + id);
+                    return false;
+                }
+
+                if (!PipelineJob.TaskStatus.running.name().equalsIgnoreCase(sf.getStatus()))
+                {
+                    errors.reject(ERROR_MSG, "This cannot be used on actively running jobs.  Status was: " + sf.getStatus());
+                    return false;
+                }
+
+                sfs.add(sf);
+            }
+
+            sfs.forEach(sf -> {
+
+                File log = new File(sf.getFilePath());
+                File json = AbstractClusterExecutionEngine.getSerializedJobFile(log);
+                if (!json.exists())
+                {
+                    return;
+                }
+
+                try
+                {
+                    PipelineJob job = PipelineJob.readFromFile(json);
+                    job.setStatus(job.getActiveTaskStatus());
+                }
+                catch (PipelineJobException | IOException e)
+                {
+                    _log.error(e);
+                }
+            });
+
+            return true;
         }
     }
 }
