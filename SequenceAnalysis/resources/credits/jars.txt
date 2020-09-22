@@ -5,6 +5,7 @@ sam-1.96.jar|picard tools|1.96|{link:picard tools|http://sourceforge.net/project
 biojava3-core-3.0.7.jar|biojava3-core|3.0.7|{link:biojava|http://biojava.org/wiki/Main_Page}|{link:GNU Lesser GPL V2.1|http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html}|bbimber|Java framework for processing biological data
 biojava3-genome-3.0.7.jar|biojava3-genome|3.0.7|{link:biojava|http://biojava.org/wiki/Main_Page}|{link:GNU Lesser GPL V2.1|http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html}|bbimber|Java framework for processing biological data
 commons-math3-3.6.1.jar|commons-math|3-3.6.1|{link:commons-math|http://commons.apache.org/proper/commons-math/}|{link:Apache License, Version 2.0|http://www.apache.org/licenses/LICENSE-2.0.txt}|bbimber|Self-contained mathematics and statistics components
+commons-net-3.5.jar|Commons Net|3.3|{link:Apache|http://jakarta.apache.org/commons/net/}|{link:Apache 2.0|http://www.apache.org/licenses/LICENSE-2.0}|bbimber|FTPClient used to retrieve resources from other servers (e.g., GO annotations)
 htsjdk-2.21.3.jar|htsjdk|2.21.3|{link:htsjdk|http://samtools.github.io/htsjdk/}|{link:MIT License|http://opensource.org/licenses/MIT}|bbimber|Description	A Java API for high-throughput sequencing data (HTS) formats
 picard-2.22.4.jar|Picard Tools Lib|2.22.4|{link:PicardTools|https://github.com/broadinstitute/picard}|{link:Apache 2.0|http://www.apache.org/licenses/LICENSE-2.0}|bbimber|Manipulating Sequence Data
 {table}
