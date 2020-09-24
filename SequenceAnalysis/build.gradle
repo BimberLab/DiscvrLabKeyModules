@@ -24,6 +24,8 @@ dependencies {
    external 'org.itadaki:bzip2:0.9.1'
    external 'org.clojars.chapmanb:sam:1.96'
    external "org.apache.commons:commons-math3:${commonsMath3Version}"
+   implementation "net.sf.opencsv:opencsv:${opencsvVersion}"
+
    // picard brings in a version of servlet-api and a very old one at that, so we excluded it
    // Note: if changing this, we might need to match the htsjdk version set in gradle.properties
    external("com.github.broadinstitute:picard:2.22.4") {
