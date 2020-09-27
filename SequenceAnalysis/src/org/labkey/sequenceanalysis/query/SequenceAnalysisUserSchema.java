@@ -31,6 +31,7 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.SimpleUserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
@@ -362,7 +363,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
                 @Override
                 public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
                 {
-                    String result = StringUtils.trimToNull(super.getFormattedValue(ctx));
+                    String result = StringUtils.trimToNull(super.getFormattedHtml(ctx).toString());
                     String delim = "";
                     if (result != null)
                     {
