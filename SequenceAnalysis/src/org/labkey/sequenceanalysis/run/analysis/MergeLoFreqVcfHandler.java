@@ -81,7 +81,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                     put("maxValue", 1);
                     put("decimalPrecision", 2);
                 }}, 0.10),
-                ToolParameterDescriptor.create(MIN_AF, "Min AF to Include (Indels)", "An indel will be included in the indel output if there is a passing variant above this AF in at least one sample.", "ldk-numberfield", new JSONObject(){{
+                ToolParameterDescriptor.create(MIN_AF_INDEL, "Min AF to Include (Indels)", "An indel will be included in the indel output if there is a passing variant above this AF in at least one sample.", "ldk-numberfield", new JSONObject(){{
                     put("minValue", 0);
                     put("maxValue", 1);
                     put("decimalPrecision", 2);
@@ -91,7 +91,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                 }}, 25),
                 ToolParameterDescriptor.createExpDataParam(SNPEffStep.GENE_PARAM, "Gene File", "This is the ID of a GTF or GFF3 file containing genes from this genome.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
                 {{
-                    put("extensions", Arrays.asList("gtf", "gff"));
+                    put("extensions", Arrays.asList("gtf", "gff", "gbk"));
                     put("width", 400);
                     put("allowBlank", false);
                 }}, null)
@@ -248,6 +248,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             {
                 writer.writeNext(new String[]{"ReadsetName", "OutputFileId", "ReadsetId", "Source", "Contig", "Start", "End", "Length", "Ref", "AltAllele", "GatkDepth", "LoFreqDepth", "AltCount", "AltAF"});
 
+                Set<Integer> analysesWithoutPindel = new HashSet<>();
                 for (SequenceOutputFile so : inputFiles)
                 {
                     //This will error if the coverage file is not found.  Perform check now to fail fast
@@ -337,6 +338,13 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                             {
                                 if (line[0].equals("Type"))
                                 {
+                                    if (line.length != 8)
+                                    {
+                                        ctx.getLogger().warn("Older version of pindel file found, skipping: " + pindelFile.getPath());
+                                        analysesWithoutPindel.add(so.getAnalysis_id());
+                                        break;
+                                    }
+
                                     continue;
                                 }
 
@@ -357,11 +365,11 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                     if ("D".equals(line[0]))
                                     {
                                         length = end1 - Integer.parseInt(line[2]);  //NOTE: pindel reports one base upstream+downstream as part of the indel
-                                        alt = String.valueOf(rs.getBases()[start0]);
+                                        alt = Character.toString(rs.getBases()[start0]);
                                     }
                                     else if ("I".equals(line[0]))
                                     {
-                                        alt = (char)rs.getBases()[start0] + line[7];
+                                        alt = Character.toString(rs.getBases()[start0]) + line[7];
                                         length = alt.length();
                                     }
 
@@ -379,7 +387,13 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                     else
                     {
                         ctx.getLogger().warn("Unable to find pindel file, expected: " + pindelFile.getPath());
+                        analysesWithoutPindel.add(so.getAnalysis_id());
                     }
+                }
+
+                if (!analysesWithoutPindel.isEmpty())
+                {
+                    ctx.getLogger().warn("Analysis missing pindel: " + StringUtils.join(analysesWithoutPindel, ";"));
                 }
             }
             catch (IOException e)
@@ -452,9 +466,10 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
             File output = new File(ctx.getOutputDir(), basename + "txt.gz");
             int idx = 0;
+            int totalAdjusted = 0;
             try (CSVWriter writer = new CSVWriter(new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(output)), StringUtilsLabKey.DEFAULT_CHARSET)), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
-                writer.writeNext(new String[]{"ReadsetName", "OutputFileId", "ReadsetId", "Contig", "Start", "End", "Ref", "AltAlleles", "GatkDepth", "LoFreqDepth", "RefAF", "AltAFs", "NonRefCount", "AltCounts"});
+                writer.writeNext(new String[]{"ReadsetName", "OutputFileId", "ReadsetId", "Contig", "Start", "End", "Ref", "AltAlleles", "GatkDepth", "LoFreqDepth", "RefAF", "AltAFs", "NonRefCount", "AltCounts", "OrigAltAFs"});
 
                 int siteIdx = 0;
                 for (Pair<String, Integer> site : whitelistSites)
@@ -462,7 +477,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                     siteIdx++;
                     if (siteIdx % 1000 == 0)
                     {
-                        ctx.getLogger().info("positions written: " + siteIdx);
+                        ctx.getLogger().info("positions written: " + siteIdx + ", current pos: " + site.getRight());
                     }
 
                     for (SequenceOutputFile so : inputFiles)
@@ -499,19 +514,22 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                 {
                                     line.add(String.valueOf(depth));
                                     line.add("ND");
-                                    line.add("ND");
-                                    line.add("ND");
-                                    line.add("ND");
+                                    line.add("ND"); //RefAF
+                                    line.add("ND"); //AltAFs
+                                    line.add("ND"); //Non-Ref Count
+                                    line.add("ND"); //AltCounts
+                                    line.add("ND"); //Orig AFs
                                 }
                                 else
                                 {
                                     line.add(String.valueOf(depth));
                                     line.add("ND");
-                                    line.add("1");
-                                    line.add(";0".repeat(siteDef._alternates.size()).substring(1));
+                                    line.add("1"); //RefAF
+                                    line.add(";0".repeat(siteDef._alternates.size()).substring(1));  //AltAFs
 
-                                    line.add("0");
-                                    line.add(";0".repeat(siteDef._alternates.size()).substring(1));
+                                    line.add("0"); //NonRefCount
+                                    line.add(";0".repeat(siteDef._alternates.size()).substring(1)); //AltCounts
+                                    line.add(";0".repeat(siteDef._alternates.size()).substring(1)); //Orig AFs
                                 }
 
                                 writer.writeNext(line.toArray(new String[]{}));
@@ -606,11 +624,13 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                 //NOTE: because an upstream deletion could be merged with this site (and their depths / AFs computed slightly differently), recalculate here:
 
                                 //First establish true ALT depth, which could include upstream deletions:
+                                Map<String, Double> alleleToOrigAf = new HashMap<>();
                                 int totalAltDepth = 0;
                                 double totalAltAf = 0.0;
                                 for (String a : siteDef._alternates)
                                 {
                                     double af = alleleToAf.getOrDefault(a, 0.0);
+                                    alleleToOrigAf.put(a, af);
                                     int dp = alleleToDp.getOrDefault(a, 0);
 
                                     if (dp == (int)NO_DATA_VAL)
@@ -624,7 +644,12 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                     double diff = Math.abs(adjAF - af);
                                     if (diff > 0.01)
                                     {
-                                        ctx.getLogger().warn("Significant AF adjustment: readset: " + line.get(0) + " / site: " + line.get(4) + " / allele: " + a + " / AF: " + af + " / New AF: " + adjAF + " / diff: " + diff + " / gatk depth: " + gatkDepth + " / lofreq depth: " + lofreqDepth);
+                                        totalAdjusted++;
+
+                                        if (diff > 0.05)
+                                        {
+                                            ctx.getLogger().warn("Significant AF adjustment: readset: " + line.get(0) + " / site: " + line.get(4) + " / allele: " + a + " / AF: " + af + " / New AF: " + adjAF + " / diff: " + diff + " / gatk depth: " + gatkDepth + " / lofreq depth: " + lofreqDepth);
+                                        }
                                     }
 
                                     totalAltAf += adjAF;
@@ -641,10 +666,14 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                 //Add AFs in order:
                                 List<Object> toAdd = new ArrayList<>();
                                 List<Object> toAddDp = new ArrayList<>();
+                                List<Object> toAddAfOrig = new ArrayList<>();
                                 for (String a : siteDef._alternates)
                                 {
                                     double af = alleleToAf.getOrDefault(a, 0.0);
                                     toAdd.add(af == NO_DATA_VAL ? "ND" : af);
+
+                                    double afOrig = alleleToOrigAf.getOrDefault(a, 0.0);
+                                    toAddAfOrig.add(afOrig == NO_DATA_VAL ? "ND" : afOrig);
 
                                     int dp = alleleToDp.getOrDefault(a, 0);
                                     toAddDp.add(dp == NO_DATA_VAL ? "ND" : dp);
@@ -653,6 +682,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
                                 toWrite.add(String.valueOf(totalAltDepth));
                                 toWrite.add(toAddDp.stream().map(String::valueOf).collect(Collectors.joining(";")));
+                                toWrite.add(toAddAfOrig.stream().map(String::valueOf).collect(Collectors.joining(";")));
 
                                 writer.writeNext(toWrite.toArray(new String[]{}));
                                 idx++;
@@ -683,6 +713,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                 }
             }
 
+            ctx.getLogger().info("total sites with AF adjusted >0.01%: " + totalAdjusted);
             ctx.getFileManager().addSequenceOutput(output, "Merged LoFreq Variants: " + inputFiles.size() + " VCFs", "Merged LoFreq Variant Table", null, null, genome.getGenomeId(), null);
         }
 
@@ -869,8 +900,8 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                 snpEffSites.forEach(writer::add);
             }
 
-            ctx.getFileManager().addIntermediateFile(vcfOut);
-            ctx.getFileManager().addIntermediateFile(new File(vcfOut.getPath() + ".tbi"));
+            //ctx.getFileManager().addIntermediateFile(vcfOut);
+            //ctx.getFileManager().addIntermediateFile(new File(vcfOut.getPath() + ".tbi"));
 
             SnpEffWrapper snpEffWrapper = new SnpEffWrapper(ctx.getLogger());
             Integer geneFileId = ctx.getParams().optInt(SNPEffStep.GENE_PARAM, -1);

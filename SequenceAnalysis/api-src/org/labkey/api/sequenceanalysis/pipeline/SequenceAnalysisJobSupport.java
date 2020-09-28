@@ -47,6 +47,8 @@ public interface SequenceAnalysisJobSupport extends Serializable
 
     public void cacheReadset(int readsetId, User u);
 
+    public void cacheReadset(int readsetId, User u, boolean allowReadsetsWithArchivedData);
+
     public List<AnalysisModel> getCachedAnalyses();
 
     public void cacheGenome(ReferenceGenome m);

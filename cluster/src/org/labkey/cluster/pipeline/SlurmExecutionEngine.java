@@ -159,7 +159,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                             }
                             else
                             {
-                                String hostname = StringUtils.trimToNull(tokens[hostnameIdx]);
+                                String hostname = tokens.length > hostnameIdx ? StringUtils.trimToNull(tokens[hostnameIdx]) : null;
                                 if (hostname != null)
                                 {
                                     j.setHostname(hostname);
@@ -173,7 +173,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     }
                     catch (Exception e)
                     {
-                        _log.error("Error parsing line: " + line);
+                        _log.error("Error parsing line: " + line, e);
                         throw e;
                     }
                 }
@@ -257,7 +257,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
 
                         if (hostnameIdx > -1)
                         {
-                            String hostname = StringUtils.trimToNull(tokens[hostnameIdx]);
+                            String hostname = tokens.length > hostnameIdx ? StringUtils.trimToNull(tokens[hostnameIdx]) : null;
                             if (hostname != null)
                             {
                                 if (job.getHostname() == null || !job.getHostname().equals(hostname))
@@ -269,7 +269,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     }
                     catch (Exception e)
                     {
-                        _log.error("Error parsing line: " + line);
+                        _log.error("Error parsing line: " + line, e);
                         throw e;
                     }
                 }
@@ -633,7 +633,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                         {
                             if (hostnameIdx > -1)
                             {
-                                String hostname = StringUtils.trimToNull(tokens[hostnameIdx]);
+                                String hostname = tokens.length > hostnameIdx ? StringUtils.trimToNull(tokens[hostnameIdx]) : null;
                                 if (hostname != null)
                                 {
                                     job.setHostname(hostname);
@@ -645,7 +645,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     }
                     catch (Exception e)
                     {
-                        _log.error("Error parsing line: " + line);
+                        _log.error("Error parsing line: " + line, e);
                         throw e;
                     }
                 }

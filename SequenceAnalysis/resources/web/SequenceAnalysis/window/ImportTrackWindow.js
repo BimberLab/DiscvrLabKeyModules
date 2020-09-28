@@ -51,8 +51,8 @@ Ext4.define('SequenceAnalysis.window.ImportTrackWindow', {
                     name: 'track',
                     allowBlank: false,
                     validator: function(){
-                        var matcher = /^.*\.(bed|gff|gff3|gtf|vcf|bigwig|bw)$/i;
-                        return matcher.test(this.getValue()) ? true : 'File must be either: .bed, .gff, .gff3, .gtf, .vcf, .bigwig, or .bw';
+                        var matcher = /^.*\.(bed|gff|gff3|gtf|vcf|bigwig|bw|gbk)$/i;
+                        return matcher.test(this.getValue()) ? true : 'File must be either: .bed, .gff, .gff3, .gtf, .gbk, .vcf, .bigwig, or .bw';
                     }
                 },{
                     xtype: 'textfield',

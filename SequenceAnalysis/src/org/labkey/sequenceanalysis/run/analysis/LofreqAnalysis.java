@@ -97,7 +97,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             super("LofreqAnalysis", "LoFreq Analysis", null, "This will run LowFreq, a tool designed to call low-frequency mutations in a sample, such as viral populations or bacteria.  It is recommended to run GATK's BQSR and IndelRealigner upstream of this tool.", Arrays.asList(
                     ToolParameterDescriptor.createExpDataParam(SNPEffStep.GENE_PARAM, "Gene File", "This is the ID of a GTF or GFF3 file containing genes from this genome.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
                     {{
-                        put("extensions", Arrays.asList("gtf", "gff"));
+                        put("extensions", Arrays.asList("gtf", "gff", "gbk"));
                         put("width", 400);
                         put("allowBlank", false);
                     }}, null),
@@ -592,7 +592,23 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
         PindelAnalysis.runPindel(output, getPipelineCtx(), rs, outputDir, inputBam, referenceGenome.getWorkingFastaFile(), minFraction, minDepth, true, coverageOut, minInsertSize);
 
+        runPangolin(consensusFastaLoFreq);
+
         return output;
+    }
+
+    private void runPangolin(File consensusFasta) throws PipelineJobException
+    {
+        SimpleScriptWrapper wrapper = new SimpleScriptWrapper(getPipelineCtx().getLogger());
+        wrapper.setWorkingDir(consensusFasta.getParentFile());
+
+        File pangolin = SequencePipelineService.get().getExeForPackage("PANGOLINPATH", "pangolin");
+
+        List<String> args = new ArrayList<>();
+        args.add(pangolin.getPath());
+        args.add(consensusFasta.getPath());
+
+        wrapper.execute(args);
     }
 
     private File generateConsensus(File loFreqConsensusVcf, File fasta, File maskBed) throws PipelineJobException
