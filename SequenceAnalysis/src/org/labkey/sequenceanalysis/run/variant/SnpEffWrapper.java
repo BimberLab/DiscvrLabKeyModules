@@ -35,7 +35,7 @@ public class SnpEffWrapper extends AbstractCommandWrapper
         String basename = getGenomeBasename(genomeId, geneId);
 
         List<String> params = new ArrayList<>();
-        params.add(SequencePipelineService.get().getJava8FilePath());
+        params.add(SequencePipelineService.get().getJavaFilepath());
         params.addAll(SequencePipelineService.get().getJavaOpts());
         params.add("-jar");
         params.add(getSnpEffJar().getPath());
@@ -49,7 +49,7 @@ public class SnpEffWrapper extends AbstractCommandWrapper
         params.add(getSnpEffConfigFile().getPath());
         params.add("-configOption");
         params.add(basename + ".genome=" + basename);
-        params.add("-t");
+
         params.add(input.getPath());
 
         if (intervalsFile != null)
@@ -127,6 +127,10 @@ public class SnpEffWrapper extends AbstractCommandWrapper
         else if ("gff".equalsIgnoreCase(ext))
         {
             params.add("-gff3");
+        }
+        else if ("gbk".equalsIgnoreCase(ext))
+        {
+            params.add("-genbank");
         }
         else
         {

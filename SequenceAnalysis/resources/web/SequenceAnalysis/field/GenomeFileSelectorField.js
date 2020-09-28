@@ -26,7 +26,7 @@ Ext4.define('SequenceAnalysis.field.GenomeFileSelectorField', {
                     load: function(store){
                         if (this.extensions) {
                             Ext4.Array.forEach(store.getRange(), function (r) {
-                                if (this.extensions.indexOf(r.get('fileid/FileExtension')) == -1){
+                                if (this.extensions.indexOf(r.get('fileid/FileExtension')) === -1){
                                     store.remove(r);
                                 }
                             }, this);
@@ -50,7 +50,7 @@ Ext4.define('SequenceAnalysis.field.GenomeFileSelectorField', {
                     }
                 }
                 else if (parent.libraryIds){
-                    if (parent.libraryIds.length == 1){
+                    if (parent.libraryIds.length === 1){
                         this.updateStoreFilters(parent.libraryIds[0]);
                     }
                     else if (!parent.libraryIds.length){

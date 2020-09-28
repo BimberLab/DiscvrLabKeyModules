@@ -236,8 +236,11 @@ public class ReadDataImpl implements ReadData
 
     public void cacheForRemoteServer()
     {
-        getFile1();
-        getFile2();
+        if (!isArchived())
+        {
+            getFile1();
+            getFile2();
+        }
     }
 
     @Transient

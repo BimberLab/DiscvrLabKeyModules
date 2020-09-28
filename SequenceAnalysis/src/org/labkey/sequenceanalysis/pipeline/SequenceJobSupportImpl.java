@@ -73,12 +73,19 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
         return _cachedAnalyses.get(rowId);
     }
 
+    @Override
     public void cacheReadset(int readsetId, User u)
+    {
+        cacheReadset(readsetId,u, false);
+    }
+
+    @Override
+    public void cacheReadset(int readsetId, User u, boolean allowReadsetsWithArchivedData)
     {
         SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(readsetId, u);
         if (rs != null)
         {
-            cacheReadset(rs);
+            cacheReadset(rs, allowReadsetsWithArchivedData);
         }
         else
         {
@@ -88,9 +95,14 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
 
     public void cacheReadset(SequenceReadsetImpl m)
     {
-        if (m.hasArchivedData())
+        cacheReadset(m, false);
+    }
+
+    public void cacheReadset(SequenceReadsetImpl m, boolean allowReadsetsWithArchivedData)
+    {
+        if (!allowReadsetsWithArchivedData && m.hasArchivedData())
         {
-            throw new IllegalArgumentException("Readset has archived data, cannot be used for pipeline jobs");
+            throw new IllegalArgumentException("Readset has archived data, cannot be used for pipeline jobs", new Exception());
         }
 
         m.cacheForRemoteServer();
@@ -114,6 +126,11 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
 
     public void cacheAnalysis(AnalysisModelImpl m, PipelineJob job)
     {
+        cacheAnalysis(m, job, false);
+    }
+
+    public void cacheAnalysis(AnalysisModelImpl m, PipelineJob job, boolean allowReadsetsWithArchivedData)
+    {
         if (m.getAlignmentFile() != null)
         {
             cacheExpData(m.getAlignmentData());
@@ -122,7 +139,7 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
         if (m.getReadset() != null)
         {
             SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(m.getReadset(), job.getUser());
-            cacheReadset(rs);
+            cacheReadset(rs, allowReadsetsWithArchivedData);
         }
 
         if (m.getLibraryId() != null)

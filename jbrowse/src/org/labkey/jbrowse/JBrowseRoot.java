@@ -675,8 +675,9 @@ public class JBrowseRoot
 
                 //even through we're loading the raw data based on urlTemplate, make a symlink from this location into our DB so generate-names.pl works properly
                 File sourceFile = f.expectDataSubdirForTrack() ? new File(f.getTrackRootDir(), "tracks/track-" + f.getTrackId()) : f.getTrackRootDir();
-                File targetFile = new File(outDir, "tracks/track-" + f.getTrackId());
+                sourceFile = identifyValidParentDir(sourceFile);
 
+                File targetFile = new File(outDir, "tracks/track-" + f.getTrackId());
                 createSymlink(targetFile, sourceFile);
             }
             else if (f.getOutputFile() != null)
@@ -1020,6 +1021,21 @@ public class JBrowseRoot
         }
     }
 
+    // For some reason the location of the subdir is still not consistent. We're going ot migrate to jbrowse2
+    // and stop using the perl scripts, so while this is a hack, leave in place for now.
+    private File identifyValidParentDir(File sourceDir)
+    {
+        int i = 1;
+        File target = new File(sourceDir, "trackList.json");
+        while (i < 3 && !target.exists())
+        {
+            i++;
+            target = new File(target.getParentFile().getParentFile(), "trackList.json");
+        }
+
+        return target == null ? sourceDir : target.getParentFile();
+    }
+
     private boolean shouldCreateOwnIndex(String databaseId) throws PipelineJobException
     {
         TableSelector ts = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), PageFlowUtil.set("libraryId", "createOwnIndex", "primaryDb"), new SimpleFilter(FieldKey.fromString("objectid"), databaseId), null);
@@ -1279,7 +1295,7 @@ public class JBrowseRoot
 
         if (!sourceFile.exists())
         {
-            getLogger().error("unable to find file: " + sourceFile.getPath());
+            getLogger().error("unable to find file: " + sourceFile.getPath(), new Exception());
         }
 
         if (targetFile.exists())

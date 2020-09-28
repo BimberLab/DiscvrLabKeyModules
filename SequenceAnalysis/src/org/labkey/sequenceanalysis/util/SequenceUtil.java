@@ -82,6 +82,7 @@ public class SequenceUtil
         sff(".sff"),
         gtf(".gtf"),
         gff(Arrays.asList(".gff", ".gff3"), false),
+        gbk(".gbk"),
         bed(".bed"),
         vcf(Arrays.asList(".vcf"), true),
         gvcf(Arrays.asList(".g.vcf"), true);
