@@ -75,8 +75,7 @@ public class FastqToSamWrapper extends PicardWrapper
             if (rg.getPlatformUnit() != null)
                 params.add("PLATFORM_UNIT=" + rg.getPlatformUnit());
 
-            if (rg.getPlatformUnit() != null)
-                params.add("SAMPLE_NAME=" + rg.getSample());
+            params.add("SAMPLE_NAME=" + (rg.getSample() == null ? "SAMPLE" : rg.getSample()));
         }
         else
         {
