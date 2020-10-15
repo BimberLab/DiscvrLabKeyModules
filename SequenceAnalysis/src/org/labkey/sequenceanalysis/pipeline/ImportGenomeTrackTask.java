@@ -58,6 +58,7 @@ import org.labkey.api.sequenceanalysis.GenomeTrigger;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenomeManager;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.Job;
@@ -138,10 +139,11 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
             final Container genomeContainer = ReferenceGenomeImpl.getFolderForGenome(libraryId);
             if (!genomeContainer.hasPermission(getJob().getUser(), InsertPermission.class))
             {
-                throw new UnauthorizedException("User cannot does not have update permissionin folder: " + genomeContainer.getPath());
+                throw new UnauthorizedException("User cannot does not have update permission in folder: " + genomeContainer.getPath());
             }
 
             final int trackId = addTrackForLibrary(getPipelineJob().getTrack(), getPipelineJob().getTrackName(), getPipelineJob().getTrackDescription(), action);
+            ReferenceGenomeManager.get().markGenomeModified(SequenceAnalysisService.get().getReferenceGenome(getPipelineJob().getLibraryId(), getJob().getUser()));
 
             Set<GenomeTrigger> triggers = SequenceAnalysisServiceImpl.get().getGenomeTriggers();
             if (!triggers.isEmpty())
@@ -175,7 +177,7 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
         return new RecordedActionSet(action);
     }
 
-    public int addTrackForLibrary(File file, String trackName, String trackDescription, RecordedAction action) throws Exception
+    private int addTrackForLibrary(File file, String trackName, String trackDescription, RecordedAction action) throws Exception
     {
         ReferenceGenome genome = SequenceAnalysisService.get().getReferenceGenome(getPipelineJob().getLibraryId(), getJob().getUser());
         if (genome == null)
@@ -224,7 +226,7 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
         SAMSequenceDictionary dict = null;
         if (genome.getSequenceDictionary().exists())
         {
-            dict = SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary());
+            dict = SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath());
         }
         else
         {

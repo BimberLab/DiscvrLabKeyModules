@@ -55,6 +55,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenomeManager;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
@@ -410,7 +411,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         File localCachedIndexDir = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
         if (localCachedIndexDir != null)
         {
-            AlignerIndexUtil.cacheGenomeLocally(referenceGenome, localCachedIndexDir, getJob().getLogger());
+            ReferenceGenomeManager.get().cacheGenomeLocally(referenceGenome, getJob().getLogger());
         }
         else if (doCopy)
         {

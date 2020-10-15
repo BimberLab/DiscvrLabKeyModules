@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.run.util;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
@@ -10,8 +11,10 @@ import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.run.AbstractGatk4Wrapper;
+import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
+import org.springframework.util.FileSystemUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -175,15 +178,29 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
                     }
                     else
                     {
-                        long size = f.isDirectory() ? FileUtils.sizeOfDirectory(f) : FileUtils.sizeOf(f);
-                        ctx.getLogger().debug("copying file: " + f.getName() + ", size: " + FileUtils.byteCountToDisplaySize(size));
+                        long size = f.isDirectory() ? -1 : FileUtils.sizeOf(f);
+                        ctx.getLogger().debug("copying file: " + f.getName() + (size != -1 ? ", size: " + FileUtils.byteCountToDisplaySize(size) : ""));
                         if (f.isDirectory())
                         {
-                            if (movedFile.exists())
+                            if (SystemUtils.IS_OS_WINDOWS)
                             {
-                                FileUtils.deleteDirectory(movedFile);
+                                if (movedFile.exists())
+                                {
+                                    ctx.getLogger().debug("Deleting existing copy of directory: " + movedFile.getPath());
+                                    FileUtils.deleteDirectory(movedFile);
+                                }
+
+                                ctx.getLogger().debug("Copying directory: " + movedFile.getPath());
+                                FileUtils.copyDirectory(f, movedFile);
                             }
-                            FileUtils.copyDirectory(f, movedFile);
+                            else
+                            {
+                                ctx.getLogger().debug("Copying directory with rsync: " + movedFile.getPath());
+                                new SimpleScriptWrapper(ctx.getLogger()).execute(Arrays.asList(
+                                    "rsync", "-r", "-vi", "-a", "--delete", "--delete-excluded", "--no-owner", "--no-group", f.getPath(), movedFile.getPath()
+                                ));
+                            }
+
                             FileUtils.touch(doneFile);
                         }
                         else
@@ -192,6 +209,8 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
                             {
                                 movedFile.delete();
                             }
+
+                            ctx.getLogger().debug("Copying file: " + movedFile.getPath());
                             FileUtils.copyFile(f, movedFile);
                             if (origIdx != null)
                             {

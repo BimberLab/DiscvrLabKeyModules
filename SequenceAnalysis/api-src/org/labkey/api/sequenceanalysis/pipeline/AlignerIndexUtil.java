@@ -178,29 +178,13 @@ public class AlignerIndexUtil
                 }
 
                 lockFile.delete();
+
+                ReferenceGenomeManager.get().markGenomeModified(genome);
             }
             catch (IOException e)
             {
                 throw new PipelineJobException(e);
             }
         }
-    }
-
-    public static void cacheGenomeLocally(ReferenceGenome genome, File localCacheDir, Logger log) throws PipelineJobException
-    {
-        log.info("attempting to rsync genome to local disks: " + localCacheDir.getPath());
-        if (genome.isTemporaryGenome())
-        {
-            log.info("cannot cache custom genomes, skipping");
-            return;
-        }
-
-        File sourceDir = genome.getSourceFastaFile().getParentFile();
-
-        new SimpleScriptWrapper(log).execute(Arrays.asList(
-                "rsync", "-r", "-vi", "-a", "--delete", "--delete-excluded", "--exclude", "tracks/*", "--exclude", "chainFiles/*", "--no-owner", "--no-group", sourceDir.getPath(), localCacheDir.getPath()
-        ));
-
-        genome.setWorkingFasta(new File(new File(localCacheDir, genome.getGenomeId().toString()), genome.getSourceFastaFile().getName()));
     }
 }

@@ -90,7 +90,7 @@ public class ClusterPipelineJob extends PipelineJob
             catch (NullPointerException e)
             {
                 //this indicates the TaskFactory has not been registered yet
-                getLogger().error("A NullPointerException was throw in ClusterPipelineJob", e);
+                getLogger().error("A NullPointerException was thrown in ClusterPipelineJob", e);
                 registerTaskPipeline(_location);
             }
         }

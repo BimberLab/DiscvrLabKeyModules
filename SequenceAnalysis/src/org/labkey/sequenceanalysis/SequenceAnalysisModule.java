@@ -49,6 +49,7 @@ import org.labkey.sequenceanalysis.button.ReprocessLibraryButton;
 import org.labkey.sequenceanalysis.button.RunMultiQCButton;
 import org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisJob;
 import org.labkey.sequenceanalysis.pipeline.AlignmentImportJob;
+import org.labkey.sequenceanalysis.pipeline.CacheGenomeTrigger;
 import org.labkey.sequenceanalysis.pipeline.IlluminaImportJob;
 import org.labkey.sequenceanalysis.pipeline.ImportFastaSequencesPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.ImportGenomeTrackPipelineJob;
@@ -339,6 +340,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
         //ObjectFactory.Registry.register(AnalysisModelImpl.class, new UnderscoreBeanObjectFactory(AnalysisModelImpl.class));
         //ObjectFactory.Registry.register(SequenceReadsetImpl.class, new UnderscoreBeanObjectFactory(SequenceReadsetImpl.class));
+
+        SequenceAnalysisService.get().registerGenomeTrigger(new CacheGenomeTrigger());
     }
 
     @Override
@@ -404,6 +407,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         PipelineService.get().registerPipelineProvider(new ImportGenomeTrackPipelineJob.Provider(this));
         PipelineService.get().registerPipelineProvider(new OrphanFilePipelineProvider(this));
         PipelineService.get().registerPipelineProvider(new SequencePipelineProvider(this));
+        PipelineService.get().registerPipelineProvider(new CacheGenomeTrigger.CacheGenomePipelineJobProvider(this));
 
         LDKService.get().registerQueryButton(new ReprocessLibraryButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
 

@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
@@ -9,23 +10,30 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.ldk.LDKService;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance.MaintenanceTask;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
+import org.labkey.sequenceanalysis.pipeline.CacheGenomeTrigger;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -56,12 +64,62 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         //delete sequence text files and library artifacts not associated with a DB record
         try
         {
+            possiblySubmitRemoteTask(log);
+
             processContainer(ContainerManager.getRoot(), log);
             verifySequenceDataPresent(log);
         }
         catch (Exception e)
         {
             log.error(e.getMessage(), e);
+        }
+    }
+
+    private void possiblySubmitRemoteTask(Logger log)
+    {
+        if (SequencePipelineService.get().getRemoteGenomeCacheDirectory() != null)
+        {
+            JobRunner jr = JobRunner.getDefault();
+            jr.execute(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    try
+                    {
+                        Map<Integer, File> genomeMap = new HashMap<>();
+                        new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("rowid", "fasta_file"), new SimpleFilter(FieldKey.fromString("datedisabled"), null, CompareType.ISBLANK), null).forEachResults(rs -> {
+                            int dataId = rs.getInt(FieldKey.fromString("fasta_file"));
+                            if (dataId > -1)
+                            {
+                                ExpData d = ExperimentService.get().getExpData(dataId);
+                                if (d != null && d.getFile() != null)
+                                {
+                                    genomeMap.put(rs.getInt(FieldKey.fromString("rowid")), d.getFile());
+                                }
+                            }
+                        });
+
+                        if (!genomeMap.isEmpty())
+                        {
+                            final User adminUser = LDKService.get().getBackgroundAdminUser();
+                            if (adminUser == null)
+                            {
+                                log.error("LDK module BackgroundAdminUser property not set.  If this is set, JBrowseMaintenanceTask could automatically submit repair jobs.");
+                                return;
+                            }
+
+                            CacheGenomeTrigger.cacheGenomes(ContainerManager.getSharedContainer(), adminUser, genomeMap, log);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        log.error(e);
+                    }
+                }
+            });
+
+            jr.waitForCompletion();
         }
     }
 
