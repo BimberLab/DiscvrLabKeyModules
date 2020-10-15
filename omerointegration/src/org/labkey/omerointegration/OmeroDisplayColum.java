@@ -72,6 +72,6 @@ public class OmeroDisplayColum extends DataColumn
     @Override
     public @NotNull Set<ClientDependency> getClientDependencies()
     {
-        return PageFlowUtil.set(ClientDependency.fromPath("omerointegration/utils.js"), ClientDependency.fromPath("ldk/LDKApi.lib.xml"));
+        return PageFlowUtil.set(ClientDependency.fromPath("ldk/LDKApi.lib.xml"), ClientDependency.fromPath("omerointegration/utils.js"));
     }
 }
