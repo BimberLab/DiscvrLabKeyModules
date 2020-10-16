@@ -90,6 +90,7 @@ public class ReferenceGenomeManager
 
         File sourceDir = genome.getSourceFastaFile().getParentFile();
 
+        //Note: neither source nor dest have trailing slashes, so the entire source (i.e '128', gets synced into a subdir of dest)
         new SimpleScriptWrapper(log).execute(Arrays.asList(
                 "rsync", "-r", "-vi", "-a", "--delete", "--delete-excluded", "--no-owner", "--no-group", sourceDir.getPath(), localCacheDir.getPath()
         ));

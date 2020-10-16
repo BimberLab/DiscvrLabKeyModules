@@ -335,7 +335,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
 
     private void copyToLevelFiles(PipelineJob job, File sourceWorkspace, File destinationWorkspace) throws IOException
     {
-        job.getLogger().info("Copying top-level files");
+        job.getLogger().info("Copying top-level files from: " + sourceWorkspace.getPath());
         for (String fn : Arrays.asList("callset.json", "vidmap.json", "vcfheader.vcf", "__tiledb_workspace.tdb"))
         {
             File source = new File(sourceWorkspace, fn);
@@ -537,8 +537,9 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                         else
                         {
                             ctx.getLogger().debug("Copying directory with rsync: " + sourceFolder.getPath());
+                            //NOTE: since neither path will end in slashes, rsync to the parent folder should result in the correct placement
                             new SimpleScriptWrapper(ctx.getLogger()).execute(Arrays.asList(
-                                    "rsync", "-r", "-vi", "-a", "--delete", "--delete-excluded", "--no-owner", "--no-group", sourceFolder.getPath(), destContigFolder.getPath()
+                                    "rsync", "-r", "-vi", "-a", "--delete", "--delete-excluded", "--no-owner", "--no-group", sourceFolder.getPath(), destContigFolder.getParentFile().getPath()
                             ));
                         }
 
