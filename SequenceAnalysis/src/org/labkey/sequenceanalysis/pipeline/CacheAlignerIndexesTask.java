@@ -164,8 +164,7 @@ public class CacheAlignerIndexesTask extends WorkDirectoryTask<CacheAlignerIndex
         }
 
         //also try to rsync, if enabled
-        File cacheDir = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
-        if (cacheDir != null)
+        if (SequencePipelineService.get().isRemoteGenomeCacheUsed())
         {
             ReferenceGenomeManager.get().cacheGenomeLocally(referenceGenome, getJob().getLogger());
         }

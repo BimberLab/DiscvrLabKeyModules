@@ -68,13 +68,11 @@ public class ReferenceGenomeManager
 
     public void cacheGenomeLocally(ReferenceGenome genome, Logger log) throws PipelineJobException
     {
-        File localCacheDir = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
-        if (localCacheDir == null)
+        if (!SequencePipelineService.get().isRemoteGenomeCacheUsed())
         {
             return;
         }
 
-        log.info("attempting to rsync genome to local disks: " + localCacheDir.getPath());
         if (genome.isTemporaryGenome())
         {
             log.info("cannot cache custom genomes, skipping");
@@ -87,6 +85,9 @@ public class ReferenceGenomeManager
             return;
         }
 
+        File localCacheDir = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
+        log.info("attempting to rsync genome to local disks: " + localCacheDir.getPath());
+
         File sourceDir = genome.getSourceFastaFile().getParentFile();
 
         new SimpleScriptWrapper(log).execute(Arrays.asList(
@@ -95,6 +96,12 @@ public class ReferenceGenomeManager
 
         try
         {
+            File lastUpdate = getLocalUpdateFile(genome);
+            if (!lastUpdate.exists())
+            {
+                FileUtils.touch(lastUpdate);
+            }
+
             FileUtils.touch(getRemoteSyncFile(genome.getGenomeId()));
         }
         catch (IOException e)

@@ -77,7 +77,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
 
     private void possiblySubmitRemoteTask(Logger log)
     {
-        if (SequencePipelineService.get().getRemoteGenomeCacheDirectory() != null)
+        if (SequencePipelineService.get().isRemoteGenomeCacheUsed())
         {
             JobRunner jr = JobRunner.getDefault();
             jr.execute(new Runnable()
@@ -120,6 +120,10 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             });
 
             jr.waitForCompletion();
+        }
+        else
+        {
+            log.debug("Genome caching not used, skipping");
         }
     }
 

@@ -408,8 +408,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             doCopy = true;
         }
 
-        File localCachedIndexDir = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
-        if (localCachedIndexDir != null)
+        if (SequencePipelineService.get().isRemoteGenomeCacheUsed())
         {
             ReferenceGenomeManager.get().cacheGenomeLocally(referenceGenome, getJob().getLogger());
         }

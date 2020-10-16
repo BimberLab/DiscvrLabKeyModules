@@ -138,8 +138,7 @@ public class ReferenceGenomeImpl implements ReferenceGenome
         {
             //if we rsync locally, these are cached w/ the same structure as the server
             //this only applies for saved reference genomes (i.e. genomeId != null)
-            File remoteDir = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
-            if (remoteDir == null)
+            if (!SequencePipelineService.get().isRemoteGenomeCacheUsed())
             {
                 return new File(_workingFasta.getParentFile(), name);
             }

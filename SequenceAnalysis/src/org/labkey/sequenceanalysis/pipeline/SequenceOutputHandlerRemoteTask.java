@@ -100,8 +100,7 @@ public class SequenceOutputHandlerRemoteTask extends WorkDirectoryTask<SequenceO
 
     public static void possiblyCacheGenomes(SequenceJob job, List<SequenceOutputFile> inputs) throws PipelineJobException
     {
-        File localCachedIndexDir = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
-        if (localCachedIndexDir != null)
+        if (SequencePipelineService.get().isRemoteGenomeCacheUsed())
         {
             Set<Integer> distinctGenomes = inputs.stream().map(SequenceOutputFile::getLibrary_id).filter(Predicates.notNull()).collect(Collectors.toSet());
             for (Integer l : distinctGenomes)

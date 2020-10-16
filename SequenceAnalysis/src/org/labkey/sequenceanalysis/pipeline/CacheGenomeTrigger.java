@@ -68,8 +68,7 @@ public class CacheGenomeTrigger implements GenomeTrigger
     public static void cacheGenomes(Container c, User u, Map<Integer, File> genomeMap, Logger log, boolean deleteOtherFolders)
     {
         //Dont start pipeline job unless REMOTE_GENOME_CACHE_DIR is set
-        File cacheDir = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
-        if (cacheDir == null)
+        if (!SequencePipelineService.get().isRemoteGenomeCacheUsed())
         {
             return;
         }
