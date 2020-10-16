@@ -109,7 +109,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                                 return;
                             }
 
-                            CacheGenomeTrigger.cacheGenomes(ContainerManager.getSharedContainer(), adminUser, genomeMap, log);
+                            CacheGenomeTrigger.cacheGenomes(ContainerManager.getSharedContainer(), adminUser, genomeMap, log, true);
                         }
                     }
                     catch (Exception e)

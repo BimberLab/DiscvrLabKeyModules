@@ -11,6 +11,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.GenomeTrigger;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 
 import java.io.File;
@@ -50,7 +51,7 @@ public class CacheGenomeTrigger implements GenomeTrigger
             Map<Integer, File> genomeMap = new HashMap<>();
             ReferenceGenome rg = SequenceAnalysisService.get().getReferenceGenome(genomeId, u);
             genomeMap.put(rg.getGenomeId(), rg.getSourceFastaFile());
-            cacheGenomes(c, u, genomeMap, log);
+            cacheGenomes(c, u, genomeMap, log, false);
         }
         catch (PipelineJobException e)
         {
@@ -64,8 +65,15 @@ public class CacheGenomeTrigger implements GenomeTrigger
         return c.getActiveModules().contains(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME));
     }
 
-    public static void cacheGenomes(Container c, User u, Map<Integer, File> genomeMap, Logger log)
+    public static void cacheGenomes(Container c, User u, Map<Integer, File> genomeMap, Logger log, boolean deleteOtherFolders)
     {
+        //Dont start pipeline job unless REMOTE_GENOME_CACHE_DIR is set
+        File cacheDir = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
+        if (cacheDir == null)
+        {
+            return;
+        }
+
         PipeRoot pipeRoot = PipelineService.get().findPipelineRoot(c);
 
         File logFileDir = new File(pipeRoot.getRootPath(), CacheGenomePipelineJob.Provider.NAME);
@@ -74,7 +82,7 @@ public class CacheGenomeTrigger implements GenomeTrigger
             logFileDir.mkdirs();
         }
 
-        CacheGenomePipelineJob job = new CacheGenomePipelineJob(c, u, pipeRoot, genomeMap, logFileDir);
+        CacheGenomePipelineJob job = new CacheGenomePipelineJob(c, u, pipeRoot, genomeMap, logFileDir, deleteOtherFolders);
 
         try
         {
