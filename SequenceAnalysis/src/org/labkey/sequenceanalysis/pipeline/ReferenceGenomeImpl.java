@@ -56,6 +56,20 @@ public class ReferenceGenomeImpl implements ReferenceGenome
     @Override
     public @NotNull File getWorkingFastaFile()
     {
+        if (SequencePipelineService.get().isRemoteGenomeCacheUsed())
+        {
+            File ret = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
+            if (ret != null)
+            {
+                ret = new File(ret, getGenomeId().toString());
+                ret = new File(ret, _sourceFasta.getName());
+                if (ret.exists())
+                {
+                    return ret;
+                }
+            }
+        }
+
         return _workingFasta == null ? _sourceFasta : _workingFasta;
     }
 

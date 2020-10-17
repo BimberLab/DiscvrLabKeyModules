@@ -383,7 +383,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 toolParams.add("--genomicsdb-shared-posixfs-optimizations");
             }
 
-            wrapper.execute(genome.getSourceFastaFile(), outputVcf, toolParams, inputVcf);
+            wrapper.execute(genome.getWorkingFastaFile(), outputVcf, toolParams, inputVcf);
 
             action.addOutput(outputVcf, "VCF", outputVcf.exists(), true);
             action.setEndTime(new Date());
