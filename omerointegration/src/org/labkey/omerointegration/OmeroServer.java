@@ -134,7 +134,7 @@ public class OmeroServer
     private ExperimenterData connect(Gateway gateway, URL url) throws Exception
     {
         LoginCredentials cred = new LoginCredentials();
-        cred.getServer().setHost(url.getHost());
+        cred.getServer().setHostname(url.getHost());
         if (url.getPort() > 0) {
             cred.getServer().setPort(url.getPort());
         }
