@@ -356,7 +356,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 toolParams.add(f.getPath());
             }
 
-            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.allowOldRmsMappingData") != null)
+            if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.allowOldRmsMappingData", false))
             {
                 toolParams.add("--allow-old-rms-mapping-quality-annotation-data");
             }
