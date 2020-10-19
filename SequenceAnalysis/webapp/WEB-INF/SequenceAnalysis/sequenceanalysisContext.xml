@@ -123,6 +123,12 @@
                 <bean class="org.labkey.sequenceanalysis.pipeline.VariantProcessingScatterRemotePrepareTask$Factory">
                     <property name="join" value="true"/>
                 </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.VariantProcessingScatterRemotePrepareTask$Factory">
+                    <property name="join" value="true"/>
+                </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.CacheGenomePipelineJob.CacheGenomesTask$Factory">
+                    <property name="location" value="webserver" />
+                </bean>
             </list>
         </property>
         <property name="pipelines">
@@ -149,6 +155,14 @@
                     <property name="taskProgressionSpec">
                         <list>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.ImportGenomeTrackTask</value>
+                        </list>
+                    </property>
+                </bean>
+                <bean class="org.labkey.api.pipeline.TaskPipelineSettings">
+                    <constructor-arg type="java.lang.Class" value="org.labkey.sequenceanalysis.pipeline.CacheGenomePipelineJob"/>
+                    <property name="taskProgressionSpec">
+                        <list>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.CacheGenomePipelineJob.CacheGenomesTask</value>
                         </list>
                     </property>
                 </bean>

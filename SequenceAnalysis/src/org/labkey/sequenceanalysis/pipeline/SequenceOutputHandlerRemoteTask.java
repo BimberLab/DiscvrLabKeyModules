@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import com.google.common.base.Predicates;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
@@ -7,14 +8,21 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenomeManager;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Created by bimber on 1/16/2015.
@@ -90,6 +98,19 @@ public class SequenceOutputHandlerRemoteTask extends WorkDirectoryTask<SequenceO
         return (SequenceOutputHandlerJob)getJob();
     }
 
+    public static void possiblyCacheGenomes(SequenceJob job, List<SequenceOutputFile> inputs) throws PipelineJobException
+    {
+        if (SequencePipelineService.get().isRemoteGenomeCacheUsed())
+        {
+            Set<Integer> distinctGenomes = inputs.stream().map(SequenceOutputFile::getLibrary_id).filter(Predicates.notNull()).collect(Collectors.toSet());
+            for (Integer l : distinctGenomes)
+            {
+                ReferenceGenome referenceGenome = job.getSequenceSupport().getCachedGenome(l);
+                ReferenceGenomeManager.get().cacheGenomeLocally(referenceGenome, job.getLogger());
+            }
+        }
+    }
+
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
@@ -97,6 +118,8 @@ public class SequenceOutputHandlerRemoteTask extends WorkDirectoryTask<SequenceO
 
         SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler = getPipelineJob().getHandler();
         JobContextImpl ctx = new JobContextImpl(getPipelineJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), _wd.getDir(), new TaskFileManagerImpl(getPipelineJob(), _wd.getDir(), _wd), _wd);
+
+        possiblyCacheGenomes(getPipelineJob(), getPipelineJob().getFiles());
 
         getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + handler.getName());
         handler.getProcessor().processFilesRemote(getPipelineJob().getFiles(), ctx);

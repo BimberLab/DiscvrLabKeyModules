@@ -35,9 +35,12 @@ public class GenomicsDBAppendHandler extends AbstractGenomicsDBImportHandler
                 ToolParameterDescriptor.create("sharedPosixOptimizations", "Use Shared Posix Optimizations", "This enabled optimizations for large shared filesystems, such as lustre.", "checkbox", new JSONObject(){{
                     put("checked", true);
                 }}, true),
-                ToolParameterDescriptor.create("nativeMemoryBuffer", "C++ Memory Buffer", "By default, the pipeline java processes are allocated nearly all of the requested RAM.  GenomicsDB requires memory for the C++ layer - this value (in GB) will be reserved for this.  We recommend about 15-25% of the total job RAM", "checkbox", new JSONObject(){{
+                ToolParameterDescriptor.create("nativeMemoryBuffer", "C++ Memory Buffer", "By default, the pipeline java processes are allocated nearly all of the requested RAM.  GenomicsDB requires memory for the C++ layer - this value (in GB) will be reserved for this.  We recommend about 15-25% of the total job RAM", "ldk-integerfield", new JSONObject(){{
                     put("minValue", 0);
                 }}, 24),
+                ToolParameterDescriptor.create("consolidate", "Consolidate", "If importing data in batches, a new fragment is created for each batch. In case thousands of fragments are created, GenomicsDB feature readers will try to open ~20x as many files. Also, internally GenomicsDB would consume more memory to maintain bookkeeping data from all fragments. Use this flag to merge all fragments into one. Merging can potentially improve read performance, however overall benefit might not be noticeable as the top Java layers have significantly higher overheads. This flag has no effect if only one batch is used. Defaults to false.", "checkbox", new JSONObject(){{
+                    put("checked", false);
+                }}, false),
                 ToolParameterDescriptor.create("scatterGather", "Scatter/Gather Options", "If selected, this job will be divided to run job per chromosome.  The final step will take the VCF from each intermediate step and combined to make a final VCF file.", "sequenceanalysis-variantscattergatherpanel", new JSONObject(){{
                     put("defaultValue", "chunked");
                 }}, false)

@@ -141,9 +141,7 @@ public class OmeroServer
         }
         cred.getUser().setUsername(getOmeroUser());
         cred.getUser().setPassword(getOmeroPassword());
-        ExperimenterData user = gateway.connect(cred);
-
-        return user;
+        return gateway.connect(cred);
     }
 
     public void getThumbnail(String omeroId, HttpServletResponse response)
