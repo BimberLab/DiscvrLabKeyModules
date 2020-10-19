@@ -79,6 +79,8 @@ abstract public class SequencePipelineService
 
     abstract public List<String> getJavaOpts(@Nullable Integer maxRamOverride);
 
+    abstract public boolean isRemoteGenomeCacheUsed();
+
     @Nullable
     abstract public File getRemoteGenomeCacheDirectory();
 

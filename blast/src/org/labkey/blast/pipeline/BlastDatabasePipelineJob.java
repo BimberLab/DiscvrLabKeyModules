@@ -55,7 +55,7 @@ public class BlastDatabasePipelineJob extends PipelineJob
         setLogFile(new File(BLASTManager.get().getDatabaseDir(c, true), "blast-" + _databaseGuid + ".log"));
 
         ReferenceGenome rg = SequenceAnalysisService.get().getReferenceGenome(_libraryId, user);
-        _fasta = rg.getSourceFastaFile();
+        _fasta = rg.getWorkingFastaFile();
         _databaseDir = BLASTManager.get().getDatabaseDir(getContainer(), true);
         possiblyCreateDbRecord();
     }

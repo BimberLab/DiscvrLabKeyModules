@@ -42,6 +42,7 @@ import org.labkey.api.sequenceanalysis.GenomeTrigger;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenomeManager;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -381,6 +382,9 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             }
 
             getJob().getLogger().info("creation complete");
+
+            ReferenceGenome rg = SequenceAnalysisService.get().getReferenceGenome(rowId, getJob().getUser());
+            ReferenceGenomeManager.get().markGenomeModified(rg);
 
             Set<GenomeTrigger> triggers = new HashSet<>(getPipelineJob().getExtraTriggers());
             if (getPipelineJob().isSkipTriggers())

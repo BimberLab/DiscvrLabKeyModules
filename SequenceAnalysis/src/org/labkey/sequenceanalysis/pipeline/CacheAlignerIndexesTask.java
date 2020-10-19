@@ -14,6 +14,7 @@ import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenomeManager;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
@@ -131,7 +132,7 @@ public class CacheAlignerIndexesTask extends WorkDirectoryTask<CacheAlignerIndex
                         //create locally first
                         alignmentStep.createIndex(referenceGenome, _wd.getDir());
 
-                        //NOTE: the AlignerSteps are doing this themselves.  not sure if that is the right behvior
+                        //NOTE: the AlignerSteps are doing this themselves.  not sure if that is the right behavior
                         if (!AlignerIndexUtil.hasCachedIndex(ctx, provider.getName(), referenceGenome))
                         {
                             AlignerIndexUtil.saveCachedIndex(false, ctx, outDir, provider.getName(), referenceGenome);
@@ -163,10 +164,9 @@ public class CacheAlignerIndexesTask extends WorkDirectoryTask<CacheAlignerIndex
         }
 
         //also try to rsync, if enabled
-        File cacheDir = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
-        if (cacheDir != null)
+        if (SequencePipelineService.get().isRemoteGenomeCacheUsed())
         {
-            AlignerIndexUtil.cacheGenomeLocally(referenceGenome, cacheDir, getJob().getLogger());
+            ReferenceGenomeManager.get().cacheGenomeLocally(referenceGenome, getJob().getLogger());
         }
 
         return new RecordedActionSet();

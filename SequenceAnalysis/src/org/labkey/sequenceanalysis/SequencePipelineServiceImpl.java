@@ -319,6 +319,13 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     }
 
     @Override
+    public boolean isRemoteGenomeCacheUsed()
+    {
+        String dir = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("REMOTE_GENOME_CACHE_DIR");
+        return StringUtils.trimToNull(dir) != null;
+    }
+
+    @Override
     public File getRemoteGenomeCacheDirectory()
     {
         String dir = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("REMOTE_GENOME_CACHE_DIR");

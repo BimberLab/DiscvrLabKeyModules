@@ -11,6 +11,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.commons.lang3.SystemUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.module.Module;
@@ -26,6 +27,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
+import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
@@ -334,7 +336,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
 
     private void copyToLevelFiles(PipelineJob job, File sourceWorkspace, File destinationWorkspace) throws IOException
     {
-        job.getLogger().info("Copying top-level files");
+        job.getLogger().info("Copying top-level files from: " + sourceWorkspace.getPath());
         for (String fn : Arrays.asList("callset.json", "vidmap.json", "vcfheader.vcf", "__tiledb_workspace.tdb"))
         {
             File source = new File(sourceWorkspace, fn);
@@ -521,14 +523,27 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                             throw new PipelineJobException("Unable to find expected file: " + sourceFolder.getPath());
                         }
 
-                        if (destContigFolder.exists())
+                        if (SystemUtils.IS_OS_WINDOWS)
                         {
-                            ctx.getLogger().info("Target exists, deleting: " + destContigFolder.getPath());
-                            FileUtils.deleteDirectory(destContigFolder);
+                            if (destContigFolder.exists())
+                            {
+                                ctx.getLogger().info("Target exists, deleting: " + destContigFolder.getPath());
+                                FileUtils.deleteDirectory(destContigFolder);
+                            }
+
+                            ctx.getLogger().info("copying contig folder: " + i.getContig());
+
+                            FileUtils.copyDirectory(sourceFolder, destContigFolder);
+                        }
+                        else
+                        {
+                            ctx.getLogger().debug("Copying directory with rsync: " + sourceFolder.getPath());
+                            //NOTE: since neither path will end in slashes, rsync to the parent folder should result in the correct placement
+                            new SimpleScriptWrapper(ctx.getLogger()).execute(Arrays.asList(
+                                    "rsync", "-r", "-a", "--delete", "--delete-excluded", "--no-owner", "--no-group", sourceFolder.getPath(), destContigFolder.getParentFile().getPath()
+                            ));
                         }
 
-                        ctx.getLogger().info("copying contig folder: " + i.getContig());
-                        FileUtils.copyDirectory(sourceFolder, destContigFolder);
                         FileUtils.touch(copyDone);
                     }
                     catch (IOException e)
@@ -573,6 +588,11 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
 
             GenomicsDbImportWrapper wrapper = new GenomicsDbImportWrapper(ctx.getLogger());
             List<String> options = new ArrayList<>(getClientCommandArgs(ctx.getParams()));
+
+            if (ctx.getParams().optBoolean("consolidate", false))
+            {
+                options.add("--consolidate");
+            }
 
             if (ctx.getParams().optBoolean("sharedPosixOptimizations", false))
             {

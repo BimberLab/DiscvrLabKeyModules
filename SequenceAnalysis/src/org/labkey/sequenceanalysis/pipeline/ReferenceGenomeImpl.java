@@ -56,6 +56,20 @@ public class ReferenceGenomeImpl implements ReferenceGenome
     @Override
     public @NotNull File getWorkingFastaFile()
     {
+        if (SequencePipelineService.get().isRemoteGenomeCacheUsed())
+        {
+            File ret = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
+            if (ret != null)
+            {
+                ret = new File(ret, getGenomeId().toString());
+                ret = new File(ret, _sourceFasta.getName());
+                if (ret.exists())
+                {
+                    return ret;
+                }
+            }
+        }
+
         return _workingFasta == null ? _sourceFasta : _workingFasta;
     }
 
@@ -138,8 +152,7 @@ public class ReferenceGenomeImpl implements ReferenceGenome
         {
             //if we rsync locally, these are cached w/ the same structure as the server
             //this only applies for saved reference genomes (i.e. genomeId != null)
-            File remoteDir = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
-            if (remoteDir == null)
+            if (!SequencePipelineService.get().isRemoteGenomeCacheUsed())
             {
                 return new File(_workingFasta.getParentFile(), name);
             }

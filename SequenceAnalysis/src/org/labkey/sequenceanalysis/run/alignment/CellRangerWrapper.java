@@ -256,7 +256,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
                 }
 
                 List<String> args = new ArrayList<>();
-                args.add(getWrapper().getExe().getPath());
+                args.add(getWrapper().getExe(true).getPath());
                 args.add("mkref");
                 args.add("--fasta=" + referenceGenome.getWorkingFastaFile().getPath());
                 args.add("--genes=" + gtfFile.getPath());
@@ -297,7 +297,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
             AlignmentOutputImpl output = new AlignmentOutputImpl();
 
             List<String> args = new ArrayList<>();
-            args.add(getWrapper().getExe().getPath());
+            args.add(getWrapper().getExe(false).getPath());
             args.add("count");
 
             //TODO: consider always adding this?
@@ -672,7 +672,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
     public File runAggr(String id, File csvFile, List<String> extraArgs) throws PipelineJobException
     {
         List<String> args = new ArrayList<>();
-        args.add(getExe().getPath());
+        args.add(getExe(false).getPath());
         args.add("aggr");
 
         id = id.replaceAll("[^a-zA-z0-9_\\-]", "_");
@@ -699,7 +699,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
     public File runReanalyze(File matrix, File outDir, String id, List<String> extraParams) throws PipelineJobException
     {
         List<String> args = new ArrayList<>();
-        args.add(getExe().getPath());
+        args.add(getExe(false).getPath());
         args.add("reanalyze");
 
         id = id.replaceAll("[^a-zA-z0-9_\\-]", "_");
@@ -724,9 +724,9 @@ public class CellRangerWrapper extends AbstractCommandWrapper
         return output;
     }
 
-    protected File getExe()
+    protected File getExe(boolean use31)
     {
-        return SequencePipelineService.get().getExeForPackage("CELLRANGERPATH", "cellranger");
+        return SequencePipelineService.get().getExeForPackage("CELLRANGERPATH", "cellranger" + (use31 ? "-31" : ""));
     }
 
     public static Set<File> getRawDataDirs(File outputDir, boolean filteredOnly)

@@ -11,7 +11,6 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.util.FileType;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -57,7 +56,7 @@ public class VariantProcessingScatterRemotePrepareTask extends WorkDirectoryTask
         }
 
         @Override
-        public boolean isParticipant(PipelineJob job) throws IOException
+        public boolean isParticipant(PipelineJob job)
         {
             if (job instanceof VariantProcessingJob)
             {
@@ -99,6 +98,8 @@ public class VariantProcessingScatterRemotePrepareTask extends WorkDirectoryTask
     public @NotNull RecordedActionSet run() throws PipelineJobException
     {
         SequenceTaskHelper.logModuleVersions(getJob().getLogger());
+
+        SequenceOutputHandlerRemoteTask.possiblyCacheGenomes(getPipelineJob(), getPipelineJob().getFiles());
 
         VariantProcessingJob variantJob = getPipelineJob();
         SequenceOutputHandler handler = variantJob.getHandler();
