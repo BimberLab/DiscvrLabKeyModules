@@ -866,7 +866,24 @@ then
     echo "Compressing TAR"
     bzip2 fastx_toolkit-0.0.13.2.tar
     cd fastx_toolkit-0.0.13.2
-    ./configure --prefix=$LK_HOME
+
+    #
+    # on apt-based (Ubuntu) systems >= 18(.04), prevent the below from failing the build:
+    #
+    # fasta_formatter.cpp:105:9: error: this statement may fall through [-Werror=implicit-fallthrough=]
+    #
+    if [ $(which apt-get) ]; then
+        source /etc/os-release
+
+        if [ "${VERSION_ID%%.*}" -ge 18 ]; then
+            CFLAGS=' -Wno-error=implicit-fallthrough ' ./configure --prefix=$LK_HOME
+        else
+            ./configure --prefix=$LK_HOME
+        fi
+    else
+        ./configure --prefix=$LK_HOME
+    fi
+
     make
     make install
 else
