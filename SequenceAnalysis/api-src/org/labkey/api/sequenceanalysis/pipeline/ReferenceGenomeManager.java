@@ -1,7 +1,7 @@
 package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 
