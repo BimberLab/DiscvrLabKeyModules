@@ -1,6 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
