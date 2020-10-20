@@ -130,7 +130,7 @@ if [ ! -z $SKIP_PACKAGE_MANAGER ]; then
     echo "Skipping package install"
 elif [ $(which yum) ]; then
     echo "Using Yum"
-    yum -y install zip unzip gcc bzip2-devel gcc-c++ libstdc++ libstdc++-devel glibc-devel boost-devel ncurses-devel libgtextutils libgtextutils-devel python-devel openssl-devel glibc-static expat expat-devel subversion cpan git cmake liblzf-devel apache-maven R perl-devel perl-CPAN perl-PerlIO-gzip python-pip
+    yum -y install zip unzip gcc bzip2-devel gcc-c++ libstdc++ libstdc++-devel glibc-devel boost-devel ncurses-devel python-devel openssl-devel glibc-static expat expat-devel subversion cpan git cmake liblzf-devel apache-maven R perl-devel perl-CPAN perl-PerlIO-gzip python-pip
 elif [ $(which apt-get) ]; then
     echo "Using apt-get"
 
@@ -147,7 +147,7 @@ elif [ $(which apt-get) ]; then
     #update-alternatives --config java
     #update-alternatives --config javac
 
-    apt-get -q -y install bzip2 libbz2-dev libc6 libc6-dev libncurses5-dev libgtextutils-dev python-dev unzip zip ncftp gcc make perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev libgtextutils-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc git cmake maven r-base r-cran-rcpp python-pip
+    apt-get -q -y install bzip2 libbz2-dev libc6 libc6-dev libncurses5-dev python-dev unzip zip ncftp gcc make perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc git cmake maven r-base r-cran-rcpp python-pip
 else
     echo "No known package manager present, aborting"
     exit 1
@@ -837,41 +837,6 @@ else
     echo "Already installed"
 fi
 
-#
-#fastx-toolkit
-#
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install fastx-toolkit"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/fastq_masker || ! -z $FORCE_REINSTALL ]];
-then
-    echo "Cleaning up previous installs"
-    rm -Rf fastx_toolkit-0.0.13.2*
-
-    #this should not be required with this script
-    #wget $WGET_OPTS http://cancan.cshl.edu/labmembers/gordon/files/libgtextutils-0.6.tar.bz2
-    #tar -xjf libgtextutils-0.6.tar.bz2
-    #cd libgtextutils-0.6
-    #./configure
-    #make
-    #make install
-
-    wget $WGET_OPTS http://hannonlab.cshl.edu/fastx_toolkit/fastx_toolkit-0.0.13.2.tar.bz2
-    bunzip2 fastx_toolkit-0.0.13.2.tar.bz2
-    tar -xf fastx_toolkit-0.0.13.2.tar
-    echo "Compressing TAR"
-    bzip2 fastx_toolkit-0.0.13.2.tar
-    cd fastx_toolkit-0.0.13.2
-    ./configure --prefix=$LK_HOME
-    make
-    make install
-else
-    echo "Already installed"
-fi
 
 #
 #picard
