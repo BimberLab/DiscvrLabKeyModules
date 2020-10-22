@@ -65,7 +65,7 @@ public class SNPEffStep extends AbstractCommandPipelineStep<SnpEffWrapper> imple
     {
         log.debug("checking for index");
 
-        File snpEffBaseDir = AlignerIndexUtil.getWebserverIndexDir(genome, NAME);
+        File snpEffBaseDir = AlignerIndexUtil.getIndexDir(genome, NAME);
         File geneFile = support.getCachedData(geneFileId);
         if (geneFile == null || !geneFile.exists())
         {

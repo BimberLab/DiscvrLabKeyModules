@@ -336,7 +336,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
             File gtfFile = getPipelineCtx().getSequenceSupport().getCachedData(gtfId);
             output.addInput(gtfFile, GTF_FILE);
 
-            File indexDir = AlignerIndexUtil.getWebserverIndexDir(referenceGenome, getIndexCachedDirName(getPipelineCtx().getJob()));
+            File indexDir = AlignerIndexUtil.getIndexDir(referenceGenome, getIndexCachedDirName(getPipelineCtx().getJob()));
             args.add("--transcriptome=" + indexDir.getPath());
 
             getWrapper().setWorkingDir(outputDirectory);
