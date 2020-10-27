@@ -483,10 +483,9 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
                 j.setLogModified(new Date(log.lastModified()));
             }
 
-            //NOTE: in rare cases the actual job and status file can get out of sync
-            if (status.equalsIgnoreCase(PipelineJob.TaskStatus.running.name()) && sf.getStatus().equalsIgnoreCase(PipelineJob.TaskStatus.error.name()))
+            //NOTE: in rare cases the actual job and status file can get out of sync. This is generally a race-condition with differences in timing of ActiveMQ-messages vs. polling the cluster
+            if (status != null && status.equalsIgnoreCase(PipelineJob.TaskStatus.running.name()) && sf.getStatus().equalsIgnoreCase(PipelineJob.TaskStatus.error.name()))
             {
-                _log.error("Pipeline job and cluster out of sync: " + sf.getStatus() + " / " + status + ", for job: " + sf.getRowId());
                 statusChanged = true;
             }
         }
@@ -545,11 +544,6 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
                         {
                             taskStatus = PipelineJob.TaskStatus.error;
                         }
-                        else if (pj.getActiveTaskStatus() == PipelineJob.TaskStatus.running)
-                        {
-                            //this might indicate the job aborted mid-task without properly marking itself as complete
-                            pj.getLogger().warn("marking job as complete, even though JSON indicates task status is running.  this might indicate the job aborted improperly?");
-                        }
                         else if (pj.getActiveTaskStatus() != PipelineJob.TaskStatus.complete)
                         {
                             //this might indicate the job aborted mid-task without properly marking itself as complete
@@ -563,8 +557,8 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
                     }
                     else if (pj.getActiveTaskStatus() == PipelineJob.TaskStatus.complete)
                     {
-                        pj.getLogger().warn("Pipeline job marked complete, but the cluster status is error");
-
+                        //NOTE: this can occur when the cluster job has a non-zero exit after the java process terminates.
+                        pj.getLogger().info("Pipeline job JSON marked complete, but the cluster status was: " + taskStatus);
                     }
 
                     pj.getLogger().debug("setting active task status for job: " + j.getClusterId() + " to: " + taskStatus.name() + ". status was: " + pj.getActiveTaskStatus() + " (JSON) /" + sf.getStatus() + " (StatusFile) / " + status + " (Cluster), activeTaskId: " + (pj.getActiveTaskId() != null ? pj.getActiveTaskId().toString() : "no active task") + ", hostname: " + sf.getActiveHostName() + ", rowid: " + j.getRowId());
