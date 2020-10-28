@@ -384,7 +384,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             getJob().getLogger().info("creation complete");
 
             ReferenceGenome rg = SequenceAnalysisService.get().getReferenceGenome(rowId, getJob().getUser());
-            ReferenceGenomeManager.get().markGenomeModified(rg);
+            ReferenceGenomeManager.get().markGenomeModified(rg, getJob().getLogger());
 
             Set<GenomeTrigger> triggers = new HashSet<>(getPipelineJob().getExtraTriggers());
             if (getPipelineJob().isSkipTriggers())

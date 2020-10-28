@@ -57,12 +57,13 @@ public class ReferenceGenomeManager
         long lastUpdated = localFile.lastModified();
         long lastSync = remoteFile.lastModified();
 
-        return lastUpdated >= lastSync;
+        return lastSync >= lastUpdated;
     }
 
-    public void markGenomeModified(ReferenceGenome genome) throws IOException
+    public void markGenomeModified(ReferenceGenome genome, Logger log) throws IOException
     {
         File toUpdate = getLocalUpdateFile(genome);
+        log.info("Marking genome as modified: " + toUpdate.getPath());
         FileUtils.touch(toUpdate);
     }
 

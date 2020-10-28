@@ -184,7 +184,7 @@ public class AlignerIndexUtil
 
                 lockFile.delete();
 
-                ReferenceGenomeManager.get().markGenomeModified(genome);
+                ReferenceGenomeManager.get().markGenomeModified(genome, ctx.getLogger());
             }
             catch (IOException e)
             {
