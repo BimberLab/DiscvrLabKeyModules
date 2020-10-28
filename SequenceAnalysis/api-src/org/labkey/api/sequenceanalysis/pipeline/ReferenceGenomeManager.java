@@ -2,6 +2,8 @@ package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Logger;
+import com.google.common.io.Files;
+import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 
@@ -57,13 +59,14 @@ public class ReferenceGenomeManager
         long lastUpdated = localFile.lastModified();
         long lastSync = remoteFile.lastModified();
 
-        return lastUpdated >= lastSync;
+        return lastSync >= lastUpdated;
     }
 
-    public void markGenomeModified(ReferenceGenome genome) throws IOException
+    public void markGenomeModified(ReferenceGenome genome, Logger log) throws IOException
     {
         File toUpdate = getLocalUpdateFile(genome);
-        FileUtils.touch(toUpdate);
+        log.info("Marking genome as modified: " + toUpdate.getPath());
+        Files.touch(toUpdate);
     }
 
     public void cacheGenomeLocally(ReferenceGenome genome, Logger log) throws PipelineJobException
@@ -100,10 +103,10 @@ public class ReferenceGenomeManager
             File lastUpdate = getLocalUpdateFile(genome);
             if (!lastUpdate.exists())
             {
-                FileUtils.touch(lastUpdate);
+                Files.touch(lastUpdate);
             }
 
-            FileUtils.touch(getRemoteSyncFile(genome.getGenomeId()));
+            Files.touch(getRemoteSyncFile(genome.getGenomeId()));
         }
         catch (IOException e)
         {

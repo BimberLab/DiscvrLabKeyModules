@@ -143,7 +143,7 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
             }
 
             final int trackId = addTrackForLibrary(getPipelineJob().getTrack(), getPipelineJob().getTrackName(), getPipelineJob().getTrackDescription(), action);
-            ReferenceGenomeManager.get().markGenomeModified(SequenceAnalysisService.get().getReferenceGenome(getPipelineJob().getLibraryId(), getJob().getUser()));
+            ReferenceGenomeManager.get().markGenomeModified(SequenceAnalysisService.get().getReferenceGenome(getPipelineJob().getLibraryId(), getJob().getUser()), getJob().getLogger());
 
             Set<GenomeTrigger> triggers = SequenceAnalysisServiceImpl.get().getGenomeTriggers();
             if (!triggers.isEmpty())

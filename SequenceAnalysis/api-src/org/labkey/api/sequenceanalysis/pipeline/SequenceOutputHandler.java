@@ -247,6 +247,11 @@ public interface SequenceOutputHandler<T>
     {
         public File getScatterJobOutput(JobContext ctx) throws PipelineJobException;
 
+        default File finalizeScatterJobOutput(JobContext ctx, File primaryOutput) throws PipelineJobException
+        {
+            return primaryOutput;
+        }
+
         public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, List<SequenceOutputFile> inputFiles) throws PipelineJobException;
     }
 
