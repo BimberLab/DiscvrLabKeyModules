@@ -291,6 +291,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             String basename = getBasename(ctx);
 
             File outputVcf = new File(outDir, basename + ".vcf.gz");
+            File outputVcfIdx = new File(outDir, basename + ".vcf.gz.tbi");
 
             for (File f : inputFiles)
             {
@@ -304,86 +305,93 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             if (doCopyLocal)
             {
                 ctx.getLogger().info("making local copies of gVCF/GenomicsDB files prior to genotyping");
-                filesToProcess.addAll(GenotypeGVCFsWrapper.copyVcfsLocally(ctx, inputFiles, toDelete, outputVcf.exists()));
+                filesToProcess.addAll(GenotypeGVCFsWrapper.copyVcfsLocally(ctx, inputFiles, toDelete, outputVcfIdx.exists()));
             }
             else
             {
                 filesToProcess.addAll(inputFiles);
             }
 
-            //Allow CombineGVCFs to run on interval(s)
-            File inputVcf;
-            if (filesToProcess.size() > 1)
+            if (outputVcfIdx.exists())
             {
-                inputVcf = combineInputs(ctx, filesToProcess, genomeId);
-                ctx.getFileManager().addIntermediateFile(inputVcf);
-                ctx.getFileManager().addIntermediateFile(new File(inputVcf.getPath() + ".tbi"));
+                ctx.getLogger().info("VCF index exists, will not re-process: " + outputVcfIdx.getPath());
             }
             else
             {
-                inputVcf = filesToProcess.get(0);
+                //Allow CombineGVCFs to run on interval(s)
+                File inputVcf;
+                if (filesToProcess.size() > 1)
+                {
+                    inputVcf = combineInputs(ctx, filesToProcess, genomeId);
+                    ctx.getFileManager().addIntermediateFile(inputVcf);
+                    ctx.getFileManager().addIntermediateFile(new File(inputVcf.getPath() + ".tbi"));
+                }
+                else
+                {
+                    inputVcf = filesToProcess.get(0);
+                }
+
+                GenotypeGVCFsWrapper wrapper = new GenotypeGVCFsWrapper(job.getLogger());
+                ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(genomeId);
+                if (genome == null)
+                {
+                    throw new PipelineJobException("Unable to find cached genome for Id: " + genomeId);
+                }
+
+                List<String> toolParams = new ArrayList<>();
+                if (ctx.getParams().get("variantCalling.GenotypeGVCFs.stand_call_conf") != null)
+                {
+                    toolParams.add("-stand-call-conf");
+                    toolParams.add(ctx.getParams().get("variantCalling.GenotypeGVCFs.stand_call_conf").toString());
+                }
+
+                if (ctx.getParams().get("variantCalling.GenotypeGVCFs.max_alternate_alleles") != null)
+                {
+                    toolParams.add("--max-alternate-alleles");
+                    toolParams.add(ctx.getParams().get("variantCalling.GenotypeGVCFs.max_alternate_alleles").toString());
+                }
+
+                if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.includeNonVariantSites"))
+                {
+                    toolParams.add("--include-non-variant-sites");
+                }
+
+                if (ctx.getParams().get("variantCalling.GenotypeGVCFs.forceSitesFile") != null)
+                {
+                    File f = ctx.getSequenceSupport().getCachedData(ctx.getParams().getInt("variantCalling.GenotypeGVCFs.forceSitesFile"));
+                    toolParams.add("--force-output-intervals");
+                    toolParams.add(f.getPath());
+                }
+
+                if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.allowOldRmsMappingData", false))
+                {
+                    toolParams.add("--allow-old-rms-mapping-quality-annotation-data");
+                }
+
+                List<Interval> intervals = ProcessVariantsHandler.getIntervals(ctx);
+                if (intervals != null)
+                {
+                    intervals.forEach(interval -> {
+                        toolParams.add("-L");
+                        toolParams.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+                    });
+
+                    toolParams.add("--only-output-calls-starting-in-intervals");
+                }
+
+                if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.disableFileLocking", false))
+                {
+                    ctx.getLogger().debug("Disabling file locking for TileDB");
+                    wrapper.addToEnvironment("TILEDB_DISABLE_FILE_LOCKING", "1");
+                }
+
+                if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.sharedPosixOptimizations", false))
+                {
+                    toolParams.add("--genomicsdb-shared-posixfs-optimizations");
+                }
+
+                wrapper.execute(genome.getWorkingFastaFile(), outputVcf, toolParams, inputVcf);
             }
-
-            GenotypeGVCFsWrapper wrapper = new GenotypeGVCFsWrapper(job.getLogger());
-            ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(genomeId);
-            if (genome == null)
-            {
-                throw new PipelineJobException("Unable to find cached genome for Id: " + genomeId);
-            }
-
-            List<String> toolParams = new ArrayList<>();
-            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.stand_call_conf") != null)
-            {
-                toolParams.add("-stand-call-conf");
-                toolParams.add(ctx.getParams().get("variantCalling.GenotypeGVCFs.stand_call_conf").toString());
-            }
-
-            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.max_alternate_alleles") != null)
-            {
-                toolParams.add("--max-alternate-alleles");
-                toolParams.add(ctx.getParams().get("variantCalling.GenotypeGVCFs.max_alternate_alleles").toString());
-            }
-
-            if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.includeNonVariantSites"))
-            {
-                toolParams.add("--include-non-variant-sites");
-            }
-
-            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.forceSitesFile") != null)
-            {
-                File f = ctx.getSequenceSupport().getCachedData(ctx.getParams().getInt("variantCalling.GenotypeGVCFs.forceSitesFile"));
-                toolParams.add("--force-output-intervals");
-                toolParams.add(f.getPath());
-            }
-
-            if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.allowOldRmsMappingData", false))
-            {
-                toolParams.add("--allow-old-rms-mapping-quality-annotation-data");
-            }
-
-            List<Interval> intervals = ProcessVariantsHandler.getIntervals(ctx);
-            if (intervals != null)
-            {
-                intervals.forEach(interval -> {
-                    toolParams.add("-L");
-                    toolParams.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
-                });
-
-                toolParams.add("--only-output-calls-starting-in-intervals");
-            }
-
-            if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.disableFileLocking", false))
-            {
-                ctx.getLogger().debug("Disabling file locking for TileDB");
-                wrapper.addToEnvironment("TILEDB_DISABLE_FILE_LOCKING", "1");
-            }
-
-            if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.sharedPosixOptimizations", false))
-            {
-                toolParams.add("--genomicsdb-shared-posixfs-optimizations");
-            }
-
-            wrapper.execute(genome.getWorkingFastaFile(), outputVcf, toolParams, inputVcf);
 
             action.addOutput(outputVcf, "VCF", outputVcf.exists(), true);
             action.setEndTime(new Date());
