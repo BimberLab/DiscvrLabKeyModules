@@ -14,9 +14,12 @@ RAW_CALLS=$4
 DO_HTO_FILTER=$5
 MIN_READS_PER_CELL=$6
 METRICS_FILE=$7
+USE_SEURAT=$8
+USE_MULTISEQ=$9
+
 WHITELIST="whitelistFile<-NULL;"
-if [ $# -ge 8 ];then
-    WHITELIST="whitelistFile<-'"${8}"';"
+if [ $# -ge 10 ];then
+    WHITELIST="whitelistFile<-'"${10}"';"
 fi
 
 ENV_OPTS=""
@@ -33,4 +36,4 @@ fi
 
 sudo $DOCKER pull bimberlab/oosap
 
-sudo $DOCKER run --rm=true $RAM_OPTS $ENV_OPTS -v "${WD}:/work" -v "${HOME}:/homeDir" -u $UID -e USERID=$UID -w /work -e HOME=/homeDir bimberlab/oosap Rscript -e "barcodeDir <- '"${CITESEQ_COUNT_DIR}"';finalCallFile <- '"${FINAL_CALLS}"';doHtoFilter <- "${DO_HTO_FILTER}";maxValueForColSumFilter <- "${MIN_READS_PER_CELL}";allCallsOutFile <- '"${RAW_CALLS}"';metricsFile <- '"${METRICS_FILE}"';"${WHITELIST}"rmarkdown::render('htoClassifier.Rmd', output_file = '"${HTML_FILE}"')"
+sudo $DOCKER run --rm=true $RAM_OPTS $ENV_OPTS -v "${WD}:/work" -v "${HOME}:/homeDir" -u $UID -e USERID=$UID -w /work -e HOME=/homeDir bimberlab/oosap Rscript -e "barcodeDir <- '"${CITESEQ_COUNT_DIR}"';finalCallFile <- '"${FINAL_CALLS}"';doHtoFilter <- "${DO_HTO_FILTER}";maxValueForColSumFilter <- "${MIN_READS_PER_CELL}";allCallsOutFile <- '"${RAW_CALLS}"';metricsFile <- '"${METRICS_FILE}"';useSeurat <- ${USE_SEURAT};useMultiSeq <- ${USE_MULTISEQ};"${WHITELIST}"rmarkdown::render('htoClassifier.Rmd', output_file = '"${HTML_FILE}"')"

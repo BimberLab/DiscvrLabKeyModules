@@ -49,9 +49,14 @@ public class AlignerIndexUtil
         return verifyOrCreateCachedIndex(ctx, ctx.getWorkDir(), output, localName, webserverName, genome, forceCopyLocal);
     }
 
-    public static File getWebserverIndexDir(ReferenceGenome genome, String name)
+    public static File getIndexDir(ReferenceGenome genome, String name)
     {
-        return new File(genome.getSourceFastaFile().getParentFile(), (genome.isTemporaryGenome() ? "" : INDEX_DIR + "/") + name);
+        return getIndexDir(genome, name, false);
+    }
+
+    public static File getIndexDir(ReferenceGenome genome, String name, boolean useWebserverDir)
+    {
+        return new File(useWebserverDir ? genome.getSourceFastaFile().getParentFile() : genome.getWorkingFastaFile().getParentFile(), (genome.isTemporaryGenome() ? "" : INDEX_DIR + "/") + name);
     }
 
     /**
@@ -63,7 +68,7 @@ public class AlignerIndexUtil
         if (genome != null)
         {
             //NOTE: when we cache the indexes with the source FASTA genome, we store all aligners under the folder /alignerIndexes.  When these are temporary genomes, they're top-level
-            File webserverIndexDir = getWebserverIndexDir(genome, webserverName);
+            File webserverIndexDir = getIndexDir(genome, webserverName, true);
             if (webserverIndexDir.exists())
             {
                 ctx.getLogger().info("previously created index found, no need to recreate");
@@ -180,7 +185,7 @@ public class AlignerIndexUtil
 
                 lockFile.delete();
 
-                ReferenceGenomeManager.get().markGenomeModified(genome);
+                ReferenceGenomeManager.get().markGenomeModified(genome, ctx.getLogger());
             }
             catch (IOException e)
             {
