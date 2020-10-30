@@ -644,6 +644,10 @@ Ext4.define('OpenLdapSync.panel.LdapSettingsPanel', {
             helpPopup: 'This should hold the value that uniquely identifies this record on the LDAP server.  Usually this would be the login, but it could also be the distinguishing name or objectId',
             itemId: 'uidFieldMapping',
             name: 'uidFieldMapping'
+        },{
+            displayName: 'IM',
+            itemId: 'imFieldMapping',
+            name: 'imFieldMapping'
         }];
 
 
