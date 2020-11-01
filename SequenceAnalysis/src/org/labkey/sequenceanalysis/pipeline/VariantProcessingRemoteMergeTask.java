@@ -153,6 +153,7 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
 
         Map<String, File> scatterOutputs = getPipelineJob().getScatterJobOutputs();
         List<File> toConcat = new ArrayList<>();
+        Set<File> missing = new HashSet<>();
         for (String name : jobToIntervalMap.keySet())
         {
             if (!scatterOutputs.containsKey(name))
@@ -163,7 +164,7 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
             File vcf = scatterOutputs.get(name);
             if (!vcf.exists())
             {
-                throw new PipelineJobException("Missing VCF: " + vcf.getPath());
+                missing.add(vcf);
             }
 
             toConcat.add(vcf);
@@ -181,6 +182,11 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
         }
         else
         {
+            if (!missing.isEmpty())
+            {
+                throw new PipelineJobException("Missing one of more VCFs: " + missing.stream().map(File::getPath).collect(Collectors.joining(",")));
+            }
+
             Set<Integer> genomeIds = new HashSet<>();
             getPipelineJob().getFiles().forEach(x -> genomeIds.add(x.getLibrary_id()));
             if (genomeIds.size() != 1)
