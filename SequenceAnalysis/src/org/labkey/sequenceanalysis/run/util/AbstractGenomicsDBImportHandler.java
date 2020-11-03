@@ -432,6 +432,10 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
             ctx.getLogger().info("Starting GenomicsDbImport: " + (_append ? "append" : "import"));
+            if (inputFiles.isEmpty())
+            {
+                throw new PipelineJobException("No input files found");
+            }
 
             boolean doCopyGVcfLocal = doCopyLocal(ctx.getParams());
 
@@ -450,6 +454,10 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             if (genomeIds.size() > 1)
             {
                 throw new PipelineJobException("The selected files use more than one genome");
+            }
+            else if (genomeIds.isEmpty())
+            {
+                throw new PipelineJobException("No genome found");
             }
 
             int genomeId = genomeIds.iterator().next();
