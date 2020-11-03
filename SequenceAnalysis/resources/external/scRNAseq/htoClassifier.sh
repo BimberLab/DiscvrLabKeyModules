@@ -36,4 +36,6 @@ fi
 
 sudo $DOCKER pull bimberlab/oosap
 
-sudo $DOCKER run --rm=true $RAM_OPTS $ENV_OPTS -v "${WD}:/work" -v "${HOME}:/homeDir" -u $UID -e USERID=$UID -w /work -e HOME=/homeDir bimberlab/oosap Rscript -e "barcodeDir <- '"${CITESEQ_COUNT_DIR}"';finalCallFile <- '"${FINAL_CALLS}"';doHtoFilter <- "${DO_HTO_FILTER}";maxValueForColSumFilter <- "${MIN_READS_PER_CELL}";allCallsOutFile <- '"${RAW_CALLS}"';metricsFile <- '"${METRICS_FILE}"';useSeurat <- ${USE_SEURAT};useMultiSeq <- ${USE_MULTISEQ};"${WHITELIST}"rmarkdown::render('htoClassifier.Rmd', output_file = '"${HTML_FILE}"')"
+sudo $DOCKER run --rm=true $RAM_OPTS $ENV_OPTS -v "${WD}:/work" -v "${HOME}:/homeDir" -u $UID -e USERID=$UID -w /work -e HOME=/homeDir bimberlab/oosap Rscript -e "barcodeDir <- '"${CITESEQ_COUNT_DIR}"';finalCallFile <- '"${FINAL_CALLS}"';doHtoFilter <- "${DO_HTO_FILTER}";maxValueForColSumFilter <- "${MIN_READS_PER_CELL}";allCallsOutFile <- '"${RAW_CALLS}"';metricsFile <- '"${METRICS_FILE}"';useSeurat <- ${USE_SEURAT};useMultiSeq <- ${USE_MULTISEQ};"${WHITELIST}"rmarkdown::render('htoClassifier.Rmd', output_file = '"${HTML_FILE}"');print('Rmarkdown complete');"
+
+echo 'script complete'
