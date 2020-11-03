@@ -166,6 +166,7 @@ public class OpenLdapSyncController extends SpringActionController
         private String _uidFieldMapping;
         private String _firstNameFieldMapping;
         private String _lastNameFieldMapping;
+        private String _imFieldMapping;
 
         private String _userDeleteBehavior;
         private String _groupDeleteBehavior;
@@ -400,6 +401,16 @@ public class OpenLdapSyncController extends SpringActionController
             _lastNameFieldMapping = lastNameFieldMapping;
         }
 
+        public String getImFieldMapping()
+        {
+            return _imFieldMapping;
+        }
+
+        public void setImFieldMapping(String imFieldMapping)
+        {
+            _imFieldMapping = imFieldMapping;
+        }
+
         public String getUserInfoChangedBehavior()
         {
             return _userInfoChangedBehavior;
@@ -629,6 +640,9 @@ public class OpenLdapSyncController extends SpringActionController
 
             if (form.getLastNameFieldMapping() != null)
                 props.put(LdapSettings.LASTNAME_FIELD_PROP, form.getLastNameFieldMapping());
+
+            if (form.getImFieldMapping() != null)
+                props.put(LdapSettings.IM_FIELD_PROP, form.getImFieldMapping());
 
             if (form.getEmailFieldMapping() != null)
                 props.put(LdapSettings.EMAIL_FIELD_PROP, form.getEmailFieldMapping());

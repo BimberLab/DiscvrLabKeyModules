@@ -114,6 +114,20 @@ public class LdapEntry
         return getAttribute(_settings.getUIDMapping());
     }
 
+    public String getIM() throws LdapInvalidAttributeValueException
+    {
+        try
+        {
+            Attribute a = _entry.get(_settings.getIMMapping());
+            return a == null ? null : a.getString();
+        }
+        catch (LdapInvalidAttributeValueException e)
+        {
+            //not sure what's best here
+        }
+        return null;
+    }
+
     protected String getAttribute(String alias)
     {
         try

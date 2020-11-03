@@ -38,6 +38,8 @@ public class LdapSettings
     public static final String PHONE_FIELD_PROP = "phoneNumberFieldMapping";
     public static final String FIRSTNAME_FIELD_PROP = "firstNameFieldMapping";
     public static final String LASTNAME_FIELD_PROP = "lastNameFieldMapping";
+    public static final String IM_FIELD_PROP = "imFieldMapping";
+
 
     public static final String LABKEY_EMAIL_PROP = "labkeyAdminEmail";
 
@@ -70,6 +72,7 @@ public class LdapSettings
     public static final String DEFAULT_LAST_NAME_VAL = "sn";
     public static final String DEFAULT_FIRST_NAME_VAL = "givenName";
     public static final String DEFAULT_PHONE_VAL = "telephoneNumber";
+    public static final String DEFAULT_IM_VAL = "im";
     public static final String DEFAULT_UID_VAL = "userPrincipalName";
     public static final String DEFAULT_USERCLASS_VAL = "user";
     public static final String DEFAULT_GROUPCLASS_VAL = "group";
@@ -182,6 +185,9 @@ public class LdapSettings
 
         if (isMissingOrEmpty(ret, FIRSTNAME_FIELD_PROP))
             ret.put(FIRSTNAME_FIELD_PROP, DEFAULT_FIRST_NAME_VAL);
+
+        if (!ret.containsKey(IM_FIELD_PROP))
+            ret.put(IM_FIELD_PROP, DEFAULT_IM_VAL);
 
         if (isMissingOrEmpty(ret, PHONE_FIELD_PROP))
             ret.put(PHONE_FIELD_PROP, DEFAULT_PHONE_VAL);
@@ -415,6 +421,11 @@ public class LdapSettings
     public String getPhoneMapping()
     {
         return (String)_settings.get(PHONE_FIELD_PROP);
+    }
+
+    public String getIMMapping()
+    {
+        return (String)_settings.get(IM_FIELD_PROP);
     }
 
     public String getUIDMapping()

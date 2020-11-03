@@ -613,6 +613,10 @@ public class LdapSyncRunner implements Job
                 if (phone != null)
                     newUser.setPhone(phone);
 
+                String im = ldapEntry.getIM();
+                if (im != null)
+                    newUser.setIM(im);
+
                 UserManager.updateUser(_settings.getLabKeyAdminUser(), newUser);
 
                 return newUser;
@@ -663,6 +667,13 @@ public class LdapSyncRunner implements Job
         {
             changed = true;
             existing.setEmail(email);
+        }
+
+        String im = ldapEntry.getIM();
+        if (im != null && !im.equals(existing.getIM()))
+        {
+            changed = true;
+            existing.setIM(im);
         }
 
         if (changed)
