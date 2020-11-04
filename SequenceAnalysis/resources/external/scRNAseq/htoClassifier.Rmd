@@ -15,6 +15,15 @@ if (cores != ''){
     print('SEQUENCEANALYSIS_MAX_THREADS not set, will not set cores')
 }
 
+print('Global variables: ')
+for (v in c('doHtoFilter', 'maxValueForColSumFilter', 'useSeurat', 'useMultiSeq', 'whitelistFile')){
+    if (exists(v)){
+        print(paste0(v, ': ', get(v)))
+    } else {
+      print(paste0(v, ': not defined'))
+    }
+}
+
 ```
 
 ## Basic QC and Filtering on input:

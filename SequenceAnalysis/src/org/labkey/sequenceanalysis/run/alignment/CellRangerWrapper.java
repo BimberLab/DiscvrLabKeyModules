@@ -90,7 +90,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--force-cells"), "force-cells", "Force Cells", "Force pipeline to use this number of cells, bypassing the cell detection algorithm. Use this if the number of cells estimated by Cell Ranger is not consistent with the barcode rank plot.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, null),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--disable--ui"), "disable--ui", "Disable UI", "If checked, this will run cellranger with the optional web-based UI disabled.", "checkbox", new JSONObject(){{
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--disable-ui"), "disable-ui", "Disable UI", "If checked, this will run cellranger with the optional web-based UI disabled.", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true),
                     ToolParameterDescriptor.createExpDataParam("gtfFile", "Gene File", "This is the ID of a GTF file containing genes from this genome.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
