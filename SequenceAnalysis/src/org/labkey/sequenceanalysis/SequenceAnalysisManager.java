@@ -839,10 +839,10 @@ public class SequenceAnalysisManager
         TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid", "sequenceFile"), new SimpleFilter(FieldKey.fromString("seqLength"), null, CompareType.ISBLANK), null);
 
         log.info(ts.getRowCount() + " total sequences to migrate");
-        ts.forEach(new Selector.ForEachBlock<RefNtSequenceModel>()
+        ts.forEach(RefNtSequenceModel.class, new Selector.ForEachBlock<>()
         {
             @Override
-            public void exec(RefNtSequenceModel nt) throws SQLException, StopIteratingException
+            public void exec(RefNtSequenceModel nt) throws StopIteratingException
             {
                 try (InputStream is = nt.getSequenceInputStream())
                 {
@@ -864,7 +864,7 @@ public class SequenceAnalysisManager
                     stopIterating();
                 }
             }
-        }, RefNtSequenceModel.class);
+        });
     }
 
     public static class TestCase extends Assert

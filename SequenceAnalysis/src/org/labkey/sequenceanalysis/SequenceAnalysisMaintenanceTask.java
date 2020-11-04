@@ -2,7 +2,6 @@ package org.labkey.sequenceanalysis;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -220,7 +219,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             TableInfo tableRefNtSequences = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
             TableSelector ntTs = new TableSelector(tableRefNtSequences, new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
             final Set<String> expectedSequences = new HashSet<>(10000, 1000);
-            ntTs.forEach(m -> {
+            ntTs.forEach(RefNtSequenceModel.class, m -> {
                 if (m.getSequenceFile() == null || m.getSequenceFile() == 0)
                 {
                     log.error("sequence record lacks a sequence file Id: " + m.getRowid());
@@ -244,7 +243,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                 {
                     expectedSequences.add(d.getFile().getName());
                 }
-            }, RefNtSequenceModel.class);
+            });
 
             if (sequenceDir.exists())
             {

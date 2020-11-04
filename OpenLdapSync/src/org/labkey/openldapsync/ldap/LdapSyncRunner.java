@@ -62,7 +62,6 @@ import static org.labkey.openldapsync.ldap.LdapSettings.DISPLAYNAME_FIELD_PROP;
 import static org.labkey.openldapsync.ldap.LdapSettings.FIRSTNAME_FIELD_PROP;
 
 /**
- * Created with IntelliJ IDEA.
  * User: bimber
  * Date: 1/21/13
  * Time: 5:18 PM
@@ -568,14 +567,14 @@ public class LdapSyncRunner implements Job
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("provider"), _wrapper.getProviderName(), CompareType.EQUAL);
         TableSelector ts = new TableSelector(ti, filter, null);
 
-        ts.forEach(new Selector.ForEachBlock<LdapSyncModel>()
+        ts.forEach(LdapSyncModel.class, new Selector.ForEachBlock<LdapSyncModel>()
         {
             @Override
             public void exec(LdapSyncModel model)
             {
                 _syncedRecordMap.put(model.getSourceId(), model);
             }
-        }, LdapSyncModel.class);
+        });
     }
 
     private User createUser(LdapEntry ldapEntry) throws LdapException
