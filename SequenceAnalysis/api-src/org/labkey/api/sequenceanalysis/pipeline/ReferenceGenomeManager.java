@@ -80,13 +80,15 @@ public class ReferenceGenomeManager
             return;
         }
 
+        File localCacheDir = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
         if (isUpToDate(genome))
         {
             log.debug("Genome up-to-date, will not repeat rsync");
+            genome.setWorkingFasta(new File(new File(localCacheDir, genome.getGenomeId().toString()), genome.getSourceFastaFile().getName()));
+
             return;
         }
 
-        File localCacheDir = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
         log.info("attempting to rsync genome to local disks: " + localCacheDir.getPath());
 
         File sourceDir = genome.getSourceFastaFile().getParentFile();
