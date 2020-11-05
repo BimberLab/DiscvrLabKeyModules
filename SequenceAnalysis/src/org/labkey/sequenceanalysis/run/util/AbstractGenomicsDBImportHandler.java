@@ -225,6 +225,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         }
 
         File overallDone = new File(destinationWorkspace, "merge.done");
+        manager.addIntermediateFile(overallDone);
         if (overallDone.exists())
         {
             job.getLogger().info("workspace has already been merged, resuming");
