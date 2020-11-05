@@ -510,6 +510,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                         if (!genomicsDbStarted && copyDone.exists())
                         {
                             ctx.getLogger().info("has been copied, skipping: " + i.getContig());
+                            reportFragmentsPerContig(ctx, destContigFolder, i.getContig());
                             continue;
                         }
 
@@ -553,6 +554,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                         }
 
                         FileUtils.touch(copyDone);
+                        reportFragmentsPerContig(ctx, destContigFolder, i.getContig());
                     }
                     catch (IOException e)
                     {
@@ -657,6 +659,13 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 throw new PipelineJobException("Unable to find expected file: " + markerFile.getPath());
             }
 
+            List<Interval> intervals = getIntervalsOrFullGenome(ctx, genome);
+            for (Interval i : intervals)
+            {
+                File destContigFolder = new File(destinationWorkspaceFolder, getFolderNameFromInterval(i));
+                reportFragmentsPerContig(ctx, destContigFolder, i.getName());
+            }
+
             ctx.getLogger().debug("adding sequence output: " + destinationWorkspaceFolder.getPath());
             SequenceOutputFile so1 = new SequenceOutputFile();
             so1.setName(destinationWorkspaceFolder.getName());
@@ -695,6 +704,22 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                     f.delete();
                 }
             }
+        }
+    }
+
+    private void reportFragmentsPerContig(JobContext ctx, File destContigFolder, String contigName)
+    {
+        if (destContigFolder.exists())
+        {
+            File[] children = destContigFolder.listFiles(x -> {
+                return  x.isDirectory() && !"genomicsdb_meta_dir".equals(x.getName());
+            });
+
+            ctx.getLogger().info(contigName + " total fragments: " + children.length);
+        }
+        else
+        {
+            ctx.getLogger().warn("expected folder not found: " + destContigFolder.getPath());
         }
     }
 
