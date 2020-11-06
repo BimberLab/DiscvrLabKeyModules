@@ -59,6 +59,7 @@ import static org.labkey.openldapsync.ldap.LdapSettings.DEFAULT_PHONE_VAL;
 import static org.labkey.openldapsync.ldap.LdapSettings.DEFAULT_UID_VAL;
 import static org.labkey.openldapsync.ldap.LdapSettings.DISPLAYNAME_FIELD_PROP;
 import static org.labkey.openldapsync.ldap.LdapSettings.FIRSTNAME_FIELD_PROP;
+import static org.labkey.openldapsync.ldap.LdapSettings.DEFAULT_IM_VAL;
 
 /**
  * Created with IntelliJ IDEA.
@@ -876,6 +877,7 @@ public class LdapSyncRunner implements Job
             props.put(DEFAULT_PHONE_VAL, "(123) 456-7890");
             props.put(DEFAULT_FIRST_NAME_VAL, "Test");
             props.put(DEFAULT_LAST_NAME_VAL, "User");
+            props.put(DEFAULT_IM_VAL, "IMTest");
 
             String dn = "uid=" + ve.getPersonal() + ",cn=users,dc=example,dc=com";
 
@@ -1153,6 +1155,12 @@ public class LdapSyncRunner implements Job
             protected String getAttribute(String alias)
             {
                 return _otherProps.get(alias);
+            }
+
+            @Override
+            public String getIM()
+            {
+                return _otherProps.get(DEFAULT_IM_VAL);
             }
 
             @Override
