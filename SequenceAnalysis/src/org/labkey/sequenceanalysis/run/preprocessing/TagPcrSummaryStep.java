@@ -79,14 +79,17 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
                     }}, true),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--reads-to-output"), "readsToOutput", "Reads To Output Per Site", "If this is non-zero, up to this many reads per integration site will be written to a FASTA file.  This can serve as a way to verify the actual junction border.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, 25),
+                    }}, null),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-mf"), "minFraction", "Min Fraction To Output", "Only sites with at least this fraction of reads will be output.", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                         put("decimalPrecision", 5);
                     }}, 0),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-ma"), "minAlignment", "Min Alignments To Output", "Only sites with at least this many alignments will be output.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, 3)
+                    }}, 3),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--include-sa"), "include-sa", "Include Supplemental Alignments", "If checked, alignments with the SA supplemental alignment tag will be parsed, and these alignments inspected.", "checkbox", new JSONObject(){{
+
+                    }}, false)
             ), null, null);
         }
 
