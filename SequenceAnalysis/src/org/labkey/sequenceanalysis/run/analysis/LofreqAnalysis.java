@@ -129,8 +129,15 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                     ToolParameterDescriptor.create("minInsertSize", "Min Insert Size", "Normally this tool will use the value of Picard CollectInsertSizeMetrics as the mean insert size to pass to pindel; however, this value can be used to set a minimum.", "ldk-integerfield", new JSONObject()
                     {{
                         put("minValue", 0);
-                    }}, 200)
+                    }}, 200),
+                    ToolParameterDescriptor.create("runPindel", "Run Pindel", "If selected, pindel will be used to identify large structural variants.", "checkbox", new JSONObject()
+                    {{
 
+                    }}, false),
+                    ToolParameterDescriptor.create("runPangolin", "Run Pangolin", "If selected, Pangolin will be used to score the consensus against common SARS-CoV-2 lineages.", "checkbox", new JSONObject()
+                    {{
+
+                    }}, false)
                     ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "http://csb5.github.io/lofreq/");
         }
 
@@ -589,9 +596,18 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         int minDepth = getProvider().getParameterByName("minDepth").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 0);
         int minInsertSize = getProvider().getParameterByName("minInsertSize").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 0);
 
-        PindelAnalysis.runPindel(output, getPipelineCtx(), rs, outputDir, inputBam, referenceGenome.getWorkingFastaFile(), minFraction, minDepth, true, coverageOut, minInsertSize);
+        boolean runPangolin = getProvider().getParameterByName("runPangolin").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+        boolean runPindel = getProvider().getParameterByName("runPindel").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
 
-        runPangolin(consensusFastaLoFreq);
+        if (runPindel)
+        {
+            PindelAnalysis.runPindel(output, getPipelineCtx(), rs, outputDir, inputBam, referenceGenome.getWorkingFastaFile(), minFraction, minDepth, true, coverageOut, minInsertSize);
+        }
+
+        if (runPangolin)
+        {
+            runPangolin(consensusFastaLoFreq);
+        }
 
         return output;
     }
