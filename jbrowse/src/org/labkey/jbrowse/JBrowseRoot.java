@@ -33,7 +33,7 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.reports.ExternalScriptEngineDefinition;
-import org.labkey.api.reports.LabkeyScriptEngineManager;
+import org.labkey.api.reports.LabKeyScriptEngineManager;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
@@ -141,7 +141,7 @@ public class JBrowseRoot
 
     private String getPerlLocation()
     {
-        LabkeyScriptEngineManager svc = ServiceRegistry.get().getService(LabkeyScriptEngineManager.class);
+        LabKeyScriptEngineManager svc = LabKeyScriptEngineManager.get();
         for (ExternalScriptEngineDefinition def : svc.getEngineDefinitions())
         {
             if (def.getExtensions() != null && Arrays.stream(def.getExtensions()).anyMatch("pl"::equals))
