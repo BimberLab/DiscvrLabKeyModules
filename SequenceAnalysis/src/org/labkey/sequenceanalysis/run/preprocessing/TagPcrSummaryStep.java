@@ -163,7 +163,7 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
         {
             genbank = new File(outputDir, basename + ".sites.gb");
         }
-        File metrics = getMetricsFile(inputBam, getPipelineCtx().getSourceDirectory());
+        File metrics = getMetricsFile(inputBam, outputDir);
 
         getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), siteTable, primerTable, genbank, metrics, blastDbs.get(referenceGenome.getGenomeId()), getClientCommandArgs());
 

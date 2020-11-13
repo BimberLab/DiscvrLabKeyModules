@@ -1,10 +1,14 @@
 ---
 title: 'Cell Hashing'
+output: html_document
+
 ---
 
 ```{r setup}
 
 library(OOSAP)
+
+knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=TRUE, error = FALSE)
 
 cores <- Sys.getenv('SEQUENCEANALYSIS_MAX_THREADS')
 if (cores != ''){
