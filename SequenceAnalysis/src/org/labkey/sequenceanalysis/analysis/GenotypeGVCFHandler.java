@@ -3,6 +3,7 @@ package org.labkey.sequenceanalysis.analysis;
 import htsjdk.samtools.util.Interval;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -34,6 +35,7 @@ import org.labkey.sequenceanalysis.run.util.GenomicsDBImportHandler;
 import org.labkey.sequenceanalysis.run.util.GenotypeGVCFsWrapper;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -292,6 +294,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
 
             File outputVcf = new File(outDir, basename + ".vcf.gz");
             File outputVcfIdx = new File(outDir, basename + ".vcf.gz.tbi");
+            File outputVcfDone = new File(outDir, basename + ".vcf.gz.done");
 
             for (File f : inputFiles)
             {
@@ -312,9 +315,10 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 filesToProcess.addAll(inputFiles);
             }
 
-            if (outputVcfIdx.exists())
+            ctx.getFileManager().addIntermediateFile(outputVcfDone);
+            if (outputVcfDone.exists())
             {
-                ctx.getLogger().info("VCF index exists, will not re-process: " + outputVcfIdx.getPath());
+                ctx.getLogger().info("GenotypeGVCFs completed, will not re-process: " + outputVcfDone.getPath());
             }
             else
             {
@@ -391,6 +395,14 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 }
 
                 wrapper.execute(genome.getWorkingFastaFile(), outputVcf, toolParams, inputVcf);
+                try
+                {
+                    FileUtils.touch(outputVcfDone);
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
             }
 
             action.addOutput(outputVcf, "VCF", outputVcf.exists(), true);
