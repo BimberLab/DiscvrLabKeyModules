@@ -9,6 +9,7 @@ import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalUtil;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
@@ -663,10 +664,16 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                 VariantContext vc = it.next();
 
                 //NOTE: LoFreq always reports each allele on a different line, so track separately:
-                for (Allele a : vc.getAlternateAlleles())
+                for (Genotype g : vc.getGenotypes())
                 {
-                    String key = vc.getContig() + "<>" + vc.getStart() + a.getBaseString();
-                    variantsBcftools.add(key);
+                    for (Allele a : g.getAlleles())
+                    {
+                        if (!a.isReference())
+                        {
+                            String key = vc.getContig() + "<>" + vc.getStart() + a.getBaseString();
+                            variantsBcftools.add(key);
+                        }
+                    }
                 }
             }
         }
