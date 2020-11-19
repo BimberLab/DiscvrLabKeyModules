@@ -660,8 +660,13 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             while (it.hasNext())
             {
                 VariantContext vc = it.next();
-                String key = getHashKey(vc);
-                variantsBcftools.add(key);
+
+                //NOTE: LoFreq always reports each allele on a different line, so track separately:
+                for (Allele a : vc.getAlternateAlleles())
+                {
+                    String key = vc.getContig() + "<>" + vc.getStart() + a.getBaseString();
+                    variantsBcftools.add(key);
+                }
             }
         }
 
