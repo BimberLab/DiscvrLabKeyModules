@@ -605,26 +605,27 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         //write metrics:
         try (CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(getMetricsFile(outputDir)), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
-            writer.writeNext(new String[]{"Category", "MetricName", "Value", "QualValue"});
-            writer.writeNext(new String[]{"LoFreq Analysis", "CoverageThreshold", String.valueOf(minCoverage), ""});
-            writer.writeNext(new String[]{"LoFreq Analysis", "TotalConsensusN", String.valueOf(lofreqConsensusNs), ""});
-            writer.writeNext(new String[]{"LoFreq Analysis", "LowCoverPositionsSkipped", String.valueOf(positionsSkipped), ""});
-            writer.writeNext(new String[]{"LoFreq Analysis", "VariantGTThreshold", String.valueOf(totalGTThreshold), ""});
-            writer.writeNext(new String[]{"LoFreq Analysis", "VariantGT1", String.valueOf(totalGT1), ""});
-            writer.writeNext(new String[]{"LoFreq Analysis", "VariantGT50", String.valueOf(totalGT50), ""});
-            writer.writeNext(new String[]{"LoFreq Analysis", "IndelsGTThreshold", String.valueOf(totalIndelGTThreshold), ""});
-            writer.writeNext(new String[]{"LoFreq Analysis", "TotalConsensusVariantsInPBS", String.valueOf(totalConsensusInPBS), ""});
+            writer.writeNext(new String[]{"Category", "MetricName", "Value"});
+            writer.writeNext(new String[]{"LoFreq Analysis", "CoverageThreshold", String.valueOf(minCoverage)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "TotalConsensusN", String.valueOf(lofreqConsensusNs)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "LowCoverPositionsSkipped", String.valueOf(positionsSkipped)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "VariantGTThreshold", String.valueOf(totalGTThreshold)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "VariantGT1", String.valueOf(totalGT1)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "VariantGT50", String.valueOf(totalGT50)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "IndelsGTThreshold", String.valueOf(totalIndelGTThreshold)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "TotalConsensusVariantsInPBS", String.valueOf(totalConsensusInPBS)});
             writer.writeNext(new String[]{"LoFreq Analysis", "MeanCoverage", String.valueOf(avgDepth)});
             writer.writeNext(new String[]{"LoFreq Analysis", "FilteredVariantsRecovered", String.valueOf(filteredVariantsRecovered)});
             writer.writeNext(new String[]{"LoFreq Analysis", "ConcensusFilteredVariantsRecovered", String.valueOf(concensusFilteredVariantsRecovered)});
 
             if (pangolinData != null)
             {
-                writer.writeNext(new String[]{"LoFreq Analysis", "PangolinLineage", pangolinData[2], pangolinData[1]});
+                writer.writeNext(new String[]{"LoFreq Analysis", "PangolinLineage", pangolinData[1]});
+                writer.writeNext(new String[]{"LoFreq Analysis", "PangolinLineageConfidence", pangolinData[2]});
             }
             else
             {
-                writer.writeNext(new String[]{"LoFreq Analysis", "PangolinLineage", "", "QC Fail"});
+                writer.writeNext(new String[]{"LoFreq Analysis", "PangolinLineage", "QC Fail"});
             }
         }
         catch (IOException e)
