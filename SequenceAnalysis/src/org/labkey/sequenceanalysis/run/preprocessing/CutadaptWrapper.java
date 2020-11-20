@@ -80,9 +80,9 @@ public class CutadaptWrapper extends AbstractCommandWrapper
         {
             PreprocessingOutputImpl output = new PreprocessingOutputImpl(inputFile, inputFile2);
 
-            String extention = getExtension(inputFile);
-            File output1 = new File(outputDir, SequenceTaskHelper.getUnzippedBaseName(inputFile.getName()) + ".adaptertrimmed" + extention);
-            File output2 = inputFile2 == null ? null : new File(outputDir, SequenceTaskHelper.getUnzippedBaseName(inputFile2.getName()) + ".adaptertrimmed" + extention);
+            String extension = getExtension(inputFile);
+            File output1 = new File(outputDir, SequenceTaskHelper.getUnzippedBaseName(inputFile.getName()) + ".adaptertrimmed" + extension);
+            File output2 = inputFile2 == null ? null : new File(outputDir, SequenceTaskHelper.getUnzippedBaseName(inputFile2.getName()) + ".adaptertrimmed" + extension);
 
             List<AdapterModel> adapters = TrimmomaticWrapper.AdapterTrimmingProvider.getAdapters(getPipelineCtx().getJob(), getProvider().getName());
             if (adapters == null || adapters.isEmpty())

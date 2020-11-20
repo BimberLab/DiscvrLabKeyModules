@@ -103,6 +103,7 @@ import org.labkey.sequenceanalysis.run.bampostprocessing.MarkDuplicatesWithMateC
 import org.labkey.sequenceanalysis.run.bampostprocessing.RnaSeQCStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SortSamStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SplitNCigarReadsStep;
+import org.labkey.sequenceanalysis.run.preprocessing.CutadaptCropWrapper;
 import org.labkey.sequenceanalysis.run.preprocessing.CutadaptWrapper;
 import org.labkey.sequenceanalysis.run.preprocessing.DownsampleFastqWrapper;
 import org.labkey.sequenceanalysis.run.preprocessing.FastqcProcessingStep;
@@ -234,6 +235,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.AvgQualProvider());
         SequencePipelineService.get().registerPipelineStep(new CutadaptWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new FastqcProcessingStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new CutadaptCropWrapper.Provider());
         //SequencePipelineService.get().registerPipelineStep(new BlastFilterPipelineStep.Provider());
 
         //ref library
