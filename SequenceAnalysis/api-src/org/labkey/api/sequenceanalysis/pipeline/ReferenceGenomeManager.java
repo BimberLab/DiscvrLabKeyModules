@@ -1,10 +1,13 @@
 package org.labkey.api.sequenceanalysis.pipeline;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 
 public class ReferenceGenomeManager
@@ -68,8 +71,22 @@ public class ReferenceGenomeManager
     //NOTE: Java implementations of touch are erroring between the cluster and NFS filesystem
     private void touchFile(File target, Logger log) throws PipelineJobException
     {
-        SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
-        wrapper.execute(Arrays.asList("/bin/bash", "-c", "$(which touch) '" + target.getPath() + "'"));
+        if (SystemUtils.IS_OS_WINDOWS)
+        {
+            try
+            {
+                FileUtils.touch(target);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+        else
+        {
+            SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
+            wrapper.execute(Arrays.asList("/bin/bash", "-c", "$(which touch) '" + target.getPath() + "'"));
+        }
     }
 
     public void cacheGenomeLocally(ReferenceGenome genome, Logger log) throws PipelineJobException
