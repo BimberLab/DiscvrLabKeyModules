@@ -400,7 +400,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         int totalGT50 = 0;
         int totalGTThreshold = 0;
         int filteredVariantsRecovered = 0;
-        int concensusFilteredVariantsRecovered = 0;
+        int consensusFilteredVariantsRecovered = 0;
 
         int totalIndelGT1 = 0;
         int totalIndelGTThreshold = 0;
@@ -450,7 +450,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
                             if (gDepth >= minCoverage && vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) >= minFractionForConsensus)
                             {
-                                concensusFilteredVariantsRecovered++;
+                                consensusFilteredVariantsRecovered++;
                             }
                         }
                     }
@@ -547,7 +547,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
         String description = String.format("Total Variants: %s\nTotal GT 1 PCT: %s\nTotal GT 50 PCT: %s\nTotal Indel GT 1 PCT: %s\nPositions Below Coverage: %s\nTotal In LoFreq Consensus: %s\nTotal Indel In LoFreq Consensus: %s\nTotal Consensus Variant in PBS: %s", totalVariants, totalGT1, totalGT50, totalIndelGT1, positionsSkipped, totalGTThreshold, totalIndelGTThreshold, totalConsensusInPBS);
         description += "\n" + "Strand Bias Recovered: " + filteredVariantsRecovered;
-        description += "\n" + "Consensus Strand Bias Recovered: " + concensusFilteredVariantsRecovered;
+        description += "\n" + "Consensus Strand Bias Recovered: " + consensusFilteredVariantsRecovered;
 
         if (!variantsBcftools.isEmpty())
         {
@@ -617,7 +617,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             writer.writeNext(new String[]{"LoFreq Analysis", "TotalConsensusVariantsInPBS", String.valueOf(totalConsensusInPBS)});
             writer.writeNext(new String[]{"LoFreq Analysis", "MeanCoverage", String.valueOf(avgDepth)});
             writer.writeNext(new String[]{"LoFreq Analysis", "FilteredVariantsRecovered", String.valueOf(filteredVariantsRecovered)});
-            writer.writeNext(new String[]{"LoFreq Analysis", "ConcensusFilteredVariantsRecovered", String.valueOf(concensusFilteredVariantsRecovered)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "ConsensusFilteredVariantsRecovered", String.valueOf(consensusFilteredVariantsRecovered)});
 
             if (pangolinData != null)
             {
