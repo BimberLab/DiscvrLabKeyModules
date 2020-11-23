@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.run.util;
 
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.ValidationStringency;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -24,6 +25,7 @@ public class AlignmentSummaryMetricsWrapper extends PicardWrapper
     public File executeCommand(File inputFile, File reference, @Nullable File outputFile) throws PipelineJobException
     {
         getLogger().info("Running AlignmentSummaryMetrics: " + inputFile.getPath());
+        setStringency(ValidationStringency.SILENT);
         File idx = new File(inputFile.getPath() + ".bai");
         if (!idx.exists())
         {
