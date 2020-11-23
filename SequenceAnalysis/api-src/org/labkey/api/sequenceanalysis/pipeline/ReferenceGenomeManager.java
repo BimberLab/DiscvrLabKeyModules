@@ -1,12 +1,10 @@
 package org.labkey.api.sequenceanalysis.pipeline;
 
-import com.google.common.io.Files;
 import org.apache.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 
 public class ReferenceGenomeManager
@@ -60,11 +58,18 @@ public class ReferenceGenomeManager
         return lastSync >= lastUpdated;
     }
 
-    public void markGenomeModified(ReferenceGenome genome, Logger log) throws IOException
+    public void markGenomeModified(ReferenceGenome genome, Logger log) throws PipelineJobException
     {
         File toUpdate = getLocalUpdateFile(genome);
         log.info("Marking genome as modified: " + toUpdate.getPath());
-        Files.touch(toUpdate);
+        touchFile(toUpdate, log);
+    }
+
+    //NOTE: Java implementations of touch are erroring between the cluster and NFS filesystem
+    private void touchFile(File target, Logger log) throws PipelineJobException
+    {
+        SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
+        wrapper.execute(Arrays.asList("/bin/bash", "-c", "$(which touch) '" + target.getPath() + "'"));
     }
 
     public void cacheGenomeLocally(ReferenceGenome genome, Logger log) throws PipelineJobException
@@ -98,20 +103,13 @@ public class ReferenceGenomeManager
                 "rsync", "-r", "-a", "--delete", "--no-owner", "--no-group", sourceDir.getPath(), localCacheDir.getPath()
         ));
 
-        try
+        File lastUpdate = getLocalUpdateFile(genome);
+        if (!lastUpdate.exists())
         {
-            File lastUpdate = getLocalUpdateFile(genome);
-            if (!lastUpdate.exists())
-            {
-                Files.touch(lastUpdate);
-            }
+            touchFile(lastUpdate, log);
+        }
 
-            Files.touch(getRemoteSyncFile(genome.getGenomeId()));
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
+        touchFile(getRemoteSyncFile(genome.getGenomeId()), log);
 
         genome.setWorkingFasta(new File(new File(localCacheDir, genome.getGenomeId().toString()), genome.getSourceFastaFile().getName()));
     }
