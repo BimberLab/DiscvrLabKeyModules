@@ -224,6 +224,11 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                 continue;
                             }
 
+                            if (vc.isFiltered())
+                            {
+                                continue;
+                            }
+
                             //Also perform santity check of VCF early
                             if (vc.getAttribute("GATK_DP") == null)
                             {
@@ -439,7 +444,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                 while (it.hasNext())
                                 {
                                     VariantContext vc = it.next();
-                                    if (vc.isIndel())
+                                    if (vc.isIndel() || vc.isFiltered())
                                     {
                                         continue;
                                     }
@@ -499,7 +504,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                         alleleToAf.put(a, val);
 
                                         int val1 = alleleToDp.getOrDefault(a, 0);
-                                        if (val1 == NO_DATA_VAL)
+                                        if (val1 == (int)NO_DATA_VAL)
                                         {
                                             val1 = 0;
                                         }
@@ -507,6 +512,14 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                         val1 = val1 + alleleDepth;
                                         alleleToDp.put(a, val1);
                                     }
+                                }
+
+                                if (gatkDepth == null)
+                                {
+                                    //No variant was called, so this is either considered all WT, or no-call
+                                    gatkDepth = getReadDepth(so.getFile(), contigToOffset, site.getLeft(), site.getRight(), ctx);
+                                    lofreqDepth = (int)NO_DATA_VAL;
+
                                 }
 
                                 List<String> toWrite = new ArrayList<>(line);
@@ -523,6 +536,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                     if (dp == (int)NO_DATA_VAL)
                                     {
                                         af = 0.0;
+                                        dp = 0;
                                     }
 
                                     totalAltDepth += dp;
