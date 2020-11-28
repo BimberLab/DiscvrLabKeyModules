@@ -180,7 +180,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
             ctx.getLogger().info("Pass 1: Building whitelist of sites/alleles");
             Set<String> uniqueIndels = new HashSet<>();
-            Map<String, SiteAndAlleles> siteToAlleleNoIndel = new HashMap<>();
+            Map<String, SiteAndAlleles> siteToAllele = new HashMap<>();
             List<Pair<String, Integer>> whitelistSites = new ArrayList<>();
 
             Set<Integer> genomeIds = new HashSet<>();
@@ -236,17 +236,17 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                             }
 
                             double af = vc.getAttributeAsDouble("AF", 0.0);
-                            if (af >= minAfThreshold && !vc.isIndel())
+                            if ((!vc.isIndel() && af >= minAfThreshold) || (vc.isIndel() && af >= minIndelAfThreshold))
                             {
                                 String key = getCacheKey(vc.getContig(), vc.getStart());
-                                SiteAndAlleles site = siteToAlleleNoIndel.containsKey(key) ? siteToAlleleNoIndel.get(key) : new SiteAndAlleles(vc.getContig(), vc.getStart(), vc.getReference());
-                                if (!siteToAlleleNoIndel.containsKey(key))
+                                SiteAndAlleles site = siteToAllele.containsKey(key) ? siteToAllele.get(key) : new SiteAndAlleles(vc.getContig(), vc.getStart(), vc.getReference());
+                                if (!siteToAllele.containsKey(key))
                                 {
                                     whitelistSites.add(Pair.of(vc.getContig(), vc.getStart()));
                                 }
 
                                 site.addSite(vc, ctx.getLogger());
-                                siteToAlleleNoIndel.put(key, site);
+                                siteToAllele.put(key, site);
                             }
 
                             if (af >= minIndelAfThreshold && vc.isIndel())
@@ -361,7 +361,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             Map<String, Integer> contigToOffset = getContigToOffset(dict);
 
             //Write whitelist as VCF, then run SNPEff:
-            runSnpEff(ctx, siteToAlleleNoIndel, whitelistSites, uniqueIndels, genome, basename);
+            runSnpEff(ctx, siteToAllele, whitelistSites, uniqueIndels, genome, basename);
 
             ctx.getLogger().info("Pass 2: Building merged table");
 
@@ -394,7 +394,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                             line.add(String.valueOf(so.getReadset()));
 
                             String key = getCacheKey(site.getLeft(), site.getRight());
-                            SiteAndAlleles siteDef = siteToAlleleNoIndel.get(key);
+                            SiteAndAlleles siteDef = siteToAllele.get(key);
                             if (siteDef._alternates.isEmpty())
                             {
                                 continue;
@@ -444,7 +444,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                 while (it.hasNext())
                                 {
                                     VariantContext vc = it.next();
-                                    if (vc.isIndel() || vc.isFiltered())
+                                    if (vc.isFiltered())
                                     {
                                         continue;
                                     }
@@ -726,7 +726,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             return readerMap.get(f);
         }
 
-        private void runSnpEff(JobContext ctx, Map<String, SiteAndAlleles> siteToAlleleNoIndel, List<Pair<String, Integer>> whitelistSites, Set<String> uniqueIndels, ReferenceGenome genome, String basename) throws PipelineJobException
+        private void runSnpEff(JobContext ctx, Map<String, SiteAndAlleles> siteToAllele, List<Pair<String, Integer>> whitelistSites, Set<String> uniqueIndels, ReferenceGenome genome, String basename) throws PipelineJobException
         {
             File vcfOut = new File(ctx.getOutputDir(), "whitelistSites.vcf.gz");
             VariantContextWriterBuilder vcb = new VariantContextWriterBuilder();
@@ -734,10 +734,11 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
             //This set shouldnt be huge, so try in memory:
             List<VariantContext> snpEffSites = new ArrayList<>();
+            Set<String> indelsAdded = new HashSet<>();
             for (Pair<String, Integer> site : whitelistSites)
             {
                 String key = getCacheKey(site.getLeft(), site.getRight());
-                Processor.SiteAndAlleles siteDef = siteToAlleleNoIndel.get(key);
+                Processor.SiteAndAlleles siteDef = siteToAllele.get(key);
 
                 for (String a : siteDef._alternates)
                 {
@@ -753,12 +754,24 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                     List<Allele> alleles = Arrays.asList(siteDef._ref, Allele.create(a));
                     b.alleles(alleles);
                     b.computeEndFromAlleles(alleles, siteDef._start);
-                    snpEffSites.add(b.make());
+
+                    VariantContext vc = b.make();
+                    if (vc.isIndel())
+                    {
+                        indelsAdded.add(vc.getContig() + "<>" + vc.getStart() + "<>" + vc.getReference().getBaseString() + "<>" + vc.getAlternateAllele(0).getBaseString());
+                    }
+
+                    snpEffSites.add(vc);
                 }
             }
 
             for (String allele : uniqueIndels)
             {
+                if (indelsAdded.contains(allele))
+                {
+                    continue;
+                }
+
                 String[] tokens = allele.split("<>");
 
                 VariantContextBuilder b = new VariantContextBuilder();
