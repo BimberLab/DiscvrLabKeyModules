@@ -180,7 +180,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
             ctx.getLogger().info("Pass 1: Building whitelist of sites/alleles");
             Set<String> uniqueIndels = new HashSet<>();
-            Map<String, SiteAndAlleles> siteToAllele = new HashMap<>();
+            Map<String, SiteAndAlleles> siteToAlleleNoIndel = new HashMap<>();
             List<Pair<String, Integer>> whitelistSites = new ArrayList<>();
 
             Set<Integer> genomeIds = new HashSet<>();
@@ -236,17 +236,17 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                             }
 
                             double af = vc.getAttributeAsDouble("AF", 0.0);
-                            if ((!vc.isIndel() && af >= minAfThreshold) || (vc.isIndel() && af >= minIndelAfThreshold))
+                            if ((!vc.isIndel() && af >= minAfThreshold))
                             {
                                 String key = getCacheKey(vc.getContig(), vc.getStart());
-                                SiteAndAlleles site = siteToAllele.containsKey(key) ? siteToAllele.get(key) : new SiteAndAlleles(vc.getContig(), vc.getStart(), vc.getReference());
-                                if (!siteToAllele.containsKey(key))
+                                SiteAndAlleles site = siteToAlleleNoIndel.containsKey(key) ? siteToAlleleNoIndel.get(key) : new SiteAndAlleles(vc.getContig(), vc.getStart(), vc.getReference());
+                                if (!siteToAlleleNoIndel.containsKey(key))
                                 {
                                     whitelistSites.add(Pair.of(vc.getContig(), vc.getStart()));
                                 }
 
                                 site.addSite(vc, ctx.getLogger());
-                                siteToAllele.put(key, site);
+                                siteToAlleleNoIndel.put(key, site);
                             }
 
                             if (af >= minIndelAfThreshold && vc.isIndel())
@@ -361,7 +361,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             Map<String, Integer> contigToOffset = getContigToOffset(dict);
 
             //Write whitelist as VCF, then run SNPEff:
-            runSnpEff(ctx, siteToAllele, whitelistSites, uniqueIndels, genome, basename);
+            runSnpEff(ctx, siteToAlleleNoIndel, whitelistSites, uniqueIndels, genome, basename);
 
             ctx.getLogger().info("Pass 2: Building merged table");
 
@@ -394,7 +394,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                             line.add(String.valueOf(so.getReadset()));
 
                             String key = getCacheKey(site.getLeft(), site.getRight());
-                            SiteAndAlleles siteDef = siteToAllele.get(key);
+                            SiteAndAlleles siteDef = siteToAlleleNoIndel.get(key);
                             if (siteDef._alternates.isEmpty())
                             {
                                 continue;
@@ -444,7 +444,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
                                 while (it.hasNext())
                                 {
                                     VariantContext vc = it.next();
-                                    if (vc.isFiltered())
+                                    if (vc.isIndel() || vc.isFiltered())
                                     {
                                         continue;
                                     }
@@ -726,7 +726,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             return readerMap.get(f);
         }
 
-        private void runSnpEff(JobContext ctx, Map<String, SiteAndAlleles> siteToAllele, List<Pair<String, Integer>> whitelistSites, Set<String> uniqueIndels, ReferenceGenome genome, String basename) throws PipelineJobException
+        private void runSnpEff(JobContext ctx, Map<String, SiteAndAlleles> siteToAlleleNoIndel, List<Pair<String, Integer>> whitelistSites, Set<String> uniqueIndels, ReferenceGenome genome, String basename) throws PipelineJobException
         {
             File vcfOut = new File(ctx.getOutputDir(), "whitelistSites.vcf.gz");
             VariantContextWriterBuilder vcb = new VariantContextWriterBuilder();
@@ -738,7 +738,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             for (Pair<String, Integer> site : whitelistSites)
             {
                 String key = getCacheKey(site.getLeft(), site.getRight());
-                Processor.SiteAndAlleles siteDef = siteToAllele.get(key);
+                Processor.SiteAndAlleles siteDef = siteToAlleleNoIndel.get(key);
 
                 for (String a : siteDef._alternates)
                 {
