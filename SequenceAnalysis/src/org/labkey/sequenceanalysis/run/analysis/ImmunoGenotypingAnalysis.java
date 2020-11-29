@@ -1,15 +1,18 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
 import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.SAMFileHeader;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
@@ -25,10 +28,13 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SamSorter;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.run.util.ImmunoGenotypingWrapper;
 import org.labkey.sequenceanalysis.util.ReferenceLibraryHelperImpl;
@@ -118,6 +124,26 @@ public class ImmunoGenotypingAnalysis extends AbstractCommandPipelineStep<Immuno
     }
 
     @Override
+    public void init(SequenceAnalysisJobSupport support) throws PipelineJobException
+    {
+        for (ReferenceGenome genome : support.getCachedGenomes())
+        {
+            File output = getLineageMapFile(getPipelineCtx(), genome);
+            try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(output), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+            {
+                List<Integer> refNtIds = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS), PageFlowUtil.set("ref_nt_id"), new SimpleFilter(FieldKey.fromString("library_id"), genome.getGenomeId()), null).getArrayList(Integer.class);
+                new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES), PageFlowUtil.set("rowid", "name", "lineage"), new SimpleFilter(FieldKey.fromString("rowid"), refNtIds, CompareType.IN), null).forEachResults(rs -> {
+                    writer.writeNext(new String[]{rs.getString(FieldKey.fromString("name")), rs.getString(FieldKey.fromString("lineage"))});
+                });
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+    }
+
+    @Override
     public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta, File outDir) throws PipelineJobException
     {
         File outputPrefix = getSBTSummaryFileBasename(outDir, inputBam);
@@ -152,6 +178,11 @@ public class ImmunoGenotypingAnalysis extends AbstractCommandPipelineStep<Immuno
         return null;
     }
 
+    private File getLineageMapFile(PipelineContext ctx, ReferenceGenome referenceGenome)
+    {
+        return new File(getPipelineCtx().getSourceDirectory(), referenceGenome.getGenomeId() + "_lineageMap.txt");
+    }
+
     @Override
     public Output performAnalysisPerSampleRemote(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
     {
@@ -179,7 +210,7 @@ public class ImmunoGenotypingAnalysis extends AbstractCommandPipelineStep<Immuno
         }
 
         List<String> options = new ArrayList<>();
-        File lineageMapFile = new File(getPipelineCtx().getSourceDirectory(), referenceGenome.getGenomeId() + "_lineageMap.txt");
+        File lineageMapFile = getLineageMapFile(getPipelineCtx(), referenceGenome);
         if (lineageMapFile.exists())
         {
             options.add("-referenceToLineageFile");
