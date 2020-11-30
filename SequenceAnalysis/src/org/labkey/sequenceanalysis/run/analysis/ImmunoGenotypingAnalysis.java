@@ -133,7 +133,10 @@ public class ImmunoGenotypingAnalysis extends AbstractCommandPipelineStep<Immuno
             {
                 List<Integer> refNtIds = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS), PageFlowUtil.set("ref_nt_id"), new SimpleFilter(FieldKey.fromString("library_id"), genome.getGenomeId()), null).getArrayList(Integer.class);
                 new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES), PageFlowUtil.set("rowid", "name", "lineage"), new SimpleFilter(FieldKey.fromString("rowid"), refNtIds, CompareType.IN), null).forEachResults(rs -> {
-                    writer.writeNext(new String[]{rs.getString(FieldKey.fromString("name")), rs.getString(FieldKey.fromString("lineage"))});
+                    if (rs.getString(FieldKey.fromString("lineage")) != null)
+                    {
+                        writer.writeNext(new String[]{rs.getString(FieldKey.fromString("name")), rs.getString(FieldKey.fromString("lineage"))});
+                    }
                 });
             }
             catch (IOException e)
@@ -215,6 +218,8 @@ public class ImmunoGenotypingAnalysis extends AbstractCommandPipelineStep<Immuno
         {
             options.add("-referenceToLineageFile");
             options.add(lineageMapFile.getPath());
+
+            output.addIntermediateFile(lineageMapFile);
         }
         else
         {
