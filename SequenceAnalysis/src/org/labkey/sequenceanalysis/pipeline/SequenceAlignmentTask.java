@@ -1379,7 +1379,6 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
             if (file != null)
             {
-                job.getLogger().debug("using file file: " + file.getPath());
                 try
                 {
                     return createFromJson(job, task, file);
