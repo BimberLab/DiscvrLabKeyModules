@@ -151,7 +151,7 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
         if (isSplitJob())
         {
             String logName = FileUtil.getBaseName(getLogFile());
-            logName = logName.substring(0, logName.lastIndexOf("-"));
+            logName = logName.substring(0, logName.lastIndexOf("-Job"));
 
             return new File(getWebserverDir(true), logName + ".outputs.json.gz");
         }

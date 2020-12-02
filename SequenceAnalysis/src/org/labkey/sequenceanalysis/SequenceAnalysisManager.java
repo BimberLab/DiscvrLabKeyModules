@@ -55,6 +55,7 @@ import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.InvalidKeyException;
 import org.labkey.api.query.QueryService;
+import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.query.QueryUpdateServiceException;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.reader.FastaDataLoader;
@@ -448,6 +449,8 @@ public class SequenceAnalysisManager
 
         try (DbScope.Transaction transaction = s.getSchema().getScope().ensureTransaction())
         {
+            List<Map<String, Object>> toDeleteQus = new ArrayList<>();
+
             for (int rowId : rowIds)
             {
                 //first data from analyses
@@ -487,13 +490,28 @@ public class SequenceAnalysisManager
                 {
                     Map<String, Object> map = new CaseInsensitiveHashMap<>();
                     map.put("rowid", rowId);
-                    List<Map<String, Object>> toDelete = Arrays.asList(map);
-
-                    Map<String, Object> scriptContext = new HashMap<>();
-                    scriptContext.put("deleteFromServer", true);  //a flag to make the trigger script accept this
-                    us.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES).getUpdateService().deleteRows(user, container, toDelete, null, scriptContext);
+                    toDeleteQus.add(map);
                 }
             }
+
+            if (!toDeleteQus.isEmpty())
+            {
+                Map<String, Object> scriptContext = new HashMap<>();
+                scriptContext.put("deleteFromServer", true);  //a flag to make the trigger script accept this
+
+                QueryUpdateService qus = us.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES).getUpdateService();
+
+                int batchSize = 2500;
+                int numBatches = (int)Math.ceil(toDeleteQus.size() / (double)batchSize);
+
+                for (int i = 0; i < numBatches; i++)
+                {
+                    int start = i * batchSize;
+                    List<Map<String, Object>> subset = toDeleteQus.subList(start, Math.min(toDeleteQus.size(), start + batchSize));
+                    qus.deleteRows(user, container, subset, null, scriptContext);
+                }
+            }
+
             transaction.commit();
         }
     }

@@ -91,6 +91,9 @@ public class CellRangerWrapper extends AbstractCommandWrapper
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--force-cells"), "force-cells", "Force Cells", "Force pipeline to use this number of cells, bypassing the cell detection algorithm. Use this if the number of cells estimated by Cell Ranger is not consistent with the barcode rank plot.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, null),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--disable-ui"), "disable-ui", "Disable UI", "If checked, this will run cellranger with the optional web-based UI disabled.", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, true),
                     ToolParameterDescriptor.createExpDataParam("gtfFile", "Gene File", "This is the ID of a GTF file containing genes from this genome.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
                     {{
                         put("extensions", Arrays.asList("gtf"));
@@ -327,7 +330,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
 
             File localFqDir = new File(outputDirectory, "localFq");
             output.addIntermediateFile(localFqDir);
-            Set<String> sampleNames = prepareFastqSymlinks(rs, localFqDir);
+            Set<String> sampleNames = prepareFastqSymlinks(rs, localFqDir, inputFastq1, inputFastq2);
             args.add("--fastqs=" + localFqDir.getPath());
 
             getPipelineCtx().getLogger().debug("Sample names: [" + StringUtils.join(sampleNames, ",") + "]");
@@ -458,9 +461,9 @@ public class CellRangerWrapper extends AbstractCommandWrapper
             }
         }
 
-        public Set<String> prepareFastqSymlinks(Readset rs, File localFqDir) throws PipelineJobException
+        public Set<String> prepareFastqSymlinks(Readset rs, File localFqDir, File input1, File input2) throws PipelineJobException
         {
-            getPipelineCtx().getLogger().info("preparing symlinks for readset: " + rs.getName());
+            getPipelineCtx().getLogger().info("Possibly preparing symlinks for readset: " + rs.getName());
             Set<String> ret = new HashSet<>();
             if (!localFqDir.exists())
             {
@@ -473,46 +476,76 @@ public class CellRangerWrapper extends AbstractCommandWrapper
                 deleteSymlinks(localFqDir);
             }
 
-            int idx = 0;
-            boolean doRename = true;  //cellranger is too picky - simply rename files all the time
-            for (ReadData rd : rs.getReadData())
+            //Files might have been changed by pre-processing:
+            if (!input1.equals(rs.getReadData().get(0).getFile1()))
             {
-                idx++;
+                getPipelineCtx().getLogger().info("FASTQs appear to have been pre-processed, using local copies:");
+                if (rs.getReadData().size() > 1)
+                {
+                    String alignmentMode = getProvider().getParameterByName(AbstractAlignmentStepProvider.ALIGNMENT_MODE_PARAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx());
+                    AbstractAlignmentStepProvider.ALIGNMENT_MODE mode = AbstractAlignmentStepProvider.ALIGNMENT_MODE.valueOf(alignmentMode);
+                    if (mode != AbstractAlignmentStepProvider.ALIGNMENT_MODE.MERGE_THEN_ALIGN)
+                    {
+                        throw new PipelineJobException("cellranger cannot be used with pre-processing unless MERGE_THEN_ALIGN is used");
+                    }
+                }
+
                 try
                 {
-                    File target1 = new File(localFqDir, getSymlinkFileName(rd.getFile1().getName(), doRename,  rs.getName(), idx, false));
-                    getPipelineCtx().getLogger().debug("file: " + rd.getFile1().getPath());
-                    getPipelineCtx().getLogger().debug("target: " + target1.getPath());
-                    if (target1.exists())
-                    {
-                        getPipelineCtx().getLogger().debug("deleting existing symlink: " + target1.getName());
-                        Files.delete(target1.toPath());
-                    }
-
-                    Files.createSymbolicLink(target1.toPath(), rd.getFile1().toPath());
+                    File target1 = new File(localFqDir, getSymlinkFileName(input1.getName(), true, rs.getName(), 1, false));
+                    createSymLink(input1, target1);
                     ret.add(getSampleName(target1.getName()));
 
-                    if (rd.getFile2() != null)
-                    {
-                        File target2 = new File(localFqDir, getSymlinkFileName(rd.getFile2().getName(), doRename, rs.getName(), idx, true));
-                        getPipelineCtx().getLogger().debug("file: " + rd.getFile2().getPath());
-                        getPipelineCtx().getLogger().debug("target: " + target2.getPath());
-                        if (target2.exists())
-                        {
-                            getPipelineCtx().getLogger().debug("deleting existing symlink: " + target2.getName());
-                            Files.delete(target2.toPath());
-                        }
-                        Files.createSymbolicLink(target2.toPath(), rd.getFile2().toPath());
-                        ret.add(getSampleName(target2.getName()));
-                    }
+                    File target2 = new File(localFqDir, getSymlinkFileName(input2.getName(), true, rs.getName(), 1, true));
+                    createSymLink(input2, target2);
+                    ret.add(getSampleName(target2.getName()));
                 }
                 catch (IOException e)
                 {
                     throw new PipelineJobException(e);
                 }
             }
+            else
+            {
+                int idx = 0;
+                boolean doRename = true;  //cellranger is too picky - simply rename files all the time
+                for (ReadData rd : rs.getReadData())
+                {
+                    idx++;
+                    try
+                    {
+                        File target1 = new File(localFqDir, getSymlinkFileName(rd.getFile1().getName(), doRename, rs.getName(), idx, false));
+                        createSymLink(rd.getFile1(), target1);
+                        ret.add(getSampleName(target1.getName()));
+
+                        if (rd.getFile2() != null)
+                        {
+                            File target2 = new File(localFqDir, getSymlinkFileName(rd.getFile2().getName(), doRename, rs.getName(), idx, true));
+                            createSymLink(rd.getFile2(), target2);
+                            ret.add(getSampleName(target2.getName()));
+                        }
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
+                }
+            }
 
             return ret;
+        }
+
+        private void createSymLink(File input, File target) throws IOException
+        {
+            getPipelineCtx().getLogger().debug("file: " + input.getPath());
+            getPipelineCtx().getLogger().debug("target: " + target.getPath());
+            if (target.exists())
+            {
+                getPipelineCtx().getLogger().debug("deleting existing symlink: " + target.getName());
+                Files.delete(target.toPath());
+            }
+
+            Files.createSymbolicLink(target.toPath(), input.toPath());
         }
 
         private static Pattern FILE_PATTERN = Pattern.compile("^(.+?)(_S[0-9]+){0,1}_L(.+?)_(R){0,1}([0-9])(_[0-9]+){0,1}(.*?)(\\.f(ast){0,1}q)(\\.gz)?$");

@@ -675,7 +675,7 @@ public class JBrowseRoot
 
                 //even through we're loading the raw data based on urlTemplate, make a symlink from this location into our DB so generate-names.pl works properly
                 File sourceFile = f.expectDataSubdirForTrack() ? new File(f.getTrackRootDir(), "tracks/track-" + f.getTrackId()) : f.getTrackRootDir();
-                sourceFile = identifyValidParentDir(sourceFile);
+                //sourceFile = identifyValidParentDir(sourceFile);
 
                 File targetFile = new File(outDir, "tracks/track-" + f.getTrackId());
                 createSymlink(targetFile, sourceFile);
