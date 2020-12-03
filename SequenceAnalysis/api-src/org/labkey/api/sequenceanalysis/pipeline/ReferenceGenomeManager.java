@@ -1,6 +1,7 @@
 package org.labkey.api.sequenceanalysis.pipeline;
 
-import com.google.common.io.Files;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
@@ -60,11 +61,32 @@ public class ReferenceGenomeManager
         return lastSync >= lastUpdated;
     }
 
-    public void markGenomeModified(ReferenceGenome genome, Logger log) throws IOException
+    public void markGenomeModified(ReferenceGenome genome, Logger log) throws PipelineJobException
     {
         File toUpdate = getLocalUpdateFile(genome);
         log.info("Marking genome as modified: " + toUpdate.getPath());
-        Files.touch(toUpdate);
+        touchFile(toUpdate, log);
+    }
+
+    //NOTE: Java implementations of touch are erroring between the cluster and NFS filesystem
+    private void touchFile(File target, Logger log) throws PipelineJobException
+    {
+        if (SystemUtils.IS_OS_WINDOWS)
+        {
+            try
+            {
+                FileUtils.touch(target);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+        else
+        {
+            SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
+            wrapper.execute(Arrays.asList("/bin/bash", "-c", "$(which touch) '" + target.getPath() + "'"));
+        }
     }
 
     public void cacheGenomeLocally(ReferenceGenome genome, Logger log) throws PipelineJobException
@@ -80,36 +102,31 @@ public class ReferenceGenomeManager
             return;
         }
 
+        File localCacheDir = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
         if (isUpToDate(genome))
         {
             log.debug("Genome up-to-date, will not repeat rsync");
+            genome.setWorkingFasta(new File(new File(localCacheDir, genome.getGenomeId().toString()), genome.getSourceFastaFile().getName()));
+
             return;
         }
 
-        File localCacheDir = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
         log.info("attempting to rsync genome to local disks: " + localCacheDir.getPath());
 
         File sourceDir = genome.getSourceFastaFile().getParentFile();
 
         //Note: neither source nor dest have trailing slashes, so the entire source (i.e '128', gets synced into a subdir of dest)
         new SimpleScriptWrapper(log).execute(Arrays.asList(
-                "rsync", "-r", "-a", "--delete", "--delete-excluded", "--no-owner", "--no-group", sourceDir.getPath(), localCacheDir.getPath()
+                "rsync", "-r", "-a", "--delete", "--no-owner", "--no-group", sourceDir.getPath(), localCacheDir.getPath()
         ));
 
-        try
+        File lastUpdate = getLocalUpdateFile(genome);
+        if (!lastUpdate.exists())
         {
-            File lastUpdate = getLocalUpdateFile(genome);
-            if (!lastUpdate.exists())
-            {
-                Files.touch(lastUpdate);
-            }
+            touchFile(lastUpdate, log);
+        }
 
-            Files.touch(getRemoteSyncFile(genome.getGenomeId()));
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
+        touchFile(getRemoteSyncFile(genome.getGenomeId()), log);
 
         genome.setWorkingFasta(new File(new File(localCacheDir, genome.getGenomeId().toString()), genome.getSourceFastaFile().getName()));
     }

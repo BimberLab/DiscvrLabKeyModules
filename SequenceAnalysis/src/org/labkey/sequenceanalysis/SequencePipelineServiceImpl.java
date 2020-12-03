@@ -4,8 +4,8 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -426,7 +426,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         //preferentially use R config setup in scripting props.  only works if running locally.
         if (PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
         {
-            LabKeyScriptEngineManager svc = LabKeyScriptEngineManager.get();
+            LabKeyScriptEngineManager svc = ServiceRegistry.get().getService(LabKeyScriptEngineManager.class);
             for (ExternalScriptEngineDefinition def : svc.getEngineDefinitions())
             {
                 if (RScriptEngineFactory.isRScriptEngine(def.getExtensions()))

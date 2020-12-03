@@ -667,7 +667,7 @@ public class SequenceTest extends BaseWebDriverTest
         assertEquals(invalidJSONError, analysisDescription, params.get("jobDescription"));
         assertEquals(invalidJSONError, jobName, params.get("jobName"));
 
-        assertEquals(invalidJSONError, "IlluminaAdapterTrimming;AdapterTrimming;AvgQualFilter;CropReads;FASTQC;DownsampleReads;PrintReadsContaining;Flash;MaxInfoTrim;SlidingWindowTrim;ReadLengthFilter", params.get("fastqProcessing"));
+        assertEquals(invalidJSONError, "IlluminaAdapterTrimming;AdapterTrimming;AvgQualFilter;CropReads;FASTQC;DownsampleReads;PrintReadsContaining;Flash;MaxInfoTrim;SlidingWindowTrim;ReadCropping;ReadLengthFilter", params.get("fastqProcessing"));
         assertEquals(invalidJSONError, overlapLength.toString(), params.get("fastqProcessing.AdapterTrimming.overlapLength").toString());
         assertEquals(invalidJSONError, errorRate.toString(), params.get("fastqProcessing.AdapterTrimming.errorRate").toString());
         assertEquals(invalidJSONError, minReadLength, params.get("fastqProcessing.AdapterTrimming.minLength").toString());

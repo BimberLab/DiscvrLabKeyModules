@@ -70,7 +70,7 @@ public class RCommandWrapper extends AbstractCommandWrapper
         //preferentially use R config setup in scripting props.  only works if running locally.
         if (PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
         {
-            LabKeyScriptEngineManager svc = LabKeyScriptEngineManager.get();
+            LabKeyScriptEngineManager svc = ServiceRegistry.get().getService(LabKeyScriptEngineManager.class);
             for (ExternalScriptEngineDefinition def : svc.getEngineDefinitions())
             {
                 if (RScriptEngineFactory.isRScriptEngine(def.getExtensions()))
