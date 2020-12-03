@@ -4,12 +4,13 @@ import htsjdk.samtools.util.BlockCompressedOutputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
@@ -33,7 +34,7 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.reports.ExternalScriptEngineDefinition;
-import org.labkey.api.reports.LabKeyScriptEngineManager;
+import org.labkey.api.reports.LabkeyScriptEngineManager;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
@@ -42,7 +43,6 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.services.ServiceRegistry;
-import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.GUID;
@@ -141,7 +141,7 @@ public class JBrowseRoot
 
     private String getPerlLocation()
     {
-        LabKeyScriptEngineManager svc = LabKeyScriptEngineManager.get();
+        LabkeyScriptEngineManager svc = ServiceRegistry.get().getService(LabkeyScriptEngineManager.class);
         for (ExternalScriptEngineDefinition def : svc.getEngineDefinitions())
         {
             if (def.getExtensions() != null && Arrays.stream(def.getExtensions()).anyMatch("pl"::equals))
@@ -675,7 +675,7 @@ public class JBrowseRoot
 
                 //even through we're loading the raw data based on urlTemplate, make a symlink from this location into our DB so generate-names.pl works properly
                 File sourceFile = f.expectDataSubdirForTrack() ? new File(f.getTrackRootDir(), "tracks/track-" + f.getTrackId()) : f.getTrackRootDir();
-                sourceFile = identifyValidParentDir(sourceFile);
+                //sourceFile = identifyValidParentDir(sourceFile);
 
                 File targetFile = new File(outDir, "tracks/track-" + f.getTrackId());
                 createSymlink(targetFile, sourceFile);

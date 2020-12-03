@@ -641,7 +641,6 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         }
 
         //also sequence outputs
-        log.debug("also inspecting outputs: " + (job.getOutputsToCreate() == null ? "none" : job.getOutputsToCreate().size()));
         for (SequenceOutputFile so : job.getOutputsToCreate())
         {
             if (so.getFile().equals(original))

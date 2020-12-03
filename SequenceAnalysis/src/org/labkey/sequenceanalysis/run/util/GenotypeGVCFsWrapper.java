@@ -199,7 +199,7 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
                                 //NOTE: since neither path will end in slashes, rsync to the parent folder should result in the correct placement
                                 ctx.getLogger().debug("Copying directory with rsync: " + movedFile.getPath());
                                 new SimpleScriptWrapper(ctx.getLogger()).execute(Arrays.asList(
-                                    "rsync", "-r", "-a", "--delete", "--delete-excluded", "--no-owner", "--no-group", f.getPath(), movedFile.getParentFile().getPath()
+                                    "rsync", "-r", "-a", "--delete", "--no-owner", "--no-group", f.getPath(), movedFile.getParentFile().getPath()
                                 ));
                             }
 

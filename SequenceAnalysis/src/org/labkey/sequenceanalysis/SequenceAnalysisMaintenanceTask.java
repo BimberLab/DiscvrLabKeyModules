@@ -305,6 +305,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                         expectedChildren.add("alignerIndexes");
                         expectedChildren.add("tracks");
                         expectedChildren.add("chainFiles");
+                        expectedChildren.add(".lastUpdate");
 
                         for (String fileName : child.list())
                         {
