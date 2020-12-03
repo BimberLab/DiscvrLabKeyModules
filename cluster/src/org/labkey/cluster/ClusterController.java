@@ -17,7 +17,8 @@
 package org.labkey.cluster;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.labkey.api.action.ConfirmAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.pipeline.PipelineJob;
@@ -49,7 +50,7 @@ public class ClusterController extends SpringActionController
     private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(ClusterController.class);
     public static final String NAME = "cluster";
 
-    private static final Logger _log = Logger.getLogger(ClusterController.class);
+    private static final Logger _log = LogManager.getLogger(ClusterController.class);
 
     public ClusterController()
     {
