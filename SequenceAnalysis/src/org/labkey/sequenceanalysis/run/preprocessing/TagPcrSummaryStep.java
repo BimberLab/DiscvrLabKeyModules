@@ -72,13 +72,13 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
                     ToolParameterDescriptor.create(OUTPUT_GENBANK, "Create Genbank Output", "If selected, this will output a genbank file summarizing amplicons and primers", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--insert-type"), "insertType", "Insert Type", "The type of insert to detect.", "ldk-simplecombo", new JSONObject(){{
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--insert-name"), "insertType", "Insert Type", "The type of insert to detect.", "ldk-simplecombo", new JSONObject(){{
                         put("storeValues", "PiggyBac;Lentivirus");
                         put("allowBlank", false);
                     }}, "PiggyBac"),
                     ToolParameterDescriptor.create(DESIGN_PRIMERS, "Design Primers", "If selected, Primer3 will be used to design primers to flank integration sites", "checkbox", new JSONObject(){{
-                        put("checked", true);
-                    }}, true),
+                        put("checked", false);
+                    }}, false),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--reads-to-output"), "readsToOutput", "Reads To Output Per Site", "If this is non-zero, up to this many reads per integration site will be written to a FASTA file.  This can serve as a way to verify the actual junction border.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, null),
