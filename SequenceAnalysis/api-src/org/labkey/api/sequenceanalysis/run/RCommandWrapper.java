@@ -17,7 +17,6 @@ package org.labkey.api.sequenceanalysis.run;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.reports.ExternalScriptEngineDefinition;

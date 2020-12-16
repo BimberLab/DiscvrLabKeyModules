@@ -1,4 +1,4 @@
-[![Build Status](https://api.travis-ci.com/BimberLab/DiscvrLabKeyModules.svg)](https://travis-ci.com/BimberLab/DiscvrLabKeyModules)
+![Build DISCVR](https://github.com/BimberLab/DiscvrLabKeyModules/workflows/Build%20DISCVR/badge.svg)
 
 ## Overview
 
