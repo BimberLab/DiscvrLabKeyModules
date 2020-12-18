@@ -287,7 +287,7 @@ public class SequenceAnalysisManager
             for (SequenceOutputFile so : files)
             {
                 ExpData d = so.getExpData();
-                if (d != null && d.getFile() != null && d.getFile().exists())
+                if (d != null && d.getFile() != null)
                 {
                     // account for possibility that another sequence output is using this file.  this would probably be from an error, like a pipeline resume/double import, but even in this case we shouldnt delete it
                     // also check based on filepath
@@ -309,7 +309,9 @@ public class SequenceAnalysisManager
                     }
                     else if (doDelete)
                     {
-                        d.getFile().delete();
+                        if (d.getFile().exists())
+                            d.getFile().delete();
+
                         expDataDeleted.add(d.getRowId());
                     }
                 }
@@ -346,6 +348,34 @@ public class SequenceAnalysisManager
                 //also look for orphan quality metrics:
                 if (!expDataDeleted.isEmpty())
                 {
+                    // If the BAM was deleted by the analysis was not, rather than discard all the metrics, set dataId to NULL and keep them attached to the analysis:
+                    if (!bamsDeleted.isEmpty())
+                    {
+                        List<Map<String, Object>> rowsToUpdate = new ArrayList<>();
+                        List<Map<String, Object>> oldKeys = new ArrayList<>();
+                        new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), PageFlowUtil.set("rowId", "analysis_id", "container"), new SimpleFilter(FieldKey.fromString("dataId"), bamsDeleted, CompareType.IN), null).forEachResults(rs -> {
+                            // The intent of this is to recover rows from any situation where a BAM is deleted but the analysis is not
+                            if (rs.getObject(FieldKey.fromString("analysis_id")) != null && !additionalAnalysisIds.contains(rs.getInt(FieldKey.fromString("analysis_id"))))
+                            {
+                                Map<String, Object> toUpdate = new CaseInsensitiveHashMap<>();
+                                toUpdate.put("rowId", rs.getInt(FieldKey.fromString("rowid")));
+                                toUpdate.put("dataid", null);
+                                toUpdate.put("container", rs.getString(FieldKey.fromString("container")));
+                                rowsToUpdate.add(toUpdate);
+
+                                Map<String, Object> toUpdateKey = new CaseInsensitiveHashMap<>();
+                                toUpdateKey.put("rowId", rs.getInt(FieldKey.fromString("rowid")));
+                                oldKeys.add(toUpdateKey);
+                            }
+                        });
+
+                        if (!rowsToUpdate.isEmpty())
+                        {
+                            _log.info("quality metric rows attached to BAMs that will not be deleted: " + rowsToUpdate.size());
+                            us.getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS).getUpdateService().updateRows(user, container, rowsToUpdate, oldKeys, null, new HashMap<>());
+                        }
+                    }
+
                     List<Integer> metricRowIds = new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), PageFlowUtil.set("rowId"), new SimpleFilter(FieldKey.fromString("dataId"), expDataDeleted, CompareType.IN), null).getArrayList(Integer.class);
                     if (!metricRowIds.isEmpty())
                     {
