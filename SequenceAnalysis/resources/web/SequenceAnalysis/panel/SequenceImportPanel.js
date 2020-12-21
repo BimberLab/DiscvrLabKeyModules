@@ -1644,6 +1644,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         var showBarcodes = this.down('#showBarcodes').getValue();
 
         LABKEY.Query.selectRows({
+            method: 'POST',
             containerPath: Laboratory.Utils.getQueryContainerPath(),
             schemaName: 'sequenceanalysis',
             queryName: 'sequence_readsets',
