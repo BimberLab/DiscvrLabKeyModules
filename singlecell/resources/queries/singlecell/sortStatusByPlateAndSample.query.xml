@@ -1,0 +1,21 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="" useColumnOrder="false" tableDbType="TABLE">
+                <tableTitle>TCR Status By Plate</tableTitle>
+                <columns>
+                    <column columnName="plateId">
+                        <isKeyField>true</isKeyField>
+                        <url>/query/executeQuery.view?schemaName=singlecell&amp;query.queryName=sorts&amp;query.plateId~eq=${plateId}</url>
+                    </column>
+                    <column columnName="container">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="isComplete">
+                        <columnTitle>Plate Complete</columnTitle>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

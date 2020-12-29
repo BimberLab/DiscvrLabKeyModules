@@ -23,8 +23,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.biojava3.core.sequence.DNASequence;
 import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
 import org.biojava3.core.sequence.compound.NucleotideCompound;
@@ -152,7 +152,6 @@ import org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 import org.labkey.sequenceanalysis.run.BamHaplotyper;
-import org.labkey.sequenceanalysis.run.alignment.CellRangerWrapper;
 import org.labkey.sequenceanalysis.run.analysis.AASnpByCodonAggregator;
 import org.labkey.sequenceanalysis.run.analysis.AASnpByReadAggregator;
 import org.labkey.sequenceanalysis.run.analysis.AlignmentAggregator;
@@ -5169,84 +5168,6 @@ public class SequenceAnalysisController extends SpringActionController
         public void setOutputFileIds(Integer[] outputFileIds)
         {
             _outputFileIds = outputFileIds;
-        }
-    }
-
-    @RequiresPermission(InsertPermission.class)
-    public class DownloadLoupeDataAction extends ExportAction<OutputFilesForm>
-    {
-        @Override
-        public void export(OutputFilesForm form, HttpServletResponse response, BindException errors) throws Exception
-        {
-            Map<String, Set<File>> toExport = new HashMap<>();
-
-            for (Integer rowId : form.getOutputFileIds())
-            {
-                SequenceOutputFile so = SequenceOutputFile.getForId(rowId);
-                if (so != null)
-                {
-                    File loupe = so.getFile();
-                    if (!loupe.exists())
-                    {
-                        errors.reject(ERROR_MSG, "Missing file: " + loupe.getPath());
-                        return;
-                    }
-
-                    String name = FileUtil.makeLegalName(so.getName());
-                    Set<File> toAdd = toExport.getOrDefault(name, new HashSet<>());
-                    toAdd.addAll(CellRangerWrapper.getRawDataDirs(loupe.getParentFile(), false));
-
-                    toExport.put(name, toAdd);
-                }
-                else
-                {
-                    errors.reject(ERROR_MSG, "Unable to find output file with ID: " + rowId);
-                    return;
-                }
-            }
-
-            PageFlowUtil.prepareResponseForFile(response, Collections.emptyMap(), "LoupeData.zip", true);
-            try (ZipOutputStream zOut = new ZipOutputStream(response.getOutputStream()))
-            {
-                for (String dir : toExport.keySet())
-                {
-                    String prefix = dir + "/";
-                    for (File f : toExport.get(dir))
-                    {
-                        try
-                        {
-                            addToArchive(zOut, f, prefix);
-                        }
-                        catch (Exception e)
-                        {
-                            _log.error(e);
-                            errors.reject(ERROR_MSG, e.getMessage());
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        private void addToArchive(ZipOutputStream zOut, File srcFile, String prefix) throws IOException
-        {
-            if (srcFile.isDirectory())
-            {
-                File[] files = srcFile.listFiles();
-                for (int i = 0; i < files.length; i++)
-                {
-                    addToArchive(zOut, files[i], prefix + srcFile.getName() + "/");
-                }
-            }
-            else
-            {
-                try (FileInputStream in = new FileInputStream(srcFile))
-                {
-                    zOut.putNextEntry(new ZipEntry(prefix + srcFile.getName()));
-                    IOUtils.copy(in, zOut);
-                    zOut.closeEntry();
-                }
-            }
         }
     }
 }

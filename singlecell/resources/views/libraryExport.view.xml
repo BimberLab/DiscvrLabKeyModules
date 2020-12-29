@@ -1,0 +1,7 @@
+<view xmlns="http://labkey.org/data/xml/view" title="10x Library Export">
+    <dependencies>
+        <dependency path="laboratory.context" />
+        <dependency path="extWidgets/ExcelUploadPanel.js"/>
+        <dependency path="singlecell/panel/LibraryExportPanel.js"/>
+    </dependencies>
+</view>

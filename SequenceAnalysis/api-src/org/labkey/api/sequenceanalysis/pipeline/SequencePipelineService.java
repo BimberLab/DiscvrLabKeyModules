@@ -18,12 +18,10 @@ package org.labkey.api.sequenceanalysis.pipeline;
 
 import htsjdk.samtools.SAMFileHeader;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
-import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 
 import java.io.File;
@@ -126,6 +124,4 @@ abstract public class SequencePipelineService
     abstract public void updateOutputFile(SequenceOutputFile o, PipelineJob job, Integer runId, Integer analysisId);
 
     abstract public PreprocessingStep.Output simpleTrimFastqPair(File fq1, File fq2, List<String> params, File outDir, Logger log) throws PipelineJobException;
-
-    abstract public File runCiteSeqCount(PipelineStepOutput output, @Nullable String outputCategory, Readset htoReadset, File htoList, File cellBarcodeList, File outputDir, String basename, Logger log, List<String> extraArgs, boolean doHtoFiltering, @Nullable Integer minCountPerCell, File localPipelineDir, @Nullable Integer editDistance, boolean scanEditDistances, Readset parentReadset, @Nullable Integer genomeId, boolean generateHtoCalls, boolean createOutputFiles, boolean useSeurat, boolean useMultiSeq) throws PipelineJobException;
 }

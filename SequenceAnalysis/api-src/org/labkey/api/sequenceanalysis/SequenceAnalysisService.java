@@ -17,7 +17,6 @@ package org.labkey.api.sequenceanalysis;
 
 
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.laboratory.NavItem;
@@ -88,10 +87,6 @@ abstract public class SequenceAnalysisService
 
     abstract public String getVCFLineCount(File vcf, Logger log, boolean passOnly) throws PipelineJobException;
 
-    abstract public File writeAllCellHashingBarcodes(File webserverDir, User u, Container c) throws PipelineJobException;
-
-    abstract public File writeAllCiteSeqBarcodes(File webserverDir, User u, Container c) throws PipelineJobException;
-
     abstract public String createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String assemblyId, String description, boolean skipCacheIndexes, boolean skipTriggers) throws IOException;
 
     abstract public String createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String assemblyId, String description, boolean skipCacheIndexes, boolean skipTriggers, Set<GenomeTrigger> extraTriggers) throws IOException;
@@ -103,4 +98,6 @@ abstract public class SequenceAnalysisService
     abstract public void sortGxf(Logger log, File input, @Nullable File output) throws PipelineJobException;
 
     abstract public void ensureFeatureFileIndex(File input, Logger log) throws PipelineJobException;
+
+    abstract public void mergeFastqFiles(File output, List<File> inputs, Logger log) throws PipelineJobException;
 }
