@@ -10,8 +10,9 @@ public interface SingleCellStep extends PipelineStep
 {
     public Collection<String> getLibraries();
 
-    public Output appendToMarkdown(PrintWriter writer, List<String> seuratVariables, SeuratContext ctx);
+    public void writeComments(PrintWriter writer, List<String> seuratVariables, SeuratContext ctx);
 
+    public Output appendToMarkdown(PrintWriter writer, List<String> seuratVariables, SeuratContext ctx);
 
     public interface Output
     {
