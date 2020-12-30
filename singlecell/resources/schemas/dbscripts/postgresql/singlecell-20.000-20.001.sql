@@ -1,5 +1,5 @@
 CREATE TABLE singlecell.cdna_libraries (
-  rowid int serial,
+  rowid serial,
   sortid int,
   chemistry varchar(200),
   concentration float,
@@ -24,7 +24,7 @@ CREATE TABLE singlecell.cdna_libraries (
 );
 
 CREATE TABLE singlecell.stim_types(
-  rowid int serial,
+  rowid serial,
   name varchar(200) NOT NULL,
   category varchar(200),
   type varchar(200),
@@ -39,7 +39,7 @@ CREATE TABLE singlecell.stim_types(
 );
 
 CREATE TABLE singlecell.assay_types(
-  rowid int serial,
+  rowid serial,
   name varchar(200) NOT NULL,
   treatment varchar(1000),
   description varchar(4000),
@@ -54,7 +54,7 @@ CREATE TABLE singlecell.assay_types(
 );
 
 CREATE TABLE singlecell.samples(
-  rowid int serial,
+  rowid serial,
   subjectId varchar(100),
   sampledate timestamp,
   tissue varchar(4000),
@@ -75,7 +75,7 @@ CREATE TABLE singlecell.samples(
 );
 
 CREATE TABLE singlecell.sorts(
-  rowid int serial,
+  rowid serial,
   sampleid int,
   population varchar(1000),
   replicate varchar(100),
