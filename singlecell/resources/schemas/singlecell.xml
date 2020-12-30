@@ -1,0 +1,554 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+
+ * Copyright (c) 2020 LabKey Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+
+ -->
+<tables xsi:schemaLocation="http://labkey.org/data/xml ..\..\..\..\schemas\tableInfo.xsd"
+        xmlns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <table tableName="samples" tableDbType="TABLE" useColumnOrder="true">
+        <javaCustomizer class="org.labkey.laboratory.query.LaboratoryTableCustomizer" />
+        <tableTitle>Single Cell Samples</tableTitle>
+        <titleColumn>rowid</titleColumn>
+        <columns>
+            <column columnName="rowid">
+                <columnTitle>Stim Id</columnTitle>
+            </column>
+            <column columnName="subjectId">
+                <columnTitle>Subject/Animal</columnTitle>
+                <conceptURI>http://cpas.labkey.com/Study#ParticipantId</conceptURI>
+                <nullable>false</nullable>
+            </column>
+            <column columnName="celltype">
+                <columnTitle>Cell Type</columnTitle>
+                <nullable>true</nullable>
+            </column>
+            <column columnName="tissue">
+                <columnTitle>Tissue</columnTitle>
+                <nullable>true</nullable>
+            </column>
+            <column columnName="sampledate">
+                <columnTitle>Sample Date</columnTitle>
+                <conceptURI>http://cpas.labkey.com/laboratory#sampleDate</conceptURI>
+                <nullable>false</nullable>
+                <formatString>Date</formatString>
+            </column>
+            <column columnName="stim">
+                <columnTitle>Peptide/Stim</columnTitle>
+                <nullable>false</nullable>
+                <fk>
+                    <fkDbSchema>singlecell</fkDbSchema>
+                    <fkTable>stim_types</fkTable>
+                    <fkColumnName>name</fkColumnName>
+                    <fkDisplayColumnName useRawValue="true"/>
+                </fk>
+            </column>
+            <column columnName="assaytype">
+                <columnTitle>Assay Type</columnTitle>
+                <nullable>true</nullable>
+                <fk>
+                    <fkDbSchema>singlecell</fkDbSchema>
+                    <fkTable>assay_types</fkTable>
+                    <fkColumnName>name</fkColumnName>
+                    <fkDisplayColumnName useRawValue="true"/>
+                </fk>
+            </column>
+            <column columnName="comment">
+
+            </column>
+            <column columnName="status">
+
+            </column>
+            <column columnName="lsid">
+                <datatype>lsidtype</datatype>
+                <isReadOnly>true</isReadOnly>
+                <isHidden>true</isHidden>
+                <isUserEditable>false</isUserEditable>
+                <isUnselectable>true</isUnselectable>
+                <fk>
+                    <fkColumnName>ObjectUri</fkColumnName>
+                    <fkTable>Object</fkTable>
+                    <fkDbSchema>exp</fkDbSchema>
+                </fk>
+            </column>
+            <column columnName="container">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="createdby">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <nullable>true</nullable>
+                <scale>29</scale>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <nullable>true</nullable>
+                <scale>29</scale>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
+    <table tableName="sorts" tableDbType="TABLE" useColumnOrder="true">
+        <javaCustomizer class="org.labkey.laboratory.query.LaboratoryTableCustomizer">
+            <properties>
+                <property name="setEditLinkOverrides">true</property>
+            </properties>
+        </javaCustomizer>
+        <tableTitle>Sorts</tableTitle>
+        <titleColumn>rowid</titleColumn>
+        <columns>
+            <column columnName="rowid">
+                <columnTitle>Sort Id</columnTitle>
+                <isHidden>false</isHidden>
+            </column>
+            <column columnName="sampleId">
+                <columnTitle>Sample</columnTitle>
+                <fk>
+                    <fkDbSchema>singlecell</fkDbSchema>
+                    <fkTable>samples</fkTable>
+                    <fkColumnName>rowid</fkColumnName>
+                </fk>
+                <nullable>false</nullable>
+            </column>
+            <column columnName="population">
+                <nullable>false</nullable>
+            </column>
+            <column columnName="replicate">
+
+            </column>
+            <column columnName="cells">
+                <columnTitle># Cells</columnTitle>
+                <nullable>false</nullable>
+            </column>
+            <column columnName="plateId">
+                <nullable>true</nullable>
+            </column>
+            <column columnName="well">
+                <nullable>false</nullable>
+                <fk>
+                    <fkDbSchema>laboratory</fkDbSchema>
+                    <fkTable>96well_plate</fkTable>
+                    <fkColumnName>well</fkColumnName>
+                    <fkDisplayColumnName useRawValue="true"/>
+                </fk>
+            </column>
+            <column columnName="hto">
+                <columnTitle>Hashtag Oligo</columnTitle>
+                <fk>
+                    <fkDbSchema>singlecell</fkDbSchema>
+                    <fkTable>hashtag_oligos</fkTable>
+                    <fkColumnName>tag_name</fkColumnName>
+                    <fkDisplayColumnName useRawValue="true"/>
+                </fk>
+            </column>
+            <column columnName="buffer">
+
+            </column>
+            <column columnName="comment">
+
+            </column>
+            <column columnName="lsid">
+                <datatype>lsidtype</datatype>
+                <isReadOnly>true</isReadOnly>
+                <isHidden>true</isHidden>
+                <isUserEditable>false</isUserEditable>
+                <isUnselectable>true</isUnselectable>
+                <fk>
+                    <fkColumnName>ObjectUri</fkColumnName>
+                    <fkTable>Object</fkTable>
+                    <fkDbSchema>exp</fkDbSchema>
+                </fk>
+            </column>
+            <column columnName="container">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="createdby">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <nullable>true</nullable>
+                <scale>29</scale>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <nullable>true</nullable>
+                <scale>29</scale>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
+    <table tableName="cdna_libraries" tableDbType="TABLE" useColumnOrder="true">
+        <javaCustomizer class="org.labkey.laboratory.query.LaboratoryTableCustomizer" />
+        <tableTitle>cDNA Libraries</tableTitle>
+        <titleColumn>rowid</titleColumn>
+        <columns>
+            <column columnName="rowid">
+                <columnTitle>Library Id</columnTitle>
+                <isHidden>false</isHidden>
+            </column>
+            <column columnName="sortId">
+                <columnTitle>Sort Id</columnTitle>
+                <fk>
+                    <fkDbSchema>singlecell</fkDbSchema>
+                    <fkTable>sorts</fkTable>
+                    <fkColumnName>rowid</fkColumnName>
+                </fk>
+                <nullable>false</nullable>
+            </column>
+            <column columnName="chemistry">
+
+            </column>
+            <column columnName="concentration">
+
+            </column>
+            <column columnName="plateId">
+                <nullable>false</nullable>
+            </column>
+            <column columnName="well">
+                <nullable>false</nullable>
+                <fk>
+                    <fkDbSchema>laboratory</fkDbSchema>
+                    <fkTable>96well_plate</fkTable>
+                    <fkColumnName>well</fkColumnName>
+                    <fkDisplayColumnName useRawValue="true"/>
+                </fk>
+            </column>
+            <column columnName="readsetId">
+                <columnTitle>Readset (GEX)</columnTitle>
+                <fk>
+                    <fkDbSchema>sequenceanalysis</fkDbSchema>
+                    <fkTable>sequence_readsets</fkTable>
+                    <fkColumnName>rowid</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="tcrReadsetId">
+                <columnTitle>Readset (TCR)</columnTitle>
+                <fk>
+                    <fkDbSchema>sequenceanalysis</fkDbSchema>
+                    <fkTable>sequence_readsets</fkTable>
+                    <fkColumnName>rowid</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="hashingReadsetId">
+                <columnTitle>Readset (Cell Hashing)</columnTitle>
+                <fk>
+                    <fkDbSchema>sequenceanalysis</fkDbSchema>
+                    <fkTable>sequence_readsets</fkTable>
+                    <fkColumnName>rowid</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="citeseqReadsetId">
+                <columnTitle>Readset (CITE-Seq)</columnTitle>
+                <fk>
+                    <fkDbSchema>sequenceanalysis</fkDbSchema>
+                    <fkTable>sequence_readsets</fkTable>
+                    <fkColumnName>rowid</fkColumnName>
+                </fk>
+            </column>
+            <column columnName="citeseqpanel">
+                <columnTitle>Cite-Seq Panel</columnTitle>
+                <fk>
+                    <fkDbSchema>singlecell</fkDbSchema>
+                    <fkTable>citeseq_panel_names</fkTable>
+                    <fkColumnName>name</fkColumnName>
+                    <fkDisplayColumnName useRawValue="true"/>
+                </fk>
+            </column>
+            <column columnName="comment">
+
+            </column>
+            <column columnName="status">
+
+            </column>
+            <column columnName="lsid">
+                <datatype>lsidtype</datatype>
+                <isReadOnly>true</isReadOnly>
+                <isHidden>true</isHidden>
+                <isUserEditable>false</isUserEditable>
+                <isUnselectable>true</isUnselectable>
+                <fk>
+                    <fkColumnName>ObjectUri</fkColumnName>
+                    <fkTable>Object</fkTable>
+                    <fkDbSchema>exp</fkDbSchema>
+                </fk>
+            </column>
+            <column columnName="container">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="createdby">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <nullable>true</nullable>
+                <scale>29</scale>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <nullable>true</nullable>
+                <scale>29</scale>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+        <buttonBarOptions includeStandardButtons="true">
+            <includeScript>laboratory/buttons.js</includeScript>
+            <item text="Insert" permission="INSERT" iconCls="plus">
+                <item>
+                    <item text="Import 10x">
+                        <onClick>Laboratory.buttonHandlers.importDataHandlerForView(dataRegionName, 'singlecell', 'poolImport')</onClick>
+                    </item>
+                </item>
+            </item>
+            <item hidden="true">
+                <originalText>Insert</originalText>
+            </item>
+            <item hidden="true">
+                <originalText>Charts</originalText>
+            </item>
+        </buttonBarOptions>
+    </table>
+    <table tableName="stim_types" tableDbType="TABLE" useColumnOrder="true">
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
+        <tableTitle>Peptides/Stims</tableTitle>
+        <columns>
+            <column columnName="rowid">
+                <columnTitle>Row Id</columnTitle>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="name">
+                <columnTitle>Peptide/Stim</columnTitle>
+            </column>
+            <column columnName="category">
+                <columnTitle>Category</columnTitle>
+            </column>
+            <column columnName="type">
+                <columnTitle>Type</columnTitle>
+            </column>
+            <column columnName="container">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="createdby">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <nullable>true</nullable>
+                <scale>29</scale>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <nullable>true</nullable>
+                <scale>29</scale>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
+    <table tableName="assay_types" tableDbType="TABLE" useColumnOrder="true">
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
+        <tableTitle>Single Cell Assay Types</tableTitle>
+        <columns>
+            <column columnName="rowid">
+                <columnTitle>Row Id</columnTitle>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="name">
+                <columnTitle>Assay Name</columnTitle>
+            </column>
+            <column columnName="treatment">
+                <columnTitle>Treatment</columnTitle>
+            </column>
+            <column columnName="description">
+                <columnTitle>Description</columnTitle>
+            </column>
+            <column columnName="container">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="createdby">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <nullable>true</nullable>
+                <scale>29</scale>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <nullable>true</nullable>
+                <scale>29</scale>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
+    <table tableName="citeseq_panels" tableDbType="TABLE" useColumnOrder="true">
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
+        <tableTitle>CITE-Seq Panels</tableTitle>
+        <columns>
+            <column columnName="rowid">
+                <columnTitle>Row Id</columnTitle>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="name">
+                <columnTitle>Panel Name</columnTitle>
+            </column>
+            <column columnName="antibody">
+                <columnTitle>Marker/Antigen</columnTitle>
+                <fk>
+                    <fkDbSchema>singlecell</fkDbSchema>
+                    <fkTable>citeseq_antibodies</fkTable>
+                    <fkColumnName>antibodyName</fkColumnName>
+                    <fkDisplayColumnName useRawValue="true"/>
+                </fk>
+            </column>
+            <column columnName="markerLabel">
+                <columnTitle>Marker/Antigen Label In Panel</columnTitle>
+                <description>If the desired label is different than the default label for this marker, enter a value</description>
+            </column>
+            <column columnName="container">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="createdby">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <nullable>true</nullable>
+                <scale>29</scale>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <nullable>true</nullable>
+                <scale>29</scale>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
+    <table tableName="citeseq_antibodies" tableDbType="TABLE" useColumnOrder="true">
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
+        <tableTitle>CITE-Seq Antibodies</tableTitle>
+        <columns>
+            <column columnName="rowid">
+                <columnTitle>Row Id</columnTitle>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="antibodyName">
+                <columnTitle>Antibody Name</columnTitle>
+            </column>
+            <column columnName="markerName">
+                <columnTitle>Marker/Antigen Name</columnTitle>
+            </column>
+            <column columnName="markerLabel">
+                <columnTitle>Marker/Antigen Label</columnTitle>
+            </column>
+            <column columnName="cloneName">
+                <columnTitle>Clone Name</columnTitle>
+            </column>
+            <column columnName="vendor">
+                <columnTitle>Vendor</columnTitle>
+            </column>
+            <column columnName="productId">
+                <columnTitle>Product Id</columnTitle>
+            </column>
+            <column columnName="barcodeName">
+                <columnTitle>Barcode Name</columnTitle>
+                <fk>
+                    <fkDbSchema>sequenceanalysis</fkDbSchema>
+                    <fkTable>barcodes</fkTable>
+                    <fkColumnName>tag_name</fkColumnName>
+                    <fkDisplayColumnName useRawValue="true"/>
+                </fk>
+            </column>
+            <column columnName="adaptersequence">
+                <columnTitle>Adapter Sequence</columnTitle>
+                <inputType>textarea</inputType>
+            </column>
+            <column columnName="container">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="createdby">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <nullable>true</nullable>
+                <scale>29</scale>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <nullable>true</nullable>
+                <scale>29</scale>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
+</tables>

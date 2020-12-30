@@ -1,0 +1,26 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" canOverride="true">
+    <columns>
+        <column name="rowId" />
+        <column name="sampleId" />
+        <column name="sampleId/subjectId" />
+        <column name="sampleId/sampledate" />
+        <column name="sampleId/stim" />
+        <column name="sampleId/tissue" />
+        <column name="sampleId/treatment" />
+        <column name="population" />
+        <column name="replicate" />
+        <column name="cells" />
+        <column name="hto" />
+        <column name="plateId" />
+        <column name="well" />
+        <column name="buffer" />
+        <column name="comment" />
+        <column name="status" />
+        <column name="workbook" />
+        <column name="processingRequested" />
+    </columns>
+    <sorts>
+        <sort column="plateId" descending="false"/>
+        <sort column="well/addressByColumn"/>
+    </sorts>
+</customView>

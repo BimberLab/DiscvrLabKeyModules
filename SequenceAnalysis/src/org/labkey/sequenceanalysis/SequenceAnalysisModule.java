@@ -15,8 +15,8 @@
 
 package org.labkey.sequenceanalysis;
 
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
@@ -40,12 +40,24 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
-import org.labkey.sequenceanalysis.analysis.*;
+import org.labkey.sequenceanalysis.analysis.BamCleanupHandler;
+import org.labkey.sequenceanalysis.analysis.BamHaplotypeHandler;
+import org.labkey.sequenceanalysis.analysis.CombineStarGeneCountsHandler;
+import org.labkey.sequenceanalysis.analysis.CombineSubreadGeneCountsHandler;
+import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
+import org.labkey.sequenceanalysis.analysis.HaplotypeCallerHandler;
+import org.labkey.sequenceanalysis.analysis.LiftoverHandler;
+import org.labkey.sequenceanalysis.analysis.ListVcfSamplesHandler;
+import org.labkey.sequenceanalysis.analysis.MultiQCBamHandler;
+import org.labkey.sequenceanalysis.analysis.MultiQCHandler;
+import org.labkey.sequenceanalysis.analysis.PicardAlignmentMetricsHandler;
+import org.labkey.sequenceanalysis.analysis.RecalculateSequenceMetricsHandler;
+import org.labkey.sequenceanalysis.analysis.RnaSeqcHandler;
+import org.labkey.sequenceanalysis.analysis.SbtGeneCountHandler;
+import org.labkey.sequenceanalysis.analysis.UnmappedSequenceBasedGenotypeHandler;
 import org.labkey.sequenceanalysis.button.AddSraRunButton;
-import org.labkey.sequenceanalysis.button.CellHashingButton;
 import org.labkey.sequenceanalysis.button.ChangeReadsetStatusButton;
 import org.labkey.sequenceanalysis.button.ChangeReadsetStatusForAnalysesButton;
-import org.labkey.sequenceanalysis.button.CiteSeqButton;
 import org.labkey.sequenceanalysis.button.ReprocessLibraryButton;
 import org.labkey.sequenceanalysis.button.RunMultiQCButton;
 import org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisJob;
@@ -72,7 +84,6 @@ import org.labkey.sequenceanalysis.run.alignment.BWASWWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWAWrapper;
 import org.labkey.sequenceanalysis.run.alignment.Bowtie2Wrapper;
 import org.labkey.sequenceanalysis.run.alignment.BowtieWrapper;
-import org.labkey.sequenceanalysis.run.alignment.CellRangerWrapper;
 import org.labkey.sequenceanalysis.run.alignment.GSnapWrapper;
 import org.labkey.sequenceanalysis.run.alignment.MosaikWrapper;
 import org.labkey.sequenceanalysis.run.alignment.StarWrapper;
@@ -165,7 +176,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
     @Override
     public Double getSchemaVersion()
     {
-        return 12.323;
+        return 12.324;
     }
 
     @Override
@@ -251,12 +262,9 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new BWAMemWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new BWAWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new BWASWWrapper.Provider());
-        //not compatible with CollectAlignmentSummaryMetrics, so deprecate
-        //SequencePipelineService.get().registerPipelineStep(new LastzWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new MosaikWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new GSnapWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new StarWrapper.Provider());
-        SequencePipelineService.get().registerPipelineStep(new CellRangerWrapper.Provider());
 
         //de novo assembly
         SequencePipelineService.get().registerPipelineStep(new TrinityRunner.Provider());
@@ -329,9 +337,6 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new DepthOfCoverageHandler());
         SequenceAnalysisService.get().registerFileHandler(new MultiAllelicPositionsHandler());
         SequenceAnalysisService.get().registerFileHandler(new RecalculateSequenceMetricsHandler());
-        SequenceAnalysisService.get().registerFileHandler(new CellRangerReanalysisHandler());
-        SequenceAnalysisService.get().registerFileHandler(new CellRangerAggrHandler());
-        SequenceAnalysisService.get().registerFileHandler(new CellRangerRawDataHandler());
         SequenceAnalysisService.get().registerFileHandler(new ListVcfSamplesHandler());
         SequenceAnalysisService.get().registerFileHandler(new MultiQCBamHandler());
         SequenceAnalysisService.get().registerFileHandler(new GenomicsDBImportHandler());
@@ -339,8 +344,6 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new MergeLoFreqVcfHandler());
 
         SequenceAnalysisService.get().registerReadsetHandler(new MultiQCHandler());
-        SequenceAnalysisService.get().registerReadsetHandler(new CellHashingHandler());
-        SequenceAnalysisService.get().registerReadsetHandler(new CiteSeqHandler());
 
         //ObjectFactory.Registry.register(AnalysisModelImpl.class, new UnderscoreBeanObjectFactory(AnalysisModelImpl.class));
         //ObjectFactory.Registry.register(SequenceReadsetImpl.class, new UnderscoreBeanObjectFactory(SequenceReadsetImpl.class));
@@ -385,8 +388,6 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
         LDKService.get().registerQueryButton(new AddSraRunButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS);
         LDKService.get().registerQueryButton(new RunMultiQCButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS);
-        LDKService.get().registerQueryButton(new CellHashingButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS);
-        LDKService.get().registerQueryButton(new CiteSeqButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS);
 
         LDKService.get().registerQueryButton(new ChangeReadsetStatusForAnalysesButton(), "sequenceanalysis", "sequence_analyses");
         LDKService.get().registerQueryButton(new ChangeReadsetStatusButton(), "sequenceanalysis", "sequence_readsets");

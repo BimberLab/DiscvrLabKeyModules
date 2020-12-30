@@ -7,8 +7,8 @@ import htsjdk.tribble.index.IndexFactory;
 import htsjdk.variant.vcf.VCFCodec;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -41,7 +41,6 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.view.UnauthorizedException;
-import org.labkey.sequenceanalysis.analysis.CellHashingHandler;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
@@ -51,6 +50,7 @@ import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 import org.labkey.sequenceanalysis.run.util.GxfSorter;
 import org.labkey.sequenceanalysis.run.util.IndexFeatureFileWrapper;
 import org.labkey.sequenceanalysis.run.util.TabixRunner;
+import org.labkey.sequenceanalysis.util.FastqMerger;
 import org.labkey.sequenceanalysis.util.ReferenceLibraryHelperImpl;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
@@ -452,18 +452,6 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     }
 
     @Override
-    public File writeAllCellHashingBarcodes(File webserverDir, User u, Container c) throws PipelineJobException
-    {
-        return CellHashingHandler.writeAllBarcodes(CellHashingHandler.BARCODE_TYPE.hashing, webserverDir, u, c);
-    }
-
-    @Override
-    public File writeAllCiteSeqBarcodes(File webserverDir, User u, Container c) throws PipelineJobException
-    {
-        return CellHashingHandler.writeAllBarcodes(CellHashingHandler.BARCODE_TYPE.citeseq, webserverDir, u, c);
-    }
-
-    @Override
     public String createReferenceLibrary(List<Integer> sequenceIds, Container c, User u, String name, String assemblyId, String description, boolean skipCacheIndexes, boolean skipTriggers) throws IOException
     {
         return createReferenceLibrary(sequenceIds, c, u, name, assemblyId, description, skipCacheIndexes, skipTriggers, null);
@@ -519,5 +507,12 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         {
             throw new IllegalArgumentException("Unexpected input file type, cannot index: " + input.getName());
         }
+    }
+
+    @Override
+    public void mergeFastqFiles(File output, List<File> inputs, Logger log) throws PipelineJobException
+    {
+        FastqMerger merger = new FastqMerger(log);
+        merger.mergeFiles(output, inputs);
     }
 }

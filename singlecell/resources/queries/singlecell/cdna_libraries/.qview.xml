@@ -1,0 +1,29 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" canOverride="true">
+    <columns>
+        <column name="rowId" />
+        <column name="sortId" />
+        <column name="sortId/sampleId/subjectId" />
+        <column name="sortId/sampleId/date" />
+        <column name="sortId/sampleId/stim" />
+        <column name="sortId/sampleId/treatment" />
+        <column name="sortId/sampleId/tissue" />
+        <column name="sortId/population" />
+        <column name="sortId/replicate" />
+        <column name="sortId/cells" />
+        <column name="sortId/hto" />
+        <column name="plateId" />
+        <column name="well" />
+        <column name="readsetId" />
+        <column name="tcrReadsetId" />
+        <column name="hashingReadsetId" />
+        <column name="citeseqReadsetId" />
+        <column name="comment" />
+        <column name="citeseqpanel" />
+        <column name="status" />
+        <column name="workbook" />
+    </columns>
+    <sorts>
+        <sort column="plateId" descending="false"/>
+        <sort column="well/addressByColumn"/>
+    </sorts>
+</customView>
