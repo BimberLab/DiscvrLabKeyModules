@@ -350,6 +350,10 @@
         <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <tableTitle>Peptides/Stims</tableTitle>
         <columns>
+            <column columnName="rowid">
+                <columnTitle>Row Id</columnTitle>
+                <isHidden>true</isHidden>
+            </column>
             <column columnName="name">
                 <columnTitle>Peptide/Stim</columnTitle>
             </column>
@@ -390,6 +394,10 @@
         <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <tableTitle>Single Cell Assay Types</tableTitle>
         <columns>
+            <column columnName="rowid">
+                <columnTitle>Row Id</columnTitle>
+                <isHidden>true</isHidden>
+            </column>
             <column columnName="name">
                 <columnTitle>Assay Name</columnTitle>
             </column>
