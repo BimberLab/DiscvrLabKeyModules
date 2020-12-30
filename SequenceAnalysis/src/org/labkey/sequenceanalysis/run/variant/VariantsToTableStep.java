@@ -59,10 +59,10 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-EMD"), "emd", "Error on Missing Data", "If checked, the tool will error is any variants are missing the requested fields", "checkbox", new JSONObject(){{
                         put("checked", false);
                     }}, false),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--showFiltered"), "showFiltered", "Show Filtered Data", "If checked, rows that are filtered will be included", "checkbox", new JSONObject(){{
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--show-filtered"), "showFiltered", "Show Filtered Data", "If checked, rows that are filtered will be included", "checkbox", new JSONObject(){{
                         put("checked", false);
                     }}, false),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--splitMultiAllelic"), "splitMultiAllelic", "Split Multi Allelic", "If checked, sites with multiple alleles will be split into separate rows in the output table", "checkbox", new JSONObject(){{
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--split-multi-allelic"), "splitMultiAllelic", "Split Multi Allelic", "If checked, sites with multiple alleles will be split into separate rows in the output table", "checkbox", new JSONObject(){{
                         put("checked", false);
                     }}, false),
                     ToolParameterDescriptor.create("fields", "Fields", "Choose the fields to display.  These should match fields available in the VCF, which will vary file to file.", "sequenceanalysis-variantfieldselector", null, null),

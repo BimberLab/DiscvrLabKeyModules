@@ -63,6 +63,7 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
 
     private static final String OUTPUT_GENBANK = "outputGenbank";
     private static final String DESIGN_PRIMERS = "designPrimers";
+    private static final String BACKBONE_SEARCH = "backboneSearch";
 
     public static class Provider extends AbstractAnalysisStepProvider<TagPcrSummaryStep>
     {
@@ -91,7 +92,11 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
                     }}, 3),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--include-sa"), "include-sa", "Include Supplemental Alignments", "If checked, alignments with the SA supplemental alignment tag will be parsed, and these alignments inspected.", "checkbox", new JSONObject(){{
 
-                    }}, false)
+                    }}, false),
+                    ToolParameterDescriptor.create(BACKBONE_SEARCH, "Backbone Search Strings", "An optional comma-separated list of search strings to use to mark vector backbone.", "textarea", new JSONObject(){{
+                        put("height", 100);
+                        put("width", 400);
+                    }}, null)
             ), null, null);
         }
 
@@ -150,6 +155,7 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
 
         boolean designPrimers = getProvider().getParameterByName(DESIGN_PRIMERS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true);
         boolean outputGenbank = getProvider().getParameterByName(OUTPUT_GENBANK).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true);
+        String backboneSearch = StringUtils.trimToNull(getProvider().getParameterByName(BACKBONE_SEARCH).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null));
 
         String basename = SequenceAnalysisService.get().getUnzippedBaseName(inputBam.getName());
         File siteTable = new File(outputDir, basename + ".sites.txt");
@@ -167,7 +173,16 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
         }
         File metrics = getMetricsFile(inputBam, outputDir);
 
-        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), siteTable, primerTable, genbank, metrics, blastDbs.get(referenceGenome.getGenomeId()), getClientCommandArgs());
+        List<String> extraArgs = new ArrayList<>(getClientCommandArgs());
+
+        if (backboneSearch != null) {
+            Arrays.stream(backboneSearch.split(",")).forEach(s -> {
+                extraArgs.add("-bs");
+                extraArgs.add(s);
+            });
+        }
+
+        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), siteTable, primerTable, genbank, metrics, blastDbs.get(referenceGenome.getGenomeId()), extraArgs);
 
         if (siteTable.exists())
         {

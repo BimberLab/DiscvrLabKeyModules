@@ -1,0 +1,12 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" canOverride="true">
+    <columns>
+        <column name="name" />
+        <column name="antibody" />
+        <column name="antibody/markerName" />
+        <column name="markerLabel" />
+        <column name="workbook" />
+    </columns>
+    <sorts>
+        <sort column="name" />
+    </sorts>
+</customView>

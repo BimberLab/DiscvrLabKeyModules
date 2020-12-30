@@ -9,7 +9,6 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -169,7 +168,7 @@ public class MosaikWrapper extends AbstractCommandWrapper
         {
 ////            'ma|mode' => 'm',
 
-            super("Mosaik", "Mosaik is suitable for longer reads and has the option to retain multiple hits per read. The only downside is that it can be slower. When this pipeline was first written, this aligner was preferred for sequence-based genotyping and similar applications which require retaining multiple hits. It supports paired end reads. The aligner is still good; however, Lastz also seems to perform well for SBT.", Arrays.asList(
+            super("Mosaik", "Mosaik is suitable for longer reads and has the option to retain multiple hits per read. The only downside is that it can be slower. When this pipeline was first written, this aligner was preferred for sequence-based genotyping and similar applications which require retaining multiple hits.", Arrays.asList(
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-om"), "output_multiple", "Retain All Hits", "If selected, all hits above thresholds will be reported. If not, only a single hit will be retained", "checkbox", new JSONObject()
                     {{
                             put("checked", true);

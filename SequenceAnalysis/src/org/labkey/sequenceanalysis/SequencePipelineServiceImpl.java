@@ -14,12 +14,10 @@ import org.labkey.api.reports.ExternalScriptEngineDefinition;
 import org.labkey.api.reports.LabKeyScriptEngineManager;
 import org.labkey.api.reports.RScriptEngineFactory;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
-import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.HasJobParams;
 import org.labkey.api.sequenceanalysis.pipeline.JobResourceSettings;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
-import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -28,7 +26,6 @@ import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.Pair;
-import org.labkey.sequenceanalysis.analysis.CellHashingHandler;
 import org.labkey.sequenceanalysis.pipeline.PipelineStepCtxImpl;
 import org.labkey.sequenceanalysis.pipeline.SequenceJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerFinalTask;
@@ -525,13 +522,5 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         }
 
         return output;
-    }
-
-    @Override
-    public File runCiteSeqCount(PipelineStepOutput output, @Nullable String outputCategory, Readset htoReadset, File htoList, File cellBarcodeList, File outputDir, String basename, Logger log, List<String> extraArgs, boolean doHtoFiltering, @Nullable Integer minCountPerCell, File localPipelineDir, @Nullable Integer editDistance, boolean scanEditDistances, Readset parentReadset, @Nullable Integer genomeId, boolean generateHtoCalls, boolean createOutputFiles, boolean useSeurat, boolean useMultiSeq) throws PipelineJobException
-    {
-        CellHashingHandler handler = new CellHashingHandler();
-
-        return handler.runCiteSeqCount(output, outputCategory, htoReadset, htoList, cellBarcodeList, outputDir, basename, log, extraArgs, doHtoFiltering, minCountPerCell, localPipelineDir, editDistance, scanEditDistances, parentReadset, genomeId, generateHtoCalls ? CellHashingHandler.BARCODE_TYPE.hashing : CellHashingHandler.BARCODE_TYPE.citeseq, createOutputFiles, useSeurat, useMultiSeq);
     }
 }
