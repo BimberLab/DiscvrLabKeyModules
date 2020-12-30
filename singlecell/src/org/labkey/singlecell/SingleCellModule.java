@@ -104,8 +104,6 @@ public class SingleCellModule extends ExtendedSimpleModule
     {
         super.doStartupAfterSpringConfig(moduleContext);
 
-        CellHashingService.setInstance(CellHashingServiceImpl.get());
-
         LaboratoryService.get().registerDataProvider(new SingleCellProvider(this));
         SequenceAnalysisService.get().registerDataProvider(new SingleCellProvider(this));
 
@@ -122,6 +120,8 @@ public class SingleCellModule extends ExtendedSimpleModule
 
     public static void registerPipelineSteps()
     {
+        CellHashingService.setInstance(CellHashingServiceImpl.get());
+
         SequencePipelineService.get().registerPipelineStep(new CellRangerWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new CellRangerVDJWrapper.VDJProvider());
 
