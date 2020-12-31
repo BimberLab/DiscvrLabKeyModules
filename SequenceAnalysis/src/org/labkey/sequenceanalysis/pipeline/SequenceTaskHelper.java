@@ -19,7 +19,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
@@ -249,8 +248,8 @@ public class SequenceTaskHelper implements PipelineContext
 
     public static void logModuleVersions(Logger log)
     {
-        log.info("SequenceAnalysis Module Version: " + ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getFormattedVersion() + " (r" + (ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getVcsRevision()) + ")");
-        log.info("Pipeline Module Version: " + ModuleLoader.getInstance().getModule("pipeline").getFormattedVersion() + " (r" + (ModuleLoader.getInstance().getModule("pipeline").getVcsRevision()) + ")");
+        log.info("SequenceAnalysis Module Version: " + ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getReleaseVersion() + " (r" + (ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getVcsRevision()) + ")");
+        log.info("Pipeline Module Version: " + ModuleLoader.getInstance().getModule("pipeline").getReleaseVersion() + " (r" + (ModuleLoader.getInstance().getModule("pipeline").getVcsRevision()) + ")");
         log.debug("java.io.tmpDir: " + System.getProperty("java.io.tmpdir"));
         try
         {
