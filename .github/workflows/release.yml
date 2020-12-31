@@ -1,0 +1,24 @@
+on:
+  release:
+    types: [created]
+name: Publish Release
+jobs:
+  generate:
+    name: Create release-artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Build DISCVR"
+        uses: bimberlabinternal/DevOps/githubActions/discvr-build@master
+        with:
+          artifactory_user: ${{secrets.artifactory_user}}
+          artifactory_password: ${{secrets.artifactory_password}}
+          # NOTE: permissions are limited on the default secrets.GITHUB_TOKEN, including updating workflows, so use a personal access token
+          github_token: ${{ secrets.PAT }}
+
+      - name: Upload Artifacts
+        if: github.event_name == 'release' && github.event.action == 'created'
+        uses: skx/github-action-publish-binaries@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: /lkDist/discvr/DISCVR-*
