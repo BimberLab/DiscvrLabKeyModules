@@ -320,7 +320,7 @@ SequenceAnalysis.Buttons = new function(){
                 'query.queryName': dataRegion.queryName,
                 dataRegionSelectionKey: 'query',
                 '.select': checked,
-                returnURL: window.location.pathname + window.location.search
+                returnUrl: window.location.pathname + window.location.search
             });
         },
 
