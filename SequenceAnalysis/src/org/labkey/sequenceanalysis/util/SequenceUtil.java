@@ -23,6 +23,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
@@ -560,6 +561,25 @@ public class SequenceUtil
         catch (IOException e)
         {
             throw new PipelineJobException(e);
+        }
+    }
+
+    public static void deleteFolderWithRm(Logger log, File directory) throws PipelineJobException
+    {
+        if (SystemUtils.IS_OS_WINDOWS)
+        {
+            try
+            {
+                FileUtils.deleteDirectory(directory);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+        else
+        {
+            new SimpleScriptWrapper(log).execute(Arrays.asList("rm", "-Rf", directory.getPath()));
         }
     }
 }

@@ -386,11 +386,14 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                 File scriptCopy = new File(ctx.getWorkingDirectory(), rmdScript.getName());
                 if (scriptCopy.exists())
                 {
-                    scriptCopy.delete();
+                    ctx.getLogger().debug("Re-using existing markdown file");
+                }
+                else
+                {
+                    IOUtil.copyFile(rmdScript, scriptCopy);
+                    rmdScript = scriptCopy;
                 }
 
-                IOUtil.copyFile(rmdScript, scriptCopy);
-                rmdScript = scriptCopy;
                 ctx.getFileManager().addIntermediateFile(rmdScript);
 
                 scriptCopy = new File(ctx.getWorkingDirectory(), wrapperScript.getName());
