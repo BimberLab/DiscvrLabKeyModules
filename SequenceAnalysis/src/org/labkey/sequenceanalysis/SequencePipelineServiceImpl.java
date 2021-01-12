@@ -353,6 +353,18 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     }
 
     @Override
+    public String getDockerCommand()
+    {
+        String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("DOCKER_EXE");
+        if (StringUtils.trimToNull(path) != null)
+        {
+            return path;
+        }
+
+        return "docker";
+    }
+
+    @Override
     public List<File> getSequenceJobInputFiles(PipelineJob job)
     {
         if (!(job instanceof SequenceJob))

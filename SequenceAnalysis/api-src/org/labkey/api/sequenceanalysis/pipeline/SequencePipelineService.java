@@ -88,6 +88,12 @@ abstract public class SequencePipelineService
 
     abstract public CommandWrapper getCommandWrapper(Logger log);
 
+    /**
+     * This allows instances to override the default docker exeutable. If DOCKER_EXE is provided in pipelineConfig.xml, this
+     * will be used. Otherise this defaults to 'docker'
+     */
+    abstract public String getDockerCommand();
+
     abstract public List<File> getSequenceJobInputFiles(PipelineJob job);
 
     /**
