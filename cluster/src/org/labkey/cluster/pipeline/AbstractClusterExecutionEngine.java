@@ -343,7 +343,7 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
         // iterate existing submissions to catch completed tasks and errors
         // regenerate this list in case status has otherwise changed
         jobs = getJobsToCheck(false, extraJobIds);
-        _log.info("found " + jobs.size() + " additional cluster jobs to check");
+        //_log.info("found " + jobs.size() + " additional cluster jobs to check");
 
         for (ClusterJob j : jobs)
         {
