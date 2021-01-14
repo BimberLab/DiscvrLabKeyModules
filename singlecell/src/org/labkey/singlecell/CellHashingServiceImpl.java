@@ -817,7 +817,8 @@ public class CellHashingServiceImpl extends CellHashingService
                 ToolParameterDescriptor.create("methods", "Calling Methods", "The set of methods to use in calling.", "ldk-simplecombo", new JSONObject(){{
                     put("multiSelect", true);
                     put("storeValues", StringUtils.join(Arrays.stream(CALLING_METHOD.values()).map(Enum::name).collect(Collectors.toList()), ";"));
-                    put("value", StringUtils.join(CALLING_METHOD.getDefaultMethodNames(), ";"));
+                    put("initialValues", StringUtils.join(CALLING_METHOD.getDefaultMethodNames(), ";"));
+                    put("delimiter", ";");
                 }}, null)
         ));
 

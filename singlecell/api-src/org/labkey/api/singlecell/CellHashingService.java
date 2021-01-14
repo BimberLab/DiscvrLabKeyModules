@@ -4,6 +4,7 @@ import au.com.bytecode.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -94,7 +95,12 @@ abstract public class CellHashingService
         public List<CALLING_METHOD> methods = CALLING_METHOD.getDefaultMethods();
         public String basename = null;
 
-        public static CellHashingParameters createFromJson(BARCODE_TYPE type, JSONObject params, Readset htoOrCiteseqReadset, @Nullable Readset parentReadset)
+        private CellHashingParameters()
+        {
+
+        }
+
+        public static CellHashingParameters createFromJson(BARCODE_TYPE type, JSONObject params, Readset htoOrCiteseqReadset, @Nullable Readset parentReadset) throws PipelineJobException
         {
             CellHashingParameters ret = new CellHashingParameters();
             ret.type = type;
@@ -104,8 +110,28 @@ abstract public class CellHashingService
             ret.htoOrCiteseqReadset = htoOrCiteseqReadset;
             ret.parentReadset = parentReadset;
 
-            //TODO
-            //ret.methods = params.optJSONArray("methods", true);
+            JSONArray methodsArr = params.optJSONArray("methods");
+            if (methodsArr != null)
+            {
+                List<CALLING_METHOD> methods = new ArrayList<>();
+                try
+                {
+                    Arrays.stream(methodsArr.toArray()).forEach(x -> {
+                        try
+                        {
+                            methods.add(CALLING_METHOD.valueOf(String.valueOf(x)));
+                        }
+                        catch (IllegalArgumentException e)
+                        {
+                            throw new IllegalArgumentException("Unknown calling method: " + x);
+                        }
+                    });
+                }
+                catch (IllegalArgumentException e)
+                {
+                    throw new PipelineJobException(e.getMessage(), e);
+                }
+            }
 
             return ret;
         }
@@ -154,8 +180,6 @@ abstract public class CellHashingService
             {
                 throw new IllegalStateException("Missing all barcode file");
             }
-
-            //TODO: more....
         }
 
         public List<String> getAllowableBarcodeNames() throws PipelineJobException
@@ -211,14 +235,19 @@ abstract public class CellHashingService
             this.isDefault = isDefault;
         }
 
+        public boolean isDefault()
+        {
+            return isDefault;
+        }
+
         public static List<CALLING_METHOD> getDefaultMethods()
         {
-            return Arrays.stream(values()).collect(Collectors.toList());
+            return Arrays.stream(values()).filter(CALLING_METHOD::isDefault).collect(Collectors.toList());
         }
 
         public static List<String> getDefaultMethodNames()
         {
-            return Arrays.stream(values()).map(Enum::name).collect(Collectors.toList());
+            return getDefaultMethods().stream().map(Enum::name).collect(Collectors.toList());
         }
     }
 

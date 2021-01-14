@@ -3899,7 +3899,7 @@ public class SequenceAnalysisController extends SpringActionController
                 return null;
             }
 
-            SequenceOutputHandler handler = SequenceAnalysisManager.get().getFileHandler(form.getHandlerClass(), form.getHandlerEnum());
+            SequenceOutputHandler<?> handler = SequenceAnalysisManager.get().getFileHandler(form.getHandlerClass(), form.getHandlerEnum());
             if (handler == null)
             {
                 errors.reject(ERROR_MSG, "Unknown handler: " + form.getHandlerClass());
