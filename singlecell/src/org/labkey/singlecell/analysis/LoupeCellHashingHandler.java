@@ -13,33 +13,36 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.singlecell.CellHashingServiceImpl;
 import org.labkey.singlecell.SingleCellModule;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
-public class SeuratCellHashingHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
+public class LoupeCellHashingHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
-    private FileType _fileType = new FileType(".seurat.rds", false);
-    public static final String CATEGORY = "Seurat Cell Hashing Calls";
+    private FileType _fileType = new FileType("cloupe", false);
+    public static String CATEGORY = "10x GEX Cell Hashing Calls";
 
-    public SeuratCellHashingHandler()
+    public LoupeCellHashingHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Seurat GEX/Cell Hashing", "This will run CiteSeqCount/MultiSeqClassifier to generate a sample-to-cellbarcode TSV based on the cell barcodes present in the saved Seurat object.", null, getDefaultParams());
+        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "CellRanger GEX/Cell Hashing", "This will run CiteSeqCount/cellhashR to generate a sample-to-cellbarcode TSV based on the filtered barcodes from CellRanger.", new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/CellRangerAggrTextarea.js")), getDefaultParams());
     }
 
     private static List<ToolParameterDescriptor> getDefaultParams()
     {
-        List<ToolParameterDescriptor> ret = new ArrayList<>();
-        ret.add(ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately..", "checkbox", new JSONObject()
-        {{
-            put("checked", true);
-        }}, false));
-
-        ret.addAll(CellHashingService.get().getDefaultHashingParams(true));
+        List<ToolParameterDescriptor> ret = new ArrayList<>(CellHashingService.get().getDefaultHashingParams(true));
+        ret.add(
+                ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
+                    put("checked", true);
+                }}, true)
+        );
 
         return ret;
     }
@@ -65,7 +68,7 @@ public class SeuratCellHashingHandler extends AbstractParameterizedOutputHandler
     @Override
     public SequenceOutputProcessor getProcessor()
     {
-        return new Processor();
+        return new LoupeCellHashingHandler.Processor();
     }
 
     @Override
@@ -105,7 +108,60 @@ public class SeuratCellHashingHandler extends AbstractParameterizedOutputHandler
             {
                 ctx.getLogger().info("processing file: " + so.getName());
 
-                File cellBarcodes = getCellBarcodesFromSeurat(so.getFile());
+                //find TSV:
+                File rawCellBarcodeWhitelistFile;
+                File barcodeDir = null;
+                for (String dirName : Arrays.asList("filtered_gene_bc_matrices", "filtered_feature_bc_matrix"))
+                {
+                    File f = new File(so.getFile().getParentFile(), dirName);
+                    if (f.exists())
+                    {
+                        barcodeDir = f;
+                        break;
+                    }
+                }
+
+                if (barcodeDir == null)
+                {
+                    //this might be a re-analysis loupe directory.  in this case, use the tsne projection.csv as the whitelist:
+                    File dir = new File(so.getFile().getParentFile(), "analysis");
+                    dir = new File(dir, "tsne");
+                    dir = new File(dir, "2_components");
+                    if (!dir.exists())
+                    {
+                        throw new PipelineJobException("Unable to find barcode or analysis directory: " + dir.getPath());
+                    }
+
+                    rawCellBarcodeWhitelistFile = new File(dir, "projection.csv");
+                }
+                //cellranger 2 format
+                else if ("filtered_gene_bc_matrices".equals(barcodeDir.getName()))
+                {
+                    File[] children = barcodeDir.listFiles(new FileFilter()
+                    {
+                        @Override
+                        public boolean accept(File pathname)
+                        {
+                            return pathname.isDirectory();
+                        }
+                    });
+
+                    if (children == null || children.length != 1)
+                    {
+                        throw new PipelineJobException("Expected to find a single subfolder under: " + barcodeDir.getPath());
+                    }
+
+                    rawCellBarcodeWhitelistFile = new File(children[0], "barcodes.tsv");
+                }
+                else
+                {
+                    rawCellBarcodeWhitelistFile = new File(barcodeDir, "barcodes.tsv.gz");
+                }
+
+                if (!rawCellBarcodeWhitelistFile.exists())
+                {
+                    throw new PipelineJobException("Unable to find file: " + rawCellBarcodeWhitelistFile.getPath());
+                }
 
                 Readset rs = ctx.getSequenceSupport().getCachedReadset(so.getReadset());
                 if (rs == null)
@@ -123,12 +179,12 @@ public class SeuratCellHashingHandler extends AbstractParameterizedOutputHandler
                     throw new PipelineJobException("Unable to find Hashing/Cite-seq readset for GEX readset: " + rs.getReadsetId());
                 }
 
-                CellHashingService.CellHashingParameters parameters = CellHashingService.CellHashingParameters.createFromJson(CellHashingService.BARCODE_TYPE.hashing, ctx.getParams(), null, rs);
-                parameters.outputCategory = CATEGORY;
+                CellHashingService.CellHashingParameters parameters = CellHashingService.CellHashingParameters.createFromJson(CellHashingService.BARCODE_TYPE.hashing, ctx.getParams(), rs, null);
+                parameters.cellBarcodeWhitelistFile = CellHashingServiceImpl.get().createCellBarcodeWhitelistFromLoupe(ctx, rawCellBarcodeWhitelistFile);
                 parameters.genomeId = so.getLibrary_id();
-                parameters.cellBarcodeWhitelistFile = cellBarcodes;
+                parameters.outputCategory = CATEGORY;
 
-                CellHashingService.get().processCellHashingOrCiteSeq(ctx, parameters);
+                CellHashingService.get().processCellHashingOrCiteSeq(ctx.getFileManager(), ctx.getOutputDir(), ctx.getSourceDirectory(), ctx.getLogger(), parameters);
             }
 
             ctx.addActions(action);
@@ -145,16 +201,5 @@ public class SeuratCellHashingHandler extends AbstractParameterizedOutputHandler
                 }
             }
         }
-    }
-
-    public static File getCellBarcodesFromSeurat(File seuratObj) throws PipelineJobException
-    {
-        File barcodes = new File(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds", "cellBarcodes.csv"));
-        if (!barcodes.exists())
-        {
-            throw new PipelineJobException("Unable to find expected cell barcodes file.  This might indicate the seurat object was created with an older version of the pipeline.  Expected: " + barcodes.getPath());
-        }
-
-        return barcodes;
     }
 }

@@ -29,7 +29,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.singlecell.analysis.CellHashingHandler;
-import org.labkey.singlecell.analysis.CellRangerCellHashingHandler;
+import org.labkey.singlecell.analysis.LoupeCellHashingHandler;
 import org.labkey.singlecell.analysis.CellRangerRawDataHandler;
 import org.labkey.singlecell.analysis.CellRangerSeuratHandler;
 import org.labkey.singlecell.analysis.CiteSeqHandler;
@@ -128,7 +128,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerReadsetHandler(new CellHashingHandler());
         SequenceAnalysisService.get().registerReadsetHandler(new CiteSeqHandler());
 
-        SequenceAnalysisService.get().registerFileHandler(new CellRangerCellHashingHandler());
+        SequenceAnalysisService.get().registerFileHandler(new LoupeCellHashingHandler());
         SequenceAnalysisService.get().registerFileHandler(new SeuratCellHashingHandler());
         SequenceAnalysisService.get().registerFileHandler(new SeuratCiteSeqHandler());
         SequenceAnalysisService.get().registerFileHandler(new CellRangerSeuratHandler());

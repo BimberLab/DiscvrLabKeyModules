@@ -389,6 +389,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         _intermediateFiles.add(f);
     }
 
+    @Override
     public void removeIntermediateFile(File f)
     {
         _job.getLogger().debug("removing intermediate file: " + f.getPath());

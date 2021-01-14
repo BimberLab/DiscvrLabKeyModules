@@ -543,7 +543,7 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
 
             if (CellHashingService.get().usesCellHashing(ctx.getSequenceSupport(), ctx.getSourceDirectory()))
             {
-                runCellHashing(ctx, inputFiles, seuratObj, action);
+                runCellHashing(ctx, inputFiles, seuratObj);
             }
             else
             {
@@ -593,32 +593,25 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                     throw new PipelineJobException("Readset lacks a rowId for outputfile: " + so.getRowid());
                 }
 
-                File barcodes = subsetBarcodes(allCellBarcodes, barcodePrefix);
-                ctx.getFileManager().addIntermediateFile(barcodes);
+                File cellbarcodeWhitelistFile = subsetBarcodes(allCellBarcodes, barcodePrefix);
+                ctx.getFileManager().addIntermediateFile(cellbarcodeWhitelistFile);
 
                 // write readset-specific HTO list
-                Integer citeseqReadsetId = CellHashingServiceImpl.getCachedCiteSeqReadsetMap(ctx.getSequenceSupport()).get(rs.getReadsetId());
-                if (citeseqReadsetId == null)
-                {
-                    ctx.getLogger().info("No cite-seq readset for: " + rs.getReadsetId() + ", this probably indicates either hashing is not used or the hashing data is not available.");
-                    continue;
-                }
-
-                Readset citeseqReadset = ctx.getSequenceSupport().getCachedReadset(citeseqReadsetId);
-                if (citeseqReadset == null)
-                {
-                    throw new PipelineJobException("Unable to find Cite-seq readset for GEX readset: " + rs.getReadsetId());
-                }
-
-                File perReadsetAdts = CellHashingServiceImpl.getValidCiteSeqBarcodeFile(ctx.getSourceDirectory(), rs.getReadsetId());
+                File perReadsetAdts = CellHashingServiceImpl.get().getValidCiteSeqBarcodeFile(ctx.getSourceDirectory(), rs.getReadsetId());
                 long adtsForReadset = !perReadsetAdts.exists() ? 0 : SequencePipelineService.get().getLineCount(perReadsetAdts) - 1;
-
                 if (adtsForReadset > 0)
                 {
                     ctx.getLogger().info("Total ADTs for readset: " + adtsForReadset);
-                    File countMatrix = CellRangerCellHashingHandler.processBarcodeFile(ctx, barcodes, rs, citeseqReadset, so.getLibrary_id(), action, getClientCommandArgs(ctx.getParams()), false, SeuratCiteSeqHandler.CATEGORY, true, perReadsetAdts, false);
+                    CellHashingService.CellHashingParameters parameters = CellHashingService.CellHashingParameters.createFromJson(CellHashingService.BARCODE_TYPE.citeseq, ctx.getParams(), null, rs);
+                    parameters.cellBarcodeWhitelistFile = cellbarcodeWhitelistFile;
+                    parameters.genomeId = so.getLibrary_id();
+                    parameters.outputCategory = SeuratCiteSeqHandler.CATEGORY;
+                    parameters.allBarcodeFile = perReadsetAdts;
+
+                    File countMatrix = CellHashingService.get().processCellHashingOrCiteSeqForParent(rs, ctx.getFileManager(), ctx, parameters);
                     citeSeqData.put(barcodePrefix, countMatrix.getParentFile());
-                    File perReadsetAdtMetadata = CellHashingServiceImpl.getValidCiteSeqBarcodeMetadataFile(ctx.getSourceDirectory(), rs.getReadsetId());
+
+                    File perReadsetAdtMetadata = CellHashingServiceImpl.get().getValidCiteSeqBarcodeMetadataFile(ctx.getSourceDirectory(), rs.getReadsetId());
                     markerMetadata.put(barcodePrefix, perReadsetAdtMetadata);
                 }
                 else
@@ -640,7 +633,7 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
             }
         }
 
-        private void runCellHashing(JobContext ctx, List<SequenceOutputFile> inputFiles, File seuratObj, RecordedAction action) throws PipelineJobException
+        private void runCellHashing(JobContext ctx, List<SequenceOutputFile> inputFiles, File seuratObj) throws PipelineJobException
         {
             ctx.getLogger().info("Adding cell hashing");
 
@@ -678,17 +671,15 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                     throw new PipelineJobException("Unable to find hashing readset for GEX readset: " + rs.getReadsetId());
                 }
 
-                File perReadsetHtos = new File(allCellBarcodes.getParentFile(), "allowableHtos." + barcodePrefix + ".txt");
-                int htosForReadset = 0;
-                try (CSVReader reader = new CSVReader(Readers.getReader(CellHashingServiceImpl.get().getCDNAInfoFile(ctx.getSourceDirectory())), '\t'); CSVWriter bcWriter = new CSVWriter(PrintWriters.getPrintWriter(perReadsetHtos), ',', CSVWriter.NO_QUOTE_CHARACTER))
+                List<String> htosPerReadset = new ArrayList<>();
+                try (CSVReader reader = new CSVReader(Readers.getReader(CellHashingServiceImpl.get().getCDNAInfoFile(ctx.getSourceDirectory())), '\t'))
                 {
                     String[] line;
                     while ((line = reader.readNext()) != null)
                     {
                         if (hashingReadsetId.toString().equals(line[5]))
                         {
-                            htosForReadset++;
-                            bcWriter.writeNext(new String[]{line[8], line[7]});
+                            htosPerReadset.add(line[7]);
                         }
                     }
                 }
@@ -697,12 +688,19 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                     throw new PipelineJobException(e);
                 }
 
-                if (htosForReadset > 1)
+                if (htosPerReadset.size() > 1)
                 {
-                    ctx.getLogger().info("Total HTOs for readset: " + htosForReadset);
-                    finalCalls.put(barcodePrefix, CellRangerCellHashingHandler.processBarcodeFile(ctx, barcodes, rs, htoReadset, so.getLibrary_id(), action, getClientCommandArgs(ctx.getParams()), false, SeuratCellHashingHandler.CATEGORY, true, perReadsetHtos, true));
+                    ctx.getLogger().info("Total HTOs for readset: " + htosPerReadset.size());
+
+                    CellHashingService.CellHashingParameters parameters = CellHashingService.CellHashingParameters.createFromJson(CellHashingService.BARCODE_TYPE.hashing, ctx.getParams(), htoReadset, rs);
+                    parameters.genomeId = so.getLibrary_id();
+                    parameters.allBarcodeFile = allCellBarcodes;
+                    parameters.allowableBarcodes = htosPerReadset;
+                    parameters.outputCategory = SeuratCellHashingHandler.CATEGORY;
+
+                    finalCalls.put(barcodePrefix, CellHashingService.get().processCellHashingOrCiteSeq(ctx.getFileManager(), ctx.getOutputDir(), ctx.getSourceDirectory(), ctx.getLogger(), parameters));
                 }
-                else if (htosForReadset == 1)
+                else if (htosPerReadset.size() == 1)
                 {
                     ctx.getLogger().info("Only single HTO used for lane, skipping cell hashing calling");
                 }

@@ -93,15 +93,11 @@ public class SeuratCiteSeqHandler extends AbstractParameterizedOutputHandler<Seq
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, SequenceOutputHandler.JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
             RecordedAction action = new RecordedAction(getName());
-
-            Map<Integer, Integer> readsetToCiteSeq = CellHashingServiceImpl.getCachedCiteSeqReadsetMap(ctx.getSequenceSupport());
-            ctx.getLogger().debug("total cached readset to GEX/citeseq pairs: " + readsetToCiteSeq.size());
-
             for (SequenceOutputFile so : inputFiles)
             {
                 ctx.getLogger().info("processing file: " + so.getName());
 
-                File barcodes = SeuratCellHashingHandler.getBarcodesFromSeurat(so.getFile());
+                File cellBarcodes = SeuratCellHashingHandler.getCellBarcodesFromSeurat(so.getFile());
 
                 Readset rs = ctx.getSequenceSupport().getCachedReadset(so.getReadset());
                 if (rs == null)
@@ -113,14 +109,15 @@ public class SeuratCiteSeqHandler extends AbstractParameterizedOutputHandler<Seq
                     throw new PipelineJobException("Readset lacks a rowId for outputfile: " + so.getRowid());
                 }
 
-                Readset citeseqReadset = ctx.getSequenceSupport().getCachedReadset(readsetToCiteSeq.get(rs.getReadsetId()));
-                if (citeseqReadset == null)
-                {
-                    throw new PipelineJobException("Unable to find Cite-seq readset for GEX readset: " + rs.getReadsetId());
-                }
+                File adtWhitelist = CellHashingServiceImpl.get().getValidCiteSeqBarcodeFile(ctx.getSourceDirectory(), so.getReadset());
 
-                File adtWhitelist = CellHashingServiceImpl.getValidCiteSeqBarcodeFile(ctx.getSourceDirectory(), so.getReadset());
-                File citeSeqMatrix = CellRangerCellHashingHandler.processBarcodeFile(ctx, barcodes, rs, citeseqReadset, so.getLibrary_id(), action, getClientCommandArgs(ctx.getParams()), false, CATEGORY, true, adtWhitelist, false);
+                CellHashingService.CellHashingParameters parameters = CellHashingService.CellHashingParameters.createFromJson(CellHashingService.BARCODE_TYPE.citeseq, ctx.getParams(), null, rs);
+                parameters.genomeId = so.getLibrary_id();
+                parameters.outputCategory = CATEGORY;
+                parameters.cellBarcodeWhitelistFile = cellBarcodes;
+                parameters.allBarcodeFile = adtWhitelist;
+
+                File citeSeqMatrix = CellHashingService.get().processCellHashingOrCiteSeqForParent(rs, ctx.getFileManager(), ctx, parameters);
                 if (!citeSeqMatrix.exists())
                 {
                     throw new PipelineJobException("Unable to find expected file: " + citeSeqMatrix.getPath());

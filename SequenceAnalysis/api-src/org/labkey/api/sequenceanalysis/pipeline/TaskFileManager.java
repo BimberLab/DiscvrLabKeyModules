@@ -34,11 +34,9 @@ import java.util.Map;
  * Date: 6/20/2014
  * Time: 5:38 PM
  */
-public interface TaskFileManager
+public interface TaskFileManager extends PipelineOutputTracker
 {
     public void addSequenceOutput(SequenceOutputFile o);
-
-    public void addSequenceOutput(File file, String label, String category, @Nullable Integer readsetId, @Nullable Integer analysisId, @Nullable Integer genomeId, @Nullable String description);
 
     public void addOutput(RecordedAction action, String role, File file);
 
@@ -56,10 +54,6 @@ public interface TaskFileManager
     public boolean isDeleteIntermediateFiles();
 
     public boolean isCopyInputsLocally();
-
-    public void addIntermediateFile(File f);
-
-    public void addIntermediateFiles(Collection<File> files);
 
     public void removeIntermediateFile(File f);
 
