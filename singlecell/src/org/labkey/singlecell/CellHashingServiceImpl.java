@@ -340,6 +340,7 @@ public class CellHashingServiceImpl extends CellHashingService
     @Override
     public File processCellHashingOrCiteSeqForParent(Readset parentReadset, PipelineOutputTracker output, SequenceOutputHandler.JobContext ctx, CellHashingParameters parameters) throws PipelineJobException
     {
+        parameters.validate(true);
         Map<Integer, Integer> readsetToHashing = getCachedHashingReadsetMap(ctx.getSequenceSupport());
         if (readsetToHashing.isEmpty())
         {
@@ -348,7 +349,7 @@ public class CellHashingServiceImpl extends CellHashingService
         }
 
         //prepare whitelist of barcodes, based on cDNA records
-        File htoBarcodeWhitelist = parameters.allBarcodeFile;
+        File htoBarcodeWhitelist = parameters.getHtoOrCiteSeqBarcodeFile();
         if (!htoBarcodeWhitelist.exists())
         {
             throw new PipelineJobException("Unable to find file: " + htoBarcodeWhitelist.getPath());
@@ -882,31 +883,17 @@ public class CellHashingServiceImpl extends CellHashingService
         return cellBarcodeWhitelist;
     }
 
-    private File getAllHashingBarcodesFile(File webserverDir)
+    public File getAllBarcodesFile(File webserverDir, BARCODE_TYPE type)
     {
-        return new File(webserverDir, "allHTOBarcodes.txt");
+        return new File(webserverDir, type.getAllBarcodeFileName());
     }
 
-    private File getAllCiteSeqBarcodesFile(File webserverDir)
+    public void writeAllBarcodes(CellHashingService.BARCODE_TYPE type, File webserverDir, User u, Container c, @Nullable String groupName) throws PipelineJobException
     {
-        return new File(webserverDir, "allCiteSeqBarcodes.txt");
+        writeAllBarcodes(groupName == null ? type.getDefaultTagGroup() : groupName, u, c, getAllBarcodesFile(webserverDir, type));
     }
 
-    public File writeAllBarcodes(CellHashingService.BARCODE_TYPE type, File webserverDir, User u, Container c, @Nullable String groupName) throws PipelineJobException
-    {
-        if (type == BARCODE_TYPE.hashing)
-        {
-            return writeAllBarcodes(groupName == null ? type.getDefaultTagGroup() : groupName, u, c, getAllHashingBarcodesFile(webserverDir));
-        }
-        else if (type == BARCODE_TYPE.citeseq)
-        {
-            return writeAllBarcodes(groupName == null ? type.getDefaultTagGroup() : groupName, u, c, getAllCiteSeqBarcodesFile(webserverDir));
-        }
-
-        throw new IllegalArgumentException("Unknown barcode type");
-    }
-
-    private File writeAllBarcodes(String groupName, User u, Container c, File output) throws PipelineJobException
+    private void writeAllBarcodes(String groupName, User u, Container c, File output) throws PipelineJobException
     {
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(output), ',', CSVWriter.NO_QUOTE_CHARACTER))
         {
@@ -920,13 +907,11 @@ public class CellHashingServiceImpl extends CellHashingService
         {
             throw new PipelineJobException(e);
         }
-
-        return output;
     }
 
     private Map<String, String> readAllBarcodes(File webserverDir, BARCODE_TYPE type) throws PipelineJobException
     {
-        File barcodes = type == BARCODE_TYPE.citeseq ? getAllCiteSeqBarcodesFile(webserverDir) : getAllHashingBarcodesFile(webserverDir);
+        File barcodes = getAllBarcodesFile(webserverDir, type);
         try (CSVReader reader = new CSVReader(Readers.getReader(barcodes), ','))
         {
             Map<String, String> ret = new HashMap<>();
@@ -1348,7 +1333,7 @@ public class CellHashingServiceImpl extends CellHashingService
         {
             List<String> baseArgs = new ArrayList<>();
             baseArgs.add("-t");
-            baseArgs.add(parameters.allBarcodeFile.getPath());
+            baseArgs.add(parameters.getHtoOrCiteSeqBarcodeFile().getPath());
 
             if (parameters.cellBarcodeWhitelistFile!= null)
             {
@@ -1357,8 +1342,8 @@ public class CellHashingServiceImpl extends CellHashingService
 
                 //Note: version 1.4.2 and greater requires this:
                 //https://github.com/Hoohm/CITE-seq-Count/issues/56
-                baseArgs.add("-cells");
-                baseArgs.add("0");
+                //baseArgs.add("-cells");
+                //baseArgs.add("0");
             }
 
             Integer cores = SequencePipelineService.get().getMaxThreads(log);
@@ -1470,5 +1455,39 @@ public class CellHashingServiceImpl extends CellHashingService
         }
 
         return callMap;
+    }
+
+    @Override
+    public List<String> getHtosForParentReadset(Integer parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support) throws PipelineJobException
+    {
+        Integer htoReadset = getCachedHashingReadsetMap(support).get(parentReadsetId);
+        if (htoReadset == null)
+        {
+            throw new PipelineJobException("Unable to find hashing readset for parent id: " + parentReadsetId);
+        }
+
+        return getHtosForReadset(htoReadset, webserverJobDir);
+    }
+
+    public List<String> getHtosForReadset(Integer hashingReadsetId, File webserverJobDir) throws PipelineJobException
+    {
+        List<String> htosPerReadset = new ArrayList<>();
+        try (CSVReader reader = new CSVReader(Readers.getReader(CellHashingServiceImpl.get().getCDNAInfoFile(webserverJobDir)), '\t'))
+        {
+            String[] line;
+            while ((line = reader.readNext()) != null)
+            {
+                if (hashingReadsetId.toString().equals(line[5]))
+                {
+                    htosPerReadset.add(line[7]);
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        return htosPerReadset;
     }
 }

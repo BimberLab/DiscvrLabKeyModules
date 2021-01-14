@@ -72,12 +72,14 @@ abstract public class CellHashingService
 
     abstract public List<ToolParameterDescriptor> getDefaultHashingParams(boolean includeExcludeFailedcDNA);
 
+    abstract public List<String> getHtosForParentReadset(Integer parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support) throws PipelineJobException;
+
     public static class CellHashingParameters
     {
         public BARCODE_TYPE type;
 
-        public File allBarcodeFile;
-        public List<String> allowableBarcodes;
+        private File htoOrCiteseqBarcodesFile;
+        public List<String> allowableHtoOrCiteseqBarcodes;
 
         public File cellBarcodeWhitelistFile;
 
@@ -88,7 +90,6 @@ abstract public class CellHashingService
         public Readset parentReadset;
 
         public @Nullable Integer genomeId;
-
         public Integer editDistance = 2;
         public boolean scanEditDistances = false;
         public Integer minCountPerCell = 5;
@@ -100,7 +101,7 @@ abstract public class CellHashingService
 
         }
 
-        public static CellHashingParameters createFromJson(BARCODE_TYPE type, JSONObject params, Readset htoOrCiteseqReadset, @Nullable Readset parentReadset) throws PipelineJobException
+        public static CellHashingParameters createFromJson(BARCODE_TYPE type, File webserverDir, JSONObject params, Readset htoOrCiteseqReadset, @Nullable Readset parentReadset, @Nullable File htoOrCiteseqBarcodesFile) throws PipelineJobException
         {
             CellHashingParameters ret = new CellHashingParameters();
             ret.type = type;
@@ -109,6 +110,7 @@ abstract public class CellHashingService
             ret.minCountPerCell = params.optInt("minCountPerCell", 3);
             ret.htoOrCiteseqReadset = htoOrCiteseqReadset;
             ret.parentReadset = parentReadset;
+            ret.htoOrCiteseqBarcodesFile = htoOrCiteseqBarcodesFile == null ? new File(webserverDir, type.getAllBarcodeFileName()) : htoOrCiteseqBarcodesFile;
 
             JSONArray methodsArr = params.optJSONArray("methods");
             if (methodsArr != null)
@@ -141,6 +143,11 @@ abstract public class CellHashingService
             return parentReadset != null ? parentReadset.getReadsetId() : htoOrCiteseqReadset.getReadsetId();
         }
 
+        public File getHtoOrCiteSeqBarcodeFile()
+        {
+            return htoOrCiteseqBarcodesFile;
+        }
+
         public String getReportTitle()
         {
             return getBasename();
@@ -166,7 +173,12 @@ abstract public class CellHashingService
 
         public void validate()
         {
-            if (htoOrCiteseqReadset == null)
+            validate(false);
+        }
+
+        public void validate(boolean allowMissingHtoReadset)
+        {
+            if (!allowMissingHtoReadset && htoOrCiteseqReadset == null)
             {
                 throw new IllegalStateException("Missing Hashing/Cite-seq readset");
             }
@@ -176,25 +188,25 @@ abstract public class CellHashingService
                 throw new IllegalStateException("Missing output category");
             }
 
-            if (allBarcodeFile == null)
+            if (htoOrCiteseqBarcodesFile == null)
             {
-                throw new IllegalStateException("Missing all barcode file");
+                throw new IllegalStateException("Missing all HTO/CITE-seq barcodes file");
             }
         }
 
         public List<String> getAllowableBarcodeNames() throws PipelineJobException
         {
-            if (allowableBarcodes != null)
+            if (allowableHtoOrCiteseqBarcodes != null)
             {
-                return Collections.unmodifiableList(allowableBarcodes);
+                return Collections.unmodifiableList(allowableHtoOrCiteseqBarcodes);
             }
-            if (allBarcodeFile == null)
+            if (htoOrCiteseqBarcodesFile == null)
             {
                 throw new IllegalArgumentException("Barcode file was null");
             }
 
             List<String> allowableBarcodes = new ArrayList<>();
-            try (CSVReader reader = new CSVReader(Readers.getReader(allBarcodeFile), '\t'))
+            try (CSVReader reader = new CSVReader(Readers.getReader(htoOrCiteseqBarcodesFile), '\t'))
             {
                 String[] line;
                 while ((line = reader.readNext()) != null)
@@ -253,8 +265,8 @@ abstract public class CellHashingService
 
     public enum BARCODE_TYPE
     {
-        hashing(true, true, "Cell Hashing", "cellHashingCalls", null, "MultiSeq Barcodes"),
-        citeseq(false, false, "CITE-Seq", "citeSeqCounts", 10, "TotalSeq-C");
+        hashing(true, true, "Cell Hashing", "cellHashingCalls", null, "MultiSeq Barcodes", "allHTOBarcodes.txt"),
+        citeseq(false, false, "CITE-Seq", "citeSeqCounts", 10, "TotalSeq-C", "allCiteSeqBarcodes.txt");
 
         private final boolean _supportsScan;
         private final boolean _doGenerateCalls;
@@ -262,14 +274,16 @@ abstract public class CellHashingService
         private final String _defaultName;
         private final Integer _defaultTrim;
         private final String _defaultTagGroup;
+        private final String _allBarcodeFileName;
 
-        BARCODE_TYPE(boolean supportsScan, boolean doGenerateCalls, String label, String defaultName, Integer defaultTrim, String defaultTagGroup) {
+        BARCODE_TYPE(boolean supportsScan, boolean doGenerateCalls, String label, String defaultName, Integer defaultTrim, String defaultTagGroup, String allBarcodeFileName) {
             _supportsScan = supportsScan;
             _doGenerateCalls = doGenerateCalls;
             _label = label;
             _defaultName = defaultName;
             _defaultTrim = defaultTrim;
             _defaultTagGroup = defaultTagGroup;
+            _allBarcodeFileName = allBarcodeFileName;
         }
 
         public boolean isSupportsScan()
@@ -300,6 +314,11 @@ abstract public class CellHashingService
         public String getDefaultTagGroup()
         {
             return _defaultTagGroup;
+        }
+
+        public String getAllBarcodeFileName()
+        {
+            return _allBarcodeFileName;
         }
     }
 }

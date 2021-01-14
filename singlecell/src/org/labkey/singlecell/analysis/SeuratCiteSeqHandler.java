@@ -111,11 +111,10 @@ public class SeuratCiteSeqHandler extends AbstractParameterizedOutputHandler<Seq
 
                 File adtWhitelist = CellHashingServiceImpl.get().getValidCiteSeqBarcodeFile(ctx.getSourceDirectory(), so.getReadset());
 
-                CellHashingService.CellHashingParameters parameters = CellHashingService.CellHashingParameters.createFromJson(CellHashingService.BARCODE_TYPE.citeseq, ctx.getParams(), null, rs);
+                CellHashingService.CellHashingParameters parameters = CellHashingService.CellHashingParameters.createFromJson(CellHashingService.BARCODE_TYPE.citeseq, ctx.getSourceDirectory(), ctx.getParams(), null, rs, adtWhitelist);
                 parameters.genomeId = so.getLibrary_id();
                 parameters.outputCategory = CATEGORY;
                 parameters.cellBarcodeWhitelistFile = cellBarcodes;
-                parameters.allBarcodeFile = adtWhitelist;
 
                 File citeSeqMatrix = CellHashingService.get().processCellHashingOrCiteSeqForParent(rs, ctx.getFileManager(), ctx, parameters);
                 if (!citeSeqMatrix.exists())

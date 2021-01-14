@@ -123,12 +123,27 @@ public class SeuratCellHashingHandler extends AbstractParameterizedOutputHandler
                     throw new PipelineJobException("Unable to find Hashing/Cite-seq readset for GEX readset: " + rs.getReadsetId());
                 }
 
-                CellHashingService.CellHashingParameters parameters = CellHashingService.CellHashingParameters.createFromJson(CellHashingService.BARCODE_TYPE.hashing, ctx.getParams(), null, rs);
-                parameters.outputCategory = CATEGORY;
-                parameters.genomeId = so.getLibrary_id();
-                parameters.cellBarcodeWhitelistFile = cellBarcodes;
+                List<String> htosPerReadset = CellHashingServiceImpl.get().getHtosForReadset(htoReadset.getReadsetId(), ctx.getSourceDirectory());
+                if (htosPerReadset.size() > 1)
+                {
+                    ctx.getLogger().info("Total HTOs for readset: " + htosPerReadset.size());
 
-                CellHashingService.get().processCellHashingOrCiteSeq(ctx, parameters);
+                    CellHashingService.CellHashingParameters parameters = CellHashingService.CellHashingParameters.createFromJson(CellHashingService.BARCODE_TYPE.hashing, ctx.getSourceDirectory(), ctx.getParams(), htoReadset, rs, null);
+                    parameters.outputCategory = CATEGORY;
+                    parameters.genomeId = so.getLibrary_id();
+                    parameters.cellBarcodeWhitelistFile = cellBarcodes;
+                    parameters.allowableHtoOrCiteseqBarcodes = htosPerReadset;
+
+                    CellHashingService.get().processCellHashingOrCiteSeq(ctx, parameters);
+                }
+                else if (htosPerReadset.size() == 1)
+                {
+                    ctx.getLogger().info("Only single HTO used for lane, skipping cell hashing calling");
+                }
+                else
+                {
+                    ctx.getLogger().info("No HTOs found for readset");
+                }
             }
 
             ctx.addActions(action);

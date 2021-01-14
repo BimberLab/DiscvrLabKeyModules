@@ -602,11 +602,10 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                 if (adtsForReadset > 0)
                 {
                     ctx.getLogger().info("Total ADTs for readset: " + adtsForReadset);
-                    CellHashingService.CellHashingParameters parameters = CellHashingService.CellHashingParameters.createFromJson(CellHashingService.BARCODE_TYPE.citeseq, ctx.getParams(), null, rs);
+                    CellHashingService.CellHashingParameters parameters = CellHashingService.CellHashingParameters.createFromJson(CellHashingService.BARCODE_TYPE.citeseq, ctx.getSourceDirectory(), ctx.getParams(), null, rs, perReadsetAdts);
                     parameters.cellBarcodeWhitelistFile = cellbarcodeWhitelistFile;
                     parameters.genomeId = so.getLibrary_id();
                     parameters.outputCategory = SeuratCiteSeqHandler.CATEGORY;
-                    parameters.allBarcodeFile = perReadsetAdts;
 
                     File countMatrix = CellHashingService.get().processCellHashingOrCiteSeqForParent(rs, ctx.getFileManager(), ctx, parameters);
                     citeSeqData.put(barcodePrefix, countMatrix.getParentFile());
@@ -671,31 +670,15 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                     throw new PipelineJobException("Unable to find hashing readset for GEX readset: " + rs.getReadsetId());
                 }
 
-                List<String> htosPerReadset = new ArrayList<>();
-                try (CSVReader reader = new CSVReader(Readers.getReader(CellHashingServiceImpl.get().getCDNAInfoFile(ctx.getSourceDirectory())), '\t'))
-                {
-                    String[] line;
-                    while ((line = reader.readNext()) != null)
-                    {
-                        if (hashingReadsetId.toString().equals(line[5]))
-                        {
-                            htosPerReadset.add(line[7]);
-                        }
-                    }
-                }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
-                }
-
+                List<String> htosPerReadset = CellHashingServiceImpl.get().getHtosForReadset(hashingReadsetId, ctx.getSourceDirectory());
                 if (htosPerReadset.size() > 1)
                 {
                     ctx.getLogger().info("Total HTOs for readset: " + htosPerReadset.size());
 
-                    CellHashingService.CellHashingParameters parameters = CellHashingService.CellHashingParameters.createFromJson(CellHashingService.BARCODE_TYPE.hashing, ctx.getParams(), htoReadset, rs);
+                    CellHashingService.CellHashingParameters parameters = CellHashingService.CellHashingParameters.createFromJson(CellHashingService.BARCODE_TYPE.hashing, ctx.getSourceDirectory(), ctx.getParams(), htoReadset, rs, null);
                     parameters.genomeId = so.getLibrary_id();
-                    parameters.allBarcodeFile = allCellBarcodes;
-                    parameters.allowableBarcodes = htosPerReadset;
+                    parameters.cellBarcodeWhitelistFile = allCellBarcodes;
+                    parameters.allowableHtoOrCiteseqBarcodes = htosPerReadset;
                     parameters.outputCategory = SeuratCellHashingHandler.CATEGORY;
 
                     finalCalls.put(barcodePrefix, CellHashingService.get().processCellHashingOrCiteSeq(ctx.getFileManager(), ctx.getOutputDir(), ctx.getSourceDirectory(), ctx.getLogger(), parameters));

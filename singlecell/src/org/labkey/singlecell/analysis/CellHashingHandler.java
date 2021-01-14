@@ -204,7 +204,7 @@ public class CellHashingHandler extends AbstractParameterizedOutputHandler<Seque
 
             for (Readset rs : readsets)
             {
-                CellHashingService.CellHashingParameters parameters = CellHashingService.CellHashingParameters.createFromJson(_type, ctx.getParams(), rs, null);
+                CellHashingService.CellHashingParameters parameters = CellHashingService.CellHashingParameters.createFromJson(_type, ctx.getSourceDirectory(), ctx.getParams(), rs, null, null);
                 CellHashingServiceImpl.get().processCellHashingOrCiteSeq(ctx, parameters);
             }
         }
