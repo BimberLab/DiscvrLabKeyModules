@@ -78,8 +78,6 @@ public class CellHashingServiceImpl extends CellHashingService
 
     public static final String CALL_EXTENSION = ".calls.txt";
 
-    private final Logger _log = LogManager.getLogger(CellHashingServiceImpl.class);
-
     private CellHashingServiceImpl()
     {
 
@@ -97,7 +95,7 @@ public class CellHashingServiceImpl extends CellHashingService
         UserSchema singleCell = QueryService.get().getUserSchema(job.getUser(), target, SingleCellSchema.NAME);
         TableInfo cDNAs = singleCell.getTable(SingleCellSchema.TABLE_CDNAS, null);
 
-        _log.debug("preparing cDNA and cell hashing files");
+        job.getLogger().debug("preparing cDNA and cell hashing files");
 
         writeAllBarcodes(BARCODE_TYPE.hashing, sourceDir, job.getUser(), job.getContainer(), null);
         writeAllBarcodes(BARCODE_TYPE.citeseq, sourceDir, job.getUser(), job.getContainer(), null);
@@ -138,7 +136,7 @@ public class CellHashingServiceImpl extends CellHashingService
                 new TableSelector(cDNAs, colMap.values(), new SimpleFilter(FieldKey.fromString(filterField), rs.getRowId()), null).forEachResults(results -> {
                     if (skipFailedCdna && results.getObject(FieldKey.fromString("status")) != null)
                     {
-                        _log.info("skipping cDNA with non-null status: " + results.getString(FieldKey.fromString("rowid")));
+                        job.getLogger().info("skipping cDNA with non-null status: " + results.getString(FieldKey.fromString("rowid")));
                         return;
                     }
 
@@ -213,7 +211,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
                 if (hashingStatus.size() > 1)
                 {
-                    _log.info("The selected readsets/cDNA records use a mixture of cell hashing and non-hashing.");
+                    job.getLogger().info("The selected readsets/cDNA records use a mixture of cell hashing and non-hashing.");
                 }
 
                 //NOTE: hashingStatus.isEmpty() indicates there are no cDNA records associated with the data
@@ -241,7 +239,7 @@ public class CellHashingServiceImpl extends CellHashingService
             }
             else
             {
-                _log.info("distinct HTOs: " + distinctHTOs.size());
+                job.getLogger().info("distinct HTOs: " + distinctHTOs.size());
             }
 
             support.cacheObject(READSET_TO_HASHING_MAP, readsetToHashingMap);
@@ -344,7 +342,7 @@ public class CellHashingServiceImpl extends CellHashingService
         Map<Integer, Integer> readsetToHashing = getCachedHashingReadsetMap(ctx.getSequenceSupport());
         if (readsetToHashing.isEmpty())
         {
-            _log.info("No cached hashing readsets, skipping");
+            ctx.getLogger().info("No cached hashing readsets, skipping");
             return null;
         }
 
@@ -358,12 +356,12 @@ public class CellHashingServiceImpl extends CellHashingService
         long lineCount = SequencePipelineService.get().getLineCount(htoBarcodeWhitelist);
         if (lineCount == 1)
         {
-            _log.info("Only one barcode is used, will not use cell hashing");
+            ctx.getLogger().info("Only one barcode is used, will not use cell hashing");
             return null;
         }
 
-        _log.debug("total cached readset/hashing readset pairs: " + readsetToHashing.size());
-        _log.debug("unique HTOs: " + lineCount);
+        ctx.getLogger().debug("total cached readset/hashing readset pairs: " + readsetToHashing.size());
+        ctx.getLogger().debug("unique HTOs: " + lineCount);
 
         Readset htoReadset = ctx.getSequenceSupport().getCachedReadset(readsetToHashing.get(parentReadset.getReadsetId()));
         if (htoReadset == null)
@@ -372,7 +370,7 @@ public class CellHashingServiceImpl extends CellHashingService
         }
         parameters.htoOrCiteseqReadset = htoReadset;
         
-        File hashtagCalls = processCellHashingOrCiteSeq(output, ctx.getOutputDir(), ctx.getSourceDirectory(), _log, parameters);
+        File hashtagCalls = processCellHashingOrCiteSeq(output, ctx.getOutputDir(), ctx.getSourceDirectory(), ctx.getLogger(), parameters);
         if (!hashtagCalls.exists())
         {
             throw new PipelineJobException("Unable to find expected file: " + hashtagCalls.getPath());
