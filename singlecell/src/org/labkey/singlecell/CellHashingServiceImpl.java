@@ -1216,8 +1216,6 @@ public class CellHashingServiceImpl extends CellHashingService
                 List<String> allowableBarcodes = parameters.getAllowableBarcodeNames();
                 String allowableBarcodeParam = allowableBarcodes != null ? "c('" + StringUtils.join(allowableBarcodes, "','") + "')" : "NULL";
 
-                writer.println("barcodeDir <- " + citeSeqCountOutDir.getName());
-                writer.println("finalCallFile <- " + callsFile.getName());
                 writer.println("cellhashR::CallAndGenerateReport(rawCountData = '" + citeSeqCountOutDir.getName() + "', reportFile = '" + htmlFile.getName() + "', callFile = '" + callsFile.getName() + "', metricsFile = '" + metricsFile.getName() + "', cellbarcodeWhitelist  = '" + cellbarcodeWhitelist + "', barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', methods = c('" + StringUtils.join(methodNames, "','") + "'))");
                 writer.println("print('Rmarkdown complete')");
 
