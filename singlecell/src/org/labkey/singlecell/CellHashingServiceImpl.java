@@ -1236,7 +1236,7 @@ public class CellHashingServiceImpl extends CellHashingService
         try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
         {
             writer.println("#/bin/bash");
-            writer.println("sudo $DOCKER pull ghcr.io/bimberlab/cellhashR:latest");
+            writer.println("sudo $DOCKER pull ghcr.io/bimberlab/cellhashr:latest");
 
             writer.println("WD=`pwd`");
             writer.println("HOME=`echo ~/`");
