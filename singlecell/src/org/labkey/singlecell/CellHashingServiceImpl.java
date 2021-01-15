@@ -1262,7 +1262,7 @@ public class CellHashingServiceImpl extends CellHashingService
             writer.println("-e USERID=$UID \\");
             writer.println("-w /work \\");
             writer.println("-e HOME=/homeDir \\");
-            writer.println("ghcr.io/bimberlab/cellhashR:latest \\");
+            writer.println("ghcr.io/bimberlab/cellhashr:latest \\");
             writer.println("Rscript --vanilla " + localRScript.getName());
         }
         catch (IOException e)
