@@ -1340,8 +1340,8 @@ public class CellHashingServiceImpl extends CellHashingService
 
                 //Note: version 1.4.2 and greater requires this:
                 //https://github.com/Hoohm/CITE-seq-Count/issues/56
-                //baseArgs.add("-cells");
-                //baseArgs.add("0");
+                baseArgs.add("-cells");
+                baseArgs.add("0");
             }
 
             Integer cores = SequencePipelineService.get().getMaxThreads(log);
