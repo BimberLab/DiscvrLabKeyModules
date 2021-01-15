@@ -1246,7 +1246,7 @@ public class CellHashingServiceImpl extends CellHashingService
             writer.println("sudo $DOCKER run --rm=true \\");
             if (SequencePipelineService.get().getMaxRam() != null)
             {
-                writer.println("--memory=${" + SequencePipelineService.get().getMaxRam() + "}g \\");
+                writer.println("--memory=" + SequencePipelineService.get().getMaxRam() + "g \\");
                 writer.println("-e SEQUENCEANALYSIS_MAX_RAM \\");
             }
 
