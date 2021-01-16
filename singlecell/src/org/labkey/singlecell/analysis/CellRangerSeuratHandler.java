@@ -704,31 +704,6 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
             }
         }
 
-        private File subsetBarcodes(File allCellBarcodes, String barcodePrefix) throws PipelineJobException
-        {
-            //Subset barcodes by dataset:
-            File barcodes = new File(allCellBarcodes.getParentFile(), "cellBarcodeWhitelist." + barcodePrefix + ".txt");
-            try (CSVReader reader = new CSVReader(Readers.getReader(allCellBarcodes), '\t'); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(barcodes), '\t', CSVWriter.NO_QUOTE_CHARACTER))
-            {
-                String[] line;
-                while ((line = reader.readNext()) != null)
-                {
-                    String barcode = line[0];
-                    if (barcode.startsWith(barcodePrefix + "_"))
-                    {
-                        barcode = barcode.split("_")[1];
-                        writer.writeNext(new String[]{barcode});
-                    }
-                }
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-
-            return barcodes;
-        }
-
         private File appendCiteSeqToSeurat(JobContext ctx, File seuratObj, Map<String, File> citeseqData, Map<String, File> perReadsetAdtMap) throws PipelineJobException
         {
             File rScript = new File(seuratObj.getParentFile(), "appendCiteSeq.Rmd");
@@ -1043,5 +1018,30 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
         });
 
         return genomeIds.size() == 1 ? genomeIds.iterator().next() : null;
+    }
+
+    public static File subsetBarcodes(File allCellBarcodes, String barcodePrefix) throws PipelineJobException
+    {
+        //Subset barcodes by dataset:
+        File output = new File(allCellBarcodes.getParentFile(), "cellBarcodeWhitelist." + barcodePrefix + ".txt");
+        try (CSVReader reader = new CSVReader(Readers.getReader(allCellBarcodes), '\t'); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(output), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+        {
+            String[] line;
+            while ((line = reader.readNext()) != null)
+            {
+                String barcode = line[0];
+                if (barcode.startsWith(barcodePrefix + "_"))
+                {
+                    barcode = barcode.split("_")[1];
+                    writer.writeNext(new String[]{barcode});
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        return output;
     }
 }

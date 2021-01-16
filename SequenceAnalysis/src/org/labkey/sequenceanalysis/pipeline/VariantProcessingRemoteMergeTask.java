@@ -115,8 +115,6 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
             finalOut = runDefaultVariantMerge(manager, action, handler);
         }
 
-        //TODO: run tasks after merge?
-
         Map<String, File> scatterOutputs = getPipelineJob().getScatterJobOutputs();
         if (handler instanceof SequenceOutputHandler.TracksVCF)
         {
