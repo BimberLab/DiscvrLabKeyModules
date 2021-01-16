@@ -593,8 +593,8 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                     throw new PipelineJobException("Readset lacks a rowId for outputfile: " + so.getRowid());
                 }
 
-                File cellbarcodeWhitelistFile = subsetBarcodes(allCellBarcodes, barcodePrefix);
-                ctx.getFileManager().addIntermediateFile(cellbarcodeWhitelistFile);
+                File perReadsetBarcodes = subsetBarcodes(allCellBarcodes, barcodePrefix);
+                ctx.getFileManager().addIntermediateFile(perReadsetBarcodes);
 
                 // write readset-specific HTO list
                 File perReadsetAdts = CellHashingServiceImpl.get().getValidCiteSeqBarcodeFile(ctx.getSourceDirectory(), rs.getReadsetId());
@@ -603,7 +603,7 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                 {
                     ctx.getLogger().info("Total ADTs for readset: " + adtsForReadset);
                     CellHashingService.CellHashingParameters parameters = CellHashingService.CellHashingParameters.createFromJson(CellHashingService.BARCODE_TYPE.citeseq, ctx.getSourceDirectory(), ctx.getParams(), null, rs, perReadsetAdts);
-                    parameters.cellBarcodeWhitelistFile = cellbarcodeWhitelistFile;
+                    parameters.cellBarcodeWhitelistFile = perReadsetBarcodes;
                     parameters.genomeId = so.getLibrary_id();
                     parameters.outputCategory = SeuratCiteSeqHandler.CATEGORY;
 
@@ -653,8 +653,8 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                     throw new PipelineJobException("Readset lacks a rowId for outputfile: " + so.getRowid());
                 }
 
-                File barcodes = subsetBarcodes(allCellBarcodes, barcodePrefix);
-                ctx.getFileManager().addIntermediateFile(barcodes);
+                File perReadsetBarcodes = subsetBarcodes(allCellBarcodes, barcodePrefix);
+                ctx.getFileManager().addIntermediateFile(perReadsetBarcodes);
 
                 // write readset-specific HTO list
                 Integer hashingReadsetId = CellHashingServiceImpl.get().getCachedHashingReadsetMap(ctx.getSequenceSupport()).get(rs.getReadsetId());
@@ -677,7 +677,7 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
 
                     CellHashingService.CellHashingParameters parameters = CellHashingService.CellHashingParameters.createFromJson(CellHashingService.BARCODE_TYPE.hashing, ctx.getSourceDirectory(), ctx.getParams(), htoReadset, rs, null);
                     parameters.genomeId = so.getLibrary_id();
-                    parameters.cellBarcodeWhitelistFile = allCellBarcodes;
+                    parameters.cellBarcodeWhitelistFile = perReadsetBarcodes;
                     parameters.allowableHtoOrCiteseqBarcodes = htosPerReadset;
                     parameters.outputCategory = SeuratCellHashingHandler.CATEGORY;
 

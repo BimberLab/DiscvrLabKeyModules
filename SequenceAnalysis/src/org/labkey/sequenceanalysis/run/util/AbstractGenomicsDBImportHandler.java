@@ -209,11 +209,6 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         Map<String, File> scatterOutputs = getPipelineJob(job).getScatterJobOutputs();
         for (String name : jobToIntervalMap.keySet())
         {
-//            if (!scatterOutputs.containsKey(name))
-//            {
-//                throw new PipelineJobException("Missing output for interval/contig: " + name);
-//            }
-//
             //Iterate the contig folders we expect:
             for (Interval i : jobToIntervalMap.get(name))
             {
