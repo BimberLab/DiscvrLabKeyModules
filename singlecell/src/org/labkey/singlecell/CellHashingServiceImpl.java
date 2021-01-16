@@ -1236,13 +1236,11 @@ public class CellHashingServiceImpl extends CellHashingService
             writer.println("#/bin/bash");
             writer.println("set -e");
             writer.println("set -x");
-            writer.println("sudo $DOCKER pull ghcr.io/bimberlab/cellhashr:latest");
-
             writer.println("WD=`pwd`");
             writer.println("HOME=`echo ~/`");
 
-            writer.println("DOCKER=" + SequencePipelineService.get().getDockerCommand());
-
+            writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
+            writer.println("sudo $DOCKER pull ghcr.io/bimberlab/cellhashr:latest");
             writer.println("sudo $DOCKER run --rm=true \\");
             if (SequencePipelineService.get().getMaxRam() != null)
             {
