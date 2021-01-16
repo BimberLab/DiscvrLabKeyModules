@@ -1210,13 +1210,13 @@ public class CellHashingServiceImpl extends CellHashingService
                 String cellbarcodeWhitelist = "";
                 if (cellBarcodeWhitelistFile != null)
                 {
-                    cellbarcodeWhitelist = cellBarcodeWhitelistFile.getName();
+                    cellbarcodeWhitelist = "'/work/" + cellBarcodeWhitelistFile.getName() + "'";
                 }
 
                 List<String> allowableBarcodes = parameters.getAllowableBarcodeNames();
                 String allowableBarcodeParam = allowableBarcodes != null ? "c('" + StringUtils.join(allowableBarcodes, "','") + "')" : "NULL";
 
-                writer.println("cellhashR::CallAndGenerateReport(rawCountData = '" + citeSeqCountOutDir.getName() + "', reportFile = '" + htmlFile.getName() + "', callFile = '" + callsFile.getName() + "', metricsFile = '" + metricsFile.getName() + "', cellbarcodeWhitelist  = '" + cellbarcodeWhitelist + "', barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', methods = c('" + StringUtils.join(methodNames, "','") + "'))");
+                writer.println("cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', methods = c('" + StringUtils.join(methodNames, "','") + "'))");
                 writer.println("print('Rmarkdown complete')");
 
             }
