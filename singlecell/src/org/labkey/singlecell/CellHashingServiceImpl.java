@@ -953,10 +953,10 @@ public class CellHashingServiceImpl extends CellHashingService
                 if (header.isEmpty())
                 {
                     header.addAll(Arrays.asList(line));
-                    htoClassIdx = header.indexOf("HTO_Classification");
-                    htoIdx = header.indexOf("HTO");
-                    seuratIdx = header.indexOf("Seurat");
-                    multiSeqIdx = header.indexOf("MultiSeq");
+                    htoClassIdx = header.indexOf("consensuscall.global");
+                    htoIdx = header.indexOf("consensuscall");
+                    seuratIdx = header.indexOf("htodemux");
+                    multiSeqIdx = header.indexOf("multiseq");
                     continue;
                 }
 
@@ -981,12 +981,12 @@ public class CellHashingServiceImpl extends CellHashingService
                 {
                     uniqueHTOs.add(line[htoIdx]);
 
-                    if ("TRUE".equals(line[seuratIdx]))
+                    if ("Singlet".equals(line[seuratIdx]))
                     {
                         seuratSinglet++;
                     }
 
-                    if ("TRUE".equals(line[multiSeqIdx]))
+                    if ("Singlet".equals(line[multiSeqIdx]))
                     {
                         multiSeqSinglet++;
                     }
