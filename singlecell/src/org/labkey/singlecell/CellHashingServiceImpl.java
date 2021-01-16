@@ -1234,6 +1234,8 @@ public class CellHashingServiceImpl extends CellHashingService
         try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
         {
             writer.println("#/bin/bash");
+            writer.println("set -e");
+            writer.println("set -x");
             writer.println("sudo $DOCKER pull ghcr.io/bimberlab/cellhashr:latest");
 
             writer.println("WD=`pwd`");
@@ -1253,7 +1255,6 @@ public class CellHashingServiceImpl extends CellHashingService
                 writer.println("-e SEQUENCEANALYSIS_MAX_THREADS \\");
             }
 
-            writer.println("$RAM_OPTS $ENV_OPTS \\");
             writer.println("-v \"${WD}:/work\" \\");
             writer.println("-v \"${HOME}:/homeDir\" \\");
             writer.println("-u $UID \\");
