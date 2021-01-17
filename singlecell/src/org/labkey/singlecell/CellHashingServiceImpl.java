@@ -485,7 +485,16 @@ public class CellHashingServiceImpl extends CellHashingService
             Map<String, Object> callMap = results.get(bestEditDistance);
             if (parameters.type.doGenerateCalls())
             {
-                String description = String.format("%% Mapped: %s\n%% Unmapped: %s\nEdit Distance: %,d\nMin Reads/Cell: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nSeurat Singlet: %,d\nMultiSeq Singlet: %,d\nNegative: %,d\nUnique HTOs: %s", callMap.get("PercentageMapped"), callMap.get("PercentageUnmapped"), bestEditDistance, parameters.minCountPerCell, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("seuratSinglet"), callMap.get("multiSeqSinglet"), callMap.get("negative"), callMap.get("UniqueHtos"));
+                String description = String.format("%% Mapped: %s\n%% Unmapped: %s\nEdit Distance: %,d\nMin Reads/Cell: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nNegative: %,d\nUnique HTOs: %s", callMap.get("PercentageMapped"), callMap.get("PercentageUnmapped"), bestEditDistance, parameters.minCountPerCell, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("negative"), callMap.get("UniqueHtos"));
+                for (CALLING_METHOD x : CALLING_METHOD.values())
+                {
+                    String value = "singlet." + x.name();
+                    if (callMap.containsKey(value))
+                    {
+                       description = description + ",\n" + callMap.get(value);
+                    }
+                }
+
                 File htoCalls = (File) callMap.get("htoCalls");
                 if (htoCalls == null)
                 {
@@ -764,7 +773,10 @@ public class CellHashingServiceImpl extends CellHashingService
                     String delim = description.length() > 0 ? "\n" : "";
 
                     DecimalFormat fmt = new DecimalFormat("##.##%");
-                    for (String metricName : Arrays.asList("InputBarcodes", "TotalCalled", "TotalCounts", "TotalSinglet", "FractionOfInputCalled", "FractionOfInputSinglet", "FractionOfInputDoublet", "FractionOfInputDiscordant", "FractionCalledNotInInput", "SeuratNonNegative", "MultiSeqNonNegative", "UniqueHtos", "UnknownTagMatchingKnown"))
+                    List<String> metricNames = new ArrayList<>(Arrays.asList("PassingCellBarcodes", "TotalLowCounts", "TotalSinglet", "FractionCalled", "FractionSinglet", "FractionDoublet", "FractionDiscordant", "UniqueHtos", "UnknownTagMatchingKnown"));
+                    Arrays.stream(CALLING_METHOD.values()).forEach(x -> metricNames.add("Singlet." + x.name()));
+
+                    for (String metricName : metricNames)
                     {
                         if (valueMap.get(metricName) != null)
                         {
@@ -855,7 +867,7 @@ public class CellHashingServiceImpl extends CellHashingService
                         barcode = barcode.split("-")[0];
                     }
 
-                    //This format is written out by the seurat pipeline
+                    //This format is written out by the OOSAP pipeline
                     if (barcode.contains("_"))
                     {
                         barcode = barcode.split("_")[1];
@@ -933,8 +945,7 @@ public class CellHashingServiceImpl extends CellHashingService
         long doublet = 0L;
         long discordant = 0L;
         long negative = 0L;
-        long seuratSinglet = 0L;
-        long multiSeqSinglet = 0L;
+        Map<String, Long> singletByMethod = new HashMap<>();
         Set<String> uniqueHTOs = new TreeSet<>();
 
         try (CSVReader reader = new CSVReader(Readers.getReader(htoCalls), '\t'))
@@ -943,8 +954,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
             int htoClassIdx = -1;
             int htoIdx = -1;
-            int seuratIdx = -1;
-            int multiSeqIdx = -1;
+            Map<String, Integer> singletColIdx = new HashMap<>();
 
             List<String> header = new ArrayList<>();
             while ((line = reader.readNext()) != null)
@@ -955,8 +965,7 @@ public class CellHashingServiceImpl extends CellHashingService
                     header.addAll(Arrays.asList(line));
                     htoClassIdx = header.indexOf("consensuscall.global");
                     htoIdx = header.indexOf("consensuscall");
-                    seuratIdx = header.indexOf("htodemux");
-                    multiSeqIdx = header.indexOf("multiseq");
+                    Arrays.stream(CALLING_METHOD.values()).forEach(x -> singletColIdx.put(x.name(), header.indexOf(x.name())));
                     continue;
                 }
 
@@ -981,14 +990,12 @@ public class CellHashingServiceImpl extends CellHashingService
                 {
                     uniqueHTOs.add(line[htoIdx]);
 
-                    if ("Singlet".equals(line[seuratIdx]))
+                    for (String name : singletColIdx.keySet())
                     {
-                        seuratSinglet++;
-                    }
-
-                    if ("Singlet".equals(line[multiSeqIdx]))
-                    {
-                        multiSeqSinglet++;
+                        if ("Singlet".equals(line[singletColIdx.get(name)]))
+                        {
+                            singletByMethod.put(name, singletByMethod.getOrDefault(name, 0L) + 1);
+                        }
                     }
                 }
             }
@@ -998,8 +1005,11 @@ public class CellHashingServiceImpl extends CellHashingService
             ret.put("doublet", doublet);
             ret.put("discordant", discordant);
             ret.put("negative", negative);
-            ret.put("seuratSinglet", seuratSinglet);
-            ret.put("multiSeqSinglet", multiSeqSinglet);
+            for (String name : singletByMethod.keySet())
+            {
+                ret.put("singlet." + name, singletByMethod.get(name));
+            }
+
             List<String> uniqueHTOSorted = new ArrayList<>(uniqueHTOs);
             uniqueHTOSorted.sort(ComparatorUtils.naturalComparator());
             ret.put("UniqueHtos", StringUtils.join(uniqueHTOSorted, ","));
