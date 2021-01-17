@@ -8,6 +8,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.DbSchema;
@@ -1020,17 +1021,17 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
         return genomeIds.size() == 1 ? genomeIds.iterator().next() : null;
     }
 
-    public static File subsetBarcodes(File allCellBarcodes, String barcodePrefix) throws PipelineJobException
+    public static File subsetBarcodes(File allCellBarcodes, @Nullable String barcodePrefix) throws PipelineJobException
     {
         //Subset barcodes by dataset:
-        File output = new File(allCellBarcodes.getParentFile(), "cellBarcodeWhitelist." + barcodePrefix + ".txt");
+        File output = new File(allCellBarcodes.getParentFile(), "cellBarcodeWhitelist." + (barcodePrefix == null ? "all" : barcodePrefix ) + ".txt");
         try (CSVReader reader = new CSVReader(Readers.getReader(allCellBarcodes), '\t'); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(output), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
             String[] line;
             while ((line = reader.readNext()) != null)
             {
                 String barcode = line[0];
-                if (barcode.startsWith(barcodePrefix + "_"))
+                if (barcodePrefix == null || barcode.startsWith(barcodePrefix + "_"))
                 {
                     barcode = barcode.split("_")[1];
                     writer.writeNext(new String[]{barcode});

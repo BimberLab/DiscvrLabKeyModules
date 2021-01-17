@@ -18,6 +18,7 @@ import org.labkey.singlecell.SingleCellModule;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -85,6 +86,14 @@ public class SeuratCellHashingHandler extends AbstractParameterizedOutputHandler
         @Override
         public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
+            for (SequenceOutputFile so : inputFiles)
+            {
+                if (so.getReadset() == null)
+                {
+                    throw new PipelineJobException("Seurat object lacks a readset. This might indicate this is a combo object with multiple input readsets. If so, this pipeline does not support cell hashing calling using these as inputs.");
+                }
+            }
+
             CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(outputDir, job, support, "readsetId", params.optBoolean("excludeFailedcDNA", true), true, false);
         }
 
@@ -105,7 +114,11 @@ public class SeuratCellHashingHandler extends AbstractParameterizedOutputHandler
             {
                 ctx.getLogger().info("processing file: " + so.getName());
 
-                File cellBarcodes = getCellBarcodesFromSeurat(so.getFile());
+                File allCellBarcodes = getCellBarcodesFromSeurat(so.getFile());
+
+                //NOTE: by leaving null, it will simply drop the barcode prefix. Upstream checks should ensure this is a single-readset object
+                File cellBarcodesParsed = CellRangerSeuratHandler.subsetBarcodes(allCellBarcodes, null);
+                ctx.getFileManager().addIntermediateFile(cellBarcodesParsed);
 
                 Readset rs = ctx.getSequenceSupport().getCachedReadset(so.getReadset());
                 if (rs == null)
@@ -131,7 +144,7 @@ public class SeuratCellHashingHandler extends AbstractParameterizedOutputHandler
                     CellHashingService.CellHashingParameters parameters = CellHashingService.CellHashingParameters.createFromJson(CellHashingService.BARCODE_TYPE.hashing, ctx.getSourceDirectory(), ctx.getParams(), htoReadset, rs, null);
                     parameters.outputCategory = CATEGORY;
                     parameters.genomeId = so.getLibrary_id();
-                    parameters.cellBarcodeWhitelistFile = cellBarcodes;
+                    parameters.cellBarcodeWhitelistFile = cellBarcodesParsed;
                     parameters.allowableHtoOrCiteseqBarcodes = htosPerReadset;
 
                     CellHashingService.get().processCellHashingOrCiteSeq(ctx, parameters);
