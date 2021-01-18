@@ -24,6 +24,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
+import org.labkey.api.sequenceanalysis.run.RCommandWrapper;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.pipeline.PipelineStepCtxImpl;
@@ -43,6 +44,7 @@ import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +63,8 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     private Set<PipelineStepProvider> _providers = new HashSet<>();
     private Set<JobResourceSettings> _resourceSettings = new HashSet<>();
 
+    private Map<Class<? extends PipelineStep>, String> _pipelineStepTypeMap = new HashMap<>();
+
     private SequencePipelineServiceImpl()
     {
 
@@ -69,6 +73,17 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     public static SequencePipelineServiceImpl get()
     {
         return _instance;
+    }
+
+    @Override
+    public void registerPipelineStepType(Class<? extends PipelineStep> clazz, String paramName)
+    {
+        if (_pipelineStepTypeMap.containsKey(clazz))
+        {
+            throw new IllegalArgumentException("Pipeline step type has already been registered: " + clazz.getSimpleName());
+        }
+
+        _pipelineStepTypeMap.put(clazz, paramName);
     }
 
     @Override
@@ -85,7 +100,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     }
 
     @Override
-    public <StepType extends PipelineStep> Set<PipelineStepProvider<StepType>> getProviders(Class<? extends StepType> stepType)
+    public <StepType extends PipelineStep> Set<PipelineStepProvider<StepType>> getProviders(Class<StepType> stepType)
     {
         Set<PipelineStepProvider<StepType>> ret = new HashSet<>();
         for (PipelineStepProvider provider : _providers)
@@ -103,14 +118,14 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     }
 
     @Override
-    public <StepType extends PipelineStep> PipelineStepProvider<StepType> getProviderByName(String name, Class<? extends StepType> stepType)
+    public <StepType extends PipelineStep> PipelineStepProvider<StepType> getProviderByName(String name, Class<StepType> stepType)
     {
         if (StringUtils.trimToNull(name) == null)
         {
             throw new IllegalArgumentException("PipelineStepProvider name cannot be empty");
         }
 
-        for (PipelineStepProvider provider : getProviders(stepType))
+        for (PipelineStepProvider<StepType> provider : getProviders(stepType))
         {
             if (name.equals(provider.getName()))
             {
@@ -119,6 +134,12 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         }
 
         throw new IllegalArgumentException("Unable to find pipeline step: [" + name + "]");
+    }
+
+    @Override
+    public @Nullable String getParamNameForStepType(Class<? extends PipelineStep> stepType)
+    {
+        return _pipelineStepTypeMap.get(stepType);
     }
 
     @Override
@@ -155,7 +176,13 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         }
     }
 
-    public <StepType extends PipelineStep> List<PipelineStepCtx<StepType>> getSteps(PipelineJob job, Class<StepType> stepType)
+    public Map<Class<? extends PipelineStep>, String> getPipelineStepTypes()
+    {
+        return Collections.unmodifiableMap(_pipelineStepTypeMap);
+    }
+
+    @Override
+    public <StepType extends PipelineStep> List<PipelineStepCtx<StepType>> getSteps(PipelineJob job, Class<StepType> type)
     {
         Map<String, String> params;
         if (job instanceof HasJobParams)
@@ -167,19 +194,24 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
             params = job.getParameters();
         }
 
-        PipelineStep.StepType type = PipelineStep.StepType.getStepType(stepType);
-        if (!params.containsKey(type.name()) || StringUtils.isEmpty(params.get(type.name())))
+        String paramName = getParamNameForStepType(type);
+        if (paramName == null)
         {
-            return Collections.EMPTY_LIST;
+            throw new IllegalArgumentException("PipelineStep type not registered: " + type.getSimpleName());
+        }
+
+        if (!params.containsKey(paramName) || StringUtils.isEmpty(params.get(paramName)))
+        {
+            return Collections.emptyList();
         }
 
         List<PipelineStepCtx<StepType>> steps = new ArrayList<>();
-        String[] pipelineSteps = params.get(type.name()).split(";");
+        String[] pipelineSteps = params.get(paramName).split(";");
 
         List<String> encounteredStepNames = new ArrayList<>();
         for (String stepName : pipelineSteps)
         {
-            PipelineStepProvider<StepType> provider = SequencePipelineService.get().getProviderByName(stepName, stepType);
+            PipelineStepProvider<StepType> provider = SequencePipelineService.get().getProviderByName(stepName, type);
             int stepIdx = Collections.frequency(encounteredStepNames, provider.getName());
 
             steps.add(new PipelineStepCtxImpl<>(provider, stepIdx));
@@ -224,6 +256,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         }
     }
 
+    @Override
     public String getJava8FilePath()
     {
         String java8Home = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("JAVA_HOME_8");
@@ -375,16 +408,19 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         return ((SequenceJob) job).getInputFiles();
     }
 
+    @Override
     public Integer getExpRunIdForJob(PipelineJob job) throws PipelineJobException
     {
         return SequenceTaskHelper.getExpRunIdForJob(job);
     }
 
+    @Override
     public long getLineCount(File f) throws PipelineJobException
     {
         return SequenceUtil.getLineCount(f);
     }
 
+    @Override
     public File ensureBamIndex(File inputBam, Logger log, boolean forceDeleteExisting) throws PipelineJobException
     {
         File expectedIndex = new File(inputBam.getPath() + ".bai");
@@ -411,17 +447,20 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         return null;
     }
 
+    @Override
     public SAMFileHeader.SortOrder getBamSortOrder(File bam) throws IOException
     {
         return SequenceUtil.getBamSortOrder(bam);
     }
 
+    @Override
     public File sortVcf(File inputVcf, @Nullable File outputVcf, File sequenceDictionary, Logger log) throws PipelineJobException
     {
         SortVcfWrapper wrapper = new SortVcfWrapper(log);
         return wrapper.sortVcf(inputVcf, outputVcf, sequenceDictionary);
     }
 
+    @Override
     public void sortROD(File input, Logger log, Integer startColumnIdx) throws IOException, PipelineJobException
     {
         SequenceUtil.sortROD(input, log, startColumnIdx);
@@ -430,43 +469,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     @Override
     public String inferRPath(Logger log)
     {
-        String path;
-
-        //preferentially use R config setup in scripting props.  only works if running locally.
-        if (PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
-        {
-            LabkeyScriptEngineManager svc = ServiceRegistry.get().getService(LabkeyScriptEngineManager.class);
-            for (ExternalScriptEngineDefinition def : svc.getEngineDefinitions())
-            {
-                if (RScriptEngineFactory.isRScriptEngine(def.getExtensions()))
-                {
-                    path = new File(def.getExePath()).getParent();
-                    log.info("Using RSciptEngine path: " + path);
-                    return path;
-                }
-            }
-        }
-
-        //then pipeline config
-        String packagePath = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("R");
-        if (StringUtils.trimToNull(packagePath) != null)
-        {
-            log.info("Using path from pipeline config: " + packagePath);
-            return packagePath;
-        }
-
-        //then RHOME
-        Map<String, String> env = System.getenv();
-        if (env.containsKey("RHOME"))
-        {
-            log.info("Using path from RHOME: " + env.get("RHOME"));
-            return env.get("RHOME");
-        }
-
-        //else assume it's in the PATH
-        log.info("Unable to infer R path, using null");
-
-        return null;
+        return RCommandWrapper.inferRPath(log);
     }
 
     @Override

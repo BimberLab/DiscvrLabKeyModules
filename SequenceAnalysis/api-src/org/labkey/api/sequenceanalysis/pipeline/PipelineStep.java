@@ -22,7 +22,7 @@ package org.labkey.api.sequenceanalysis.pipeline;
  *
  * This describes one step in the pipeline, which is divided into the steps below.  Subclasses of this interface
  * define methods specific to that type of PipelineStep.  Each step is typically a wrapper around a command line tool or script.
- * Supported step types are enumerated in PipelineStep.StepType
+ * Supported step types must be registered with SequencePipelineService
  */
 public interface PipelineStep
 {
@@ -34,18 +34,19 @@ public interface PipelineStep
 
     public void setStepIdx(int stepIdx);
 
-    public enum StepType
+    public enum CorePipelineStepTypes
     {
         fastqProcessing(PreprocessingStep.class),
         referenceLibraryCreation(ReferenceLibraryStep.class),
         alignment(AlignmentStep.class),
         bamPostProcessing(BamProcessingStep.class),
         variantProcessing(VariantProcessingStep.class),
+        assembly(AssemblyStep.class),
         analysis(AnalysisStep.class);
 
         private Class<? extends PipelineStep> _stepClass;
 
-        StepType(Class<? extends PipelineStep> clazz)
+        CorePipelineStepTypes(Class<? extends PipelineStep> clazz)
         {
             _stepClass = clazz;
         }
@@ -53,19 +54,6 @@ public interface PipelineStep
         public Class<? extends PipelineStep> getStepClass()
         {
             return _stepClass;
-        }
-
-        public static StepType getStepType(Class<? extends PipelineStep> step)
-        {
-            for (StepType t : values())
-            {
-                if (t.getStepClass().isAssignableFrom(step))
-                {
-                    return t;
-                }
-            }
-
-            throw new IllegalArgumentException("Unable to find matching type for class: " + step.getName());
         }
     }
 }

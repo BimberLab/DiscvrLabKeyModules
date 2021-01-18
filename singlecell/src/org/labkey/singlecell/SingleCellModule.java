@@ -33,10 +33,12 @@ import org.labkey.singlecell.analysis.LoupeCellHashingHandler;
 import org.labkey.singlecell.analysis.CellRangerRawDataHandler;
 import org.labkey.singlecell.analysis.CellRangerSeuratHandler;
 import org.labkey.singlecell.analysis.CiteSeqHandler;
+import org.labkey.singlecell.analysis.ProcessSingleCellHandler;
 import org.labkey.singlecell.analysis.SeuratCellHashingHandler;
 import org.labkey.singlecell.analysis.SeuratCiteSeqHandler;
 import org.labkey.singlecell.button.CellHashingButton;
 import org.labkey.singlecell.button.CiteSeqButton;
+import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.singlecell.run.CellRangerVDJWrapper;
 import org.labkey.singlecell.run.CellRangerWrapper;
 
@@ -120,6 +122,7 @@ public class SingleCellModule extends ExtendedSimpleModule
 
     public static void registerPipelineSteps()
     {
+        SequencePipelineService.get().registerPipelineStepType(SingleCellStep.class, SingleCellStep.STEP_TYPE);
         CellHashingService.setInstance(CellHashingServiceImpl.get());
 
         SequencePipelineService.get().registerPipelineStep(new CellRangerWrapper.Provider());
@@ -133,5 +136,6 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new SeuratCiteSeqHandler());
         SequenceAnalysisService.get().registerFileHandler(new CellRangerSeuratHandler());
         SequenceAnalysisService.get().registerFileHandler(new CellRangerRawDataHandler());
+        SequenceAnalysisService.get().registerFileHandler(new ProcessSingleCellHandler());
     }
 }

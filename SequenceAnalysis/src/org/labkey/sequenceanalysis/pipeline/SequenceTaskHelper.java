@@ -44,6 +44,8 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
+import org.labkey.sequenceanalysis.SequencePipelineServiceImpl;
 
 import java.io.File;
 import java.io.IOException;
@@ -244,13 +246,13 @@ public class SequenceTaskHelper implements PipelineContext
 
     public static boolean isAlignmentUsed(PipelineJob job)
     {
-        return !StringUtils.isEmpty(job.getParameters().get(PipelineStep.StepType.alignment.name()));
+        return !StringUtils.isEmpty(job.getParameters().get(PipelineStep.CorePipelineStepTypes.alignment.name()));
     }
 
     public static void logModuleVersions(Logger log)
     {
-        log.info("SequenceAnalysis Module Version: " + ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getFormattedVersion() + " (r" + (ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getVcsRevision()) + ")");
-        log.info("Pipeline Module Version: " + ModuleLoader.getInstance().getModule("pipeline").getFormattedVersion() + " (r" + (ModuleLoader.getInstance().getModule("pipeline").getVcsRevision()) + ")");
+        log.info("SequenceAnalysis Module Version: " + ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getReleaseVersion() + " (r" + (ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getVcsRevision()) + ")");
+        log.info("Pipeline Module Version: " + ModuleLoader.getInstance().getModule("pipeline").getReleaseVersion() + " (r" + (ModuleLoader.getInstance().getModule("pipeline").getVcsRevision()) + ")");
         log.debug("java.io.tmpDir: " + System.getProperty("java.io.tmpdir"));
         try
         {
@@ -319,12 +321,13 @@ public class SequenceTaskHelper implements PipelineContext
 
     public void cacheExpDatasForParams() throws PipelineJobException
     {
+        Map<Class<? extends  PipelineStep>, String> map = SequencePipelineServiceImpl.get().getPipelineStepTypes();
         //cache params, as needed:
-        for (PipelineStep.StepType stepType : PipelineStep.StepType.values())
+        for (Class<? extends PipelineStep> stepType : map.keySet())
         {
-            for (PipelineStepProvider fact : SequencePipelineService.get().getProviders(stepType.getStepClass()))
+            for (PipelineStepProvider<?> fact : SequencePipelineService.get().getProviders(stepType))
             {
-                for (ToolParameterDescriptor pd : (List<ToolParameterDescriptor>)fact.getParameters())
+                for (ToolParameterDescriptor pd : fact.getParameters())
                 {
                     if (pd instanceof ToolParameterDescriptor.CachableParam)
                     {

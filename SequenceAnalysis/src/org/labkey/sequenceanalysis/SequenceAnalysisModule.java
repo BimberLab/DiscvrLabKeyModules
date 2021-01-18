@@ -36,6 +36,7 @@ import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.search.SearchService;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
@@ -234,6 +235,10 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
             _log.error(e.getMessage(), e);
         }
 
+        //Step types:
+        Arrays.stream(PipelineStep.CorePipelineStepTypes.values()).forEach(x -> {
+            SequencePipelineService.get().registerPipelineStepType(x.getStepClass(), x.name());
+        });
 
         //preprocessing
         SequencePipelineService.get().registerPipelineStep(new DownsampleFastqWrapper.Provider());

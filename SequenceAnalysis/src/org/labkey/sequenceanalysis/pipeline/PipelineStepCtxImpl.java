@@ -18,11 +18,13 @@ public class PipelineStepCtxImpl<StepType extends PipelineStep> implements Pipel
         _stepIdx = stepIdx;
     }
 
+    @Override
     public PipelineStepProvider<StepType> getProvider()
     {
         return _provider;
     }
 
+    @Override
     public int getStepIdx()
     {
         return _stepIdx;
