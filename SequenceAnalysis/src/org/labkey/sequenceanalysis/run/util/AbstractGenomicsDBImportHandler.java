@@ -209,6 +209,12 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         Map<String, File> scatterOutputs = getPipelineJob(job).getScatterJobOutputs();
         for (String name : jobToIntervalMap.keySet())
         {
+            File overallCopyDone = new File(variantProcessingJob.getDataDirectory(), name + "/copyToWebserver.done");
+            if (overallCopyDone.exists())
+            {
+                overallCopyDone.delete();
+            }
+
             //Iterate the contig folders we expect:
             for (Interval i : jobToIntervalMap.get(name))
             {
@@ -407,10 +413,10 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 throw new PipelineJobException("Unable to find cached genome for Id: " + genomeId);
             }
 
-            File destinationWorkspaceFolder = getWorkspaceOutput(ctx.getOutputDir(), ctx.getParams().getString("fileBaseName"));
+            File workingDestinationWorkspaceFolder = getWorkspaceOutput(ctx.getOutputDir(), ctx.getParams().getString("fileBaseName"));
 
             Set<File> toDelete = new HashSet<>();
-            File doneFile = new File(destinationWorkspaceFolder, "genomicsdb.done");
+            File doneFile = new File(workingDestinationWorkspaceFolder, "genomicsdb.done");
             boolean genomicsDbCompleted = doneFile.exists();
 
             ctx.getFileManager().addIntermediateFile(doneFile);
@@ -422,7 +428,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 }
 
                 File sourceWorkspace = getSourceWorkspace(ctx.getParams(), ctx.getSequenceSupport());
-                copyWorkspace(ctx, sourceWorkspace, destinationWorkspaceFolder, genome, toDelete, !genomicsDbCompleted);
+                copyWorkspace(ctx, sourceWorkspace, workingDestinationWorkspaceFolder, genome, toDelete, !genomicsDbCompleted);
             }
             else
             {
@@ -432,12 +438,12 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 }
                 else
                 {
-                    if (destinationWorkspaceFolder.exists())
+                    if (workingDestinationWorkspaceFolder.exists())
                     {
-                        ctx.getLogger().info("Deleting existing output folder: " + destinationWorkspaceFolder.getPath());
+                        ctx.getLogger().info("Deleting existing output folder: " + workingDestinationWorkspaceFolder.getPath());
                         try
                         {
-                            FileUtils.deleteDirectory(destinationWorkspaceFolder);
+                            FileUtils.deleteDirectory(workingDestinationWorkspaceFolder);
                         }
                         catch (IOException e)
                         {
@@ -497,7 +503,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                         wrapper.setMaxRamOverride(maxRam);
                     }
 
-                    wrapper.execute(genome, vcfsToProcess, destinationWorkspaceFolder, intervals, options, _append);
+                    wrapper.execute(genome, vcfsToProcess, workingDestinationWorkspaceFolder, intervals, options, _append);
 
                     FileUtils.touch(doneFile);
                     ctx.getLogger().debug("GenomicsDB complete, touching file: " + doneFile.getPath());
@@ -509,11 +515,11 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             }
             else
             {
-                ctx.getLogger().info("Resuming from existing file: " + destinationWorkspaceFolder.getPath());
+                ctx.getLogger().info("Resuming from existing file: " + workingDestinationWorkspaceFolder.getPath());
             }
             ctx.getFileManager().addIntermediateFile(doneFile);
 
-            File markerFile = getMarkerFile(destinationWorkspaceFolder);
+            File markerFile = getMarkerFile(workingDestinationWorkspaceFolder);
             if (!markerFile.exists())
             {
                 throw new PipelineJobException("Unable to find expected file: " + markerFile.getPath());
@@ -522,15 +528,15 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             List<Interval> intervals = getIntervalsOrFullGenome(ctx, genome);
             for (Interval i : intervals)
             {
-                File destContigFolder = new File(destinationWorkspaceFolder, getFolderNameFromInterval(i));
+                File destContigFolder = new File(workingDestinationWorkspaceFolder, getFolderNameFromInterval(i));
                 reportFragmentsPerContig(ctx, destContigFolder, i.getName());
             }
 
-            ctx.getLogger().debug("adding sequence output: " + destinationWorkspaceFolder.getPath());
+            ctx.getLogger().debug("adding sequence output: " + workingDestinationWorkspaceFolder.getPath());
             SequenceOutputFile so1 = new SequenceOutputFile();
-            so1.setName(destinationWorkspaceFolder.getName());
+            so1.setName(workingDestinationWorkspaceFolder.getName());
 
-            int sampleCount = getSamplesForWorkspace(destinationWorkspaceFolder).size();
+            int sampleCount = getSamplesForWorkspace(workingDestinationWorkspaceFolder).size();
 
             if (_append)
             {
@@ -548,12 +554,11 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             File workspaceLocalDir = getWorkspaceOutput(ctx.getSourceDirectory(true), ctx.getParams().getString("fileBaseName"));
             ctx.getLogger().info("Copying local workspace to local job dir: " + workspaceLocalDir.getPath());
 
-            File copyToSourceDone = new File(ctx.getOutputDir(), "copyToWebserver.done");
-            ctx.getFileManager().addDeferredIntermediateFile(copyToSourceDone); //NOTE: dont delete until job completely done
+            File copyToSourceDone = getCopyToSourceDone(ctx);
 
             if (!copyToSourceDone.exists())
             {
-                copyWorkspace(ctx, destinationWorkspaceFolder, workspaceLocalDir, genome, toDelete, true);
+                copyWorkspace(ctx, workingDestinationWorkspaceFolder, workspaceLocalDir, genome, toDelete, true);
 
                 try
                 {
@@ -584,7 +589,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             ctx.addSequenceOutput(so1);
             action.addOutput(markerFile, "GenomicsDB Workspace", false);
 
-            SequenceUtil.deleteFolderWithRm(ctx.getLogger(), destinationWorkspaceFolder);
+            SequenceUtil.deleteFolderWithRm(ctx.getLogger(), workingDestinationWorkspaceFolder);
 
             action.setEndTime(new Date());
             ctx.addActions(action);
@@ -676,6 +681,11 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 throw new PipelineJobException(e);
             }
         }
+    }
+
+    private File getCopyToSourceDone(JobContext ctx)
+    {
+        return new File(ctx.getSourceDirectory(), "copyToWebserver.done");
     }
 
     private void reportFragmentsPerContig(JobContext ctx, File destContigFolder, String contigName)
