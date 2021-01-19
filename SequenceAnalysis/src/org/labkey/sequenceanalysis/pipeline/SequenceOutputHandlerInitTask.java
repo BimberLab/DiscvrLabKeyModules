@@ -125,7 +125,9 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
             }
         }
 
-        handler.getProcessor().init(getJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getFiles(), getPipelineJob().getParameterJson(), getPipelineJob().getAnalysisDirectory(), actions, outputsToCreate);
+        TaskFileManagerImpl manager = new TaskFileManagerImpl(getPipelineJob(), getPipelineJob().getAnalysisDirectory(), null);
+        JobContextImpl ctx = new JobContextImpl(getPipelineJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), getPipelineJob().getAnalysisDirectory(), manager, null);
+        handler.getProcessor().init(ctx, getPipelineJob().getFiles(), actions, outputsToCreate);
 
         if (!outputsToCreate.isEmpty())
         {

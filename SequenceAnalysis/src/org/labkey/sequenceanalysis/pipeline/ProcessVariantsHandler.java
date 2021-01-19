@@ -489,9 +489,9 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
     public class Processor implements SequenceOutputProcessor
     {
         @Override
-        public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            initVariantProcessing(job, support, inputFiles, outputDir);
+            initVariantProcessing(ctx.getJob(), ctx.getSequenceSupport(), inputFiles, ctx.getOutputDir());
         }
 
         @Override

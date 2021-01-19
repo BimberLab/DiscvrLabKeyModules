@@ -18,7 +18,6 @@ import org.labkey.singlecell.SingleCellModule;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -84,7 +83,7 @@ public class SeuratCellHashingHandler extends AbstractParameterizedOutputHandler
     public class Processor implements SequenceOutputHandler.SequenceOutputProcessor
     {
         @Override
-        public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
             for (SequenceOutputFile so : inputFiles)
             {
@@ -94,7 +93,7 @@ public class SeuratCellHashingHandler extends AbstractParameterizedOutputHandler
                 }
             }
 
-            CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(outputDir, job, support, "readsetId", params.optBoolean("excludeFailedcDNA", true), true, false);
+            CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getSourceDirectory(), ctx.getJob(), ctx.getSequenceSupport(), "readsetId", ctx.getParams().optBoolean("excludeFailedcDNA", true), true, false);
         }
 
         @Override

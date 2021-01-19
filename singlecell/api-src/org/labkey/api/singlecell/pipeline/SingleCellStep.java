@@ -1,22 +1,29 @@
 package org.labkey.api.singlecell.pipeline;
 
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 
 import java.io.File;
-import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.List;
 
 public interface SingleCellStep extends PipelineStep
 {
     public static final String STEP_TYPE = "singleCell";
+    public static final String SEURAT_PROCESSING = "seuratProcessing";
 
-    public Collection<String> getLibraries();
+    public Collection<String> getRLibraries();
 
-    public void writeComments(PrintWriter writer, List<String> seuratVariables, SeuratContext ctx);
+    public String getDockerContainerName();
 
-    public Output appendToMarkdown(PrintWriter writer, List<String> seuratVariables, SeuratContext ctx);
+    default void init(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputFiles)
+    {
+
+    }
+
+    public Output execute(List<File> inputObjects, SeuratContext ctx);
 
     public interface SeuratContext
     {

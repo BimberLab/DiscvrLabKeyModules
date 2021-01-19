@@ -19,7 +19,6 @@ import org.labkey.singlecell.SingleCellModule;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 public class SeuratCiteSeqHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
@@ -78,9 +77,9 @@ public class SeuratCiteSeqHandler extends AbstractParameterizedOutputHandler<Seq
     public class Processor implements SequenceOutputHandler.SequenceOutputProcessor
     {
         @Override
-        public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(outputDir, job, support,"readsetId", params.optBoolean("excludeFailedcDNA", true), false, true);
+            CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getOutputDir(), ctx.getJob(), ctx.getSequenceSupport(),"readsetId", ctx.getParams().optBoolean("excludeFailedcDNA", true), false, true);
         }
 
         @Override

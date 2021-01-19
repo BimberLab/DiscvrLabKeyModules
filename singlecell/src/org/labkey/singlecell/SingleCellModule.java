@@ -27,18 +27,27 @@ import org.labkey.api.module.ModuleContext;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.singlecell.CellHashingService;
+import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.singlecell.analysis.CellHashingHandler;
-import org.labkey.singlecell.analysis.LoupeCellHashingHandler;
 import org.labkey.singlecell.analysis.CellRangerRawDataHandler;
 import org.labkey.singlecell.analysis.CellRangerSeuratHandler;
 import org.labkey.singlecell.analysis.CiteSeqHandler;
+import org.labkey.singlecell.analysis.LoupeCellHashingHandler;
 import org.labkey.singlecell.analysis.ProcessSingleCellHandler;
 import org.labkey.singlecell.analysis.SeuratCellHashingHandler;
 import org.labkey.singlecell.analysis.SeuratCiteSeqHandler;
 import org.labkey.singlecell.button.CellHashingButton;
 import org.labkey.singlecell.button.CiteSeqButton;
-import org.labkey.api.singlecell.pipeline.SingleCellStep;
+import org.labkey.singlecell.pipeline.singlecell.AppendCiteSeq;
+import org.labkey.singlecell.pipeline.singlecell.DoubletFinder;
+import org.labkey.singlecell.pipeline.singlecell.Downsample;
+import org.labkey.singlecell.pipeline.singlecell.MergeSeuratRawCount;
+import org.labkey.singlecell.pipeline.singlecell.RunSingleR;
+import org.labkey.singlecell.pipeline.singlecell.SeuratDimRedux;
+import org.labkey.singlecell.pipeline.singlecell.SeuratPreprocessing;
+import org.labkey.singlecell.pipeline.singlecell.SplitSeurat;
+import org.labkey.singlecell.pipeline.singlecell.SubsetSeurat;
 import org.labkey.singlecell.run.CellRangerVDJWrapper;
 import org.labkey.singlecell.run.CellRangerWrapper;
 
@@ -137,5 +146,16 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new CellRangerSeuratHandler());
         SequenceAnalysisService.get().registerFileHandler(new CellRangerRawDataHandler());
         SequenceAnalysisService.get().registerFileHandler(new ProcessSingleCellHandler());
+
+        //Single-cell:
+        SequencePipelineService.get().registerPipelineStep(new AppendCiteSeq.Provider());
+        SequencePipelineService.get().registerPipelineStep(new DoubletFinder.Provider());
+        SequencePipelineService.get().registerPipelineStep(new Downsample.Provider());
+        SequencePipelineService.get().registerPipelineStep(new MergeSeuratRawCount.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RunSingleR.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SeuratDimRedux.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SeuratPreprocessing.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SplitSeurat.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SubsetSeurat.Provider());
     }
 }

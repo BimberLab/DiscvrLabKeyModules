@@ -315,16 +315,16 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         }
 
         @Override
-        public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
             Set<Integer> genomeIds = new HashSet<>();
             Set<String> uniqueSamples = new HashSet<>();
 
             if (_append)
             {
-                File workspace = getSourceWorkspace(params, support);
+                File workspace = getSourceWorkspace(ctx.getParams(), ctx.getSequenceSupport());
                 uniqueSamples.addAll(getSamplesForWorkspace(workspace));
-                job.getLogger().info("Samples in the existing workspace: " + uniqueSamples.size());
+                ctx.getJob().getLogger().info("Samples in the existing workspace: " + uniqueSamples.size());
             }
 
             for (SequenceOutputFile so : inputFiles)

@@ -170,25 +170,25 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
     public class Processor implements SequenceOutputProcessor
     {
         @Override
-        public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
             for (SequenceOutputFile so : inputFiles)
             {
                 if (so.getReadset() != null)
                 {
-                    support.cacheReadset(so.getReadset(), job.getUser());
+                    ctx.getSequenceSupport().cacheReadset(so.getReadset(), ctx.getJob().getUser());
                 }
                 else
                 {
-                    job.getLogger().error("Output file lacks a readset and will be skipped: " + so.getRowid());
+                    ctx.getJob().getLogger().error("Output file lacks a readset and will be skipped: " + so.getRowid());
                 }
             }
 
-            CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(outputDir, job, support,"readsetId", params.optBoolean("excludeFailedcDNA", true), false, false);
+            CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getOutputDir(), ctx.getJob(), ctx.getSequenceSupport(),"readsetId", ctx.getParams().optBoolean("excludeFailedcDNA", true), false, false);
 
-            if (params.get(GTF_FILE_ID) == null)
+            if (ctx.getParams().get(GTF_FILE_ID) == null)
             {
-                job.getLogger().info("attempting to infer GTF:");
+                ctx.getJob().getLogger().info("attempting to infer GTF:");
 
                 //TODO: collapse by filepath
                 Map<File, Integer> gtfFileToId = new HashMap<>();
@@ -241,8 +241,8 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                 }
 
                 int gtfId = gtfFileToId.get(gtfFileToId.keySet().iterator().next());
-                support.cacheExpData(ExperimentService.get().getExpData(gtfId));
-                support.cacheObject(GTF_FILE_ID, gtfId);
+                ctx.getSequenceSupport().cacheExpData(ExperimentService.get().getExpData(gtfId));
+                ctx.getSequenceSupport().cacheObject(GTF_FILE_ID, gtfId);
             }
         }
 

@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
@@ -30,7 +31,7 @@ public class JobContextImpl implements SequenceOutputHandler.JobContext
     private TaskFileManager _fileManager;
     private WorkDirectory _wd;
 
-    public JobContextImpl(SequenceJob job, SequenceAnalysisJobSupport support, JSONObject params, File outputDir, TaskFileManager fileManager, WorkDirectory workDirectory)
+    public JobContextImpl(SequenceJob job, SequenceAnalysisJobSupport support, JSONObject params, File outputDir, TaskFileManager fileManager, @Nullable WorkDirectory workDirectory)
     {
         _job = job;
         _support = support;

@@ -7,13 +7,12 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.io.File;
-import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
 
-public class AppendCiteSeq extends AbstractOosapStep
+public class FindMarkers extends AbstractOosapStep
 {
-    public AppendCiteSeq(PipelineContext ctx, Provider provider)
+    public FindMarkers(PipelineContext ctx, FindMarkers.Provider provider)
     {
         super(provider, ctx);
     }
@@ -22,19 +21,18 @@ public class AppendCiteSeq extends AbstractOosapStep
     {
         public Provider()
         {
-            super("AppendCiteSeq", "Append CITE-seq Data", "OOSAP", "If available, this will download and append CITE-seq data to the Seurat object(s).", Arrays.asList(
-                ToolParameterDescriptor.create("normalizationMethod", "Normalization Method", "", "ldk-simplecombo", new JSONObject(){{
-                    put("storeValues", "CLR");
-                    put("initialValue", "CLR");
-                }}, null)
+            super("FindMarkers", "Find Markers", "OOSAP", "This will run Final_All_Markers on the input object(s), save the results as a TSV.", Arrays.asList(
+                    ToolParameterDescriptor.create("identFields", "Identity Field(s)", "", "textarea", new JSONObject(){{
+                        put("allowBlank", false);
+                        put("height", 200);
+                    }}, null)
             ), null, null);
         }
 
-
         @Override
-        public AppendCiteSeq create(PipelineContext ctx)
+        public FindMarkers create(PipelineContext ctx)
         {
-            return new AppendCiteSeq(ctx, this);
+            return new FindMarkers(ctx, this);
         }
     }
 

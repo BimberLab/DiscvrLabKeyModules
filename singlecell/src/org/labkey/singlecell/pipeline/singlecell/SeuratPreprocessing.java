@@ -8,9 +8,9 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
-public class SeuratDimRedux extends AbstractOosapStep
+public class SeuratPreprocessing extends AbstractOosapStep
 {
-    public SeuratDimRedux(PipelineContext ctx, SeuratDimRedux.Provider provider)
+    public SeuratPreprocessing(PipelineContext ctx, SeuratPreprocessing.Provider provider)
     {
         super(provider, ctx);
     }
@@ -19,16 +19,16 @@ public class SeuratDimRedux extends AbstractOosapStep
     {
         public Provider()
         {
-            super("SeuratDimRedux", "Seurat DimRedux", "OOSAP", "This will use OOSAP to run Seurat's standard DimRedux steps.", Arrays.asList(
+            super("SeuratPreprocessing", "Pre-processing", "OOSAP", "This step reads the raw count matrix/matrices, runs EmptyDrops, and can perform basic filtering.", Arrays.asList(
 
             ), null, null);
         }
 
 
         @Override
-        public SeuratDimRedux create(PipelineContext ctx)
+        public SeuratPreprocessing create(PipelineContext ctx)
         {
-            return new SeuratDimRedux(ctx, this);
+            return new SeuratPreprocessing(ctx, this);
         }
     }
 

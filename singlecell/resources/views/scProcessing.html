@@ -1,0 +1,10 @@
+<script type="text/javascript">
+    Ext4.onReady(function(){
+        var webpart = <%=webpartContext%>;
+
+        Ext4.create('SequenceAnalysis.panel.SingleCellProcessingPanel', {
+            outputFileIds: LABKEY.ActionURL.getParameter("outputFileIds") ? LABKEY.ActionURL.getParameter("outputFileIds").split(';') : []
+        }).render(webpart.wrapperDivId);
+    });
+
+</script>
