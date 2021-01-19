@@ -23,7 +23,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         alwaysShow: true
     },{
         name: 'subjectId',
-        labels: ['Subject Id', 'Animal', 'Animal Id', 'SubjectId'],
+        labels: ['Subject Id', 'Animal', 'AnimalId', 'Animal Id', 'SubjectId'],
         allowRowSpan: true,
         allowBlank: false,
         transform: 'subject'
