@@ -139,7 +139,15 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     @Override
     public @Nullable String getParamNameForStepType(Class<? extends PipelineStep> stepType)
     {
-        return _pipelineStepTypeMap.get(stepType);
+        for (Class<? extends PipelineStep> step : _pipelineStepTypeMap.keySet())
+        {
+            if (step.isAssignableFrom(stepType))
+            {
+                return _pipelineStepTypeMap.get(step);
+            }
+        }
+
+        throw new IllegalArgumentException("Unable to find matching type for class: " + stepType.getName());
     }
 
     @Override
