@@ -506,6 +506,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                         totalConsensusInPBS++;
                     }
 
+                    //Note: if there are multiple variants, the sum might argue for consensus: i.e. G->T 0.43, G->C 0.23. wild-type is the minority
                     vcb.attribute("IN_CONSENSUS", 1);
 
                     if (vc.hasAttribute("INDEL"))
