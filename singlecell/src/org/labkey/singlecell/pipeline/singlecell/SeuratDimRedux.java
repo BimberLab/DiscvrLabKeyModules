@@ -1,7 +1,9 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
+import org.json.JSONObject;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.io.File;
@@ -19,7 +21,10 @@ public class SeuratDimRedux extends AbstractOosapStep
     {
         public Provider()
         {
-            super("SeuratDimRedux", "Seurat DimRedux", "OOSAP", "This will use OOSAP to run Seurat's standard DimRedux steps.", Arrays.asList(
+            super("SeuratDimRedux", "Seurat DimRedux", "OOSAP", "This will run tSNA and UMAP for the input object.", Arrays.asList(
+                    ToolParameterDescriptor.create("minDimsToUse", "Min. PCs to Use", "The minimum number of PCs to use", "ldk-integerfield", new JSONObject(){{
+                        put("minValue", 0);
+                    }}, 15)
 
             ), null, null);
         }

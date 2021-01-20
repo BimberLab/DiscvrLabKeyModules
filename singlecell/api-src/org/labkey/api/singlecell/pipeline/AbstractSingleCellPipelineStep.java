@@ -27,6 +27,12 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         out.println("```");
     }
 
+    @Override
+    public boolean requiresHashingOrCiteSeq()
+    {
+        return false;
+    }
+
     protected void appendChunk(String header, String extraText, String chunkName, String body, PrintWriter out)
     {
         out.println("");

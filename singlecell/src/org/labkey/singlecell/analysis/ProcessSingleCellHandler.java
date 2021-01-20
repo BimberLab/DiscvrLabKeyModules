@@ -16,6 +16,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.FileType;
 import org.labkey.api.view.ActionURL;
@@ -129,11 +130,22 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
         @Override
         public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
+            boolean requiresHashingOrCite = false;
             List<PipelineStepCtx<SingleCellStep>> steps = SequencePipelineService.get().getSteps(ctx.getJob(), SingleCellStep.class);
             for (PipelineStepCtx<SingleCellStep> stepCtx : steps)
             {
                 SingleCellStep step = stepCtx.getProvider().create(ctx);
                 step.init(ctx, inputFiles);
+
+                if (step.requiresHashingOrCiteSeq())
+                {
+                    requiresHashingOrCite = true;
+                }
+            }
+
+            if (requiresHashingOrCite)
+            {
+                CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getSourceDirectory(), ctx.getJob(), ctx.getSequenceSupport(), "readsetId", false, false, false);
             }
         }
 

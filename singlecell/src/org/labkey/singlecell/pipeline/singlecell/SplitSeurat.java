@@ -22,7 +22,7 @@ public class SplitSeurat extends AbstractOosapStep
         public Provider()
         {
             super("SplitSeurat", "Split Seurat Objects", "OOSAP", "This will split each input seurat object into multiple objects.", Arrays.asList(
-                    ToolParameterDescriptor.create("splitField", "Field Name", "", "textbox", new JSONObject(){{
+                    ToolParameterDescriptor.create("splitField", "Field Name", "This field will be used to split the seurat object. For each unique value of this field, cells will be subset and a new seurat object created. Any cells lacking a value in this field will be discarded.", "textfield", new JSONObject(){{
                         put("allowBlank", false);
                     }}, null)
             ), null, null);

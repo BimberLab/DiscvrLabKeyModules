@@ -8,9 +8,9 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
-public class MergeSeuratRawCount extends AbstractOosapStep
+public class RemoveCellCycle extends AbstractOosapStep
 {
-    public MergeSeuratRawCount(PipelineContext ctx, MergeSeuratRawCount.Provider provider)
+    public RemoveCellCycle(PipelineContext ctx, RemoveCellCycle.Provider provider)
     {
         super(provider, ctx);
     }
@@ -19,16 +19,16 @@ public class MergeSeuratRawCount extends AbstractOosapStep
     {
         public Provider()
         {
-            super("MergeSeuratRawCount", "Merge ", "OOSAP", "If available, this will download and append CITE-seq data to the Seurat object(s).", Arrays.asList(
+            super("RemoveCellCycle", "Remove Cell Cycle", "OOSAP", "This will score cells by cell cycle phase and regress out cell cycle.", Arrays.asList(
 
             ), null, null);
         }
 
 
         @Override
-        public MergeSeuratRawCount create(PipelineContext ctx)
+        public RemoveCellCycle create(PipelineContext ctx)
         {
-            return new MergeSeuratRawCount(ctx, this);
+            return new RemoveCellCycle(ctx, this);
         }
     }
 
@@ -38,3 +38,4 @@ public class MergeSeuratRawCount extends AbstractOosapStep
         return null;
     }
 }
+

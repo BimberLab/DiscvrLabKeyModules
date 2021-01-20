@@ -10,9 +10,9 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
-public class SubsetSeurat extends AbstractOosapStep
+public class MergeSeurat extends AbstractOosapStep
 {
-    public SubsetSeurat(PipelineContext ctx, SubsetSeurat.Provider provider)
+    public MergeSeurat(PipelineContext ctx, MergeSeurat.Provider provider)
     {
         super(provider, ctx);
     }
@@ -21,19 +21,18 @@ public class SubsetSeurat extends AbstractOosapStep
     {
         public Provider()
         {
-            super("SubsetSeurat", "Subset", "OOSAP", "The seurat object will be subset based on the expressions below, one per line, which are passed directly to Seurat's subset(subset = X).", Arrays.asList(
-                    ToolParameterDescriptor.create("expressions", "Expressions", "Enter one expression per line", "textarea", new JSONObject(){{
+            super("MergeSeurat", "Merge Seurat Objects", "OOSAP", "This will merge the incoming seurat objects into a single object, merging all assays. Note: this will discard any normalization or DimRedux data, and performs zero validation to ensure this is compatible with downstream steps.", Arrays.asList(
+                    ToolParameterDescriptor.create("basename", "New Basename", "The updated baseline for this merged object.", "textfield", new JSONObject(){{
                         put("allowBlank", false);
-                        put("height", 150);
                     }}, null)
             ), null, null);
         }
 
 
         @Override
-        public SubsetSeurat create(PipelineContext ctx)
+        public MergeSeurat create(PipelineContext ctx)
         {
-            return new SubsetSeurat(ctx, this);
+            return new MergeSeurat(ctx, this);
         }
     }
 

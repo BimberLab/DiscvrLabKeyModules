@@ -22,7 +22,7 @@ public class FindMarkers extends AbstractOosapStep
         public Provider()
         {
             super("FindMarkers", "Find Markers", "OOSAP", "This will run Final_All_Markers on the input object(s), save the results as a TSV.", Arrays.asList(
-                    ToolParameterDescriptor.create("identFields", "Identity Field(s)", "", "textarea", new JSONObject(){{
+                    ToolParameterDescriptor.create("identFields", "Identity Field(s)", "When running FindMarkers, these field(s) will be used to group the data, identify markers for each group of cells. Enter one field per row.", "textarea", new JSONObject(){{
                         put("allowBlank", false);
                         put("height", 200);
                     }}, null)

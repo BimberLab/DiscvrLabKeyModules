@@ -8,9 +8,9 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
-public class SeuratPreprocessing extends AbstractOosapStep
+public class PrepareRawCounts extends AbstractOosapStep
 {
-    public SeuratPreprocessing(PipelineContext ctx, SeuratPreprocessing.Provider provider)
+    public PrepareRawCounts(PipelineContext ctx, PrepareRawCounts.Provider provider)
     {
         super(provider, ctx);
     }
@@ -19,16 +19,16 @@ public class SeuratPreprocessing extends AbstractOosapStep
     {
         public Provider()
         {
-            super("SeuratPreprocessing", "Pre-processing", "OOSAP", "This step reads the raw count matrix/matrices, runs EmptyDrops, and can perform basic filtering.", Arrays.asList(
+            super("PrepareRawCounts", "Load Raw Counts", "OOSAP", "This step reads the raw count matrix/matrices, and runs EmptyDrops to provide an unfiltered count matrix.", Arrays.asList(
 
             ), null, null);
         }
 
 
         @Override
-        public SeuratPreprocessing create(PipelineContext ctx)
+        public PrepareRawCounts create(PipelineContext ctx)
         {
-            return new SeuratPreprocessing(ctx, this);
+            return new PrepareRawCounts(ctx, this);
         }
     }
 

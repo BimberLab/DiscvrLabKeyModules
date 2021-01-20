@@ -57,6 +57,46 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
                 name: 'jobDescription',
                 allowBlank:true
             },{
+                xtype: 'combo',
+                name: 'doSplitJobs',
+                width: 600,
+                fieldLabel: 'Job Submission',
+                displayField: 'label',
+                valueField: 'value',
+                store: {
+                    fields: ['value', 'label'],
+                    data: [
+                        {value: 'individual', label: 'Run Separately (One Job/Input)'},
+                        {value: 'merged', label: 'Merged Input (One Job/Batch)'}
+                    ]
+                },
+                listeners: {
+                    change: function(field, val, oldVal) {
+                        var useOutputFileContainer = field.up('panel').down('#useOutputFileContainer');
+                        useOutputFileContainer.setVisible(val === 'individual');
+                        useOutputFileContainer.setValue(val !== 'individual');
+
+                        var outputBasename = field.up('panel').down('#outputBasename');
+                        outputBasename.allowBlank = val === 'individual';
+                    }
+                },
+                value: null,
+                allowBlank: false
+            },{
+                xtype: 'textfield',
+                width: 600,
+                itemId: 'outputBasename',
+                name: 'outputBasename',
+                fieldLabel: 'Output Basename',
+                description: 'This will be used as the final sample/file name.  If blank, the readset name will be used.  The latter cannot be used when merging multiple inputs.'
+            },{
+                xtype: 'checkbox',
+                width: 600,
+                itemId: 'useOutputFileContainer',
+                name: 'useOutputFileContainer',
+                fieldLabel: 'Submit to Source File Workbook',
+                description: 'If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if Run Separately is selected.'
+            },{
                 fieldLabel: 'Delete Intermediate Files',
                 helpPopup: 'Check to delete the intermediate files created by this pipeline.  In general these are not needed and it will save disk space.  These files might be useful for debugging though.',
                 name: 'deleteIntermediateFiles',
@@ -115,9 +155,10 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
                         }
                     }, this);
 
-                    if (errors.length){
-                        alert('The following inputs lack a file and will be skipped: ' + errorNames.join(', '));
-                    }
+                    //TODO
+                    //if (errors.length){
+                    //    alert('The following inputs lack a file and will be skipped: ' + errorNames.join(', '));
+                    //}
 
                     this.libraryIds = Ext4.unique(libraryIds);
                 }
@@ -182,7 +223,7 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
         items.push({
             xtype: 'sequenceanalysis-analysissectionpanel',
             title: 'Seurat Processing',
-            stepType: 'seuratProcessing',
+            stepType: 'singleCell',
             allowDuplicateSteps: true,
             sectionDescription: 'This steps in this section will act on the seurat object(s). The initial loading from raw counts will create one seurat object per input dataset. Individual steps can either join, split, or act on each input object.  The steps will be executed in the order listed.  Use the button below to add steps.',
             toolConfig: results
@@ -227,11 +268,12 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
             json.doSplitJobs = !!values.doSplitJobs;
         }
 
-        var actionName = 'runSequenceHandler';
-        var failedTools = [];
+        console.log(json);
+        console.log(values);
+        return;
 
         LABKEY.Ajax.request({
-            url: LABKEY.ActionURL.buildURL('sequenceanalysis', actionName),
+            url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler'),
             jsonData: json,
             scope: this,
             success: function(){

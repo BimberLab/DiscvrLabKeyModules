@@ -1,5 +1,6 @@
 package org.labkey.api.singlecell.pipeline;
 
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
@@ -18,10 +19,12 @@ public interface SingleCellStep extends PipelineStep
 
     public String getDockerContainerName();
 
-    default void init(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputFiles)
+    default void init(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputFiles) throws PipelineJobException
     {
 
     }
+
+    public boolean requiresHashingOrCiteSeq();
 
     public Output execute(List<File> inputObjects, SeuratContext ctx);
 
