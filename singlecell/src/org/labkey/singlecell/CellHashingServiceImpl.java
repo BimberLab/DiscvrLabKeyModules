@@ -206,7 +206,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
                 if (hasError.get())
                 {
-                    throw new PipelineJobException("No cell hashing readset or HTO found for one or more cDNAs. see the file: " + output.getName());
+                    throw new PipelineJobException("There is a problem with either cell hashing or CITE-seq. See the file: " + output.getName());
                 }
 
                 if (hashingStatus.size() > 1)
