@@ -6,13 +6,11 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
-import java.io.File;
 import java.util.Arrays;
-import java.util.List;
 
-public class SeuratDimRedux extends AbstractOosapStep
+public class FindClustersAndDimRedux extends AbstractOosapStep
 {
-    public SeuratDimRedux(PipelineContext ctx, SeuratDimRedux.Provider provider)
+    public FindClustersAndDimRedux(PipelineContext ctx, FindClustersAndDimRedux.Provider provider)
     {
         super(provider, ctx);
     }
@@ -21,7 +19,7 @@ public class SeuratDimRedux extends AbstractOosapStep
     {
         public Provider()
         {
-            super("SeuratDimRedux", "Seurat DimRedux", "OOSAP", "This will run tSNA and UMAP for the input object.", Arrays.asList(
+            super("FindClustersAndDimRedux", "Find Clusters And Dim Redux", "OOSAP", "This will run tSNA and UMAP for the input object.", Arrays.asList(
                     ToolParameterDescriptor.create("minDimsToUse", "Min. PCs to Use", "The minimum number of PCs to use", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, 15)
@@ -31,9 +29,9 @@ public class SeuratDimRedux extends AbstractOosapStep
 
 
         @Override
-        public SeuratDimRedux create(PipelineContext ctx)
+        public FindClustersAndDimRedux create(PipelineContext ctx)
         {
-            return new SeuratDimRedux(ctx, this);
+            return new FindClustersAndDimRedux(ctx, this);
         }
     }
 }

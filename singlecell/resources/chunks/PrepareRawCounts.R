@@ -1,7 +1,8 @@
-for (datasetName in names(seuratObjects)) {
+for (datasetId in names(seuratObjects)) {
     seuratObj <- seuratObjects[[datasetId]]
 
-    seuratObjs[[datasetName]] <- ReadAndFilter10xData(dataDir = data[[datasetName]], datasetName = datasetName, gtfFile = NULL)
+    datasetName <- datasetIdToName[[datasetId]]
+    seuratObjs[[datasetId]] <- CellMembrane::ReadAndFilter10xData(dataDir = data[[datasetId]], datasetName = datasetName)
 
     newSeuratObjects[[datasetId]] <- seuratObj
 }

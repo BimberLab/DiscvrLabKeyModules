@@ -50,7 +50,7 @@ import org.labkey.singlecell.pipeline.singlecell.RemoveCellCycle;
 import org.labkey.singlecell.pipeline.singlecell.RunCellHashing;
 import org.labkey.singlecell.pipeline.singlecell.RunPCA;
 import org.labkey.singlecell.pipeline.singlecell.RunSingleR;
-import org.labkey.singlecell.pipeline.singlecell.SeuratDimRedux;
+import org.labkey.singlecell.pipeline.singlecell.FindClustersAndDimRedux;
 import org.labkey.singlecell.pipeline.singlecell.SplitSeurat;
 import org.labkey.singlecell.pipeline.singlecell.SubsetSeurat;
 import org.labkey.singlecell.run.CellRangerVDJWrapper;
@@ -165,7 +165,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new RunCellHashing.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunPCA.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunSingleR.Provider());
-        SequencePipelineService.get().registerPipelineStep(new SeuratDimRedux.Provider());
+        SequencePipelineService.get().registerPipelineStep(new FindClustersAndDimRedux.Provider());
         SequencePipelineService.get().registerPipelineStep(new SplitSeurat.Provider());
         SequencePipelineService.get().registerPipelineStep(new SubsetSeurat.Provider());
     }

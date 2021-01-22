@@ -4,7 +4,7 @@ for (datasetId in names(newSeuratObjects)) {
 
     saveRDS(seuratObj, file = paste0(datasetId, '.rds'))
 
-    datasetName <- datasetIdToName[[datasetName]]
+    datasetName <- datasetIdToName[[datasetId]]
     savedFiles <- rbind(savedFiles, data.frame(datasetId = datasetId, datasetName = datasetName, filename = file))
 }
 

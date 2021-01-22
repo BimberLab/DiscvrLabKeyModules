@@ -261,7 +261,7 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
 
         Ext4.Msg.wait('Submitting...');
         var json = {
-            handlerClass: 'org.labkey.singecell.pipeline.ProcessSingleCellHandler',
+            handlerClass: 'org.labkey.singlecell.analysis.ProcessSingleCellHandler',
             outputFileIds: this.outputFileIds,
             params: Ext4.encode(values)
         };

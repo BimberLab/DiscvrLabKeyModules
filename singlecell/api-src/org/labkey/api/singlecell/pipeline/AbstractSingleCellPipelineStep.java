@@ -46,7 +46,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         File markdownFile = getExpectedMarkdownFile(ctx, outputPrefix);
         if (!markdownFile.exists())
         {
-            //TODO: this is for testing only:
+            //TODO: this is for testing only
             try
             {
                 Files.touch(markdownFile);
@@ -62,7 +62,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         File htmlFile = getExpectedHtmlFile(ctx, outputPrefix);
         if (!htmlFile.exists())
         {
-            //TODO: this is for testing only:
+            //TODO: this is for testing only
             try
             {
                 Files.touch(markdownFile);
@@ -85,7 +85,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                 File f = new File(ctx.getOutputDir(), line[1]);
                 if (!f.exists())
                 {
-                    //TODO: this is for testing only:
+                    //TODO: this is for testing only
                     try
                     {
                         Files.touch(markdownFile);
