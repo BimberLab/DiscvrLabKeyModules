@@ -15,7 +15,6 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
-import org.labkey.api.util.FileUtil;
 import org.labkey.api.writer.PrintWriters;
 
 import java.io.BufferedReader;

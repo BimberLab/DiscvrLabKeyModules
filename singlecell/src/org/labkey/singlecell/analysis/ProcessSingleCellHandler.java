@@ -178,24 +178,18 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
         {
             List<PipelineStepCtx<SingleCellStep>> steps = SequencePipelineService.get().getSteps(ctx.getJob(), SingleCellStep.class);
 
-            String basename = StringUtils.trimToNull(ctx.getParams().optString("outputBasename"));
-            if (basename == null)
+            String basename;
+            if (inputFiles.size() == 1 && inputFiles.get(0).getReadset() != null)
             {
-                if (inputFiles.size() > 1)
-                {
-                    throw new IllegalArgumentException("Must provide a basename when more than one input is used! This should have been stopped upstream");
-                }
-
                 Integer readsetId = inputFiles.get(0).getReadset();
-                if (readsetId == null)
-                {
-                    throw new IllegalArgumentException("Expected output to have a readsetId: " + inputFiles.get(0).getRowid());
-                }
-
                 Readset rs = ctx.getSequenceSupport().getCachedReadset(readsetId);
-
                 basename = FileUtil.makeLegalName(rs.getName());
             }
+            else
+            {
+                basename = "SingleCellProcessing";
+            }
+
 
             List<File> markdowns = new ArrayList<>();
 

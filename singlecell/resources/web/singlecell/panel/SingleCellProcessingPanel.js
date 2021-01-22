@@ -75,21 +75,10 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
                         var useOutputFileContainer = field.up('panel').down('#useOutputFileContainer');
                         useOutputFileContainer.setVisible(val === 'individual');
                         useOutputFileContainer.setValue(val !== 'individual');
-
-                        var outputBasename = field.up('panel').down('#outputBasename');
-                        outputBasename.allowBlank = val === 'individual';
-                        outputBasename.validate();
                     }
                 },
                 value: null,
                 allowBlank: false
-            },{
-                xtype: 'textfield',
-                width: 600,
-                itemId: 'outputBasename',
-                name: 'outputBasename',
-                fieldLabel: 'Output Basename',
-                description: 'This will be used as the final sample/file name.  If blank, the readset name will be used.  The latter cannot be used when merging multiple inputs.'
             },{
                 xtype: 'checkbox',
                 width: 600,
