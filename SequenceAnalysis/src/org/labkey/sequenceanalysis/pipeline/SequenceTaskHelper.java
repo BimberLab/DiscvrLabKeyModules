@@ -19,7 +19,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
@@ -41,10 +40,10 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
-import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 import org.labkey.sequenceanalysis.SequencePipelineServiceImpl;
 
 import java.io.File;
@@ -65,7 +64,7 @@ public class SequenceTaskHelper implements PipelineContext
     private SequenceJob _job;
     private WorkDirectory _wd;
     private SequencePipelineSettings _settings;
-    private TaskFileManagerImpl _fileManager;
+    private TaskFileManager _fileManager;
     private File _workLocation;
     public static final String FASTQ_DATA_INPUT_NAME = "Input FASTQ File";
     public static final String BAM_INPUT_NAME = "Input BAM File";
@@ -97,12 +96,12 @@ public class SequenceTaskHelper implements PipelineContext
         _settings = new SequencePipelineSettings(_job.getParameters());
     }
 
-    public TaskFileManagerImpl getFileManager()
+    public TaskFileManager getFileManager()
     {
         return _fileManager;
     }
 
-    public void setFileManager(TaskFileManagerImpl fileManager)
+    public void setFileManager(TaskFileManager fileManager)
     {
         _fileManager = fileManager;
     }

@@ -16,8 +16,10 @@
 package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
+import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.util.Pair;
 
@@ -25,6 +27,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This class helps manage the inputs and outputs created during a pipeline job.  It will gather inputs, outputs and intermediate files.
@@ -55,8 +58,6 @@ public interface TaskFileManager extends PipelineOutputTracker
 
     public boolean isCopyInputsLocally();
 
-    public void removeIntermediateFile(File f);
-
     public void addPicardMetricsFiles(List<PipelineStepOutput.PicardMetricsOutput> files) throws PipelineJobException;
 
     public void writeMetricsToDb(Map<Integer, Integer> readsetMap, Map<Integer, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap) throws PipelineJobException;
@@ -68,11 +69,21 @@ public interface TaskFileManager extends PipelineOutputTracker
     //should be used for remote jobs or local jobs running in a separate working directory
     public void cleanup(Collection<RecordedAction> actions) throws PipelineJobException;
 
+    public void cleanup(Collection<RecordedAction> actions, @Nullable AbstractResumer resumer) throws PipelineJobException;
+
     public InputFileTreatment getInputFileTreatment();
+
+    public Set<File> getIntermediateFiles();
 
     public void processUnzippedInputs();
 
     public void decompressInputFiles(Pair<File, File> pair, List<RecordedAction> actions);
+
+    public Set<SequenceOutputFile> getOutputsToCreate();
+
+    public void addCommandsToAction(List<String> commands, RecordedAction action);
+
+    public void onResume(PipelineJob job, WorkDirectory wd);
 
     public enum InputFileTreatment
     {

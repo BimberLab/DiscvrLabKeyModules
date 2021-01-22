@@ -226,14 +226,21 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 
     protected void executeR(SequenceOutputHandler.JobContext ctx, File rmd, String outputPrefix) throws PipelineJobException
     {
+        List<String> lines = new ArrayList<>();
+        lines.add("rmarkdown::render(output_file = '" + getExpectedHtmlFile(ctx, outputPrefix).getName() + "', input = '" + rmd.getName() + "', intermediates_dir  = '/work'))");
+        lines.add("print('Rmarkdown complete')");
+
+        executeR(ctx, getDockerContainerName(), outputPrefix, lines);
+    }
+
+    public static void executeR(SequenceOutputHandler.JobContext ctx, String dockerContainerName, String outputPrefix, List<String> lines) throws PipelineJobException
+    {
         File localRScript = new File(ctx.getOutputDir(), outputPrefix + ".R");
         if (!localRScript.exists())
         {
             try (PrintWriter writer = PrintWriters.getPrintWriter(localRScript))
             {
-                writer.println("rmarkdown::render('/work/" + rmd.getName() + "')");
-                writer.println("print('Rmarkdown complete')");
-
+                lines.forEach(writer::println);
             }
             catch (IOException e)
             {
@@ -255,7 +262,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             writer.println("HOME=`echo ~/`");
 
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-            writer.println("sudo $DOCKER pull ghcr.io/bimberlab/cellhashr:latest");
+            writer.println("sudo $DOCKER pull " + dockerContainerName);
             writer.println("sudo $DOCKER run --rm=true \\");
             if (SequencePipelineService.get().getMaxRam() != null)
             {
@@ -274,7 +281,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             writer.println("-e USERID=$UID \\");
             writer.println("-w /work \\");
             writer.println("-e HOME=/homeDir \\");
-            writer.println(getDockerContainerName() + " \\");
+            writer.println(dockerContainerName + " \\");
             writer.println("Rscript --vanilla " + localRScript.getName());
         }
         catch (IOException e)

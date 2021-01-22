@@ -9,6 +9,8 @@ import java.util.Collection;
 
 abstract public class AbstractCellMembraneStep extends AbstractSingleCellPipelineStep
 {
+    public static String CONTINAER_NAME = "ghcr.io/bimberlabinternal/cellmembrane:latest";
+
     public AbstractCellMembraneStep(PipelineStepProvider provider, PipelineContext ctx)
     {
         super(provider, ctx);
@@ -23,6 +25,6 @@ abstract public class AbstractCellMembraneStep extends AbstractSingleCellPipelin
     @Override
     public String getDockerContainerName()
     {
-        return "ghcr.io/bimberlabinternal/cellmembrane:latest";
+        return CONTINAER_NAME;
     }
 }

@@ -46,6 +46,7 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractResumer;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractSequenceTaskFactory;
 import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
@@ -1399,12 +1400,11 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         {
             Resumer ret = readFromJson(file, Resumer.class);
             ret._isResume = true;
-            ret._log = task.getJob().getLogger();
-            ret._localWorkDir = task.getPipelineJob().getAnalysisDirectory();
-            ret._fileManager._job = job;
-            ret._fileManager._wd = task._wd;
-            ret._fileManager._workLocation = task._wd.getDir();
-            task._taskHelper.setFileManager(ret._fileManager);
+            ret.setLogger(task.getJob().getLogger());
+            ret.setLocalWorkDir(task.getPipelineJob().getAnalysisDirectory());
+            ret.getFileManager().onResume(job, task._wd);
+
+            task._taskHelper.setFileManager(ret.getFileManager());
             try
             {
                 if (!ret._copiedInputs.isEmpty())
@@ -1446,10 +1446,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         public void setHasCopiedResources(File workingFasta, List<RecordedAction> actions, Map<File, File> copiedInputs) throws PipelineJobException
         {
             _workingFasta = workingFasta;
-            for (RecordedAction action : actions)
-            {
-                _recordedActions.add(action);
-            }
+            _recordedActions.addAll(actions);
             _copiedInputs.putAll(copiedInputs);
             saveState();
         }
@@ -1467,10 +1464,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         public void setFastqPreprocessingDone(Map<ReadData, Pair<File, File>> toAlign, List<RecordedAction> actions, Map<File, File> copiedInputs) throws PipelineJobException
         {
             _filesToAlign = toAlign;
-            for (RecordedAction action : actions)
-            {
-                _recordedActions.add(action);
-            }
+            _recordedActions.addAll(actions);
             _copiedInputs.putAll(copiedInputs);
             saveState();
         }
@@ -1488,10 +1482,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             }
 
             _mergedBamFile = mergedBamFile;
-            for (RecordedAction action : actions)
-            {
-                _recordedActions.add(action);
-            }
+            _recordedActions.addAll(actions);
             saveState();
         }
 
@@ -1503,10 +1494,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         public void setBamPostProcessingBamDone(File postProcessedBamFile, List<RecordedAction> actions) throws PipelineJobException
         {
             _postProcessedBamFile = postProcessedBamFile;
-            for (RecordedAction action : actions)
-            {
-                _recordedActions.add(action);
-            }
+            _recordedActions.addAll(actions);
             saveState();
         }
 
@@ -1534,11 +1522,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         public void setBamRenameDone(File renamedBamFile, List<RecordedAction> actions) throws PipelineJobException
         {
             _renamedBamFile = renamedBamFile;
-            for (RecordedAction action : actions)
-            {
-                _recordedActions.add(action);
-            }
-
+            _recordedActions.addAll(actions);
             saveState();
         }
 
@@ -1555,10 +1539,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         public void setBamAnalysisComplete(List<RecordedAction> actions) throws PipelineJobException
         {
             _bamAnalysisDone = true;
-            for (RecordedAction action : actions)
-            {
-                _recordedActions.add(action);
-            }
+            _recordedActions.addAll(actions);
             saveState();
         }
 
@@ -1669,7 +1650,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         public void setReadDataAlignmentDone(int readDataId, List<RecordedAction> actions, File bam) throws PipelineJobException
         {
-            _log.debug("setting read data alignment done: " + readDataId + ", " + (actions == null ? "0" : actions.size()) + " actions");
+            getLogger().debug("setting read data alignment done: " + readDataId + ", " + (actions == null ? "0" : actions.size()) + " actions");
             _readDataBamMap.put(readDataId, bam);
             if (actions != null)
             {
@@ -1721,18 +1702,18 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         public void serializeTest() throws Exception
         {
             Resumer r = new Resumer();
-            r._log = _log;
-            r._recordedActions = new LinkedHashSet<>();
+            r.setLogger(_log);
+            r.setRecordedActions(new LinkedHashSet<>());
             RecordedAction action1 = new RecordedAction();
             action1.setName("Action1");
             action1.setDescription("Description");
             action1.addInput(new File("/input"), "Input");
             action1.addOutput(new File("/output"), "Output", false);
-            r._recordedActions.add(action1);
-            r._fileManager = new TaskFileManagerImpl();
+            r.getRecordedActions().add(action1);
+            r.setFileManager(new TaskFileManagerImpl());
             SequenceOutputFile so = new SequenceOutputFile();
             so.setName("so1");
-            r._fileManager.addSequenceOutput(so);
+            r.getFileManager().addSequenceOutput(so);
 
             File file1 = new File("file1");
             File file2 = new File("file2");
@@ -1752,8 +1733,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
             //after deserialization the RecordedAction should match the original
             Resumer r2 = Resumer.readFromJson(file, Resumer.class);
-            assertEquals(1, r2._recordedActions.size());
-            RecordedAction action2 = r2._recordedActions.iterator().next();
+            assertEquals(1, r2.getRecordedActions().size());
+            RecordedAction action2 = r2.getRecordedActions().iterator().next();
             assertEquals("Action1", action2.getName());
             assertEquals("Description", action2.getDescription());
             assertEquals(1, action2.getInputs().size());

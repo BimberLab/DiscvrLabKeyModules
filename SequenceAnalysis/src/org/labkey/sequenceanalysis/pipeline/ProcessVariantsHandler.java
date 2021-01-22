@@ -26,6 +26,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.PedigreeRecord;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractResumer;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -656,7 +657,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
         private Resumer(JobContextImpl ctx)
         {
-            super(ctx.getSourceDirectory(), ctx.getLogger(), (TaskFileManagerImpl)ctx.getFileManager());
+            super(ctx.getSourceDirectory(), ctx.getLogger(), ctx.getFileManager());
         }
 
         public static Resumer create(JobContextImpl ctx) throws PipelineJobException
@@ -671,11 +672,9 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             {
                 ret = readFromJson(json, Resumer.class);
                 ret._isResume = true;
-                ret._log = ctx.getLogger();
-                ret._localWorkDir = ctx.getWorkDir().getDir();
-                ret._fileManager._job = (SequenceOutputHandlerJob)ctx.getJob();
-                ret._fileManager._wd = ctx.getWorkDir();
-                ret._fileManager._workLocation = ctx.getWorkDir().getDir();
+                ret.setLogger(ctx.getLogger());
+                ret.setLocalWorkDir(ctx.getWorkDir().getDir());
+                ret._fileManager.onResume(ctx.getJob(), ctx.getWorkDir());
 
                 ctx.getLogger().debug("FileManagers initially equal: " + ctx.getFileManager().equals(ret._fileManager));
 
@@ -808,15 +807,15 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         public void serializeTest() throws Exception
         {
             ProcessVariantsHandler.Resumer r = new ProcessVariantsHandler.Resumer();
-            r._log = _log;
-            r._recordedActions = new LinkedHashSet<>();
-            r._fileManager = new TaskFileManagerImpl();
+            r.setLogger(_log);
+            r.setRecordedActions(new LinkedHashSet<>());
+            r.setFileManager(new TaskFileManagerImpl());
             RecordedAction action1 = new RecordedAction();
             action1.setName("Action1");
             action1.setDescription("Description");
             action1.addInput(new File("/input"), "Input");
             action1.addOutput(new File("/output"), "Output", false);
-            r._recordedActions.add(action1);
+            r.getRecordedActions().add(action1);
 
             File tmp = new File(System.getProperty("java.io.tmpdir"));
             File f = FileUtil.getAbsoluteCaseSensitiveFile(new File(tmp, ProcessVariantsHandler.Resumer.JSON_NAME));
@@ -830,8 +829,8 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
             //after deserialization the RecordedAction should match the original
             ProcessVariantsHandler.Resumer r2 = ProcessVariantsHandler.Resumer.readFromJson(f, ProcessVariantsHandler.Resumer.class);
-            assertEquals(1, r2._recordedActions.size());
-            RecordedAction action2 = r2._recordedActions.iterator().next();
+            assertEquals(1, r2.getRecordedActions().size());
+            RecordedAction action2 = r2.getRecordedActions().iterator().next();
             assertEquals("Action1", action2.getName());
             assertEquals("Description", action2.getDescription());
             assertEquals(1, action2.getInputs().size());

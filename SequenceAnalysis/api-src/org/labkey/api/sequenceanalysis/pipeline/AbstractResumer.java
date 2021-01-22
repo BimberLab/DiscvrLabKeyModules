@@ -1,8 +1,7 @@
-package org.labkey.sequenceanalysis.pipeline;
+package org.labkey.api.sequenceanalysis.pipeline;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
@@ -27,7 +26,7 @@ abstract public class AbstractResumer implements Serializable
     transient Logger _log;
     transient File _localWorkDir;
 
-    protected TaskFileManagerImpl _fileManager;
+    protected TaskFileManager _fileManager;
     protected LinkedHashSet<RecordedAction> _recordedActions = null;
     protected boolean _isResume = false;
     protected Map<File, File> _copiedInputs = new HashMap<>();
@@ -40,7 +39,7 @@ abstract public class AbstractResumer implements Serializable
 
     }
 
-    protected AbstractResumer(File localWorkDir, Logger log, TaskFileManagerImpl fileManager)
+    protected AbstractResumer(File localWorkDir, Logger log, TaskFileManager fileManager)
     {
         _localWorkDir = localWorkDir;
         _log = log;
@@ -49,12 +48,12 @@ abstract public class AbstractResumer implements Serializable
         _filesCopiedLocally = new ArrayList<>();
     }
 
-    protected static File getSerializedJson(File outdir, String jsonName)
+    public static File getSerializedJson(File outdir, String jsonName)
     {
         return new File(outdir, jsonName);
     }
 
-    protected static <RESUMER extends AbstractResumer> RESUMER readFromJson(File json, Class<RESUMER> clazz) throws PipelineJobException
+    public static <RESUMER extends AbstractResumer> RESUMER readFromJson(File json, Class<RESUMER> clazz) throws PipelineJobException
     {
         try (BufferedInputStream bus = new BufferedInputStream(new FileInputStream(json)))
         {
@@ -80,7 +79,7 @@ abstract public class AbstractResumer implements Serializable
         _log.debug("total sequence outputs: " + getFileManager().getOutputsToCreate().size());
     }
 
-    protected void writeToJson(File outDir) throws PipelineJobException
+    public void writeToJson(File outDir) throws PipelineJobException
     {
         _log.debug("saving job checkpoint to file");
         logInfoBeforeSave();
@@ -126,12 +125,12 @@ abstract public class AbstractResumer implements Serializable
         writeToJson();
     }
 
-    public TaskFileManagerImpl getFileManager()
+    public TaskFileManager getFileManager()
     {
         return _fileManager;
     }
 
-    public void setFileManager(TaskFileManagerImpl fileManager)
+    public void setFileManager(TaskFileManager fileManager)
     {
         _fileManager = fileManager;
     }
@@ -164,6 +163,16 @@ abstract public class AbstractResumer implements Serializable
     public void setLocalWorkDir(File localWorkDir)
     {
         _localWorkDir = localWorkDir;
+    }
+
+    public Logger getLogger()
+    {
+        return _log;
+    }
+
+    public void setLogger(Logger log)
+    {
+        _log = log;
     }
 
     public Map<File, File> getCopiedInputs()

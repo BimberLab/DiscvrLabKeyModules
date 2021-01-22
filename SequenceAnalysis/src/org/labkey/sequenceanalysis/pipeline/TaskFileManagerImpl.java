@@ -7,7 +7,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -22,6 +21,7 @@ import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractResumer;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
@@ -47,6 +47,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -80,6 +81,19 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     {
         _job = job;
         _workLocation = workDir;
+        _wd = wd;
+    }
+
+    @Override
+    public void onResume(PipelineJob job, WorkDirectory wd)
+    {
+        if (!(job instanceof SequenceJob))
+        {
+            throw new IllegalArgumentException("Can only be used with SequenceJob jobs");
+        }
+
+        _job = (SequenceJob)job;
+        _workLocation = wd.getDir();
         _wd = wd;
     }
 
@@ -155,6 +169,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         addCommandsToAction(output.getCommandsExecuted(), action);
     }
 
+    @Override
     public void addCommandsToAction(List<String> commands, RecordedAction action)
     {
         if (!commands.isEmpty())
@@ -811,9 +826,10 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         }
     }
 
+    @Override
     public Set<SequenceOutputFile> getOutputsToCreate()
     {
-        return _outputsToCreate;
+        return Collections.unmodifiableSet(_outputsToCreate);
     }
 
     public void setOutputsToCreate(Set<SequenceOutputFile> outputsToCreate)

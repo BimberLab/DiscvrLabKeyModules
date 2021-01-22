@@ -14,24 +14,31 @@ import org.labkey.api.query.DetailsURL;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractResumer;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.singlecell.CellHashingService;
+import org.labkey.api.singlecell.pipeline.AbstractSingleCellPipelineStep;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.singlecell.CellHashingServiceImpl;
 import org.labkey.singlecell.SingleCellModule;
+import org.labkey.singlecell.pipeline.singlecell.AbstractCellMembraneStep;
 import org.labkey.singlecell.pipeline.singlecell.PrepareRawCounts;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -285,7 +292,23 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
                 throw new PipelineJobException("No markdown files produced!");
             }
 
-            //TODO: process with pandoc
+            //process with pandoc
+            List<String> lines = new ArrayList<>();
+            List<String> markdownNames = markdowns.stream().map(File::getName).collect(Collectors.toList());
+            lines.add("knitr::pandoc(input = c('" + StringUtils.join(markdownNames, "','") + "'))");
+
+            AbstractSingleCellPipelineStep.executeR(ctx, AbstractCellMembraneStep.CONTINAER_NAME, "pandoc", lines);
+        }
+    }
+
+    private static class Resumer extends AbstractResumer
+    {
+        public static final String JSON_NAME = "processSingleCellCheckpoint.json";
+
+        @Override
+        protected String getJsonName()
+        {
+            return JSON_NAME;
         }
     }
 }
