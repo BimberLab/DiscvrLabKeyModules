@@ -31,10 +31,4 @@ public class RunSingleR extends AbstractOosapStep
             return new RunSingleR(ctx, this);
         }
     }
-
-    @Override
-    public Output execute(List<File> inputObjects, SeuratContext ctx)
-    {
-        return null;
-    }
 }

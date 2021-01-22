@@ -10,9 +10,9 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
-public class NormalizeScale extends AbstractOosapStep
+public class NormalizeAndScale extends AbstractOosapStep
 {
-    public NormalizeScale(PipelineContext ctx, NormalizeScale.Provider provider)
+    public NormalizeAndScale(PipelineContext ctx, NormalizeAndScale.Provider provider)
     {
         super(provider, ctx);
     }
@@ -21,31 +21,26 @@ public class NormalizeScale extends AbstractOosapStep
     {
         public Provider()
         {
-            super("NormalizeScale", "Normalize/Scale", "OOSAP", "This will run standard Seurat processing steps to normalize and scale the data.", Arrays.asList(
+            super("NormalizeAndScale", "Normalize/Scale", "OOSAP", "This will run standard Seurat processing steps to normalize and scale the data.", Arrays.asList(
                     ToolParameterDescriptor.create("variableFeatureSelectionMethod", "Variable Feature Selection Method", "The value, passed directly to Seurat's FindVariableFeatures, variableFeatureSelectionMethod", "ldk-simplecombo", new JSONObject(){{
                         put("storeValues", "vst");
                         put("initialValues", "vst");
                         put("allowBlank", false);
                     }}, "vst"),
-                    ToolParameterDescriptor.create("toRegress", "Variables to Regress", "These will be passed to Seurat::ScaleData. Enter comma-separated or one field name per line", "textarea", new JSONObject(){{
+                    ToolParameterDescriptor.create("toRegress", "Variables to Regress", "These will be passed to Seurat::ScaleData. Enter comma-separated or one field name per line", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("allowBlank", false);
                         put("height", 150);
+                        put("delimiter", ",");
                     }}, "nCount_RNA,p.mito")
-            ), null, null);
+            ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
 
         @Override
-        public NormalizeScale create(PipelineContext ctx)
+        public NormalizeAndScale create(PipelineContext ctx)
         {
-            return new NormalizeScale(ctx, this);
+            return new NormalizeAndScale(ctx, this);
         }
-    }
-
-    @Override
-    public Output execute(List<File> inputObjects, SeuratContext ctx)
-    {
-        return null;
     }
 }
 

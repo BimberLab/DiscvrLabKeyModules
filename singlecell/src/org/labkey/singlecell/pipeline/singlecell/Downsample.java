@@ -7,7 +7,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.io.File;
-import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,11 +41,5 @@ public class Downsample extends AbstractOosapStep
         {
             return new Downsample(ctx, this);
         }
-    }
-
-    @Override
-    public Output execute(List<File> inputObjects, SeuratContext ctx)
-    {
-        return null;
     }
 }

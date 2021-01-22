@@ -49,10 +49,4 @@ public class RunCellHashing extends AbstractSingleCellPipelineStep
     {
         return true;
     }
-
-    @Override
-    public Output execute(List<File> inputObjects, SeuratContext ctx)
-    {
-        return null;
-    }
 }

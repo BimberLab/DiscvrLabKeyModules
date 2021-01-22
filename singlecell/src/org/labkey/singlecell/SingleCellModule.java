@@ -45,7 +45,7 @@ import org.labkey.singlecell.pipeline.singlecell.Downsample;
 import org.labkey.singlecell.pipeline.singlecell.FilterRawCounts;
 import org.labkey.singlecell.pipeline.singlecell.FindMarkers;
 import org.labkey.singlecell.pipeline.singlecell.MergeSeurat;
-import org.labkey.singlecell.pipeline.singlecell.NormalizeScale;
+import org.labkey.singlecell.pipeline.singlecell.NormalizeAndScale;
 import org.labkey.singlecell.pipeline.singlecell.RemoveCellCycle;
 import org.labkey.singlecell.pipeline.singlecell.RunCellHashing;
 import org.labkey.singlecell.pipeline.singlecell.RunPCA;
@@ -159,7 +159,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new FilterRawCounts.Provider());
         SequencePipelineService.get().registerPipelineStep(new FindMarkers.Provider());
         SequencePipelineService.get().registerPipelineStep(new MergeSeurat.Provider());
-        SequencePipelineService.get().registerPipelineStep(new NormalizeScale.Provider());
+        SequencePipelineService.get().registerPipelineStep(new NormalizeAndScale.Provider());
         //SequencePipelineService.get().registerPipelineStep(new PrepareRawCounts.Provider());
         SequencePipelineService.get().registerPipelineStep(new RemoveCellCycle.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunCellHashing.Provider());

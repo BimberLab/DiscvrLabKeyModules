@@ -7,11 +7,9 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.io.File;
-import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
 
@@ -55,11 +53,5 @@ public class AppendCiteSeq extends AbstractOosapStep
     public boolean requiresHashingOrCiteSeq()
     {
         return true;
-    }
-
-    @Override
-    public Output execute(List<File> inputObjects, SeuratContext ctx)
-    {
-        return null;
     }
 }

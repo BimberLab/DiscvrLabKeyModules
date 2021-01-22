@@ -34,10 +34,4 @@ public class SplitSeurat extends AbstractOosapStep
             return new SplitSeurat(ctx, this);
         }
     }
-
-    @Override
-    public Output execute(List<File> inputObjects, SeuratContext ctx)
-    {
-        return null;
-    }
 }

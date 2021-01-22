@@ -36,10 +36,4 @@ public class SeuratDimRedux extends AbstractOosapStep
             return new SeuratDimRedux(ctx, this);
         }
     }
-
-    @Override
-    public Output execute(List<File> inputObjects, SeuratContext ctx)
-    {
-        return null;
-    }
 }

@@ -31,11 +31,5 @@ public class RemoveCellCycle extends AbstractOosapStep
             return new RemoveCellCycle(ctx, this);
         }
     }
-
-    @Override
-    public Output execute(List<File> inputObjects, SeuratContext ctx)
-    {
-        return null;
-    }
 }
 

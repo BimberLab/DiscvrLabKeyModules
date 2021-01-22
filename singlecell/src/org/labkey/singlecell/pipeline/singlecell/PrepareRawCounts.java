@@ -31,10 +31,4 @@ public class PrepareRawCounts extends AbstractOosapStep
             return new PrepareRawCounts(ctx, this);
         }
     }
-
-    @Override
-    public Output execute(List<File> inputObjects, SeuratContext ctx)
-    {
-        return null;
-    }
 }

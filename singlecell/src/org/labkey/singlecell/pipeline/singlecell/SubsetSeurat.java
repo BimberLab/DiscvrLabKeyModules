@@ -22,11 +22,12 @@ public class SubsetSeurat extends AbstractOosapStep
         public Provider()
         {
             super("SubsetSeurat", "Subset", "OOSAP", "The seurat object will be subset based on the expressions below, one per line, which are passed directly to Seurat's subset(subset = X).", Arrays.asList(
-                    ToolParameterDescriptor.create("expressions", "Expressions", "Enter one expression per line", "textarea", new JSONObject(){{
+                    ToolParameterDescriptor.create("expressions", "Expressions", "Enter one expression per line", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("allowBlank", false);
                         put("height", 150);
+                        put("delimiter", ",");
                     }}, null)
-            ), null, null);
+            ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
 
@@ -35,11 +36,5 @@ public class SubsetSeurat extends AbstractOosapStep
         {
             return new SubsetSeurat(ctx, this);
         }
-    }
-
-    @Override
-    public Output execute(List<File> inputObjects, SeuratContext ctx)
-    {
-        return null;
     }
 }

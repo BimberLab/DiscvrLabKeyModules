@@ -58,7 +58,7 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
                 allowBlank:true
             },{
                 xtype: 'combo',
-                name: 'doSplitJobs',
+                name: 'submissionType',
                 width: 600,
                 fieldLabel: 'Job Submission',
                 displayField: 'label',
@@ -78,6 +78,7 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
 
                         var outputBasename = field.up('panel').down('#outputBasename');
                         outputBasename.allowBlank = val === 'individual';
+                        outputBasename.validate();
                     }
                 },
                 value: null,
@@ -94,6 +95,7 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
                 width: 600,
                 itemId: 'useOutputFileContainer',
                 name: 'useOutputFileContainer',
+                hidden: true,
                 fieldLabel: 'Submit to Source File Workbook',
                 description: 'If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if Run Separately is selected.'
             },{
@@ -259,18 +261,14 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
 
         Ext4.Msg.wait('Submitting...');
         var json = {
-            handlerClass: 'org.labkey.sequenceanalysis.pipeline.ProcessSingleCellHandler',
+            handlerClass: 'org.labkey.singecell.pipeline.ProcessSingleCellHandler',
             outputFileIds: this.outputFileIds,
             params: Ext4.encode(values)
         };
 
-        if (Ext4.isDefined(values.doSplitJobs)) {
-            json.doSplitJobs = !!values.doSplitJobs;
+        if (Ext4.isDefined(values.submissionType)) {
+            json.doSplitJobs = values.submissionType === 'individual';
         }
-
-        console.log(json);
-        console.log(values);
-        return;
 
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler'),
@@ -318,6 +316,10 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
                 errors = errors.concat(errs);
             }
         }, this);
+
+        if (!this.down('#runInformation').isValid()) {
+            errors.push('One or more fields is invalid');
+        }
 
         errors = Ext4.unique(errors);
         return errors;

@@ -1091,7 +1091,7 @@ public class CellHashingServiceImpl extends CellHashingService
         return ret;
     }
 
-    private File ensureLocalCopy(File input, File outputDir, Logger log, Set<File> toDelete) throws PipelineJobException
+    public File ensureLocalCopy(File input, File outputDir, Logger log, Set<File> toDelete) throws PipelineJobException
     {
         if (!outputDir.equals(input.getParentFile()))
         {

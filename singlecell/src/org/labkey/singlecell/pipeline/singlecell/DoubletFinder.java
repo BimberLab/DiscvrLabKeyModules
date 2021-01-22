@@ -35,10 +35,4 @@ public class DoubletFinder extends AbstractOosapStep
             return new DoubletFinder(ctx, this);
         }
     }
-
-    @Override
-    public Output execute(List<File> inputObjects, SeuratContext ctx)
-    {
-        return null;
-    }
 }

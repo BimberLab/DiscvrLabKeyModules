@@ -381,17 +381,7 @@ public class SequenceAnalysisController extends SpringActionController
             _htmlFile = htmlFile;
         }
 
-        public void validateCommand(Object form, Errors errors)
-        {
-
-        }
-
-        public URLHelper getSuccessURL(Object form)
-        {
-            return getContainer().getStartURL(getUser());
-        }
-
-        public ModelAndView getView(Object form, BindException errors) throws Exception
+        public ModelAndView getView(Object form, BindException errors)
         {
             LinkedHashSet<ClientDependency> cds = new LinkedHashSet<>();
             for (PipelineStepProvider fact : SequencePipelineService.get().getAllProviders())

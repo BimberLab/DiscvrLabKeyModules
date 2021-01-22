@@ -6,9 +6,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
-import java.io.File;
 import java.util.Arrays;
-import java.util.List;
 
 public class FilterRawCounts extends AbstractOosapStep
 {
@@ -51,11 +49,5 @@ public class FilterRawCounts extends AbstractOosapStep
         {
             return new FilterRawCounts(ctx, this);
         }
-    }
-
-    @Override
-    public Output execute(List<File> inputObjects, SeuratContext ctx)
-    {
-        return null;
     }
 }
