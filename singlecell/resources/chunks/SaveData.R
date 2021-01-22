@@ -2,10 +2,12 @@ savedFiles <- data.frame(datasetId = character(), datasetName = character(), fil
 for (datasetId in names(newSeuratObjects)) {
     seuratObj <- newSeuratObjects[[datasetId]]
 
-    saveRDS(seuratObj, file = paste0(datasetId, '.rds'))
+    saveRDS(seuratObj, file = paste0(outputPrefix, '.', datasetId, '.seurat.rds'))
 
     datasetName <- datasetIdToName[[datasetId]]
     savedFiles <- rbind(savedFiles, data.frame(datasetId = datasetId, datasetName = datasetName, filename = file))
+
+    CellMembrane::WriteCellBarcodes(seuratObj, file = paste0(outputPrefix, '.', datasetId, '.cellBarcodes.csv'))
 }
 
 write.table(savedFiles, file = 'savedSeuratObjects.txt', quote = FALSE, delim = '\t', row.names = FALSE, col.names = FALSE)

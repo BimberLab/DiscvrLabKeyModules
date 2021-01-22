@@ -156,7 +156,9 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             Markdown markdown = new Markdown();
             markdown.headerYml = getDefaultHeader();
             markdown.setup = new SetupChunk(getRLibraries());
-            markdown.chunks = getChunks(inputObjects);
+            markdown.chunks = new ArrayList<>();
+            markdown.chunks.add(createParamChunk(inputObjects, outputPrefix));
+            markdown.chunks.addAll(getChunks());
             markdown.chunks.add(createFinalChunk());
 
             markdown.print(out);
@@ -191,10 +193,9 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         return ret;
     }
 
-    protected List<Chunk> getChunks(List<SeuratObjectWrapper> inputObjects) throws PipelineJobException
+    protected List<Chunk> getChunks() throws PipelineJobException
     {
         List<Chunk> ret = new ArrayList<>();
-        ret.add(createParamChunk(inputObjects));
         ret.add(new Chunk(getProvider().getName(), getProvider().getLabel(), null, loadChunkFromFile()));
 
         return ret;
@@ -336,7 +337,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         return ret;
     }
 
-    protected Chunk createParamChunk(List<SeuratObjectWrapper> inputObjects)
+    protected Chunk createParamChunk(List<SeuratObjectWrapper> inputObjects, String outputPrefix)
     {
         List<String> body = new ArrayList<>();
 
@@ -345,6 +346,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             body.add(pd.getName() + " <- " + prepareValueForR(pd));
         }
         body.add("");
+        body.add("outputPrefix <- '" + outputPrefix + "'");
 
         //Read RDS:
         body.add("seuratObjects <- list()");
@@ -364,9 +366,9 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         return new Chunk("parameters", null, null, body);
     }
 
-    protected Chunk createFinalChunk()
+    protected Chunk createFinalChunk() throws PipelineJobException
     {
-        List<String> body = new ArrayList<>();
+        List<String> body = loadChunkFromFile("singlecell", "chunks/SaveData.R");
 
         return new Chunk("saveData", null, null, body);
     }
