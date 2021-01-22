@@ -6,12 +6,9 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
-public class Downsample extends AbstractOosapStep
+public class Downsample extends AbstractCellMembraneStep
 {
     public Downsample(PipelineContext ctx, Downsample.Provider provider)
     {

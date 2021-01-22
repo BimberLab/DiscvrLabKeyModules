@@ -7,9 +7,9 @@ import org.labkey.api.util.PageFlowUtil;
 
 import java.util.Collection;
 
-abstract public class AbstractOosapStep extends AbstractSingleCellPipelineStep
+abstract public class AbstractCellMembraneStep extends AbstractSingleCellPipelineStep
 {
-    public AbstractOosapStep(PipelineStepProvider provider, PipelineContext ctx)
+    public AbstractCellMembraneStep(PipelineStepProvider provider, PipelineContext ctx)
     {
         super(provider, ctx);
     }
@@ -17,12 +17,12 @@ abstract public class AbstractOosapStep extends AbstractSingleCellPipelineStep
     @Override
     public Collection<String> getRLibraries()
     {
-        return PageFlowUtil.set("OOSAP");
+        return PageFlowUtil.set("CellMembrane");
     }
 
     @Override
     public String getDockerContainerName()
     {
-        return "ghcr.io/bimberlabinternal/oosap:latest";
+        return "ghcr.io/bimberlabinternal/cellmembrane:latest";
     }
 }

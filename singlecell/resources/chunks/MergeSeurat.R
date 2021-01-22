@@ -1,8 +1,2 @@
-for (datasetId in names(seuratObjects)) {
-    seuratObj <- seuratObjects[[datasetId]]
-
-    #TODO
-    stop('Not yet implemented!')
-
-    newSeuratObjects[[datasetId]] <- seuratObj
-}
+##TODO
+newSeuratObjects <- CellMembrane::MergeSeuratObjs(seuratObjects, metadata = data)

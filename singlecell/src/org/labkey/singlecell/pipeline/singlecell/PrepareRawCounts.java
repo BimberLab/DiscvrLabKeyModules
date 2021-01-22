@@ -4,11 +4,9 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
-import java.io.File;
 import java.util.Arrays;
-import java.util.List;
 
-public class PrepareRawCounts extends AbstractOosapStep
+public class PrepareRawCounts extends AbstractCellMembraneStep
 {
     public PrepareRawCounts(PipelineContext ctx, PrepareRawCounts.Provider provider)
     {

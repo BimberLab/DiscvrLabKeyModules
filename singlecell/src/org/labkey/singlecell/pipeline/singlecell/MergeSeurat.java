@@ -6,11 +6,9 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
-import java.io.File;
 import java.util.Arrays;
-import java.util.List;
 
-public class MergeSeurat extends AbstractOosapStep
+public class MergeSeurat extends AbstractCellMembraneStep
 {
     public MergeSeurat(PipelineContext ctx, MergeSeurat.Provider provider)
     {

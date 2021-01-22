@@ -6,12 +6,9 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
-public class FindMarkers extends AbstractOosapStep
+public class FindMarkers extends AbstractCellMembraneStep
 {
     public FindMarkers(PipelineContext ctx, FindMarkers.Provider provider)
     {

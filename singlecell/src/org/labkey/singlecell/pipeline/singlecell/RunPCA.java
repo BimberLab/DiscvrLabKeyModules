@@ -6,11 +6,9 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
-import java.io.File;
 import java.util.Arrays;
-import java.util.List;
 
-public class RunPCA extends AbstractOosapStep
+public class RunPCA extends AbstractCellMembraneStep
 {
     public RunPCA(PipelineContext ctx, RunPCA.Provider provider)
     {

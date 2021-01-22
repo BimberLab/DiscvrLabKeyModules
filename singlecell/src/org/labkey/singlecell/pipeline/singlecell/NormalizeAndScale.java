@@ -6,11 +6,9 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
-import java.io.File;
 import java.util.Arrays;
-import java.util.List;
 
-public class NormalizeAndScale extends AbstractOosapStep
+public class NormalizeAndScale extends AbstractCellMembraneStep
 {
     public NormalizeAndScale(PipelineContext ctx, NormalizeAndScale.Provider provider)
     {
@@ -26,12 +24,12 @@ public class NormalizeAndScale extends AbstractOosapStep
                         put("storeValues", "vst");
                         put("initialValues", "vst");
                         put("allowBlank", false);
-                    }}, "vst"),
-                    ToolParameterDescriptor.create("toRegress", "Variables to Regress", "These will be passed to Seurat::ScaleData. Enter comma-separated or one field name per line", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
-                        put("allowBlank", false);
-                        put("height", 150);
-                        put("delimiter", ",");
-                    }}, "nCount_RNA,p.mito")
+                    }}, "vst")
+//                    ToolParameterDescriptor.create("toRegress", "Variables to Regress", "These will be passed to Seurat::ScaleData. Enter comma-separated or one field name per line", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
+//                        put("allowBlank", false);
+//                        put("height", 150);
+//                        put("delimiter", ",");
+//                    }}, "nCount_RNA,p.mito")
             ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 

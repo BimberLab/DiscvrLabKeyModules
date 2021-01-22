@@ -8,7 +8,7 @@ import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
 
-public class FindClustersAndDimRedux extends AbstractOosapStep
+public class FindClustersAndDimRedux extends AbstractCellMembraneStep
 {
     public FindClustersAndDimRedux(PipelineContext ctx, FindClustersAndDimRedux.Provider provider)
     {

@@ -4,11 +4,9 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
-import java.io.File;
 import java.util.Arrays;
-import java.util.List;
 
-public class RunSingleR extends AbstractOosapStep
+public class RunSingleR extends AbstractCellMembraneStep
 {
     public RunSingleR(PipelineContext ctx, RunSingleR.Provider provider)
     {

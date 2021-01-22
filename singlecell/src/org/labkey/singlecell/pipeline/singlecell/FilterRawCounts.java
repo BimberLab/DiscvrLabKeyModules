@@ -8,7 +8,7 @@ import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
 
-public class FilterRawCounts extends AbstractOosapStep
+public class FilterRawCounts extends AbstractCellMembraneStep
 {
     public FilterRawCounts(PipelineContext ctx, FilterRawCounts.Provider provider)
     {

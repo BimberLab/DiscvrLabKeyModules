@@ -1,8 +1,7 @@
 for (datasetId in names(seuratObjects)) {
     seuratObj <- seuratObjects[[datasetId]]
 
-    #TODO
-    stop('Not yet implemented!')
+    seuratObj <- CellMembrane::NormalizeAndScale(seuratObj, variableFeatureSelectionMethod = variableFeatureSelectionMethod)
 
     newSeuratObjects[[datasetId]] <- seuratObj
 }

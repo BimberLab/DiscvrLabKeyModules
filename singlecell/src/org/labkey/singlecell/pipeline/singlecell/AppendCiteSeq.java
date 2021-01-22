@@ -9,11 +9,10 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
-public class AppendCiteSeq extends AbstractOosapStep
+public class AppendCiteSeq extends AbstractCellMembraneStep
 {
     public AppendCiteSeq(PipelineContext ctx, Provider provider)
     {
