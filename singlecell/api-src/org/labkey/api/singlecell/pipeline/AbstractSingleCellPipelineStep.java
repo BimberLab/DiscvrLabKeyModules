@@ -363,7 +363,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         body.add("datasetIdToName <- list()");
         for (SeuratObjectWrapper so : inputObjects)
         {
-            body.add("seuratObjects[['" + so.getDatasetId() + "']] <- readRDS(file = '" + so.getFile().getName() + "')");
+            body.add("seuratObjects[['" + so.getDatasetId() + "']] <- " + printInputFile(so));
             body.add("datasetIdToName[['" + so.getDatasetId() + "']] <- '" + so.getDatasetName() + "'");
         }
 
@@ -374,6 +374,11 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         body.add("addIntermediateFile <- function(f) { intermediateFiles <<- c(intermediateFiles, f) } ");
 
         return new Chunk("parameters", null, null, body);
+    }
+
+    protected String printInputFile(SeuratObjectWrapper so)
+    {
+        return "readRDS(file = '" + so.getFile().getName() + "')";
     }
 
     protected Chunk createFinalChunk() throws PipelineJobException

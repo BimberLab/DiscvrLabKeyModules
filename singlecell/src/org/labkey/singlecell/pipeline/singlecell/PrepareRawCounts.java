@@ -29,4 +29,10 @@ public class PrepareRawCounts extends AbstractCellMembraneStep
             return new PrepareRawCounts(ctx, this);
         }
     }
+
+    @Override
+    protected String printInputFile(SeuratObjectWrapper so)
+    {
+        return "'" + so.getFile().getName() + "'";
+    }
 }
