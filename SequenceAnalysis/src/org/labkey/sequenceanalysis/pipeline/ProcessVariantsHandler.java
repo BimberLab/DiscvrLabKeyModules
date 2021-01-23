@@ -655,6 +655,12 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
         }
 
+        // For use by AbstractResumer.create()
+        public Resumer(JobContext ctx) throws PipelineJobException
+        {
+            super(ctx.getSourceDirectory(), ctx.getLogger(), ctx.getFileManager());
+        }
+
         public static Resumer create(JobContext ctx) throws PipelineJobException
         {
             return AbstractResumer.create(ctx, JSON_NAME, Resumer.class);
