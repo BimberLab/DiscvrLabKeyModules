@@ -249,7 +249,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         }
         else
         {
-            ctx.getLogger().info("script exists, re-using: " + localRScript.getPath());
+            ctx.getLogger().info("R script exists, re-using: " + localRScript.getPath());
         }
 
         File localBashScript = new File(ctx.getOutputDir(), "wrapper.sh");

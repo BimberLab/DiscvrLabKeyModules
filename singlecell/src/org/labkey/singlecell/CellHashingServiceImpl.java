@@ -1243,7 +1243,7 @@ public class CellHashingServiceImpl extends CellHashingService
         File localBashScript = new File(outputDir, "wrapper.sh");
         try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
         {
-            writer.println("#/bin/bash");
+            writer.println("#!/bin/bash");
             writer.println("set -e");
             writer.println("set -x");
             writer.println("WD=`pwd`");
