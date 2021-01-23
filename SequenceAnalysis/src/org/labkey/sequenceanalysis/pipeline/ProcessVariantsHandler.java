@@ -498,7 +498,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         @Override
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
-            _resumer = Resumer.create((JobContextImpl)ctx);
+            _resumer = Resumer.create(ctx);
 
             boolean doCombine = ctx.getParams().optBoolean("variantMerging.CombineVCFs.doCombine", false);
             if (doCombine)
@@ -655,92 +655,9 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
         }
 
-        private Resumer(JobContextImpl ctx)
+        public static Resumer create(JobContext ctx) throws PipelineJobException
         {
-            super(ctx.getSourceDirectory(), ctx.getLogger(), ctx.getFileManager());
-        }
-
-        public static Resumer create(JobContextImpl ctx) throws PipelineJobException
-        {
-            Resumer ret;
-            File json = getSerializedJson(ctx.getSourceDirectory(), JSON_NAME);
-            if (!json.exists())
-            {
-                ret = new Resumer(ctx);
-            }
-            else
-            {
-                ret = readFromJson(json, Resumer.class);
-                ret._isResume = true;
-                ret.setLogger(ctx.getLogger());
-                ret.setLocalWorkDir(ctx.getWorkDir().getDir());
-                ret._fileManager.onResume(ctx.getJob(), ctx.getWorkDir());
-
-                ctx.getLogger().debug("FileManagers initially equal: " + ctx.getFileManager().equals(ret._fileManager));
-
-                ctx.getLogger().debug("Replacing fileManager on JobContext");
-                ctx.setFileManager(ret._fileManager);
-                try
-                {
-                    if (!ret._copiedInputs.isEmpty())
-                    {
-                        for (File orig : ret._copiedInputs.keySet())
-                        {
-                            ctx.getWorkDir().inputFile(orig, ret._copiedInputs.get(orig), false);
-                        }
-                    }
-                }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
-                }
-
-                //debugging:
-                ctx.getLogger().debug("loaded from file.  total recorded actions: " + ret.getRecordedActions().size());
-                ctx.getLogger().debug("total sequence outputs: " + ret.getFileManager().getOutputsToCreate().size());
-                ctx.getLogger().debug("total intermediate files: " + ret.getFileManager().getIntermediateFiles().size());
-                for (RecordedAction a : ret.getRecordedActions())
-                {
-                    ctx.getLogger().debug("action: " + a.getName() + ", inputs: " + a.getInputs().size() + ", outputs: " + a.getOutputs().size());
-                }
-
-                if (ret._recordedActions == null)
-                {
-                    throw new PipelineJobException("Job read from file, but did not have any saved actions.  This indicates a problem w/ serialization.");
-                }
-            }
-
-            if (ret.isResume())
-            {
-                ctx.getLogger().info("resuming previous job");
-
-            }
-
-            boolean fmEqual = ctx.getFileManager().equals(ret._fileManager);
-            ctx.getLogger().debug("FileManagers on resumer and JobContext equal: " + fmEqual);
-
-            return ret;
-        }
-
-        public void markComplete(JobContext ctx)
-        {
-            // NOTE: due to the way the resumer is set up, the FileManager used by the Resumer is a different
-            // instance than the JobContext, meaning we need to manually pass information back to the primary FileManager
-            ctx.getLogger().debug("total sequence outputs tracked in resumer: " + getFileManager().getOutputsToCreate().size());
-            for (SequenceOutputFile so : getFileManager().getOutputsToCreate())
-            {
-                ctx.addSequenceOutput(so);
-            }
-
-            ctx.getLogger().debug("total actions tracked in resumer: " + getRecordedActions().size());
-            for (RecordedAction a : getRecordedActions())
-            {
-                ctx.addActions(a);
-            }
-
-            ctx.getFileManager().addIntermediateFiles(getFileManager().getIntermediateFiles());
-
-            super.markComplete();
+            return AbstractResumer.create(ctx, JSON_NAME, Resumer.class);
         }
 
         @Override

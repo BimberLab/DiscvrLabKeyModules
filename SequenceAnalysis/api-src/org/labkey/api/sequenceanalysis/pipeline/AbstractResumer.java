@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.util.Pair;
 
 import java.io.BufferedInputStream;
@@ -12,6 +13,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -198,5 +200,100 @@ abstract public class AbstractResumer implements Serializable
     public void addFileCopiedLocally(File orig, File copied)
     {
         _filesCopiedLocally.add(Pair.of(orig, copied));
+    }
+
+    public static <T extends AbstractResumer> T create(SequenceOutputHandler.JobContext ctx, String jsonName, Class<T> clazz) throws PipelineJobException
+    {
+        if (!(ctx instanceof SequenceOutputHandler.MutableJobContext))
+        {
+            throw new IllegalArgumentException("Expected JobContext to be instance of MutableJobContext");
+        }
+
+        T ret;
+        File json = getSerializedJson(ctx.getSourceDirectory(), jsonName);
+        if (!json.exists())
+        {
+            try
+            {
+                ret = clazz.getDeclaredConstructor(SequenceOutputHandler.JobContext.class).newInstance(ctx);
+            }
+            catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+        else
+        {
+            ret = readFromJson(json, clazz);
+            ret.setResume(true);
+            ret.setLogger(ctx.getLogger());
+            ret.setLocalWorkDir(ctx.getWorkDir().getDir());
+            ret.getFileManager().onResume(ctx.getJob(), ctx.getWorkDir());
+
+            ctx.getLogger().debug("FileManagers initially equal: " + ctx.getFileManager().equals(ret.getFileManager()));
+
+            ctx.getLogger().debug("Replacing fileManager on JobContext");
+            ((SequenceOutputHandler.MutableJobContext)ctx).setFileManager(ret.getFileManager());
+            try
+            {
+                if (!ret.getCopiedInputs().isEmpty())
+                {
+                    for (File orig : ret.getCopiedInputs().keySet())
+                    {
+                        ctx.getWorkDir().inputFile(orig, ret._copiedInputs.get(orig), false);
+                    }
+                }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            //debugging:
+            ctx.getLogger().debug("loaded from file.  total recorded actions: " + ret.getRecordedActions().size());
+            ctx.getLogger().debug("total sequence outputs: " + ret.getFileManager().getOutputsToCreate().size());
+            ctx.getLogger().debug("total intermediate files: " + ret.getFileManager().getIntermediateFiles().size());
+            for (RecordedAction a : ret.getRecordedActions())
+            {
+                ctx.getLogger().debug("action: " + a.getName() + ", inputs: " + a.getInputs().size() + ", outputs: " + a.getOutputs().size());
+            }
+
+            if (ret._recordedActions == null)
+            {
+                throw new PipelineJobException("Job read from file, but did not have any saved actions.  This indicates a problem w/ serialization.");
+            }
+        }
+
+        if (ret.isResume())
+        {
+            ctx.getLogger().info("resuming previous job");
+
+        }
+
+        boolean fmEqual = ctx.getFileManager().equals(ret._fileManager);
+        ctx.getLogger().debug("FileManagers on resumer and JobContext equal: " + fmEqual);
+
+        return ret;
+    }
+
+    public void markComplete(SequenceOutputHandler.JobContext ctx)
+    {
+        // NOTE: due to the way the resumer is set up, the FileManager used by the Resumer is a different
+        // instance than the JobContext, meaning we need to manually pass information back to the primary FileManager
+        ctx.getLogger().debug("total sequence outputs tracked in resumer: " + getFileManager().getOutputsToCreate().size());
+        for (SequenceOutputFile so : getFileManager().getOutputsToCreate())
+        {
+            ctx.addSequenceOutput(so);
+        }
+
+        ctx.getLogger().debug("total actions tracked in resumer: " + getRecordedActions().size());
+        for (RecordedAction a : getRecordedActions())
+        {
+            ctx.addActions(a);
+        }
+
+        ctx.getFileManager().addIntermediateFiles(getFileManager().getIntermediateFiles());
+
+        markComplete();
     }
 }

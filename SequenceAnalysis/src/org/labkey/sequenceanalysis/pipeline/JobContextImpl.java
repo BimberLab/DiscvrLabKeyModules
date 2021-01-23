@@ -1,14 +1,12 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.WorkDirectory;
-import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
@@ -21,7 +19,7 @@ import java.util.LinkedHashSet;
 /**
  * Created by bimber on 8/31/2016.
  */
-public class JobContextImpl implements SequenceOutputHandler.JobContext
+public class JobContextImpl implements SequenceOutputHandler.MutableJobContext
 {
     private SequenceJob _job;
     private SequenceAnalysisJobSupport _support;
@@ -78,6 +76,7 @@ public class JobContextImpl implements SequenceOutputHandler.JobContext
         return _fileManager;
     }
 
+    @Override
     public void setFileManager(TaskFileManager fileManager)
     {
         _fileManager = fileManager;
@@ -89,6 +88,7 @@ public class JobContextImpl implements SequenceOutputHandler.JobContext
         _fileManager.addSequenceOutput(o);
     }
 
+    @Override
     public PipeRoot getFolderPipeRoot()
     {
         return _job.getFolderPipeRoot();

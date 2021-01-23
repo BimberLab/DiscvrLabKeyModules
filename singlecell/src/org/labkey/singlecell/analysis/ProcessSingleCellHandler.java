@@ -21,35 +21,34 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.pipeline.AbstractSingleCellPipelineStep;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
-import org.labkey.api.writer.PrintWriters;
-import org.labkey.singlecell.CellHashingServiceImpl;
 import org.labkey.singlecell.SingleCellModule;
 import org.labkey.singlecell.pipeline.singlecell.AbstractCellMembraneStep;
 import org.labkey.singlecell.pipeline.singlecell.PrepareRawCounts;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, SequenceOutputHandler.HasActionNames
 {
     private static FileType LOUPE_TYPE = new FileType("cloupe", false);
+
+    private Resumer _resumer;
 
     public ProcessSingleCellHandler()
     {
@@ -183,6 +182,8 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
         @Override
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
+            _resumer = Resumer.create(ctx);
+
             List<PipelineStepCtx<SingleCellStep>> steps = SequencePipelineService.get().getSteps(ctx.getJob(), SingleCellStep.class);
 
             String basename;
@@ -197,54 +198,95 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
                 basename = "SingleCellProcessing";
             }
 
-
-            List<File> markdowns = new ArrayList<>();
+            List<SingleCellStep.SeuratObjectWrapper> currentFiles;
 
             // Step 1: read raw data
             PrepareRawCounts prepareRawCounts = new PrepareRawCounts.Provider().create(ctx);
             ctx.getLogger().info("Starting to run: " + prepareRawCounts.getProvider().getLabel());
-            List<SingleCellStep.SeuratObjectWrapper> inputMatrices = new ArrayList<>();
-            inputFiles.forEach(x -> {
-                String datasetName = ctx.getSequenceSupport().getCachedReadset(x.getReadset()).getName();
-                File source = new File(x.getFile().getParentFile(), "raw_feature_bc_matrix");
-                if (!source.exists())
-                {
-                    throw new IllegalArgumentException("Unable to find file: " + source.getPath());
-                }
+            if (_resumer.isStepComplete(0))
+            {
+                ctx.getLogger().info("resuming from saved state");
+                currentFiles = _resumer.getSeuratFromStep(0);
+            }
+            else
+            {
+                RecordedAction action = new RecordedAction(prepareRawCounts.getProvider().getLabel());
+                Date start = new Date();
+                action.setStartTime(start);
 
-                try
-                {
-                    File localCopy = new File(ctx.getOutputDir(), x.getRowid() + "_RawData");
-                    if (localCopy.exists())
+                List<SingleCellStep.SeuratObjectWrapper> inputMatrices = new ArrayList<>();
+                inputFiles.forEach(x -> {
+                    String datasetName = ctx.getSequenceSupport().getCachedReadset(x.getReadset()).getName();
+                    File source = new File(x.getFile().getParentFile(), "raw_feature_bc_matrix");
+                    if (!source.exists())
                     {
-                        ctx.getLogger().debug("Deleting directory: " + localCopy.getPath());
-                        FileUtils.deleteDirectory(localCopy);
+                        throw new IllegalArgumentException("Unable to find file: " + source.getPath());
                     }
 
-                    ctx.getLogger().debug("Copying raw data directory: " + source.getPath());
-                    ctx.getLogger().debug("To: " + localCopy.getPath());
+                    try
+                    {
+                        File localCopy = new File(ctx.getOutputDir(), x.getRowid() + "_RawData");
+                        if (localCopy.exists())
+                        {
+                            ctx.getLogger().debug("Deleting directory: " + localCopy.getPath());
+                            FileUtils.deleteDirectory(localCopy);
+                        }
 
-                    FileUtils.copyDirectory(source, localCopy);
+                        ctx.getLogger().debug("Copying raw data directory: " + source.getPath());
+                        ctx.getLogger().debug("To: " + localCopy.getPath());
 
-                    inputMatrices.add(new SingleCellStep.SeuratObjectWrapper(String.valueOf(x.getRowid()), datasetName, localCopy));
-                }
-                catch (IOException e)
+                        FileUtils.copyDirectory(source, localCopy);
+
+                        inputMatrices.add(new SingleCellStep.SeuratObjectWrapper(String.valueOf(x.getRowid()), datasetName, localCopy));
+                    }
+                    catch (IOException e)
+                    {
+                        throw new IllegalArgumentException(e);
+                    }
+                });
+
+                inputFiles.forEach(currentFile -> action.addInput(currentFile.getFile(), "Input Loupe File"));
+
+                SingleCellStep.Output output0 = prepareRawCounts.execute(ctx, inputMatrices, basename + ".rawCounts");
+                currentFiles =  output0.getSeuratObjects();
+                if (currentFiles == null || currentFiles.isEmpty())
                 {
-                    throw new IllegalArgumentException(e);
+                    throw new PipelineJobException("No seurat objects produced by: " + prepareRawCounts.getProvider().getName());
                 }
-            });
 
-            SingleCellStep.Output output0 = prepareRawCounts.execute(ctx, inputMatrices, basename + ".rawCounts");
-            List<SingleCellStep.SeuratObjectWrapper> currentFiles =  output0.getSeuratObjects();
-            markdowns.add(output0.getMarkdownFile());
+                _resumer.setStepComplete(0, action, output0.getSeuratObjects(), output0.getMarkdownFile(), output0.getHtmlFile());
+            }
 
             // Step 2: iterate seurat processing:
             String outputPrefix = basename;
+            int stepIdx = 0;
             for (PipelineStepCtx<SingleCellStep> stepCtx : steps)
             {
                 ctx.getLogger().info("Starting to run: " + stepCtx.getProvider().getLabel());
-
                 ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + stepCtx.getProvider().getLabel());
+                stepIdx++;
+
+                SingleCellStep step = stepCtx.getProvider().create(ctx);
+                step.setStepIdx(stepCtx.getStepIdx());
+
+                if (_resumer.isStepComplete(stepIdx))
+                {
+                    ctx.getLogger().info("resuming from saved state");
+                    if (_resumer.getSeuratFromStep(stepIdx) != null)
+                    {
+                        currentFiles = _resumer.getSeuratFromStep(stepIdx);
+                    }
+                    else if (step.createsSeuratObjects())
+                    {
+                        throw new PipelineJobException("Expected step to create seurat objects but none were cached");
+                    }
+                    else
+                    {
+                        ctx.getLogger().debug("No cached seurat objects found from step, using prior step's output");
+                    }
+
+                    continue;
+                }
 
                 RecordedAction action = new RecordedAction(stepCtx.getProvider().getLabel());
                 Date start = new Date();
@@ -252,16 +294,15 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
                 currentFiles.forEach(currentFile -> action.addInput(currentFile.getFile(), "Input Seurat Object"));
                 ctx.getFileManager().addIntermediateFiles(currentFiles.stream().map(SingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toList()));
 
-                SingleCellStep step = stepCtx.getProvider().create(ctx);
-                step.setStepIdx(stepCtx.getStepIdx());
-
                 outputPrefix = outputPrefix + "." + step.getProvider().getName() + (step.getStepIdx() == 0 ? "" : "-" + step.getStepIdx());
                 SingleCellStep.Output output = step.execute(ctx, currentFiles, outputPrefix);
-                ctx.getFileManager().addStepOutputs(action, output);
+
+                _resumer.getFileManager().addStepOutputs(action, output);
 
                 if (output.getSeuratObjects() != null)
                 {
                     currentFiles = new ArrayList<>(output.getSeuratObjects());
+                    _resumer.getFileManager().addIntermediateFiles(currentFiles.stream().map(SingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toSet()));
                 }
                 else if (step.createsSeuratObjects())
                 {
@@ -272,11 +313,11 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
                     ctx.getLogger().info("No seurat objects were produced");
                 }
 
-                markdowns.add(output.getMarkdownFile());
-
                 Date end = new Date();
                 action.setEndTime(end);
                 ctx.getJob().getLogger().info(stepCtx.getProvider().getLabel() + " Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+
+                _resumer.setStepComplete(stepIdx, action, currentFiles, output.getMarkdownFile(), output.getHtmlFile());
             }
 
             for (SingleCellStep.SeuratObjectWrapper seurat : currentFiles)
@@ -284,20 +325,27 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
                 if (seurat.getFile().exists())
                 {
                     ctx.getFileManager().removeIntermediateFile(seurat.getFile());
+                    _resumer.getFileManager().removeIntermediateFile(seurat.getFile());
                 }
             }
 
-            if (markdowns.isEmpty())
+            if (_resumer.getMarkdowns().isEmpty())
             {
                 throw new PipelineJobException("No markdown files produced!");
             }
 
             //process with pandoc
             List<String> lines = new ArrayList<>();
-            List<String> markdownNames = markdowns.stream().map(File::getName).collect(Collectors.toList());
+            List<String> markdownNames = _resumer.getMarkdowns().stream().map(File::getName).collect(Collectors.toList());
             lines.add("knitr::pandoc(input = c('" + StringUtils.join(markdownNames, "','") + "'))");
 
             AbstractSingleCellPipelineStep.executeR(ctx, AbstractCellMembraneStep.CONTINAER_NAME, "pandoc", lines);
+
+            //TODO:
+            //_resumer.getFileManager().addSequenceOutput(so1);
+
+
+            _resumer.markComplete(ctx);
         }
     }
 
@@ -305,10 +353,78 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
     {
         public static final String JSON_NAME = "processSingleCellCheckpoint.json";
 
+        private Map<Integer, File> _markdowns = new LinkedHashMap<>();
+        private Map<Integer, File> _htmlFiles = new LinkedHashMap<>();
+        private Map<Integer, List<SingleCellStep.SeuratObjectWrapper>> _stepOutputs = new LinkedHashMap<>();
+
         @Override
         protected String getJsonName()
         {
             return JSON_NAME;
+        }
+
+        private Resumer(JobContext ctx)
+        {
+            super(ctx.getSourceDirectory(), ctx.getLogger(), ctx.getFileManager());
+        }
+
+        public static Resumer create(JobContext ctx) throws PipelineJobException
+        {
+            Resumer ret;
+            File json = getSerializedJson(ctx.getSourceDirectory(), JSON_NAME);
+            if (!json.exists())
+            {
+                ret = new Resumer(ctx);
+            }
+            else
+            {
+                ret = readFromJson(json, Resumer.class);
+                ret._isResume = true;
+                ret.setLogger(ctx.getLogger());
+                ret.setLocalWorkDir(ctx.getWorkDir().getDir());
+                ret._fileManager.onResume(ctx.getJob(), ctx.getWorkDir());
+
+            }
+
+            return ret;
+        }
+
+        public boolean isStepComplete(int stepIdx)
+        {
+            return _stepOutputs.containsKey(stepIdx);
+        }
+
+        public List<SingleCellStep.SeuratObjectWrapper> getSeuratFromStep(int stepIdx)
+        {
+            return _stepOutputs.get(stepIdx);
+        }
+
+        public void setStepComplete(int stepIdx, RecordedAction action, List<SingleCellStep.SeuratObjectWrapper> seurat, File markdown, File html) throws PipelineJobException
+        {
+            if (seurat != null)
+            {
+                seurat.forEach(x -> action.addOutput(x.getFile(), "Seurat Object", false));
+            }
+
+            action.addOutput(markdown, "Markdown File", true);
+            action.addOutput(markdown, "HTML Report", false);
+
+            _stepOutputs.put(stepIdx, seurat);
+            _markdowns.put(stepIdx, markdown);
+            _htmlFiles.put(stepIdx, html);
+
+            _recordedActions.add(action);
+            saveState();
+        }
+
+        public Collection<File> getMarkdowns()
+        {
+            return _markdowns.values();
+        }
+
+        public Collection<File> getHtmlFiles()
+        {
+            return _htmlFiles.values();
         }
     }
 }

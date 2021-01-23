@@ -81,7 +81,6 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         @Override
         public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-
             Map<Integer, SequenceOutputFile> fileMap = inputFiles.stream().collect(Collectors.toMap(SequenceOutputFile::getRowid, x -> x));
 
             List<Map<String, Object>> toInsert = new ArrayList<>();

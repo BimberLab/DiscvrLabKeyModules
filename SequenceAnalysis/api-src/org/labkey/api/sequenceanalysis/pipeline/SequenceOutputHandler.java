@@ -221,10 +221,6 @@ public interface SequenceOutputHandler<T>
 
     public interface JobContext extends PipelineContext
     {
-        public PipelineJob getJob();
-
-        public SequenceAnalysisJobSupport getSequenceSupport();
-
         public JSONObject getParams();
 
         public File getOutputDir();
@@ -236,6 +232,11 @@ public interface SequenceOutputHandler<T>
         public void addSequenceOutput(SequenceOutputFile o);
 
         public PipeRoot getFolderPipeRoot();
+    }
+
+    public interface MutableJobContext extends JobContext
+    {
+        public void setFileManager(TaskFileManager manager);
     }
 
     public interface HasActionNames
