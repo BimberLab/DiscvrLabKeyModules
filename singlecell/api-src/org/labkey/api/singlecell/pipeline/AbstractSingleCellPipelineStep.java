@@ -262,27 +262,30 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             writer.println("HOME=`echo ~/`");
 
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-            writer.println("sudo $DOCKER pull " + dockerContainerName);
+            writer.println("sudo $DOCKER pull -q " + dockerContainerName);
             writer.println("sudo $DOCKER run --rm=true \\");
             if (SequencePipelineService.get().getMaxRam() != null)
             {
-                writer.println("--memory=" + SequencePipelineService.get().getMaxRam() + "g \\");
-                writer.println("-e SEQUENCEANALYSIS_MAX_RAM \\");
+                writer.println("\t--memory=" + SequencePipelineService.get().getMaxRam() + "g \\");
+                writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM \\");
             }
 
             if (SequencePipelineService.get().getMaxThreads(ctx.getLogger()) != null)
             {
-                writer.println("-e SEQUENCEANALYSIS_MAX_THREADS \\");
+                writer.println("\t-e SEQUENCEANALYSIS_MAX_THREADS \\");
             }
 
-            writer.println("-v \"${WD}:/work\" \\");
-            writer.println("-v \"${HOME}:/homeDir\" \\");
-            writer.println("-u $UID \\");
-            writer.println("-e USERID=$UID \\");
-            writer.println("-w /work \\");
-            writer.println("-e HOME=/homeDir \\");
-            writer.println(dockerContainerName + " \\");
-            writer.println("Rscript --vanilla " + localRScript.getName());
+            writer.println("\t-v \"${WD}:/work\" \\");
+            writer.println("\t-v \"${HOME}:/homeDir\" \\");
+            writer.println("\t-u $UID \\");
+            writer.println("\t-e USERID=$UID \\");
+            writer.println("\t-w /work \\");
+            writer.println("\t-e HOME=/homeDir \\");
+            writer.println("\t" + dockerContainerName + " \\");
+            writer.println("\tRscript --vanilla " + localRScript.getName());
+            writer.println("");
+            writer.println("echo 'script complete'");
+
         }
         catch (IOException e)
         {
