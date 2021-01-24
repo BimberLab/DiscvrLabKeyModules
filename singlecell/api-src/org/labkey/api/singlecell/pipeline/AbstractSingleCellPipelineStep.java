@@ -45,32 +45,14 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         File markdownFile = getExpectedMarkdownFile(ctx, outputPrefix);
         if (!markdownFile.exists())
         {
-            //TODO: this is for testing only
-            try
-            {
-                Files.touch(markdownFile);
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-            //throw new PipelineJobException("Unable to find markdown file: " + markdownFile.getPath());
+            throw new PipelineJobException("Unable to find markdown file: " + markdownFile.getPath());
         }
         output.setMarkdownFile(markdownFile);
 
         File htmlFile = getExpectedHtmlFile(ctx, outputPrefix);
         if (!htmlFile.exists())
         {
-            //TODO: this is for testing only
-            try
-            {
-                Files.touch(markdownFile);
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-            //throw new PipelineJobException("Unable to find HTML file: " + htmlFile.getPath());
+            throw new PipelineJobException("Unable to find HTML file: " + htmlFile.getPath());
         }
         output.setHtmlFile(htmlFile);
 
@@ -81,19 +63,10 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             String[] line;
             while ((line = reader.readNext()) != null)
             {
-                File f = new File(ctx.getOutputDir(), line[1]);
+                File f = new File(ctx.getOutputDir(), line[2]);
                 if (!f.exists())
                 {
-                    //TODO: this is for testing only
-                    try
-                    {
-                        Files.touch(markdownFile);
-                    }
-                    catch (IOException e)
-                    {
-                        throw new PipelineJobException(e);
-                    }
-                    //throw new PipelineJobException("File not found: " + f.getPath());
+                    throw new PipelineJobException("File not found: " + f.getPath());
                 }
 
                 outputs.add(new SeuratObjectWrapper(line[0], line[1], f));
