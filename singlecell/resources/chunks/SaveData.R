@@ -7,7 +7,7 @@ for (datasetId in names(newSeuratObjects)) {
 
     saveRDS(seuratObj, file = fn)
 
-    datasetName <- datasetIdToName[[datasetId]]
+    datasetName <- ifelse(datasetId %in% names(datasetIdToName), yes = datasetIdToName[[datasetId]], no = datasetId)
     savedFiles <- rbind(savedFiles, data.frame(datasetId = datasetId, datasetName = datasetName, filename = fn))
 
     CellMembrane::WriteCellBarcodes(seuratObj, file = barcodeFile)
