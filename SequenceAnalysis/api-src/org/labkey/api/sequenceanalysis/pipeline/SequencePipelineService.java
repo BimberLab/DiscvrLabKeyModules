@@ -134,4 +134,7 @@ abstract public class SequencePipelineService
     abstract public void updateOutputFile(SequenceOutputFile o, PipelineJob job, Integer runId, Integer analysisId);
 
     abstract public PreprocessingStep.Output simpleTrimFastqPair(File fq1, File fq2, List<String> params, File outDir, Logger log) throws PipelineJobException;
+
+    // Note: this primarily exists for testing. The returned TaskFileManager does not have key values set: SequenceJob, WorkingDir (File) and WorkDirectory
+    abstract public TaskFileManager getTaskFileManager();
 }

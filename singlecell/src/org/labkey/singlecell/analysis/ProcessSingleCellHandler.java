@@ -3,7 +3,11 @@ package org.labkey.singlecell.analysis;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
+import org.junit.Assert;
+import org.junit.Test;
 import org.labkey.api.data.Container;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
@@ -34,6 +38,7 @@ import org.labkey.singlecell.pipeline.singlecell.PrepareRawCounts;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -463,50 +468,63 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
             _stepOutputs = stepOutputs;
         }
     }
-//
-//    public static class TestCase extends Assert
-//    {
-//        private static final Logger _log = LogManager.getLogger(ProcessSingleCellHandler.TestCase.class);
-//
-//        @Test
-//        public void serializeTest() throws Exception
-//        {
-//            ProcessSingleCellHandler.Resumer r = new ProcessSingleCellHandler.Resumer();
-//            r.setLogger(_log);
-//            r.setRecordedActions(new LinkedHashSet<>());
-//            //r.setFileManager(new TaskFileManagerImpl());
-//            RecordedAction action1 = new RecordedAction();
-//            action1.setName("Action1");
-//            action1.setDescription("Description");
-//            action1.addInput(new File("/input"), "Input");
-//            action1.addOutput(new File("/output"), "Output", false);
-//            r.getRecordedActions().add(action1);
-//
-//            File tmp = new File(System.getProperty("java.io.tmpdir"));
-//            File f = FileUtil.getAbsoluteCaseSensitiveFile(new File(tmp, ProcessSingleCellHandler.Resumer.JSON_NAME));
-//
-//            SequenceOutputFile so = new SequenceOutputFile();
-//            so.setName("so1");
-//            so.setFile(f);
-//            r.getFileManager().addSequenceOutput(so);
-//
-//            r.writeToJson(tmp);
-//
-//            //after deserialization the RecordedAction should match the original
-//            ProcessSingleCellHandler.Resumer r2 = ProcessSingleCellHandler.Resumer.readFromJson(f, ProcessSingleCellHandler.Resumer.class);
-//            assertEquals(1, r2.getRecordedActions().size());
-//            RecordedAction action2 = r2.getRecordedActions().iterator().next();
-//            assertEquals("Action1", action2.getName());
-//            assertEquals("Description", action2.getDescription());
-//            assertEquals(1, action2.getInputs().size());
-//            assertEquals(new File("/input").toURI(), action1.getInputs().iterator().next().getURI());
-//            assertEquals(1, action2.getOutputs().size());
-//            assertEquals(new File("/output").toURI(), action2.getOutputs().iterator().next().getURI());
-//            assertEquals(1, r2.getFileManager().getOutputsToCreate().size());
-//            assertEquals("so1", r2.getFileManager().getOutputsToCreate().iterator().next().getName());
-//            assertEquals(f, r2.getFileManager().getOutputsToCreate().iterator().next().getFile());
-//
-//            f.delete();
-//        }
-//    }
+
+    public static class TestCase extends Assert
+    {
+        private static final Logger _log = LogManager.getLogger(ProcessSingleCellHandler.TestCase.class);
+
+        @Test
+        public void serializeTest() throws Exception
+        {
+            ProcessSingleCellHandler.Resumer r = new ProcessSingleCellHandler.Resumer();
+            r.setLogger(_log);
+            r.setRecordedActions(new LinkedHashSet<>());
+            r.setFileManager(SequencePipelineService.get().getTaskFileManager());
+            RecordedAction action1 = new RecordedAction();
+            action1.setName("Action1");
+            action1.setDescription("Description");
+            action1.addInput(new File("/input"), "Input");
+            action1.addOutput(new File("/output"), "Output", false);
+            r.getRecordedActions().add(action1);
+
+            r._markdowns.put(1, new File("file1"));
+            r._markdowns.put(2, new File("file2"));
+
+            r._stepOutputs.put(1, Arrays.asList(new SingleCellStep.SeuratObjectWrapper("datasetId", "datasetName", new File("seurat.rds"))));
+
+            File tmp = new File(System.getProperty("java.io.tmpdir"));
+            File f = FileUtil.getAbsoluteCaseSensitiveFile(new File(tmp, ProcessSingleCellHandler.Resumer.JSON_NAME));
+
+            SequenceOutputFile so = new SequenceOutputFile();
+            so.setName("so1");
+            so.setFile(f);
+            r.getFileManager().addSequenceOutput(so);
+
+            r.writeToJson(tmp);
+
+            //after deserialization the RecordedAction should match the original
+            ProcessSingleCellHandler.Resumer r2 = ProcessSingleCellHandler.Resumer.readFromJson(f, ProcessSingleCellHandler.Resumer.class);
+            assertEquals(1, r2.getRecordedActions().size());
+            RecordedAction action2 = r2.getRecordedActions().iterator().next();
+            assertEquals("Action1", action2.getName());
+            assertEquals("Description", action2.getDescription());
+            assertEquals(1, action2.getInputs().size());
+            assertEquals(new File("/input").toURI(), action1.getInputs().iterator().next().getURI());
+            assertEquals(1, action2.getOutputs().size());
+            assertEquals(new File("/output").toURI(), action2.getOutputs().iterator().next().getURI());
+            assertEquals(1, r2.getFileManager().getOutputsToCreate().size());
+            assertEquals("so1", r2.getFileManager().getOutputsToCreate().iterator().next().getName());
+            assertEquals(f, r2.getFileManager().getOutputsToCreate().iterator().next().getFile());
+
+            assertEquals("file1", r2.getMarkdowns().get(1).getName());
+            assertEquals("file2", r2.getMarkdowns().get(2).getName());
+
+            assertEquals(1, r2.getStepOutputs().size());
+            assertEquals("datasetId", r2.getStepOutputs().get(1).get(0).getDatasetId());
+            assertEquals("datasetName", r2.getStepOutputs().get(1).get(0).getDatasetName());
+            assertEquals("seurat.rds", r2.getStepOutputs().get(1).get(0).getFile().getName());
+
+            f.delete();
+        }
+    }
 }

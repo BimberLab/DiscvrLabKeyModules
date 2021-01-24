@@ -160,7 +160,10 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new FindMarkers.Provider());
         SequencePipelineService.get().registerPipelineStep(new MergeSeurat.Provider());
         SequencePipelineService.get().registerPipelineStep(new NormalizeAndScale.Provider());
+
+        //Note: this should not be registered normally. It is used directly in ProcessSingleCellHandler
         //SequencePipelineService.get().registerPipelineStep(new PrepareRawCounts.Provider());
+
         SequencePipelineService.get().registerPipelineStep(new RemoveCellCycle.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunCellHashing.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunPCA.Provider());
