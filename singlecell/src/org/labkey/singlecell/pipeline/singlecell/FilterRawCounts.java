@@ -3,7 +3,7 @@ package org.labkey.singlecell.pipeline.singlecell;
 import org.json.JSONObject;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
-import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
@@ -20,26 +20,26 @@ public class FilterRawCounts extends AbstractCellMembraneStep
         public Provider()
         {
             super("FilterRawCounts", "Filter Raw Counts", "Seurat/OOSAP", "This will use OOSAP/Seurat to perform basic filtering on cells based on UMI count, feature count, etc.", Arrays.asList(
-                    ToolParameterDescriptor.create("nCountRnaLow", "Min UMI Count", "Cells with UMI counts below this value will be discarded", "ldk-integerfield", new JSONObject(){{
+                    SeuratToolParameter.create("nCountRnaLow", "Min UMI Count", "Cells with UMI counts below this value will be discarded", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, 0),
-                    ToolParameterDescriptor.create("nCountRnaHigh", "Max UMI Count", "Cells with UMI counts above this value will be discarded", "ldk-integerfield", new JSONObject(){{
+                    }}, 0, "nCount_RNA.low"),
+                    SeuratToolParameter.create("nCountRnaHigh", "Max UMI Count", "Cells with UMI counts above this value will be discarded", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, 20000),
-                    ToolParameterDescriptor.create("nCountFeatureLow", "Min Feature Count", "Cells with unique feature totals below this value will be discarded", "ldk-integerfield", new JSONObject(){{
+                    }}, 20000, "nCount_RNA.high"),
+                    SeuratToolParameter.create("nCountFeatureLow", "Min Feature Count", "Cells with unique feature totals below this value will be discarded", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, 200),
-                    ToolParameterDescriptor.create("nCountFeatureHigh", "Max Feature Count", "Cells with unique feature totals above this value will be discarded", "ldk-integerfield", new JSONObject(){{
+                    }}, 200, "nFeature.low"),
+                    SeuratToolParameter.create("nCountFeatureHigh", "Max Feature Count", "Cells with unique feature totals above this value will be discarded", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, 5000),
-                    ToolParameterDescriptor.create("pMitoLow", "Min Percent Mito", "Cells percent mitochondrial genes below this value will be discarded", "ldk-numberfield", new JSONObject(){{
-                        put("minValue", 0);
-                        put("maxValue", 1);
-                    }}, 0),
-                    ToolParameterDescriptor.create("pMitoHigh", "Max Percent Mito", "Cells percent mitochondrial genes above this value will be discarded", "ldk-numberfield", new JSONObject(){{
+                    }}, 5000, "nFeature.low"),
+                    SeuratToolParameter.create("pMitoLow", "Min Percent Mito", "Cells percent mitochondrial genes below this value will be discarded", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                         put("maxValue", 1);
-                    }}, 0.15)
+                    }}, 0, "pMito.low"),
+                    SeuratToolParameter.create("pMitoHigh", "Max Percent Mito", "Cells percent mitochondrial genes above this value will be discarded", "ldk-numberfield", new JSONObject(){{
+                        put("minValue", 0);
+                        put("maxValue", 1);
+                    }}, 0.15, "pMito.high")
                     ), null, null);
         }
 

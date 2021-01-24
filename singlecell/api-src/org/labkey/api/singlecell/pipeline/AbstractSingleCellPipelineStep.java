@@ -271,7 +271,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
     }
 
-    protected String prepareValueForR(ToolParameterDescriptor pd)
+    protected String prepareValueForR(SeuratToolParameter pd)
     {
         String val = StringUtils.trimToNull(pd.extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()));
         if (val == null)
@@ -335,7 +335,10 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 
         for (ToolParameterDescriptor pd : getProvider().getParameters())
         {
-            body.add(pd.getName() + " <- " + prepareValueForR(pd));
+            if (pd instanceof SeuratToolParameter)
+            {
+                body.add(((SeuratToolParameter) pd).getVariableName() + " <- " + prepareValueForR((SeuratToolParameter)pd));
+            }
         }
         body.add("");
         body.add("outputPrefix <- '" + outputPrefix + "'");

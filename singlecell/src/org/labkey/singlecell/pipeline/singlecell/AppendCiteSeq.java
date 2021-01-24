@@ -6,7 +6,7 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
-import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
@@ -24,11 +24,11 @@ public class AppendCiteSeq extends AbstractCellMembraneStep
         public Provider()
         {
             super("AppendCiteSeq", "Append CITE-seq Data", "OOSAP", "If available, this will process and append CITE-seq data to the Seurat object(s).", Arrays.asList(
-                ToolParameterDescriptor.create("normalizationMethod", "Normalization Method", "", "ldk-simplecombo", new JSONObject(){{
+                SeuratToolParameter.create("normalizationMethod", "Normalization Method", "", "ldk-simplecombo", new JSONObject(){{
                     put("storeValues", "CLR");
                     put("initialValues", "CLR");
                 }}, "CLR"),
-                ToolParameterDescriptor.create("processingMethod", "Processing Method", "", "ldk-simplecombo", new JSONObject(){{
+                SeuratToolParameter.create("processingMethod", "Processing Method", "", "ldk-simplecombo", new JSONObject(){{
                     put("storeValues", "PCA-tSNE;Distance-tSNE");
                     put("initialValues", "PCA-tSNE");
                 }}, "PCA-tSNE")
