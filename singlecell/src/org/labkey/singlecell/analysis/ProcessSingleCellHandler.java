@@ -36,8 +36,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -336,7 +336,7 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
 
             //process with pandoc
             List<String> lines = new ArrayList<>();
-            List<String> markdownNames = _resumer.getMarkdowns().stream().map(File::getName).collect(Collectors.toList());
+            List<String> markdownNames = _resumer.getMarkdownsInOrder().stream().map(File::getName).collect(Collectors.toList());
             lines.add("knitr::pandoc(input = c('" + StringUtils.join(markdownNames, "','") + "'))");
 
             AbstractSingleCellPipelineStep.executeR(ctx, AbstractCellMembraneStep.CONTINAER_NAME, "pandoc", lines);
@@ -353,9 +353,9 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
     {
         public static final String JSON_NAME = "processSingleCellCheckpoint.json";
 
-        private Map<Integer, File> _markdowns = new LinkedHashMap<>();
-        private Map<Integer, File> _htmlFiles = new LinkedHashMap<>();
-        private Map<Integer, List<SingleCellStep.SeuratObjectWrapper>> _stepOutputs = new LinkedHashMap<>();
+        private Map<Integer, File> _markdowns = new HashMap<>();
+        private Map<Integer, File> _htmlFiles = new HashMap<>();
+        private Map<Integer, List<SingleCellStep.SeuratObjectWrapper>> _stepOutputs = new HashMap<>();
 
         @Override
         protected String getJsonName()
@@ -423,16 +423,6 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
             saveState();
         }
 
-        public Collection<File> getMarkdowns()
-        {
-            return _markdowns.values();
-        }
-
-        public Collection<File> getHtmlFiles()
-        {
-            return _htmlFiles.values();
-        }
-
         public void setMarkdowns(Map<Integer, File> markdowns)
         {
             _markdowns = markdowns;
@@ -441,6 +431,26 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
         public void setHtmlFiles(Map<Integer, File> htmlFiles)
         {
             _htmlFiles = htmlFiles;
+        }
+
+        public Map<Integer, File> getMarkdowns()
+        {
+            return _markdowns;
+        }
+
+        public Map<Integer, File> getHtmlFiles()
+        {
+            return _htmlFiles;
+        }
+
+        public List<File> getMarkdownsInOrder()
+        {
+            return _markdowns.keySet().stream().sorted().map(_markdowns::get).collect(Collectors.toList());
+        }
+
+        public List<File> getHtmlFilesInOrder()
+        {
+            return _markdowns.keySet().stream().sorted().map(_markdowns::get).collect(Collectors.toList());
         }
 
         public Map<Integer, List<SingleCellStep.SeuratObjectWrapper>> getStepOutputs()
@@ -453,4 +463,50 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
             _stepOutputs = stepOutputs;
         }
     }
+//
+//    public static class TestCase extends Assert
+//    {
+//        private static final Logger _log = LogManager.getLogger(ProcessSingleCellHandler.TestCase.class);
+//
+//        @Test
+//        public void serializeTest() throws Exception
+//        {
+//            ProcessSingleCellHandler.Resumer r = new ProcessSingleCellHandler.Resumer();
+//            r.setLogger(_log);
+//            r.setRecordedActions(new LinkedHashSet<>());
+//            //r.setFileManager(new TaskFileManagerImpl());
+//            RecordedAction action1 = new RecordedAction();
+//            action1.setName("Action1");
+//            action1.setDescription("Description");
+//            action1.addInput(new File("/input"), "Input");
+//            action1.addOutput(new File("/output"), "Output", false);
+//            r.getRecordedActions().add(action1);
+//
+//            File tmp = new File(System.getProperty("java.io.tmpdir"));
+//            File f = FileUtil.getAbsoluteCaseSensitiveFile(new File(tmp, ProcessSingleCellHandler.Resumer.JSON_NAME));
+//
+//            SequenceOutputFile so = new SequenceOutputFile();
+//            so.setName("so1");
+//            so.setFile(f);
+//            r.getFileManager().addSequenceOutput(so);
+//
+//            r.writeToJson(tmp);
+//
+//            //after deserialization the RecordedAction should match the original
+//            ProcessSingleCellHandler.Resumer r2 = ProcessSingleCellHandler.Resumer.readFromJson(f, ProcessSingleCellHandler.Resumer.class);
+//            assertEquals(1, r2.getRecordedActions().size());
+//            RecordedAction action2 = r2.getRecordedActions().iterator().next();
+//            assertEquals("Action1", action2.getName());
+//            assertEquals("Description", action2.getDescription());
+//            assertEquals(1, action2.getInputs().size());
+//            assertEquals(new File("/input").toURI(), action1.getInputs().iterator().next().getURI());
+//            assertEquals(1, action2.getOutputs().size());
+//            assertEquals(new File("/output").toURI(), action2.getOutputs().iterator().next().getURI());
+//            assertEquals(1, r2.getFileManager().getOutputsToCreate().size());
+//            assertEquals("so1", r2.getFileManager().getOutputsToCreate().iterator().next().getName());
+//            assertEquals(f, r2.getFileManager().getOutputsToCreate().iterator().next().getFile());
+//
+//            f.delete();
+//        }
+//    }
 }

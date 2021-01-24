@@ -7,6 +7,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
@@ -45,11 +46,17 @@ public interface SingleCellStep extends PipelineStep
         public File getHtmlFile();
     }
 
-    public static class SeuratObjectWrapper
+    public static class SeuratObjectWrapper implements Serializable
     {
         private File _file;
         private String _datasetId;
         private String _datasetName;
+
+        //For serialization
+        public SeuratObjectWrapper()
+        {
+
+        }
 
         public SeuratObjectWrapper(String datasetId, String datasetName, File file)
         {
