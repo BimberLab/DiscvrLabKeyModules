@@ -69,6 +69,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                     throw new PipelineJobException("File not found: " + f.getPath());
                 }
 
+                getPipelineCtx().getLogger().debug("Output seurat: " + line[0] + " / " + line[1] + " / "+ f.getName());
                 outputs.add(new SeuratObjectWrapper(line[0], line[1], f));
             }
         }
