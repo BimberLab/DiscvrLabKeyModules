@@ -227,7 +227,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
     protected void executeR(SequenceOutputHandler.JobContext ctx, File rmd, String outputPrefix) throws PipelineJobException
     {
         List<String> lines = new ArrayList<>();
-        lines.add("rmarkdown::render(output_file = '" + getExpectedHtmlFile(ctx, outputPrefix).getName() + "', input = '" + rmd.getName() + "', intermediates_dir  = '/work'))");
+        lines.add("rmarkdown::render(output_file = '" + getExpectedHtmlFile(ctx, outputPrefix).getName() + "', input = '" + rmd.getName() + "', intermediates_dir  = '/work')");
         lines.add("print('Rmarkdown complete')");
 
         executeR(ctx, getDockerContainerName(), outputPrefix, lines);
@@ -303,6 +303,14 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         if (val == null)
         {
             return "NULL";
+        }
+        else if ("false".equals(val))
+        {
+            return "FALSE";
+        }
+        else if ("true".equals(val))
+        {
+            return "TRUE";
         }
         else if (NumberUtils.isCreatable(val))
         {
