@@ -31,7 +31,7 @@ public class FilterRawCounts extends AbstractCellMembraneStep
                     }}, 200, "nFeature.low"),
                     SeuratToolParameter.create("nCountFeatureHigh", "Max Feature Count", "Cells with unique feature totals above this value will be discarded", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, 5000, "nFeature.low"),
+                    }}, 5000, "nFeature.high"),
                     SeuratToolParameter.create("pMitoLow", "Min Percent Mito", "Cells percent mitochondrial genes below this value will be discarded", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                         put("maxValue", 1);
