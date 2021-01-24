@@ -407,7 +407,7 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
             }
 
             action.addOutput(markdown, "Markdown File", true);
-            action.addOutput(markdown, "HTML Report", false);
+            action.addOutput(html, "HTML Report", false);
 
             _stepOutputs.put(stepIdx, seurat);
             _markdowns.put(stepIdx, markdown);
