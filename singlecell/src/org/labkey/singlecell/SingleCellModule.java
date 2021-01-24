@@ -28,6 +28,7 @@ import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.singlecell.analysis.CellHashingHandler;
 import org.labkey.singlecell.analysis.CellRangerRawDataHandler;
@@ -43,6 +44,7 @@ import org.labkey.singlecell.pipeline.singlecell.AppendCiteSeq;
 import org.labkey.singlecell.pipeline.singlecell.DoubletFinder;
 import org.labkey.singlecell.pipeline.singlecell.Downsample;
 import org.labkey.singlecell.pipeline.singlecell.FilterRawCounts;
+import org.labkey.singlecell.pipeline.singlecell.FindClustersAndDimRedux;
 import org.labkey.singlecell.pipeline.singlecell.FindMarkers;
 import org.labkey.singlecell.pipeline.singlecell.MergeSeurat;
 import org.labkey.singlecell.pipeline.singlecell.NormalizeAndScale;
@@ -50,7 +52,6 @@ import org.labkey.singlecell.pipeline.singlecell.RemoveCellCycle;
 import org.labkey.singlecell.pipeline.singlecell.RunCellHashing;
 import org.labkey.singlecell.pipeline.singlecell.RunPCA;
 import org.labkey.singlecell.pipeline.singlecell.RunSingleR;
-import org.labkey.singlecell.pipeline.singlecell.FindClustersAndDimRedux;
 import org.labkey.singlecell.pipeline.singlecell.SplitSeurat;
 import org.labkey.singlecell.pipeline.singlecell.SubsetSeurat;
 import org.labkey.singlecell.run.CellRangerVDJWrapper;
@@ -171,5 +172,14 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new FindClustersAndDimRedux.Provider());
         SequencePipelineService.get().registerPipelineStep(new SplitSeurat.Provider());
         SequencePipelineService.get().registerPipelineStep(new SubsetSeurat.Provider());
+    }
+
+    @Override
+    @NotNull
+    public Set<Class> getUnitTests()
+    {
+        return PageFlowUtil.set(
+                ProcessSingleCellHandler.TestCase.class
+        );
     }
 }
