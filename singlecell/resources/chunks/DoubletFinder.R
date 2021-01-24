@@ -4,4 +4,8 @@ for (datasetId in names(seuratObjects)) {
     seuratObj <- CellMembrane::FindDoublets(seuratObj, dropDoublets = dropDoublets)
 
     newSeuratObjects[[datasetId]] <- seuratObj
+
+    # Cleanup
+    seuratObjects[[datasetId]] <- NULL
+    gc()
 }

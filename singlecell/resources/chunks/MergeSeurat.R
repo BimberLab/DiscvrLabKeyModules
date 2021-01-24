@@ -4,3 +4,7 @@ if (length(seuratObjects) == 1) {
 } else {
     newSeuratObjects[[projectName]] <- CellMembrane::MergeSeuratObjs(seuratObjects, projectName = projectName)
 }
+
+# Cleanup
+rm(seuratObjects)
+gc()

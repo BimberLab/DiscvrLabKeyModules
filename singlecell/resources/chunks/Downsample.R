@@ -4,4 +4,8 @@ for (datasetId in names(seuratObjects)) {
     CellMembrane::DownsampleSeurat(seuratObj, targetCells = targetCells, subsetFields = subsetFields, seed = seed)
 
     newSeuratObjects[[datasetId]] <- seuratObj
+
+    # Cleanup
+    seuratObjects[[datasetId]] <- NULL
+    gc()
 }

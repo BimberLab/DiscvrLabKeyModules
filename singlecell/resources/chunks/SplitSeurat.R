@@ -5,4 +5,8 @@ for (datasetId in names(seuratObjects)) {
     for (name in names(newList)) {
         newSeuratObjects[[name]] <- newList[[name]]
     }
+
+    # Cleanup
+    seuratObjects[[datasetId]] <- NULL
+    gc()
 }

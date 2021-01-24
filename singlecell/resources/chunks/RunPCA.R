@@ -4,4 +4,8 @@ for (datasetId in names(seuratObjects)) {
     seuratObj <- CellMembrane::RunPcaSteps(seuratObj, variableGenesWhitelist = variableGenesWhitelist, variableGenesBlacklist = variableGenesBlacklist, npcs = npcs)
 
     newSeuratObjects[[datasetId]] <- seuratObj
+
+    # Cleanup
+    seuratObjects[[datasetId]] <- NULL
+    gc()
 }
