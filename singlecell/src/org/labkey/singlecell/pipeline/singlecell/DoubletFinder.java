@@ -26,7 +26,6 @@ public class DoubletFinder extends AbstractCellMembraneStep
             ), null, null);
         }
 
-
         @Override
         public DoubletFinder create(PipelineContext ctx)
         {

@@ -363,6 +363,12 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
             return JSON_NAME;
         }
 
+        //for serialization
+        public Resumer()
+        {
+
+        }
+
         private Resumer(JobContext ctx)
         {
             super(ctx.getSourceDirectory(), ctx.getLogger(), ctx.getFileManager());
@@ -425,6 +431,26 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
         public Collection<File> getHtmlFiles()
         {
             return _htmlFiles.values();
+        }
+
+        public void setMarkdowns(Map<Integer, File> markdowns)
+        {
+            _markdowns = markdowns;
+        }
+
+        public void setHtmlFiles(Map<Integer, File> htmlFiles)
+        {
+            _htmlFiles = htmlFiles;
+        }
+
+        public Map<Integer, List<SingleCellStep.SeuratObjectWrapper>> getStepOutputs()
+        {
+            return _stepOutputs;
+        }
+
+        public void setStepOutputs(Map<Integer, List<SingleCellStep.SeuratObjectWrapper>> stepOutputs)
+        {
+            _stepOutputs = stepOutputs;
         }
     }
 }
