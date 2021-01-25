@@ -174,12 +174,12 @@ public class SeuratCellHashingHandler extends AbstractParameterizedOutputHandler
         }
     }
 
-    public static File getCellBarcodesFromSeurat(File seuratObj) throws PipelineJobException
+    public static File getCellBarcodesFromSeurat(File seuratObj)
     {
         File barcodes = new File(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds", "cellBarcodes.csv"));
         if (!barcodes.exists())
         {
-            throw new PipelineJobException("Unable to find expected cell barcodes file.  This might indicate the seurat object was created with an older version of the pipeline.  Expected: " + barcodes.getPath());
+            throw new IllegalArgumentException("Unable to find expected cell barcodes file.  This might indicate the seurat object was created with an older version of the pipeline.  Expected: " + barcodes.getPath());
         }
 
         return barcodes;

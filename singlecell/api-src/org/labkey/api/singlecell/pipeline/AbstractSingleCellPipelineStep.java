@@ -415,7 +415,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                 out.println(extraText);
             }
             out.println("");
-            out.println("```{r " + chunkName + (chunkOpts == null ? "" : ", " + chunkOpts) + "}");
+            out.println("```{r " + (chunkName == null ? "" : chunkName) + (chunkOpts == null ? "" : ", " + chunkOpts) + "}");
             bodyLines.forEach(out::println);
             out.println("");
             out.println("```");

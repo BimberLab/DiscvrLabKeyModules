@@ -318,6 +318,7 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
                 {
                     currentFiles = new ArrayList<>(output.getSeuratObjects());
                     _resumer.getFileManager().addIntermediateFiles(currentFiles.stream().map(SingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toSet()));
+                    _resumer.getFileManager().addIntermediateFiles(currentFiles.stream().map(x -> SeuratCellHashingHandler.getCellBarcodesFromSeurat(x.getFile())).collect(Collectors.toSet()));
                 }
                 else if (step.createsSeuratObjects())
                 {
@@ -342,6 +343,7 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
                     ctx.getLogger().debug("Removing intermediate file: " + seurat.getFile().getPath());
                     ctx.getFileManager().removeIntermediateFile(seurat.getFile());
                     _resumer.getFileManager().removeIntermediateFile(seurat.getFile());
+                    _resumer.getFileManager().removeIntermediateFile(SeuratCellHashingHandler.getCellBarcodesFromSeurat(seurat.getFile()));
                 }
             }
 

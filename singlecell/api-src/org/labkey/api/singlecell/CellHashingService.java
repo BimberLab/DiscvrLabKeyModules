@@ -18,6 +18,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.model.CDNA_Library;
 import org.labkey.api.singlecell.model.Sample;
 import org.labkey.api.singlecell.model.Sort;
+import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.FileUtil;
 
 import java.io.File;
@@ -101,6 +102,21 @@ abstract public class CellHashingService
 
         }
 
+        public static CellHashingService.CellHashingParameters createFromStep(SequenceOutputHandler.JobContext ctx, SingleCellStep step, CellHashingService.BARCODE_TYPE type, Readset htoOrCiteseqReadset, @Nullable Readset parentReadset, @Nullable File htoOrCiteseqBarcodesFile) throws PipelineJobException
+        {
+            CellHashingService.CellHashingParameters ret = new CellHashingService.CellHashingParameters();
+            ret.type = type;
+            ret.scanEditDistances = step.getProvider().getParameterByName("scanEditDistances").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, false);
+            ret.editDistance = step.getProvider().getParameterByName("editDistance").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Integer.class, 2);
+            ret.minCountPerCell = step.getProvider().getParameterByName("minCountPerCell").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Integer.class, 3);
+            ret.htoOrCiteseqReadset = htoOrCiteseqReadset;
+            ret.parentReadset = parentReadset;
+            ret.htoOrCiteseqBarcodesFile = htoOrCiteseqBarcodesFile == null ? new File(ctx.getSourceDirectory(), type.getAllBarcodeFileName()) : htoOrCiteseqBarcodesFile;
+            ret.methods = extractMethods(step.getProvider().getParameterByName("methods").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), JSONArray.class));
+
+            return ret;
+        }
+
         public static CellHashingParameters createFromJson(BARCODE_TYPE type, File webserverDir, JSONObject params, Readset htoOrCiteseqReadset, @Nullable Readset parentReadset, @Nullable File htoOrCiteseqBarcodesFile) throws PipelineJobException
         {
             CellHashingParameters ret = new CellHashingParameters();
@@ -111,8 +127,13 @@ abstract public class CellHashingService
             ret.htoOrCiteseqReadset = htoOrCiteseqReadset;
             ret.parentReadset = parentReadset;
             ret.htoOrCiteseqBarcodesFile = htoOrCiteseqBarcodesFile == null ? new File(webserverDir, type.getAllBarcodeFileName()) : htoOrCiteseqBarcodesFile;
+            ret.methods = extractMethods(params.optJSONArray("methods"));
 
-            JSONArray methodsArr = params.optJSONArray("methods");
+            return ret;
+        }
+
+        public static List<CALLING_METHOD> extractMethods(JSONArray methodsArr) throws PipelineJobException
+        {
             if (methodsArr != null)
             {
                 List<CALLING_METHOD> methods = new ArrayList<>();
@@ -128,6 +149,8 @@ abstract public class CellHashingService
                             throw new IllegalArgumentException("Unknown calling method: " + x);
                         }
                     });
+
+                    return methods;
                 }
                 catch (IllegalArgumentException e)
                 {
@@ -135,7 +158,7 @@ abstract public class CellHashingService
                 }
             }
 
-            return ret;
+            return null;
         }
 
         public int getEffectiveReadsetId()
