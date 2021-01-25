@@ -40,9 +40,11 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.SequencePipelineServiceImpl;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,7 +64,7 @@ public class SequenceTaskHelper implements PipelineContext
     private SequenceJob _job;
     private WorkDirectory _wd;
     private SequencePipelineSettings _settings;
-    private TaskFileManagerImpl _fileManager;
+    private TaskFileManager _fileManager;
     private File _workLocation;
     public static final String FASTQ_DATA_INPUT_NAME = "Input FASTQ File";
     public static final String BAM_INPUT_NAME = "Input BAM File";
@@ -94,12 +96,12 @@ public class SequenceTaskHelper implements PipelineContext
         _settings = new SequencePipelineSettings(_job.getParameters());
     }
 
-    public TaskFileManagerImpl getFileManager()
+    public TaskFileManager getFileManager()
     {
         return _fileManager;
     }
 
-    public void setFileManager(TaskFileManagerImpl fileManager)
+    public void setFileManager(TaskFileManager fileManager)
     {
         _fileManager = fileManager;
     }
@@ -243,7 +245,7 @@ public class SequenceTaskHelper implements PipelineContext
 
     public static boolean isAlignmentUsed(PipelineJob job)
     {
-        return !StringUtils.isEmpty(job.getParameters().get(PipelineStep.StepType.alignment.name()));
+        return !StringUtils.isEmpty(job.getParameters().get(PipelineStep.CorePipelineStepTypes.alignment.name()));
     }
 
     public static void logModuleVersions(Logger log)
@@ -318,12 +320,13 @@ public class SequenceTaskHelper implements PipelineContext
 
     public void cacheExpDatasForParams() throws PipelineJobException
     {
+        Map<Class<? extends  PipelineStep>, String> map = SequencePipelineServiceImpl.get().getPipelineStepTypes();
         //cache params, as needed:
-        for (PipelineStep.StepType stepType : PipelineStep.StepType.values())
+        for (Class<? extends PipelineStep> stepType : map.keySet())
         {
-            for (PipelineStepProvider fact : SequencePipelineService.get().getProviders(stepType.getStepClass()))
+            for (PipelineStepProvider<?> fact : SequencePipelineService.get().getProviders(stepType))
             {
-                for (ToolParameterDescriptor pd : (List<ToolParameterDescriptor>)fact.getParameters())
+                for (ToolParameterDescriptor pd : fact.getParameters())
                 {
                     if (pd instanceof ToolParameterDescriptor.CachableParam)
                     {

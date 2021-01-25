@@ -9,9 +9,8 @@ import htsjdk.variant.vcf.VCFFileReader;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.module.Module;
@@ -185,33 +184,6 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         return (VariantProcessingJob) job;
     }
 
-    private void deleteSourceWorkspaces(VariantProcessingJob variantProcessingJob) throws PipelineJobException
-    {
-        Map<String, File> scatterOutputs = variantProcessingJob.getScatterJobOutputs();
-        Map<String, List<Interval>> jobToIntervalMap = variantProcessingJob.getJobToIntervalMap();
-
-        for (String name : jobToIntervalMap.keySet())
-        {
-            if (!scatterOutputs.containsKey(name))
-            {
-                throw new PipelineJobException("Missing output for interval/contig: " + name);
-            }
-
-            File sourceWorkspace = scatterOutputs.get(name).getParentFile();
-            if (sourceWorkspace.exists())
-            {
-                try
-                {
-                    FileUtils.deleteDirectory(sourceWorkspace);
-                }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
-                }
-            }
-        }
-    }
-
     @Override
     public File performVariantMerge(TaskFileManager manager, RecordedAction action, SequenceOutputHandler<SequenceOutputProcessor> handler, PipelineJob job) throws PipelineJobException
     {
@@ -233,75 +205,41 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             return getMarkerFile(destinationWorkspace);
         }
 
+        // The per-contig folders should have been copied during the jobs:
         Map<String, File> scatterOutputs = getPipelineJob(job).getScatterJobOutputs();
-        boolean copiedTopLevelFiles = false;
-        Set<File> toDelete = new HashSet<>();
         for (String name : jobToIntervalMap.keySet())
         {
-            if (!scatterOutputs.containsKey(name))
+            File overallCopyDone = new File(variantProcessingJob.getDataDirectory(), name + "/copyToWebserver.done");
+            if (overallCopyDone.exists())
             {
-                throw new PipelineJobException("Missing output for interval/contig: " + name);
-            }
-
-            File sourceWorkspace = scatterOutputs.get(name).getParentFile();
-            if (!sourceWorkspace.exists())
-            {
-                throw new PipelineJobException("Missing output: " + sourceWorkspace.getPath());
+                overallCopyDone.delete();
             }
 
             //Iterate the contig folders we expect:
-            try
+            for (Interval i : jobToIntervalMap.get(name))
             {
-                for (Interval i : jobToIntervalMap.get(name))
+                String contigFolder = getFolderNameFromInterval(i);
+                job.getLogger().info("Inspecting contig folder: " + contigFolder);
+                File copyDone = new File(destinationWorkspace, contigFolder + ".copy.done");
+                if (copyDone.exists())
                 {
-                    String contigFolder = getFolderNameFromInterval(i);
-                    job.getLogger().info("Copying contig folder: " + contigFolder);
-                    File copyDone = new File(destinationWorkspace, contigFolder + ".copy.done");
-                    toDelete.add(copyDone);
+                    copyDone.delete();
+                }
 
-                    if (copyDone.exists())
+                File expectedFolder = new File(destinationWorkspace, contigFolder);
+                if (!expectedFolder.exists())
+                {
+                    Set<String> contigsInInput = getContigsInInputs(variantProcessingJob.getInputFiles(), job.getLogger());
+                    if (!contigsInInput.contains(i.getContig()))
                     {
-                        job.getLogger().info("has been copied, skipping");
+                        job.getLogger().info("Contig not present in the input gVCFs, skipping: " + i.getContig());
                         continue;
                     }
 
-                    if (!copiedTopLevelFiles)
-                    {
-                        copyToLevelFiles(job, sourceWorkspace, destinationWorkspace);
-                        copiedTopLevelFiles = true;
-                    }
-
-                    File sourceFolder = new File(sourceWorkspace, contigFolder);
-                    if (!sourceFolder.exists())
-                    {
-                        Set<String> contigsInInput = getContigsInInputs(variantProcessingJob.getInputFiles(), job.getLogger());
-                        if (!contigsInInput.contains(i.getContig()))
-                        {
-                            job.getLogger().info("Contig not present in the input gVCFs, skipping: " + i.getContig());
-                            continue;
-                        }
-
-                        throw new PipelineJobException("Unable to find expected file: " + sourceFolder.getPath());
-                    }
-
-                    File destContigFolder = new File(destinationWorkspace, sourceFolder.getName());
-                    if (destContigFolder.exists())
-                    {
-                        throw new PipelineJobException("Target exists, perhaps it was already copied: " + destContigFolder.getPath() + ".  Expected to find marker file: " + copyDone.getPath());
-                    }
-
-                    FileUtils.moveDirectory(sourceFolder, destContigFolder);
-                    FileUtils.touch(copyDone);
+                    throw new PipelineJobException("Unable to find expected file: " + expectedFolder.getPath());
                 }
             }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
         }
-
-        toDelete.forEach(File::delete);
-        deleteSourceWorkspaces(variantProcessingJob);
 
         try
         {
@@ -335,7 +273,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         return _contigsInInputs;
     }
 
-    private void copyToLevelFiles(PipelineJob job, File sourceWorkspace, File destinationWorkspace) throws IOException
+    private void copyToLevelFiles(PipelineJob job, File sourceWorkspace, File destinationWorkspace, boolean overwrite) throws IOException
     {
         job.getLogger().info("Copying top-level files from: " + sourceWorkspace.getPath());
         for (String fn : Arrays.asList("callset.json", "vidmap.json", "vcfheader.vcf", "__tiledb_workspace.tdb"))
@@ -344,6 +282,12 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             File dest = new File(destinationWorkspace, fn);
             if (dest.exists())
             {
+                if (!overwrite)
+                {
+                    job.getLogger().debug("workspace file exists, will not overwrite: " + dest.getPath());
+                    continue;
+                }
+
                 dest.delete();
             }
 
@@ -371,16 +315,16 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         }
 
         @Override
-        public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
             Set<Integer> genomeIds = new HashSet<>();
             Set<String> uniqueSamples = new HashSet<>();
 
             if (_append)
             {
-                File workspace = getSourceWorkspace(params, support);
+                File workspace = getSourceWorkspace(ctx.getParams(), ctx.getSequenceSupport());
                 uniqueSamples.addAll(getSamplesForWorkspace(workspace));
-                job.getLogger().info("Samples in the existing workspace: " + uniqueSamples.size());
+                ctx.getJob().getLogger().info("Samples in the existing workspace: " + uniqueSamples.size());
             }
 
             for (SequenceOutputFile so : inputFiles)
@@ -469,20 +413,13 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 throw new PipelineJobException("Unable to find cached genome for Id: " + genomeId);
             }
 
-            File destinationWorkspaceFolder = getWorkspaceOutput(ctx.getOutputDir(), ctx.getParams().getString("fileBaseName"));
+            File workingDestinationWorkspaceFolder = getWorkspaceOutput(ctx.getOutputDir(), ctx.getParams().getString("fileBaseName"));
 
             Set<File> toDelete = new HashSet<>();
-            File doneFile = new File(destinationWorkspaceFolder, "genomicsdb.done");
-            File startedFile = new File(destinationWorkspaceFolder.getParentFile(), "genomicsdb.started");
+            File doneFile = new File(workingDestinationWorkspaceFolder, "genomicsdb.done");
             boolean genomicsDbCompleted = doneFile.exists();
-            boolean genomicsDbStarted = startedFile.exists();
-            if (genomicsDbStarted)
-            {
-                ctx.getLogger().info("GenomicsDB has previously started in this folder");
-            }
 
             ctx.getFileManager().addIntermediateFile(doneFile);
-            ctx.getFileManager().addIntermediateFile(startedFile);
             if (_append)
             {
                 if (genomicsDbCompleted)
@@ -490,78 +427,8 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                     ctx.getLogger().debug("GenomicsDB previously completed, resuming");
                 }
 
-                if (!destinationWorkspaceFolder.exists())
-                {
-                    destinationWorkspaceFolder.mkdirs();
-                }
-
-                boolean copiedTopLevelFiles = false;
                 File sourceWorkspace = getSourceWorkspace(ctx.getParams(), ctx.getSequenceSupport());
-                List<Interval> intervals = getIntervalsOrFullGenome(ctx, genome);
-                for (Interval i : intervals)
-                {
-                    try
-                    {
-                        File sourceFolder = new File(sourceWorkspace, getFolderNameFromInterval(i));
-                        File destContigFolder = new File(destinationWorkspaceFolder, sourceFolder.getName());
-                        File copyDone = new File(destContigFolder.getPath() + ".copy.done");
-                        toDelete.add(copyDone);
-
-                        //NOTE: if GenomicsDB has started, but dies mid-job, the resulting workspace probably cannot be resumed
-                        if (!genomicsDbStarted && copyDone.exists())
-                        {
-                            ctx.getLogger().info("has been copied, skipping: " + i.getContig());
-                            reportFragmentsPerContig(ctx, destContigFolder, i.getContig());
-                            continue;
-                        }
-
-                        //Allow the above to complete so we track the .done files
-                        if (genomicsDbCompleted)
-                        {
-                            ctx.getLogger().info("has completed, skipping: " + i.getContig());
-                            continue;
-                        }
-
-                        if (!copiedTopLevelFiles)
-                        {
-                            copyToLevelFiles(ctx.getJob(), sourceWorkspace, destinationWorkspaceFolder);
-                            copiedTopLevelFiles = true;
-                        }
-
-                        if (!sourceFolder.exists())
-                        {
-                            throw new PipelineJobException("Unable to find expected file: " + sourceFolder.getPath());
-                        }
-
-                        if (SystemUtils.IS_OS_WINDOWS)
-                        {
-                            if (destContigFolder.exists())
-                            {
-                                ctx.getLogger().info("Target exists, deleting: " + destContigFolder.getPath());
-                                FileUtils.deleteDirectory(destContigFolder);
-                            }
-
-                            ctx.getLogger().info("copying contig folder: " + i.getContig());
-
-                            FileUtils.copyDirectory(sourceFolder, destContigFolder);
-                        }
-                        else
-                        {
-                            ctx.getLogger().debug("Copying directory with rsync: " + sourceFolder.getPath());
-                            //NOTE: since neither path will end in slashes, rsync to the parent folder should result in the correct placement
-                            new SimpleScriptWrapper(ctx.getLogger()).execute(Arrays.asList(
-                                    "rsync", "-r", "-a", "--delete", "--no-owner", "--no-group", sourceFolder.getPath(), destContigFolder.getParentFile().getPath()
-                            ));
-                        }
-
-                        FileUtils.touch(copyDone);
-                        reportFragmentsPerContig(ctx, destContigFolder, i.getContig());
-                    }
-                    catch (IOException e)
-                    {
-                        throw new PipelineJobException(e);
-                    }
-                }
+                copyWorkspace(ctx, sourceWorkspace, workingDestinationWorkspaceFolder, genome, toDelete, !genomicsDbCompleted);
             }
             else
             {
@@ -571,12 +438,12 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 }
                 else
                 {
-                    if (destinationWorkspaceFolder.exists())
+                    if (workingDestinationWorkspaceFolder.exists())
                     {
-                        ctx.getLogger().info("Deleting existing output folder: " + destinationWorkspaceFolder.getPath());
+                        ctx.getLogger().info("Deleting existing output folder: " + workingDestinationWorkspaceFolder.getPath());
                         try
                         {
-                            FileUtils.deleteDirectory(destinationWorkspaceFolder);
+                            FileUtils.deleteDirectory(workingDestinationWorkspaceFolder);
                         }
                         catch (IOException e)
                         {
@@ -620,8 +487,6 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             {
                 try
                 {
-                    FileUtils.touch(startedFile);
-
                     List<Interval> intervals = getIntervals(ctx);
 
                     Integer maxRam = SequencePipelineService.get().getMaxRam();
@@ -638,7 +503,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                         wrapper.setMaxRamOverride(maxRam);
                     }
 
-                    wrapper.execute(genome, vcfsToProcess, destinationWorkspaceFolder, intervals, options, _append);
+                    wrapper.execute(genome, vcfsToProcess, workingDestinationWorkspaceFolder, intervals, options, _append);
 
                     FileUtils.touch(doneFile);
                     ctx.getLogger().debug("GenomicsDB complete, touching file: " + doneFile.getPath());
@@ -650,11 +515,11 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             }
             else
             {
-                ctx.getLogger().info("Resuming from existing file: " + destinationWorkspaceFolder.getPath());
+                ctx.getLogger().info("Resuming from existing file: " + workingDestinationWorkspaceFolder.getPath());
             }
             ctx.getFileManager().addIntermediateFile(doneFile);
 
-            File markerFile = getMarkerFile(destinationWorkspaceFolder);
+            File markerFile = getMarkerFile(workingDestinationWorkspaceFolder);
             if (!markerFile.exists())
             {
                 throw new PipelineJobException("Unable to find expected file: " + markerFile.getPath());
@@ -663,15 +528,15 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             List<Interval> intervals = getIntervalsOrFullGenome(ctx, genome);
             for (Interval i : intervals)
             {
-                File destContigFolder = new File(destinationWorkspaceFolder, getFolderNameFromInterval(i));
+                File destContigFolder = new File(workingDestinationWorkspaceFolder, getFolderNameFromInterval(i));
                 reportFragmentsPerContig(ctx, destContigFolder, i.getName());
             }
 
-            ctx.getLogger().debug("adding sequence output: " + destinationWorkspaceFolder.getPath());
+            ctx.getLogger().debug("adding sequence output: " + workingDestinationWorkspaceFolder.getPath());
             SequenceOutputFile so1 = new SequenceOutputFile();
-            so1.setName(destinationWorkspaceFolder.getName());
+            so1.setName(workingDestinationWorkspaceFolder.getName());
 
-            int sampleCount = getSamplesForWorkspace(destinationWorkspaceFolder).size();
+            int sampleCount = getSamplesForWorkspace(workingDestinationWorkspaceFolder).size();
 
             if (_append)
             {
@@ -684,6 +549,37 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 so1.setDescription("GATK GenomicsDB, created from " + inputFiles.size() + " files, " + sampleCount + " samples.  GATK Version: " + wrapper.getVersionString());
             }
 
+            // rsync to source during the job, so we take care of this expensive step prior to closing the resumer.
+            // also we dont want those files tracked as outputs, since there will be many:
+            File workspaceLocalDir = getWorkspaceOutput(ctx.getSourceDirectory(true), ctx.getParams().getString("fileBaseName"));
+            ctx.getLogger().info("Copying local workspace to local job dir: " + workspaceLocalDir.getPath());
+
+            File copyToSourceDone = getCopyToSourceDone(ctx);
+
+            if (!copyToSourceDone.exists())
+            {
+                copyWorkspace(ctx, workingDestinationWorkspaceFolder, workspaceLocalDir, genome, toDelete, true);
+
+                try
+                {
+                    FileUtils.touch(copyToSourceDone);
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
+            else
+            {
+                ctx.getLogger().debug("Workspace has already been copied locally");
+            }
+
+            markerFile = getMarkerFile(workspaceLocalDir);
+            if (!markerFile.exists())
+            {
+                throw new PipelineJobException("Unable to find expected file: " + markerFile.getPath());
+            }
+
             so1.setFile(markerFile);
             so1.setLibrary_id(genomeId);
             so1.setCategory(CATEGORY);
@@ -692,6 +588,8 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             so1.setModified(new Date());
             ctx.addSequenceOutput(so1);
             action.addOutput(markerFile, "GenomicsDB Workspace", false);
+
+            SequenceUtil.deleteFolderWithRm(ctx.getLogger(), workingDestinationWorkspaceFolder);
 
             action.setEndTime(new Date());
             ctx.addActions(action);
@@ -706,6 +604,88 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 }
             }
         }
+    }
+
+    private void copyWorkspace(JobContext ctx, File sourceWorkspace, File destinationWorkspaceFolder, ReferenceGenome genome, Collection<File> toDelete, boolean alwaysPerformRsync) throws PipelineJobException
+    {
+        if (!destinationWorkspaceFolder.exists())
+        {
+            destinationWorkspaceFolder.mkdirs();
+        }
+
+        boolean haveCopiedTopLevelFiles = false;
+
+        List<Interval> intervals = getIntervalsOrFullGenome(ctx, genome);
+        for (Interval i : intervals)
+        {
+            try
+            {
+                File sourceFolder = new File(sourceWorkspace, getFolderNameFromInterval(i));
+                File destContigFolder = new File(destinationWorkspaceFolder, sourceFolder.getName());
+
+                File copyDone = new File(destContigFolder.getPath() + ".copy.done");
+                toDelete.add(copyDone);
+
+                if (copyDone.exists())
+                {
+                    if (alwaysPerformRsync)
+                    {
+                        ctx.getLogger().debug("deleting existing done file: " + copyDone.getPath());
+                        copyDone.exists();
+                    }
+                    else
+                    {
+                        ctx.getLogger().info("has been copied, skipping: " + i.getContig());
+                        reportFragmentsPerContig(ctx, destContigFolder, i.getContig());
+                        continue;
+                    }
+                }
+
+                if (!haveCopiedTopLevelFiles)
+                {
+                    copyToLevelFiles(ctx.getJob(), sourceWorkspace, destinationWorkspaceFolder, false);
+                    haveCopiedTopLevelFiles = true;
+                }
+
+                if (!sourceFolder.exists())
+                {
+                    throw new PipelineJobException("Unable to find expected file: " + sourceFolder.getPath());
+                }
+
+                if (SystemUtils.IS_OS_WINDOWS)
+                {
+                    if (destContigFolder.exists())
+                    {
+                        ctx.getLogger().info("Target exists, deleting: " + destContigFolder.getPath());
+                        FileUtils.deleteDirectory(destContigFolder);
+                    }
+
+                    ctx.getLogger().info("copying contig folder: " + i.getContig());
+
+                    FileUtils.copyDirectory(sourceFolder, destContigFolder);
+                }
+                else
+                {
+                    ctx.getLogger().debug("Copying directory with rsync: " + sourceFolder.getPath());
+                    //NOTE: since neither path will end in slashes, rsync to the parent folder should result in the correct placement
+                    new SimpleScriptWrapper(ctx.getLogger()).execute(Arrays.asList(
+                            "rsync", "-r", "-a", "--delete", "--no-owner", "--no-group", sourceFolder.getPath(), destContigFolder.getParentFile().getPath()
+                    ));
+                }
+
+                FileUtils.touch(copyDone);
+                reportFragmentsPerContig(ctx, destContigFolder, i.getContig());
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+    }
+
+    private File getCopyToSourceDone(JobContext ctx)
+    {
+        return new File(ctx.getSourceDirectory(), "copyToWebserver.done");
     }
 
     private void reportFragmentsPerContig(JobContext ctx, File destContigFolder, String contigName)

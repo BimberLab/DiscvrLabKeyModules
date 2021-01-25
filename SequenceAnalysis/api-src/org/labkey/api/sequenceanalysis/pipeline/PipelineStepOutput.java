@@ -30,8 +30,22 @@ import java.util.List;
  * Date: 6/21/2014
  * Time: 7:47 AM
  */
-public interface PipelineStepOutput
+public interface PipelineStepOutput extends PipelineOutputTracker
 {
+    /**
+     * Add an experiment input to this pipeline step
+     * @param input
+     * @param role
+     */
+    public void addInput(File input, String role);
+
+    /**
+     * Add an experiment output to this pipeline step
+     * @param output
+     * @param role
+     */
+    public void addOutput(File output, String role);
+
     /**
      * Returns a list of pairs giving additional input files and role of this file.  Note: inputs are usually set upfront, so this will only include
      * any non-standard inputs created during the course of this step
@@ -49,17 +63,19 @@ public interface PipelineStepOutput
     public List<File> getOutputsOfRole(String role);
 
     /**
+     * Add an intermediate file.  If the user selected 'delete intermediates', this will be deleted on job success.
+     * This will also be recorded as a step output with this role.
+     * @param file
+     * @param role
+     */
+    public void addIntermediateFile(File file, String role);
+
+    /**
      * Returns a list of intermediate files created during this step.  Intermediate files are files
      * that are deemed non-essential by this step.  If the pipeline has selected deleteIntermediaFiles=true,
      * these files will be deleted during the cleanup step.
      */
     public List<File> getIntermediateFiles();
-
-    /**
-     * Remove a previously added intermediate file
-     * @param toRemove The file to remove
-     */
-    public void removeIntermediateFiles(File toRemove);
 
     public List<PicardMetricsOutput> getPicardMetricsFiles();
 
@@ -72,46 +88,6 @@ public interface PipelineStepOutput
     public List<File> getDeferredDeleteIntermediateFiles();
 
     public List<SequenceOutput> getSequenceOutputs();
-
-    /**
-     * Add an experiment input to this pipeline step
-     * @param input
-     * @param role
-     */
-    public void addInput(File input, String role);
-
-    /**
-     * Add an experiment output to this pipeline step
-     * @param output
-     * @param role
-     */
-    public void addOutput(File output, String role);
-
-    /**
-     * Add an intermediate file.  If the user selected 'delete intermediates', this will be deleted on job success.
-     * @param file
-     */
-    public void addIntermediateFile(File file);
-
-    /**
-     * Add an intermediate file.  If the user selected 'delete intermediates', this will be deleted on job success.
-     * This will also be recorded as a step output with this role.
-     * @param file
-     * @param role
-     */
-    public void addIntermediateFile(File file, String role);
-
-    /**
-     * Add a SequenceOutputFile for this job.  These files are tracked and displayed through the browser UI.
-     * @param file
-     * @param label
-     * @param category
-     * @param readsetId
-     * @param analysisId
-     * @param genomeId
-     * @param description
-     */
-    public void addSequenceOutput(File file, String label, String category, @Nullable Integer readsetId, @Nullable Integer analysisId, @Nullable Integer genomeId, @Nullable String description);
 
     /**
      * Returns a list of any commands executed by this step

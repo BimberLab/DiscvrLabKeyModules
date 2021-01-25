@@ -18,6 +18,7 @@ import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractSequenceTaskFactory;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;

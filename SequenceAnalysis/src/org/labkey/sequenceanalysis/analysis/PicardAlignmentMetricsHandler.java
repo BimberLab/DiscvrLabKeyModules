@@ -91,13 +91,13 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
     public class Processor implements SequenceOutputProcessor
     {
         @Override
-        public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
             for (SequenceOutputFile o : inputFiles)
             {
                 if (o.getLibrary_id() != null)
                 {
-                    support.cacheGenome(SequenceAnalysisService.get().getReferenceGenome(o.getLibrary_id(), job.getUser()));
+                    ctx.getSequenceSupport().cacheGenome(SequenceAnalysisService.get().getReferenceGenome(o.getLibrary_id(), ctx.getJob().getUser()));
                 }
             }
         }

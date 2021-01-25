@@ -390,7 +390,7 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 				border: false,
 				width: '100%',
 				style: 'text-align: center',
-				html: 'Powered By DISCVR-Seq.  <a href="https://github.com/BimberLab/discvr-seq/wiki">Click here to learn more.</a>'
+				html: 'Powered By DISCVR-Seq.  <a href="https://bimberlab.github.io/DiscvrLabKeyModules/discvr-seq/overview.html">Click here to learn more.</a>'
 			}]
 		});
 

@@ -9,8 +9,8 @@ import htsjdk.variant.vcf.VCFHeader;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
@@ -26,6 +26,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.PedigreeRecord;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractResumer;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -489,15 +490,15 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
     public class Processor implements SequenceOutputProcessor
     {
         @Override
-        public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            initVariantProcessing(job, support, inputFiles, outputDir);
+            initVariantProcessing(ctx.getJob(), ctx.getSequenceSupport(), inputFiles, ctx.getOutputDir());
         }
 
         @Override
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
-            _resumer = Resumer.create((JobContextImpl)ctx);
+            _resumer = Resumer.create(ctx);
 
             boolean doCombine = ctx.getParams().optBoolean("variantMerging.CombineVCFs.doCombine", false);
             if (doCombine)
@@ -654,94 +655,15 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
         }
 
-        private Resumer(JobContextImpl ctx)
+        // For use by AbstractResumer.create()
+        public Resumer(JobContext ctx) throws PipelineJobException
         {
-            super(ctx.getSourceDirectory(), ctx.getLogger(), (TaskFileManagerImpl)ctx.getFileManager());
+            super(ctx.getSourceDirectory(), ctx.getLogger(), ctx.getFileManager());
         }
 
-        public static Resumer create(JobContextImpl ctx) throws PipelineJobException
+        public static Resumer create(JobContext ctx) throws PipelineJobException
         {
-            Resumer ret;
-            File json = getSerializedJson(ctx.getSourceDirectory(), JSON_NAME);
-            if (!json.exists())
-            {
-                ret = new Resumer(ctx);
-            }
-            else
-            {
-                ret = readFromJson(json, Resumer.class);
-                ret._isResume = true;
-                ret._log = ctx.getLogger();
-                ret._localWorkDir = ctx.getWorkDir().getDir();
-                ret._fileManager._job = (SequenceOutputHandlerJob)ctx.getJob();
-                ret._fileManager._wd = ctx.getWorkDir();
-                ret._fileManager._workLocation = ctx.getWorkDir().getDir();
-
-                ctx.getLogger().debug("FileManagers initially equal: " + ctx.getFileManager().equals(ret._fileManager));
-
-                ctx.getLogger().debug("Replacing fileManager on JobContext");
-                ctx.setFileManager(ret._fileManager);
-                try
-                {
-                    if (!ret._copiedInputs.isEmpty())
-                    {
-                        for (File orig : ret._copiedInputs.keySet())
-                        {
-                            ctx.getWorkDir().inputFile(orig, ret._copiedInputs.get(orig), false);
-                        }
-                    }
-                }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
-                }
-
-                //debugging:
-                ctx.getLogger().debug("loaded from file.  total recorded actions: " + ret.getRecordedActions().size());
-                ctx.getLogger().debug("total sequence outputs: " + ret.getFileManager().getOutputsToCreate().size());
-                ctx.getLogger().debug("total intermediate files: " + ret.getFileManager().getIntermediateFiles().size());
-                for (RecordedAction a : ret.getRecordedActions())
-                {
-                    ctx.getLogger().debug("action: " + a.getName() + ", inputs: " + a.getInputs().size() + ", outputs: " + a.getOutputs().size());
-                }
-
-                if (ret._recordedActions == null)
-                {
-                    throw new PipelineJobException("Job read from file, but did not have any saved actions.  This indicates a problem w/ serialization.");
-                }
-            }
-
-            if (ret.isResume())
-            {
-                ctx.getLogger().info("resuming previous job");
-
-            }
-
-            boolean fmEqual = ctx.getFileManager().equals(ret._fileManager);
-            ctx.getLogger().debug("FileManagers on resumer and JobContext equal: " + fmEqual);
-
-            return ret;
-        }
-
-        public void markComplete(JobContext ctx)
-        {
-            // NOTE: due to the way the resumer is set up, the FileManager used by the Resumer is a different
-            // instance than the JobContext, meaning we need to manually pass information back to the primary FileManager
-            ctx.getLogger().debug("total sequence outputs tracked in resumer: " + getFileManager().getOutputsToCreate().size());
-            for (SequenceOutputFile so : getFileManager().getOutputsToCreate())
-            {
-                ctx.addSequenceOutput(so);
-            }
-
-            ctx.getLogger().debug("total actions tracked in resumer: " + getRecordedActions().size());
-            for (RecordedAction a : getRecordedActions())
-            {
-                ctx.addActions(a);
-            }
-
-            ctx.getFileManager().addIntermediateFiles(getFileManager().getIntermediateFiles());
-
-            super.markComplete();
+            return AbstractResumer.create(ctx, JSON_NAME, Resumer.class);
         }
 
         @Override
@@ -808,15 +730,15 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         public void serializeTest() throws Exception
         {
             ProcessVariantsHandler.Resumer r = new ProcessVariantsHandler.Resumer();
-            r._log = _log;
-            r._recordedActions = new LinkedHashSet<>();
-            r._fileManager = new TaskFileManagerImpl();
+            r.setLogger(_log);
+            r.setRecordedActions(new LinkedHashSet<>());
+            r.setFileManager(new TaskFileManagerImpl());
             RecordedAction action1 = new RecordedAction();
             action1.setName("Action1");
             action1.setDescription("Description");
             action1.addInput(new File("/input"), "Input");
             action1.addOutput(new File("/output"), "Output", false);
-            r._recordedActions.add(action1);
+            r.getRecordedActions().add(action1);
 
             File tmp = new File(System.getProperty("java.io.tmpdir"));
             File f = FileUtil.getAbsoluteCaseSensitiveFile(new File(tmp, ProcessVariantsHandler.Resumer.JSON_NAME));
@@ -830,8 +752,8 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
             //after deserialization the RecordedAction should match the original
             ProcessVariantsHandler.Resumer r2 = ProcessVariantsHandler.Resumer.readFromJson(f, ProcessVariantsHandler.Resumer.class);
-            assertEquals(1, r2._recordedActions.size());
-            RecordedAction action2 = r2._recordedActions.iterator().next();
+            assertEquals(1, r2.getRecordedActions().size());
+            RecordedAction action2 = r2.getRecordedActions().iterator().next();
             assertEquals("Action1", action2.getName());
             assertEquals("Description", action2.getDescription());
             assertEquals(1, action2.getInputs().size());

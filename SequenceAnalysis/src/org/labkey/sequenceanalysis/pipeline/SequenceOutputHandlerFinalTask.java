@@ -172,6 +172,8 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
             {
                 SimpleFilter filter = new SimpleFilter(FieldKey.fromString("runId"), runId, CompareType.EQUAL);
                 filter.addCondition(FieldKey.fromString("dataId"), o.getDataId(), CompareType.EQUAL);
+                filter.addCondition(FieldKey.fromString("category"), o.getCategory(), CompareType.EQUAL);
+                filter.addCondition(FieldKey.fromString("name"), o.getName(), CompareType.EQUAL);
                 if (new TableSelector(ti, filter, null).exists())
                 {
                     job.getLogger().warn("Existing output file found, skipping: " + o.getName() + ", dataid: " + o.getDataId());

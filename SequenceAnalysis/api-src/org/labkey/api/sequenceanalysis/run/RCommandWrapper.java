@@ -62,7 +62,7 @@ public class RCommandWrapper extends AbstractCommandWrapper
         return exePath;
     }
 
-    private String inferRPath(Logger log)
+    public static String inferRPath(Logger log)
     {
         String path;
 

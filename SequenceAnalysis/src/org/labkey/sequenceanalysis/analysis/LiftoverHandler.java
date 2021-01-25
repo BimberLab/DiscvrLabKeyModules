@@ -137,20 +137,20 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
     public class Processor implements SequenceOutputProcessor
     {
         @Override
-        public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            Integer chainFileId = params.getInt("chainFileId");
+            Integer chainFileId = ctx.getParams().getInt("chainFileId");
             ExpData chainData = ExperimentService.get().getExpData(chainFileId);
             if (chainData == null || !chainData.getFile().exists())
             {
                 throw new PipelineJobException("Unable to find chain file: " + chainFileId);
             }
 
-            support.cacheExpData(chainData);
+            ctx.getSequenceSupport().cacheExpData(chainData);
 
-            int targetGenomeId = params.getInt("targetGenomeId");
-            ReferenceGenome targetGenome = SequenceAnalysisService.get().getReferenceGenome(targetGenomeId, job.getUser());
-            support.cacheGenome(targetGenome);
+            int targetGenomeId = ctx.getParams().getInt("targetGenomeId");
+            ReferenceGenome targetGenome = SequenceAnalysisService.get().getReferenceGenome(targetGenomeId, ctx.getJob().getUser());
+            ctx.getSequenceSupport().cacheGenome(targetGenome);
         }
 
         @Override

@@ -123,6 +123,7 @@ public class VariantProcessingRemoteSplitTask extends WorkDirectoryTask<VariantP
                     else
                     {
                         ctx.getLogger().debug("Output has already been moved from workdir: " + output.getPath());
+                        getPipelineJob().getScatterJobOutputs().put(getPipelineJob().getIntervalSetName(), output);
                     }
                 }
                 catch (IOException e)

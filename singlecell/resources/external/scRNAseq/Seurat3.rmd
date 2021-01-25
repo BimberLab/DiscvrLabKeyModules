@@ -9,7 +9,7 @@ output: html_document
 library(knitr)
 library(OOSAP)
 
-knitr::opts_chunk$set(message=FALSE, warning=FALSE, echo=TRUE, error = TRUE)
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, echo = TRUE, error = FALSE)
 
 cores <- Sys.getenv('SEQUENCEANALYSIS_MAX_THREADS')
 if (cores != ''){
@@ -31,6 +31,8 @@ for (v in c('outPrefix', 'resolutionToUse', 'dimsToUse', 'minDimsToUse', 'doCell
       print(paste0(v, ': not defined'))
     }
 }
+
+print(paste0('R memory: ', memory.limit()))
 
 ```
 

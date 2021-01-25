@@ -27,16 +27,33 @@ import org.labkey.api.module.ModuleContext;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.singlecell.CellHashingService;
+import org.labkey.api.singlecell.pipeline.SingleCellStep;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.singlecell.analysis.CellHashingHandler;
-import org.labkey.singlecell.analysis.CellRangerCellHashingHandler;
 import org.labkey.singlecell.analysis.CellRangerRawDataHandler;
 import org.labkey.singlecell.analysis.CellRangerSeuratHandler;
 import org.labkey.singlecell.analysis.CiteSeqHandler;
+import org.labkey.singlecell.analysis.LoupeCellHashingHandler;
+import org.labkey.singlecell.analysis.ProcessSingleCellHandler;
 import org.labkey.singlecell.analysis.SeuratCellHashingHandler;
 import org.labkey.singlecell.analysis.SeuratCiteSeqHandler;
 import org.labkey.singlecell.button.CellHashingButton;
 import org.labkey.singlecell.button.CiteSeqButton;
+import org.labkey.singlecell.pipeline.singlecell.AppendCiteSeq;
+import org.labkey.singlecell.pipeline.singlecell.DoubletFinder;
+import org.labkey.singlecell.pipeline.singlecell.Downsample;
+import org.labkey.singlecell.pipeline.singlecell.FilterRawCounts;
+import org.labkey.singlecell.pipeline.singlecell.FindClustersAndDimRedux;
+import org.labkey.singlecell.pipeline.singlecell.FindMarkers;
+import org.labkey.singlecell.pipeline.singlecell.MergeSeurat;
+import org.labkey.singlecell.pipeline.singlecell.NormalizeAndScale;
+import org.labkey.singlecell.pipeline.singlecell.RemoveCellCycle;
+import org.labkey.singlecell.pipeline.singlecell.RunCellHashing;
+import org.labkey.singlecell.pipeline.singlecell.RunPCA;
+import org.labkey.singlecell.pipeline.singlecell.RunSingleR;
+import org.labkey.singlecell.pipeline.singlecell.SplitSeurat;
+import org.labkey.singlecell.pipeline.singlecell.SubsetSeurat;
 import org.labkey.singlecell.run.CellRangerVDJWrapper;
 import org.labkey.singlecell.run.CellRangerWrapper;
 
@@ -120,6 +137,7 @@ public class SingleCellModule extends ExtendedSimpleModule
 
     public static void registerPipelineSteps()
     {
+        SequencePipelineService.get().registerPipelineStepType(SingleCellStep.class, SingleCellStep.STEP_TYPE);
         CellHashingService.setInstance(CellHashingServiceImpl.get());
 
         SequencePipelineService.get().registerPipelineStep(new CellRangerWrapper.Provider());
@@ -128,10 +146,40 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerReadsetHandler(new CellHashingHandler());
         SequenceAnalysisService.get().registerReadsetHandler(new CiteSeqHandler());
 
-        SequenceAnalysisService.get().registerFileHandler(new CellRangerCellHashingHandler());
+        SequenceAnalysisService.get().registerFileHandler(new LoupeCellHashingHandler());
         SequenceAnalysisService.get().registerFileHandler(new SeuratCellHashingHandler());
         SequenceAnalysisService.get().registerFileHandler(new SeuratCiteSeqHandler());
         SequenceAnalysisService.get().registerFileHandler(new CellRangerSeuratHandler());
         SequenceAnalysisService.get().registerFileHandler(new CellRangerRawDataHandler());
+        SequenceAnalysisService.get().registerFileHandler(new ProcessSingleCellHandler());
+
+        //Single-cell:
+        SequencePipelineService.get().registerPipelineStep(new AppendCiteSeq.Provider());
+        SequencePipelineService.get().registerPipelineStep(new DoubletFinder.Provider());
+        SequencePipelineService.get().registerPipelineStep(new Downsample.Provider());
+        SequencePipelineService.get().registerPipelineStep(new FilterRawCounts.Provider());
+        SequencePipelineService.get().registerPipelineStep(new FindMarkers.Provider());
+        SequencePipelineService.get().registerPipelineStep(new MergeSeurat.Provider());
+        SequencePipelineService.get().registerPipelineStep(new NormalizeAndScale.Provider());
+
+        //Note: this should not be registered normally. It is used directly in ProcessSingleCellHandler
+        //SequencePipelineService.get().registerPipelineStep(new PrepareRawCounts.Provider());
+
+        SequencePipelineService.get().registerPipelineStep(new RemoveCellCycle.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RunCellHashing.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RunPCA.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RunSingleR.Provider());
+        SequencePipelineService.get().registerPipelineStep(new FindClustersAndDimRedux.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SplitSeurat.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SubsetSeurat.Provider());
+    }
+
+    @Override
+    @NotNull
+    public Set<Class> getUnitTests()
+    {
+        return PageFlowUtil.set(
+                ProcessSingleCellHandler.TestCase.class
+        );
     }
 }

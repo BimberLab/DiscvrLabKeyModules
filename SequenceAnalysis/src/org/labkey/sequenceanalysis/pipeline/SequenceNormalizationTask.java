@@ -20,10 +20,8 @@ import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.SAMException;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.util.FastqQualityFormat;
-import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.QualityEncodingDetector;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.jetbrains.annotations.NotNull;
@@ -36,7 +34,7 @@ import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.reader.Readers;
-import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractSequenceTaskFactory;
 import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
@@ -60,9 +58,7 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -72,7 +68,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.zip.GZIPOutputStream;
 
 /**
  * User: bbimber

@@ -154,15 +154,15 @@ public interface SequenceOutputHandler<T>
     {
         /**
          * Allows handlers to perform setup on the webserver prior to remote running.  This will be run in the background as a pipeline job.
-         * @param job             The pipeline job running this task
-         * @param support Provides context about the active pipeline job
+         * @param ctx Provides context about the active pipeline job
          * @param inputFiles      The list of input files to process
-         * @param params
-         * @param outputDir
          * @param actions
          * @param outputsToCreate
          */
-        public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException;
+        default void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        {
+
+        }
 
         /**
          * Allows handlers to perform processing on the input SequenceOutputFiles locally.  This will be run in the background as a pipeline job.
@@ -221,10 +221,6 @@ public interface SequenceOutputHandler<T>
 
     public interface JobContext extends PipelineContext
     {
-        public PipelineJob getJob();
-
-        public SequenceAnalysisJobSupport getSequenceSupport();
-
         public JSONObject getParams();
 
         public File getOutputDir();
@@ -236,6 +232,11 @@ public interface SequenceOutputHandler<T>
         public void addSequenceOutput(SequenceOutputFile o);
 
         public PipeRoot getFolderPipeRoot();
+    }
+
+    public interface MutableJobContext extends JobContext
+    {
+        public void setFileManager(TaskFileManager manager);
     }
 
     public interface HasActionNames

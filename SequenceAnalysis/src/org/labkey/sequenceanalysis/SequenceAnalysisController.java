@@ -381,17 +381,7 @@ public class SequenceAnalysisController extends SpringActionController
             _htmlFile = htmlFile;
         }
 
-        public void validateCommand(Object form, Errors errors)
-        {
-
-        }
-
-        public URLHelper getSuccessURL(Object form)
-        {
-            return getContainer().getStartURL(getUser());
-        }
-
-        public ModelAndView getView(Object form, BindException errors) throws Exception
+        public ModelAndView getView(Object form, BindException errors)
         {
             LinkedHashSet<ClientDependency> cds = new LinkedHashSet<>();
             for (PipelineStepProvider fact : SequencePipelineService.get().getAllProviders())
@@ -942,19 +932,21 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class GetAnalysisToolDetailsAction extends ReadOnlyApiAction<Object>
     {
+        @Override
         public ApiResponse execute(Object form, BindException errors)
         {
             Map<String, Object> ret = new HashMap<>();
 
-            for (PipelineStep.StepType stepType : PipelineStep.StepType.values())
+            Map<Class<? extends PipelineStep>, String> map = SequencePipelineServiceImpl.get().getPipelineStepTypes();
+            for (Class<? extends  PipelineStep> step : map.keySet())
             {
                 JSONArray list = new JSONArray();
-                for (PipelineStepProvider fact : SequencePipelineService.get().getProviders(stepType.getStepClass()))
+                for (PipelineStepProvider fact : SequencePipelineService.get().getProviders(step))
                 {
                     list.put(fact.toJSON());
                 }
 
-                ret.put(stepType.name(), list);
+                ret.put(map.get(step), list);
             }
 
             JSONObject resourceSettings = getReourceSettingsJson();
@@ -972,6 +964,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class GetResourceSettingsJsonAction extends ReadOnlyApiAction<Object>
     {
+        @Override
         public ApiResponse execute(Object form, BindException errors)
         {
             Map<String, Object> ret = new HashMap<>();
@@ -991,6 +984,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(UpdatePermission.class)
     public class SaveAnalysisAsTemplateAction extends MutatingApiAction<SaveAnalysisAsTemplateForm>
     {
+        @Override
         public ApiResponse execute(SaveAnalysisAsTemplateForm form, BindException errors) throws Exception
         {
             if (StringUtils.isEmpty(form.getJson()))
@@ -1084,6 +1078,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class ValidateReadsetFilesAction extends ReadOnlyApiAction<ValidateReadsetImportForm>
     {
+        @Override
         public ApiResponse execute(ValidateReadsetImportForm form, BindException errors) throws Exception
         {
             Map<String, Object> resultProperties = new HashMap<>();
@@ -1253,6 +1248,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(UpdatePermission.class)
     public class AnalyzeBamAction extends MutatingApiAction<AnalyzeBamForm>
     {
+        @Override
         public ApiResponse execute(AnalyzeBamForm form, BindException errors) throws Exception
         {
             Map<String, Object> resultProperties = new HashMap<>();
@@ -1486,6 +1482,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class GetAASnpsAction extends ReadOnlyApiAction<AASNPForm>
     {
+        @Override
         public ApiResponse execute(AASNPForm form, BindException errors) throws Exception
         {
             Map<String, Object> resultProperties = new HashMap<>();
@@ -1848,6 +1845,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class GenerateChartAction extends ReadOnlyApiAction<GenerateChartForm>
     {
+        @Override
         public ApiResponse execute(GenerateChartForm form, BindException errors) throws Exception
         {
             Map<String, Object> resultProperties = new HashMap<>();
@@ -1972,6 +1970,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(InsertPermission.class)
     public class StartPipelineJobAction extends MutatingApiAction<AnalyzeForm>
     {
+        @Override
         public ApiResponse execute(AnalyzeForm form, BindException errors) throws Exception
         {
             try
@@ -2174,6 +2173,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(InsertPermission.class)
     public class CreateReferenceLibraryAction extends MutatingApiAction<CreateReferenceLibraryForm>
     {
+        @Override
         public ApiResponse execute(CreateReferenceLibraryForm form, BindException errors) throws Exception
         {
             if (form.getName() == null)
@@ -3269,6 +3269,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(AdminPermission.class)
     public class RecreateReferenceLibraryAction extends MutatingApiAction<RecreateReferenceLibraryForm>
     {
+        @Override
         public ApiResponse execute(RecreateReferenceLibraryForm form, BindException errors)
         {
             if (form.getLibraryIds() == null || form.getLibraryIds().length == 0)
@@ -3342,6 +3343,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class CheckFileStatusForHandlerAction extends ReadOnlyApiAction<CheckFileStatusForm>
     {
+        @Override
         public ApiResponse execute(CheckFileStatusForm form, BindException errors)
         {
             Map<String, Object> ret = new HashMap<>();
@@ -3813,6 +3815,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class GetDataItemsAction extends ReadOnlyApiAction<GetDataItemsForm>
     {
+        @Override
         public ApiResponse execute(GetDataItemsForm form, BindException errors)
         {
             Map<String, List<JSONObject>> results = new HashMap<>();
@@ -3887,6 +3890,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(InsertPermission.class)
     public class RunSequenceHandlerAction extends MutatingApiAction<RunSequenceHandlerForm>
     {
+        @Override
         public ApiResponse execute(RunSequenceHandlerForm form, BindException errors) throws Exception
         {
             PipeRoot pr = PipelineService.get().findPipelineRoot(getContainer());
@@ -3899,7 +3903,7 @@ public class SequenceAnalysisController extends SpringActionController
                 return null;
             }
 
-            SequenceOutputHandler handler = SequenceAnalysisManager.get().getFileHandler(form.getHandlerClass(), form.getHandlerEnum());
+            SequenceOutputHandler<?> handler = SequenceAnalysisManager.get().getFileHandler(form.getHandlerClass(), form.getHandlerEnum());
             if (handler == null)
             {
                 errors.reject(ERROR_MSG, "Unknown handler: " + form.getHandlerClass());
@@ -4162,6 +4166,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(InsertPermission.class)
     public class ImportOutputFilesAction extends MutatingApiAction<ImportOutputFilesForm>
     {
+        @Override
         public ApiResponse execute(ImportOutputFilesForm form, BindException errors) throws Exception
         {
             PipeRoot pr = PipelineService.get().findPipelineRoot(getContainer());
@@ -4355,6 +4360,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class GetAvailableHandlersAction extends ReadOnlyApiAction<GetAvailableHandlersForm>
     {
+        @Override
         public ApiResponse execute(GetAvailableHandlersForm form, BindException errors) throws Exception
         {
             Map<String, Object> ret = new HashMap<>();
@@ -4483,6 +4489,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class CompareFastaSequencesAction extends ReadOnlyApiAction<CompareFastaSequencesForm>
     {
+        @Override
         public ApiResponse execute(CompareFastaSequencesForm form, BindException errors) throws Exception
         {
             Map<String, Object> ret = new HashMap<>();
@@ -4799,6 +4806,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class GetBamHaplotypesAction extends ReadOnlyApiAction<GetBamHaplotypesForm>
     {
+        @Override
         public ApiResponse execute(GetBamHaplotypesForm form, BindException errors) throws Exception
         {
             try
@@ -5062,6 +5070,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class GetSequenceImportDefaultsAction extends ReadOnlyApiAction<Object>
     {
+        @Override
         public ApiResponse execute(Object form, BindException errors) throws Exception
         {
             Map<String, Object> resultProperties = new HashMap<>();
@@ -5077,6 +5086,7 @@ public class SequenceAnalysisController extends SpringActionController
     {
         public static final String INPUT_FILE_TREATMENT = "inputFileTreatment";
 
+        @Override
         public ApiResponse execute(SetSequenceImportDefaultsForm form, BindException errors) throws Exception
         {
             Container target = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
@@ -5107,6 +5117,7 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class GetSamplesFromVcfAction extends ReadOnlyApiAction<OutputFilesForm>
     {
+        @Override
         public ApiResponse execute(OutputFilesForm form, BindException errors) throws Exception
         {
             Map<String, Object> resp = new HashMap<>();
