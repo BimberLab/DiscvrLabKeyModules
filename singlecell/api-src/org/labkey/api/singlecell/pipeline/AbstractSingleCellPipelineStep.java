@@ -395,7 +395,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             out.println("");
             if (header != null)
             {
-                out.println("##" + header);
+                out.println("## " + header);
             }
 
             if (extraText != null)
