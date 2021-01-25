@@ -32,15 +32,18 @@ import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.singlecell.SingleCellModule;
 import org.labkey.singlecell.pipeline.singlecell.AbstractCellMembraneStep;
 import org.labkey.singlecell.pipeline.singlecell.PrepareRawCounts;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -347,11 +350,30 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
             }
 
             //process with pandoc
-            List<String> lines = new ArrayList<>();
-            List<String> markdownNames = _resumer.getMarkdownsInOrder().stream().map(File::getName).collect(Collectors.toList());
-            lines.add("knitr::pandoc(input = c('" + StringUtils.join(markdownNames, "','") + "'))");
+            AbstractSingleCellPipelineStep.Markdown finalMarkdown = new AbstractSingleCellPipelineStep.Markdown();
+            finalMarkdown.headerYml = finalMarkdown.getDefaultHeader();
+            finalMarkdown.chunks = new ArrayList<>();
+            for (File markdown : _resumer.getMarkdownsInOrder())
+            {
+                finalMarkdown.chunks.add(new AbstractSingleCellPipelineStep.Chunk(null, null, null, Collections.emptyList(), "child='" + markdown.getName() + "'"));
+            }
+            finalMarkdown.chunks.add(new AbstractSingleCellPipelineStep.SessionInfoChunk());
 
+            File finalMarkdownFile = new File(ctx.getOutputDir(), "final.rmd");
+            try (PrintWriter writer = PrintWriters.getPrintWriter(finalMarkdownFile))
+            {
+                finalMarkdown.print(writer);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            File finalHtml = new File(ctx.getOutputDir(), "finalHtml.html");
+            List<String> lines = new ArrayList<>();
+            lines.add("rmarkdown::render(output_file = '" + finalHtml.getName() + "', input = '" + finalMarkdownFile.getName() + "', intermediates_dir  = '/work')");
             AbstractSingleCellPipelineStep.executeR(ctx, AbstractCellMembraneStep.CONTINAER_NAME, "pandoc", lines);
+            _resumer.getFileManager().addIntermediateFile(finalMarkdownFile);
 
             for (SingleCellStep.SeuratObjectWrapper output : currentFiles)
             {
@@ -372,9 +394,9 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
                         }
                         else
                         {
-                            SequenceOutputFile o = inputFiles.get(id);
-                            so.setLibrary_id(o.getLibrary_id());
-                            so.setReadset(o.getReadset());
+                            SequenceOutputFile o1 = inputMap.get(id);
+                            so.setLibrary_id(o1.getLibrary_id());
+                            so.setReadset(o1.getReadset());
                         }
                     }
                     catch (NumberFormatException e)
@@ -384,6 +406,17 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
                 }
 
                 _resumer.getFileManager().addSequenceOutput(so);
+
+                // This could be a little confusing, but add one record out seurat output, even though there is one HTML file::
+                SequenceOutputFile o = new SequenceOutputFile();
+                o.setCategory("Seurat Report");
+                o.setContainer(ctx.getJob().getContainer().getId());
+                o.setFile(finalHtml);
+                o.setLibrary_id(so.getLibrary_id());
+                o.setReadset(so.getReadset());
+                o.setName("Seurat Report: " + so.getName());
+
+                _resumer.getFileManager().addSequenceOutput(o);
             }
 
             _resumer.markComplete(ctx);

@@ -128,7 +128,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         try (PrintWriter out = PrintWriters.getPrintWriter(outfile))
         {
             Markdown markdown = new Markdown();
-            markdown.headerYml = getDefaultHeader();
+            markdown.headerYml = markdown.getDefaultHeader();
             markdown.setup = new SetupChunk(getRLibraries());
             markdown.chunks = new ArrayList<>();
             markdown.chunks.add(createParamChunk(inputObjects, outputPrefix));
@@ -143,28 +143,6 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         }
 
         return outfile;
-    }
-
-    protected List<String> getDefaultHeader()
-    {
-        List<String> ret = new ArrayList<>();
-
-        ret.add("title: \"Single Cell Report\"");
-        ret.add("date: \"`r Sys.Date()`\"");
-        ret.add("output:");
-        ret.add("  rmdformats::html_clean:");
-        ret.add("    highlight: kate");
-        ret.add("    self_contained: true");
-        ret.add("    thumbnails: true");
-        ret.add("    fig_width: 12");
-        ret.add("    code_folding: hide");
-        ret.add("    keep_md: true");
-        ret.add("    gallery: true");
-        ret.add("    lightbox: true");
-        ret.add("    cache: false");
-        ret.add("    df_print: paged");
-
-        return ret;
     }
 
     protected List<Chunk> getChunks() throws PipelineJobException
@@ -183,9 +161,9 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 
     public static class Markdown
     {
-        List<Chunk> chunks;
-        Chunk setup;
-        List<String> headerYml;
+        public List<Chunk> chunks;
+        public Chunk setup;
+        public List<String> headerYml;
 
         public void print(PrintWriter out)
         {
@@ -195,6 +173,28 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             out.println("");
 
             chunks.forEach(chunk -> chunk.print(out));
+        }
+
+        public List<String> getDefaultHeader()
+        {
+            List<String> ret = new ArrayList<>();
+
+            ret.add("title: \"Single Cell Report\"");
+            ret.add("date: \"`r Sys.Date()`\"");
+            ret.add("output:");
+            ret.add("  rmdformats::html_clean:");
+            ret.add("    highlight: kate");
+            ret.add("    self_contained: true");
+            ret.add("    thumbnails: true");
+            ret.add("    fig_width: 12");
+            ret.add("    code_folding: hide");
+            ret.add("    keep_md: true");
+            ret.add("    gallery: true");
+            ret.add("    lightbox: true");
+            ret.add("    cache: false");
+            ret.add("    df_print: paged");
+
+            return ret;
         }
     }
 
@@ -384,10 +384,16 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 
         public Chunk(String chunkName, @Nullable String header, @Nullable String extraText, List<String> bodyLines)
         {
+            this(chunkName, header, extraText, bodyLines, null);
+        }
+
+        public Chunk(String chunkName, @Nullable String header, @Nullable String extraText, List<String> bodyLines, String chunkOpts)
+        {
             this.chunkName = chunkName;
             this.extraText = extraText;
             this.header = header;
             this.bodyLines = new ArrayList<>(bodyLines);
+            this.chunkOpts = chunkOpts;
         }
 
         public void print(PrintWriter out)
@@ -421,6 +427,15 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 
             bodyLines.add("knitr::opts_chunk$set(echo = TRUE)");
             chunkOpts = "include=FALSE";
+        }
+    }
+
+    public static class SessionInfoChunk extends Chunk
+    {
+        public SessionInfoChunk()
+        {
+            super("sessionInfo", "Session Info", null, new ArrayList<>());
+            bodyLines.add("sessionInfo()");
         }
     }
 }
