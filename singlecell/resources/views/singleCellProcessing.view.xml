@@ -1,0 +1,14 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Filter/Process VCF Files">
+    <dependencies>
+        <dependency path="laboratory.context"/>
+        <dependency path="SequenceAnalysis/sequenceAnalysis"/>
+        <dependency path="SequenceAnalysis/sequenceAnalysis.css"/>
+        <dependency path="SequenceAnalysis/panel/AnalysisSectionPanel.js"/>
+        <dependency path="SequenceAnalysis/panel/BaseSequencePanel.js"/>
+        <dependency path="SingleCell/panel/SingleCellProcessingPanel.js"/>
+
+
+        <dependency path="SequenceAnalysis/window/SaveAnalysisAsTemplateWindow.js"/>
+        <dependency path="ux/ItemSelector/MultiSelect.js"/>
+    </dependencies>
+</view>

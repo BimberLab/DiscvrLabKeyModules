@@ -134,14 +134,14 @@ public class ToolParameterDescriptor
         return ret;
     }
 
-    private String getJsonParamName(PipelineStepProvider provider, int stepIdx)
+    private String getJsonParamName(PipelineStepProvider<?> provider, int stepIdx)
     {
-        PipelineStep.StepType type = PipelineStep.StepType.getStepType(provider.getStepClass());
+        String typeName = SequencePipelineService.get().getParamNameForStepType(provider.getStepClass());
 
-        return type.name() + "." + provider.getName() + "." + getName() + (stepIdx == 0 ? "" : "." + stepIdx);
+        return typeName + "." + provider.getName() + "." + getName() + (stepIdx == 0 ? "" : "." + stepIdx);
     }
 
-    public String extractValue(PipelineJob job, PipelineStepProvider provider, int stepIdx) throws PipelineJobException
+    public String extractValue(PipelineJob job, PipelineStepProvider provider, int stepIdx)
     {
         return extractValue(job, provider, stepIdx, String.class);
     }
@@ -212,7 +212,7 @@ public class ToolParameterDescriptor
 
     public interface CachableParam
     {
-        public void doCache(PipelineJob job, Object value, SequenceAnalysisJobSupport support) throws PipelineJobException;
+        void doCache(PipelineJob job, Object value, SequenceAnalysisJobSupport support) throws PipelineJobException;
     }
 
     public static class ExpDataToolParameterDescriptor extends ToolParameterDescriptor implements CachableParam

@@ -51,15 +51,19 @@ abstract public class SequencePipelineService
         _instance = instance;
     }
 
+    abstract public void registerPipelineStepType(Class<? extends PipelineStep> clazz, String paramName);
+
     abstract public void registerPipelineStep(PipelineStepProvider provider);
 
     abstract public Set<PipelineStepProvider> getAllProviders();
 
-    abstract public <StepType extends PipelineStep> Set<PipelineStepProvider<StepType>> getProviders(Class<? extends StepType> stepType);
+    abstract public <StepType extends PipelineStep> Set<PipelineStepProvider<StepType>> getProviders(Class<StepType> stepType);
 
-    abstract public <StepType extends PipelineStep> PipelineStepProvider<StepType> getProviderByName(String name, Class<? extends StepType> stepType);
+    abstract public <StepType extends PipelineStep> PipelineStepProvider<StepType> getProviderByName(String name, Class<StepType> stepType);
 
-    abstract public <StepType extends PipelineStep> List<PipelineStepCtx<StepType>> getSteps(PipelineJob job, Class<StepType> stepType);
+    abstract public <StepType extends PipelineStep> List<PipelineStepCtx<StepType>> getSteps(PipelineJob job, Class<StepType> type);
+
+    abstract public @Nullable String getParamNameForStepType(Class<? extends PipelineStep> stepType);
 
     abstract public File getExeForPackage(String packageName, String exe);
 
@@ -87,6 +91,12 @@ abstract public class SequencePipelineService
     abstract public Integer getMaxRam();
 
     abstract public CommandWrapper getCommandWrapper(Logger log);
+
+    /**
+     * This allows instances to override the default docker exeutable. If DOCKER_EXE is provided in pipelineConfig.xml, this
+     * will be used. Otherise this defaults to 'docker'
+     */
+    abstract public String getDockerCommand();
 
     abstract public List<File> getSequenceJobInputFiles(PipelineJob job);
 
@@ -124,4 +134,7 @@ abstract public class SequencePipelineService
     abstract public void updateOutputFile(SequenceOutputFile o, PipelineJob job, Integer runId, Integer analysisId);
 
     abstract public PreprocessingStep.Output simpleTrimFastqPair(File fq1, File fq2, List<String> params, File outDir, Logger log) throws PipelineJobException;
+
+    // Note: this primarily exists for testing. The returned TaskFileManager does not have key values set: SequenceJob, WorkingDir (File) and WorkDirectory
+    abstract public TaskFileManager getTaskFileManager();
 }

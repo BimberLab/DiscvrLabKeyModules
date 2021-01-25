@@ -167,9 +167,9 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
     public class Processor implements SequenceOutputProcessor
     {
         @Override
-        public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            ProcessVariantsHandler.initVariantProcessing(job, support, inputFiles, outputDir);
+            ProcessVariantsHandler.initVariantProcessing(ctx.getJob(), ctx.getSequenceSupport(), inputFiles, ctx.getOutputDir());
 
             Set<Integer> genomeIds = new HashSet<>();
             for (SequenceOutputFile so : inputFiles)
@@ -186,17 +186,17 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 throw new PipelineJobException("No genome ID found for inputs");
             }
 
-            if (params.get("variantCalling.GenotypeGVCFs.forceSitesFile") != null)
+            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.forceSitesFile") != null)
             {
-                int dataId = params.getInt("variantCalling.GenotypeGVCFs.forceSitesFile");
+                int dataId = ctx.getParams().getInt("variantCalling.GenotypeGVCFs.forceSitesFile");
                 ExpData data = ExperimentService.get().getExpData(dataId);
                 if (data == null)
                 {
                     throw new PipelineJobException("Unable to find ExpData with ID: " + dataId);
                 }
 
-                job.getLogger().debug("Caching ExpData: " + dataId);
-                support.cacheExpData(data);
+                ctx.getJob().getLogger().debug("Caching ExpData: " + dataId);
+                ctx.getSequenceSupport().cacheExpData(data);
             }
         }
 

@@ -124,9 +124,9 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
     public class Processor implements SequenceOutputProcessor
     {
         @Override
-        public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            if (!params.containsKey("name"))
+            if (!ctx.getParams().containsKey("name"))
             {
                 throw new PipelineJobException("Must provide the name of the output");
             }
@@ -147,15 +147,15 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
                         throw new PipelineJobException("All samples must use the same reference genome");
                     }
 
-                    support.cacheGenome(SequenceAnalysisService.get().getReferenceGenome(o.getLibrary_id(), job.getUser()));
+                    ctx.getSequenceSupport().cacheGenome(SequenceAnalysisService.get().getReferenceGenome(o.getLibrary_id(), ctx.getJob().getUser()));
                 }
                 else
                 {
                     throw new PipelineJobException("No library Id provided for file: " + o.getRowid());
                 }
 
-                String idInHeader = params.optString("idInHeader", OutputFileId);
-                String val = getHeaderValue(idInHeader, support, o);
+                String idInHeader = ctx.getParams().optString("idInHeader", OutputFileId);
+                String val = getHeaderValue(idInHeader, ctx.getSequenceSupport(), o);
 
                 if (distinctHeaderValues.contains(val))
                 {

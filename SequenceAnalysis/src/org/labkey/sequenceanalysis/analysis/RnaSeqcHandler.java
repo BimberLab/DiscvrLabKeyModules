@@ -16,7 +16,6 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
-import org.labkey.sequenceanalysis.run.alignment.BWAWrapper;
 import org.labkey.sequenceanalysis.run.util.RnaSeQCWrapper;
 
 import java.io.File;
@@ -86,9 +85,9 @@ public class RnaSeqcHandler extends AbstractParameterizedOutputHandler<SequenceO
     public class Processor implements SequenceOutputProcessor
     {
         @Override
-        public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            if (!params.containsKey("name"))
+            if (!ctx.getParams().containsKey("name"))
             {
                 throw new PipelineJobException("Must provide the name of the output");
             }
@@ -108,7 +107,7 @@ public class RnaSeqcHandler extends AbstractParameterizedOutputHandler<SequenceO
                         throw new PipelineJobException("All samples must use the same reference genome");
                     }
 
-                    support.cacheGenome(SequenceAnalysisService.get().getReferenceGenome(o.getLibrary_id(), job.getUser()));
+                    ctx.getSequenceSupport().cacheGenome(SequenceAnalysisService.get().getReferenceGenome(o.getLibrary_id(), ctx.getJob().getUser()));
                 }
                 else
                 {

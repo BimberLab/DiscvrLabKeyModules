@@ -17,7 +17,6 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
-import org.labkey.sequenceanalysis.pipeline.SequenceJobSupportImpl;
 import org.labkey.sequenceanalysis.run.util.AddOrReplaceReadGroupsWrapper;
 import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 
@@ -81,17 +80,17 @@ public class BamCleanupHandler extends AbstractParameterizedOutputHandler<Sequen
     public class Processor implements SequenceOutputProcessor
     {
         @Override
-        public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
             for (SequenceOutputFile so : inputFiles)
             {
                 if (so.getReadset() != null)
                 {
-                    ((SequenceJobSupportImpl) support).cacheReadset(so.getReadset(), job.getUser());
+                    ctx.getSequenceSupport().cacheReadset(so.getReadset(), ctx.getJob().getUser());
                 }
                 else
                 {
-                    job.getLogger().error("Output file lacks a readset and will be skipped: " + so.getRowid());
+                    ctx.getJob().getLogger().error("Output file lacks a readset and will be skipped: " + so.getRowid());
                 }
             }
         }

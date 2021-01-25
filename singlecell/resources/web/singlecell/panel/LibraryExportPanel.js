@@ -790,7 +790,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                             var sampleName = getSampleName(simpleSampleNames, r[fieldName], r[fieldName + '/name']) + (suffix && instrument.startsWith('Novogene') ? '' : '-' + suffix);
 
                             var barcode5s = r[fieldName + '/barcode5/sequence'] ? r[fieldName + '/barcode5/sequence'].split(',') : [];
-                            if (!barcode5s) {
+                            if (!barcode5s.length) {
                                 LDK.Utils.logError('Sample missing barcode: ' + sampleName);
                             }
 
@@ -835,7 +835,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                     data = ['Premade-10X transcriptome library'];
                                     data.push(r.plateAlias ? r.plateAlias : samplePrefix + r.plateId.replace(/-/g, '_'));
                                     data.push(sampleName);
-                                    data.push('Partial lane sequencing-With Demultiplexing');  //TODO: HiSeq?
+                                    data.push(suffix === 'HTO' ? 'Lane sequencing-With Demultiplexing' : 'Partial lane sequencing-With Demultiplexing');
                                     data.push(bc);
                                     data.push(''); //P5
                                     data.push(size);

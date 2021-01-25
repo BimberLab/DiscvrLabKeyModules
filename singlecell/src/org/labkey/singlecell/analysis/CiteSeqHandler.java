@@ -1,14 +1,13 @@
 package org.labkey.singlecell.analysis;
 
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.singlecell.CellHashingService;
 
 public class CiteSeqHandler extends CellHashingHandler
 {
-    private static final String DEFAULT_TAG_GROUP = "TotalSeq-C";
-
     public CiteSeqHandler()
     {
-        super("CITE-Seq Count", "This will run CITE-Seq Count to generate a table of features counts from CITE-Seq", CellHashingHandler.getDefaultParams(false, DEFAULT_TAG_GROUP, BARCODE_TYPE.citeseq));
+        super("CITE-Seq Count", "This will run CITE-Seq Count to generate a table of features counts from CITE-Seq", CellHashingHandler.getDefaultParams(false, CellHashingService.BARCODE_TYPE.citeseq));
     }
 
     @Override
@@ -44,6 +43,6 @@ public class CiteSeqHandler extends CellHashingHandler
     @Override
     public SequenceReadsetProcessor getProcessor()
     {
-        return new Processor(BARCODE_TYPE.citeseq);
+        return new Processor(CellHashingService.BARCODE_TYPE.citeseq);
     }
 }

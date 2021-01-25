@@ -506,6 +506,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                         totalConsensusInPBS++;
                     }
 
+                    //Note: if there are multiple variants, the sum might argue for consensus: i.e. G->T 0.43, G->C 0.23. wild-type is the minority
                     vcb.attribute("IN_CONSENSUS", 1);
 
                     if (vc.hasAttribute("INDEL"))
@@ -601,7 +602,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         String[] pangolinData = null;
         if (runPangolin)
         {
-            pangolinData = runPangolin(consensusFastaLoFreq);
+            pangolinData = PangolinHandler.runPangolin(consensusFastaLoFreq, getPipelineCtx().getLogger(), output);
         }
 
         //write metrics:
@@ -622,12 +623,12 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
             if (pangolinData != null)
             {
-                writer.writeNext(new String[]{"LoFreq Analysis", "PangolinLineage", pangolinData[1]});
-                writer.writeNext(new String[]{"LoFreq Analysis", "PangolinLineageConfidence", pangolinData[2]});
+                writer.writeNext(new String[]{"Pangolin", "PangolinLineage", pangolinData[1]});
+                writer.writeNext(new String[]{"Pangolin", "PangolinLineageConfidence", pangolinData[2]});
             }
             else
             {
-                writer.writeNext(new String[]{"LoFreq Analysis", "PangolinLineage", "QC Fail"});
+                writer.writeNext(new String[]{"Pangolin", "PangolinLineage", "QC Fail"});
             }
         }
         catch (IOException e)
@@ -680,38 +681,6 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         }
 
         return variantsBcftools;
-    }
-
-    private String[] runPangolin(File consensusFasta) throws PipelineJobException
-    {
-        SimpleScriptWrapper wrapper = new SimpleScriptWrapper(getPipelineCtx().getLogger());
-        wrapper.setWorkingDir(consensusFasta.getParentFile());
-
-        File pangolin = SequencePipelineService.get().getExeForPackage("PANGOLINPATH", "pangolin");
-
-        List<String> args = new ArrayList<>();
-        args.add(pangolin.getPath());
-        args.add(consensusFasta.getPath());
-
-        wrapper.execute(args);
-
-        File output = new File(consensusFasta.getParentFile(), "lineage_report.csv");
-        if (!output.exists())
-        {
-            throw new PipelineJobException("Pangolin output not found: " + output.getPath());
-        }
-
-        try (CSVReader reader = new CSVReader(Readers.getReader(output)))
-        {
-            reader.readNext(); //header
-            String[] line = reader.readNext();
-
-            return line;
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException();
-        }
     }
 
     private File generateConsensus(File loFreqConsensusVcf, File fasta, File maskBed) throws PipelineJobException

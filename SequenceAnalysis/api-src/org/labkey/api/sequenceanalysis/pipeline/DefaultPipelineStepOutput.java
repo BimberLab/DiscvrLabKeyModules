@@ -21,6 +21,7 @@ import org.labkey.api.util.Pair;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -78,7 +79,7 @@ public class DefaultPipelineStepOutput implements PipelineStepOutput
     }
 
     @Override
-    public void removeIntermediateFiles(File toRemove)
+    public void removeIntermediateFile(File toRemove)
     {
         _intermediateFiles.remove(toRemove);
     }
@@ -132,6 +133,12 @@ public class DefaultPipelineStepOutput implements PipelineStepOutput
             addOutput(file, role);
 
         _intermediateFiles.add(file);
+    }
+
+    @Override
+    public void addIntermediateFiles(Collection<File> files)
+    {
+        _intermediateFiles.addAll(files);
     }
 
     public void addPicardMetricsFile(Readset rs, File metricFile, File inputFile)

@@ -13,6 +13,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.util.FileType;
+import org.labkey.singlecell.CellHashingServiceImpl;
 import org.labkey.singlecell.SingleCellModule;
 
 import java.io.File;
@@ -82,9 +83,17 @@ public class SeuratCellHashingHandler extends AbstractParameterizedOutputHandler
     public class Processor implements SequenceOutputHandler.SequenceOutputProcessor
     {
         @Override
-        public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(outputDir, job, support, "readsetId", params.optBoolean("excludeFailedcDNA", true), true, false);
+            for (SequenceOutputFile so : inputFiles)
+            {
+                if (so.getReadset() == null)
+                {
+                    throw new PipelineJobException("Seurat object lacks a readset. This might indicate this is a combo object with multiple input readsets. If so, this pipeline does not support cell hashing calling using these as inputs.");
+                }
+            }
+
+            CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getSourceDirectory(), ctx.getJob(), ctx.getSequenceSupport(), "readsetId", ctx.getParams().optBoolean("excludeFailedcDNA", true), true, false);
         }
 
         @Override
@@ -97,14 +106,18 @@ public class SeuratCellHashingHandler extends AbstractParameterizedOutputHandler
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, SequenceOutputHandler.JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
             RecordedAction action = new RecordedAction(getName());
-            Map<Integer, Integer> readsetToHashing = CellHashingService.get().getCachedHashingReadsetMap(ctx.getSequenceSupport());
+            Map<Integer, Integer> readsetToHashing = CellHashingServiceImpl.get().getCachedHashingReadsetMap(ctx.getSequenceSupport());
             ctx.getLogger().debug("total cached readset to hashing pairs: " + readsetToHashing.size());
 
             for (SequenceOutputFile so : inputFiles)
             {
                 ctx.getLogger().info("processing file: " + so.getName());
 
-                File barcodes = getBarcodesFromSeurat(so.getFile());
+                File allCellBarcodes = getCellBarcodesFromSeurat(so.getFile());
+
+                //NOTE: by leaving null, it will simply drop the barcode prefix. Upstream checks should ensure this is a single-readset object
+                File cellBarcodesParsed = CellRangerSeuratHandler.subsetBarcodes(allCellBarcodes, null);
+                ctx.getFileManager().addIntermediateFile(cellBarcodesParsed);
 
                 Readset rs = ctx.getSequenceSupport().getCachedReadset(so.getReadset());
                 if (rs == null)
@@ -122,7 +135,27 @@ public class SeuratCellHashingHandler extends AbstractParameterizedOutputHandler
                     throw new PipelineJobException("Unable to find Hashing/Cite-seq readset for GEX readset: " + rs.getReadsetId());
                 }
 
-                CellRangerCellHashingHandler.processBarcodeFile(ctx, barcodes, rs, htoReadset, so.getLibrary_id(), action, getClientCommandArgs(ctx.getParams()), false, CATEGORY);
+                List<String> htosPerReadset = CellHashingServiceImpl.get().getHtosForReadset(htoReadset.getReadsetId(), ctx.getSourceDirectory());
+                if (htosPerReadset.size() > 1)
+                {
+                    ctx.getLogger().info("Total HTOs for readset: " + htosPerReadset.size());
+
+                    CellHashingService.CellHashingParameters parameters = CellHashingService.CellHashingParameters.createFromJson(CellHashingService.BARCODE_TYPE.hashing, ctx.getSourceDirectory(), ctx.getParams(), htoReadset, rs, null);
+                    parameters.outputCategory = CATEGORY;
+                    parameters.genomeId = so.getLibrary_id();
+                    parameters.cellBarcodeWhitelistFile = cellBarcodesParsed;
+                    parameters.allowableHtoOrCiteseqBarcodes = htosPerReadset;
+
+                    CellHashingService.get().processCellHashingOrCiteSeq(ctx, parameters);
+                }
+                else if (htosPerReadset.size() == 1)
+                {
+                    ctx.getLogger().info("Only single HTO used for lane, skipping cell hashing calling");
+                }
+                else
+                {
+                    ctx.getLogger().info("No HTOs found for readset");
+                }
             }
 
             ctx.addActions(action);
@@ -141,7 +174,7 @@ public class SeuratCellHashingHandler extends AbstractParameterizedOutputHandler
         }
     }
 
-    public static File getBarcodesFromSeurat(File seuratObj) throws PipelineJobException
+    public static File getCellBarcodesFromSeurat(File seuratObj) throws PipelineJobException
     {
         File barcodes = new File(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds", "cellBarcodes.csv"));
         if (!barcodes.exists())

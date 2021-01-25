@@ -27,6 +27,7 @@ import org.labkey.api.action.ExportAction;
 import org.labkey.api.action.MutatingApiAction;
 import org.labkey.api.action.ReadOnlyApiAction;
 import org.labkey.api.action.SimpleApiJsonForm;
+import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
@@ -37,6 +38,9 @@ import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.module.Module;
+import org.labkey.api.module.ModuleHtmlView;
+import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
@@ -45,10 +49,18 @@ import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.Path;
+import org.labkey.api.util.URLHelper;
+import org.labkey.api.view.NavTree;
+import org.labkey.api.view.template.ClientDependency;
 import org.labkey.singlecell.run.CellRangerWrapper;
 import org.springframework.validation.BindException;
+import org.springframework.validation.Errors;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -59,6 +71,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -407,4 +420,38 @@ public class SingleCellController extends SpringActionController
             return resp;
         }
     }
+
+    @RequiresPermission(InsertPermission.class)
+    public class SingleCellProcessingAction extends SimpleViewAction<Object>
+    {
+        public URLHelper getSuccessURL(Object form)
+        {
+            return getContainer().getStartURL(getUser());
+        }
+
+        public ModelAndView getView(Object form, BindException errors) throws Exception
+        {
+            LinkedHashSet<ClientDependency> cds = new LinkedHashSet<>();
+            for (PipelineStepProvider fact : SequencePipelineService.get().getAllProviders())
+            {
+                cds.addAll(fact.getClientDependencies());
+            }
+
+            Module module = ModuleLoader.getInstance().getModule(SingleCellModule.class);
+
+            ModuleHtmlView view = ModuleHtmlView.get(module, Path.parse("views/singleCellProcessing.html"));
+            assert view != null;
+            view.addClientDependencies(cds);
+            getPageConfig().setIncludePostParameters(true);
+
+            return view;
+        }
+
+        @Override
+        public void addNavTrail(NavTree tree)
+        {
+            tree.addChild("Process Single Cell Data");
+        }
+    }
+
 }
