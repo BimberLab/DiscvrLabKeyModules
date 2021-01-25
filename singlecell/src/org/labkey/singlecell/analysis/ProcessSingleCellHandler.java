@@ -141,6 +141,8 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
             allowableNames.add(provider.getLabel());
         }
 
+        allowableNames.add(PrepareRawCounts.LABEL);
+
         return allowableNames;
     }
 

@@ -8,6 +8,8 @@ import java.util.Arrays;
 
 public class PrepareRawCounts extends AbstractCellMembraneStep
 {
+    public static final String LABEL = "Load Raw Counts";
+
     public PrepareRawCounts(PipelineContext ctx, PrepareRawCounts.Provider provider)
     {
         super(provider, ctx);
@@ -17,7 +19,7 @@ public class PrepareRawCounts extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("PrepareRawCounts", "Load Raw Counts", "OOSAP", "This step reads the raw count matrix/matrices, and runs EmptyDrops to provide an unfiltered count matrix.", Arrays.asList(
+            super("PrepareRawCounts", LABEL, "OOSAP", "This step reads the raw count matrix/matrices, and runs EmptyDrops to provide an unfiltered count matrix.", Arrays.asList(
 
             ), null, null);
         }
