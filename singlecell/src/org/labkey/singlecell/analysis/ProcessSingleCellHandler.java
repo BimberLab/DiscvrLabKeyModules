@@ -267,6 +267,7 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
                 {
                     throw new PipelineJobException("No seurat objects produced by: " + prepareRawCounts.getProvider().getName());
                 }
+                currentFiles.stream().map(SingleCellStep.SeuratObjectWrapper::getFile).forEach(_resumer.getFileManager()::addIntermediateFile);
 
                 _resumer.setStepComplete(0, action, output0.getSeuratObjects(), output0.getMarkdownFile(), output0.getHtmlFile());
             }
@@ -356,6 +357,9 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
             for (File markdown : _resumer.getMarkdownsInOrder())
             {
                 finalMarkdown.chunks.add(new AbstractSingleCellPipelineStep.Chunk(null, null, null, Collections.emptyList(), "child='" + markdown.getName() + "'"));
+
+                //TODO: add markdown:
+                //_resumer.getFileManager().addIntermediateFile(markdown);
             }
             finalMarkdown.chunks.add(new AbstractSingleCellPipelineStep.SessionInfoChunk());
 

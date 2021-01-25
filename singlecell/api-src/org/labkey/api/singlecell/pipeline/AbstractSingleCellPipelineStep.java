@@ -42,6 +42,8 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         File rmd = createRmd(ctx, inputObjects, outputPrefix);
         executeR(ctx, rmd, outputPrefix);
 
+        ctx.getFileManager().addIntermediateFile(rmd);
+
         File markdownFile = getExpectedMarkdownFile(ctx, outputPrefix);
         if (!markdownFile.exists())
         {
@@ -269,6 +271,9 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         SimpleScriptWrapper rWrapper = new SimpleScriptWrapper(ctx.getLogger());
         rWrapper.setWorkingDir(ctx.getOutputDir());
         rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
+
+        localRScript.delete();
+        localBashScript.delete();
     }
 
     protected String prepareValueForR(SeuratToolParameter pd)
