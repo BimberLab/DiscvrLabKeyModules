@@ -2,6 +2,7 @@ package org.labkey.singlecell.analysis;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -191,6 +192,8 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
         {
             _resumer = Resumer.create(ctx);
 
+            Map<Integer, SequenceOutputFile> inputMap = inputFiles.stream().collect(Collectors.toMap(SequenceOutputFile::getRowid, so -> so));
+
             List<PipelineStepCtx<SingleCellStep>> steps = SequencePipelineService.get().getSteps(ctx.getJob(), SingleCellStep.class);
 
             String basename;
@@ -243,6 +246,7 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
                         ctx.getLogger().debug("To: " + localCopy.getPath());
 
                         FileUtils.copyDirectory(source, localCopy);
+                        _resumer.getFileManager().addIntermediateFile(localCopy);
 
                         inputMatrices.add(new SingleCellStep.SeuratObjectWrapper(String.valueOf(x.getRowid()), datasetName, localCopy));
                     }
@@ -306,7 +310,7 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
 
                 _resumer.getFileManager().addStepOutputs(action, output);
 
-                if (output.getSeuratObjects() != null)
+                if (output.getSeuratObjects() != null && !output.getSeuratObjects().isEmpty())
                 {
                     currentFiles = new ArrayList<>(output.getSeuratObjects());
                     _resumer.getFileManager().addIntermediateFiles(currentFiles.stream().map(SingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toSet()));
@@ -331,6 +335,7 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
             {
                 if (seurat.getFile().exists())
                 {
+                    ctx.getLogger().debug("Removing intermediate file: " + seurat.getFile().getPath());
                     ctx.getFileManager().removeIntermediateFile(seurat.getFile());
                     _resumer.getFileManager().removeIntermediateFile(seurat.getFile());
                 }
@@ -348,9 +353,38 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
 
             AbstractSingleCellPipelineStep.executeR(ctx, AbstractCellMembraneStep.CONTINAER_NAME, "pandoc", lines);
 
-            //TODO:
-            //_resumer.getFileManager().addSequenceOutput(so1);
+            for (SingleCellStep.SeuratObjectWrapper output : currentFiles)
+            {
+                SequenceOutputFile so = new SequenceOutputFile();
+                so.setName(output.getDatasetName() == null ? output.getDatasetId() : output.getDatasetName());
+                so.setCategory("Seurat Object");
+                so.setContainer(ctx.getJob().getContainer().getId());
+                so.setFile(output.getFile());
 
+                if (NumberUtils.isCreatable(output.getDatasetId()))
+                {
+                    try
+                    {
+                        Integer id = NumberUtils.createInteger(output.getDatasetId());
+                        if (!inputMap.containsKey(id))
+                        {
+                            ctx.getLogger().warn("No input found matching dataset Id: " + output.getDatasetId());
+                        }
+                        else
+                        {
+                            SequenceOutputFile o = inputFiles.get(id);
+                            so.setLibrary_id(o.getLibrary_id());
+                            so.setReadset(o.getReadset());
+                        }
+                    }
+                    catch (NumberFormatException e)
+                    {
+                        ctx.getLogger().error("Expected dataset ID to be an integer: " + output.getDatasetId());
+                    }
+                }
+
+                _resumer.getFileManager().addSequenceOutput(so);
+            }
 
             _resumer.markComplete(ctx);
         }

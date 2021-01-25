@@ -329,7 +329,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         return ret;
     }
 
-    protected Chunk createParamChunk(List<SeuratObjectWrapper> inputObjects, String outputPrefix)
+    protected Chunk createParamChunk(List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException
     {
         List<String> body = new ArrayList<>();
 
@@ -344,6 +344,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         body.add("outputPrefix <- '" + outputPrefix + "'");
 
         //Read RDS:
+        body.add("");
         body.add("seuratObjects <- list()");
         body.add("datasetIdToName <- list()");
         for (SeuratObjectWrapper so : inputObjects)
@@ -352,11 +353,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             body.add("datasetIdToName[['" + so.getDatasetId() + "']] <- '" + so.getDatasetName() + "'");
         }
 
-        body.add("# This will store any modified/transformed Seurat objects:");
-        body.add("newSeuratObjects <- list()");
-
-        body.add("intermediateFiles <- c()");
-        body.add("addIntermediateFile <- function(f) { intermediateFiles <<- c(intermediateFiles, f) } ");
+        body.addAll(loadChunkFromFile("singlecell", "chunks/Functions.R"));
 
         return new Chunk("parameters", null, null, body);
     }
