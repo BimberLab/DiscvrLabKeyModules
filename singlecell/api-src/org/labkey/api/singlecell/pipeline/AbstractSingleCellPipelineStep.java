@@ -337,7 +337,11 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         {
             if (pd instanceof SeuratToolParameter)
             {
-                body.add(((SeuratToolParameter) pd).getVariableName() + " <- " + prepareValueForR((SeuratToolParameter)pd));
+                SeuratToolParameter stp = (SeuratToolParameter)pd;
+                if (stp.shouldIncludeInMarkdown(getPipelineCtx().getJob(), getProvider(), getStepIdx()))
+                {
+                    body.add(((SeuratToolParameter) pd).getVariableName() + " <- " + prepareValueForR(stp));
+                }
             }
         }
         body.add("");

@@ -22,24 +22,24 @@ public class FilterRawCounts extends AbstractCellMembraneStep
             super("FilterRawCounts", "Filter Raw Counts", "Seurat/OOSAP", "This will use OOSAP/Seurat to perform basic filtering on cells based on UMI count, feature count, etc.", Arrays.asList(
                     SeuratToolParameter.create("nCountRnaLow", "Min UMI Count", "Cells with UMI counts below this value will be discarded", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, 0, "nCount_RNA.low"),
+                    }}, 0, "nCount_RNA.low", false),
                     SeuratToolParameter.create("nCountRnaHigh", "Max UMI Count", "Cells with UMI counts above this value will be discarded", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, 20000, "nCount_RNA.high"),
+                    }}, 20000, "nCount_RNA.high", false),
                     SeuratToolParameter.create("nCountFeatureLow", "Min Feature Count", "Cells with unique feature totals below this value will be discarded", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, 200, "nFeature.low"),
+                    }}, 200, "nFeature.low", false),
                     SeuratToolParameter.create("nCountFeatureHigh", "Max Feature Count", "Cells with unique feature totals above this value will be discarded", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, 5000, "nFeature.high"),
+                    }}, 5000, "nFeature.high", false),
                     SeuratToolParameter.create("pMitoLow", "Min Percent Mito", "Cells percent mitochondrial genes below this value will be discarded", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                         put("maxValue", 1);
-                    }}, 0, "pMito.low"),
+                    }}, 0, "pMito.low", false),
                     SeuratToolParameter.create("pMitoHigh", "Max Percent Mito", "Cells percent mitochondrial genes above this value will be discarded", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                         put("maxValue", 1);
-                    }}, 0.15, "pMito.high")
+                    }}, 0.15, "pMito.high", false)
                     ), null, null);
         }
 
