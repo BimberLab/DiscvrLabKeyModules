@@ -1,5 +1,7 @@
 package org.labkey.api.singlecell.pipeline;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
@@ -48,6 +50,10 @@ public interface SingleCellStep extends PipelineStep
 
     public static class SeuratObjectWrapper implements Serializable
     {
+        private transient SequenceOutputFile _sequenceOutputFile;
+
+        private Integer _sequenceOutputFileId;
+
         private File _file;
         private String _datasetId;
         private String _datasetName;
@@ -58,11 +64,23 @@ public interface SingleCellStep extends PipelineStep
 
         }
 
-        public SeuratObjectWrapper(String datasetId, String datasetName, File file)
+        public SeuratObjectWrapper(String datasetId, String datasetName, File file, SequenceOutputFile sequenceOutputFile)
         {
             _datasetId = datasetId;
             _datasetName = datasetName;
             _file = file;
+            _sequenceOutputFileId = sequenceOutputFile.getRowid();
+            _sequenceOutputFile = sequenceOutputFile;
+
+        }
+
+        public SeuratObjectWrapper(String datasetId, String datasetName, File file, @Nullable Integer sequenceOutputFileId)
+        {
+            _datasetId = datasetId;
+            _datasetName = datasetName;
+            _file = file;
+            _sequenceOutputFileId = sequenceOutputFileId;
+            _sequenceOutputFile = null;
         }
 
         public File getFile()
@@ -93,6 +111,28 @@ public interface SingleCellStep extends PipelineStep
         public void setDatasetName(String datasetName)
         {
             _datasetName = datasetName;
+        }
+
+        public Integer getSequenceOutputFileId()
+        {
+            return _sequenceOutputFileId;
+        }
+
+        public void setSequenceOutputFileId(Integer sequenceOutputFileId)
+        {
+            _sequenceOutputFileId = sequenceOutputFileId;
+        }
+
+        @JsonIgnore
+        public SequenceOutputFile getSequenceOutputFile()
+        {
+            return _sequenceOutputFile;
+        }
+
+        @JsonIgnore
+        public void setSequenceOutputFile(SequenceOutputFile sequenceOutputFile)
+        {
+            _sequenceOutputFile = sequenceOutputFile;
         }
     }
 }

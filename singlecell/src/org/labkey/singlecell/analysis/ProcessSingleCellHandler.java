@@ -251,7 +251,7 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
                         FileUtils.copyDirectory(source, localCopy);
                         _resumer.getFileManager().addIntermediateFile(localCopy);
 
-                        inputMatrices.add(new SingleCellStep.SeuratObjectWrapper(String.valueOf(x.getRowid()), datasetName, localCopy));
+                        inputMatrices.add(new SingleCellStep.SeuratObjectWrapper(String.valueOf(x.getRowid()), datasetName, localCopy, x));
                     }
                     catch (IOException e)
                     {
@@ -302,6 +302,13 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
 
                     continue;
                 }
+
+                currentFiles.forEach(currentFile -> {
+                    if (currentFile.getSequenceOutputFileId() != null)
+                    {
+                        currentFile.setSequenceOutputFile(inputMap.get(currentFile.getSequenceOutputFileId()));
+                    }
+                });
 
                 RecordedAction action = new RecordedAction(stepCtx.getProvider().getLabel());
                 Date start = new Date();
@@ -386,7 +393,6 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
                 SequenceOutputFile so = new SequenceOutputFile();
                 so.setName(output.getDatasetName() == null ? output.getDatasetId() : output.getDatasetName());
                 so.setCategory("Seurat Object");
-                so.setContainer(ctx.getJob().getContainer().getId());
                 so.setFile(output.getFile());
 
                 if (NumberUtils.isCreatable(output.getDatasetId()))
@@ -416,7 +422,6 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
                 // This could be a little confusing, but add one record out seurat output, even though there is one HTML file::
                 SequenceOutputFile o = new SequenceOutputFile();
                 o.setCategory("Seurat Report");
-                o.setContainer(ctx.getJob().getContainer().getId());
                 o.setFile(finalHtml);
                 o.setLibrary_id(so.getLibrary_id());
                 o.setReadset(so.getReadset());
@@ -565,7 +570,9 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
             r._markdowns.put(1, new File("file1"));
             r._markdowns.put(2, new File("file2"));
 
-            r._stepOutputs.put(1, Arrays.asList(new SingleCellStep.SeuratObjectWrapper("datasetId", "datasetName", new File("seurat.rds"))));
+            SequenceOutputFile so1 = new SequenceOutputFile();
+            so1.setRowid(999);
+            r._stepOutputs.put(1, Arrays.asList(new SingleCellStep.SeuratObjectWrapper("datasetId", "datasetName", new File("seurat.rds"), so1)));
 
             File tmp = new File(System.getProperty("java.io.tmpdir"));
             File f = FileUtil.getAbsoluteCaseSensitiveFile(new File(tmp, ProcessSingleCellHandler.Resumer.JSON_NAME));
@@ -598,6 +605,8 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
             assertEquals("datasetId", r2.getStepOutputs().get(1).get(0).getDatasetId());
             assertEquals("datasetName", r2.getStepOutputs().get(1).get(0).getDatasetName());
             assertEquals("seurat.rds", r2.getStepOutputs().get(1).get(0).getFile().getName());
+            assertEquals(Integer.valueOf(999), r2.getStepOutputs().get(1).get(0).getSequenceOutputFileId());
+            assertNull(r2.getStepOutputs().get(1).get(0).getSequenceOutputFile());
 
             f.delete();
         }

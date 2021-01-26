@@ -10,6 +10,9 @@ for (datasetId in names(newSeuratObjects)) {
     datasetName <- ifelse(datasetId %in% names(datasetIdToName), yes = datasetIdToName[[datasetId]], no = datasetId)
     savedFiles <- rbind(savedFiles, data.frame(datasetId = datasetId, datasetName = datasetName, filename = fn))
 
+    # NOTE: this is the ID of the original loupe file. Needed for operations like appending cell hashing or CITE-seq
+    outputFileId <- ifelse(datasetId %in% names(datasetIdToName), yes = datasetId, no = NA)
+
     CellMembrane::WriteCellBarcodes(seuratObj, file = barcodeFile)
 }
 

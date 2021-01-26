@@ -39,7 +39,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
     {
         SingleCellOutput output = new SingleCellOutput();
 
-        File rmd = createRmd(ctx, inputObjects, outputPrefix);
+        File rmd = createRmd(output, ctx, inputObjects, outputPrefix);
         executeR(ctx, rmd, outputPrefix);
 
         ctx.getFileManager().addIntermediateFile(rmd);
@@ -71,8 +71,10 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                     throw new PipelineJobException("File not found: " + f.getPath());
                 }
 
-                getPipelineCtx().getLogger().debug("Output seurat: " + line[0] + " / " + line[1] + " / "+ f.getName());
-                outputs.add(new SeuratObjectWrapper(line[0], line[1], f));
+                getPipelineCtx().getLogger().debug("Output seurat: " + line[0] + " / " + line[1] + " / "+ f.getName() + " / " + line[3]);
+
+                String outputIdVal = StringUtils.trimToNull(line[3]);
+                outputs.add(new SeuratObjectWrapper(line[0], line[1], f, outputIdVal == null ? null : Integer.parseInt(outputIdVal)));
             }
         }
         catch (IOException e)
@@ -124,7 +126,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         return new File(ctx.getOutputDir(), outputPrefix + ".html");
     }
 
-    protected File createRmd(SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException
+    protected File createRmd(SingleCellOutput output, SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException
     {
         File outfile = new File(ctx.getOutputDir(), outputPrefix + ".rmd");
         try (PrintWriter out = PrintWriters.getPrintWriter(outfile))

@@ -1,8 +1,18 @@
 for (datasetId in names(seuratObjects)) {
     seuratObj <- seuratObjects[[datasetId]]
 
-    #TODO
-    stop('Not yet implemented!')
+    if (!(datasetId %in% names(featureData))) {
+        stop(paste0('No hashing information found for datasetId: ', datasetId))
+    }
+
+    callFile <- featureData[[datasetId]]
+    if (!is.null(callFile)) {
+        seuratObj <- CellMembrane::AppendCiteSeq(seuratObj, barcodeCallFile = callFile, barcodePrefix = datasetId)
+    }
 
     newSeuratObjects[[datasetId]] <- seuratObj
+
+    # Cleanup
+    seuratObjects[[datasetId]] <- NULL
+    gc()
 }
