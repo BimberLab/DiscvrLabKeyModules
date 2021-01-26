@@ -20,3 +20,8 @@ addIntermediateFile <- function(f) { intermediateFiles <<- c(intermediateFiles, 
 
 # This will store any modified/transformed Seurat objects:
 newSeuratObjects <- list()
+
+print('Updating future.globals.maxSize')
+options(future.globals.maxSize = Inf)
+
+print(paste0('R memory: ', memory.limit()))
