@@ -84,6 +84,7 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         {
             Map<Integer, SequenceOutputFile> fileMap = inputFiles.stream().collect(Collectors.toMap(SequenceOutputFile::getRowid, x -> x));
 
+            job.getLogger().info("Importing metrics:");
             List<Map<String, Object>> toInsert = new ArrayList<>();
             try (CSVReader reader = new CSVReader(Readers.getReader(getMetricsFile(outputDir)), '\t'))
             {
