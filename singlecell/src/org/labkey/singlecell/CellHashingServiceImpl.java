@@ -992,7 +992,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
                     for (String name : singletColIdx.keySet())
                     {
-                        if ("Singlet".equals(line[singletColIdx.get(name)]))
+                        if (singletColIdx.get(name) > -1 && "Singlet".equals(line[singletColIdx.get(name)]))
                         {
                             singletByMethod.put(name, singletByMethod.getOrDefault(name, 0L) + 1);
                         }
