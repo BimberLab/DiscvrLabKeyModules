@@ -74,6 +74,11 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                 getPipelineCtx().getLogger().debug("Output seurat: " + line[0] + " / " + line[1] + " / "+ f.getName() + " / " + line[3]);
 
                 String outputIdVal = StringUtils.trimToNull(line[3]);
+                if (outputIdVal != null && !NumberUtils.isCreatable(outputIdVal))
+                {
+                    throw new PipelineJobException("Unable to parse outputFileId: " + outputIdVal);
+                }
+
                 outputs.add(new SeuratObjectWrapper(line[0], line[1], f, outputIdVal == null ? null : Integer.parseInt(outputIdVal)));
             }
         }
@@ -360,10 +365,16 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         body.add("");
         body.add("seuratObjects <- list()");
         body.add("datasetIdToName <- list()");
+        body.add("datasetIdTOutputFileId<- list()");
         for (SeuratObjectWrapper so : inputObjects)
         {
             body.add("seuratObjects[['" + so.getDatasetId() + "']] <- " + printInputFile(so));
             body.add("datasetIdToName[['" + so.getDatasetId() + "']] <- '" + so.getDatasetName() + "'");
+
+            if (so.getSequenceOutputFileId() != null)
+            {
+                body.add("datasetIdTOutputFileId[['" + so.getDatasetId() + "']] <- " + so.getSequenceOutputFileId());
+            }
         }
 
         body.addAll(loadChunkFromFile("singlecell", "chunks/Functions.R"));

@@ -10,7 +10,7 @@ for (datasetId in names(newSeuratObjects)) {
     datasetName <- ifelse(datasetId %in% names(datasetIdToName), yes = datasetIdToName[[datasetId]], no = datasetId)
 
     # NOTE: this is the ID of the original loupe file. Needed for operations like appending cell hashing or CITE-seq
-    outputFileId <- ifelse(datasetId %in% names(datasetIdToName), yes = datasetId, no = NA)
+    outputFileId <- ifelse(datasetId %in% names(datasetIdTOutputFileId), yes = datasetIdTOutputFileId[[datasetId]], no = NA)
 
     savedFiles <- rbind(savedFiles, data.frame(datasetId = datasetId, datasetName = datasetName, filename = fn, outputFileId = outputFileId))
 
