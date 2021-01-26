@@ -242,11 +242,13 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
             writer.println("sudo $DOCKER pull " + dockerContainerName);
             writer.println("sudo $DOCKER run --rm=true \\");
-            if (SequencePipelineService.get().getMaxRam() != null)
-            {
-                writer.println("\t--memory=" + SequencePipelineService.get().getMaxRam() + "g \\");
-                writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM \\");
-            }
+
+            //NOTE: i think this is causing OOM errors. Investigate --memory-swap
+            //if (SequencePipelineService.get().getMaxRam() != null)
+            //{
+            //    writer.println("\t--memory=" + SequencePipelineService.get().getMaxRam() + "g \\");
+            //    writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM \\");
+            //}
 
             if (SequencePipelineService.get().getMaxThreads(ctx.getLogger()) != null)
             {
