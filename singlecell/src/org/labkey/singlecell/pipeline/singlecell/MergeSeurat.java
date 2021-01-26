@@ -1,12 +1,16 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
 import org.json.JSONObject;
+import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class MergeSeurat extends AbstractCellMembraneStep
 {
@@ -33,4 +37,11 @@ public class MergeSeurat extends AbstractCellMembraneStep
             return new MergeSeurat(ctx, this);
         }
     }
+
+    @Override
+    public boolean isIncluded(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputs) throws PipelineJobException
+    {
+        return inputs.size() > 1;
+    }
+
 }

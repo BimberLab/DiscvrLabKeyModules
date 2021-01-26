@@ -34,6 +34,8 @@ public interface SingleCellStep extends PipelineStep
 
     public boolean requiresHashingOrCiteSeq();
 
+    public boolean isIncluded(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputs) throws PipelineJobException;
+
     public Output execute(SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException;
 
     public static interface Output extends PipelineStepOutput

@@ -2,7 +2,7 @@ for (datasetId in names(seuratObjects)) {
     seuratObj <- seuratObjects[[datasetId]]
 
     if (!(datasetId %in% names(featureData))) {
-        stop(paste0('No hashing information found for datasetId: ', datasetId))
+        stop(paste0('No CITE-seq information found for datasetId: ', datasetId))
     }
 
     callFile <- featureData[[datasetId]]

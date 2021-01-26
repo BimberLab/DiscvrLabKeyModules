@@ -11,17 +11,20 @@ import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellOutput;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.singlecell.analysis.CellRangerSeuratHandler;
 import org.labkey.singlecell.analysis.SeuratCellHashingHandler;
 import org.labkey.singlecell.analysis.SeuratCiteSeqHandler;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AppendCiteSeq extends AbstractCellHashRStep
+public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
 {
     public AppendCiteSeq(PipelineContext ctx, Provider provider)
     {
@@ -52,9 +55,15 @@ public class AppendCiteSeq extends AbstractCellHashRStep
     }
 
     @Override
-    public void init(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputFiles) throws PipelineJobException
+    public Collection<String> getRLibraries()
     {
-        //TODO: ensure panels are written to disk, including aliases
+        return PageFlowUtil.set("CellMembrane");
+    }
+
+    @Override
+    public String getDockerContainerName()
+    {
+        return AbstractCellMembraneStep.CONTINAER_NAME;
     }
 
     @Override
@@ -82,28 +91,30 @@ public class AppendCiteSeq extends AbstractCellHashRStep
                 throw new PipelineJobException("Unable to find readset for outputfile: " + wrapper.getSequenceOutputFileId());
             }
 
-            List<String> htosPerReadset = CellHashingService.get().getHtosForParentReadset(parentReadset.getReadsetId(), ctx.getSourceDirectory(), ctx.getSequenceSupport());
-            if (htosPerReadset.size() > 1)
+            if (CellHashingService.get().usesCiteSeq(ctx.getSequenceSupport(), Collections.singletonList(wrapper.getSequenceOutputFile())))
             {
-                ctx.getLogger().info("Total HTOs for readset: " + htosPerReadset.size());
-
                 CellHashingService.CellHashingParameters params = CellHashingService.CellHashingParameters.createFromStep(ctx, this, CellHashingService.BARCODE_TYPE.citeseq, null, parentReadset, cellBarcodesParsed);
                 params.outputCategory = SeuratCiteSeqHandler.CATEGORY;
-                params.createOutputFiles = false;
+                params.createOutputFiles = true;
                 params.genomeId = wrapper.getSequenceOutputFile().getLibrary_id();
                 params.cellBarcodeWhitelistFile = cellBarcodesParsed;
-                //params.allowableHtoOrCiteseqBarcodes = htosPerReadset;
 
                 finalOutput = CellHashingService.get().processCellHashingOrCiteSeqForParent(parentReadset, output, ctx, params);
             }
             else
             {
-                ctx.getLogger().info("No CITE-seq/ADTs found for readset");
+                ctx.getLogger().info("CITE-seq not used, skipping: " + parentReadset.getName());
             }
 
             dataIdToCalls.put(wrapper.getSequenceOutputFileId(), finalOutput);
         }
 
         return dataIdToCalls;
+    }
+
+    @Override
+    public boolean isIncluded(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputs) throws PipelineJobException
+    {
+        return CellHashingService.get().usesCiteSeq(ctx.getSequenceSupport(), inputs);
     }
 }

@@ -6,34 +6,20 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.singlecell.pipeline.AbstractSingleCellPipelineStep;
 import org.labkey.api.singlecell.pipeline.SingleCellOutput;
-import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-abstract public class AbstractCellHashRStep extends AbstractSingleCellPipelineStep
+abstract public class AbstractCellHashingCiteseqStep extends AbstractSingleCellPipelineStep
 {
-    public AbstractCellHashRStep(PipelineStepProvider provider, PipelineContext ctx)
+    public AbstractCellHashingCiteseqStep(PipelineStepProvider provider, PipelineContext ctx)
     {
         super(provider, ctx);
-    }
-
-    @Override
-    public Collection<String> getRLibraries()
-    {
-        return PageFlowUtil.set("cellhashR");
-    }
-
-    @Override
-    public String getDockerContainerName()
-    {
-        return "ghcr.io/bimberlab/cellhashr:latest";
     }
 
     @Override

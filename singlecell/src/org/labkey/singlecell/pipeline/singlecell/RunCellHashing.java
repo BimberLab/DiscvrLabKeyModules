@@ -1,6 +1,7 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
@@ -8,15 +9,17 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.pipeline.SingleCellOutput;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.singlecell.analysis.CellRangerSeuratHandler;
 import org.labkey.singlecell.analysis.SeuratCellHashingHandler;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class RunCellHashing extends AbstractCellHashRStep
+public class RunCellHashing extends AbstractCellHashingCiteseqStep
 {
     public RunCellHashing(PipelineContext ctx, RunCellHashing.Provider provider)
     {
@@ -35,6 +38,18 @@ public class RunCellHashing extends AbstractCellHashRStep
         {
             return new RunCellHashing(ctx, this);
         }
+    }
+
+    @Override
+    public Collection<String> getRLibraries()
+    {
+        return PageFlowUtil.set("cellhashR");
+    }
+
+    @Override
+    public String getDockerContainerName()
+    {
+        return "ghcr.io/bimberlab/cellhashr:latest";
     }
 
     @Override
@@ -88,5 +103,11 @@ public class RunCellHashing extends AbstractCellHashRStep
         }
 
         return dataIdToCalls;
+    }
+
+    @Override
+    public boolean isIncluded(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputs) throws PipelineJobException
+    {
+        return CellHashingService.get().usesCellHashing(ctx.getSequenceSupport(), ctx.getSourceDirectory());
     }
 }

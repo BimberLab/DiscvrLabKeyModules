@@ -1,13 +1,13 @@
 package org.labkey.api.singlecell.pipeline;
 
 import au.com.bytecode.opencsv.CSVReader;
-import com.google.common.io.Files;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
@@ -444,5 +444,11 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             super("sessionInfo", "Session Info", null, new ArrayList<>());
             bodyLines.add("sessionInfo()");
         }
+    }
+
+    @Override
+    public boolean isIncluded(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputs) throws PipelineJobException
+    {
+        return true;
     }
 }

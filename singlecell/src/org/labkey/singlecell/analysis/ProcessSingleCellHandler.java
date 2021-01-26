@@ -284,6 +284,12 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
                 SingleCellStep step = stepCtx.getProvider().create(ctx);
                 step.setStepIdx(stepCtx.getStepIdx());
 
+                if (!step.isIncluded(ctx, inputFiles))
+                {
+                    ctx.getLogger().info("Step not required, skipping");
+                    continue;
+                }
+
                 if (_resumer.isStepComplete(stepIdx))
                 {
                     ctx.getLogger().info("resuming from saved state");
