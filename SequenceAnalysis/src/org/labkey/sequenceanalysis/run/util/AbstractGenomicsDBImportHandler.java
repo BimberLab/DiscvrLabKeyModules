@@ -529,7 +529,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             for (Interval i : intervals)
             {
                 File destContigFolder = new File(workingDestinationWorkspaceFolder, getFolderNameFromInterval(i));
-                reportFragmentsPerContig(ctx, destContigFolder, i.getName());
+                reportFragmentsPerContig(ctx, destContigFolder, i.getContig());
             }
 
             ctx.getLogger().debug("adding sequence output: " + workingDestinationWorkspaceFolder.getPath());

@@ -31,8 +31,6 @@ import java.util.stream.Collectors;
 
 abstract public class CellHashingService
 {
-    public static final String HASHING_CALLS = "Cell Hashing TCR Calls";
-
     private static CellHashingService _instance;
 
     public static CellHashingService get()
