@@ -366,6 +366,7 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
             }
 
             //process with pandoc
+            ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Creating final report");
             AbstractSingleCellPipelineStep.Markdown finalMarkdown = new AbstractSingleCellPipelineStep.Markdown();
             finalMarkdown.headerYml = finalMarkdown.getDefaultHeader();
             finalMarkdown.chunks = new ArrayList<>();

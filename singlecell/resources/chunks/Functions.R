@@ -1,11 +1,11 @@
 # Binds arguments from the environment to the target function
 bindArgs <- function(fun, seuratObj) {
     boundArgs <- list()
-    boundArgs['seuratObj'] <- seuratObj
+    boundArgs[['seuratObj']] <- seuratObj
 
     for (name in names(formals(fun))) {
         if (exists(name)) {
-            boundArgs[name] <- get(name)
+            boundArgs[[name]] <- get(name)
         }
     }
 
