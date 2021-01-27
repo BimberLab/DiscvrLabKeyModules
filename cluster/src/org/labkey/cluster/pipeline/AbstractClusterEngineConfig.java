@@ -13,6 +13,8 @@ import org.labkey.api.util.StringExpressionFactory;
 import org.labkey.cluster.ClusterServiceImpl;
 
 import java.io.File;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -163,7 +165,7 @@ abstract class AbstractClusterEngineConfig implements PipelineJobService.RemoteE
     {
         //TODO: verify this
         // This PathMapper considers "local" from a cluster node's point of view.
-        String ret = getPathMapper().remoteToLocal(localFile.getAbsoluteFile().toURI().toString());
+        String ret = URLDecoder.decode(getPathMapper().remoteToLocal(localFile.getAbsoluteFile().toURI()).toString(), StandardCharsets.UTF_8);
 
         if (ret != null && !asURI)
         {
