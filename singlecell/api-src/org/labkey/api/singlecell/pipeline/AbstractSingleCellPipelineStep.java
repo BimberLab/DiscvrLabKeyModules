@@ -258,7 +258,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             {
                 //int swap = 4*maxRam;
                 writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM \\");
-                writer.println("\t--mem=" + maxRam + "g' \\");
+                writer.println("\t--memory=" + maxRam + "g' \\");
                 //writer.println("\t-e R_MAX_VSIZE='" + swap + "GB' \\");
                 //writer.println("\t--memory-swap=" + swap + "g' \\");
             }
