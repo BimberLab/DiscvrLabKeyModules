@@ -73,7 +73,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 
                 getPipelineCtx().getLogger().debug("Output seurat: " + line[0] + " / " + line[1] + " / "+ f.getName() + " / " + line[3]);
 
-                String outputIdVal = StringUtils.trimToNull(line[3]);
+                String outputIdVal = "NA".equals(line[3]) ? null : StringUtils.trimToNull(line[3]);
                 if (outputIdVal != null && !NumberUtils.isCreatable(outputIdVal))
                 {
                     throw new PipelineJobException("Unable to parse outputFileId: " + outputIdVal);
