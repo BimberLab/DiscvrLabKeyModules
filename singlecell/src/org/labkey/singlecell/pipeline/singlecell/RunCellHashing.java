@@ -83,7 +83,7 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
             {
                 ctx.getLogger().info("Total barcodes for readset: " + htosPerReadset.size());
 
-                CellHashingService.CellHashingParameters params = CellHashingService.CellHashingParameters.createFromStep(ctx, this, CellHashingService.BARCODE_TYPE.hashing, null, parentReadset, cellBarcodesParsed);
+                CellHashingService.CellHashingParameters params = CellHashingService.CellHashingParameters.createFromStep(ctx, this, CellHashingService.BARCODE_TYPE.hashing, null, parentReadset, null);
                 params.outputCategory = SeuratCellHashingHandler.CATEGORY;
                 params.genomeId = wrapper.getSequenceOutputFile().getLibrary_id();
                 params.cellBarcodeWhitelistFile = cellBarcodesParsed;

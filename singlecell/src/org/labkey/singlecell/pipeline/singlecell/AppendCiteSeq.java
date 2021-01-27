@@ -93,7 +93,7 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
 
             if (CellHashingService.get().usesCiteSeq(ctx.getSequenceSupport(), Collections.singletonList(wrapper.getSequenceOutputFile())))
             {
-                CellHashingService.CellHashingParameters params = CellHashingService.CellHashingParameters.createFromStep(ctx, this, CellHashingService.BARCODE_TYPE.citeseq, null, parentReadset, cellBarcodesParsed);
+                CellHashingService.CellHashingParameters params = CellHashingService.CellHashingParameters.createFromStep(ctx, this, CellHashingService.BARCODE_TYPE.citeseq, null, parentReadset, null);
                 params.outputCategory = SeuratCiteSeqHandler.CATEGORY;
                 params.createOutputFiles = true;
                 params.genomeId = wrapper.getSequenceOutputFile().getLibrary_id();
