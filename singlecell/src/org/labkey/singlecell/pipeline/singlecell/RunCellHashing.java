@@ -10,6 +10,7 @@ import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.pipeline.SingleCellOutput;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.singlecell.CellHashingServiceImpl;
 import org.labkey.singlecell.analysis.CellRangerSeuratHandler;
 import org.labkey.singlecell.analysis.SeuratCellHashingHandler;
 
@@ -77,7 +78,7 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
                 throw new PipelineJobException("Unable to find readset for outputfile: " + wrapper.getSequenceOutputFileId());
             }
 
-            List<String> htosPerReadset = CellHashingService.get().getHtosForParentReadset(parentReadset.getReadsetId(), ctx.getSourceDirectory(), ctx.getSequenceSupport());
+            List<String> htosPerReadset = CellHashingServiceImpl.get().getHtosForParentReadset(parentReadset.getReadsetId(), ctx.getSourceDirectory(), ctx.getSequenceSupport(), false);
             if (htosPerReadset.size() > 1)
             {
                 ctx.getLogger().info("Total barcodes for readset: " + htosPerReadset.size());

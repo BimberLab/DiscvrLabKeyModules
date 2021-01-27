@@ -8,6 +8,10 @@ for (datasetId in names(seuratObjects)) {
     callFile <- featureData[[datasetId]]
     if (!is.null(callFile)) {
         seuratObj <- cellhashR::AppendCellHashing(seuratObj, barcodeCallFile = callFile, barcodePrefix = datasetId)
+    } else {
+        # Add empty columns to keep objects consistent
+        seuratObj$HTO <- c(NA)
+        seuratObj$consensuscall.global <- c(NA)
     }
 
     newSeuratObjects[[datasetId]] <- seuratObj

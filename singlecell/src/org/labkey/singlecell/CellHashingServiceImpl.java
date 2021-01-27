@@ -59,6 +59,7 @@ import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -1465,10 +1466,22 @@ public class CellHashingServiceImpl extends CellHashingService
     @Override
     public List<String> getHtosForParentReadset(Integer parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support) throws PipelineJobException
     {
+        return getHtosForParentReadset(parentReadsetId, webserverJobDir, support, true);
+    }
+
+    public List<String> getHtosForParentReadset(Integer parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support, boolean throwIfNotFound) throws PipelineJobException
+    {
         Integer htoReadset = getCachedHashingReadsetMap(support).get(parentReadsetId);
         if (htoReadset == null)
         {
-            throw new PipelineJobException("Unable to find hashing readset for parent id: " + parentReadsetId);
+            if (throwIfNotFound)
+            {
+                throw new PipelineJobException("Unable to find hashing readset for parent id: " + parentReadsetId);
+            }
+            else
+            {
+                return (Collections.emptyList());
+            }
         }
 
         return getHtosForReadset(htoReadset, webserverJobDir);
