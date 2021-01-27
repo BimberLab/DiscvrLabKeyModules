@@ -1,8 +1,8 @@
 package org.labkey.cluster.pipeline;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.cluster.ClusterResourceAllocator;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
@@ -364,8 +364,8 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     //writer.write("#SBATCH --requeue\n");
 
                     //NOTE: this is just the output of the java process, so do not put into regular pipeline log
-                    writer.write("#SBATCH --output=" + getConfig().getClusterPath(new File(outDir, basename + "-%j.java.log")) + "\n");
-                    writer.write("#SBATCH --error=" + getConfig().getClusterPath(new File(outDir, basename + "-%j.java.log")) + "\n");
+                    writer.write("#SBATCH --output=\"" + getConfig().getClusterPath(new File(outDir, basename + "-%j.java.log")) + "\"\n");
+                    writer.write("#SBATCH --error=\"" + getConfig().getClusterPath(new File(outDir, basename + "-%j.java.log")) + "\"\n");
 
                     // This allows modules to register code to modify resource usage per task.
                     Integer maxCpus = null;
@@ -456,7 +456,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                         writer.write(line + "\n");
                     }
 
-                    writer.write("#SBATCH --workdir=" + getConfig().getClusterPath(job.getLogFile().getParentFile()) + "\n");
+                    writer.write("#SBATCH --workdir=\"" + getConfig().getClusterPath(job.getLogFile().getParentFile()) + "\"\n");
 
                     String args = StringUtils.join(getConfig().getJobArgs(outDir, serializedJobFile, job, this), " ");
                     writer.write("srun " + getConfig().getRemoteExecutable() + " " + args);
