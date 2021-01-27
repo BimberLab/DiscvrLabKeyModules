@@ -110,7 +110,7 @@ abstract public class CellHashingService
             ret.htoOrCiteseqReadset = htoOrCiteseqReadset;
             ret.parentReadset = parentReadset;
             ret.htoOrCiteseqBarcodesFile = htoOrCiteseqBarcodesFile == null ? new File(ctx.getSourceDirectory(), type.getAllBarcodeFileName()) : htoOrCiteseqBarcodesFile;
-            ret.methods = extractMethods(step.getProvider().getParameterByName("methods").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), JSONArray.class));
+            ret.methods = extractMethods(step.getProvider().getParameterByName("methods").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), String.class));
 
             return ret;
         }
@@ -125,19 +125,21 @@ abstract public class CellHashingService
             ret.htoOrCiteseqReadset = htoOrCiteseqReadset;
             ret.parentReadset = parentReadset;
             ret.htoOrCiteseqBarcodesFile = htoOrCiteseqBarcodesFile == null ? new File(webserverDir, type.getAllBarcodeFileName()) : htoOrCiteseqBarcodesFile;
-            ret.methods = extractMethods(params.optJSONArray("methods"));
+            ret.methods = extractMethods(params.optString("methods"));
 
             return ret;
         }
 
-        public static List<CALLING_METHOD> extractMethods(JSONArray methodsArr) throws PipelineJobException
+        public static List<CALLING_METHOD> extractMethods(String methodsStr) throws PipelineJobException
         {
-            if (methodsArr != null)
+            if (methodsStr != null)
             {
+                String[] tokens = methodsStr.split(";");
+
                 List<CALLING_METHOD> methods = new ArrayList<>();
                 try
                 {
-                    Arrays.stream(methodsArr.toArray()).forEach(x -> {
+                    Arrays.stream(tokens).forEach(x -> {
                         try
                         {
                             methods.add(CALLING_METHOD.valueOf(String.valueOf(x)));

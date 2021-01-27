@@ -831,6 +831,7 @@ public class CellHashingServiceImpl extends CellHashingService
                     put("storeValues", StringUtils.join(Arrays.stream(CALLING_METHOD.values()).map(Enum::name).collect(Collectors.toList()), ";"));
                     put("initialValues", StringUtils.join(CALLING_METHOD.getDefaultMethodNames(), ";"));
                     put("delimiter", ";");
+                    put("joinReturnValue", true);
                 }}, null)
         ));
 
