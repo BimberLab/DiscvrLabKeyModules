@@ -238,7 +238,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         File localBashScript = new File(ctx.getOutputDir(), "wrapper.sh");
         try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
         {
-            writer.println("#/bin/bash");
+            writer.println("#!/bin/bash");
             writer.println("set -e");
             writer.println("set -x");
             writer.println("WD=`pwd`");
