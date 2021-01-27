@@ -25,16 +25,12 @@ SequenceAnalysis.Buttons = new function(){
 
             params['query.'+(options.keyField ? options.keyField :'analysis_id')+'~in'] = checked.join(';');
 
-            changeLocation(LABKEY.ActionURL.buildURL(
+            window.location = LABKEY.ActionURL.buildURL(
                     'query',
                     'executeQuery.view',
                     dataRegion.containerPath,
                     params
-            ));
-
-            function changeLocation(location){
-                window.location = location;
-            }
+            );
         },
 
         /**
@@ -138,22 +134,15 @@ SequenceAnalysis.Buttons = new function(){
 
                     params['query.run~in'] = runIds.join(';');
 
-                    changeLocation(LABKEY.ActionURL.buildURL(
-                            'query',
-                            'executeQuery.view',
-                            dataRegion.containerPath,
-                            params
-                        ));
-
-
+                    window.location = LABKEY.ActionURL.buildURL(
+                        'query',
+                        'executeQuery.view',
+                        dataRegion.containerPath,
+                        params
+                    );
                 },
                 failure: LDK.Utils.getErrorCallback()
             });
-
-            function changeLocation(location){
-                window.location = location;
-            }
-
         },
 
         viewSNPs: function(dataRegionName, options){
