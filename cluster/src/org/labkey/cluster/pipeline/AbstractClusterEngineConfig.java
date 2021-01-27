@@ -165,10 +165,11 @@ abstract class AbstractClusterEngineConfig implements PipelineJobService.RemoteE
     {
         //TODO: verify this
         // This PathMapper considers "local" from a cluster node's point of view.
-        String ret = URLDecoder.decode(getPathMapper().remoteToLocal(localFile.getAbsoluteFile().toURI()).toString(), StandardCharsets.UTF_8);
+        String ret = getPathMapper().remoteToLocal(localFile.getAbsoluteFile().toURI()).toString();
 
         if (ret != null && !asURI)
         {
+            ret = URLDecoder.decode(ret, StandardCharsets.UTF_8);
             ret = ret.replaceFirst("^file:/", "/");
             ret = ret.replaceAll("^/+", "/");
         }

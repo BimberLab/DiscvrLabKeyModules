@@ -248,19 +248,20 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             writer.println("sudo $DOCKER pull " + dockerContainerName);
             writer.println("sudo $DOCKER run --rm=true \\");
 
-            //NOTE: i think this is causing OOM errors. Investigate --memory-swap
-            //if (SequencePipelineService.get().getMaxRam() != null)
-            //{
-            //    writer.println("\t--memory=" + SequencePipelineService.get().getMaxRam() + "g \\");
-            //    writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM \\");
-            //}
-
             if (SequencePipelineService.get().getMaxThreads(ctx.getLogger()) != null)
             {
                 writer.println("\t-e SEQUENCEANALYSIS_MAX_THREADS \\");
             }
 
-            writer.println("\t-e R_MAX_VSIZE='32000GB' \\");
+            Integer maxRam = SequencePipelineService.get().getMaxRam();
+            if (maxRam != null)
+            {
+                //int swap = 4*maxRam;
+                writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM \\");
+                writer.println("\t--mem=" + maxRam + "g' \\");
+                //writer.println("\t-e R_MAX_VSIZE='" + swap + "GB' \\");
+                //writer.println("\t--memory-swap=" + swap + "g' \\");
+            }
 
             writer.println("\t-v \"${WD}:/work\" \\");
             writer.println("\t-v \"${HOME}:/homeDir\" \\");
