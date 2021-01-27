@@ -122,10 +122,10 @@ abstract class AbstractClusterEngineConfig implements PipelineJobService.RemoteE
                 "-cp",
                 getLabKeyDir() + "/labkeyBootstrap.jar",
                 "org.labkey.bootstrap.ClusterBootstrap",
-                "-modulesdir=" + getLabKeyDir() + "/modules",
-                "-webappdir=" + getLabKeyDir() + "/labkeywebapp",
-                "-configdir=" + getLabKeyDir() + "/config",
-                getClusterPath(localSerializedJobXmlFile, true)
+                "-modulesdir='" + getLabKeyDir() + "/modules'",
+                "-webappdir='" + getLabKeyDir() + "/labkeywebapp'",
+                "-configdir='" + getLabKeyDir() + "/config'",
+                "'" + getClusterPath(localSerializedJobXmlFile, true) + "'"
         ));
 
         return ret;
