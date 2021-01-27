@@ -260,6 +260,8 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                 writer.println("\t-e SEQUENCEANALYSIS_MAX_THREADS \\");
             }
 
+            writer.println("\t-e R_MAX_VSIZE='32000GB' \\");
+
             writer.println("\t-v \"${WD}:/work\" \\");
             writer.println("\t-v \"${HOME}:/homeDir\" \\");
             writer.println("\t-u $UID \\");
