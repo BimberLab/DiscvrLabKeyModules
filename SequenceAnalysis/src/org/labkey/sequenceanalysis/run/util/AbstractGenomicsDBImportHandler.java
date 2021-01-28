@@ -666,10 +666,11 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 }
                 else
                 {
+                    //TODO: dest permissions?
                     ctx.getLogger().debug("Copying directory with rsync: " + sourceFolder.getPath());
                     //NOTE: since neither path will end in slashes, rsync to the parent folder should result in the correct placement
                     new SimpleScriptWrapper(ctx.getLogger()).execute(Arrays.asList(
-                            "rsync", "-r", "-a", "--delete", "--no-owner", "--no-group", sourceFolder.getPath(), destContigFolder.getParentFile().getPath()
+                            "rsync", "-r", "-a", "--delete", "--no-owner", "--no-group", "--no-perms", sourceFolder.getPath(), destContigFolder.getParentFile().getPath()
                     ));
                 }
 
