@@ -212,6 +212,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         List<String> lines = new ArrayList<>();
         lines.add("rmarkdown::render(output_file = '" + getExpectedHtmlFile(ctx, outputPrefix).getName() + "', input = '" + rmd.getName() + "', intermediates_dir  = '/work')");
         lines.add("print('Rmarkdown complete')");
+        lines.add("");
 
         executeR(ctx, getDockerContainerName(), outputPrefix, lines);
     }

@@ -69,7 +69,7 @@ abstract public class AbstractCellHashingCiteseqStep extends AbstractSingleCellP
 
         // Remove trailing comma:
         int lastIdx = lines.size() - 1;
-        lines.add(lastIdx, lines.get(lastIdx).replaceAll(",$", ""));
+        lines.set(lastIdx, lines.get(lastIdx).replaceAll(",$", ""));
 
         lines.add(")");
         lines.add("");
