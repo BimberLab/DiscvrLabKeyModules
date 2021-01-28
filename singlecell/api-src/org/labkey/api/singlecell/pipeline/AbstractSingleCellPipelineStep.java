@@ -271,9 +271,9 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             writer.println("\t-w /work \\");
             writer.println("\t-e HOME=/homeDir \\");
             writer.println("\t" + dockerContainerName + " \\");
-            writer.println("\tRscript --vanilla " + localRScript.getName());
+            writer.println("\tRscript --vanilla " + localRScript.getName() + " && echo 'Done!'");
             writer.println("");
-            writer.println("echo 'script complete'");
+            writer.println("echo 'Bash script complete'");
 
         }
         catch (IOException e)
