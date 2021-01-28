@@ -92,6 +92,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         if (j.getClusterId() == null)
         {
             job.getLogger().error("Unable to parse cluster ID: " + StringUtils.join(ret, "\n"));
+            job.getLogger().error("Command was: [" + command + "]");
         }
 
         return ret;
