@@ -26,3 +26,5 @@ options(future.globals.maxSize = Inf)
 
 print(paste0('R memory: ', memory.limit()))
 print(paste0('R_MAX_VSIZE: ', Sys.getenv('R_MAX_VSIZE')))
+
+options('Seurat.memsafe' = TRUE)
