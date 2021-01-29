@@ -828,6 +828,7 @@ public class CellHashingServiceImpl extends CellHashingService
                 ToolParameterDescriptor.create("minCountPerCell", "Min Reads/Cell", null, "ldk-integerfield", null, 5),
                 ToolParameterDescriptor.create("methods", "Calling Methods", "The set of methods to use in calling.", "ldk-simplecombo", new JSONObject(){{
                     put("multiSelect", true);
+                    put("allowBlank", false);
                     put("storeValues", StringUtils.join(Arrays.stream(CALLING_METHOD.values()).map(Enum::name).collect(Collectors.toList()), ";"));
                     put("initialValues", StringUtils.join(CALLING_METHOD.getDefaultMethodNames(), ";"));
                     put("delimiter", ";");
