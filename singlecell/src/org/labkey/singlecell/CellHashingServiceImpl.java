@@ -1257,23 +1257,23 @@ public class CellHashingServiceImpl extends CellHashingService
             writer.println("sudo $DOCKER run --rm=true \\");
             if (SequencePipelineService.get().getMaxRam() != null)
             {
-                writer.println("--memory=" + SequencePipelineService.get().getMaxRam() + "g \\");
-                writer.println("-e SEQUENCEANALYSIS_MAX_RAM \\");
+                writer.println("\t--memory=" + SequencePipelineService.get().getMaxRam() + "g \\");
+                writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM \\");
             }
 
             if (SequencePipelineService.get().getMaxThreads(log) != null)
             {
-                writer.println("-e SEQUENCEANALYSIS_MAX_THREADS \\");
+                writer.println("\t-e SEQUENCEANALYSIS_MAX_THREADS \\");
             }
 
-            writer.println("-v \"${WD}:/work\" \\");
-            writer.println("-v \"${HOME}:/homeDir\" \\");
-            writer.println("-u $UID \\");
-            writer.println("-e USERID=$UID \\");
-            writer.println("-w /work \\");
-            writer.println("-e HOME=/homeDir \\");
-            writer.println("ghcr.io/bimberlab/cellhashr:latest \\");
-            writer.println("Rscript --vanilla " + localRScript.getName());
+            writer.println("\t-v \"${WD}:/work\" \\");
+            writer.println("\t-v \"${HOME}:/homeDir\" \\");
+            writer.println("\t-u $UID \\");
+            writer.println("\t-e USERID=$UID \\");
+            writer.println("\t-w /work \\");
+            writer.println("\t-e HOME=/homeDir \\");
+            writer.println("\tghcr.io/bimberlab/cellhashr:latest \\");
+            writer.println("\tRscript --vanilla " + localRScript.getName());
         }
         catch (IOException e)
         {
