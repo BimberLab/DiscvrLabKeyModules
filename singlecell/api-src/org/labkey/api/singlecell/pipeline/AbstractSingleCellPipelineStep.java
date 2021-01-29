@@ -40,7 +40,14 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         SingleCellOutput output = new SingleCellOutput();
 
         File rmd = createRmd(output, ctx, inputObjects, outputPrefix);
-        executeR(ctx, rmd, outputPrefix);
+        if (hasCompleted())
+        {
+            ctx.getLogger().info("Step has already completed, skipping R");
+        }
+        else
+        {
+            executeR(ctx, rmd, outputPrefix);
+        }
 
         ctx.getFileManager().addIntermediateFile(rmd);
 
@@ -205,6 +212,11 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 
             return ret;
         }
+    }
+
+    protected boolean hasCompleted()
+    {
+        return false;
     }
 
     protected void executeR(SequenceOutputHandler.JobContext ctx, File rmd, String outputPrefix) throws PipelineJobException

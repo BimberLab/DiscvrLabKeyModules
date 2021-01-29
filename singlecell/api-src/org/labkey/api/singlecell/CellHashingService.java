@@ -3,8 +3,8 @@ package org.labkey.api.singlecell;
 import au.com.bytecode.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -112,6 +112,11 @@ abstract public class CellHashingService
             ret.htoOrCiteseqBarcodesFile = htoOrCiteseqBarcodesFile == null ? new File(ctx.getSourceDirectory(), type.getAllBarcodeFileName()) : htoOrCiteseqBarcodesFile;
             ret.methods = extractMethods(step.getProvider().getParameterByName("methods").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), String.class));
 
+            if (type == BARCODE_TYPE.hashing && ret.methods.isEmpty())
+            {
+                throw new IllegalArgumentException("Must provide at least one calling method");
+            }
+
             return ret;
         }
 
@@ -127,10 +132,15 @@ abstract public class CellHashingService
             ret.htoOrCiteseqBarcodesFile = htoOrCiteseqBarcodesFile == null ? new File(webserverDir, type.getAllBarcodeFileName()) : htoOrCiteseqBarcodesFile;
             ret.methods = extractMethods(params.optString("methods"));
 
+            if (type == BARCODE_TYPE.hashing && ret.methods.isEmpty())
+            {
+                throw new IllegalArgumentException("Must provide at least one calling method");
+            }
+
             return ret;
         }
 
-        public static List<CALLING_METHOD> extractMethods(String methodsStr) throws PipelineJobException
+        private static @NotNull List<CALLING_METHOD> extractMethods(String methodsStr) throws PipelineJobException
         {
             if (methodsStr != null)
             {
@@ -158,7 +168,7 @@ abstract public class CellHashingService
                 }
             }
 
-            return null;
+            return Collections.emptyList();
         }
 
         public int getEffectiveReadsetId()
