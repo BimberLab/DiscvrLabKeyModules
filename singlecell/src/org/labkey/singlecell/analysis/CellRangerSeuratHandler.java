@@ -671,7 +671,7 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                     throw new PipelineJobException("Unable to find hashing readset for GEX readset: " + rs.getReadsetId());
                 }
 
-                List<String> htosPerReadset = CellHashingServiceImpl.get().getHtosForReadset(hashingReadsetId, ctx.getSourceDirectory());
+                Set<String> htosPerReadset = CellHashingServiceImpl.get().getHtosForReadset(hashingReadsetId, ctx.getSourceDirectory());
                 if (htosPerReadset.size() > 1)
                 {
                     ctx.getLogger().info("Total HTOs for readset: " + htosPerReadset.size());

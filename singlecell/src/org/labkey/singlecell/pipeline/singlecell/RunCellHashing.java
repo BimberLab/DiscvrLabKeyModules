@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class RunCellHashing extends AbstractCellHashingCiteseqStep
 {
@@ -78,7 +79,7 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
                 throw new PipelineJobException("Unable to find readset for outputfile: " + wrapper.getSequenceOutputFileId());
             }
 
-            List<String> htosPerReadset = CellHashingServiceImpl.get().getHtosForParentReadset(parentReadset.getReadsetId(), ctx.getSourceDirectory(), ctx.getSequenceSupport(), false);
+            Set<String> htosPerReadset = CellHashingServiceImpl.get().getHtosForParentReadset(parentReadset.getReadsetId(), ctx.getSourceDirectory(), ctx.getSequenceSupport(), false);
             if (htosPerReadset.size() > 1)
             {
                 ctx.getLogger().info("Total barcodes for readset: " + htosPerReadset.size());

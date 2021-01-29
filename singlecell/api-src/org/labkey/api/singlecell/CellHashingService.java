@@ -26,7 +26,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 abstract public class CellHashingService
@@ -71,14 +73,14 @@ abstract public class CellHashingService
 
     abstract public List<ToolParameterDescriptor> getDefaultHashingParams(boolean includeExcludeFailedcDNA);
 
-    abstract public List<String> getHtosForParentReadset(Integer parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support) throws PipelineJobException;
+    abstract public Set<String> getHtosForParentReadset(Integer parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support) throws PipelineJobException;
 
     public static class CellHashingParameters
     {
         public BARCODE_TYPE type;
 
         private File htoOrCiteseqBarcodesFile;
-        public List<String> allowableHtoOrCiteseqBarcodes;
+        public Set<String> allowableHtoOrCiteseqBarcodes;
 
         public File cellBarcodeWhitelistFile;
 
@@ -227,18 +229,18 @@ abstract public class CellHashingService
             }
         }
 
-        public List<String> getAllowableBarcodeNames() throws PipelineJobException
+        public Set<String> getAllowableBarcodeNames() throws PipelineJobException
         {
             if (allowableHtoOrCiteseqBarcodes != null)
             {
-                return Collections.unmodifiableList(allowableHtoOrCiteseqBarcodes);
+                return Collections.unmodifiableSet(allowableHtoOrCiteseqBarcodes);
             }
             if (htoOrCiteseqBarcodesFile == null)
             {
                 throw new IllegalArgumentException("Barcode file was null");
             }
 
-            List<String> allowableBarcodes = new ArrayList<>();
+            Set<String> allowableBarcodes = new HashSet<>();
             try (CSVReader reader = new CSVReader(Readers.getReader(htoOrCiteseqBarcodesFile), '\t'))
             {
                 String[] line;

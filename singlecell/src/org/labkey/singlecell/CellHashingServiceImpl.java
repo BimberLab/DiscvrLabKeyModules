@@ -1226,7 +1226,7 @@ public class CellHashingServiceImpl extends CellHashingService
                     cellbarcodeWhitelist = "'/work/" + cellBarcodeWhitelistFile.getName() + "'";
                 }
 
-                List<String> allowableBarcodes = parameters.getAllowableBarcodeNames();
+                Set<String> allowableBarcodes = parameters.getAllowableBarcodeNames();
                 String allowableBarcodeParam = allowableBarcodes != null ? "c('" + StringUtils.join(allowableBarcodes, "','") + "')" : "NULL";
 
                 writer.println("cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', methods = c('" + StringUtils.join(methodNames, "','") + "'))");
@@ -1466,12 +1466,12 @@ public class CellHashingServiceImpl extends CellHashingService
     }
 
     @Override
-    public List<String> getHtosForParentReadset(Integer parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support) throws PipelineJobException
+    public Set<String> getHtosForParentReadset(Integer parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support) throws PipelineJobException
     {
         return getHtosForParentReadset(parentReadsetId, webserverJobDir, support, true);
     }
 
-    public List<String> getHtosForParentReadset(Integer parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support, boolean throwIfNotFound) throws PipelineJobException
+    public Set<String> getHtosForParentReadset(Integer parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support, boolean throwIfNotFound) throws PipelineJobException
     {
         Integer htoReadset = getCachedHashingReadsetMap(support).get(parentReadsetId);
         if (htoReadset == null)
@@ -1482,16 +1482,16 @@ public class CellHashingServiceImpl extends CellHashingService
             }
             else
             {
-                return (Collections.emptyList());
+                return (Collections.emptySet());
             }
         }
 
         return getHtosForReadset(htoReadset, webserverJobDir);
     }
 
-    public List<String> getHtosForReadset(Integer hashingReadsetId, File webserverJobDir) throws PipelineJobException
+    public Set<String> getHtosForReadset(Integer hashingReadsetId, File webserverJobDir) throws PipelineJobException
     {
-        List<String> htosPerReadset = new ArrayList<>();
+        Set<String> htosPerReadset = new HashSet<>();
         try (CSVReader reader = new CSVReader(Readers.getReader(CellHashingServiceImpl.get().getCDNAInfoFile(webserverJobDir)), '\t'))
         {
             String[] line;

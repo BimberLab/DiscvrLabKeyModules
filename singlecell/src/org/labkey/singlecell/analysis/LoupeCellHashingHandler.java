@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class LoupeCellHashingHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
@@ -179,7 +180,7 @@ public class LoupeCellHashingHandler extends AbstractParameterizedOutputHandler<
                     throw new PipelineJobException("Unable to find Hashing/Cite-seq readset for GEX readset: " + rs.getReadsetId());
                 }
 
-                List<String> htosPerReadset = CellHashingServiceImpl.get().getHtosForReadset(htoReadset.getReadsetId(), ctx.getSourceDirectory());
+                Set<String> htosPerReadset = CellHashingServiceImpl.get().getHtosForReadset(htoReadset.getReadsetId(), ctx.getSourceDirectory());
                 if (htosPerReadset.size() > 1)
                 {
                     ctx.getLogger().info("Total HTOs for readset: " + htosPerReadset.size());

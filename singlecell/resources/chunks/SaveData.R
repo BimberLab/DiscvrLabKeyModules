@@ -14,7 +14,8 @@ for (datasetId in names(newSeuratObjects)) {
 
     savedFiles <- rbind(savedFiles, data.frame(datasetId = datasetId, datasetName = datasetName, filename = fn, outputFileId = outputFileId))
 
-    CellMembrane::WriteCellBarcodes(seuratObj, file = barcodeFile)
+    # WriteCellBarcodes
+    write.table(data.frame(CellBarcode = colnames(seuratObj)), file = barcodeFile, quote = F, row.names = F, sep = ',', col.names = F)
 }
 
 write.table(savedFiles, file = 'savedSeuratObjects.txt', quote = FALSE, sep = '\t', row.names = FALSE, col.names = FALSE)
