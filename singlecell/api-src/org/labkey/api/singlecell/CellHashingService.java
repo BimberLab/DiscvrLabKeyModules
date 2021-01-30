@@ -112,11 +112,19 @@ abstract public class CellHashingService
             ret.htoOrCiteseqReadset = htoOrCiteseqReadset;
             ret.parentReadset = parentReadset;
             ret.htoOrCiteseqBarcodesFile = htoOrCiteseqBarcodesFile == null ? new File(ctx.getSourceDirectory(), type.getAllBarcodeFileName()) : htoOrCiteseqBarcodesFile;
-            ret.methods = extractMethods(step.getProvider().getParameterByName("methods").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), String.class));
 
-            if (type == BARCODE_TYPE.hashing && ret.methods.isEmpty())
+            if (type == BARCODE_TYPE.hashing)
             {
-                throw new IllegalArgumentException("Must provide at least one calling method");
+                String methodStr = StringUtils.trimToNull(step.getProvider().getParameterByName("methods").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), String.class));
+                if (methodStr != null)
+                {
+                    ret.methods = extractMethods(methodStr);
+                }
+
+                if (ret.methods.isEmpty())
+                {
+                    throw new IllegalArgumentException("Must provide at least one calling method");
+                }
             }
 
             return ret;
