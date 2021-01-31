@@ -94,7 +94,7 @@ public class SeuratCellHashingHandler extends AbstractParameterizedOutputHandler
                 }
             }
 
-            CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getSourceDirectory(), ctx.getJob(), ctx.getSequenceSupport(), "readsetId", ctx.getParams().optBoolean("excludeFailedcDNA", true), true, false);
+            CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getSourceDirectory(), ctx.getJob(), ctx.getSequenceSupport(), "readsetId", ctx.getParams().optBoolean("excludeFailedcDNA", false), true, false);
         }
 
         @Override

@@ -184,7 +184,7 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                 }
             }
 
-            CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getOutputDir(), ctx.getJob(), ctx.getSequenceSupport(),"readsetId", ctx.getParams().optBoolean("excludeFailedcDNA", true), false, false);
+            CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getOutputDir(), ctx.getJob(), ctx.getSequenceSupport(),"readsetId", ctx.getParams().optBoolean("excludeFailedcDNA", false), false, false);
 
             if (ctx.getParams().get(GTF_FILE_ID) == null)
             {

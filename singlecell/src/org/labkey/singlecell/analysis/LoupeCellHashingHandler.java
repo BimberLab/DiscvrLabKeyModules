@@ -89,7 +89,7 @@ public class LoupeCellHashingHandler extends AbstractParameterizedOutputHandler<
         @Override
         public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getOutputDir(), ctx.getJob(), ctx.getSequenceSupport(), "readsetId", ctx.getParams().optBoolean("excludeFailedcDNA", true), true, false);
+            CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getOutputDir(), ctx.getJob(), ctx.getSequenceSupport(), "readsetId", ctx.getParams().optBoolean("excludeFailedcDNA", false), true, false);
         }
 
         @Override

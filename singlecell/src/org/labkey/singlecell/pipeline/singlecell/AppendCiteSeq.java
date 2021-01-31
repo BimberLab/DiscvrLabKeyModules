@@ -7,6 +7,7 @@ import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellOutput;
@@ -17,7 +18,7 @@ import org.labkey.singlecell.analysis.SeuratCellHashingHandler;
 import org.labkey.singlecell.analysis.SeuratCiteSeqHandler;
 
 import java.io.File;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,16 +36,7 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
     {
         public Provider()
         {
-            super("AppendCiteSeq", "Possibly Append CITE-seq Data", "OOSAP", "If available, this will process and append CITE-seq data to the Seurat object(s).", Arrays.asList(
-                SeuratToolParameter.create("normalizationMethod", "Normalization Method", "", "ldk-simplecombo", new JSONObject(){{
-                    put("storeValues", "CLR");
-                    put("initialValues", "CLR");
-                }}, "CLR"),
-                SeuratToolParameter.create("processingMethod", "Processing Method", "", "ldk-simplecombo", new JSONObject(){{
-                    put("storeValues", "PCA-tSNE;Distance-tSNE");
-                    put("initialValues", "PCA-tSNE");
-                }}, "PCA-tSNE")
-            ), null, null);
+            super("AppendCiteSeq", "Possibly Append CITE-seq Data", "OOSAP", "If available, this will process and append CITE-seq data to the Seurat object(s).", getParams(), null, null);
         }
 
         @Override
@@ -52,6 +44,23 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
         {
             return new AppendCiteSeq(ctx, this);
         }
+    }
+
+    private static List<ToolParameterDescriptor> getParams()
+    {
+        List<ToolParameterDescriptor> ret = new ArrayList<>();
+        ret.add(SeuratToolParameter.create("normalizationMethod", "Normalization Method", "", "ldk-simplecombo", new JSONObject(){{
+            put("storeValues", "CLR");
+            put("initialValues", "CLR");
+        }}, "CLR"));
+        ret.add(SeuratToolParameter.create("processingMethod", "Processing Method", "", "ldk-simplecombo", new JSONObject(){{
+            put("storeValues", "PCA-tSNE;Distance-tSNE");
+            put("initialValues", "PCA-tSNE");
+        }}, "PCA-tSNE"));
+
+        ret.addAll(CellHashingService.get().getDefaultHashingParams(false));
+
+        return ret;
     }
 
     @Override

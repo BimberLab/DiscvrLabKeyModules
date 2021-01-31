@@ -29,7 +29,7 @@ public class SeuratCiteSeqHandler extends AbstractParameterizedOutputHandler<Seq
     {
         super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Seurat GEX/CITE-seq Counts", "This will run CiteSeqCount to generate a sample-to-cellbarcode TSV based on the cell barcodes present in the saved Seurat object.", null, Arrays.asList(
                 ToolParameterDescriptor.create("editDistance", "Edit Distance", null, "ldk-integerfield", null, 2),
-                ToolParameterDescriptor.create("excludeFailedcDNA", "Exclude Failed cDNA", "If selected, cDNAs with non-blank status fields will be omitted", "checkbox", null, true),
+                ToolParameterDescriptor.create("excludeFailedcDNA", "Exclude Failed cDNA", "If selected, cDNAs with non-blank status fields will be omitted", "checkbox", null, false),
                 ToolParameterDescriptor.create("minCountPerCell", "Min Reads/Cell (Cell Hashing)", null, "ldk-integerfield", null, 5),
                 ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately..", "checkbox", new JSONObject()
                 {{
@@ -79,7 +79,7 @@ public class SeuratCiteSeqHandler extends AbstractParameterizedOutputHandler<Seq
         @Override
         public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getOutputDir(), ctx.getJob(), ctx.getSequenceSupport(),"readsetId", ctx.getParams().optBoolean("excludeFailedcDNA", true), false, true);
+            CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getOutputDir(), ctx.getJob(), ctx.getSequenceSupport(),"readsetId", ctx.getParams().optBoolean("excludeFailedcDNA", false), false, true);
         }
 
         @Override

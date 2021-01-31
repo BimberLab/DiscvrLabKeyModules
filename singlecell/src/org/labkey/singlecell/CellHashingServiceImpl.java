@@ -838,7 +838,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
         if (includeExcludeFailedcDNA)
         {
-            ret.add(ToolParameterDescriptor.create("excludeFailedcDNA", "Exclude Failed cDNA", "If selected, cDNAs with non-blank status fields will be omitted", "checkbox", null, true));
+            ret.add(ToolParameterDescriptor.create("excludeFailedcDNA", "Exclude Failed cDNA", "If selected, cDNAs with non-blank status fields will be omitted", "checkbox", null, false));
         }
 
         return ret;
