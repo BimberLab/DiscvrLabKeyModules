@@ -341,10 +341,10 @@ public class CellHashingServiceImpl extends CellHashingService
     public File processCellHashingOrCiteSeqForParent(Readset parentReadset, PipelineOutputTracker output, SequenceOutputHandler.JobContext ctx, CellHashingParameters parameters) throws PipelineJobException
     {
         parameters.validate(true);
-        Map<Integer, Integer> readsetToHashing = getCachedHashingReadsetMap(ctx.getSequenceSupport());
-        if (readsetToHashing.isEmpty())
+        Map<Integer, Integer> readsetToHashingOrCite = parameters.type == BARCODE_TYPE.hashing ? getCachedHashingReadsetMap(ctx.getSequenceSupport()) : getCachedCiteSeqReadsetMap(ctx.getSequenceSupport());
+        if (readsetToHashingOrCite.isEmpty())
         {
-            ctx.getLogger().info("No cached hashing readsets, skipping");
+            ctx.getLogger().info("No cached " + parameters.type.name() + " readsets, skipping");
             return null;
         }
 
@@ -356,35 +356,39 @@ public class CellHashingServiceImpl extends CellHashingService
         }
 
         long lineCount = SequencePipelineService.get().getLineCount(htoBarcodeWhitelist);
-        if (lineCount == 1)
+        if (parameters.type == BARCODE_TYPE.hashing && lineCount == 1)
         {
             ctx.getLogger().info("Only one barcode is used, will not use cell hashing");
             return null;
         }
 
-        ctx.getLogger().debug("total cached readset/hashing readset pairs: " + readsetToHashing.size());
+        ctx.getLogger().debug("total cached readset/" + parameters.type.name() + " readset pairs: " + readsetToHashingOrCite.size());
         ctx.getLogger().debug("unique HTOs: " + lineCount);
 
-        Readset htoReadset = ctx.getSequenceSupport().getCachedReadset(readsetToHashing.get(parentReadset.getReadsetId()));
-        if (htoReadset == null)
+        Readset htoOrCiteReadset = ctx.getSequenceSupport().getCachedReadset(readsetToHashingOrCite.get(parentReadset.getReadsetId()));
+        if (htoOrCiteReadset == null)
         {
             throw new PipelineJobException("Unable to find HTO readset for readset: " + parentReadset.getRowId());
         }
-        parameters.htoOrCiteseqReadset = htoReadset;
-        
-        File hashtagCalls = processCellHashingOrCiteSeq(output, ctx.getOutputDir(), ctx.getSourceDirectory(), ctx.getLogger(), parameters);
-        if (!hashtagCalls.exists())
+        parameters.htoOrCiteseqReadset = htoOrCiteReadset;
+
+        // either the HTO calls or count matrix for CITE-seq
+        File processOutput = processCellHashingOrCiteSeq(output, ctx.getOutputDir(), ctx.getSourceDirectory(), ctx.getLogger(), parameters);
+        if (!processOutput.exists())
         {
-            throw new PipelineJobException("Unable to find expected file: " + hashtagCalls.getPath());
+            throw new PipelineJobException("Unable to find expected file: " + processOutput.getPath());
         }
 
-        File html = new File(hashtagCalls.getParentFile(), FileUtil.getBaseName(FileUtil.getBaseName(hashtagCalls.getName())) + ".html");
-        if (!html.exists())
+        if (parameters.type == BARCODE_TYPE.hashing)
         {
-            throw new PipelineJobException("Unable to find HTML file: " + html.getPath());
+            File html = new File(processOutput.getParentFile(), FileUtil.getBaseName(FileUtil.getBaseName(processOutput.getName())) + ".html");
+            if (!html.exists())
+            {
+                throw new PipelineJobException("Unable to find HTML file: " + html.getPath());
+            }
         }
 
-        return hashtagCalls;
+        return processOutput;
     }
 
     @Override
