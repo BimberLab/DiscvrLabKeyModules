@@ -1234,7 +1234,7 @@ public class CellHashingServiceImpl extends CellHashingService
                 Set<String> allowableBarcodes = parameters.getAllowableBarcodeNames();
                 String allowableBarcodeParam = allowableBarcodes != null ? "c('" + StringUtils.join(allowableBarcodes, "','") + "')" : "NULL";
 
-                writer.println("cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', methods = c('" + StringUtils.join(methodNames, "','") + "'))");
+                writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', methods = c('" + StringUtils.join(methodNames, "','") + "'))");
                 writer.println("print('Rmarkdown complete')");
 
             }
@@ -1248,7 +1248,8 @@ public class CellHashingServiceImpl extends CellHashingService
             log.info("script exists, re-using: " + localRScript.getPath());
         }
 
-        File localBashScript = new File(outputDir, "generateCallsWrapper.sh");
+        File localBashScript = new File(outputDir, "generateCallsDockerWrapper.sh");
+        File rWrapperScript = new File(outputDir, "generateCallsRWrapper.sh");
         try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
         {
             writer.println("#!/bin/bash");
@@ -1278,7 +1279,25 @@ public class CellHashingServiceImpl extends CellHashingService
             writer.println("\t-w /work \\");
             writer.println("\t-e HOME=/homeDir \\");
             writer.println("\tghcr.io/bimberlab/cellhashr:latest \\");
-            writer.println("\tRscript --vanilla " + localRScript.getName());
+            writer.println("\t/bin/bash " + rWrapperScript.getName());
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        try (PrintWriter writer = PrintWriters.getPrintWriter(rWrapperScript))
+        {
+            writer.println("#!/bin/bash");
+            writer.println("set -x");
+
+            writer.println("if Rscript --vanilla " + localRScript.getName());
+            writer.println("then");
+            writer.println("\texit 0");
+            writer.println("else");
+            writer.println("\techo \"Rscript exited with value $?\"");
+            writer.println("\texit 0");
+            writer.println("fi");
         }
         catch (IOException e)
         {
@@ -1314,6 +1333,10 @@ public class CellHashingServiceImpl extends CellHashingService
 
             throw new PipelineJobException("Unable to find HTO calls file: " + callsFile.getPath());
         }
+
+        localBashScript.delete();
+        rWrapperScript.delete();
+        localRScript.delete();
 
         try
         {

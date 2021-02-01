@@ -283,7 +283,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             writer.println("\t-w /work \\");
             writer.println("\t-e HOME=/homeDir \\");
             writer.println("\t" + dockerContainerName + " \\");
-            writer.println("\t" + rWrapperScript.getName());
+            writer.println("\t/bin/bash " + rWrapperScript.getName());
             writer.println("");
             writer.println("echo 'Bash script complete'");
 
@@ -316,6 +316,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
 
         localRScript.delete();
+        rWrapperScript.delete();
         localBashScript.delete();
     }
 
