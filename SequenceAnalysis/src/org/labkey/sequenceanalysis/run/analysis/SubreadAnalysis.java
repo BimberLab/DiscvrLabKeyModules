@@ -72,6 +72,9 @@ public class SubreadAnalysis extends AbstractCommandPipelineStep<SubreadAnalysis
                         put("minValue", 0);
                         put("maxValue", 1);
                     }}, 0.1),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-g"), "group", "Group Field", "The field for grouping, such as exon_id, transcript_id or gene_id. This can be omitted, in which case gene_id will be used.", "textfield", new JSONObject(){{
+
+                    }}, null),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--minOverlap"), "minOverlap", "Min Read Overlap", "Minimum number of overlapping bases in a read that is required for read assignment.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, null),
