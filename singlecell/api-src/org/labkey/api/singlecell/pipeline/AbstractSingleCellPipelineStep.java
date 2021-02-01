@@ -248,11 +248,11 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             ctx.getLogger().info("R script exists, re-using: " + localRScript.getPath());
         }
 
-        File localBashScript = new File(ctx.getOutputDir(), "wrapper.sh");
+        File localBashScript = new File(ctx.getOutputDir(), "dockerWrapper.sh");
+        File rWrapperScript = new File(ctx.getOutputDir(), "rWrapper.sh");
         try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
         {
             writer.println("#!/bin/bash");
-            writer.println("set -e");
             writer.println("set -x");
             writer.println("WD=`pwd`");
             writer.println("HOME=`echo ~/`");
@@ -283,10 +283,28 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             writer.println("\t-w /work \\");
             writer.println("\t-e HOME=/homeDir \\");
             writer.println("\t" + dockerContainerName + " \\");
-            writer.println("\tRscript --vanilla " + localRScript.getName() + " && echo 'Done!'");
+            writer.println("\t" + rWrapperScript.getName());
             writer.println("");
             writer.println("echo 'Bash script complete'");
 
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        try (PrintWriter writer = PrintWriters.getPrintWriter(rWrapperScript))
+        {
+            writer.println("#!/bin/bash");
+            writer.println("set -x");
+
+            writer.println("if Rscript --vanilla " + localRScript.getName());
+            writer.println("then");
+            writer.println("\texit 0");
+            writer.println("else");
+            writer.println("\techo \"Rscript exited with value $?\"");
+            writer.println("\texit 0");
+            writer.println("fi");
         }
         catch (IOException e)
         {
