@@ -286,7 +286,8 @@ public class CellHashingServiceImpl extends CellHashingService
                 FieldKey.fromString("antibody/markerName"),
                 FieldKey.fromString("antibody/markerLabel"),
                 FieldKey.fromString("markerLabel"),
-                FieldKey.fromString("antibody/adaptersequence")
+                FieldKey.fromString("antibody/adaptersequence"),
+                FieldKey.fromString("antibody/pattern")
         ));
 
         for (int gexReadsetId : gexToPanels.keySet())
@@ -296,7 +297,7 @@ public class CellHashingServiceImpl extends CellHashingService
             File metadataOutput = getValidCiteSeqBarcodeMetadataFile(outputDir, gexReadsetId);
             try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(barcodeOutput), ',', CSVWriter.NO_QUOTE_CHARACTER);CSVWriter metaWriter = new CSVWriter(PrintWriters.getPrintWriter(metadataOutput), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
-                metaWriter.writeNext(new String[]{"tagname", "sequence", "markername", "markerlabel"});
+                metaWriter.writeNext(new String[]{"tagname", "sequence", "markername", "markerlabel", "pattern"});
                 AtomicInteger barcodeCount = new AtomicInteger();
                 Set<String> found = new HashSet<>();
                 new TableSelector(panels, barcodeColMap.values(), new SimpleFilter(FieldKey.fromString("name"), gexToPanels.get(gexReadsetId), CompareType.IN), new org.labkey.api.data.Sort("antibody")).forEachResults(results -> {
@@ -1213,7 +1214,7 @@ public class CellHashingServiceImpl extends CellHashingService
         File callsFile = new File(outputDir, basename + CALL_EXTENSION);
         File metricsFile = getMetricsFile(callsFile);
 
-        File localRScript = new File(outputDir, "calling.R");
+        File localRScript = new File(outputDir, "generateCallsWrapper.R");
         if (!localRScript.exists())
         {
             try (PrintWriter writer = PrintWriters.getPrintWriter(localRScript))
@@ -1243,7 +1244,7 @@ public class CellHashingServiceImpl extends CellHashingService
             log.info("script exists, re-using: " + localRScript.getPath());
         }
 
-        File localBashScript = new File(outputDir, "wrapper.sh");
+        File localBashScript = new File(outputDir, "generateCallsWrapper.sh");
         try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
         {
             writer.println("#!/bin/bash");
