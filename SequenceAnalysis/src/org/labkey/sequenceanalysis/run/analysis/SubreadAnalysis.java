@@ -75,6 +75,12 @@ public class SubreadAnalysis extends AbstractCommandPipelineStep<SubreadAnalysis
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-g"), "group", "Group Field", "The field for grouping, such as exon_id, transcript_id or gene_id. This can be omitted, in which case gene_id will be used.", "textfield", new JSONObject(){{
 
                     }}, null),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-t"), "featureType", "Feature Type", "Optional. Specify the feature type. Only rows which have the matched feature type in the provided GTF annotation file will be included for read counting. ‘exon’ by default.", "textfield", new JSONObject(){{
+
+                    }}, null),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-f"), "useMeta", "Use Meta Features", "If specified, read summarization will be performed at feature level (eg. exon level). Otherwise, it is performed at metafeature level (eg. gene level).", "checkbox", new JSONObject(){{
+
+                    }}, null),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--minOverlap"), "minOverlap", "Min Read Overlap", "Minimum number of overlapping bases in a read that is required for read assignment.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, null),
