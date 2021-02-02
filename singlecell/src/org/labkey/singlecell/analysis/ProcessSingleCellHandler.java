@@ -278,7 +278,6 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
             for (PipelineStepCtx<SingleCellStep> stepCtx : steps)
             {
                 ctx.getLogger().info("Starting to run: " + stepCtx.getProvider().getLabel());
-                ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + stepCtx.getProvider().getLabel());
                 stepIdx++;
 
                 SingleCellStep step = stepCtx.getProvider().create(ctx);
@@ -309,6 +308,7 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
                     continue;
                 }
 
+                ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + stepCtx.getProvider().getLabel());
                 currentFiles.forEach(currentFile -> {
                     if (currentFile.getSequenceOutputFileId() != null)
                     {

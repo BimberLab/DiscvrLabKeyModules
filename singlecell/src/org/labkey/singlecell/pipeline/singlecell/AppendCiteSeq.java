@@ -107,6 +107,7 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
                 params.createOutputFiles = true;
                 params.genomeId = wrapper.getSequenceOutputFile().getLibrary_id();
                 params.cellBarcodeWhitelistFile = cellBarcodesParsed;
+                params.cells = 250000;
 
                 finalOutput = CellHashingService.get().processCellHashingOrCiteSeqForParent(parentReadset, output, ctx, params);
             }

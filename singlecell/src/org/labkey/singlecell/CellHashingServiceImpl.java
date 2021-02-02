@@ -363,7 +363,7 @@ public class CellHashingServiceImpl extends CellHashingService
         }
 
         ctx.getLogger().debug("total cached readset/" + parameters.type.name() + " readset pairs: " + readsetToHashingOrCite.size());
-        ctx.getLogger().debug("unique HTOs: " + lineCount);
+        ctx.getLogger().debug("unique indexes: " + lineCount);
 
         Readset htoOrCiteReadset = ctx.getSequenceSupport().getCachedReadset(readsetToHashingOrCite.get(parentReadset.getReadsetId()));
         if (htoOrCiteReadset == null)
@@ -1358,7 +1358,7 @@ public class CellHashingServiceImpl extends CellHashingService
                 //Note: version 1.4.2 and greater requires this:
                 //https://github.com/Hoohm/CITE-seq-Count/issues/56
                 baseArgs.add("-cells");
-                baseArgs.add("0");
+                baseArgs.add(parameters.cells == null ? "0" : String.valueOf(parameters.cells));
             }
 
             Integer cores = SequencePipelineService.get().getMaxThreads(log);

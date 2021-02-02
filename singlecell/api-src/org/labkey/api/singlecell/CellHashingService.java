@@ -96,6 +96,7 @@ abstract public class CellHashingService
         public Integer minCountPerCell = 5;
         public List<CALLING_METHOD> methods = CALLING_METHOD.getDefaultMethods();
         public String basename = null;
+        public Integer cells = 0;
 
         private CellHashingParameters()
         {

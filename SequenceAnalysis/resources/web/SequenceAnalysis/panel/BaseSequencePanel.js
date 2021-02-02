@@ -11,8 +11,8 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
 
     initComponent: function(){
         //NOTE: if we're in a workbook, default to serch against the parent, since it will include children by default
-        this.queryContainer = LABKEY.Security.currentContainer.type == 'workbook' ? LABKEY.Security.currentContainer.parentId : LABKEY.Security.currentContainer.id;
-        this.queryContainerPath = LABKEY.Security.currentContainer.type == 'workbook' ? LABKEY.Security.currentContainer.parentPath : LABKEY.Security.currentContainer.path;
+        this.queryContainer = LABKEY.Security.currentContainer.type === 'workbook' ? LABKEY.Security.currentContainer.parentId : LABKEY.Security.currentContainer.id;
+        this.queryContainerPath = LABKEY.Security.currentContainer.type === 'workbook' ? LABKEY.Security.currentContainer.parentPath : LABKEY.Security.currentContainer.path;
 
         this.initFiles();
 
@@ -330,6 +330,13 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                         sequencePanel: this
                     }).show(btn);
                 }
+            },{
+                xtype: 'ldk-linkbutton',
+                text: 'Manage Saved Templates',
+                linkCls: 'labkey-text-link',
+                linkTarget: LABKEY.ActionURL.buildURL('query', 'executeQuery', Laboratory.Utils.getQueryContainerPath(), {schemaName: 'sequenceanalysis', 'query.queryName': 'saved_analyses', 'query.jobType~eq': this.jobType}),
+                visible: LABKEY.Security.currentUser.isAdmin,
+                scope: this
             }]
         }
     },

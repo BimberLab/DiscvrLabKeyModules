@@ -16,7 +16,7 @@ public class CiteSeqButton extends SimpleButtonConfigFactory
 {
     public CiteSeqButton()
     {
-        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Generate CITE-seq Table", "SequenceAnalysis.window.OutputHandlerWindow.readsetButtonHandler(dataRegionName, '" + CiteSeqHandler.class.getName() + "');",
+        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Generate CITE-seq Count Table", "SequenceAnalysis.window.OutputHandlerWindow.readsetButtonHandler(dataRegionName, '" + CiteSeqHandler.class.getName() + "');",
                 Arrays.asList(
                         ClientDependency.supplierFromModuleName("ldk"),
                         ClientDependency.supplierFromModuleName("laboratory"),
