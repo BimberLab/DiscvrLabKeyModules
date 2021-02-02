@@ -334,7 +334,8 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                 xtype: 'ldk-linkbutton',
                 text: 'Manage Saved Templates',
                 linkCls: 'labkey-text-link',
-                linkTarget: LABKEY.ActionURL.buildURL('query', 'executeQuery', Laboratory.Utils.getQueryContainerPath(), {schemaName: 'sequenceanalysis', 'query.queryName': 'saved_analyses', 'query.jobType~eq': this.jobType}),
+                href: LABKEY.ActionURL.buildURL('query', 'executeQuery', Laboratory.Utils.getQueryContainerPath(), {schemaName: 'sequenceanalysis', 'query.queryName': 'saved_analyses', 'query.taskid~eq': this.jobType}),
+                linkTarget: '_blank',
                 visible: LABKEY.Security.currentUser.isAdmin,
                 scope: this
             }]
