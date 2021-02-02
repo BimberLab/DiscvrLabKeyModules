@@ -5,10 +5,10 @@ for (datasetId in names(seuratObjects)) {
         stop(paste0('No CITE-seq information found for datasetId: ', datasetId))
     }
 
-    callFile <- featureData[[datasetId]]
-    if (!is.null(callFile)) {
-        seuratObj <- CellMembrane::AppendCiteSeq(seuratObj, barcodeCallFile = callFile, barcodePrefix = datasetId)
-    }
+    # callFile <- featureData[[datasetId]]
+    # if (!is.null(callFile)) {
+    #     seuratObj <- CellMembrane::AppendCiteSeq(seuratObj, barcodeCallFile = callFile, barcodePrefix = datasetId)
+    # }
 
     newSeuratObjects[[datasetId]] <- seuratObj
 
