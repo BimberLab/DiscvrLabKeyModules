@@ -80,7 +80,10 @@ Ext4.define('SequenceAnalysis.panel.AlignmentAnalysisPanel', {
 
                     this.libraryIds = Ext4.unique(libraryIds);
 
-                    this.down('#alignmentCount').update('Alignments to be analyzed: ' + store.getCount());
+                    var target = this.down('#alignmentCount');
+                    if (target) {
+                        target.update('Alignments to be analyzed: ' + store.getCount());
+                    }
                 }
             }
         });

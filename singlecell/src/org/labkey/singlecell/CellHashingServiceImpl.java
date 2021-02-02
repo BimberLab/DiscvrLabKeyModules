@@ -1249,11 +1249,9 @@ public class CellHashingServiceImpl extends CellHashingService
         }
 
         File localBashScript = new File(outputDir, "generateCallsDockerWrapper.sh");
-        File rWrapperScript = new File(outputDir, "generateCallsRWrapper.sh");
         try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
         {
             writer.println("#!/bin/bash");
-            writer.println("set -e");
             writer.println("set -x");
             writer.println("WD=`pwd`");
             writer.println("HOME=`echo ~/`");
@@ -1279,25 +1277,7 @@ public class CellHashingServiceImpl extends CellHashingService
             writer.println("\t-w /work \\");
             writer.println("\t-e HOME=/homeDir \\");
             writer.println("\tghcr.io/bimberlab/cellhashr:latest \\");
-            writer.println("\t/bin/bash " + rWrapperScript.getName());
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
-
-        try (PrintWriter writer = PrintWriters.getPrintWriter(rWrapperScript))
-        {
-            writer.println("#!/bin/bash");
-            writer.println("set -x");
-
-            writer.println("if Rscript --vanilla " + localRScript.getName());
-            writer.println("then");
-            writer.println("\texit 0");
-            writer.println("else");
-            writer.println("\techo \"Rscript exited with value $?\"");
-            writer.println("\texit 0");
-            writer.println("fi");
+            writer.println("\tRscript --vanilla " + localRScript.getName());
         }
         catch (IOException e)
         {
@@ -1335,7 +1315,6 @@ public class CellHashingServiceImpl extends CellHashingService
         }
 
         localBashScript.delete();
-        rWrapperScript.delete();
         localRScript.delete();
 
         try
