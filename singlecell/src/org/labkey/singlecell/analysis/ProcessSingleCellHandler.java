@@ -269,7 +269,7 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
                 }
                 currentFiles.stream().map(SingleCellStep.SeuratObjectWrapper::getFile).forEach(_resumer.getFileManager()::addIntermediateFile);
 
-                _resumer.setStepComplete(0, action, output0.getSeuratObjects(), output0.getMarkdownFile(), output0.getHtmlFile());
+                _resumer.setStepComplete(ctx.getLogger(), prepareRawCounts, 0, action, output0.getSeuratObjects(), output0.getMarkdownFile(), output0.getHtmlFile());
             }
 
             // Step 2: iterate seurat processing:
@@ -346,7 +346,7 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
                 action.setEndTime(end);
                 ctx.getJob().getLogger().info(stepCtx.getProvider().getLabel() + " Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
 
-                _resumer.setStepComplete(stepIdx, action, currentFiles, output.getMarkdownFile(), output.getHtmlFile());
+                _resumer.setStepComplete(ctx.getLogger(), step, stepIdx, action, currentFiles, output.getMarkdownFile(), output.getHtmlFile());
             }
 
             for (SingleCellStep.SeuratObjectWrapper seurat : currentFiles)
@@ -497,8 +497,10 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
             return _stepOutputs.get(stepIdx);
         }
 
-        public void setStepComplete(int stepIdx, RecordedAction action, List<SingleCellStep.SeuratObjectWrapper> seurat, File markdown, File html) throws PipelineJobException
+        public void setStepComplete(Logger log, SingleCellStep step, int stepIdx, RecordedAction action, List<SingleCellStep.SeuratObjectWrapper> seurat, File markdown, File html) throws PipelineJobException
         {
+            log.info("Marking step complete: " + step.getProvider().getName());
+
             if (seurat != null)
             {
                 seurat.forEach(x -> action.addOutput(x.getFile(), "Seurat Object", false));
