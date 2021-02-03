@@ -271,8 +271,6 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                 //int swap = 4*maxRam;
                 writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM \\");
                 writer.println("\t--memory='" + maxRam + "g' \\");
-                //writer.println("\t-e R_MAX_VSIZE='" + swap + "GB' \\");
-                //writer.println("\t--memory-swap=" + swap + "g' \\");
             }
 
             writer.println("\t-v \"${WD}:/work\" \\");
@@ -280,7 +278,8 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");
             writer.println("\t-w /work \\");
-            writer.println("\t-e HOME=/homeDir \\");
+            //NOTE: this seems to disrupt packages installed into home
+            //writer.println("\t-e HOME=/homeDir \\");
             writer.println("\t" + dockerContainerName + " \\");
             writer.println("\tRscript --vanilla " + localRScript.getName());
             writer.println("");
