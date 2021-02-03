@@ -482,6 +482,7 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
                 ret.setLocalWorkDir(ctx.getWorkDir().getDir());
                 ret._fileManager.onResume(ctx.getJob(), ctx.getWorkDir());
 
+                ctx.getLogger().debug("Cached steps: " + StringUtils.join(ret._stepOutputs.keySet(), ", "));
             }
 
             return ret;
@@ -499,7 +500,7 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
 
         public void setStepComplete(Logger log, SingleCellStep step, int stepIdx, RecordedAction action, List<SingleCellStep.SeuratObjectWrapper> seurat, File markdown, File html) throws PipelineJobException
         {
-            log.info("Marking step complete: " + step.getProvider().getName());
+            log.info("Marking step complete: " + step.getProvider().getName() + ", " + stepIdx);
 
             if (seurat != null)
             {
@@ -508,6 +509,11 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
 
             action.addOutput(markdown, "Markdown File", true);
             action.addOutput(html, "HTML Report", false);
+
+            if (_stepOutputs.containsKey(stepIdx))
+            {
+                log.debug("Step already marked as done: " + step.getProvider().getName() + " / " +stepIdx);
+            }
 
             _stepOutputs.put(stepIdx, seurat);
             _markdowns.put(stepIdx, markdown);
