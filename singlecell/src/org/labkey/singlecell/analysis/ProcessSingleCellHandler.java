@@ -479,7 +479,7 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
                 ret = readFromJson(json, Resumer.class);
                 ret._isResume = true;
                 ret.setLogger(ctx.getLogger());
-                ret.setLocalWorkDir(ctx.getWorkDir().getDir());
+                ret.setWebserverJobDir(ctx.getSourceDirectory());
                 ret._fileManager.onResume(ctx.getJob(), ctx.getWorkDir());
 
                 ctx.getLogger().debug("Cached steps: " + StringUtils.join(ret._stepOutputs.keySet(), ", "));
