@@ -187,7 +187,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             headerYml.forEach(out::println);
             out.println("---");
             out.println("");
-
+            setup.print(out);
             chunks.forEach(chunk -> chunk.print(out));
         }
 
