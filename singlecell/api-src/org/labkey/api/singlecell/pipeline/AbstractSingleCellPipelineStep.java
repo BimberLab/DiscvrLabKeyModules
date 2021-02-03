@@ -178,7 +178,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
     public static class Markdown
     {
         public List<Chunk> chunks;
-        public Chunk setup;
+        public Chunk setup = null;
         public List<String> headerYml;
 
         public void print(PrintWriter out)
@@ -187,7 +187,10 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             headerYml.forEach(out::println);
             out.println("---");
             out.println("");
-            setup.print(out);
+            if (setup != null)
+            {
+                setup.print(out);
+            }
             chunks.forEach(chunk -> chunk.print(out));
         }
 
