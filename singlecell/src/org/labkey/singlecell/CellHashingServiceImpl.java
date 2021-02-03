@@ -1275,7 +1275,7 @@ public class CellHashingServiceImpl extends CellHashingService
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");
             writer.println("\t-w /work \\");
-            writer.println("\t-e HOME=/homeDir \\");
+            //writer.println("\t-e HOME=/homeDir \\");
             writer.println("\tghcr.io/bimberlab/cellhashr:latest \\");
             writer.println("\tRscript --vanilla " + localRScript.getName());
         }

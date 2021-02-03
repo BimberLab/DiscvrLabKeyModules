@@ -284,7 +284,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             writer.println("\tRscript --vanilla " + localRScript.getName());
             writer.println("");
             writer.println("echo 'Bash script complete'");
-
+            writer.println("");
         }
         catch (IOException e)
         {
