@@ -145,9 +145,9 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
     }
 
     @Override
-    protected Chunk createDataChunk(Map<Integer, File> hashingData)
+    protected Chunk createDataChunk(Map<Integer, File> hashingData, File outputDir)
     {
-        Chunk ret = super.createDataChunk(hashingData);
+        Chunk ret = super.createDataChunk(hashingData, outputDir);
 
         List<String> lines = new ArrayList<>();
 
@@ -161,7 +161,7 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
             else
             {
                 File meta = getAdtMetadata(hashingData.get(key));
-                lines.add("\t'" + key + "' = '" + meta.getName() + "',");
+                lines.add("\t'" + key + "' = '" + getRelativePath(meta, outputDir) + "',");
             }
         }
 

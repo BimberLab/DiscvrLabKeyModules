@@ -6,6 +6,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.singlecell.pipeline.AbstractSingleCellPipelineStep;
 import org.labkey.api.singlecell.pipeline.SingleCellOutput;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.writer.PrintWriters;
 
 import java.io.File;
@@ -35,7 +36,7 @@ abstract public class AbstractCellHashingCiteseqStep extends AbstractSingleCellP
             markdown.setup = new SetupChunk(getRLibraries());
             markdown.chunks = new ArrayList<>();
             markdown.chunks.add(createParamChunk(inputObjects, outputPrefix));
-            markdown.chunks.add(createDataChunk(countData));
+            markdown.chunks.add(createDataChunk(countData, ctx.getOutputDir()));
 
             markdown.chunks.addAll(getChunks());
             markdown.chunks.add(createFinalChunk());
@@ -50,7 +51,7 @@ abstract public class AbstractCellHashingCiteseqStep extends AbstractSingleCellP
         return outfile;
     }
 
-    protected Chunk createDataChunk(Map<Integer, File> hashingData)
+    protected Chunk createDataChunk(Map<Integer, File> hashingData, File outputDir)
     {
         List<String> lines = new ArrayList<>();
 
@@ -63,7 +64,7 @@ abstract public class AbstractCellHashingCiteseqStep extends AbstractSingleCellP
             }
             else
             {
-                lines.add("\t'" + key + "' = '" + hashingData.get(key).getName() + "',");
+                lines.add("\t'" + key + "' = '" + getRelativePath(hashingData.get(key), outputDir) + "',");
             }
         }
 
@@ -75,6 +76,11 @@ abstract public class AbstractCellHashingCiteseqStep extends AbstractSingleCellP
         lines.add("");
 
         return new Chunk("featureData", null, null, lines, "include=FALSE");
+    }
+
+    protected String getRelativePath(File target, File outputDir)
+    {
+        return FileUtil.relativePath(outputDir.getPath(), target.getPath());
     }
 
     @Override
