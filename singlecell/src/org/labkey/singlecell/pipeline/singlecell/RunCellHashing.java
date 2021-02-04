@@ -32,7 +32,7 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
     {
         public Provider()
         {
-            super("RunCellHashing", "Possibly Run/Store Cell Hashing", "cellhashR", "If available, this will run cellhashR to score cells by sample.", CellHashingService.get().getDefaultHashingParams(false), null, null);
+            super("RunCellHashing", "Possibly Run/Store Cell Hashing", "cellhashR", "If available, this will run cellhashR to score cells by sample.", CellHashingService.get().getDefaultHashingParams(false, CellHashingService.BARCODE_TYPE.hashing), null, null);
         }
 
         @Override

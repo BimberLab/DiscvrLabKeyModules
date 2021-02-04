@@ -823,23 +823,28 @@ public class CellHashingServiceImpl extends CellHashingService
     }
 
     @Override
-    public List<ToolParameterDescriptor> getDefaultHashingParams(boolean includeExcludeFailedcDNA)
+    public List<ToolParameterDescriptor> getDefaultHashingParams(boolean includeExcludeFailedcDNA, BARCODE_TYPE type)
     {
         List<ToolParameterDescriptor> ret = new ArrayList<>(Arrays.asList(
                 ToolParameterDescriptor.create("scanEditDistances", "Scan Edit Distances", "If checked, CITE-seq-count will be run using edit distances from 0-3 and the iteration with the highest singlets will be used.", "checkbox", new JSONObject(){{
                     put("checked", false);
                 }}, false),
                 ToolParameterDescriptor.create("editDistance", "Edit Distance", null, "ldk-integerfield", null, 2),
-                ToolParameterDescriptor.create("minCountPerCell", "Min Reads/Cell", null, "ldk-integerfield", null, 5),
-                ToolParameterDescriptor.create("methods", "Calling Methods", "The set of methods to use in calling.", "ldk-simplecombo", new JSONObject(){{
-                    put("multiSelect", true);
-                    put("allowBlank", false);
-                    put("storeValues", StringUtils.join(Arrays.stream(CALLING_METHOD.values()).map(Enum::name).collect(Collectors.toList()), ";"));
-                    put("initialValues", StringUtils.join(CALLING_METHOD.getDefaultMethodNames(), ";"));
-                    put("delimiter", ";");
-                    put("joinReturnValue", true);
-                }}, null)
+                ToolParameterDescriptor.create("minCountPerCell", "Min Reads/Cell", null, "ldk-integerfield", null, 5)
         ));
+
+        if (type == BARCODE_TYPE.hashing)
+        {
+            ret.add(ToolParameterDescriptor.create("methods", "Calling Methods", "The set of methods to use in calling.", "ldk-simplecombo", new JSONObject()
+            {{
+                put("multiSelect", true);
+                put("allowBlank", false);
+                put("storeValues", StringUtils.join(Arrays.stream(CALLING_METHOD.values()).map(Enum::name).collect(Collectors.toList()), ";"));
+                put("initialValues", StringUtils.join(CALLING_METHOD.getDefaultMethodNames(), ";"));
+                put("delimiter", ";");
+                put("joinReturnValue", true);
+            }}, null));
+        }
 
         if (includeExcludeFailedcDNA)
         {

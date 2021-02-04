@@ -40,7 +40,7 @@ public class SeuratCellHashingHandler extends AbstractParameterizedOutputHandler
             put("checked", true);
         }}, false));
 
-        ret.addAll(CellHashingService.get().getDefaultHashingParams(true));
+        ret.addAll(CellHashingService.get().getDefaultHashingParams(true, CellHashingService.BARCODE_TYPE.hashing));
 
         return ret;
     }

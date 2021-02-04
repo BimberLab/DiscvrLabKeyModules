@@ -38,7 +38,7 @@ public class LoupeCellHashingHandler extends AbstractParameterizedOutputHandler<
 
     private static List<ToolParameterDescriptor> getDefaultParams()
     {
-        List<ToolParameterDescriptor> ret = new ArrayList<>(CellHashingService.get().getDefaultHashingParams(true));
+        List<ToolParameterDescriptor> ret = new ArrayList<>(CellHashingService.get().getDefaultHashingParams(true, CellHashingService.BARCODE_TYPE.hashing));
         ret.add(
                 ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
                     put("checked", true);

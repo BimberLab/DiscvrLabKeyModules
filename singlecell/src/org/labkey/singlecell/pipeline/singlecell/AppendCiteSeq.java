@@ -61,6 +61,7 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
             put("initialValues", "PCA-tSNE");
         }}, "PCA-tSNE"));
 
+        ret.addAll(CellHashingService.get().getDefaultHashingParams(false, CellHashingService.BARCODE_TYPE.citeseq));
         return ret;
     }
 

@@ -115,7 +115,7 @@ public class CellRangerSeuratHandler extends AbstractParameterizedOutputHandler<
                 }}, null)
         ));
 
-        ret.addAll(CellHashingService.get().getDefaultHashingParams(false));
+        ret.addAll(CellHashingService.get().getDefaultHashingParams(false, CellHashingService.BARCODE_TYPE.hashing));
 
         return ret;
     }
