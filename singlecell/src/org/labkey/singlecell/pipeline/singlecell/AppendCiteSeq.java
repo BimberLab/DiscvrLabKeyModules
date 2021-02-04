@@ -1,5 +1,6 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
+import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
@@ -13,11 +14,13 @@ import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellOutput;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.singlecell.CellHashingServiceImpl;
 import org.labkey.singlecell.analysis.CellRangerSeuratHandler;
 import org.labkey.singlecell.analysis.SeuratCellHashingHandler;
 import org.labkey.singlecell.analysis.SeuratCiteSeqHandler;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -106,20 +109,73 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
                 params.outputCategory = SeuratCiteSeqHandler.CATEGORY;
                 params.createOutputFiles = true;
                 params.genomeId = wrapper.getSequenceOutputFile().getLibrary_id();
-                params.cellBarcodeWhitelistFile = cellBarcodesParsed;
+                //params.cellBarcodeWhitelistFile = cellBarcodesParsed;
                 params.cells = 250000;
 
                 finalOutput = CellHashingService.get().processCellHashingOrCiteSeqForParent(parentReadset, output, ctx, params);
+
+                File validAdt = CellHashingServiceImpl.get().getValidCiteSeqBarcodeMetadataFile(ctx.getSourceDirectory(), parentReadset.getReadsetId());
+                if (!validAdt.exists())
+                {
+                    throw new PipelineJobException("Unable to find ADT metadata. expected: " + validAdt.getPath());
+                }
+
+                try
+                {
+                    FileUtils.copyFile(validAdt, getAdtMetadata(finalOutput));
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
             }
             else
             {
                 ctx.getLogger().info("CITE-seq not used, skipping: " + parentReadset.getName());
             }
 
-            dataIdToCalls.put(wrapper.getSequenceOutputFileId(), finalOutput);
+            dataIdToCalls.put(wrapper.getSequenceOutputFileId(), finalOutput.getParentFile());
         }
 
         return dataIdToCalls;
+    }
+
+    public File getAdtMetadata(File countMatrix)
+    {
+        return new File(countMatrix.getParentFile(), "adtMetadata.txt");
+    }
+
+    @Override
+    protected Chunk createDataChunk(Map<Integer, File> hashingData)
+    {
+        Chunk ret = super.createDataChunk(hashingData);
+
+        List<String> lines = new ArrayList<>();
+
+        lines.add("featureMetadataFiles <- list(");
+        for (Integer key : hashingData.keySet())
+        {
+            if (hashingData.get(key) == null)
+            {
+                lines.add("\t'" + key + "' = NULL,");
+            }
+            else
+            {
+                File meta = getAdtMetadata(hashingData.get(key));
+                lines.add("\t'" + key + "' = '" + meta.getName() + "',");
+            }
+        }
+
+        // Remove trailing comma:
+        int lastIdx = lines.size() - 1;
+        lines.set(lastIdx, lines.get(lastIdx).replaceAll(",$", ""));
+
+        lines.add(")");
+        lines.add("");
+
+        ret.bodyLines.addAll(lines);
+
+        return ret;
     }
 
     @Override

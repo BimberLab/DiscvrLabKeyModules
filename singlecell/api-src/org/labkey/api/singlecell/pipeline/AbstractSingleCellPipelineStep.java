@@ -415,11 +415,11 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 
     public static class Chunk
     {
-        String header;
-        String extraText;
-        String chunkName;
-        String chunkOpts;
-        List<String> bodyLines;
+        public String header;
+        public String extraText;
+        public String chunkName;
+        public String chunkOpts;
+        public List<String> bodyLines;
 
         public Chunk(String chunkName, @Nullable String header, @Nullable String extraText, List<String> bodyLines)
         {

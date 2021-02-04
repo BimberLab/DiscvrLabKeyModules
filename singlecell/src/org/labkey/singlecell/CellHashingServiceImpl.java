@@ -1360,6 +1360,11 @@ public class CellHashingServiceImpl extends CellHashingService
                 baseArgs.add("-cells");
                 baseArgs.add(parameters.cells == null ? "0" : String.valueOf(parameters.cells));
             }
+            else if (parameters.cells != null)
+            {
+                baseArgs.add("-cells");
+                baseArgs.add(String.valueOf(parameters.cells));
+            }
 
             Integer cores = SequencePipelineService.get().getMaxThreads(log);
             if (cores != null)
@@ -1370,7 +1375,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
             for (ToolParameterDescriptor param : CellHashingHandler.getDefaultParams(parameters.type))
             {
-                if (parameters.cellBarcodeWhitelistFile != null && param.getName().equals("cells"))
+                if ((parameters.cellBarcodeWhitelistFile != null || parameters.cells != null) && param.getName().equals("cells"))
                 {
                     continue;
                 }
