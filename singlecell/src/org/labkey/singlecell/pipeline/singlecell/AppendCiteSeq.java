@@ -121,7 +121,7 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
 
                 try
                 {
-                    FileUtils.copyFile(validAdt, getAdtMetadata(finalOutput));
+                    FileUtils.copyFile(validAdt, getAdtMetadata(finalOutput.getParentFile()));
                 }
                 catch (IOException e)
                 {
