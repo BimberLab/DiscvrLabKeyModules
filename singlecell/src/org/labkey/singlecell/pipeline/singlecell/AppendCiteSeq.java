@@ -133,7 +133,7 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
                 ctx.getLogger().info("CITE-seq not used, skipping: " + parentReadset.getName());
             }
 
-            dataIdToCalls.put(wrapper.getSequenceOutputFileId(), finalOutput.getParentFile());
+            dataIdToCalls.put(wrapper.getSequenceOutputFileId(), finalOutput == null ? null : finalOutput.getParentFile());
         }
 
         return dataIdToCalls;
