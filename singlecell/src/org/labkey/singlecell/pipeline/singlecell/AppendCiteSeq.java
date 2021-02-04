@@ -139,9 +139,9 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
         return dataIdToCalls;
     }
 
-    public File getAdtMetadata(File countMatrix)
+    public File getAdtMetadata(File countMatrixDir)
     {
-        return new File(countMatrix.getParentFile(), "adtMetadata.txt");
+        return new File(countMatrixDir, "adtMetadata.txt");
     }
 
     @Override
@@ -160,8 +160,7 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
             }
             else
             {
-                File meta = getAdtMetadata(hashingData.get(key));
-                lines.add("\t'" + key + "' = '" + getRelativePath(meta, outputDir) + "',");
+                lines.add("\t'" + key + "' = '" + getRelativePath(getAdtMetadata(hashingData.get(key)), outputDir) + "',");
             }
         }
 
