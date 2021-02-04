@@ -52,7 +52,7 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
     private static List<ToolParameterDescriptor> getParams()
     {
         List<ToolParameterDescriptor> ret = new ArrayList<>();
-        ret.add(SeuratToolParameter.create("normalizationMethod", "Normalization Method", "", "ldk-simplecombo", new JSONObject(){{
+        ret.add(SeuratToolParameter.create("normalizeMethod", "Normalization Method", "", "ldk-simplecombo", new JSONObject(){{
             put("storeValues", "dsb");
             put("initialValues", "dsb");
         }}, "dsb"));
