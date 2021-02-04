@@ -8,8 +8,8 @@ for (datasetId in names(seuratObjects)) {
     adtWhitelist <- NULL
     featureMetadata <- NULL
     if (datasetId %in% names(featureMetadataFiles) && !is.null(featureMetadataFiles[[datasetId]])) {
-        featureMetadata <- read.table(featureMetadataFiles[[datasetId]], sep = '\t', header = T)
-        featureMetadata$rowname <- paste0(featureMetadata$tagname, '-', featureMetadata$sequence)
+        featureMetadata <- read.table(featureMetadataFiles[[datasetId]], sep = '\t', header = T, fill = TRUE)
+        featureMetadata$rowname <- paste0(featureMetadata$tagname, '-', featureMetadata$sequence) #NOTE: this is the format used by Cite-Seq-Count
         adtWhitelist <- featureMetadata$rowname
     }
 
