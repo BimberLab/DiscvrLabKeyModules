@@ -53,13 +53,9 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
     {
         List<ToolParameterDescriptor> ret = new ArrayList<>();
         ret.add(SeuratToolParameter.create("normalizationMethod", "Normalization Method", "", "ldk-simplecombo", new JSONObject(){{
-            put("storeValues", "CLR");
-            put("initialValues", "CLR");
-        }}, "CLR"));
-        ret.add(SeuratToolParameter.create("processingMethod", "Processing Method", "", "ldk-simplecombo", new JSONObject(){{
-            put("storeValues", "PCA-tSNE;Distance-tSNE");
-            put("initialValues", "PCA-tSNE");
-        }}, "PCA-tSNE"));
+            put("storeValues", "dsb");
+            put("initialValues", "dsb");
+        }}, "dsb"));
 
         ret.addAll(CellHashingService.get().getDefaultHashingParams(false, CellHashingService.BARCODE_TYPE.citeseq));
         return ret;
