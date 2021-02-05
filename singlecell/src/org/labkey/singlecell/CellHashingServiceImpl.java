@@ -287,7 +287,7 @@ public class CellHashingServiceImpl extends CellHashingService
                 FieldKey.fromString("antibody/markerLabel"),
                 FieldKey.fromString("markerLabel"),
                 FieldKey.fromString("antibody/adaptersequence"),
-                FieldKey.fromString("antibody/pattern")
+                FieldKey.fromString("antibody/barcodePattern")
         ));
 
         for (int gexReadsetId : gexToPanels.keySet())
@@ -315,7 +315,7 @@ public class CellHashingServiceImpl extends CellHashingService
                     String label = StringUtils.trimToNull(results.getString(FieldKey.fromString("markerLabel"))) == null ? results.getString(FieldKey.fromString("antibody/markerLabel")) : results.getString(FieldKey.fromString("markerLabel"));
                     String name = StringUtils.trimToNull(results.getString(FieldKey.fromString("markerLabel"))) != null ? results.getString(FieldKey.fromString("markerLabel")) :
                             StringUtils.trimToNull(results.getString(FieldKey.fromString("antibody/markerName"))) != null ? results.getString(FieldKey.fromString("antibody/markerName")) : results.getString(FieldKey.fromString("antibody"));
-                    metaWriter.writeNext(new String[]{results.getString(FieldKey.fromString("antibody")), results.getString(FieldKey.fromString("antibody/adaptersequence")), name, label, results.getString(FieldKey.fromString("antibody/pattern"))});
+                    metaWriter.writeNext(new String[]{results.getString(FieldKey.fromString("antibody")), results.getString(FieldKey.fromString("antibody/adaptersequence")), name, label, results.getString(FieldKey.fromString("antibody/barcodePattern"))});
                 });
 
                 job.getLogger().info("Total CITE-seq barcodes written: " + barcodeCount.get());
