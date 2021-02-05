@@ -237,20 +237,13 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
     public static void executeR(SequenceOutputHandler.JobContext ctx, String dockerContainerName, String outputPrefix, List<String> lines) throws PipelineJobException
     {
         File localRScript = new File(ctx.getOutputDir(), outputPrefix + ".R");
-        if (!localRScript.exists())
+        try (PrintWriter writer = PrintWriters.getPrintWriter(localRScript))
         {
-            try (PrintWriter writer = PrintWriters.getPrintWriter(localRScript))
-            {
-                lines.forEach(writer::println);
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
+            lines.forEach(writer::println);
         }
-        else
+        catch (IOException e)
         {
-            ctx.getLogger().info("R script exists, re-using: " + localRScript.getPath());
+            throw new PipelineJobException(e);
         }
 
         File localBashScript = new File(ctx.getOutputDir(), "dockerWrapper.sh");

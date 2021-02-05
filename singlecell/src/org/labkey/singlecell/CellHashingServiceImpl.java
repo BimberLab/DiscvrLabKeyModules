@@ -1111,10 +1111,11 @@ public class CellHashingServiceImpl extends CellHashingService
             try
             {
                 //needed for docker currently
-                log.debug("Copying file to working directory: " + input.getName());
+                log.debug("Copying file to working directory: " + input.getPath());
                 File dest = new File(outputDir, input.getName());
                 if (dest.exists())
                 {
+                    log.debug("deleting existing folder: " + dest.getPath());
                     if (input.isDirectory())
                     {
                         FileUtils.deleteDirectory(dest);
@@ -1224,33 +1225,26 @@ public class CellHashingServiceImpl extends CellHashingService
         File metricsFile = getMetricsFile(callsFile);
 
         File localRScript = new File(outputDir, "generateCallsWrapper.R");
-        if (!localRScript.exists())
+        try (PrintWriter writer = PrintWriters.getPrintWriter(localRScript))
         {
-            try (PrintWriter writer = PrintWriters.getPrintWriter(localRScript))
+            List<String> methodNames = parameters.methods.stream().map(Enum::name).collect(Collectors.toList());
+
+            String cellbarcodeWhitelist = "";
+            if (cellBarcodeWhitelistFile != null)
             {
-                List<String> methodNames = parameters.methods.stream().map(Enum::name).collect(Collectors.toList());
-
-                String cellbarcodeWhitelist = "";
-                if (cellBarcodeWhitelistFile != null)
-                {
-                    cellbarcodeWhitelist = "'/work/" + cellBarcodeWhitelistFile.getName() + "'";
-                }
-
-                Set<String> allowableBarcodes = parameters.getAllowableBarcodeNames();
-                String allowableBarcodeParam = allowableBarcodes != null ? "c('" + StringUtils.join(allowableBarcodes, "','") + "')" : "NULL";
-
-                writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', methods = c('" + StringUtils.join(methodNames, "','") + "'))");
-                writer.println("print('Rmarkdown complete')");
-
+                cellbarcodeWhitelist = "'/work/" + cellBarcodeWhitelistFile.getName() + "'";
             }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
+
+            Set<String> allowableBarcodes = parameters.getAllowableBarcodeNames();
+            String allowableBarcodeParam = allowableBarcodes != null ? "c('" + StringUtils.join(allowableBarcodes, "','") + "')" : "NULL";
+
+            writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', methods = c('" + StringUtils.join(methodNames, "','") + "'))");
+            writer.println("print('Rmarkdown complete')");
+
         }
-        else
+        catch (IOException e)
         {
-            log.info("script exists, re-using: " + localRScript.getPath());
+            throw new PipelineJobException(e);
         }
 
         File localBashScript = new File(outputDir, "generateCallsDockerWrapper.sh");
