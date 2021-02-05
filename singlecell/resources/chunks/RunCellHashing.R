@@ -1,5 +1,6 @@
 for (datasetId in names(seuratObjects)) {
     seuratObj <- seuratObjects[[datasetId]]
+    seuratObjects[[datasetId]] <- NULL
 
     if (!(datasetId %in% names(featureData))) {
         stop(paste0('No hashing information found for datasetId: ', datasetId))
@@ -17,6 +18,6 @@ for (datasetId in names(seuratObjects)) {
     newSeuratObjects[[datasetId]] <- seuratObj
 
     # Cleanup
-    seuratObjects[[datasetId]] <- NULL
+    rm(seuratObj)
     gc()
 }

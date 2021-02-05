@@ -1,5 +1,4 @@
 for (datasetId in names(seuratObjects)) {
-    # Preemptively cleanup:
     seuratObj <- seuratObjects[[datasetId]]
     seuratObjects[[datasetId]] <- NULL
     gc()
@@ -9,6 +8,6 @@ for (datasetId in names(seuratObjects)) {
     newSeuratObjects[[datasetId]] <- seuratObj
 
     # Cleanup
-    seuratObjects[[datasetId]] <- NULL
+    rm(seuratObj)
     gc()
 }

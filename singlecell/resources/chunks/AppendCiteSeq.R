@@ -1,5 +1,6 @@
 for (datasetId in names(seuratObjects)) {
     seuratObj <- seuratObjects[[datasetId]]
+    seuratObjects[[datasetId]] <- NULL
 
     if (!(datasetId %in% names(featureData))) {
         stop(paste0('No CITE-seq information found for datasetId: ', datasetId))
@@ -23,6 +24,5 @@ for (datasetId in names(seuratObjects)) {
     newSeuratObjects[[datasetId]] <- seuratObj
 
     # Cleanup
-    seuratObjects[[datasetId]] <- NULL
     gc()
 }

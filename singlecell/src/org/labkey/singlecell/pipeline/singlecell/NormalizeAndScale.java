@@ -25,7 +25,18 @@ public class NormalizeAndScale extends AbstractCellMembraneStep
                         put("initialValues", "vst");
                         put("allowBlank", false);
                     }}, "vst"),
-                    SeuratToolParameter.create("blockSize", "Block Size", "This will be passed to block.size in Seurat::ScaleData, which determines the number of features processed as a time. Increasing might increase speed at a memory cost, and descreasing on large datasets might reduce memory at a cost of overall speed.", "ldk-integerfield", new JSONObject(){{
+                    SeuratToolParameter.create("variableGenesWhitelist", "Genes to Add to VariableFeatures", "These genes, entered comma-separated or one/line, will be adding to the default Seurat::VariableFeatures gene set when running PCA", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
+                        put("height", 150);
+                        put("delimiter", ",");
+                    }}, null),
+                    SeuratToolParameter.create("variableGenesBlacklist", "Genes to Exclude From VariableFeatures", "These genes, entered comma-separated or one/line, will be excluded from the genes passed to RunPCA (which is otherwise determined by Seurat::VariableFeatures)", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
+                        put("height", 150);
+                        put("delimiter", ",");
+                    }}, null),
+                    SeuratToolParameter.create("scaleVariableFeaturesOnly", "ScaleData On Variable Features Only", "If checked, ScaleData will only be performed on VariableFeatures, which should dramatically reduce time and memory", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, true),
+                    SeuratToolParameter.create("blockSize", "Block Size", "This will be passed to block.size in Seurat::ScaleData, which determines the number of features processed as a time. Increasing might increase speed at a memory cost, and decreasing on large datasets might reduce memory at a cost of overall speed.", "ldk-integerfield", new JSONObject(){{
 
                     }}, null, "block.size", false)
             ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
