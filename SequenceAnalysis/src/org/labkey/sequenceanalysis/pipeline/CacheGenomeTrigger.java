@@ -23,7 +23,7 @@ public class CacheGenomeTrigger implements GenomeTrigger
     @Override
     public String getName()
     {
-        return null;
+        return "Cache Genomes";
     }
 
     @Override
