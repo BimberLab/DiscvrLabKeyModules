@@ -17,7 +17,7 @@ public class CiteSeqDimRedux extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("CiteSeqDimRedux", "CiteSeq DimRedux", "Seurat", "This will run DimRedux steps on the ADT data.", Arrays.asList(
+            super("CiteSeqDimRedux", "CiteSeq DimRedux", "CellMembrane/Seurat", "This will run DimRedux steps on the ADT data.", Arrays.asList(
 
             ), null, null);
         }

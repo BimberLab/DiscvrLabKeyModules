@@ -19,7 +19,7 @@ public class RemoveCellCycle extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("RemoveCellCycle", "Remove Cell Cycle", "OOSAP", "This will score cells by cell cycle phase and regress out cell cycle.", Arrays.asList(
+            super("RemoveCellCycle", "Remove Cell Cycle", "CellMembrane/Seurat", "This will score cells by cell cycle phase and regress out cell cycle.", Arrays.asList(
                     SeuratToolParameter.create("scaleVariableFeaturesOnly", "ScaleData On Variable Features Only", "If checked, ScaleData will only be performed on VariableFeatures, which should dramatically reduce time and memory", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true),

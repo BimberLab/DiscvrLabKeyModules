@@ -19,7 +19,7 @@ public class NormalizeAndScale extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("NormalizeAndScale", "Normalize/Scale", "OOSAP", "This will run standard Seurat processing steps to normalize and scale the data.", Arrays.asList(
+            super("NormalizeAndScale", "Normalize/Scale", "CellMembrane/Seurat", "This will run standard Seurat processing steps to normalize and scale the data.", Arrays.asList(
                     SeuratToolParameter.create("variableFeatureSelectionMethod", "Variable Feature Selection Method", "The value, passed directly to Seurat's FindVariableFeatures, variableFeatureSelectionMethod", "ldk-simplecombo", new JSONObject(){{
                         put("storeValues", "vst");
                         put("initialValues", "vst");

@@ -5,12 +5,14 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
+import org.labkey.api.util.PageFlowUtil;
 
 import java.util.Arrays;
+import java.util.Collection;
 
-public class SubsetSeurat extends AbstractCellMembraneStep
+public class DimPlots extends AbstractCellMembraneStep
 {
-    public SubsetSeurat(PipelineContext ctx, SubsetSeurat.Provider provider)
+    public DimPlots(PipelineContext ctx, DimPlots.Provider provider)
     {
         super(provider, ctx);
     }
@@ -19,8 +21,8 @@ public class SubsetSeurat extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("SubsetSeurat", "Subset", "CellMembrane/Seurat", "The seurat object will be subset based on the expressions below, one per line, which are passed directly to Seurat's subset(subset = X).", Arrays.asList(
-                    SeuratToolParameter.create("expressionStrings", "Expressions", "Enter one expression per line", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
+            super("DimPlots", "Create DimPlots", "Seurat", "This will generate DimPlots grouped by the variables below. Any variable not present is skipped.", Arrays.asList(
+                    SeuratToolParameter.create("fieldNames", "Fields To Plot", "Enter one field name per line", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("allowBlank", false);
                         put("height", 150);
                         put("delimiter", ",");
@@ -30,9 +32,21 @@ public class SubsetSeurat extends AbstractCellMembraneStep
 
 
         @Override
-        public SubsetSeurat create(PipelineContext ctx)
+        public DimPlots create(PipelineContext ctx)
         {
-            return new SubsetSeurat(ctx, this);
+            return new DimPlots(ctx, this);
         }
+    }
+
+    @Override
+    public Collection<String> getRLibraries()
+    {
+        return PageFlowUtil.set("Seurat", "patchwork");
+    }
+
+    @Override
+    public boolean createsSeuratObjects()
+    {
+        return false;
     }
 }

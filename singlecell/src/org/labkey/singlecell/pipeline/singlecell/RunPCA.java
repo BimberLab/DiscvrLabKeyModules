@@ -19,7 +19,7 @@ public class RunPCA extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("RunPCA", "Run PCA", "OOSAP", "This will run standard Seurat PCA-related steps.", Arrays.asList(
+            super("RunPCA", "Run PCA", "CellMembrane/Seurat", "This will run standard Seurat PCA-related steps.", Arrays.asList(
                     SeuratToolParameter.create("npcs", "NPCs", "Total Number of PCs to compute and store", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, 50)

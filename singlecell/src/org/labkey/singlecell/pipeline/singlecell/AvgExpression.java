@@ -32,5 +32,11 @@ public class AvgExpression extends AbstractCellMembraneStep
             return new AvgExpression(ctx, this);
         }
     }
+
+    @Override
+    public boolean createsSeuratObjects()
+    {
+        return false;
+    }
 }
 

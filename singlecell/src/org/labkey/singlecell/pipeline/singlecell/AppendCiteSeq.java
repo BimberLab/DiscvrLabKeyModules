@@ -39,7 +39,7 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
     {
         public Provider()
         {
-            super("AppendCiteSeq", "Possibly Append CITE-seq Data", "OOSAP", "If available, this will process and append CITE-seq data to the Seurat object(s).", getParams(), null, null);
+            super("AppendCiteSeq", "Possibly Append CITE-seq Data", "CellMembrane", "If available, this will process and append CITE-seq data to the Seurat object(s).", getParams(), null, null);
         }
 
         @Override

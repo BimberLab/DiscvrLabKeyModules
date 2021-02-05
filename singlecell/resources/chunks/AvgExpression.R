@@ -2,13 +2,9 @@ for (datasetId in names(seuratObjects)) {
     seuratObj <- seuratObjects[[datasetId]]
     seuratObjects[[datasetId]] <- NULL
 
-    ret <- Seurat::AverageExpression(seuratObj, assays = NULL, features = rownames(seuratObj), group.by = groupField, slot = "counts", verbose = FALSE)
-    cellsPerGroup <- t(as.matrix(table(seuratObj[[assay]][[groupField]])))
-    rownames(cellsPerGroup) <- 'TotalCells'
-    ret[['CellsPerGroup']] <- cellsPerGroup
-
-    saveFile <- paste0(outputPrefix, '.', datasetId, '.avg.', groupField, '.rds')
-    saveRDS(ret, file = saveFile)
+    df <- CellMembrane::AvgExpression(seuratObj, groupField = groupField)
+    write.table(df, file = paste0(outputPrefix, '.', datasetId, '.avg.', groupField, '.txt'), sep = '\t', row.names = FALSE, quote = FALSE)
+    rm(df)
 
     # Cleanup
     rm(seuratObj)

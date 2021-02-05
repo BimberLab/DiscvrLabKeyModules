@@ -19,7 +19,7 @@ public class Downsample extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("Downsample", "Downsample Cells", "OOSAP", "This will downsample cells from the input object(s) based on the parameters below. Downsampling will be applied independently to each incoming Seurat object. If a second field is provided, cells within each object will be subset using that field, and then downsampled.", Arrays.asList(
+            super("Downsample", "Downsample Cells", "CellMembrane/Seurat", "This will downsample cells from the input object(s) based on the parameters below. Downsampling will be applied independently to each incoming Seurat object. If a second field is provided, cells within each object will be subset using that field, and then downsampled.", Arrays.asList(
                     SeuratToolParameter.create("targetCells", "Target Cells Per Unit of Data", "Each unit of data will be downsampled to this level", "ldk-integerfield", new JSONObject(){{
                         put("allowBlank", false);
                     }}, null),

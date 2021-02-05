@@ -23,7 +23,7 @@ public class MergeSeurat extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("MergeSeurat", "Merge Seurat Objects", "OOSAP", "This will merge the incoming seurat objects into a single object, merging all assays. Note: this will discard any normalization or DimRedux data, and performs zero validation to ensure this is compatible with downstream steps.", Arrays.asList(
+            super("MergeSeurat", "Merge Seurat Objects", "CellMembrane/Seurat", "This will merge the incoming seurat objects into a single object, merging all assays. Note: this will discard any normalization or DimRedux data, and performs zero validation to ensure this is compatible with downstream steps.", Arrays.asList(
                     SeuratToolParameter.create("projectName", "New Dataset Name", "The updated baseline for this merged object.", "textfield", new JSONObject(){{
                         put("allowBlank", false);
                     }}, null)
