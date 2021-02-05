@@ -41,6 +41,7 @@ import org.labkey.singlecell.analysis.SeuratCiteSeqHandler;
 import org.labkey.singlecell.button.CellHashingButton;
 import org.labkey.singlecell.button.CiteSeqButton;
 import org.labkey.singlecell.pipeline.singlecell.AppendCiteSeq;
+import org.labkey.singlecell.pipeline.singlecell.AvgExpression;
 import org.labkey.singlecell.pipeline.singlecell.CiteSeqDimRedux;
 import org.labkey.singlecell.pipeline.singlecell.CiteSeqWnn;
 import org.labkey.singlecell.pipeline.singlecell.DoubletFinder;
@@ -176,6 +177,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new SubsetSeurat.Provider());
         SequencePipelineService.get().registerPipelineStep(new CiteSeqDimRedux.Provider());
         SequencePipelineService.get().registerPipelineStep(new CiteSeqWnn.Provider());
+        SequencePipelineService.get().registerPipelineStep(new AvgExpression.Provider());
     }
 
     @Override
