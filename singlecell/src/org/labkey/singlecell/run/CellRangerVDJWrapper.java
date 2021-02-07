@@ -374,16 +374,23 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 File outputVloupe = new File(outdir, "vloupe.vloupe");
                 if (!outputVloupe.exists())
                 {
-                    throw new PipelineJobException("Unable to find file: " + outputVloupe.getPath());
+                    //NOTE: if there were no A/B hits, the vLoupe isnt created, but all other outputs exist
+                    File csv = new File(outdir, "all_contig_annotations.csv");
+                    if (!csv.exists())
+                    {
+                        throw new PipelineJobException("Unable to find file: " + outputVloupe.getPath());
+                    }
                 }
-
-                File outputVloupeRename = new File(outdir, prefix + outputVloupe.getName());
-                if (outputVloupeRename.exists())
+                else
                 {
-                    outputVloupeRename.delete();
+                    File outputVloupeRename = new File(outdir, prefix + outputVloupe.getName());
+                    if (outputVloupeRename.exists())
+                    {
+                        outputVloupeRename.delete();
+                    }
+                    FileUtils.moveFile(outputVloupe, outputVloupeRename);
+                    output.addSequenceOutput(outputVloupeRename, rs.getName() + " 10x VLoupe", "10x VLoupe", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
                 }
-                FileUtils.moveFile(outputVloupe, outputVloupeRename);
-                output.addSequenceOutput(outputVloupeRename, rs.getName() + " 10x VLoupe", "10x VLoupe", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
             }
             catch (IOException e)
             {

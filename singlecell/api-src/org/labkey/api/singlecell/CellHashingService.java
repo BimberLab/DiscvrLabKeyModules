@@ -93,6 +93,7 @@ abstract public class CellHashingService
         public @Nullable Integer genomeId;
         public Integer editDistance = 2;
         public boolean scanEditDistances = false;
+        public boolean skipNormalizationQc = false;
         public Integer minCountPerCell = 5;
         public List<CALLING_METHOD> methods = CALLING_METHOD.getDefaultMethods();
         public String basename = null;
@@ -108,6 +109,7 @@ abstract public class CellHashingService
             CellHashingService.CellHashingParameters ret = new CellHashingService.CellHashingParameters();
             ret.type = type;
             ret.scanEditDistances = step.getProvider().getParameterByName("scanEditDistances").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, false);
+            ret.skipNormalizationQc = step.getProvider().getParameterByName("skipNormalizationQc").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, false);
             ret.editDistance = step.getProvider().getParameterByName("editDistance").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Integer.class, 2);
             ret.minCountPerCell = step.getProvider().getParameterByName("minCountPerCell").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Integer.class, 3);
             ret.htoOrCiteseqReadset = htoOrCiteseqReadset;
@@ -136,6 +138,7 @@ abstract public class CellHashingService
             CellHashingParameters ret = new CellHashingParameters();
             ret.type = type;
             ret.scanEditDistances = params.optBoolean("scanEditDistances", false);
+            ret.skipNormalizationQc = params.optBoolean("skipNormalizationQc", false);
             ret.editDistance = params.optInt("editDistance", 2);
             ret.minCountPerCell = params.optInt("minCountPerCell", 3);
             ret.htoOrCiteseqReadset = htoOrCiteseqReadset;
