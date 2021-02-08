@@ -30,11 +30,13 @@ import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.WebPartFactory;
+import org.labkey.singlecell.analysis.AbstractSingleCellHandler;
 import org.labkey.singlecell.analysis.CellHashingHandler;
 import org.labkey.singlecell.analysis.CellRangerRawDataHandler;
 import org.labkey.singlecell.analysis.CellRangerSeuratHandler;
 import org.labkey.singlecell.analysis.CiteSeqHandler;
 import org.labkey.singlecell.analysis.LoupeCellHashingHandler;
+import org.labkey.singlecell.analysis.ProcessSeuratObjectHandler;
 import org.labkey.singlecell.analysis.ProcessSingleCellHandler;
 import org.labkey.singlecell.analysis.SeuratCellHashingHandler;
 import org.labkey.singlecell.analysis.SeuratCiteSeqHandler;
@@ -155,6 +157,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new CellRangerSeuratHandler());
         SequenceAnalysisService.get().registerFileHandler(new CellRangerRawDataHandler());
         SequenceAnalysisService.get().registerFileHandler(new ProcessSingleCellHandler());
+        SequenceAnalysisService.get().registerFileHandler(new ProcessSeuratObjectHandler());
 
         //Single-cell:
         SequencePipelineService.get().registerPipelineStep(new AppendCiteSeq.Provider());
@@ -185,7 +188,7 @@ public class SingleCellModule extends ExtendedSimpleModule
     public Set<Class> getUnitTests()
     {
         return PageFlowUtil.set(
-                ProcessSingleCellHandler.TestCase.class
+                AbstractSingleCellHandler.TestCase.class
         );
     }
 }

@@ -124,9 +124,6 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             output.setSeuratObjects(outputs);
         }
 
-        output.setHtmlFile(getExpectedHtmlFile(ctx, outputPrefix));
-        output.setMarkdownFile(getExpectedMarkdownFile(ctx, outputPrefix));
-
         return output;
     }
 
