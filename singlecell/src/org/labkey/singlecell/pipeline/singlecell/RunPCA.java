@@ -33,5 +33,11 @@ public class RunPCA extends AbstractCellMembraneStep
             return new RunPCA(ctx, this);
         }
     }
+
+    @Override
+    public String getFileSuffix()
+    {
+        return "pca";
+    }
 }
 

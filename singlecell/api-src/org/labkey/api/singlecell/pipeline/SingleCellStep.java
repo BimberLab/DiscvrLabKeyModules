@@ -36,6 +36,11 @@ public interface SingleCellStep extends PipelineStep
 
     public boolean isIncluded(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputs) throws PipelineJobException;
 
+    default String getFileSuffix()
+    {
+        return getProvider().getName();
+    }
+
     public Output execute(SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException;
 
     public static interface Output extends PipelineStepOutput

@@ -34,4 +34,10 @@ public class FindClustersAndDimRedux extends AbstractCellMembraneStep
             return new FindClustersAndDimRedux(ctx, this);
         }
     }
+
+    @Override
+    public String getFileSuffix()
+    {
+        return "dr";
+    }
 }

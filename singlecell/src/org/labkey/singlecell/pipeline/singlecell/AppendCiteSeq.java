@@ -62,6 +62,12 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
     }
 
     @Override
+    public String getFileSuffix()
+    {
+        return "cite";
+    }
+
+    @Override
     public Collection<String> getRLibraries()
     {
         return PageFlowUtil.set("CellMembrane");

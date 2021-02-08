@@ -34,6 +34,12 @@ public class AvgExpression extends AbstractCellMembraneStep
     }
 
     @Override
+    public String getFileSuffix()
+    {
+        return "avg";
+    }
+
+    @Override
     public boolean createsSeuratObjects()
     {
         return false;

@@ -49,4 +49,10 @@ public class DimPlots extends AbstractCellMembraneStep
     {
         return false;
     }
+
+    @Override
+    public String getFileSuffix()
+    {
+        return "dimplot";
+    }
 }

@@ -50,4 +50,10 @@ public class FilterRawCounts extends AbstractCellMembraneStep
             return new FilterRawCounts(ctx, this);
         }
     }
+
+    @Override
+    public String getFileSuffix()
+    {
+        return "frc";
+    }
 }

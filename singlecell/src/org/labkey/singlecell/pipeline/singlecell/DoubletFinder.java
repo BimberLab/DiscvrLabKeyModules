@@ -32,4 +32,10 @@ public class DoubletFinder extends AbstractCellMembraneStep
             return new DoubletFinder(ctx, this);
         }
     }
+
+    @Override
+    public String getFileSuffix()
+    {
+        return "df";
+    }
 }

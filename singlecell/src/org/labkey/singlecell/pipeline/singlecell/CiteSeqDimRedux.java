@@ -28,4 +28,10 @@ public class CiteSeqDimRedux extends AbstractCellMembraneStep
             return new CiteSeqDimRedux(ctx, this);
         }
     }
+
+    @Override
+    public String getFileSuffix()
+    {
+        return "cite-dr";
+    }
 }

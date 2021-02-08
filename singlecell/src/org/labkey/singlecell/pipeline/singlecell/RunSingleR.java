@@ -29,4 +29,10 @@ public class RunSingleR extends AbstractCellMembraneStep
             return new RunSingleR(ctx, this);
         }
     }
+
+    @Override
+    public String getFileSuffix()
+    {
+        return "singler";
+    }
 }

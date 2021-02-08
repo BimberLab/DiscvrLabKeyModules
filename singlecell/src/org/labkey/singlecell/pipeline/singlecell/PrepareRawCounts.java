@@ -37,4 +37,10 @@ public class PrepareRawCounts extends AbstractCellMembraneStep
     {
         return "'" + so.getFile().getName() + "'";
     }
+
+    @Override
+    public String getFileSuffix()
+    {
+        return "counts";
+    }
 }

@@ -39,4 +39,10 @@ public class Downsample extends AbstractCellMembraneStep
             return new Downsample(ctx, this);
         }
     }
+
+    @Override
+    public String getFileSuffix()
+    {
+        return "ds";
+    }
 }

@@ -35,4 +35,10 @@ public class SplitSeurat extends AbstractCellMembraneStep
             return new SplitSeurat(ctx, this);
         }
     }
+
+    @Override
+    public String getFileSuffix()
+    {
+        return "split";
+    }
 }

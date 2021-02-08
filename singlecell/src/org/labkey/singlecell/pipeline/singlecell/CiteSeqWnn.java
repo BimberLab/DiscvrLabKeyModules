@@ -28,4 +28,10 @@ public class CiteSeqWnn extends AbstractCellMembraneStep
             return new CiteSeqWnn(ctx, this);
         }
     }
+
+    @Override
+    public String getFileSuffix()
+    {
+        return "wnn";
+    }
 }

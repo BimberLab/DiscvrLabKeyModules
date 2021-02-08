@@ -44,4 +44,9 @@ public class MergeSeurat extends AbstractCellMembraneStep
         return inputs.size() > 1;
     }
 
+    @Override
+    public String getFileSuffix()
+    {
+        return "merge";
+    }
 }

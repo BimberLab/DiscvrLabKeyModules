@@ -49,6 +49,12 @@ public class NormalizeAndScale extends AbstractCellMembraneStep
             return new NormalizeAndScale(ctx, this);
         }
     }
+
+    @Override
+    public String getFileSuffix()
+    {
+        return "norm";
+    }
 }
 
 

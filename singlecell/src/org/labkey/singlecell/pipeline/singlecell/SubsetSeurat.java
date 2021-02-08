@@ -35,4 +35,10 @@ public class SubsetSeurat extends AbstractCellMembraneStep
             return new SubsetSeurat(ctx, this);
         }
     }
+
+    @Override
+    public String getFileSuffix()
+    {
+        return "subset";
+    }
 }

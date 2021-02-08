@@ -35,5 +35,11 @@ public class RemoveCellCycle extends AbstractCellMembraneStep
             return new RemoveCellCycle(ctx, this);
         }
     }
+
+    @Override
+    public String getFileSuffix()
+    {
+        return "cc";
+    }
 }
 

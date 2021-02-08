@@ -322,7 +322,7 @@ public class ProcessSingleCellHandler implements SequenceOutputHandler<SequenceO
                 currentFiles.forEach(currentFile -> action.addInput(currentFile.getFile(), "Input Seurat Object"));
                 ctx.getFileManager().addIntermediateFiles(currentFiles.stream().map(SingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toList()));
 
-                outputPrefix = outputPrefix + "." + step.getProvider().getName() + (step.getStepIdx() == 0 ? "" : "-" + step.getStepIdx());
+                outputPrefix = outputPrefix + "." + step.getFileSuffix() + (step.getStepIdx() == 0 ? "" : "-" + step.getStepIdx());
                 SingleCellStep.Output output = step.execute(ctx, currentFiles, outputPrefix);
 
                 _resumer.getFileManager().addStepOutputs(action, output);

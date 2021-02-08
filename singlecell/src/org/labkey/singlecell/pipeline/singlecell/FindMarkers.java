@@ -41,5 +41,9 @@ public class FindMarkers extends AbstractCellMembraneStep
         return false;
     }
 
-
+    @Override
+    public String getFileSuffix()
+    {
+        return "markers";
+    }
 }

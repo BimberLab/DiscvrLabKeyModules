@@ -112,4 +112,10 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
     {
         return CellHashingService.get().usesCellHashing(ctx.getSequenceSupport(), ctx.getSourceDirectory());
     }
+
+    @Override
+    public String getFileSuffix()
+    {
+        return "hashing";
+    }
 }
