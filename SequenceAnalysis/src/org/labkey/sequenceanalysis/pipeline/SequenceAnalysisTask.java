@@ -207,7 +207,14 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                             getJob().getLogger().warn("Duplicate BAM was: " + d.getFile().getPath());
                         }
 
-                        if (!d.getFile().exists())
+                        //NOTE: if the job was restarted, the BAM might have already been discarded:
+                        if (discardBam && !d.getFile().exists() && d.getFile().getPath().startsWith(getPipelineJob().getWebserverDir(false).getPath()))
+                        {
+                            // Set this value here so downstream steps work. It will be discarded next:
+                            analysisModel.setAlignmentFile(d.getRowId());
+                            found = true;
+                        }
+                        else if (!d.getFile().exists())
                         {
                             getJob().getLogger().warn("BAM registered as output does not exist: " + d.getFile().getPath());
                         }

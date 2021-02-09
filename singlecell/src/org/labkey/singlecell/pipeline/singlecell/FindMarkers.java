@@ -34,11 +34,17 @@ public class FindMarkers extends AbstractCellMembraneStep
                         put("multiSelect", true);
                         put("allowBlank", false);
                         put("storeValues", "wilcox;bimod;roc;t;negbinom;poisson;LR;MAST;DESeq2");
-                        put("initialValues", "wilcox;MAST");
+                        put("initialValues", "wilcox;MAST;DESeq2");
                         put("delimiter", ";");
                         put("joinReturnValue", true);
-                    }}, null)
-            ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+                    }}, null),
+                    SeuratToolParameter.create("pValThreshold", "pVal Threshold", "Only genes with adjusted p-values below this will be reported", "ldk-numberfield", new JSONObject(){{
+                        put("minValue", 0);
+                    }}, 0.001),
+                    SeuratToolParameter.create("foldChangeThreshold", "Log2 Fold-Change Threshold", "Only genes with log2-foldchange above this will be reported", "ldk-numberfield", new JSONObject(){{
+                        put("minValue", 0);
+                    }}, 0.05)
+                ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
         @Override
