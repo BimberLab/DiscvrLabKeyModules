@@ -1,12 +1,16 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class FindMarkers extends AbstractCellMembraneStep
 {
@@ -24,6 +28,15 @@ public class FindMarkers extends AbstractCellMembraneStep
                         put("allowBlank", false);
                         put("height", 200);
                         put("delimiter", ",");
+                    }}, null),
+                    SeuratToolParameter.create("testsToUse", "Tests To Use", "The set of tests to perform.", "ldk-simplecombo", new JSONObject()
+                    {{
+                        put("multiSelect", true);
+                        put("allowBlank", false);
+                        put("storeValues", "wilcox;bimod;roc;t;negbinom;poisson;LR;MAST;DESeq2");
+                        put("initialValues", "wilcox;MAST");
+                        put("delimiter", ";");
+                        put("joinReturnValue", true);
                     }}, null)
             ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
