@@ -397,11 +397,6 @@ public class CellHashingServiceImpl extends CellHashingService
         return new File(sourceDir, "validHashingBarcodes.csv");
     }
 
-    public File getValidCellIndexFile(File sourceDir)
-    {
-        return new File(sourceDir, "validCellIndexes.csv");
-    }
-
     @Override
     public File generateHashingCallsForRawMatrix(Readset parentReadset, PipelineOutputTracker output, SequenceOutputHandler.JobContext ctx, CellHashingParameters parameters, File rawCountMatrixDir) throws PipelineJobException
     {
@@ -893,12 +888,7 @@ public class CellHashingServiceImpl extends CellHashingService
         try (PrintWriter writer = PrintWriters.getPrintWriter(localRScript))
         {
             List<String> methodNames = parameters.methods.stream().map(Enum::name).collect(Collectors.toList());
-
-            String cellbarcodeWhitelist = "";
-            if (cellBarcodeWhitelistFile != null)
-            {
-                cellbarcodeWhitelist = "'/work/" + cellBarcodeWhitelistFile.getName() + "'";
-            }
+            String cellbarcodeWhitelist = cellBarcodeWhitelistFile != null ? "'/work/" + cellBarcodeWhitelistFile.getName() + "'" : "NULL";
 
             Set<String> allowableBarcodes = parameters.getAllowableBarcodeNames();
             String allowableBarcodeParam = allowableBarcodes != null ? "c('" + StringUtils.join(allowableBarcodes, "','") + "')" : "NULL";
