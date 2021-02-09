@@ -33,6 +33,10 @@ public class NormalizeAndScale extends AbstractCellMembraneStep
                         put("height", 150);
                         put("delimiter", ",");
                     }}, null),
+                    SeuratToolParameter.create("featuresToRegress", "Features to Regress", "These features, entered comma-separated or one/line, will be passed to Seurat::ScaleData vars.to.regress", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
+                        put("height", 150);
+                        put("delimiter", ",");
+                    }}, "nCount_RNA,p.mito"),
                     SeuratToolParameter.create("scaleVariableFeaturesOnly", "ScaleData On Variable Features Only", "If checked, ScaleData will only be performed on VariableFeatures, which should dramatically reduce time and memory", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true),
