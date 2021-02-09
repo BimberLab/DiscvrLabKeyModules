@@ -155,6 +155,15 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         ExpRun run = ExperimentService.get().getExpRun(runId);
         AnalysisModelImpl analysisModel = null;
 
+        //optionally delete the BAM itself:
+        boolean discardBam = false;
+        if (SequenceTaskHelper.isAlignmentUsed(getJob()))
+        {
+            AlignmentStep alignmentStep = taskHelper.getSingleStep(AlignmentStep.class).create(taskHelper);
+            ToolParameterDescriptor discardBamParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM);
+            discardBam = discardBamParam.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
+        }
+
         if (SequenceTaskHelper.isAlignmentUsed(getJob()))
         {
             SequenceReadsetImpl rs = getPipelineJob().getReadset();
@@ -211,7 +220,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                 }
             }
 
-            if (analysisModel.getAlignmentFile() == null)
+            if (!discardBam && analysisModel.getAlignmentFile() == null)
             {
                 getJob().getLogger().info("Total BAMs found : " + datas.size());
                 for (ExpData d : datas)
@@ -275,15 +284,6 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                     }
                 }
             }
-        }
-
-        //optionally delete the BAM itself:
-        boolean discardBam = false;
-        if (SequenceTaskHelper.isAlignmentUsed(getJob()))
-        {
-            AlignmentStep alignmentStep = taskHelper.getSingleStep(AlignmentStep.class).create(taskHelper);
-            ToolParameterDescriptor discardBamParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM);
-            discardBam = discardBamParam.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
         }
 
         if (analysisModel == null)
