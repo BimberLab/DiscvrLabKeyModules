@@ -32,6 +32,7 @@ import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.writer.PrintWriters;
+import org.labkey.singlecell.CellHashingServiceImpl;
 import org.labkey.singlecell.SingleCellModule;
 import org.labkey.singlecell.pipeline.singlecell.AbstractCellMembraneStep;
 import org.labkey.singlecell.pipeline.singlecell.PrepareRawCounts;
@@ -166,7 +167,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
 
             if (requiresHashingOrCite)
             {
-                CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getSourceDirectory(), ctx.getJob(), ctx.getSequenceSupport(), "readsetId", false, false, false);
+                CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getSourceDirectory(), ctx.getJob(), ctx.getSequenceSupport(), "readsetId", false, false);
             }
         }
 
@@ -289,7 +290,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 {
                     currentFiles = new ArrayList<>(output.getSeuratObjects());
                     _resumer.getFileManager().addIntermediateFiles(currentFiles.stream().map(SingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toSet()));
-                    _resumer.getFileManager().addIntermediateFiles(currentFiles.stream().map(x -> SeuratCellHashingHandler.getCellBarcodesFromSeurat(x.getFile())).collect(Collectors.toSet()));
+                    _resumer.getFileManager().addIntermediateFiles(currentFiles.stream().map(x -> CellHashingServiceImpl.get().getCellBarcodesFromSeurat(x.getFile())).collect(Collectors.toSet()));
                 }
                 else if (step.createsSeuratObjects())
                 {
@@ -314,7 +315,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     ctx.getLogger().debug("Removing intermediate file: " + seurat.getFile().getPath());
                     ctx.getFileManager().removeIntermediateFile(seurat.getFile());
                     _resumer.getFileManager().removeIntermediateFile(seurat.getFile());
-                    _resumer.getFileManager().removeIntermediateFile(SeuratCellHashingHandler.getCellBarcodesFromSeurat(seurat.getFile()));
+                    _resumer.getFileManager().removeIntermediateFile(CellHashingServiceImpl.get().getCellBarcodesFromSeurat(seurat.getFile()));
                 }
             }
 
@@ -469,7 +470,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 throw new PipelineJobException("No seurat objects produced by: " + prepareRawCounts.getProvider().getName());
             }
             currentFiles.stream().map(SingleCellStep.SeuratObjectWrapper::getFile).forEach(_resumer.getFileManager()::addIntermediateFile);
-            _resumer.getFileManager().addIntermediateFiles(currentFiles.stream().map(x -> SeuratCellHashingHandler.getCellBarcodesFromSeurat(x.getFile())).collect(Collectors.toSet()));
+            _resumer.getFileManager().addIntermediateFiles(currentFiles.stream().map(x -> CellHashingServiceImpl.get().getCellBarcodesFromSeurat(x.getFile())).collect(Collectors.toSet()));
 
             _resumer.setStepComplete(ctx.getLogger(), prepareRawCounts, 0, action, output0.getSeuratObjects(), output0.getMarkdownFile(), output0.getHtmlFile());
         }

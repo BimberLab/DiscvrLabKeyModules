@@ -2,14 +2,11 @@ package org.labkey.singlecell;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
-import htsjdk.samtools.util.IOUtil;
 import org.apache.commons.beanutils.ConversionException;
 import org.apache.commons.collections4.ComparatorUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -30,9 +27,7 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.security.User;
-import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
-import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineOutputTracker;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
@@ -44,21 +39,17 @@ import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.model.CDNA_Library;
 import org.labkey.api.singlecell.model.Sample;
 import org.labkey.api.singlecell.model.Sort;
-import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.util.SortHelpers;
 import org.labkey.api.writer.PrintWriters;
-import org.labkey.singlecell.analysis.CellHashingHandler;
-import org.labkey.singlecell.analysis.CiteSeqHandler;
+import org.labkey.singlecell.run.CellRangerFeatureBarcodeHandler;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -76,6 +67,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
     public static final String READSET_TO_HASHING_MAP = "readsetToHashingMap";
     public static final String READSET_TO_CITESEQ_MAP = "readsetToCiteSeqMap";
+    public static final String READSET_TO_COUNTS_MAP = "readsetToCountsMap";
 
     public static final String CALL_EXTENSION = ".calls.txt";
 
@@ -90,16 +82,20 @@ public class CellHashingServiceImpl extends CellHashingService
     }
 
     @Override
-    public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean skipFailedCdna, boolean failIfNoHashing, boolean failIfNoCiteSeq) throws PipelineJobException
+    public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing, final boolean failIfNoCiteSeq) throws PipelineJobException
+    {
+        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashing, failIfNoCiteSeq, true);
+    }
+
+    public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing, final boolean failIfNoCiteSeq, final boolean cacheCountMatrixFiles) throws PipelineJobException
     {
         Container target = job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer();
+        UserSchema sequenceAnalysis = QueryService.get().getUserSchema(job.getUser(), target, SingleCellSchema.SEQUENCE_SCHEMA_NAME);
         UserSchema singleCell = QueryService.get().getUserSchema(job.getUser(), target, SingleCellSchema.NAME);
         TableInfo cDNAs = singleCell.getTable(SingleCellSchema.TABLE_CDNAS, null);
+        TableInfo sequenceOutputs = sequenceAnalysis.getTable("outputfiles");
 
         job.getLogger().debug("preparing cDNA and cell hashing files");
-
-        writeAllBarcodes(BARCODE_TYPE.hashing, sourceDir, job.getUser(), job.getContainer(), null);
-        writeAllBarcodes(BARCODE_TYPE.citeseq, sourceDir, job.getUser(), job.getContainer(), null);
 
         Map<FieldKey, ColumnInfo> colMap = QueryService.get().getColumns(cDNAs, PageFlowUtil.set(
                 FieldKey.fromString("rowid"),
@@ -128,18 +124,18 @@ public class CellHashingServiceImpl extends CellHashingService
             List<Readset> cachedReadsets = support.getCachedReadsets();
             Set<String> distinctHTOs = new HashSet<>();
             Set<Boolean> hashingStatus = new HashSet<>();
-            Set<Boolean> citeseqStatus = new HashSet<>();
             AtomicInteger totalWritten = new AtomicInteger(0);
             for (Readset rs : cachedReadsets)
             {
                 AtomicBoolean hasError = new AtomicBoolean(false);
                 //find cDNA records using this readset
                 new TableSelector(cDNAs, colMap.values(), new SimpleFilter(FieldKey.fromString(filterField), rs.getRowId()), null).forEachResults(results -> {
-                    if (skipFailedCdna && results.getObject(FieldKey.fromString("status")) != null)
-                    {
-                        job.getLogger().info("skipping cDNA with non-null status: " + results.getString(FieldKey.fromString("rowid")));
-                        return;
-                    }
+                    // NOTE: removed b/c newer callers probably dont need this:
+                    //if (skipFailedCdna && results.getObject(FieldKey.fromString("status")) != null)
+                    //{
+                    //    job.getLogger().info("skipping cDNA with non-null status: " + results.getString(FieldKey.fromString("rowid")));
+                    //    return;
+                    //}
 
                     writer.writeNext(new String[]{
                             String.valueOf(rs.getRowId()),
@@ -186,7 +182,6 @@ public class CellHashingServiceImpl extends CellHashingService
                     }
 
                     boolean useCiteSeq = results.getObject(FieldKey.fromString("citeseqPanel")) != null;
-                    citeseqStatus.add(useCiteSeq);
                     if (useCiteSeq)
                     {
                         if (results.getObject(FieldKey.fromString("citeseqReadsetId")) == null)
@@ -219,9 +214,35 @@ public class CellHashingServiceImpl extends CellHashingService
             }
 
             // if distinct HTOs is 1, no point in running hashing.  note: presence of hashing readsets is a trigger downstream
+            HashMap<Integer, File> readsetToCountMap = new HashMap<>();
             if (distinctHTOs.size() > 1)
             {
-                readsetToHashingMap.forEach((readsetId, hashingReadsetId) -> support.cacheReadset(hashingReadsetId, job.getUser()));
+                readsetToHashingMap.forEach((readsetId, hashingReadsetId) -> {
+                    if (cacheCountMatrixFiles)
+                    {
+                        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("category"), CellRangerFeatureBarcodeHandler.HASHING_CATEGORY);
+                        filter.addCondition(FieldKey.fromString("readset"), hashingReadsetId, CompareType.EQUAL);
+
+                        TableSelector ts = new TableSelector(sequenceOutputs, filter, new org.labkey.api.data.Sort("-rowid"));
+                        if (!ts.exists())
+                        {
+                            if (failIfNoHashing)
+                            {
+                                throw new IllegalArgumentException("Unable to find existing count matrix for hashing readset: " + hashingReadsetId);
+                            }
+                            else
+                            {
+                                job.getLogger().info("Count matrix not found for readset: " + hashingReadsetId);
+                            }
+                        }
+
+                        SequenceOutputFile so = ts.getObject(SequenceOutputFile.class);
+                        readsetToCountMap.put(hashingReadsetId, so.getFile().getParentFile());  //this is the umi_counts dir
+                    }
+
+                    support.cacheReadset(hashingReadsetId, job.getUser());
+
+                });
             }
             else if (distinctHTOs.size() == 1)
             {
@@ -243,9 +264,53 @@ public class CellHashingServiceImpl extends CellHashingService
                 job.getLogger().info("distinct HTOs: " + distinctHTOs.size());
             }
 
+            readsetToCiteSeqMap.forEach((readsetId, citeseqReadsetId) -> {
+                if (cacheCountMatrixFiles)
+                {
+                    SimpleFilter filter = new SimpleFilter(FieldKey.fromString("category"), CellRangerFeatureBarcodeHandler.CITESEQ_CATEGORY);
+                    filter.addCondition(FieldKey.fromString("readset"), citeseqReadsetId, CompareType.EQUAL);
+
+                    TableSelector ts = new TableSelector(sequenceOutputs, filter, new org.labkey.api.data.Sort("-rowid"));
+                    if (!ts.exists())
+                    {
+                        if (failIfNoHashing)
+                        {
+                            throw new IllegalArgumentException("Unable to find existing count matrix for CITE-seq readset: " + citeseqReadsetId);
+                        }
+                        else
+                        {
+                            job.getLogger().info("Count matrix not found for readset: " + citeseqReadsetId);
+                        }
+                    }
+
+                    SequenceOutputFile so = ts.getObject(SequenceOutputFile.class);
+                    readsetToCountMap.put(citeseqReadsetId, so.getFile().getParentFile());  //this is the umi_count dir
+                }
+
+                support.cacheReadset(citeseqReadsetId, job.getUser());
+            });
+
             support.cacheObject(READSET_TO_HASHING_MAP, readsetToHashingMap);
             support.cacheObject(READSET_TO_CITESEQ_MAP, readsetToCiteSeqMap);
-            readsetToCiteSeqMap.forEach((readsetId, citeseqReadsetId) -> support.cacheReadset(citeseqReadsetId, job.getUser()));
+            support.cacheObject(READSET_TO_COUNTS_MAP, readsetToCountMap);
+
+            //infer groups:
+            TableInfo hashtagOligos = QueryService.get().getUserSchema(job.getUser(), target, SingleCellSchema.NAME).getTable("hashtag_oligos");
+            Set<String> uniqueHashtagGroups = new HashSet<>();
+            for (String hto : distinctHTOs)
+            {
+                String[] tokens = hto.split("<>");
+                SimpleFilter filter = new SimpleFilter(FieldKey.fromString("tag_name"), tokens[0]);
+                filter.addCondition(FieldKey.fromString("sequence"), tokens[1]);
+
+                TableSelector ts = new TableSelector(hashtagOligos, PageFlowUtil.set("group_name"), filter, null);
+                if (ts.exists())
+                {
+                    uniqueHashtagGroups.addAll(ts.getArrayList(String.class));
+                }
+            }
+
+            writeAllHashingBarcodes(uniqueHashtagGroups, job.getUser(), job.getContainer(), sourceDir);
         }
         catch (IOException e)
         {
@@ -338,7 +403,7 @@ public class CellHashingServiceImpl extends CellHashingService
     }
 
     @Override
-    public File processCellHashingOrCiteSeqForParent(Readset parentReadset, PipelineOutputTracker output, SequenceOutputHandler.JobContext ctx, CellHashingParameters parameters) throws PipelineJobException
+    public File generateHashingCallsForRawMatrix(Readset parentReadset, PipelineOutputTracker output, SequenceOutputHandler.JobContext ctx, CellHashingParameters parameters, File rawCountMatrixDir) throws PipelineJobException
     {
         parameters.validate(true);
         Map<Integer, Integer> readsetToHashingOrCite = parameters.type == BARCODE_TYPE.hashing ? getCachedHashingReadsetMap(ctx.getSequenceSupport()) : getCachedCiteSeqReadsetMap(ctx.getSequenceSupport());
@@ -372,256 +437,50 @@ public class CellHashingServiceImpl extends CellHashingService
         }
         parameters.htoOrCiteseqReadset = htoOrCiteReadset;
 
-        // either the HTO calls or count matrix for CITE-seq
-        File processOutput = processCellHashingOrCiteSeq(output, ctx.getOutputDir(), ctx.getSourceDirectory(), ctx.getLogger(), parameters);
-        if (!processOutput.exists())
-        {
-            throw new PipelineJobException("Unable to find expected file: " + processOutput.getPath());
-        }
-
-        if (parameters.type == BARCODE_TYPE.hashing)
-        {
-            File html = new File(processOutput.getParentFile(), FileUtil.getBaseName(FileUtil.getBaseName(processOutput.getName())) + ".html");
-            if (!html.exists())
-            {
-                throw new PipelineJobException("Unable to find HTML file: " + html.getPath());
-            }
-        }
-
-        return processOutput;
-    }
-
-    @Override
-    public File processCellHashingOrCiteSeq(SequenceOutputHandler.JobContext ctx, CellHashingParameters parameters) throws PipelineJobException
-    {
-        return processCellHashingOrCiteSeq(ctx.getFileManager(), ctx.getOutputDir(), ctx.getSourceDirectory(), ctx.getLogger(), parameters);
-    }
-
-    @Override
-    public File processCellHashingOrCiteSeq(PipelineOutputTracker output, File outputDir, File webserverPipelineDir, Logger log, CellHashingParameters parameters) throws PipelineJobException
-    {
         parameters.validate();
-        
-        HtoMergeResult htoFastqs = possiblyMergeHtoFastqs(parameters.htoOrCiteseqReadset, outputDir, log);
-        if (!htoFastqs.intermediateFiles.isEmpty())
+
+        String outputBasename = parameters.getBasename() + "." + parameters.type.name();
+        File callsFile = generateCellHashingCalls(rawCountMatrixDir, ctx.getOutputDir(), outputBasename, ctx.getLogger(), ctx.getSourceDirectory(), parameters);
+        if (!callsFile.exists())
         {
-            htoFastqs.intermediateFiles.forEach(output::addIntermediateFile);
+            throw new PipelineJobException("No hashing calls generated");
         }
 
-        if (parameters.scanEditDistances && !parameters.type.isSupportsScan())
+        Map<String, Object> callMap = parseOutputTable(callsFile);
+
+        File htoCalls = (File) callMap.get("htoCalls");
+        if (htoCalls == null)
         {
-            throw new PipelineJobException("Scan edit distances should not be possible to use unless cell hashing is used");
+            throw new PipelineJobException("htoCalls file was null");
         }
 
-        Set<Integer> editDistances = new TreeSet<>();
-        Map<Integer, Map<String, Object>> results = new HashMap<>();
-
-        int highestSinglet = 0;
-        Integer bestEditDistance = null;
-
-        if (parameters.scanEditDistances)
+        File html = (File) callMap.get("html");
+        if (html == null)
         {
-            //account for total length of barcode.  shorter barcode should allow fewer edits
-            Integer minLength = CellHashingServiceImpl.get().readAllBarcodes(webserverPipelineDir, parameters.type).keySet().stream().map(String::length).min(Integer::compareTo).get();
-            int maxEdit = Math.min(3, minLength - 6);
-            log.debug("Scanning edit distances, up to: " + maxEdit);
-            int i = 0;
-            while (i <= maxEdit)
+            throw new PipelineJobException("html file was null");
+        }
+
+        String description = String.format("Min Reads/Cell: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nNegative: %,d\nUnique HTOs: %s", parameters.minCountPerCell, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("negative"), callMap.get("UniqueHtos"));
+        for (CALLING_METHOD x : CALLING_METHOD.values())
+        {
+            String value = "singlet." + x.name();
+            if (callMap.containsKey(value))
             {
-                editDistances.add(i);
-                i++;
+                description = description + ",\n" + callMap.get(value);
             }
+        }
+
+        if (parameters.createOutputFiles)
+        {
+            output.addSequenceOutput(htoCalls, parameters.getBasename() + ": Cell Hashing Calls", parameters.outputCategory, parameters.getEffectiveReadsetId(), null, parameters.genomeId, description);
+            output.addSequenceOutput(html, parameters.getBasename() + ": Cell Hashing Report", parameters.outputCategory + ": Report", parameters.getEffectiveReadsetId(), null, parameters.genomeId, description);
         }
         else
         {
-            editDistances.add(parameters.editDistance);
+            ctx.getLogger().debug("Output files will not be created");
         }
 
-        for (Integer ed : editDistances)
-        {
-            File citeSeqCountOutDir = new File(outputDir, parameters.getBasename() + ".rawCounts." + ed + "." + parameters.type.name());
-            String outputBasename = parameters.getBasename() + "." + ed + "." + parameters.type.name();
-
-            File unknownBarcodeFile = getCiteSeqCountUnknownOutput(webserverPipelineDir == null ? outputDir : webserverPipelineDir, parameters.type, ed);
-            Map<String, Object> callMap = executeCiteSeqCount(outputDir, outputBasename, citeSeqCountOutDir, htoFastqs.files.getLeft(), htoFastqs.files.getRight(), ed, log, webserverPipelineDir, unknownBarcodeFile, parameters);
-            results.put(ed, callMap);
-
-            if (parameters.type.doGenerateCalls())
-            {
-                int singlet = Integer.parseInt(callMap.get("singlet").toString());
-                log.info("Edit distance: " + ed + ", singlet: " + singlet + ", doublet: " + callMap.get("doublet"));
-                if (singlet > highestSinglet)
-                {
-                    highestSinglet = singlet;
-                    bestEditDistance = ed;
-                }
-            }
-
-            output.addIntermediateFile(unknownBarcodeFile);
-            output.addIntermediateFile(citeSeqCountOutDir);
-        }
-
-        if (results.size() == 1)
-        {
-            bestEditDistance = results.keySet().iterator().next();
-        }
-
-        if (bestEditDistance != null)
-        {
-            log.info("Using edit distance: " + bestEditDistance + (highestSinglet == 0 ? "" : ", singlet: " + highestSinglet));
-
-            File origUnknown = getCiteSeqCountUnknownOutput(webserverPipelineDir, parameters.type, bestEditDistance);
-            File movedUnknown = getCiteSeqCountUnknownOutput(webserverPipelineDir, parameters.type, null);
-
-            try
-            {
-                log.debug("Copying unknown barcode file to: " + movedUnknown.getPath());
-                if (movedUnknown.exists())
-                {
-                    movedUnknown.delete();
-                }
-
-                FileUtils.copyFile(origUnknown, movedUnknown);
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-
-            Map<String, Object> callMap = results.get(bestEditDistance);
-            if (parameters.type.doGenerateCalls())
-            {
-                String description = String.format("%% Mapped: %s\n%% Unmapped: %s\nEdit Distance: %,d\nMin Reads/Cell: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nNegative: %,d\nUnique HTOs: %s", callMap.get("PercentageMapped"), callMap.get("PercentageUnmapped"), bestEditDistance, parameters.minCountPerCell, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("negative"), callMap.get("UniqueHtos"));
-                for (CALLING_METHOD x : CALLING_METHOD.values())
-                {
-                    String value = "singlet." + x.name();
-                    if (callMap.containsKey(value))
-                    {
-                       description = description + ",\n" + callMap.get(value);
-                    }
-                }
-
-                File htoCalls = (File) callMap.get("htoCalls");
-                if (htoCalls == null)
-                {
-                    throw new PipelineJobException("htoCalls file was null");
-                }
-
-                File html = (File) callMap.get("html");
-                if (html == null)
-                {
-                    throw new PipelineJobException("html file was null");
-                }
-
-                if (parameters.createOutputFiles)
-                {
-                    output.addSequenceOutput(htoCalls, parameters.getBasename() + ": Cell Hashing Calls", parameters.outputCategory, parameters.getEffectiveReadsetId(), null, parameters.genomeId, description);
-                    output.addSequenceOutput(html, parameters.getBasename() + ": Cell Hashing Report", parameters.outputCategory + ": Report", parameters.getEffectiveReadsetId(), null, parameters.genomeId, description);
-                }
-                else
-                {
-                    log.debug("Output files will not be created");
-                }
-
-                return htoCalls;
-            }
-            else
-            {
-                log.debug("Hashing calls will not be generated");
-
-                String description = String.format("%% Mapped: %s\n%% Unmapped: %s", callMap.get("PercentageMapped"), callMap.get("PercentageUnmapped"));
-                File citeSeqCount = (File) callMap.get("citeSeqCountMatrix");
-
-                if (parameters.createOutputFiles)
-                {
-                    output.addSequenceOutput(citeSeqCount, parameters.getEffectiveReadsetId() + ": CITE-Seq Count Matrix", (parameters.outputCategory == null ? "CITE-Seq Count Matrix" : parameters.outputCategory), parameters.getEffectiveReadsetId(), null, parameters.genomeId, description);
-                }
-                else
-                {
-                    log.debug("Output files will not be created");
-                }
-
-                File outDir = (File) callMap.get("outputDir");
-                output.removeIntermediateFile(outDir);
-
-                return citeSeqCount;
-            }
-        }
-        else
-        {
-            throw new PipelineJobException("None of the edit distances produced results");
-        }
-    }
-
-    public File getCiteSeqCountUnknownOutput(File webserverDir, BARCODE_TYPE type, Integer editDistance)
-    {
-        return new File(webserverDir, "citeSeqUnknownBarcodes." + type.name() + "." + (editDistance == null ? "final." : editDistance + ".") + "txt");
-    }
-
-    public static class HtoMergeResult
-    {
-        public Pair<File, File> files;
-        public List<File> intermediateFiles = new ArrayList<>();
-    }
-
-    public HtoMergeResult possiblyMergeHtoFastqs(Readset htoReadset, File outdir, Logger log) throws PipelineJobException
-    {
-        HtoMergeResult ret = new HtoMergeResult();
-        File file1;
-        File file2;
-
-        if (htoReadset.getReadData().isEmpty())
-        {
-            throw new PipelineJobException("No HTO fastqs exist for readset: " + htoReadset.getName());
-        }
-        else if (htoReadset.getReadData().size() != 1)
-        {
-            log.info("Merging HTO data");
-            file1 = new File(outdir, FileUtil.makeLegalName(htoReadset.getName() + "hto.R1.fastq.gz"));
-            file2 = new File(outdir, FileUtil.makeLegalName(htoReadset.getName() + "hto.R2.fastq.gz"));
-
-            File doneFile = new File(outdir, "merge.done");
-            if (doneFile.exists())
-            {
-                log.info("Resuming from previous merge");
-            }
-            else
-            {
-                List<File> files1 = htoReadset.getReadData().stream().map(ReadData::getFile1).collect(Collectors.toList());
-                SequenceAnalysisService.get().mergeFastqFiles(file1, files1, log);
-
-                List<File> files2 = htoReadset.getReadData().stream().map(ReadData::getFile2).collect(Collectors.toList());
-                if (files2.contains(null))
-                {
-                    throw new PipelineJobException("All HTO readsets are expected to have forward and reverse reads");
-                }
-                SequenceAnalysisService.get().mergeFastqFiles(file2, files2, log);
-
-                ret.intermediateFiles.add(file1);
-                ret.intermediateFiles.add(file2);
-
-                try
-                {
-                    FileUtils.touch(doneFile);
-                }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
-                }
-            }
-
-            ret.intermediateFiles.add(doneFile);
-        }
-        else
-        {
-            ReadData rd = htoReadset.getReadData().get(0);
-            file1 = rd.getFile1();
-            file2 = rd.getFile2();
-        }
-
-        ret.files = Pair.of(file1, file2);
-
-        return ret;
+        return callsFile;
     }
 
     private Map<Integer, Integer> getCachedCiteSeqReadsetMap(SequenceAnalysisJobSupport support) throws PipelineJobException
@@ -674,6 +533,11 @@ public class CellHashingServiceImpl extends CellHashingService
         return support.getCachedObject(READSET_TO_HASHING_MAP, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, Integer.class, Integer.class));
     }
 
+    public Map<Integer, File> getCachedReadsetToCountMatrixMap(SequenceAnalysisJobSupport support) throws PipelineJobException
+    {
+        return support.getCachedObject(READSET_TO_COUNTS_MAP, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, Integer.class, File.class));
+    }
+
     @Override
     public Sample getSampleById(int rowId)
     {
@@ -692,7 +556,7 @@ public class CellHashingServiceImpl extends CellHashingService
         return new TableSelector(SingleCellSchema.getInstance().getSchema().getTable(SingleCellSchema.TABLE_SORTS)).getObject(rowId, Sort.class);
     }
 
-    private File getMetricsFile(File callFile)
+    public File getMetricsFile(File callFile)
     {
         return new File(callFile.getPath().replaceAll(CALL_EXTENSION, ".metrics.txt"));
     }
@@ -779,7 +643,7 @@ public class CellHashingServiceImpl extends CellHashingService
                     String delim = description.length() > 0 ? "\n" : "";
 
                     DecimalFormat fmt = new DecimalFormat("##.##%");
-                    List<String> metricNames = new ArrayList<>(Arrays.asList("PassingCellBarcodes", "TotalLowCounts", "TotalSinglet", "FractionCalled", "FractionSinglet", "FractionDoublet", "FractionDiscordant", "UniqueHtos", "UnknownTagMatchingKnown"));
+                    List<String> metricNames = new ArrayList<>(Arrays.asList("PassingCellBarcodes", "TotalLowCounts", "TotalSinglet", "FractionCalled", "FractionSinglet", "FractionDoublet", "FractionDiscordant", "UniqueHtos"));
                     Arrays.stream(CALLING_METHOD.values()).forEach(x -> metricNames.add("Singlet." + x.name()));
 
                     for (String metricName : metricNames)
@@ -823,106 +687,38 @@ public class CellHashingServiceImpl extends CellHashingService
     }
 
     @Override
-    public List<ToolParameterDescriptor> getDefaultHashingParams(boolean includeExcludeFailedcDNA, BARCODE_TYPE type)
+    public List<ToolParameterDescriptor> getHashingCallingParams()
     {
         List<ToolParameterDescriptor> ret = new ArrayList<>(Arrays.asList(
-                ToolParameterDescriptor.create("scanEditDistances", "Scan Edit Distances", "If checked, CITE-seq-count will be run using edit distances from 0-3 and the iteration with the highest singlets will be used.", "checkbox", new JSONObject(){{
-                    put("checked", false);
-                }}, false),
-                ToolParameterDescriptor.create("editDistance", "Edit Distance", null, "ldk-integerfield", null, 2),
-                ToolParameterDescriptor.create("minCountPerCell", "Min Reads/Cell", null, "ldk-integerfield", null, 5),
-                ToolParameterDescriptor.create("skipNormalizationQc", "Skip Normalization QC", null, "checkbox", null, true)
+            ToolParameterDescriptor.create("minCountPerCell", "Min Reads/Cell", null, "ldk-integerfield", null, 5),
+            ToolParameterDescriptor.create("skipNormalizationQc", "Skip Normalization QC", null, "checkbox", null, true)
         ));
 
-        if (type == BARCODE_TYPE.hashing)
-        {
-            ret.add(ToolParameterDescriptor.create("methods", "Calling Methods", "The set of methods to use in calling.", "ldk-simplecombo", new JSONObject()
-            {{
-                put("multiSelect", true);
-                put("allowBlank", false);
-                put("storeValues", StringUtils.join(Arrays.stream(CALLING_METHOD.values()).map(Enum::name).collect(Collectors.toList()), ";"));
-                put("initialValues", StringUtils.join(CALLING_METHOD.getDefaultMethodNames(), ";"));
-                put("delimiter", ";");
-                put("joinReturnValue", true);
-            }}, null));
-        }
-
-        if (includeExcludeFailedcDNA)
-        {
-            ret.add(ToolParameterDescriptor.create("excludeFailedcDNA", "Exclude Failed cDNA", "If selected, cDNAs with non-blank status fields will be omitted", "checkbox", null, false));
-        }
+        ret.add(ToolParameterDescriptor.create("methods", "Calling Methods", "The set of methods to use in calling.", "ldk-simplecombo", new JSONObject()
+        {{
+            put("multiSelect", true);
+            put("allowBlank", false);
+            put("storeValues", StringUtils.join(Arrays.stream(CALLING_METHOD.values()).map(Enum::name).collect(Collectors.toList()), ";"));
+            put("initialValues", StringUtils.join(CALLING_METHOD.getDefaultMethodNames(), ";"));
+            put("delimiter", ";");
+            put("joinReturnValue", true);
+        }}, null));
 
         return ret;
     }
 
-    public File createCellBarcodeWhitelistFromLoupe(SequenceOutputHandler.JobContext ctx, File inputFile) throws PipelineJobException
+    public File getAllHashingBarcodesFile(File webserverDir)
     {
-        ctx.getLogger().debug("inspecting file: " + inputFile.getPath());
-
-        //prepare whitelist of cell indexes
-        File cellBarcodeWhitelist = CellHashingServiceImpl.get().getValidCellIndexFile(ctx.getSourceDirectory());
-        Set<String> uniqueBarcodes = new HashSet<>();
-        ctx.getLogger().debug("writing cell barcodes, using file: " + inputFile.getPath());
-        try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(cellBarcodeWhitelist), ',', CSVWriter.NO_QUOTE_CHARACTER); CSVReader reader = new CSVReader(IOUtil.openFileForBufferedUtf8Reading(inputFile), '\t'))
-        {
-            int rowIdx = 0;
-            String[] row;
-            while ((row = reader.readNext()) != null)
-            {
-                //skip header
-                rowIdx++;
-                if (rowIdx > 1)
-                {
-                    String barcode = row[0];
-
-                    //NOTE: 10x appends "-1" to barcodes
-                    if (barcode.contains("-"))
-                    {
-                        barcode = barcode.split("-")[0];
-                    }
-
-                    //This format is written out by the OOSAP pipeline
-                    if (barcode.contains("_"))
-                    {
-                        barcode = barcode.split("_")[1];
-                    }
-
-                    if (!uniqueBarcodes.contains(barcode))
-                    {
-                        writer.writeNext(new String[]{barcode});
-                        uniqueBarcodes.add(barcode);
-                    }
-                }
-            }
-
-            ctx.getLogger().debug("rows inspected: " + (rowIdx - 1));
-            ctx.getLogger().debug("unique cell barcodes: " + uniqueBarcodes.size());
-            ctx.getFileManager().addIntermediateFile(cellBarcodeWhitelist);
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
-
-        return cellBarcodeWhitelist;
+        return new File(webserverDir, BARCODE_TYPE.hashing.getAllBarcodeFileName());
     }
 
-    public File getAllBarcodesFile(File webserverDir, BARCODE_TYPE type)
+    private void writeAllHashingBarcodes(Collection<String> groupNames, User u, Container c, File webserverDir) throws PipelineJobException
     {
-        return new File(webserverDir, type.getAllBarcodeFileName());
-    }
-
-    public void writeAllBarcodes(CellHashingService.BARCODE_TYPE type, File webserverDir, User u, Container c, @Nullable String groupName) throws PipelineJobException
-    {
-        writeAllBarcodes(groupName == null ? type.getDefaultTagGroup() : groupName, u, c, getAllBarcodesFile(webserverDir, type));
-    }
-
-    private void writeAllBarcodes(String groupName, User u, Container c, File output) throws PipelineJobException
-    {
+        File output = getAllHashingBarcodesFile(webserverDir);
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(output), ',', CSVWriter.NO_QUOTE_CHARACTER))
         {
             TableInfo ti = QueryService.get().getUserSchema(u, c, SingleCellSchema.SEQUENCE_SCHEMA_NAME).getTable(SingleCellSchema.TABLE_BARCODES, null);
-            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("sequence", "tag_name"), new SimpleFilter(FieldKey.fromString("group_name"), groupName), new org.labkey.api.data.Sort("tag_name"));
+            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("sequence", "tag_name"), new SimpleFilter(FieldKey.fromString("group_name"), groupNames, CompareType.IN), new org.labkey.api.data.Sort("tag_name"));
             ts.forEachResults(rs -> {
                 writer.writeNext(new String[]{rs.getString(FieldKey.fromString("sequence")), rs.getString(FieldKey.fromString("tag_name"))});
             });
@@ -933,27 +729,7 @@ public class CellHashingServiceImpl extends CellHashingService
         }
     }
 
-    private Map<String, String> readAllBarcodes(File webserverDir, BARCODE_TYPE type) throws PipelineJobException
-    {
-        File barcodes = getAllBarcodesFile(webserverDir, type);
-        try (CSVReader reader = new CSVReader(Readers.getReader(barcodes), ','))
-        {
-            Map<String, String> ret = new HashMap<>();
-            String[] line;
-            while ((line = reader.readNext()) != null)
-            {
-                ret.put(line[0], line[1]);
-            }
-
-            return ret;
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
-    }
-
-    public Map<String, Object> parseOutputTable(Logger log, File htoCalls, File unknownBarcodeFile, File localPipelineDir, @Nullable File workDir, boolean includeFiles, CellHashingService.BARCODE_TYPE type) throws PipelineJobException
+    public Map<String, Object> parseOutputTable(File htoCalls) throws PipelineJobException
     {
         long singlet = 0L;
         long doublet = 0L;
@@ -1028,19 +804,13 @@ public class CellHashingServiceImpl extends CellHashingService
             uniqueHTOSorted.sort(ComparatorUtils.naturalComparator());
             ret.put("UniqueHtos", StringUtils.join(uniqueHTOSorted, ","));
 
-            if (includeFiles)
+            ret.put("htoCalls", htoCalls);
+            File html = new File(htoCalls.getPath().replaceAll(CALL_EXTENSION, ".html"));
+            if (!html.exists())
             {
-                ret.put("htoCalls", htoCalls);
-                File html = new File(htoCalls.getPath().replaceAll(CALL_EXTENSION, ".html"));
-                if (!html.exists())
-                {
-                    throw new PipelineJobException("Unable to find expected HTML file: " + html.getPath());
-                }
-                ret.put("html", html);
+                throw new PipelineJobException("Unable to find expected HTML file: " + html.getPath());
             }
-
-            File  metricsFile = getMetricsFile(htoCalls);
-            ret.putAll(parseUnknownBarcodes(unknownBarcodeFile, localPipelineDir, log, workDir, metricsFile, type));
+            ret.put("html", html);
 
             return ret;
         }
@@ -1048,61 +818,6 @@ public class CellHashingServiceImpl extends CellHashingService
         {
             throw new PipelineJobException(e);
         }
-    }
-
-    private Map<String, Object> parseUnknownBarcodes(File unknownBarcodeFile, File localPipelineDir, Logger log, @Nullable File workDir, File metricsFile, CellHashingService.BARCODE_TYPE type) throws PipelineJobException
-    {
-        log.debug("parsing unknown barcodes file: " + unknownBarcodeFile.getPath());
-        log.debug("using metrics file: " + metricsFile.getPath());
-
-        Map<String, Object> ret = new HashMap<>();
-        if (unknownBarcodeFile.exists())
-        {
-            Map<String, String> allBarcodes = readAllBarcodes(localPipelineDir, type);
-            Map<String, Integer> topUnknown = logTopUnknownBarcodes(unknownBarcodeFile, log, allBarcodes);
-            if (!topUnknown.isEmpty())
-            {
-                List<String> toAdd = new ArrayList<>();
-                topUnknown.forEach((x, y) -> {
-                    toAdd.add(x + ": " + y);
-                });
-
-                toAdd.sort(SortHelpers.getNaturalOrderStringComparator());
-                ret.put("UnknownTagMatchingKnown", StringUtils.join(toAdd, ","));
-
-                if (!metricsFile.exists())
-                {
-                    log.debug("metrics file not found in webserver dir: " + metricsFile.getPath());
-                    if (workDir != null)
-                    {
-                        metricsFile = new File(workDir, metricsFile.getName());
-                        log.debug("trying local dir: " + metricsFile.getPath());
-                    }
-                }
-
-                if (metricsFile.exists())
-                {
-                    try (BufferedWriter writer = IOUtil.openFileForBufferedWriting(metricsFile, true))
-                    {
-                        writer.write(StringUtils.join(new String[]{type.getLabel(), "UnknownTagMatchingKnown", (String)ret.get("UnknownTagMatchingKnown")}, "\t") + "\n");
-                    }
-                    catch (IOException e)
-                    {
-                        throw new PipelineJobException(e);
-                    }
-                }
-                else
-                {
-                    log.error("Metric file not found, expected: " + metricsFile.getPath());
-                }
-            }
-        }
-        else
-        {
-            log.error("Unable to find unknown barcode file: " + unknownBarcodeFile.getPath());
-        }
-
-        return ret;
     }
 
     public File ensureLocalCopy(File input, File outputDir, Logger log, Set<File> toDelete) throws PipelineJobException
@@ -1149,58 +864,7 @@ public class CellHashingServiceImpl extends CellHashingService
         return input;
     }
 
-    private Map<String, Integer> logTopUnknownBarcodes(File citeSeqCountUnknownOutput, Logger log, Map<String, String> allBarcodes) throws PipelineJobException
-    {
-        Map<String, Integer> unknownMap = new HashMap<>();
-        try (CSVReader reader = new CSVReader(Readers.getReader(citeSeqCountUnknownOutput), ','))
-        {
-            String[] line;
-            int lineIdx = 0;
-            log.info("Top unknown barcodes:");
-            while ((line = reader.readNext()) != null)
-            {
-                lineIdx++;
-                if (lineIdx == 1)
-                {
-                    continue;
-                }
-
-                String name = allBarcodes.get(line[0]);
-                if (name == null)
-                {
-                    for (String bc : allBarcodes.keySet())
-                    {
-                        if (line[0].startsWith(bc))
-                        {
-                            name = allBarcodes.get(bc);
-                            break;
-                        }
-                    }
-                }
-
-                if (name != null)
-                {
-                    Integer count = unknownMap.getOrDefault(name, 0);
-                    count += Integer.parseInt(line[1]);
-
-                    unknownMap.put(name, count);
-                }
-
-                if (lineIdx <= 7)
-                {
-                    log.info(line[0] + (name == null ? "" : " (" + name + ")") + ": " + line[1]);
-                }
-            }
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
-
-        return unknownMap;
-    }
-
-    private File generateCellHashingCalls(File citeSeqCountOutDir, File outputDir, String basename, Logger log, File localPipelineDir, CellHashingService.CellHashingParameters parameters) throws PipelineJobException
+    public File generateCellHashingCalls(File citeSeqCountOutDir, File outputDir, String basename, Logger log, File localPipelineDir, CellHashingService.CellHashingParameters parameters) throws PipelineJobException
     {
         log.debug("generating final calls from folder: " + citeSeqCountOutDir.getPath());
 
@@ -1341,141 +1005,22 @@ public class CellHashingServiceImpl extends CellHashingService
         return callsFile;
     }
 
-    public Map<String, Object> executeCiteSeqCount(File outputDir, String basename, File citeSeqCountOutDir, File fastq1, File fastq2, Integer ed, Logger log, File localPipelineDir, File unknownBarcodeFile, CellHashingService.CellHashingParameters parameters) throws PipelineJobException
+    @Override
+    public File getExistingFeatureBarcodeCountDir(Readset parentReadset, BARCODE_TYPE type, SequenceAnalysisJobSupport support) throws PipelineJobException
     {
-        CellHashingHandler.CiteSeqCountWrapper wrapper = new CellHashingHandler.CiteSeqCountWrapper(log);
-        File doneFile = new File(citeSeqCountOutDir, "citeSeqCount." + parameters.type.name() + "." + ed + ".done");
-        if (!doneFile.exists())
+        Integer childId = type == BARCODE_TYPE.hashing ? getCachedHashingReadsetMap(support).get(parentReadset.getReadsetId()) : getCachedCiteSeqReadsetMap(support).get(parentReadset.getReadsetId());
+        if (childId == null)
         {
-            List<String> baseArgs = new ArrayList<>();
-            baseArgs.add("-t");
-            baseArgs.add(parameters.getHtoOrCiteSeqBarcodeFile().getPath());
-
-            if (parameters.cellBarcodeWhitelistFile!= null)
-            {
-                baseArgs.add("-wl");
-                baseArgs.add(parameters.cellBarcodeWhitelistFile.getPath());
-
-                //Note: version 1.4.2 and greater requires this:
-                //https://github.com/Hoohm/CITE-seq-Count/issues/56
-                baseArgs.add("-cells");
-                baseArgs.add(parameters.cells == null ? "0" : String.valueOf(parameters.cells));
-            }
-            else if (parameters.cells != null)
-            {
-                baseArgs.add("-cells");
-                baseArgs.add(String.valueOf(parameters.cells));
-            }
-
-            Integer cores = SequencePipelineService.get().getMaxThreads(log);
-            if (cores != null)
-            {
-                baseArgs.add("-T");
-                baseArgs.add(cores.toString());
-            }
-
-            for (ToolParameterDescriptor param : CellHashingHandler.getDefaultParams(parameters.type))
-            {
-                if ((parameters.cellBarcodeWhitelistFile != null || parameters.cells != null) && param.getName().equals("cells"))
-                {
-                    continue;
-                }
-
-                if (param.getCommandLineParam() != null && param.getDefaultValue() != null)
-                {
-                    //this should avoid double-adding if extraArgs contains the param
-                    if (baseArgs.contains(param.getCommandLineParam().getArgName()))
-                    {
-                        log.debug("skipping default param because caller specified an alternate value: " + param.getName());
-                        continue;
-                    }
-
-                    baseArgs.addAll(param.getCommandLineParam().getArguments(param.getDefaultValue().toString()));
-                }
-            }
-
-            baseArgs.add("--max-error");
-            baseArgs.add(ed.toString());
-
-            if (unknownBarcodeFile != null)
-            {
-                baseArgs.add("-u");
-                baseArgs.add(unknownBarcodeFile.getPath());
-            }
-
-            wrapper.execute(baseArgs, fastq1, fastq2, citeSeqCountOutDir);
-        }
-        else
-        {
-            log.info("CITE-seq count has already run, skipping");
+            throw new PipelineJobException("Unable to find cached readset of type " + type.name() + " for parent: " + parentReadset.getReadsetId());
         }
 
-        if (!citeSeqCountOutDir.exists())
+        File ret = getCachedReadsetToCountMatrixMap(support).get(childId);
+        if (ret == null)
         {
-            throw new PipelineJobException("missing expected output: " + citeSeqCountOutDir.getPath());
+            throw new PipelineJobException("Unable to find cached count matrix of type " + type.name() + " for parent: " + parentReadset.getReadsetId());
         }
 
-        File outputMatrix = new File(citeSeqCountOutDir, "umi_count/matrix.mtx.gz");
-        if (!outputMatrix.exists())
-        {
-            throw new PipelineJobException("Unable to find expected file: " + outputMatrix.getPath());
-        }
-
-        try
-        {
-            FileUtils.touch(doneFile);
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
-
-        Map<String, Object> callMap = new HashMap<>();
-
-        File logFile = new File(citeSeqCountOutDir, "run_report.yaml");
-        try (BufferedReader reader = Readers.getReader(logFile))
-        {
-            String line;
-            while ((line = reader.readLine()) != null)
-            {
-                log.info(line);
-
-                if (line.startsWith("Percentage mapped"))
-                {
-                    callMap.put("PercentageMapped", line.split(": ")[1]);
-                }
-                else if (line.startsWith("Percentage unmapped"))
-                {
-                    callMap.put("PercentageUnmapped", line.split(": ")[1]);
-                }
-            }
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
-
-        callMap.put("citeSeqCountMatrix", outputMatrix);
-        callMap.put("outputDir", citeSeqCountOutDir);
-        callMap.put("logFile", logFile);
-
-        if (parameters.type.doGenerateCalls())
-        {
-            File htoCalls = generateCellHashingCalls(outputMatrix.getParentFile(), outputDir, basename, log, localPipelineDir, parameters);
-            if (!htoCalls.exists())
-            {
-                throw new PipelineJobException("missing expected file: " + htoCalls.getPath());
-            }
-
-            File html = new File(htoCalls.getParentFile(), basename + ".html");
-
-            //this will log results and append to metrics
-            callMap.putAll(parseOutputTable(log, htoCalls, unknownBarcodeFile, localPipelineDir, outputDir, true, parameters.type));
-            callMap.put("htoCalls", htoCalls);
-            callMap.put("html", html);
-        }
-
-        return callMap;
+        return ret;
     }
 
     @Override
@@ -1522,5 +1067,41 @@ public class CellHashingServiceImpl extends CellHashingService
         }
 
         return htosPerReadset;
+    }
+
+    public File subsetBarcodes(File allCellBarcodes, @Nullable String barcodePrefix) throws PipelineJobException
+    {
+        //Subset barcodes by dataset:
+        File output = new File(allCellBarcodes.getParentFile(), "cellBarcodeWhitelist." + (barcodePrefix == null ? "all" : barcodePrefix ) + ".txt");
+        try (CSVReader reader = new CSVReader(Readers.getReader(allCellBarcodes), '\t'); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(output), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+        {
+            String[] line;
+            while ((line = reader.readNext()) != null)
+            {
+                String barcode = line[0];
+                if (barcodePrefix == null || barcode.startsWith(barcodePrefix + "_"))
+                {
+                    barcode = barcode.split("_")[1];
+                    writer.writeNext(new String[]{barcode});
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        return output;
+    }
+
+    public File getCellBarcodesFromSeurat(File seuratObj)
+    {
+        File barcodes = new File(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds", "cellBarcodes.csv"));
+        if (!barcodes.exists())
+        {
+            throw new IllegalArgumentException("Unable to find expected cell barcodes file.  This might indicate the seurat object was created with an older version of the pipeline.  Expected: " + barcodes.getPath());
+        }
+
+        return barcodes;
     }
 }

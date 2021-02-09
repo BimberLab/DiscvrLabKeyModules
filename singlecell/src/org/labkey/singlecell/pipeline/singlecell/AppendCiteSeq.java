@@ -15,9 +15,6 @@ import org.labkey.api.singlecell.pipeline.SingleCellOutput;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.singlecell.CellHashingServiceImpl;
-import org.labkey.singlecell.analysis.CellRangerSeuratHandler;
-import org.labkey.singlecell.analysis.SeuratCellHashingHandler;
-import org.labkey.singlecell.analysis.SeuratCiteSeqHandler;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,7 +54,6 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
             put("initialValues", "dsb");
         }}, "dsb"));
 
-        ret.addAll(CellHashingService.get().getDefaultHashingParams(false, CellHashingService.BARCODE_TYPE.citeseq));
         return ret;
     }
 
@@ -86,16 +82,15 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
 
         for (SeuratObjectWrapper wrapper : inputObjects)
         {
-            File finalOutput = null;
+            File localCopyUmiCountDir = null;
             if (wrapper.getSequenceOutputFileId() == null)
             {
                 throw new PipelineJobException("Append CITE-seq is only support using seurat objects will a single input dataset. Consider moving this step easier in your pipeline, before merging or subsetting");
             }
 
-            File allCellBarcodes = SeuratCellHashingHandler.getCellBarcodesFromSeurat(wrapper.getFile());
-
             //NOTE: by leaving null, it will simply drop the barcode prefix. Upstream checks should ensure this is a single-readset object
-            File cellBarcodesParsed = CellRangerSeuratHandler.subsetBarcodes(allCellBarcodes, null);
+            File allCellBarcodes = CellHashingServiceImpl.get().getCellBarcodesFromSeurat(wrapper.getFile());
+            File cellBarcodesParsed = CellHashingServiceImpl.get().subsetBarcodes(allCellBarcodes, null);
             ctx.getFileManager().addIntermediateFile(cellBarcodesParsed);
 
             Readset parentReadset = ctx.getSequenceSupport().getCachedReadset(wrapper.getSequenceOutputFile().getReadset());
@@ -106,14 +101,23 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
 
             if (CellHashingService.get().usesCiteSeq(ctx.getSequenceSupport(), Collections.singletonList(wrapper.getSequenceOutputFile())))
             {
-                CellHashingService.CellHashingParameters params = CellHashingService.CellHashingParameters.createFromStep(ctx, this, CellHashingService.BARCODE_TYPE.citeseq, null, parentReadset, null);
-                params.outputCategory = SeuratCiteSeqHandler.CATEGORY;
-                params.createOutputFiles = true;
-                params.genomeId = wrapper.getSequenceOutputFile().getLibrary_id();
-                //params.cellBarcodeWhitelistFile = cellBarcodesParsed;
-                params.cells = 250000;
+                File existingCountMatrixUmiDir = CellHashingService.get().getExistingFeatureBarcodeCountDir(parentReadset, CellHashingService.BARCODE_TYPE.citeseq, ctx.getSequenceSupport());
+                localCopyUmiCountDir = new File(ctx.getOutputDir(), "citeseqRawCounts." + parentReadset.getReadsetId());
+                try
+                {
+                    if (localCopyUmiCountDir.exists())
+                    {
+                        FileUtils.deleteDirectory(localCopyUmiCountDir);
+                    }
 
-                finalOutput = CellHashingService.get().processCellHashingOrCiteSeqForParent(parentReadset, output, ctx, params);
+                    FileUtils.copyDirectory(existingCountMatrixUmiDir, localCopyUmiCountDir);
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+
+                ctx.getFileManager().addIntermediateFile(localCopyUmiCountDir);
 
                 File validAdt = CellHashingServiceImpl.get().getValidCiteSeqBarcodeMetadataFile(ctx.getSourceDirectory(), parentReadset.getReadsetId());
                 if (!validAdt.exists())
@@ -123,7 +127,7 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
 
                 try
                 {
-                    FileUtils.copyFile(validAdt, getAdtMetadata(finalOutput.getParentFile()));
+                    FileUtils.copyFile(validAdt, getAdtMetadata(localCopyUmiCountDir));
                 }
                 catch (IOException e)
                 {
@@ -135,7 +139,7 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
                 ctx.getLogger().info("CITE-seq not used, skipping: " + parentReadset.getName());
             }
 
-            dataIdToCalls.put(wrapper.getSequenceOutputFileId(), finalOutput == null ? null : finalOutput.getParentFile());
+            dataIdToCalls.put(wrapper.getSequenceOutputFileId(), localCopyUmiCountDir);
         }
 
         return dataIdToCalls;

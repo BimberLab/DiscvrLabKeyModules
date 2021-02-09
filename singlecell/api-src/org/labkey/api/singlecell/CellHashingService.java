@@ -45,13 +45,9 @@ abstract public class CellHashingService
         _instance = instance;
     }
 
-    abstract public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean skipFailedCdna, boolean failIfNoHashing, boolean failIfNoCiteSeq) throws PipelineJobException;
+    abstract public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, boolean failIfNoHashing, boolean failIfNoCiteSeq) throws PipelineJobException;
 
-    abstract public File processCellHashingOrCiteSeq(SequenceOutputHandler.JobContext ctx, CellHashingParameters parameters) throws PipelineJobException;
-
-    abstract public File processCellHashingOrCiteSeq(PipelineOutputTracker output, File outputDir, File webserverPipelineDir, Logger log, CellHashingParameters parameters) throws PipelineJobException;
-
-    abstract public File processCellHashingOrCiteSeqForParent(Readset parentReadset, PipelineOutputTracker output, SequenceOutputHandler.JobContext ctx, CellHashingParameters parameters) throws PipelineJobException;
+    abstract public File generateHashingCallsForRawMatrix(Readset parentReadset, PipelineOutputTracker output, SequenceOutputHandler.JobContext ctx, CellHashingParameters parameters, File rawCountMatrixDir) throws PipelineJobException;
 
     abstract public File getCDNAInfoFile(File sourceDir);
 
@@ -71,9 +67,11 @@ abstract public class CellHashingService
 
     abstract public boolean usesCiteSeq(SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles) throws PipelineJobException;
 
-    abstract public List<ToolParameterDescriptor> getDefaultHashingParams(boolean includeExcludeFailedcDNA, BARCODE_TYPE type);
+    abstract public List<ToolParameterDescriptor> getHashingCallingParams();
 
     abstract public Set<String> getHtosForParentReadset(Integer parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support) throws PipelineJobException;
+
+    abstract public File getExistingFeatureBarcodeCountDir(Readset parentReadset, BARCODE_TYPE type, SequenceAnalysisJobSupport support) throws PipelineJobException;
 
     public static class CellHashingParameters
     {
@@ -281,11 +279,11 @@ abstract public class CellHashingService
     public enum CALLING_METHOD
     {
         multiseq(true),
-        htodemux(true),
+        htodemux(false),
         dropletutils(true),
         threshold(false),
-        peaknd(true),
-        seqnd(true);
+        peaknd(false),
+        seqnd(false);
 
         boolean isDefault;
 

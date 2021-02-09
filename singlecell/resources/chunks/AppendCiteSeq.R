@@ -10,7 +10,7 @@ for (datasetId in names(seuratObjects)) {
     featureMetadata <- NULL
     if (datasetId %in% names(featureMetadataFiles) && !is.null(featureMetadataFiles[[datasetId]])) {
         featureMetadata <- read.table(featureMetadataFiles[[datasetId]], sep = '\t', header = T, fill = TRUE)
-        featureMetadata$rowname <- paste0(featureMetadata$tagname, '-', featureMetadata$sequence) #NOTE: this is the format used by Cite-Seq-Count
+        featureMetadata$rowname <- featureMetadata$tagname
         adtWhitelist <- featureMetadata$rowname
     }
 
@@ -24,5 +24,6 @@ for (datasetId in names(seuratObjects)) {
     newSeuratObjects[[datasetId]] <- seuratObj
 
     # Cleanup
+    rm(seuratObj)
     gc()
 }
