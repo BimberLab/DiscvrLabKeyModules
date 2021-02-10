@@ -226,14 +226,7 @@ public class CellHashingServiceImpl extends CellHashingService
                         TableSelector ts = new TableSelector(sequenceOutputs, filter, new org.labkey.api.data.Sort("-rowid"));
                         if (!ts.exists())
                         {
-                            if (failIfNoHashing)
-                            {
-                                throw new IllegalArgumentException("Unable to find existing count matrix for hashing readset: " + hashingReadsetId);
-                            }
-                            else
-                            {
-                                job.getLogger().info("Count matrix not found for readset: " + hashingReadsetId);
-                            }
+                            throw new IllegalArgumentException("Unable to find existing count matrix for hashing readset: " + hashingReadsetId);
                         }
                         else
                         {
@@ -275,14 +268,7 @@ public class CellHashingServiceImpl extends CellHashingService
                     TableSelector ts = new TableSelector(sequenceOutputs, filter, new org.labkey.api.data.Sort("-rowid"));
                     if (!ts.exists())
                     {
-                        if (failIfNoHashing)
-                        {
-                            throw new IllegalArgumentException("Unable to find existing count matrix for CITE-seq readset: " + citeseqReadsetId);
-                        }
-                        else
-                        {
-                            job.getLogger().info("Count matrix not found for readset: " + citeseqReadsetId);
-                        }
+                        throw new IllegalArgumentException("Unable to find existing count matrix for CITE-seq readset: " + citeseqReadsetId);
                     }
                     else
                     {

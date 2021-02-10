@@ -167,9 +167,9 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
 
             //https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/feature-bc-analysis
             File libraryCsv = new File(ctx.getOutputDir(), "libraries.csv");
-            try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(libraryCsv), ','))
+            try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(libraryCsv), ',', CSVWriter.NO_QUOTE_CHARACTER))
             {
-                writer.writeNext(new String[]{"fastqs", "sample", "librarytype"});
+                writer.writeNext(new String[]{"fastqs", "sample", "library_type"});
                 writer.writeNext(new String[]{wrapper.getLocalFastqDir(ctx.getOutputDir()).getPath(), wrapper.makeLegalSampleName(rs.getName()), "Antibody Capture"});
             }
             catch (IOException e)
@@ -308,7 +308,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
         private File createFeatureRefForCiteSeq(File outputDir, File adtWhitelist) throws PipelineJobException
         {
             File featuresCsv = new File(outputDir, "adtFeatureRef.csv");
-            try (CSVReader reader = new CSVReader(Readers.getReader(adtWhitelist), '\t'); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(featuresCsv), ','))
+            try (CSVReader reader = new CSVReader(Readers.getReader(adtWhitelist), '\t'); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(featuresCsv), ',', CSVWriter.NO_QUOTE_CHARACTER))
             {
                 writer.writeNext(new String[]{"id", "name", "read", "pattern", "sequence", "feature_type"});
 
@@ -335,7 +335,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
         private File createFeatureRefForHashing(File outputDir, File hashingWhitelist) throws PipelineJobException
         {
             File featuresCsv = new File(outputDir, "hashingFeatureRef.csv");
-            try (CSVReader reader = new CSVReader(Readers.getReader(hashingWhitelist), ',');CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(featuresCsv), ','))
+            try (CSVReader reader = new CSVReader(Readers.getReader(hashingWhitelist), ',');CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(featuresCsv), ',', CSVWriter.NO_QUOTE_CHARACTER))
             {
                 writer.writeNext(new String[]{"id", "name", "read", "pattern", "sequence", "feature_type"});
                 String[] line;
