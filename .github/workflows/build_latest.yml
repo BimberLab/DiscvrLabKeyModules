@@ -39,7 +39,7 @@ jobs:
           repo_token: "${{ secrets.PAT }}"
           automatic_release_tag: "latest"
           prerelease: true
-          title: "DISCVR Development Build: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}""
+          title: "DISCVR Development Build: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}"
           files: |
             /lkDist/discvr/*.tar.gz
             /lkDist/discvr/*.zip
