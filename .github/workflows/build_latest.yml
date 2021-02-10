@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Find default branch"
-      - uses: octokit/request-action@v2.x
+        uses: octokit/request-action@v2.x
         id: get_default_branch
         with:
           route: GET /repos/{owner}/{repo}
@@ -19,9 +19,7 @@ jobs:
           repo: DiscvrLabKeyModules
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
-
-      - name: "Print branch"
-      - run: "Default branch: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}"
+        run: "Default branch: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}"
 
       - name: "Build DISCVR"
         if: github.ref == '/refs/heads/${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
