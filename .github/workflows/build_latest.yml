@@ -21,7 +21,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PAT }}
 
       - name: "Print default branch"
-        run: "Default branch: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}"
+        run: "echo 'Default branch: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'"
 
       - name: "Build DISCVR"
         if: github.ref == '/refs/heads/${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
