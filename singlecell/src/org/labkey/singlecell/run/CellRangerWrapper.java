@@ -67,7 +67,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
         return new File(outputDirectory, "localFq");
     }
 
-    public List<String> prepareCountArgs(AlignmentOutputImpl output, String id, File outputDirectory, Readset rs, List<Pair<File, File>> inputFastqPairs, List<String> extraArgs) throws PipelineJobException
+    public List<String> prepareCountArgs(AlignmentOutputImpl output, String id, File outputDirectory, Readset rs, List<Pair<File, File>> inputFastqPairs, List<String> extraArgs, boolean writeFastqArgs) throws PipelineJobException
     {
         List<String> args = new ArrayList<>();
         args.add(getExe(false).getPath());
@@ -96,7 +96,10 @@ public class CellRangerWrapper extends AbstractCommandWrapper
         output.addIntermediateFile(localFqDir);
 
         Set<String> sampleNames = prepareFastqSymlinks(rs, localFqDir, inputFastqPairs);
-        args.add("--fastqs=" + localFqDir.getPath());
+        if (writeFastqArgs)
+        {
+            args.add("--fastqs=" + localFqDir.getPath());
+        }
 
         getLogger().debug("Sample names: [" + StringUtils.join(sampleNames, ",") + "]");
         if (sampleNames.size() > 1)

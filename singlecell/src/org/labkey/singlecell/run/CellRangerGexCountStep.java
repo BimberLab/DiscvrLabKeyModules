@@ -312,7 +312,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
             });
         }
 
-        List<String> args = new ArrayList<>(getWrapper().prepareCountArgs(output, id, outputDirectory, rs, inputFastqs, getClientCommandArgs("=")));
+        List<String> args = new ArrayList<>(getWrapper().prepareCountArgs(output, id, outputDirectory, rs, inputFastqs, getClientCommandArgs("="), true));
 
         Integer gtfId = getProvider().getParameterByName("gtfFile").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
         File gtfFile = getPipelineCtx().getSequenceSupport().getCachedData(gtfId);

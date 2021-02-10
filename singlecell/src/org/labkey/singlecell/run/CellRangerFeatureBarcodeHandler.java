@@ -143,7 +143,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
             else if (rs.getApplication().equals("CITE-Seq"))
             {
                 category = CITESEQ_CATEGORY;
-                featureFile = createFeatureRefForCiteSeq(ctx.getOutputDir(), CellHashingServiceImpl.get().getValidCiteSeqBarcodeFile(ctx.getSourceDirectory(), rs.getReadsetId()));
+                featureFile = createFeatureRefForCiteSeq(ctx.getOutputDir(), CellHashingServiceImpl.get().getValidCiteSeqBarcodeMetadataFile(ctx.getSourceDirectory(), rs.getReadsetId()));
             }
             else
             {
@@ -163,7 +163,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
                 inputFastqs.add(Pair.of(rd.getFile1(), rd.getFile2()));
             });
 
-            List<String> args = wrapper.prepareCountArgs(output, id, ctx.getOutputDir(), rs, inputFastqs, extraArgs);
+            List<String> args = wrapper.prepareCountArgs(output, id, ctx.getOutputDir(), rs, inputFastqs, extraArgs, false);
 
             //https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/feature-bc-analysis
             File libraryCsv = new File(ctx.getOutputDir(), "libraries.csv");
