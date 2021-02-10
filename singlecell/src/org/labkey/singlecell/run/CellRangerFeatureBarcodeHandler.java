@@ -257,6 +257,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
             }
 
             ctx.getFileManager().addStepOutputs(action, output);
+            ctx.addActions(action);
         }
 
         private File makeDummyIndex(JobContext ctx) throws PipelineJobException
