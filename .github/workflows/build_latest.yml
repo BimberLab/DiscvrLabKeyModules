@@ -19,6 +19,8 @@ jobs:
           repo: DiscvrLabKeyModules
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
+
+      - name: "Print default branch"
         run: "Default branch: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}"
 
       - name: "Build DISCVR"
