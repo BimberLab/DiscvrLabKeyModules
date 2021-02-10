@@ -124,7 +124,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
         {
             if (readsets.size() != 1)
             {
-                throw new PipelineJobException("This step was designed to operate on a single readset. It should have been automatically split upstream");
+                throw new PipelineJobException("This step was designed to operate on a single readset. It should have been automatically split upstream. Total: " + readsets.size());
             }
 
             AlignmentOutputImpl output = new AlignmentOutputImpl();
@@ -255,7 +255,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
         {
             try
             {
-                File indexDir = new File(ctx.getOutputDir(), "dummyIndex");
+                File indexDir = new File(ctx.getOutputDir(), "cellrangerIndex");
                 if (!indexDir.exists())
                 {
                     indexDir.mkdirs();
@@ -294,7 +294,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
                     args.add("--memgb=" + maxRam.toString());
                 }
 
-                wrapper.setWorkingDir(indexDir.getParentFile());
+                wrapper.setWorkingDir(indexDir);
                 wrapper.execute(args);
 
                 return indexDir;
