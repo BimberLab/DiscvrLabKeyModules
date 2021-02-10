@@ -312,7 +312,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
         private File createFeatureRefForCiteSeq(File outputDir, File adtWhitelist) throws PipelineJobException
         {
             File featuresCsv = new File(outputDir, "adtFeatureRef.csv");
-            try (CSVReader reader = new CSVReader(Readers.getReader(adtWhitelist), '\t'); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(featuresCsv), ',', CSVWriter.NO_QUOTE_CHARACTER))
+            try (CSVReader reader = new CSVReader(Readers.getReader(adtWhitelist), '\t'); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(featuresCsv), ',', CSVWriter.DEFAULT_QUOTE_CHARACTER))
             {
                 writer.writeNext(new String[]{"id", "name", "read", "pattern", "sequence", "feature_type"});
 
@@ -339,7 +339,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
         private File createFeatureRefForHashing(File outputDir, File hashingWhitelist) throws PipelineJobException
         {
             File featuresCsv = new File(outputDir, "hashingFeatureRef.csv");
-            try (CSVReader reader = new CSVReader(Readers.getReader(hashingWhitelist), ',');CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(featuresCsv), ',', CSVWriter.NO_QUOTE_CHARACTER))
+            try (CSVReader reader = new CSVReader(Readers.getReader(hashingWhitelist), ',');CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(featuresCsv), ',', CSVWriter.DEFAULT_QUOTE_CHARACTER))
             {
                 writer.writeNext(new String[]{"id", "name", "read", "pattern", "sequence", "feature_type"});
                 String[] line;
