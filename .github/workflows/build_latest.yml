@@ -35,7 +35,7 @@ jobs:
       # See: https://github.com/marketplace/actions/automatic-releases
       - name: Deploy Build
         if: github.ref == '/refs/heads/${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
-      - uses: "marvinpinto/action-automatic-releases@latest"
+        uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.PAT }}"
           automatic_release_tag: "latest"
