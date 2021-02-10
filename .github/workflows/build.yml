@@ -3,8 +3,6 @@ on:
   workflow_dispatch:
   push:
   pull_request:
-  schedule:
-    - cron: '0 3 * * *'
 jobs:
   build-modules:
     # See: https://help.github.com/en/actions/reference/contexts-and-expression-syntax-for-github-actions#github-context

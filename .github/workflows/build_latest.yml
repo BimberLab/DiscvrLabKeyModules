@@ -1,0 +1,45 @@
+name: Build Development Release
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *'
+jobs:
+  build-modules:
+    # See: https://help.github.com/en/actions/reference/contexts-and-expression-syntax-for-github-actions#github-context
+    # https://help.github.com/en/actions/configuring-and-managing-workflows/using-environment-variables#default-environment-variables
+    if: github.repository == 'BimberLab/DiscvrLabKeyModules'
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: "Find default branch"
+      - uses: octokit/request-action@v2.x
+        id: get_default_branch
+        with:
+          route: GET /repos/{owner}/{repo}
+          owner: BimberLab
+          repo: DiscvrLabKeyModules
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+      - run: "Default branch: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}"
+
+      - name: "Build DISCVR"
+        if: github.ref == '/refs/heads/${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
+        uses: bimberlabinternal/DevOps/githubActions/discvr-build@master
+        with:
+          artifactory_user: ${{secrets.artifactory_user}}
+          artifactory_password: ${{secrets.artifactory_password}}
+          # NOTE: permissions are limited on the default secrets.GITHUB_TOKEN, including updating workflows, so use a personal access token
+          github_token: ${{ secrets.PAT }}
+
+      # See: https://github.com/marketplace/actions/automatic-releases
+      - name: Deploy Build
+        if: github.ref == '/refs/heads/${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.PAT }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "DISCVR Development Build: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}""
+          files: |
+            /lkDist/discvr/*.tar.gz
+            /lkDist/discvr/*.zip
