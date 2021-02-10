@@ -2,6 +2,8 @@ name: Publish Release
 on:
   release:
     types: [created]
+    branches:
+      - !latest
 jobs:
   generate:
     name: Create release-artifacts
