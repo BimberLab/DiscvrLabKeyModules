@@ -235,9 +235,11 @@ public class CellHashingServiceImpl extends CellHashingService
                                 job.getLogger().info("Count matrix not found for readset: " + hashingReadsetId);
                             }
                         }
-
-                        SequenceOutputFile so = ts.getObject(SequenceOutputFile.class);
-                        readsetToCountMap.put(hashingReadsetId, so.getFile().getParentFile());  //this is the umi_counts dir
+                        else
+                        {
+                            SequenceOutputFile so = ts.getObject(SequenceOutputFile.class);
+                            readsetToCountMap.put(hashingReadsetId, so.getFile().getParentFile());  //this is the umi_counts dir
+                        }
                     }
 
                     support.cacheReadset(hashingReadsetId, job.getUser());
@@ -282,9 +284,11 @@ public class CellHashingServiceImpl extends CellHashingService
                             job.getLogger().info("Count matrix not found for readset: " + citeseqReadsetId);
                         }
                     }
-
-                    SequenceOutputFile so = ts.getObject(SequenceOutputFile.class);
-                    readsetToCountMap.put(citeseqReadsetId, so.getFile().getParentFile());  //this is the umi_count dir
+                    else
+                    {
+                        SequenceOutputFile so = ts.getObject(SequenceOutputFile.class);
+                        readsetToCountMap.put(citeseqReadsetId, so.getFile().getParentFile());  //this is the umi_count dir
+                    }
                 }
 
                 support.cacheReadset(citeseqReadsetId, job.getUser());
