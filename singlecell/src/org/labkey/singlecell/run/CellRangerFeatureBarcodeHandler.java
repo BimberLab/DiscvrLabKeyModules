@@ -19,7 +19,6 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
-import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.singlecell.CellHashingServiceImpl;
@@ -30,6 +29,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceReadsetProcessor>
@@ -122,6 +122,9 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
         @Override
         public void processFilesRemote(List<Readset> readsets, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
+            RecordedAction action = new RecordedAction(getName());
+            action.setStartTime(new Date());
+
             if (readsets.size() != 1)
             {
                 throw new PipelineJobException("This step was designed to operate on a single readset. It should have been automatically split upstream. Total: " + readsets.size());
@@ -161,6 +164,8 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
             List<Pair<File, File>> inputFastqs = new ArrayList<>();
             rs.getReadData().forEach(rd -> {
                 inputFastqs.add(Pair.of(rd.getFile1(), rd.getFile2()));
+                output.addIntermediateFile(rd.getFile1(), "Input FASTQ");
+                output.addIntermediateFile(rd.getFile2(), "Input FASTQ");
             });
 
             List<String> args = wrapper.prepareCountArgs(output, id, ctx.getOutputDir(), rs, inputFastqs, extraArgs, false);
@@ -227,10 +232,11 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
                 if (rawCounts.exists())
                 {
                     output.addSequenceOutput(rawCounts, rs.getName() + ": " + rs.getApplication() + " Raw Counts", category, rs.getRowId(), null, null, null);
+                    output.addOutput(rawCounts, "Count Matrix");
                 }
                 else
                 {
-                    ctx.getLogger().info("Count dir not found: " + rawCounts.getPath());
+                    throw new PipelineJobException("Count dir not found: " + rawCounts.getPath());
                 }
             }
             catch (IOException e)
@@ -249,6 +255,8 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
             {
                 ctx.getLogger().warn("Unable to find folder: " + directory.getPath());
             }
+
+            ctx.getFileManager().addStepOutputs(action, output);
         }
 
         private File makeDummyIndex(JobContext ctx) throws PipelineJobException
