@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by bimber on 1/16/2015.
@@ -26,6 +27,7 @@ import java.util.List;
 public class SequenceReadsetHandlerJob extends SequenceJob implements HasJobParams
 {
     private String _handlerClassName;
+    private List<Integer> _readsetIds;
 
     // Default constructor for serialization
     protected SequenceReadsetHandlerJob()
@@ -39,9 +41,11 @@ public class SequenceReadsetHandlerJob extends SequenceJob implements HasJobPara
         _handlerClassName = handler.getClass().getName();
 
         //for the purpose of caching files:
+        _readsetIds = new ArrayList<>();
         for (SequenceReadsetImpl rs : readsets)
         {
             getSequenceSupport().cacheReadset(rs);
+            _readsetIds.add(rs.getReadsetId());
         }
     }
 
@@ -64,7 +68,7 @@ public class SequenceReadsetHandlerJob extends SequenceJob implements HasJobPara
 
     public List<Readset> getReadsets()
     {
-        return getSequenceSupport().getCachedReadsets();
+        return getReadsetIds().stream().map(getSequenceSupport()::getCachedReadset).collect(Collectors.toList());
     }
 
     @Override
@@ -93,5 +97,15 @@ public class SequenceReadsetHandlerJob extends SequenceJob implements HasJobPara
         }
 
         return null;
+    }
+
+    public List<Integer> getReadsetIds()
+    {
+        return _readsetIds;
+    }
+
+    public void setReadsetIds(List<Integer> readsetIds)
+    {
+        _readsetIds = readsetIds;
     }
 }
