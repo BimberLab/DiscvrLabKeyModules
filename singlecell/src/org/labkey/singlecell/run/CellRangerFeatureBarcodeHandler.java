@@ -256,19 +256,19 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
             try
             {
                 File indexDir = new File(ctx.getOutputDir(), "cellrangerIndex");
-                if (!indexDir.exists())
+                if (indexDir.exists())
                 {
-                    indexDir.mkdirs();
+                    FileUtils.deleteDirectory(indexDir);
                 }
 
-                File fasta = new File(indexDir, "genome.fasta");
+                File fasta = new File(ctx.getOutputDir(), "genome.fasta");
                 try (PrintWriter writer = PrintWriters.getPrintWriter(fasta))
                 {
                     writer.println(">1");
                     writer.println("ATGATGATGATGATG");
                 }
 
-                File gtf = new File(indexDir, "genome.gtf");
+                File gtf = new File(ctx.getOutputDir(), "genome.gtf");
                 try (PrintWriter writer = PrintWriters.getPrintWriter(gtf))
                 {
                     writer.println("1\tnowhere\texon\t1\t4\t.\t+\t.\ttranscript_id \"transcript1\"; gene_id \"gene1\"; gene_name \"gene1\";");
@@ -294,8 +294,12 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
                     args.add("--memgb=" + maxRam.toString());
                 }
 
-                wrapper.setWorkingDir(indexDir);
+                wrapper.setWorkingDir(ctx.getOutputDir());
                 wrapper.execute(args);
+
+                ctx.getFileManager().addIntermediateFile(fasta);
+                ctx.getFileManager().addIntermediateFile(gtf);
+                ctx.getFileManager().addIntermediateFile(indexDir);
 
                 return indexDir;
             }
