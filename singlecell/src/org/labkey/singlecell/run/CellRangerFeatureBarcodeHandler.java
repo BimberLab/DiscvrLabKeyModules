@@ -17,6 +17,7 @@ import org.labkey.api.sequenceanalysis.pipeline.AlignmentOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.util.FileUtil;
@@ -38,7 +39,17 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
 
     public CellRangerFeatureBarcodeHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Create CITE-seq/Cell Hashing Counts", "This will run cellranger to generate the raw cite-seq or cell hashing count matrix. It will infer the correct ADT/hashing index sets based on the cDNA library table, and will fail if these readsets are not registered here.", null, null);
+        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Create CITE-seq/Cell Hashing Counts", "This will run cellranger to generate the raw cite-seq or cell hashing count matrix. It will infer the correct ADT/hashing index sets based on the cDNA library table, and will fail if these readsets are not registered here.", null, Arrays.asList(
+            ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
+                put("checked", true);
+            }}, false)
+        ));
+    }
+
+    @Override
+    public boolean doSplitJobs()
+    {
+        return true;
     }
 
     @Override
