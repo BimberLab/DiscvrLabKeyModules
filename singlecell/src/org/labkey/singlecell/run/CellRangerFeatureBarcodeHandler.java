@@ -24,6 +24,7 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentOutputImpl;
+import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -54,7 +55,10 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
         super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Create CITE-seq/Cell Hashing Counts", "This will run cellranger to generate the raw cite-seq or cell hashing count matrix. It will infer the correct ADT/hashing index sets based on the cDNA library table, and will fail if these readsets are not registered here.", null, Arrays.asList(
             ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
                 put("checked", true);
-            }}, false)
+            }}, false),
+            ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--chemistry"), "chemistry", "Chemistry", "This is usually left blank, in which case cellranger will auto-detect. Example values are: SC3Pv1, SC3Pv2, SC3Pv3, SC5P-PE, SC5P-R2, or SC5P-R1", "textfield", new JSONObject(){{
+
+            }}, null)
         ));
     }
 
