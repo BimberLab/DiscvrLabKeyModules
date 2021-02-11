@@ -32,6 +32,9 @@ jobs:
         env:
           GENERATE_DIST: 1
 
+      - name: "List artifacts"
+        run: "ls /lkDist/discvr/DISCVR-*"
+
       # See: https://github.com/marketplace/actions/automatic-releases
       - name: Deploy Build
         if: github.ref == '/refs/heads/${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
@@ -41,5 +44,4 @@ jobs:
           automatic_release_tag: "latest"
           prerelease: true
           title: "DISCVR Development Build: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}"
-          files: |
-            /lkDist/discvr/DISCVR-*
+          files: /lkDist/discvr/DISCVR-*
