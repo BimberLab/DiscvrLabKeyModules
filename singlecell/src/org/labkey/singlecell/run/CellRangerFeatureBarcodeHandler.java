@@ -406,7 +406,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
 
             Readset rs = readsets.get(0);
 
-            File metrics = new File(so.getFile().getParentFile(), "metrics_summary.csv");
+            File metrics = new File(so.getFile().getParentFile().getParentFile(), "metrics_summary.csv");
             if (metrics.exists())
             {
                 job.getLogger().debug("adding 10x metrics");
