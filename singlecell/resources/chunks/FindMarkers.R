@@ -3,7 +3,7 @@ for (datasetId in names(seuratObjects)) {
     seuratObjects[[datasetId]] <- NULL
 
     outFile = paste0(datasetId, '.markers.txt')
-    dt <- bindArgs(CellMembrane::Find_Markers, seuratObj)
+    dt <- bindArgs(CellMembrane::Find_Markers, seuratObj)()
     print(dt)
 
     # Cleanup

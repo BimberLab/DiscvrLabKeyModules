@@ -1,7 +1,9 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
+import org.json.JSONObject;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
@@ -18,7 +20,9 @@ public class CiteSeqDimRedux extends AbstractCellMembraneStep
         public Provider()
         {
             super("CiteSeqDimRedux", "CiteSeq DimRedux", "CellMembrane/Seurat", "This will run DimRedux steps on the ADT data.", Arrays.asList(
-
+                    SeuratToolParameter.create("performClrNormalization", "Perform CLR Normalization", "If true, Seurat CLR normalization will be performed. Otherwise any pre-existing normalization is used.", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, true, "performClrNormalization", true)
             ), null, null);
         }
 

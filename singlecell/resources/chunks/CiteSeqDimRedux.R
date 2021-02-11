@@ -3,7 +3,7 @@ for (datasetId in names(seuratObjects)) {
     seuratObjects[[datasetId]] <- NULL
 
     #TODO: what if not used?
-    seuratObj <- CellMembrane::CiteSeqDimRedux(seuratObj)
+    seuratObj <- bindArgs(CellMembrane::CiteSeqDimRedux, seuratObj)()
 
     newSeuratObjects[[datasetId]] <- seuratObj
 
