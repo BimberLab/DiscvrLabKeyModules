@@ -42,5 +42,4 @@ jobs:
           prerelease: true
           title: "DISCVR Development Build: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}"
           files: |
-            /lkDist/discvr/*.tar.gz
-            /lkDist/discvr/*.zip
+            /lkDist/discvr/DISCVR-*
