@@ -40,6 +40,7 @@ public class FindMarkers extends AbstractCellMembraneStep
                     }}, null),
                     SeuratToolParameter.create("pValThreshold", "pVal Threshold", "Only genes with adjusted p-values below this will be reported", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
+                        put("decimalPrecision", 5);
                     }}, 0.001),
                     SeuratToolParameter.create("foldChangeThreshold", "Log2 Fold-Change Threshold", "Only genes with log2-foldchange above this will be reported", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
