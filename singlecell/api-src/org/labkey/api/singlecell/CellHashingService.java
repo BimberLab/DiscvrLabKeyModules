@@ -77,20 +77,18 @@ abstract public class CellHashingService
     {
         public BARCODE_TYPE type;
 
-        private File htoOrCiteseqBarcodesFile;
-        public Set<String> allowableHtoOrCiteseqBarcodes;
+        private File htoBarcodesFile;
+        public Set<String> allowableHtoBarcodes;
 
         public File cellBarcodeWhitelistFile;
 
         public boolean createOutputFiles = true;
         public @Nullable String outputCategory;
 
-        public Readset htoOrCiteseqReadset;
+        public Readset htoReadset;
         public Readset parentReadset;
 
         public @Nullable Integer genomeId;
-        public Integer editDistance = 2;
-        public boolean scanEditDistances = false;
         public boolean skipNormalizationQc = false;
         public Integer minCountPerCell = 5;
         public List<CALLING_METHOD> methods = CALLING_METHOD.getDefaultMethods();
@@ -102,17 +100,15 @@ abstract public class CellHashingService
 
         }
 
-        public static CellHashingService.CellHashingParameters createFromStep(SequenceOutputHandler.JobContext ctx, SingleCellStep step, CellHashingService.BARCODE_TYPE type, Readset htoOrCiteseqReadset, @Nullable Readset parentReadset, @Nullable File htoOrCiteseqBarcodesFile) throws PipelineJobException
+        public static CellHashingService.CellHashingParameters createFromStep(SequenceOutputHandler.JobContext ctx, SingleCellStep step, CellHashingService.BARCODE_TYPE type, Readset htoReadset, @Nullable Readset parentReadset) throws PipelineJobException
         {
             CellHashingService.CellHashingParameters ret = new CellHashingService.CellHashingParameters();
             ret.type = type;
-            ret.scanEditDistances = step.getProvider().getParameterByName("scanEditDistances").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, false);
             ret.skipNormalizationQc = step.getProvider().getParameterByName("skipNormalizationQc").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, false);
-            ret.editDistance = step.getProvider().getParameterByName("editDistance").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Integer.class, 2);
             ret.minCountPerCell = step.getProvider().getParameterByName("minCountPerCell").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Integer.class, 3);
-            ret.htoOrCiteseqReadset = htoOrCiteseqReadset;
+            ret.htoReadset = htoReadset;
             ret.parentReadset = parentReadset;
-            ret.htoOrCiteseqBarcodesFile = htoOrCiteseqBarcodesFile == null ? new File(ctx.getSourceDirectory(), type.getAllBarcodeFileName()) : htoOrCiteseqBarcodesFile;
+            ret.htoBarcodesFile = new File(ctx.getSourceDirectory(), type.getAllBarcodeFileName());
 
             if (type == BARCODE_TYPE.hashing)
             {
@@ -131,17 +127,15 @@ abstract public class CellHashingService
             return ret;
         }
 
-        public static CellHashingParameters createFromJson(BARCODE_TYPE type, File webserverDir, JSONObject params, Readset htoOrCiteseqReadset, @Nullable Readset parentReadset, @Nullable File htoOrCiteseqBarcodesFile) throws PipelineJobException
+        public static CellHashingParameters createFromJson(BARCODE_TYPE type, File webserverDir, JSONObject params, Readset htoReadset, @Nullable Readset parentReadset) throws PipelineJobException
         {
             CellHashingParameters ret = new CellHashingParameters();
             ret.type = type;
-            ret.scanEditDistances = params.optBoolean("scanEditDistances", false);
             ret.skipNormalizationQc = params.optBoolean("skipNormalizationQc", false);
-            ret.editDistance = params.optInt("editDistance", 2);
             ret.minCountPerCell = params.optInt("minCountPerCell", 3);
-            ret.htoOrCiteseqReadset = htoOrCiteseqReadset;
+            ret.htoReadset = htoReadset;
             ret.parentReadset = parentReadset;
-            ret.htoOrCiteseqBarcodesFile = htoOrCiteseqBarcodesFile == null ? new File(webserverDir, type.getAllBarcodeFileName()) : htoOrCiteseqBarcodesFile;
+            ret.htoBarcodesFile = new File(webserverDir, type.getAllBarcodeFileName());
             ret.methods = extractMethods(params.optString("methods"));
 
             if (type == BARCODE_TYPE.hashing && ret.methods.isEmpty())
@@ -185,12 +179,12 @@ abstract public class CellHashingService
 
         public int getEffectiveReadsetId()
         {
-            return parentReadset != null ? parentReadset.getReadsetId() : htoOrCiteseqReadset.getReadsetId();
+            return parentReadset != null ? parentReadset.getReadsetId() : htoReadset.getReadsetId();
         }
 
-        public File getHtoOrCiteSeqBarcodeFile()
+        public File getHtoBarcodeFile()
         {
-            return htoOrCiteseqBarcodesFile;
+            return htoBarcodesFile;
         }
 
         public String getReportTitle()
@@ -208,9 +202,9 @@ abstract public class CellHashingService
             {
                 return FileUtil.makeLegalName(parentReadset.getName());
             }
-            else if (htoOrCiteseqReadset != null)
+            else if (htoReadset != null)
             {
-                return FileUtil.makeLegalName(htoOrCiteseqReadset.getName());
+                return FileUtil.makeLegalName(htoReadset.getName());
             }
 
             throw new IllegalStateException("Neither basename, parent readset, nor hashing/citeseq readset provided");
@@ -223,9 +217,9 @@ abstract public class CellHashingService
 
         public void validate(boolean allowMissingHtoReadset)
         {
-            if (!allowMissingHtoReadset && htoOrCiteseqReadset == null)
+            if (!allowMissingHtoReadset && htoReadset == null)
             {
-                throw new IllegalStateException("Missing Hashing/Cite-seq readset");
+                throw new IllegalStateException("Missing Hashing readset");
             }
 
             if (createOutputFiles && outputCategory == null)
@@ -233,25 +227,25 @@ abstract public class CellHashingService
                 throw new IllegalStateException("Missing output category");
             }
 
-            if (htoOrCiteseqBarcodesFile == null)
+            if (htoBarcodesFile == null)
             {
-                throw new IllegalStateException("Missing all HTO/CITE-seq barcodes file");
+                throw new IllegalStateException("Missing all HTO barcodes file");
             }
         }
 
         public Set<String> getAllowableBarcodeNames() throws PipelineJobException
         {
-            if (allowableHtoOrCiteseqBarcodes != null)
+            if (allowableHtoBarcodes != null)
             {
-                return Collections.unmodifiableSet(allowableHtoOrCiteseqBarcodes);
+                return Collections.unmodifiableSet(allowableHtoBarcodes);
             }
-            if (htoOrCiteseqBarcodesFile == null)
+            if (htoBarcodesFile == null)
             {
                 throw new IllegalArgumentException("Barcode file was null");
             }
 
             Set<String> allowableBarcodes = new HashSet<>();
-            try (CSVReader reader = new CSVReader(Readers.getReader(htoOrCiteseqBarcodesFile), '\t'))
+            try (CSVReader reader = new CSVReader(Readers.getReader(htoBarcodesFile), '\t'))
             {
                 String[] line;
                 while ((line = reader.readNext()) != null)

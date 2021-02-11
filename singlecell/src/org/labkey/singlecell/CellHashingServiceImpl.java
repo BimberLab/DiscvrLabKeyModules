@@ -390,16 +390,21 @@ public class CellHashingServiceImpl extends CellHashingService
     @Override
     public File generateHashingCallsForRawMatrix(Readset parentReadset, PipelineOutputTracker output, SequenceOutputHandler.JobContext ctx, CellHashingParameters parameters, File rawCountMatrixDir) throws PipelineJobException
     {
+        if (parameters.type != BARCODE_TYPE.hashing)
+        {
+            throw new PipelineJobException("This is only intended for cell hashing data");
+        }
+
         parameters.validate(true);
-        Map<Integer, Integer> readsetToHashingOrCite = parameters.type == BARCODE_TYPE.hashing ? getCachedHashingReadsetMap(ctx.getSequenceSupport()) : getCachedCiteSeqReadsetMap(ctx.getSequenceSupport());
-        if (readsetToHashingOrCite.isEmpty())
+        Map<Integer, Integer> readsetToHashing = getCachedHashingReadsetMap(ctx.getSequenceSupport());
+        if (readsetToHashing.isEmpty())
         {
             ctx.getLogger().info("No cached " + parameters.type.name() + " readsets, skipping");
             return null;
         }
 
         //prepare whitelist of barcodes, based on cDNA records
-        File htoBarcodeWhitelist = parameters.getHtoOrCiteSeqBarcodeFile();
+        File htoBarcodeWhitelist = parameters.getHtoBarcodeFile();
         if (!htoBarcodeWhitelist.exists())
         {
             throw new PipelineJobException("Unable to find file: " + htoBarcodeWhitelist.getPath());
@@ -412,15 +417,15 @@ public class CellHashingServiceImpl extends CellHashingService
             return null;
         }
 
-        ctx.getLogger().debug("total cached readset/" + parameters.type.name() + " readset pairs: " + readsetToHashingOrCite.size());
+        ctx.getLogger().debug("total cached readset/" + parameters.type.name() + " readset pairs: " + readsetToHashing.size());
         ctx.getLogger().debug("unique indexes: " + lineCount);
 
-        Readset htoOrCiteReadset = ctx.getSequenceSupport().getCachedReadset(readsetToHashingOrCite.get(parentReadset.getReadsetId()));
-        if (htoOrCiteReadset == null)
+        Readset htoReadset = ctx.getSequenceSupport().getCachedReadset(readsetToHashing.get(parentReadset.getReadsetId()));
+        if (htoReadset == null)
         {
             throw new PipelineJobException("Unable to find HTO readset for readset: " + parentReadset.getRowId());
         }
-        parameters.htoOrCiteseqReadset = htoOrCiteReadset;
+        parameters.htoReadset = htoReadset;
 
         parameters.validate();
 
