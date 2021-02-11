@@ -3,7 +3,7 @@ on:
   release:
     types: [created]
     branches:
-      - !latest
+      - '!latest'
 jobs:
   generate:
     name: Create release-artifacts
