@@ -19,6 +19,8 @@ jobs:
           artifactory_password: ${{secrets.artifactory_password}}
           # NOTE: permissions are limited on the default secrets.GITHUB_TOKEN, including updating workflows, so use a personal access token
           github_token: ${{ secrets.PAT }}
+        env:
+          GENERATE_DIST: 1
 
       - name: Upload Artifacts
         if: github.event_name == 'release' && github.event.action == 'created'
@@ -26,4 +28,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          args: ${HOME}/lkDist/discvr/DISCVR-*
+          args: /home/runner/work/_temp/_github_home/lkDist/discvr/DISCVR-*

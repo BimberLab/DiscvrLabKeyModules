@@ -34,10 +34,9 @@ jobs:
 
       - name: "List artifacts"
         run: |
-          "ls ${HOME}"
-          "ls /github/home"
-          "ls /github/home/lkDist"
-          "ls /github/home/lkDist/discvr*"
+          ls /home/runner/work/_temp/_github_home
+          ls /home/runner/work/_temp/_github_home/lkDist/*
+          ls /home/runner/work/_temp/_github_home/lkDist/discvr/*
 
       # See: https://github.com/marketplace/actions/automatic-releases
       - name: Deploy Build
@@ -48,4 +47,4 @@ jobs:
           automatic_release_tag: "latest"
           prerelease: true
           title: "DISCVR Development Build: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}"
-          files: ${HOME}/lkDist/discvr/DISCVR-*
+          files: /home/runner/work/_temp/_github_home/lkDist/discvr/DISCVR-*
