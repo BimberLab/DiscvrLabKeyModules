@@ -32,12 +32,6 @@ jobs:
         env:
           GENERATE_DIST: 1
 
-      - name: "List artifacts"
-        run: |
-          ls /home/runner/work/_temp/_github_home
-          ls /home/runner/work/_temp/_github_home/lkDist/*
-          ls /home/runner/work/_temp/_github_home/lkDist/discvr/*
-
       # See: https://github.com/marketplace/actions/automatic-releases
       - name: Deploy Build
         if: github.ref == '/refs/heads/${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
