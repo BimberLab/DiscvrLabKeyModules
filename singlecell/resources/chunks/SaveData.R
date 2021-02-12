@@ -4,6 +4,7 @@ for (datasetId in names(newSeuratObjects)) {
 
     fn <- paste0(outputPrefix, '.', datasetId, '.seurat.rds')
     barcodeFile <- paste0(outputPrefix, '.', datasetId, '.cellBarcodes.csv')
+    metaFile <- paste0(outputPrefix, '.', datasetId, '.seurat.meta.txt')
 
     saveRDS(seuratObj, file = fn)
 
@@ -14,7 +15,8 @@ for (datasetId in names(newSeuratObjects)) {
 
     savedFiles <- rbind(savedFiles, data.frame(datasetId = datasetId, datasetName = datasetName, filename = fn, outputFileId = outputFileId))
 
-    # WriteCellBarcodes
+    # Write cell barcodes and metadata:
+    write.table(seuratObj@meta.data, file = metaFile, quote = F, row.names = F, sep = ',', col.names = F)
     write.table(data.frame(CellBarcode = colnames(seuratObj)), file = barcodeFile, quote = F, row.names = F, sep = ',', col.names = F)
 }
 

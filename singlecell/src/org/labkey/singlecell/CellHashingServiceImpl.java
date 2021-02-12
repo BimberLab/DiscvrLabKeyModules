@@ -1089,4 +1089,15 @@ public class CellHashingServiceImpl extends CellHashingService
 
         return barcodes;
     }
+
+    public File getMetaTableFromSeurat(File seuratObj)
+    {
+        File barcodes = new File(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds", "seurat.meta.txt"));
+        if (!barcodes.exists())
+        {
+            throw new IllegalArgumentException("Unable to find expected metadata file.  This might indicate the seurat object was created with an older version of the pipeline.  Expected: " + barcodes.getPath());
+        }
+
+        return barcodes;
+    }
 }

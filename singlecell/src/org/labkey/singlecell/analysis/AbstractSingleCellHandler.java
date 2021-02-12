@@ -291,6 +291,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     currentFiles = new ArrayList<>(output.getSeuratObjects());
                     _resumer.getFileManager().addIntermediateFiles(currentFiles.stream().map(SingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toSet()));
                     _resumer.getFileManager().addIntermediateFiles(currentFiles.stream().map(x -> CellHashingServiceImpl.get().getCellBarcodesFromSeurat(x.getFile())).collect(Collectors.toSet()));
+                    _resumer.getFileManager().addIntermediateFiles(currentFiles.stream().map(x -> CellHashingServiceImpl.get().getMetaTableFromSeurat(x.getFile())).collect(Collectors.toSet()));
                 }
                 else if (step.createsSeuratObjects())
                 {
@@ -316,6 +317,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     ctx.getFileManager().removeIntermediateFile(seurat.getFile());
                     _resumer.getFileManager().removeIntermediateFile(seurat.getFile());
                     _resumer.getFileManager().removeIntermediateFile(CellHashingServiceImpl.get().getCellBarcodesFromSeurat(seurat.getFile()));
+                    _resumer.getFileManager().removeIntermediateFile(CellHashingServiceImpl.get().getMetaTableFromSeurat(seurat.getFile()));
                 }
             }
 
@@ -471,6 +473,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             }
             currentFiles.stream().map(SingleCellStep.SeuratObjectWrapper::getFile).forEach(_resumer.getFileManager()::addIntermediateFile);
             _resumer.getFileManager().addIntermediateFiles(currentFiles.stream().map(x -> CellHashingServiceImpl.get().getCellBarcodesFromSeurat(x.getFile())).collect(Collectors.toSet()));
+            _resumer.getFileManager().addIntermediateFiles(currentFiles.stream().map(x -> CellHashingServiceImpl.get().getMetaTableFromSeurat(x.getFile())).collect(Collectors.toSet()));
 
             _resumer.setStepComplete(ctx.getLogger(), prepareRawCounts, 0, action, output0.getSeuratObjects(), output0.getMarkdownFile(), output0.getHtmlFile());
         }
