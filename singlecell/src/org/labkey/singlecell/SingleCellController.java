@@ -429,10 +429,11 @@ public class SingleCellController extends SpringActionController
             return getContainer().getStartURL(getUser());
         }
 
+        @Override
         public ModelAndView getView(Object form, BindException errors) throws Exception
         {
             LinkedHashSet<ClientDependency> cds = new LinkedHashSet<>();
-            for (PipelineStepProvider fact : SequencePipelineService.get().getAllProviders())
+            for (PipelineStepProvider<?> fact : SequencePipelineService.get().getAllProviders())
             {
                 cds.addAll(fact.getClientDependencies());
             }

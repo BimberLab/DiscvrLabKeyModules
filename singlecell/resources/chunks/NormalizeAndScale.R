@@ -1,11 +1,13 @@
 for (datasetId in names(seuratObjects)) {
     seuratObj <- seuratObjects[[datasetId]]
+    seuratObjects[[datasetId]] <- NULL
+    gc()
 
-    seuratObj <- CellMembrane::NormalizeAndScale(seuratObj, variableFeatureSelectionMethod = variableFeatureSelectionMethod)
+    seuratObj <- bindArgs(CellMembrane::NormalizeAndScale, seuratObj)()
 
     newSeuratObjects[[datasetId]] <- seuratObj
 
     # Cleanup
-    seuratObjects[[datasetId]] <- NULL
+    rm(seuratObj)
     gc()
 }

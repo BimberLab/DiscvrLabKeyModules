@@ -1,10 +1,12 @@
 for (datasetId in names(seuratObjects)) {
     seuratObj <- seuratObjects[[datasetId]]
+    seuratObjects[[datasetId]] <- NULL
 
-    dt <- CellMembrane::Find_Markers(seuratObj, identFields = identFields, outFile = paste0(datasetId, '.', fieldName, '.markers.txt'))
+    outFile = paste0(datasetId, '.markers.txt')
+    dt <- bindArgs(CellMembrane::Find_Markers, seuratObj)()
     print(dt)
 
     # Cleanup
-    seuratObjects[[datasetId]] <- NULL
+    rm(seuratObj)
     gc()
 }

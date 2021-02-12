@@ -26,7 +26,7 @@ import java.util.Map;
 abstract public class AbstractResumer implements Serializable
 {
     transient Logger _log;
-    transient File _localWorkDir;
+    transient File _webserverJobDir;
 
     protected TaskFileManager _fileManager;
     protected LinkedHashSet<RecordedAction> _recordedActions = null;
@@ -41,9 +41,9 @@ abstract public class AbstractResumer implements Serializable
 
     }
 
-    protected AbstractResumer(File localWorkDir, Logger log, TaskFileManager fileManager)
+    protected AbstractResumer(File webserverJobDir, Logger log, TaskFileManager fileManager)
     {
-        _localWorkDir = localWorkDir;
+        _webserverJobDir = webserverJobDir;
         _log = log;
         _fileManager = fileManager;
         _recordedActions = new LinkedHashSet<>();
@@ -70,7 +70,7 @@ abstract public class AbstractResumer implements Serializable
 
     protected void writeToJson() throws PipelineJobException
     {
-        writeToJson(_localWorkDir);
+        writeToJson(_webserverJobDir);
     }
 
     abstract protected String getJsonName();
@@ -111,7 +111,7 @@ abstract public class AbstractResumer implements Serializable
 
     public void markComplete(boolean deleteFile)
     {
-        File file = getSerializedJson(_localWorkDir, getJsonName());
+        File file = getSerializedJson(_webserverJobDir, getJsonName());
         if (file.exists())
         {
             _log.info("closing job resumer");
@@ -157,14 +157,14 @@ abstract public class AbstractResumer implements Serializable
         _recordedActions = recordedActions;
     }
 
-    public File getLocalWorkDir()
+    public File getWebserverJobDir()
     {
-        return _localWorkDir;
+        return _webserverJobDir;
     }
 
-    public void setLocalWorkDir(File localWorkDir)
+    public void setWebserverJobDir(File webserverJobDir)
     {
-        _localWorkDir = localWorkDir;
+        _webserverJobDir = webserverJobDir;
     }
 
     public Logger getLogger()
@@ -227,7 +227,7 @@ abstract public class AbstractResumer implements Serializable
             ret = readFromJson(json, clazz);
             ret.setResume(true);
             ret.setLogger(ctx.getLogger());
-            ret.setLocalWorkDir(ctx.getWorkDir().getDir());
+            ret.setWebserverJobDir(ctx.getSourceDirectory());
             ret.getFileManager().onResume(ctx.getJob(), ctx.getWorkDir());
 
             ctx.getLogger().debug("FileManagers initially equal: " + ctx.getFileManager().equals(ret.getFileManager()));

@@ -19,7 +19,7 @@ public class FilterRawCounts extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("FilterRawCounts", "Filter Raw Counts", "Seurat/OOSAP", "This will use OOSAP/Seurat to perform basic filtering on cells based on UMI count, feature count, etc.", Arrays.asList(
+            super("FilterRawCounts", "Filter Raw Counts", "CellMembrane/Seurat", "This will use CellMembrane/Seurat to perform basic filtering on cells based on UMI count, feature count, etc.", Arrays.asList(
                     SeuratToolParameter.create("nCountRnaLow", "Min UMI Count", "Cells with UMI counts below this value will be discarded", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, 0, "nCount_RNA.low", false),
@@ -49,5 +49,11 @@ public class FilterRawCounts extends AbstractCellMembraneStep
         {
             return new FilterRawCounts(ctx, this);
         }
+    }
+
+    @Override
+    public String getFileSuffix()
+    {
+        return "frc";
     }
 }

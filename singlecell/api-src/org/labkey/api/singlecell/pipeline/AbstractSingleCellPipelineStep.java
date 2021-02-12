@@ -1,13 +1,13 @@
 package org.labkey.api.singlecell.pipeline;
 
 import au.com.bytecode.opencsv.CSVReader;
-import com.google.common.io.Files;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
@@ -15,6 +15,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.writer.PrintWriters;
 
 import java.io.BufferedReader;
@@ -39,10 +40,18 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
     {
         SingleCellOutput output = new SingleCellOutput();
 
-        File rmd = createRmd(ctx, inputObjects, outputPrefix);
-        executeR(ctx, rmd, outputPrefix);
+        File rmd = createRmd(output, ctx, inputObjects, outputPrefix);
+        if (hasCompleted())
+        {
+            ctx.getLogger().info("Step has already completed, skipping R");
+        }
+        else
+        {
+            executeR(ctx, rmd, outputPrefix);
+        }
 
         ctx.getFileManager().addIntermediateFile(rmd);
+        ctx.getFileManager().addIntermediateFile(new File(rmd.getParentFile(), FileUtil.getBaseName(rmd.getName()) + "_files"));
 
         File markdownFile = getExpectedMarkdownFile(ctx, outputPrefix);
         if (!markdownFile.exists())
@@ -71,8 +80,15 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                     throw new PipelineJobException("File not found: " + f.getPath());
                 }
 
-                getPipelineCtx().getLogger().debug("Output seurat: " + line[0] + " / " + line[1] + " / "+ f.getName());
-                outputs.add(new SeuratObjectWrapper(line[0], line[1], f));
+                getPipelineCtx().getLogger().debug("Output seurat: " + line[0] + " / " + line[1] + " / "+ f.getName() + " / " + line[3]);
+
+                String outputIdVal = "NA".equals(line[3]) ? null : StringUtils.trimToNull(line[3]);
+                if (outputIdVal != null && !NumberUtils.isCreatable(outputIdVal))
+                {
+                    throw new PipelineJobException("Unable to parse outputFileId: " + outputIdVal);
+                }
+
+                outputs.add(new SeuratObjectWrapper(line[0], line[1], f, outputIdVal == null ? null : Integer.parseInt(outputIdVal)));
             }
         }
         catch (IOException e)
@@ -108,9 +124,6 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             output.setSeuratObjects(outputs);
         }
 
-        output.setHtmlFile(getExpectedHtmlFile(ctx, outputPrefix));
-        output.setMarkdownFile(getExpectedMarkdownFile(ctx, outputPrefix));
-
         return output;
     }
 
@@ -124,7 +137,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         return new File(ctx.getOutputDir(), outputPrefix + ".html");
     }
 
-    protected File createRmd(SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException
+    protected File createRmd(SingleCellOutput output, SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException
     {
         File outfile = new File(ctx.getOutputDir(), outputPrefix + ".rmd");
         try (PrintWriter out = PrintWriters.getPrintWriter(outfile))
@@ -164,7 +177,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
     public static class Markdown
     {
         public List<Chunk> chunks;
-        public Chunk setup;
+        public Chunk setup = null;
         public List<String> headerYml;
 
         public void print(PrintWriter out)
@@ -173,7 +186,10 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             headerYml.forEach(out::println);
             out.println("---");
             out.println("");
-
+            if (setup != null)
+            {
+                setup.print(out);
+            }
             chunks.forEach(chunk -> chunk.print(out));
         }
 
@@ -200,11 +216,17 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         }
     }
 
+    protected boolean hasCompleted()
+    {
+        return false;
+    }
+
     protected void executeR(SequenceOutputHandler.JobContext ctx, File rmd, String outputPrefix) throws PipelineJobException
     {
         List<String> lines = new ArrayList<>();
         lines.add("rmarkdown::render(output_file = '" + getExpectedHtmlFile(ctx, outputPrefix).getName() + "', input = '" + rmd.getName() + "', intermediates_dir  = '/work')");
         lines.add("print('Rmarkdown complete')");
+        lines.add("");
 
         executeR(ctx, getDockerContainerName(), outputPrefix, lines);
     }
@@ -212,27 +234,19 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
     public static void executeR(SequenceOutputHandler.JobContext ctx, String dockerContainerName, String outputPrefix, List<String> lines) throws PipelineJobException
     {
         File localRScript = new File(ctx.getOutputDir(), outputPrefix + ".R");
-        if (!localRScript.exists())
+        try (PrintWriter writer = PrintWriters.getPrintWriter(localRScript))
         {
-            try (PrintWriter writer = PrintWriters.getPrintWriter(localRScript))
-            {
-                lines.forEach(writer::println);
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
+            lines.forEach(writer::println);
         }
-        else
+        catch (IOException e)
         {
-            ctx.getLogger().info("R script exists, re-using: " + localRScript.getPath());
+            throw new PipelineJobException(e);
         }
 
-        File localBashScript = new File(ctx.getOutputDir(), "wrapper.sh");
+        File localBashScript = new File(ctx.getOutputDir(), "dockerWrapper.sh");
         try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
         {
-            writer.println("#/bin/bash");
-            writer.println("set -e");
+            writer.println("#!/bin/bash");
             writer.println("set -x");
             writer.println("WD=`pwd`");
             writer.println("HOME=`echo ~/`");
@@ -240,15 +254,18 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
             writer.println("sudo $DOCKER pull " + dockerContainerName);
             writer.println("sudo $DOCKER run --rm=true \\");
-            if (SequencePipelineService.get().getMaxRam() != null)
-            {
-                writer.println("\t--memory=" + SequencePipelineService.get().getMaxRam() + "g \\");
-                writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM \\");
-            }
 
             if (SequencePipelineService.get().getMaxThreads(ctx.getLogger()) != null)
             {
                 writer.println("\t-e SEQUENCEANALYSIS_MAX_THREADS \\");
+            }
+
+            Integer maxRam = SequencePipelineService.get().getMaxRam();
+            if (maxRam != null)
+            {
+                //int swap = 4*maxRam;
+                writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM \\");
+                writer.println("\t--memory='" + maxRam + "g' \\");
             }
 
             writer.println("\t-v \"${WD}:/work\" \\");
@@ -256,12 +273,13 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");
             writer.println("\t-w /work \\");
-            writer.println("\t-e HOME=/homeDir \\");
+            //NOTE: this seems to disrupt packages installed into home
+            //writer.println("\t-e HOME=/homeDir \\");
             writer.println("\t" + dockerContainerName + " \\");
             writer.println("\tRscript --vanilla " + localRScript.getName());
             writer.println("");
-            writer.println("echo 'script complete'");
-
+            writer.println("echo 'Bash script complete'");
+            writer.println("");
         }
         catch (IOException e)
         {
@@ -356,10 +374,16 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         body.add("");
         body.add("seuratObjects <- list()");
         body.add("datasetIdToName <- list()");
+        body.add("datasetIdTOutputFileId<- list()");
         for (SeuratObjectWrapper so : inputObjects)
         {
             body.add("seuratObjects[['" + so.getDatasetId() + "']] <- " + printInputFile(so));
             body.add("datasetIdToName[['" + so.getDatasetId() + "']] <- '" + so.getDatasetName() + "'");
+
+            if (so.getSequenceOutputFileId() != null)
+            {
+                body.add("datasetIdTOutputFileId[['" + so.getDatasetId() + "']] <- " + so.getSequenceOutputFileId());
+            }
         }
 
         body.addAll(loadChunkFromFile("singlecell", "chunks/Functions.R"));
@@ -381,11 +405,11 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 
     public static class Chunk
     {
-        String header;
-        String extraText;
-        String chunkName;
-        String chunkOpts;
-        List<String> bodyLines;
+        public String header;
+        public String extraText;
+        public String chunkName;
+        public String chunkOpts;
+        public List<String> bodyLines;
 
         public Chunk(String chunkName, @Nullable String header, @Nullable String extraText, List<String> bodyLines)
         {
@@ -415,7 +439,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                 out.println(extraText);
             }
             out.println("");
-            out.println("```{r " + chunkName + (chunkOpts == null ? "" : ", " + chunkOpts) + "}");
+            out.println("```{r " + (chunkName == null ? "" : chunkName) + (chunkOpts == null ? "" : ", " + chunkOpts) + "}");
             bodyLines.forEach(out::println);
             out.println("");
             out.println("```");
@@ -442,5 +466,11 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             super("sessionInfo", "Session Info", null, new ArrayList<>());
             bodyLines.add("sessionInfo()");
         }
+    }
+
+    @Override
+    public boolean isIncluded(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputs) throws PipelineJobException
+    {
+        return true;
     }
 }

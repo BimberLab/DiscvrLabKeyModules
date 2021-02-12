@@ -30,17 +30,15 @@ import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.WebPartFactory;
-import org.labkey.singlecell.analysis.CellHashingHandler;
+import org.labkey.singlecell.analysis.AbstractSingleCellHandler;
 import org.labkey.singlecell.analysis.CellRangerRawDataHandler;
-import org.labkey.singlecell.analysis.CellRangerSeuratHandler;
-import org.labkey.singlecell.analysis.CiteSeqHandler;
-import org.labkey.singlecell.analysis.LoupeCellHashingHandler;
+import org.labkey.singlecell.analysis.ProcessSeuratObjectHandler;
 import org.labkey.singlecell.analysis.ProcessSingleCellHandler;
-import org.labkey.singlecell.analysis.SeuratCellHashingHandler;
-import org.labkey.singlecell.analysis.SeuratCiteSeqHandler;
-import org.labkey.singlecell.button.CellHashingButton;
-import org.labkey.singlecell.button.CiteSeqButton;
+import org.labkey.singlecell.button.FeatureBarcodeButton;
 import org.labkey.singlecell.pipeline.singlecell.AppendCiteSeq;
+import org.labkey.singlecell.pipeline.singlecell.AvgExpression;
+import org.labkey.singlecell.pipeline.singlecell.CiteSeqDimRedux;
+import org.labkey.singlecell.pipeline.singlecell.CiteSeqWnn;
 import org.labkey.singlecell.pipeline.singlecell.DoubletFinder;
 import org.labkey.singlecell.pipeline.singlecell.Downsample;
 import org.labkey.singlecell.pipeline.singlecell.FilterRawCounts;
@@ -54,8 +52,9 @@ import org.labkey.singlecell.pipeline.singlecell.RunPCA;
 import org.labkey.singlecell.pipeline.singlecell.RunSingleR;
 import org.labkey.singlecell.pipeline.singlecell.SplitSeurat;
 import org.labkey.singlecell.pipeline.singlecell.SubsetSeurat;
+import org.labkey.singlecell.run.CellRangerFeatureBarcodeHandler;
+import org.labkey.singlecell.run.CellRangerGexCountStep;
 import org.labkey.singlecell.run.CellRangerVDJWrapper;
-import org.labkey.singlecell.run.CellRangerWrapper;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -74,7 +73,7 @@ public class SingleCellModule extends ExtendedSimpleModule
     @Override
     public @Nullable Double getSchemaVersion()
     {
-        return 20.001;
+        return 20.002;
     }
 
     @Override
@@ -124,8 +123,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         LaboratoryService.get().registerDataProvider(new SingleCellProvider(this));
         SequenceAnalysisService.get().registerDataProvider(new SingleCellProvider(this));
 
-        LDKService.get().registerQueryButton(new CellHashingButton(), SingleCellSchema.SEQUENCE_SCHEMA_NAME, SingleCellSchema.TABLE_READSETS);
-        LDKService.get().registerQueryButton(new CiteSeqButton(), SingleCellSchema.SEQUENCE_SCHEMA_NAME, SingleCellSchema.TABLE_READSETS);
+        LDKService.get().registerQueryButton(new FeatureBarcodeButton(), SingleCellSchema.SEQUENCE_SCHEMA_NAME, SingleCellSchema.TABLE_READSETS);
 
         LaboratoryService.get().registerTableCustomizer(this, SingleCellTableCustomizer.class, SingleCellSchema.NAME, SingleCellSchema.TABLE_SAMPLES);
         LaboratoryService.get().registerTableCustomizer(this, SingleCellTableCustomizer.class, SingleCellSchema.NAME, SingleCellSchema.TABLE_SORTS);
@@ -140,18 +138,14 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStepType(SingleCellStep.class, SingleCellStep.STEP_TYPE);
         CellHashingService.setInstance(CellHashingServiceImpl.get());
 
-        SequencePipelineService.get().registerPipelineStep(new CellRangerWrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new CellRangerGexCountStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new CellRangerVDJWrapper.VDJProvider());
 
-        SequenceAnalysisService.get().registerReadsetHandler(new CellHashingHandler());
-        SequenceAnalysisService.get().registerReadsetHandler(new CiteSeqHandler());
+        SequenceAnalysisService.get().registerReadsetHandler(new CellRangerFeatureBarcodeHandler());
 
-        SequenceAnalysisService.get().registerFileHandler(new LoupeCellHashingHandler());
-        SequenceAnalysisService.get().registerFileHandler(new SeuratCellHashingHandler());
-        SequenceAnalysisService.get().registerFileHandler(new SeuratCiteSeqHandler());
-        SequenceAnalysisService.get().registerFileHandler(new CellRangerSeuratHandler());
         SequenceAnalysisService.get().registerFileHandler(new CellRangerRawDataHandler());
         SequenceAnalysisService.get().registerFileHandler(new ProcessSingleCellHandler());
+        SequenceAnalysisService.get().registerFileHandler(new ProcessSeuratObjectHandler());
 
         //Single-cell:
         SequencePipelineService.get().registerPipelineStep(new AppendCiteSeq.Provider());
@@ -172,6 +166,9 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new FindClustersAndDimRedux.Provider());
         SequencePipelineService.get().registerPipelineStep(new SplitSeurat.Provider());
         SequencePipelineService.get().registerPipelineStep(new SubsetSeurat.Provider());
+        SequencePipelineService.get().registerPipelineStep(new CiteSeqDimRedux.Provider());
+        SequencePipelineService.get().registerPipelineStep(new CiteSeqWnn.Provider());
+        SequencePipelineService.get().registerPipelineStep(new AvgExpression.Provider());
     }
 
     @Override
@@ -179,7 +176,7 @@ public class SingleCellModule extends ExtendedSimpleModule
     public Set<Class> getUnitTests()
     {
         return PageFlowUtil.set(
-                ProcessSingleCellHandler.TestCase.class
+                AbstractSingleCellHandler.TestCase.class
         );
     }
 }

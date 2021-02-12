@@ -602,6 +602,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         String[] pangolinData = null;
         if (runPangolin)
         {
+            PangolinHandler.updatePangolinRefs(getPipelineCtx().getLogger());
             pangolinData = PangolinHandler.runPangolin(consensusFastaLoFreq, getPipelineCtx().getLogger(), output);
         }
 

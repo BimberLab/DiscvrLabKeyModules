@@ -1401,7 +1401,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             Resumer ret = readFromJson(file, Resumer.class);
             ret._isResume = true;
             ret.setLogger(task.getJob().getLogger());
-            ret.setLocalWorkDir(task.getPipelineJob().getAnalysisDirectory());
+            ret.setWebserverJobDir(task.getPipelineJob().getAnalysisDirectory());
             ret.getFileManager().onResume(job, task._wd);
 
             task._taskHelper.setFileManager(ret.getFileManager());

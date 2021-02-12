@@ -1,12 +1,12 @@
 for (datasetId in names(seuratObjects)) {
-    seuratObj <- seuratObjects[[datasetId]]
+    rawCountDir <- seuratObjects[[datasetId]]
 
     datasetName <- datasetIdToName[[datasetId]]
-    seuratObj <- CellMembrane::ReadAndFilter10xData(dataDir = seuratObjects[[datasetId]], datasetId = datasetId, datasetName = datasetName)
+    seuratObj <- CellMembrane::ReadAndFilter10xData(dataDir = rawCountDir, datasetId = datasetId, datasetName = datasetName)
 
     newSeuratObjects[[datasetId]] <- seuratObj
 
     # Cleanup
-    seuratObjects[[datasetId]] <- NULL
+    rm(seuratObj)
     gc()
 }
