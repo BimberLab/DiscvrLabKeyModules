@@ -3,8 +3,8 @@ package org.labkey.api.singlecell;
 import au.com.bytecode.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -18,6 +18,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.model.CDNA_Library;
 import org.labkey.api.singlecell.model.Sample;
 import org.labkey.api.singlecell.model.Sort;
+import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.FileUtil;
 
 import java.io.File;
@@ -25,13 +26,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 abstract public class CellHashingService
 {
-    public static final String HASHING_CALLS = "Cell Hashing TCR Calls";
-
     private static CellHashingService _instance;
 
     public static CellHashingService get()
@@ -44,13 +45,9 @@ abstract public class CellHashingService
         _instance = instance;
     }
 
-    abstract public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean skipFailedCdna, boolean failIfNoHashing, boolean failIfNoCiteSeq) throws PipelineJobException;
+    abstract public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, boolean failIfNoHashing, boolean failIfNoCiteSeq) throws PipelineJobException;
 
-    abstract public File processCellHashingOrCiteSeq(SequenceOutputHandler.JobContext ctx, CellHashingParameters parameters) throws PipelineJobException;
-
-    abstract public File processCellHashingOrCiteSeq(PipelineOutputTracker output, File outputDir, File webserverPipelineDir, Logger log, CellHashingParameters parameters) throws PipelineJobException;
-
-    abstract public File processCellHashingOrCiteSeqForParent(Readset parentReadset, PipelineOutputTracker output, SequenceOutputHandler.JobContext ctx, CellHashingParameters parameters) throws PipelineJobException;
+    abstract public File generateHashingCallsForRawMatrix(Readset parentReadset, PipelineOutputTracker output, SequenceOutputHandler.JobContext ctx, CellHashingParameters parameters, File rawCountMatrixDir) throws PipelineJobException;
 
     abstract public File getCDNAInfoFile(File sourceDir);
 
@@ -70,55 +67,95 @@ abstract public class CellHashingService
 
     abstract public boolean usesCiteSeq(SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles) throws PipelineJobException;
 
-    abstract public List<ToolParameterDescriptor> getDefaultHashingParams(boolean includeExcludeFailedcDNA);
+    abstract public List<ToolParameterDescriptor> getHashingCallingParams();
 
-    abstract public List<String> getHtosForParentReadset(Integer parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support) throws PipelineJobException;
+    abstract public Set<String> getHtosForParentReadset(Integer parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support) throws PipelineJobException;
+
+    abstract public File getExistingFeatureBarcodeCountDir(Readset parentReadset, BARCODE_TYPE type, SequenceAnalysisJobSupport support) throws PipelineJobException;
 
     public static class CellHashingParameters
     {
         public BARCODE_TYPE type;
 
-        private File htoOrCiteseqBarcodesFile;
-        public List<String> allowableHtoOrCiteseqBarcodes;
+        private File htoBarcodesFile;
+        public Set<String> allowableHtoBarcodes;
 
         public File cellBarcodeWhitelistFile;
 
         public boolean createOutputFiles = true;
         public @Nullable String outputCategory;
 
-        public Readset htoOrCiteseqReadset;
+        public Readset htoReadset;
         public Readset parentReadset;
 
         public @Nullable Integer genomeId;
-        public Integer editDistance = 2;
-        public boolean scanEditDistances = false;
+        public boolean skipNormalizationQc = false;
         public Integer minCountPerCell = 5;
         public List<CALLING_METHOD> methods = CALLING_METHOD.getDefaultMethods();
         public String basename = null;
+        public Integer cells = 0;
 
         private CellHashingParameters()
         {
 
         }
 
-        public static CellHashingParameters createFromJson(BARCODE_TYPE type, File webserverDir, JSONObject params, Readset htoOrCiteseqReadset, @Nullable Readset parentReadset, @Nullable File htoOrCiteseqBarcodesFile) throws PipelineJobException
+        public static CellHashingService.CellHashingParameters createFromStep(SequenceOutputHandler.JobContext ctx, SingleCellStep step, CellHashingService.BARCODE_TYPE type, Readset htoReadset, @Nullable Readset parentReadset) throws PipelineJobException
+        {
+            CellHashingService.CellHashingParameters ret = new CellHashingService.CellHashingParameters();
+            ret.type = type;
+            ret.skipNormalizationQc = step.getProvider().getParameterByName("skipNormalizationQc").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, false);
+            ret.minCountPerCell = step.getProvider().getParameterByName("minCountPerCell").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Integer.class, 3);
+            ret.htoReadset = htoReadset;
+            ret.parentReadset = parentReadset;
+            ret.htoBarcodesFile = new File(ctx.getSourceDirectory(), type.getAllBarcodeFileName());
+
+            if (type == BARCODE_TYPE.hashing)
+            {
+                String methodStr = StringUtils.trimToNull(step.getProvider().getParameterByName("methods").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), String.class));
+                if (methodStr != null)
+                {
+                    ret.methods = extractMethods(methodStr);
+                }
+
+                if (ret.methods.isEmpty())
+                {
+                    throw new IllegalArgumentException("Must provide at least one calling method");
+                }
+            }
+
+            return ret;
+        }
+
+        public static CellHashingParameters createFromJson(BARCODE_TYPE type, File webserverDir, JSONObject params, Readset htoReadset, @Nullable Readset parentReadset) throws PipelineJobException
         {
             CellHashingParameters ret = new CellHashingParameters();
             ret.type = type;
-            ret.scanEditDistances = params.optBoolean("scanEditDistances", false);
-            ret.editDistance = params.optInt("editDistance", 2);
+            ret.skipNormalizationQc = params.optBoolean("skipNormalizationQc", false);
             ret.minCountPerCell = params.optInt("minCountPerCell", 3);
-            ret.htoOrCiteseqReadset = htoOrCiteseqReadset;
+            ret.htoReadset = htoReadset;
             ret.parentReadset = parentReadset;
-            ret.htoOrCiteseqBarcodesFile = htoOrCiteseqBarcodesFile == null ? new File(webserverDir, type.getAllBarcodeFileName()) : htoOrCiteseqBarcodesFile;
+            ret.htoBarcodesFile = new File(webserverDir, type.getAllBarcodeFileName());
+            ret.methods = extractMethods(params.optString("methods"));
 
-            JSONArray methodsArr = params.optJSONArray("methods");
-            if (methodsArr != null)
+            if (type == BARCODE_TYPE.hashing && ret.methods.isEmpty())
             {
+                throw new IllegalArgumentException("Must provide at least one calling method");
+            }
+
+            return ret;
+        }
+
+        private static @NotNull List<CALLING_METHOD> extractMethods(String methodsStr) throws PipelineJobException
+        {
+            if (methodsStr != null)
+            {
+                String[] tokens = methodsStr.split(";");
+
                 List<CALLING_METHOD> methods = new ArrayList<>();
                 try
                 {
-                    Arrays.stream(methodsArr.toArray()).forEach(x -> {
+                    Arrays.stream(tokens).forEach(x -> {
                         try
                         {
                             methods.add(CALLING_METHOD.valueOf(String.valueOf(x)));
@@ -128,6 +165,8 @@ abstract public class CellHashingService
                             throw new IllegalArgumentException("Unknown calling method: " + x);
                         }
                     });
+
+                    return methods;
                 }
                 catch (IllegalArgumentException e)
                 {
@@ -135,17 +174,17 @@ abstract public class CellHashingService
                 }
             }
 
-            return ret;
+            return Collections.emptyList();
         }
 
         public int getEffectiveReadsetId()
         {
-            return parentReadset != null ? parentReadset.getReadsetId() : htoOrCiteseqReadset.getReadsetId();
+            return parentReadset != null ? parentReadset.getReadsetId() : htoReadset.getReadsetId();
         }
 
-        public File getHtoOrCiteSeqBarcodeFile()
+        public File getHtoBarcodeFile()
         {
-            return htoOrCiteseqBarcodesFile;
+            return htoBarcodesFile;
         }
 
         public String getReportTitle()
@@ -163,9 +202,9 @@ abstract public class CellHashingService
             {
                 return FileUtil.makeLegalName(parentReadset.getName());
             }
-            else if (htoOrCiteseqReadset != null)
+            else if (htoReadset != null)
             {
-                return FileUtil.makeLegalName(htoOrCiteseqReadset.getName());
+                return FileUtil.makeLegalName(htoReadset.getName());
             }
 
             throw new IllegalStateException("Neither basename, parent readset, nor hashing/citeseq readset provided");
@@ -178,9 +217,9 @@ abstract public class CellHashingService
 
         public void validate(boolean allowMissingHtoReadset)
         {
-            if (!allowMissingHtoReadset && htoOrCiteseqReadset == null)
+            if (!allowMissingHtoReadset && htoReadset == null)
             {
-                throw new IllegalStateException("Missing Hashing/Cite-seq readset");
+                throw new IllegalStateException("Missing Hashing readset");
             }
 
             if (createOutputFiles && outputCategory == null)
@@ -188,25 +227,25 @@ abstract public class CellHashingService
                 throw new IllegalStateException("Missing output category");
             }
 
-            if (htoOrCiteseqBarcodesFile == null)
+            if (htoBarcodesFile == null)
             {
-                throw new IllegalStateException("Missing all HTO/CITE-seq barcodes file");
+                throw new IllegalStateException("Missing all HTO barcodes file");
             }
         }
 
-        public List<String> getAllowableBarcodeNames() throws PipelineJobException
+        public Set<String> getAllowableBarcodeNames() throws PipelineJobException
         {
-            if (allowableHtoOrCiteseqBarcodes != null)
+            if (allowableHtoBarcodes != null)
             {
-                return Collections.unmodifiableList(allowableHtoOrCiteseqBarcodes);
+                return Collections.unmodifiableSet(allowableHtoBarcodes);
             }
-            if (htoOrCiteseqBarcodesFile == null)
+            if (htoBarcodesFile == null)
             {
                 throw new IllegalArgumentException("Barcode file was null");
             }
 
-            List<String> allowableBarcodes = new ArrayList<>();
-            try (CSVReader reader = new CSVReader(Readers.getReader(htoOrCiteseqBarcodesFile), '\t'))
+            Set<String> allowableBarcodes = new HashSet<>();
+            try (CSVReader reader = new CSVReader(Readers.getReader(htoBarcodesFile), '\t'))
             {
                 String[] line;
                 while ((line = reader.readNext()) != null)
@@ -234,11 +273,11 @@ abstract public class CellHashingService
     public enum CALLING_METHOD
     {
         multiseq(true),
-        htodemux(true),
+        htodemux(false),
         dropletutils(true),
         threshold(false),
-        peaknd(true),
-        seqnd(true);
+        peaknd(false),
+        seqnd(false);
 
         boolean isDefault;
 

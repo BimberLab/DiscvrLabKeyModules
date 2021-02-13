@@ -70,7 +70,7 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
                                         title: results.name,
                                         handlerConfig: results,
                                         toolParameters: results.toolParameters,
-                                        libraryId: distinctGenomes.length == 1 ? distinctGenomes[0] : null
+                                        libraryId: distinctGenomes.length === 1 ? distinctGenomes[0] : null
                                     }).show();
                                 }
                             }
@@ -250,8 +250,8 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
             return;
         }
 
-        //Note: use getFieldValues() to also include unchecked checkboxes
-        var params = this.down('form').getForm().getFieldValues();
+        //Note: include all to ensure we include unchecked checkboxes
+        var params = this.down('form').getForm().getValues(false, false, false, false);
         var json = {
             handlerType: this.handlerType,
             handlerClass: this.handlerClass,

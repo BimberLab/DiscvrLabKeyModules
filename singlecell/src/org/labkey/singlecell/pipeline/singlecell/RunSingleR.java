@@ -17,7 +17,7 @@ public class RunSingleR extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("RunSingleR", "Run SingleR", "OOSAP/SingleR", "This will run singleR on the input object(s), and save the results in metadata.", Arrays.asList(
+            super("RunSingleR", "Run SingleR", "CellMembrane/SingleR", "This will run singleR on the input object(s), and save the results in metadata.", Arrays.asList(
 
             ), null, null);
         }
@@ -28,5 +28,11 @@ public class RunSingleR extends AbstractCellMembraneStep
         {
             return new RunSingleR(ctx, this);
         }
+    }
+
+    @Override
+    public String getFileSuffix()
+    {
+        return "singler";
     }
 }

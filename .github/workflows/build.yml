@@ -1,6 +1,9 @@
 name: Build DISCVR
 on:
+  workflow_dispatch:
   push:
+    branches:
+      - !latest
   pull_request:
 jobs:
   build-modules:

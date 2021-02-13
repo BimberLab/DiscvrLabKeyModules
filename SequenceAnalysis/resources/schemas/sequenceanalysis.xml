@@ -2378,7 +2378,7 @@
             <column columnName="name"/>
             <column columnName="description"/>
             <column columnName="taskid">
-                <isHidden>true</isHidden>
+                <!--<isHidden>true</isHidden>-->
             </column>
             <column columnName="originalAnalysisId">
                 <columnTitle>Original Analysis</columnTitle>
@@ -2387,10 +2387,11 @@
                     <fkTable>sequence_analyses</fkTable>
                     <fkColumnName>rowid</fkColumnName>
                 </fk>
+                <isHidden>true</isHidden>
             </column>
             <column columnName="json">
                 <columnTitle>Config</columnTitle>
-                <isHidden>true</isHidden>
+                <!--<isHidden>true</isHidden>-->
             </column>
             <column columnName="container">
                 <isHidden>true</isHidden>

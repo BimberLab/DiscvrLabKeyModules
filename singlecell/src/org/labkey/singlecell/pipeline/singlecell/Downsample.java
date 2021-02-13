@@ -19,12 +19,12 @@ public class Downsample extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("Downsample", "Downsample Cells", "OOSAP", "This will downsample cells from the input object(s) based on the parameters below. Downsampling will be applied independently to each incoming Seurat object. If a second field is provided, cells within each object will be subset using that field, and then downsampled.", Arrays.asList(
+            super("Downsample", "Downsample Cells", "CellMembrane/Seurat", "This will downsample cells from the input object(s) based on the parameters below. Downsampling will be applied independently to each incoming Seurat object. If a second field is provided, cells within each object will be subset using that field, and then downsampled.", Arrays.asList(
                     SeuratToolParameter.create("targetCells", "Target Cells Per Unit of Data", "Each unit of data will be downsampled to this level", "ldk-integerfield", new JSONObject(){{
                         put("allowBlank", false);
                     }}, null),
-                    SeuratToolParameter.create("subsetFields", "Additional Fields", "A comma-separated list of fields that will be used to subset data within each seurat object. For example, if 'barcodePrefix' is provided and 500 target cells is selected, each incoming seurat object will be subset to no more than 500 cells per barcodePrefix. If blank, each object will be treated as one unit of data.", "textfield", new JSONObject(){{
-                        put("allowBlank", false);
+                    SeuratToolParameter.create("subsetFields", "Additional Grouping Fields", "A comma-separated list of fields that will be used to subset data within each seurat object. For example, if 'BarcodePrefix' is provided and 500 target cells is selected, each incoming seurat object will be subset to no more than 500 cells per unique value of BarcodePrefix. If blank, each object will be treated as one unit of data.", "textfield", new JSONObject(){{
+
                     }}, null),
                     SeuratToolParameter.create("seed", "Random Seed", "This random seed, used for downsampling", "ldk-integerfield", new JSONObject(){{
 
@@ -38,5 +38,11 @@ public class Downsample extends AbstractCellMembraneStep
         {
             return new Downsample(ctx, this);
         }
+    }
+
+    @Override
+    public String getFileSuffix()
+    {
+        return "ds";
     }
 }

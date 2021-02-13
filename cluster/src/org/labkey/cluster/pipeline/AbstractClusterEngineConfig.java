@@ -13,6 +13,8 @@ import org.labkey.api.util.StringExpressionFactory;
 import org.labkey.cluster.ClusterServiceImpl;
 
 import java.io.File;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -120,10 +122,10 @@ abstract class AbstractClusterEngineConfig implements PipelineJobService.RemoteE
                 "-cp",
                 getLabKeyDir() + "/labkeyBootstrap.jar",
                 "org.labkey.bootstrap.ClusterBootstrap",
-                "-modulesdir=" + getLabKeyDir() + "/modules",
-                "-webappdir=" + getLabKeyDir() + "/labkeywebapp",
-                "-configdir=" + getLabKeyDir() + "/config",
-                getClusterPath(localSerializedJobXmlFile, true)
+                "-modulesdir='" + getLabKeyDir() + "/modules'",
+                "-webappdir='" + getLabKeyDir() + "/labkeywebapp'",
+                "-configdir='" + getLabKeyDir() + "/config'",
+                "'" + getClusterPath(localSerializedJobXmlFile, true) + "'"
         ));
 
         return ret;
@@ -163,10 +165,11 @@ abstract class AbstractClusterEngineConfig implements PipelineJobService.RemoteE
     {
         //TODO: verify this
         // This PathMapper considers "local" from a cluster node's point of view.
-        String ret = getPathMapper().remoteToLocal(localFile.getAbsoluteFile().toURI().toString());
+        String ret = getPathMapper().remoteToLocal(localFile.getAbsoluteFile().toURI()).toString();
 
         if (ret != null && !asURI)
         {
+            ret = URLDecoder.decode(ret, StandardCharsets.UTF_8);
             ret = ret.replaceFirst("^file:/", "/");
             ret = ret.replaceAll("^/+", "/");
         }

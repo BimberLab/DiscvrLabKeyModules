@@ -1,11 +1,11 @@
 # Binds arguments from the environment to the target function
 bindArgs <- function(fun, seuratObj) {
     boundArgs <- list()
-    boundArgs['seuratObj'] <- seuratObj
+    boundArgs[['seuratObj']] <- seuratObj
 
     for (name in names(formals(fun))) {
         if (exists(name)) {
-            boundArgs[name] <- get(name)
+            boundArgs[[name]] <- get(name)
         }
     }
 
@@ -20,3 +20,8 @@ addIntermediateFile <- function(f) { intermediateFiles <<- c(intermediateFiles, 
 
 # This will store any modified/transformed Seurat objects:
 newSeuratObjects <- list()
+
+print('Updating future.globals.maxSize')
+options(future.globals.maxSize = Inf)
+
+options('Seurat.memsafe' = TRUE)

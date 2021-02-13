@@ -341,9 +341,6 @@
             <item hidden="true">
                 <originalText>Insert</originalText>
             </item>
-            <item hidden="true">
-                <originalText>Charts</originalText>
-            </item>
         </buttonBarOptions>
     </table>
     <table tableName="stim_types" tableDbType="TABLE" useColumnOrder="true">
@@ -523,6 +520,9 @@
             <column columnName="adaptersequence">
                 <columnTitle>Adapter Sequence</columnTitle>
                 <inputType>textarea</inputType>
+            </column>
+            <column columnName="barcodePattern">
+                <columnTitle>Barcode Pattern</columnTitle>
             </column>
             <column columnName="container">
                 <isHidden>true</isHidden>

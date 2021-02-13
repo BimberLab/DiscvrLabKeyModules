@@ -384,7 +384,7 @@ public class SequenceAnalysisController extends SpringActionController
         public ModelAndView getView(Object form, BindException errors)
         {
             LinkedHashSet<ClientDependency> cds = new LinkedHashSet<>();
-            for (PipelineStepProvider fact : SequencePipelineService.get().getAllProviders())
+            for (PipelineStepProvider<?> fact : SequencePipelineService.get().getAllProviders())
             {
                 cds.addAll(fact.getClientDependencies());
             }

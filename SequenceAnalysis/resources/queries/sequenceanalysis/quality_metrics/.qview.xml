@@ -5,7 +5,7 @@
        <column name="category" />
        <column name="metricname" />
        <column name="metricvalue" />
-       <!--<column name="qualvalue" />-->
+       <column name="qualvalue" />
        <column name="readset" />
        <column name="analysis_id" />
        <column name="runid" />

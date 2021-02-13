@@ -39,6 +39,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -83,6 +84,7 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         {
             Map<Integer, SequenceOutputFile> fileMap = inputFiles.stream().collect(Collectors.toMap(SequenceOutputFile::getRowid, x -> x));
 
+            job.getLogger().info("Importing metrics:");
             List<Map<String, Object>> toInsert = new ArrayList<>();
             try (CSVReader reader = new CSVReader(Readers.getReader(getMetricsFile(outputDir)), '\t'))
             {
@@ -157,6 +159,8 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         @Override
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
+            PangolinHandler.updatePangolinRefs(ctx.getLogger());
+
             //write metrics:
             try (CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(getMetricsFile(ctx.getSourceDirectory())), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
@@ -176,6 +180,16 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         {
             return new File(webserverDir, "metrics.txt");
         }
+    }
+
+    public static void updatePangolinRefs(Logger log) throws PipelineJobException
+    {
+        log.info("Updating pangolin lineages");
+
+        SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
+
+        File pangolin = SequencePipelineService.get().getExeForPackage("PANGOLINPATH", "pangolin-update.sh");
+        wrapper.execute(Arrays.asList("/bin/bash", pangolin.getPath()));
     }
 
     public static String[] runPangolin(File consensusFasta, Logger log, PipelineOutputTracker tracker) throws PipelineJobException

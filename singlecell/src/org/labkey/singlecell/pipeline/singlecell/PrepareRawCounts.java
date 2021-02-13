@@ -19,7 +19,7 @@ public class PrepareRawCounts extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("PrepareRawCounts", LABEL, "OOSAP", "This step reads the raw count matrix/matrices, and runs EmptyDrops to provide an unfiltered count matrix.", Arrays.asList(
+            super("PrepareRawCounts", LABEL, "CellMembrane/Seurat", "This step reads the raw count matrix/matrices, and runs EmptyDrops to provide an unfiltered count matrix.", Arrays.asList(
 
             ), null, null);
         }
@@ -36,5 +36,11 @@ public class PrepareRawCounts extends AbstractCellMembraneStep
     protected String printInputFile(SeuratObjectWrapper so)
     {
         return "'" + so.getFile().getName() + "'";
+    }
+
+    @Override
+    public String getFileSuffix()
+    {
+        return "counts";
     }
 }
