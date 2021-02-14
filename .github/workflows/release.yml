@@ -2,14 +2,13 @@ name: Publish Release
 on:
   release:
     types: [created]
-    tags-ignore:
-      - 'latest'
 jobs:
   generate:
     name: Create release-artifacts
     # See: https://help.github.com/en/actions/reference/contexts-and-expression-syntax-for-github-actions#github-context
     # https://help.github.com/en/actions/configuring-and-managing-workflows/using-environment-variables#default-environment-variables
-    if: github.repository == 'BimberLab/DiscvrLabKeyModules'
+    # Note: 'latest' is a tag created by branch_latest.yml, which is the latest development build. This should not trigger normal releases.
+    if: github.repository == 'BimberLab/DiscvrLabKeyModules' && github.ref != 'refs/tags/latest'
     runs-on: ubuntu-latest
     steps:
       - name: "Build DISCVR"
