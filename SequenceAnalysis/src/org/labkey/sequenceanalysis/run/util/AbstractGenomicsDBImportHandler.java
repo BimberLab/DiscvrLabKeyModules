@@ -47,7 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-abstract public class AbstractGenomicsDBImportHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> implements SequenceOutputHandler.TracksVCF, SequenceOutputHandler.HasCustomVariantMerge, VariantProcessingStep.MayRequirePrepareTask
+abstract public class AbstractGenomicsDBImportHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> implements SequenceOutputHandler.TracksVCF, SequenceOutputHandler.HasCustomVariantMerge, VariantProcessingStep.MayRequirePrepareTask, VariantProcessingStep.SupportsScatterGather
 {
     protected FileType _gvcfFileType = new FileType(Arrays.asList(".g.vcf"), ".g.vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
     public static final FileType TILE_DB_FILETYPE = new FileType(Arrays.asList(".tdb"), ".tdb", false, FileType.gzSupportLevel.NO_GZ);
@@ -58,6 +58,35 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
     public AbstractGenomicsDBImportHandler(Module owner, String name, String description, LinkedHashSet<String> dependencies, List<ToolParameterDescriptor> parameters)
     {
         super(owner, name, description, dependencies, parameters);
+    }
+
+    @Override
+    public void validateScatter(VariantProcessingStep.ScatterGatherMethod method, PipelineJob job) throws IllegalArgumentException
+    {
+        validateNoSplitContigScatter(method, job);
+    }
+
+    public static void validateNoSplitContigScatter(VariantProcessingStep.ScatterGatherMethod method, PipelineJob job) throws IllegalArgumentException
+    {
+        if (!(job instanceof VariantProcessingJob))
+        {
+            return;
+        }
+
+        VariantProcessingJob vj = (VariantProcessingJob)job;
+
+        if (!vj.isScatterJob())
+        {
+            return;
+        }
+
+        if (vj.getScatterGatherMethod() == VariantProcessingStep.ScatterGatherMethod.fixedJobs || vj.getScatterGatherMethod() == VariantProcessingStep.ScatterGatherMethod.chunked)
+        {
+            if (vj.doAllowSplitContigs())
+            {
+                throw new IllegalArgumentException("This job does not support scatter methods with allowSplitContigs=true");
+            }
+        }
     }
 
     @Override

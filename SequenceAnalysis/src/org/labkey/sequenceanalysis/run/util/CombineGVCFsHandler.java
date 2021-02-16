@@ -25,7 +25,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -35,7 +34,7 @@ import java.util.Set;
 /**
  * Created by bimber on 4/2/2017.
  */
-public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> implements SequenceOutputHandler.TracksVCF, VariantProcessingStep.MayRequirePrepareTask
+public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> implements SequenceOutputHandler.TracksVCF, VariantProcessingStep.MayRequirePrepareTask, VariantProcessingStep.SupportsScatterGather
 {
     public static final String NAME = "Combine GVCFs";
     private static final String COMBINED_CATEGORY = "Combined gVCF File";
@@ -51,6 +50,12 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
                 }}, false),
                 ToolParameterDescriptor.create("scatterGather", "Scatter/Gather Options", "If selected, this job will be divided to run job per chromosome.  The final step will take the VCF from each intermediate step and combined to make a final VCF file.", "sequenceanalysis-variantscattergatherpanel", null, false)
         ));
+    }
+
+    @Override
+    public void validateScatter(VariantProcessingStep.ScatterGatherMethod method, PipelineJob job) throws IllegalArgumentException
+    {
+        AbstractGenomicsDBImportHandler.validateNoSplitContigScatter(method, job);
     }
 
     @Override

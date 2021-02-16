@@ -8,9 +8,9 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.util.Interval;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.junit.Assert;
@@ -29,6 +29,7 @@ import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.util.ScatterGatherUtils;
 
@@ -46,7 +47,7 @@ import java.util.Set;
 
 public class VariantProcessingJob extends SequenceOutputHandlerJob
 {
-    private ScatterGatherUtils.ScatterGatherMethod _scatterGatherMethod = ScatterGatherUtils.ScatterGatherMethod.none;
+    private VariantProcessingStep.ScatterGatherMethod _scatterGatherMethod = VariantProcessingStep.ScatterGatherMethod.none;
     File _dictFile = null;
     Map<String, File> _scatterOutputs = new HashMap<>();
     private transient LinkedHashMap<String, List<Interval>> _jobToIntervalMap;
@@ -68,13 +69,14 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
         _intervalSetName = intervalSetName;
     }
 
-    public VariantProcessingJob(Container c, User user, @Nullable String jobName, PipeRoot pipeRoot, SequenceOutputHandler handler, List<SequenceOutputFile> files, JSONObject jsonParams, ScatterGatherUtils.ScatterGatherMethod scatterGatherMethod) throws IOException, PipelineJobException
+    public VariantProcessingJob(Container c, User user, @Nullable String jobName, PipeRoot pipeRoot, SequenceOutputHandler handler, List<SequenceOutputFile> files, JSONObject jsonParams, VariantProcessingStep.ScatterGatherMethod scatterGatherMethod) throws IOException, PipelineJobException
     {
         super(c, user, jobName, pipeRoot, handler, files, jsonParams);
         _scatterGatherMethod = scatterGatherMethod;
 
         if (isScatterJob())
         {
+            validateScatterForTask();
             Set<Integer> genomeIds = new HashSet<>();
             for (SequenceOutputFile so : files)
             {
@@ -94,11 +96,28 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
         }
     }
 
+    private void validateScatterForTask()
+    {
+        if (!isScatterJob())
+        {
+            return;
+        }
+
+        if (!(getHandler() instanceof VariantProcessingStep.SupportsScatterGather))
+        {
+            throw new IllegalArgumentException("Task doe not support Scatter/Gather: " + getHandler().getName());
+        }
+
+
+        VariantProcessingStep.SupportsScatterGather sg = (VariantProcessingStep.SupportsScatterGather)getHandler();
+        sg.validateScatter(getScatterGatherMethod(), this);
+    }
+
     private LinkedHashMap<String, List<Interval>> establishIntervals()
     {
         LinkedHashMap<String, List<Interval>> ret;
         SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(_dictFile.toPath());
-        if (_scatterGatherMethod == ScatterGatherUtils.ScatterGatherMethod.contig)
+        if (_scatterGatherMethod == VariantProcessingStep.ScatterGatherMethod.contig)
         {
             ret = new LinkedHashMap<>();
             for (SAMSequenceRecord rec : dict.getSequences())
@@ -106,10 +125,10 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
                 ret.put(rec.getSequenceName(), Collections.singletonList(new Interval(rec.getSequenceName(), 1, rec.getSequenceLength())));
             }
         }
-        else if (_scatterGatherMethod == ScatterGatherUtils.ScatterGatherMethod.chunked)
+        else if (_scatterGatherMethod == VariantProcessingStep.ScatterGatherMethod.chunked)
         {
             int basesPerJob = getParameterJson().getInt("scatterGather.basesPerJob");
-            boolean allowSplitChromosomes = getParameterJson().optBoolean("scatterGather.allowSplitChromosomes", true);
+            boolean allowSplitChromosomes = doAllowSplitContigs();
             int maxContigsPerJob = getParameterJson().optInt("scatterGather.maxContigsPerJob", -1);
             getLogger().info("Creating jobs with target bp size: " + basesPerJob + " mbp.  allow splitting configs: " + allowSplitChromosomes + ", max contigs per job: " + maxContigsPerJob);
 
@@ -117,7 +136,7 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
             ret = ScatterGatherUtils.divideGenome(dict, basesPerJob, allowSplitChromosomes, maxContigsPerJob);
 
         }
-        else if (_scatterGatherMethod == ScatterGatherUtils.ScatterGatherMethod.fixedJobs)
+        else if (_scatterGatherMethod == VariantProcessingStep.ScatterGatherMethod.fixedJobs)
         {
             long totalSize = dict.getReferenceLength();
             int numJobs = getParameterJson().getInt("scatterGather.totalJobs");
@@ -133,9 +152,14 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
         return ret;
     }
 
+    public boolean doAllowSplitContigs()
+    {
+        return getParameterJson().optBoolean("scatterGather.allowSplitChromosomes", true);
+    }
+
     public boolean isScatterJob()
     {
-        return _scatterGatherMethod != ScatterGatherUtils.ScatterGatherMethod.none;
+        return _scatterGatherMethod != VariantProcessingStep.ScatterGatherMethod.none;
     }
 
     @JsonIgnore
@@ -296,12 +320,12 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
         return  PipelineJobService.get().getTaskPipeline(new TaskId(VariantProcessingJob.class));
     }
 
-    public ScatterGatherUtils.ScatterGatherMethod getScatterGatherMethod()
+    public VariantProcessingStep.ScatterGatherMethod getScatterGatherMethod()
     {
         return _scatterGatherMethod;
     }
 
-    public void setScatterGatherMethod(ScatterGatherUtils.ScatterGatherMethod scatterGatherMethod)
+    public void setScatterGatherMethod(VariantProcessingStep.ScatterGatherMethod scatterGatherMethod)
     {
         _scatterGatherMethod = scatterGatherMethod;
     }
@@ -315,7 +339,7 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
         {
             VariantProcessingJob job1 = new VariantProcessingJob();
             job1._intervalSetName = "chr1";
-            job1._scatterGatherMethod = ScatterGatherUtils.ScatterGatherMethod.chunked;
+            job1._scatterGatherMethod = VariantProcessingStep.ScatterGatherMethod.chunked;
 
             File tmp = new File(System.getProperty("java.io.tmpdir"));
             File xml = new File(tmp, "variantProcessingJob.txt");
@@ -342,7 +366,7 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
             };
 
             job1._intervalSetName = "chr1";
-            job1._scatterGatherMethod = ScatterGatherUtils.ScatterGatherMethod.chunked;
+            job1._scatterGatherMethod = VariantProcessingStep.ScatterGatherMethod.chunked;
 
             Map<String, List<Interval>> intervalMap = new LinkedHashMap<>();
             intervalMap.put("1", Arrays.asList(new Interval("chr1", 1, 10)));

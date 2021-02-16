@@ -64,7 +64,7 @@ import java.util.TreeMap;
 /**
  * Created by bimber on 8/26/2014.
  */
-public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, SequenceOutputHandler.HasActionNames, SequenceOutputHandler.TracksVCF
+public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, SequenceOutputHandler.HasActionNames, SequenceOutputHandler.TracksVCF, VariantProcessingStep.SupportsScatterGather
 {
     public static final String VCF_CATEGORY = "VCF File";
 
@@ -258,9 +258,14 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 requiresPedigree = true;
             }
 
-            if (useScatterGather && !(stepCtx.getProvider() instanceof VariantProcessingStep.SupportsScatterGather))
+            if (useScatterGather)
             {
-                stepsNotScatterGather.add(stepCtx.getProvider().getName());
+                if (!(stepCtx.getProvider() instanceof VariantProcessingStep.SupportsScatterGather))
+                {
+                    stepsNotScatterGather.add(stepCtx.getProvider().getName());
+                }
+
+                ((VariantProcessingStep.SupportsScatterGather)stepCtx.getProvider()).validateScatter(vj.getScatterGatherMethod(), job);
             }
 
             VariantProcessingStep step = stepCtx.getProvider().create(taskHelper);
