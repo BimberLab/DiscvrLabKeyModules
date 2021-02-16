@@ -5,7 +5,7 @@ for (datasetId in names(seuratObjects)) {
     if (!(assayName %in% names(seuratObj@assays))) {
         print('ADT assay not present, skipping')
     } else {
-        seuratObj <- bindArgs(CellMembrane::RunSeuratWnn, seuratObj)()
+        seuratObj <- bindArgs(CellMembrane::RunAdtPca, seuratObj)()
     }
 
     newSeuratObjects[[datasetId]] <- seuratObj

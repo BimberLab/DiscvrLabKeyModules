@@ -8,9 +8,9 @@ import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
 
-public class CiteSeqDimRedux extends AbstractCellMembraneStep
+public class CiteSeqPca extends AbstractCellMembraneStep
 {
-    public CiteSeqDimRedux(PipelineContext ctx, CiteSeqDimRedux.Provider provider)
+    public CiteSeqPca(PipelineContext ctx, CiteSeqPca.Provider provider)
     {
         super(provider, ctx);
     }
@@ -19,7 +19,7 @@ public class CiteSeqDimRedux extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("CiteSeqDimRedux", "CiteSeq DimRedux (distance)", "CellMembrane/Seurat", "This will run DimRedux steps on the ADT data.", Arrays.asList(
+            super("CiteSeqPca", "CiteSeq/ADT PCA", "CellMembrane/Seurat", "This will run PCA on the ADT data.", Arrays.asList(
                     SeuratToolParameter.create("performClrNormalization", "Perform CLR Normalization", "If true, Seurat CLR normalization will be performed. Otherwise any pre-existing normalization is used.", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true, "performClrNormalization", true)
@@ -27,15 +27,15 @@ public class CiteSeqDimRedux extends AbstractCellMembraneStep
         }
 
         @Override
-        public CiteSeqDimRedux create(PipelineContext ctx)
+        public CiteSeqPca create(PipelineContext ctx)
         {
-            return new CiteSeqDimRedux(ctx, this);
+            return new CiteSeqPca(ctx, this);
         }
     }
 
     @Override
     public String getFileSuffix()
     {
-        return "cite-dr";
+        return "cite-pca";
     }
 }

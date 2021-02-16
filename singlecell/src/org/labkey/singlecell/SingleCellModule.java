@@ -38,7 +38,9 @@ import org.labkey.singlecell.button.FeatureBarcodeButton;
 import org.labkey.singlecell.pipeline.singlecell.AppendCiteSeq;
 import org.labkey.singlecell.pipeline.singlecell.AvgExpression;
 import org.labkey.singlecell.pipeline.singlecell.CiteSeqDimRedux;
+import org.labkey.singlecell.pipeline.singlecell.CiteSeqPca;
 import org.labkey.singlecell.pipeline.singlecell.CiteSeqWnn;
+import org.labkey.singlecell.pipeline.singlecell.DimPlots;
 import org.labkey.singlecell.pipeline.singlecell.DoubletFinder;
 import org.labkey.singlecell.pipeline.singlecell.Downsample;
 import org.labkey.singlecell.pipeline.singlecell.FilterRawCounts;
@@ -169,6 +171,8 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new CiteSeqDimRedux.Provider());
         SequencePipelineService.get().registerPipelineStep(new CiteSeqWnn.Provider());
         SequencePipelineService.get().registerPipelineStep(new AvgExpression.Provider());
+        SequencePipelineService.get().registerPipelineStep(new DimPlots.Provider());
+        SequencePipelineService.get().registerPipelineStep(new CiteSeqPca.Provider());
     }
 
     @Override
