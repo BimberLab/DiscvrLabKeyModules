@@ -1,7 +1,7 @@
 import org.labkey.gradle.util.BuildUtils;
 
 repositories {
-	jcenter()
+	mavenCentral()
 	maven {
 		url "https://clojars.org/repo"
 	}

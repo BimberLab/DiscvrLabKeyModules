@@ -8,7 +8,7 @@ import org.labkey.gradle.util.PropertiesUtils
 import java.util.regex.Matcher
 
 repositories {
-   jcenter()
+   mavenCentral()
    maven {
       url "https://clojars.org/repo"
    }
