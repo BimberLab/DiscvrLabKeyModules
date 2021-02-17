@@ -4053,6 +4053,11 @@ public class SequenceAnalysisController extends SpringActionController
                 errors.reject(ERROR_MSG, "Unable to parse JSON params: " + e.getMessage());
                 return null;
             }
+            catch (IllegalArgumentException e)
+            {
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
         }
 
         protected PipelineJob createOutputJob(RunSequenceHandlerForm form, Container targetContainer, String jobName, PipeRoot pr1, SequenceOutputHandler handler, List<SequenceOutputFile> inputs, JSONObject json) throws IOException, PipelineJobException
