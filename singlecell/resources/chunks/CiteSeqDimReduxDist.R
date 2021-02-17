@@ -5,7 +5,14 @@ for (datasetId in names(seuratObjects)) {
     if (!('ADT' %in% names(seuratObj@assays))) {
         print('ADT assay not present, skipping')
     } else {
-        seuratObj <- bindArgs(CellMembrane::RunAdtPca, seuratObj)()
+        tryCatch({
+            seuratObj <- bindArgs(CellMembrane::CiteSeqDimRedux.Dist, seuratObj)()
+        }, error = function(e){
+            conditionMessage(e)
+            print(paste0('Error running CiteSeqDimRedux.Dist'))
+            print(conditionMessage(e))
+            traceback()
+        })
     }
 
     newSeuratObjects[[datasetId]] <- seuratObj
