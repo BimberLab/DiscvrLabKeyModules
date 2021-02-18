@@ -25,7 +25,7 @@ public class NormalizeAndScale extends AbstractCellMembraneStep
                         put("initialValues", "vst");
                         put("allowBlank", false);
                     }}, "vst"),
-                    SeuratToolParameter.create("variableGenesWhitelist", "Genes to Add to VariableFeatures", "These genes, entered comma-separated or one/line, will be adding to the default Seurat::VariableFeatures gene set when running PCA", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
+                    SeuratToolParameter.create("variableGenesWhitelist", "Genes to Add to VariableFeatures", "These genes, entered comma-separated or one/line, will be added to the default Seurat::VariableFeatures gene set when running PCA", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("height", 150);
                         put("delimiter", ",");
                     }}, null),

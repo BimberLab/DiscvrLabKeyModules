@@ -5,7 +5,9 @@ for (datasetId in names(seuratObjects)) {
     if (!('ADT' %in% names(seuratObj@assays))) {
         print('ADT assay not present, skipping')
     } else {
-        seuratObj <- bindArgs(CellMembrane::RunSeuratWnn, seuratObj)()
+        for (adt in rownames(seuratObj[['ADT']])) {
+            CellMembrane::FeaturePlotAcrossReductions(seuratObj, features = c(adt))
+        }
     }
 
     newSeuratObjects[[datasetId]] <- seuratObj

@@ -255,8 +255,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
             version: 2
         };
 
-        //first add the general params
-        Ext4.apply(json, this.down('#runInformation').getForm().getFieldValues());
+        //first add the general params. Note: include all to ensure we include unchecked checkboxes. Using useDataValues=false to ensure we get the string-serialized value
+        Ext4.apply(json, this.down('#runInformation').getForm().getValues(false, false, false, false));
 
         json['alignment.doAlignment'] = this.down('#doAlignment').getValue();
 
@@ -305,6 +305,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 helpPopup: 'Check to delete the intermediate files created by this pipeline.  In general these are not needed and it will save disk space.  These files might be useful for debugging though.',
                 name: 'deleteIntermediateFiles',
                 inputValue: true,
+                uncheckedValue: false,
                 checked: true,
                 xtype: 'checkbox'
             },{
@@ -312,6 +313,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 helpPopup: 'Check to copy the input files to the working directory.  Depending on your environment, this may or may not help performance.',
                 name: 'copyInputsLocally',
                 inputValue: true,
+                uncheckedValue: false,
                 checked: false,
                 xtype: 'checkbox'
             }, this.getSaveTemplateCfg(),{
@@ -320,6 +322,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 hidden: !LABKEY.Security.currentUser.isAdmin,
                 name: 'submitJobToReadsetContainer',
                 inputValue: true,
+                uncheckedValue: false,
                 checked: false,
                 xtype: 'checkbox'
             }]

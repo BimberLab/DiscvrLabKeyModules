@@ -15,13 +15,6 @@ import java.util.Set;
 
 public class ScatterGatherUtils
 {
-    public static enum ScatterGatherMethod
-    {
-        none(),
-        contig(),
-        chunked(),
-        fixedJobs()
-    }
 
     private static class ActiveIntervalSet
     {

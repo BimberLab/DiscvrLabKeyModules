@@ -407,12 +407,11 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 			return;
 		}
 
-		Ext4.Msg.wait('Submitting...');
 		var json = {
 			handlerClass: 'org.labkey.sequenceanalysis.' + (this.showGenotypeGVCFs ? 'analysis.GenotypeGVCFHandler' : 'pipeline.ProcessVariantsHandler'),
 			outputFileIds: this.outputFileIds,
 			params: Ext4.encode(values)
-		}
+		};
 
 		if (Ext4.isDefined(values.doSplitJobs)) {
 			json.doSplitJobs = !!values.doSplitJobs;
@@ -441,6 +440,7 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 			}
 		}
 
+		Ext4.Msg.wait('Submitting...');
 		LABKEY.Ajax.request({
 			url: LABKEY.ActionURL.buildURL('sequenceanalysis', actionName),
 			jsonData: json,
@@ -465,8 +465,8 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 			version: 2
 		};
 
-		//first add the general params
-		Ext4.apply(json, this.down('#runInformation').getForm().getFieldValues());
+		//first add the general params. Note: include all to ensure we include unchecked checkboxes. Using useDataValues=false to ensure we get the string-serialized value
+		Ext4.apply(json, this.down('#runInformation').getForm().getValues(false, false, false, false));
 
 		//then append each section
 		var sections = this.query('sequenceanalysis-analysissectionpanel');
