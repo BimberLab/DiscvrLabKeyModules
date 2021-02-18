@@ -75,6 +75,14 @@ public interface SequenceOutputHandler<T>
         return true;
     }
 
+    /**
+     * @return Whether this handler requires each input to be associated with a genome
+     */
+    default boolean requiresGenome()
+    {
+        return true;
+    }
+
     public boolean canProcess(SequenceOutputFile o);
 
     /**

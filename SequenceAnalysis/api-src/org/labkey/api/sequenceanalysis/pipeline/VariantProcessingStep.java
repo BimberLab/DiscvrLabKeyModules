@@ -38,6 +38,14 @@ public interface VariantProcessingStep extends PipelineStep
 
     }
 
+    enum ScatterGatherMethod
+    {
+        none(),
+        contig(),
+        chunked(),
+        fixedJobs()
+    }
+
     public static interface Output extends PipelineStepOutput
     {
         public File getVCF();
@@ -50,7 +58,10 @@ public interface VariantProcessingStep extends PipelineStep
 
     public static interface SupportsScatterGather
     {
+        default void validateScatter(ScatterGatherMethod method, PipelineJob job) throws IllegalArgumentException
+        {
 
+        }
     }
 
     public static interface MayRequirePrepareTask

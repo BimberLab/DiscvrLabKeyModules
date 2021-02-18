@@ -193,6 +193,7 @@ public class RnaSeqcHandler extends AbstractParameterizedOutputHandler<SequenceO
             so.setFile(indexHtml);
             so.setContainer(job.getContainerId());
             so.setName(params.getString("name"));
+            so.setLibrary_id(g.getGenomeId());
             ctx.addSequenceOutput(so);
 
             action.setEndTime(new Date());

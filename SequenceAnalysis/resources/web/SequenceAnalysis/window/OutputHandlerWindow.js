@@ -250,7 +250,7 @@ Ext4.define('SequenceAnalysis.window.OutputHandlerWindow', {
             return;
         }
 
-        //Note: include all to ensure we include unchecked checkboxes
+        //Note: include all to ensure we include unchecked checkboxes. Using useDataValues=false to ensure we get the string-serialized value
         var params = this.down('form').getForm().getValues(false, false, false, false);
         var json = {
             handlerType: this.handlerType,

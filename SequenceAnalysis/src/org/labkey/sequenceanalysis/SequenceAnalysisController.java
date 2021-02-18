@@ -114,6 +114,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -162,7 +163,6 @@ import org.labkey.sequenceanalysis.run.analysis.NtSnpByPosAggregator;
 import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.util.ChainFileValidator;
 import org.labkey.sequenceanalysis.util.FastqUtils;
-import org.labkey.sequenceanalysis.util.ScatterGatherUtils;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 import org.labkey.sequenceanalysis.visualization.VariationChart;
 import org.springframework.beans.PropertyValues;
@@ -4053,11 +4053,35 @@ public class SequenceAnalysisController extends SpringActionController
                 errors.reject(ERROR_MSG, "Unable to parse JSON params: " + e.getMessage());
                 return null;
             }
+            catch (IllegalArgumentException e)
+            {
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
         }
 
         protected PipelineJob createOutputJob(RunSequenceHandlerForm form, Container targetContainer, String jobName, PipeRoot pr1, SequenceOutputHandler handler, List<SequenceOutputFile> inputs, JSONObject json) throws IOException, PipelineJobException
         {
+            validateGenomes(inputs, handler);
             return new SequenceOutputHandlerJob(targetContainer, getUser(), jobName, pr1, handler, inputs, json);
+        }
+
+        protected void validateGenomes(List<SequenceOutputFile> inputs, SequenceOutputHandler<?> handler) throws IllegalArgumentException
+        {
+            Set<Integer> genomes = new HashSet<>();
+            inputs.forEach(x -> {
+                if (x.getLibrary_id() == null && (handler.requiresGenome() || handler.requiresSingleGenome()))
+                {
+                    throw new IllegalArgumentException("Input missing genome: " + x.getRowid());
+                }
+
+                genomes.add(x.getLibrary_id());
+            });
+
+            if (genomes.size() > 1 && handler.requiresSingleGenome())
+            {
+                throw new IllegalArgumentException("All inputs must use the same base genome");
+            }
         }
 
         private PipeRoot getPipeRoot(Container targetContainer, Map<Container, PipeRoot> containerToPipeRootMap)
@@ -4078,12 +4102,14 @@ public class SequenceAnalysisController extends SpringActionController
     @RequiresPermission(InsertPermission.class)
     public class RunVariantProcessingAction extends RunSequenceHandlerAction
     {
+        @Override
         protected PipelineJob createOutputJob(RunSequenceHandlerForm form, Container targetContainer, String jobName, PipeRoot pr1, SequenceOutputHandler handler, List<SequenceOutputFile> inputs, JSONObject json) throws PipelineJobException, IOException
         {
             String method = json.getString("scatterGatherMethod");
             try
             {
-                ScatterGatherUtils.ScatterGatherMethod scatterMethod = ScatterGatherUtils.ScatterGatherMethod.valueOf(method);
+                validateGenomes(inputs, handler);
+                VariantProcessingStep.ScatterGatherMethod scatterMethod = VariantProcessingStep.ScatterGatherMethod.valueOf(method);
 
                 return new VariantProcessingJob(targetContainer, getUser(), jobName, pr1, handler, inputs, json, scatterMethod);
             }

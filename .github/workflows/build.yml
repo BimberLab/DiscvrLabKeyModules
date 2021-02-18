@@ -20,3 +20,12 @@ jobs:
           # NOTE: permissions are limited on the default secrets.GITHUB_TOKEN, including updating workflows, so use a personal access token
           github_token: ${{ secrets.PAT }}
 
+      - name: Publish Release
+
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.PAT }}"
+          prerelease: true
+          title: "Release "
+          files: |
+            /home/runner/work/_temp/_github_home/lkDist/discvr/DISCVR-*

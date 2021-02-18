@@ -35,23 +35,7 @@ import org.labkey.singlecell.analysis.CellRangerRawDataHandler;
 import org.labkey.singlecell.analysis.ProcessSeuratObjectHandler;
 import org.labkey.singlecell.analysis.ProcessSingleCellHandler;
 import org.labkey.singlecell.button.FeatureBarcodeButton;
-import org.labkey.singlecell.pipeline.singlecell.AppendCiteSeq;
-import org.labkey.singlecell.pipeline.singlecell.AvgExpression;
-import org.labkey.singlecell.pipeline.singlecell.CiteSeqDimRedux;
-import org.labkey.singlecell.pipeline.singlecell.CiteSeqWnn;
-import org.labkey.singlecell.pipeline.singlecell.DoubletFinder;
-import org.labkey.singlecell.pipeline.singlecell.Downsample;
-import org.labkey.singlecell.pipeline.singlecell.FilterRawCounts;
-import org.labkey.singlecell.pipeline.singlecell.FindClustersAndDimRedux;
-import org.labkey.singlecell.pipeline.singlecell.FindMarkers;
-import org.labkey.singlecell.pipeline.singlecell.MergeSeurat;
-import org.labkey.singlecell.pipeline.singlecell.NormalizeAndScale;
-import org.labkey.singlecell.pipeline.singlecell.RemoveCellCycle;
-import org.labkey.singlecell.pipeline.singlecell.RunCellHashing;
-import org.labkey.singlecell.pipeline.singlecell.RunPCA;
-import org.labkey.singlecell.pipeline.singlecell.RunSingleR;
-import org.labkey.singlecell.pipeline.singlecell.SplitSeurat;
-import org.labkey.singlecell.pipeline.singlecell.SubsetSeurat;
+import org.labkey.singlecell.pipeline.singlecell.*;
 import org.labkey.singlecell.run.CellRangerFeatureBarcodeHandler;
 import org.labkey.singlecell.run.CellRangerGexCountStep;
 import org.labkey.singlecell.run.CellRangerVDJWrapper;
@@ -128,6 +112,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         LaboratoryService.get().registerTableCustomizer(this, SingleCellTableCustomizer.class, SingleCellSchema.NAME, SingleCellSchema.TABLE_SAMPLES);
         LaboratoryService.get().registerTableCustomizer(this, SingleCellTableCustomizer.class, SingleCellSchema.NAME, SingleCellSchema.TABLE_SORTS);
         LaboratoryService.get().registerTableCustomizer(this, SingleCellTableCustomizer.class, SingleCellSchema.NAME, SingleCellSchema.TABLE_CDNAS);
+        LaboratoryService.get().registerTableCustomizer(this, SingleCellTableCustomizer.class, SingleCellSchema.SEQUENCE_SCHEMA_NAME, SingleCellSchema.TABLE_READSETS);
 
         LDKService.get().registerQueryButton(new ShowBulkEditButton(this, SingleCellSchema.NAME, SingleCellSchema.TABLE_CDNAS), SingleCellSchema.NAME, SingleCellSchema.TABLE_CDNAS);
         LDKService.get().registerQueryButton(new ShowBulkEditButton(this, SingleCellSchema.NAME, SingleCellSchema.TABLE_SORTS), SingleCellSchema.NAME, SingleCellSchema.TABLE_SORTS);
@@ -166,9 +151,13 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new FindClustersAndDimRedux.Provider());
         SequencePipelineService.get().registerPipelineStep(new SplitSeurat.Provider());
         SequencePipelineService.get().registerPipelineStep(new SubsetSeurat.Provider());
-        SequencePipelineService.get().registerPipelineStep(new CiteSeqDimRedux.Provider());
+        SequencePipelineService.get().registerPipelineStep(new CiteSeqDimReduxDist.Provider());
         SequencePipelineService.get().registerPipelineStep(new CiteSeqWnn.Provider());
         SequencePipelineService.get().registerPipelineStep(new AvgExpression.Provider());
+        SequencePipelineService.get().registerPipelineStep(new DimPlots.Provider());
+        SequencePipelineService.get().registerPipelineStep(new CiteSeqDimReduxPca.Provider());
+        SequencePipelineService.get().registerPipelineStep(new CiteSeqPlots.Provider());
+        SequencePipelineService.get().registerPipelineStep(new PhenotypePlots.Provider());
     }
 
     @Override

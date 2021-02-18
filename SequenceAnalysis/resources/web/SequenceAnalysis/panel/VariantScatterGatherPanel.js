@@ -61,6 +61,7 @@ Ext4.define('SequenceAnalysis.panel.VariantScatterGatherPanel', {
                                 name: 'scatterGather.allowSplitChromosomes',
                                 fieldLabel: 'Allow Split Contigs',
                                 value: true,
+                                uncheckedValue: false,
                                 inputValue: true,
                                 helpPopup: 'If true, a given chromosome/contig can be split between jobs.  Otherwise chromosomes are always intact across jobs.'
                             });

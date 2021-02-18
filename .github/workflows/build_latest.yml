@@ -40,5 +40,5 @@ jobs:
           repo_token: "${{ secrets.PAT }}"
           automatic_release_tag: "latest"
           prerelease: true
-          title: "DISCVR Development Build: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}"
+          title: "Development Build: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}"
           files: /home/runner/work/_temp/_github_home/lkDist/discvr/DISCVR-*
