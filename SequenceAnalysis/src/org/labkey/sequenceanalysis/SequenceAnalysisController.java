@@ -4062,15 +4062,15 @@ public class SequenceAnalysisController extends SpringActionController
 
         protected PipelineJob createOutputJob(RunSequenceHandlerForm form, Container targetContainer, String jobName, PipeRoot pr1, SequenceOutputHandler handler, List<SequenceOutputFile> inputs, JSONObject json) throws IOException, PipelineJobException
         {
-            validateGenomes(inputs);
+            validateGenomes(inputs, handler);
             return new SequenceOutputHandlerJob(targetContainer, getUser(), jobName, pr1, handler, inputs, json);
         }
 
-        protected void validateGenomes(List<SequenceOutputFile> inputs) throws IllegalArgumentException
+        protected void validateGenomes(List<SequenceOutputFile> inputs, SequenceOutputHandler<?> handler) throws IllegalArgumentException
         {
             Set<Integer> genomes = new HashSet<>();
             inputs.forEach(x -> {
-                if (x.getLibrary_id() == null)
+                if (x.getLibrary_id() == null && (handler.requiresGenome() || handler.requiresSingleGenome()))
                 {
                     throw new IllegalArgumentException("Input missing genome: " + x.getRowid());
                 }
@@ -4078,7 +4078,7 @@ public class SequenceAnalysisController extends SpringActionController
                 genomes.add(x.getLibrary_id());
             });
 
-            if (genomes.size() > 1)
+            if (genomes.size() > 1 && handler.requiresSingleGenome())
             {
                 throw new IllegalArgumentException("All inputs must use the same base genome");
             }
@@ -4108,7 +4108,7 @@ public class SequenceAnalysisController extends SpringActionController
             String method = json.getString("scatterGatherMethod");
             try
             {
-                validateGenomes(inputs);
+                validateGenomes(inputs, handler);
                 VariantProcessingStep.ScatterGatherMethod scatterMethod = VariantProcessingStep.ScatterGatherMethod.valueOf(method);
 
                 return new VariantProcessingJob(targetContainer, getUser(), jobName, pr1, handler, inputs, json, scatterMethod);
