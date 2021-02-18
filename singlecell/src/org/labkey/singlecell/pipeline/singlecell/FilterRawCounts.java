@@ -35,11 +35,13 @@ public class FilterRawCounts extends AbstractCellMembraneStep
                     SeuratToolParameter.create("pMitoLow", "Min Percent Mito", "Cells percent mitochondrial genes below this value will be discarded", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                         put("maxValue", 1);
+                        put("decimalPrecision", 6);
                     }}, 0, "pMito.low", false),
                     SeuratToolParameter.create("pMitoHigh", "Max Percent Mito", "Cells percent mitochondrial genes above this value will be discarded", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                         put("maxValue", 1);
-                    }}, 0.15, "pMito.high", false)
+                        put("decimalPrecision", 6);
+                    }}, 0.10, "pMito.high", false)
                     ), null, null);
         }
 
