@@ -304,16 +304,28 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         return _contigsInInputs;
     }
 
-    private void copyToLevelFiles(PipelineJob job, File sourceWorkspace, File destinationWorkspace, boolean overwrite) throws IOException
+    private void copyToLevelFiles(PipelineJob job, File sourceWorkspace, File destinationWorkspace, boolean removeOtherFiles, boolean overwriteExisting) throws IOException
     {
         job.getLogger().info("Copying top-level files from: " + sourceWorkspace.getPath());
+        if (removeOtherFiles)
+        {
+            for (File f : destinationWorkspace.listFiles())
+            {
+                if (!f.isDirectory())
+                {
+                    job.getLogger().debug("deleting existing top-level file: " + f.getPath());
+                    f.delete();
+                }
+            }
+        }
+
         for (String fn : Arrays.asList("callset.json", "vidmap.json", "vcfheader.vcf", "__tiledb_workspace.tdb"))
         {
             File source = new File(sourceWorkspace, fn);
             File dest = new File(destinationWorkspace, fn);
             if (dest.exists())
             {
-                if (!overwrite)
+                if (!overwriteExisting)
                 {
                     job.getLogger().debug("workspace file exists, will not overwrite: " + dest.getPath());
                     continue;
@@ -459,7 +471,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 }
 
                 File sourceWorkspace = getSourceWorkspace(ctx.getParams(), ctx.getSequenceSupport());
-                copyWorkspace(ctx, sourceWorkspace, workingDestinationWorkspaceFolder, genome, toDelete, !genomicsDbCompleted);
+                copyWorkspace(ctx, sourceWorkspace, workingDestinationWorkspaceFolder, genome, toDelete, !genomicsDbCompleted, !genomicsDbCompleted, !genomicsDbCompleted);
             }
             else
             {
@@ -589,7 +601,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
 
             if (!copyToSourceDone.exists())
             {
-                copyWorkspace(ctx, workingDestinationWorkspaceFolder, workspaceLocalDir, genome, toDelete, true);
+                copyWorkspace(ctx, workingDestinationWorkspaceFolder, workspaceLocalDir, genome, toDelete, true, false, false);
 
                 try
                 {
@@ -637,7 +649,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         }
     }
 
-    private void copyWorkspace(JobContext ctx, File sourceWorkspace, File destinationWorkspaceFolder, ReferenceGenome genome, Collection<File> toDelete, boolean alwaysPerformRsync) throws PipelineJobException
+    private void copyWorkspace(JobContext ctx, File sourceWorkspace, File destinationWorkspaceFolder, ReferenceGenome genome, Collection<File> toDelete, boolean alwaysPerformRsync, boolean overwriteTopLevelFiles, boolean removeExistingTopLevelFiles) throws PipelineJobException
     {
         if (!destinationWorkspaceFolder.exists())
         {
@@ -675,7 +687,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
 
                 if (!haveCopiedTopLevelFiles)
                 {
-                    copyToLevelFiles(ctx.getJob(), sourceWorkspace, destinationWorkspaceFolder, false);
+                    copyToLevelFiles(ctx.getJob(), sourceWorkspace, destinationWorkspaceFolder, removeExistingTopLevelFiles, overwriteTopLevelFiles);
                     haveCopiedTopLevelFiles = true;
                 }
 
