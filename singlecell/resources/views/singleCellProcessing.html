@@ -4,7 +4,7 @@
 
         Ext4.create('SingleCell.panel.SingleCellProcessingPanel', {
             outputFileIds: LABKEY.ActionURL.getParameter("outputFileIds") ? LABKEY.ActionURL.getParameter("outputFileIds").split(';') : [],
-            inputType: LABKEY.ActionURL.getParameter("handlerClass") || 'ProcessSeuratObjectHandler'
+            handlerClass: LABKEY.ActionURL.getParameter("handlerClass") || 'ProcessSingleCellHandler'
         }).render(webpart.wrapperDivId);
     });
 
