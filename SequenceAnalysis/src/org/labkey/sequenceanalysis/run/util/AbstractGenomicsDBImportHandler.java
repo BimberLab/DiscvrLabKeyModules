@@ -40,12 +40,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 abstract public class AbstractGenomicsDBImportHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> implements SequenceOutputHandler.TracksVCF, SequenceOutputHandler.HasCustomVariantMerge, VariantProcessingStep.MayRequirePrepareTask, VariantProcessingStep.SupportsScatterGather
 {
@@ -665,6 +667,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                     else
                     {
                         ctx.getLogger().info("has been copied, skipping: " + i.getContig());
+                        assertContigFoldersEqual(sourceFolder, destContigFolder);
                         reportFragmentsPerContig(ctx, destContigFolder, i.getContig());
                         continue;
                     }
@@ -704,6 +707,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 }
 
                 FileUtils.touch(copyDone);
+                assertContigFoldersEqual(sourceFolder, destContigFolder);
                 reportFragmentsPerContig(ctx, destContigFolder, i.getContig());
             }
             catch (IOException e)
@@ -718,20 +722,44 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         return new File(ctx.getSourceDirectory(), "copyToWebserver.done");
     }
 
+    private void assertContigFoldersEqual(File sourceFolder, File destContigFolder) throws IllegalArgumentException
+    {
+        List<String> sourceFiles = getFragmentsPerContig(sourceFolder);
+        List<String> destFiles = getFragmentsPerContig(destContigFolder);
+
+        if (!sourceFiles.equals(destFiles))
+        {
+            throw new IllegalArgumentException("Source and destination contig files not equal for: " + destContigFolder.getPath());
+        }
+    }
+
     private void reportFragmentsPerContig(JobContext ctx, File destContigFolder, String contigName)
     {
-        if (destContigFolder.exists())
-        {
-            File[] children = destContigFolder.listFiles(x -> {
-                return  x.isDirectory() && !"genomicsdb_meta_dir".equals(x.getName());
-            });
-
-            ctx.getLogger().info(contigName + " total fragments: " + children.length);
-        }
-        else
+        List<String> children = getFragmentsPerContig(destContigFolder);
+        if (children == null)
         {
             ctx.getLogger().warn("expected folder not found: " + destContigFolder.getPath());
         }
+        else
+        {
+            ctx.getLogger().info(contigName + " total fragments: " + children.size());
+        }
+    }
+
+    private List<String> getFragmentsPerContig(File destContigFolder)
+    {
+        if (destContigFolder.exists())
+        {
+            List<String> children = Arrays.stream(destContigFolder.listFiles(x -> {
+                return  x.isDirectory() && !"genomicsdb_meta_dir".equals(x.getName());
+            })).map(File::getName).collect(Collectors.toList());
+
+            Collections.sort(children);
+
+            return children;
+        }
+
+        return null;
     }
 
     private boolean doCopyLocal(JSONObject params)
