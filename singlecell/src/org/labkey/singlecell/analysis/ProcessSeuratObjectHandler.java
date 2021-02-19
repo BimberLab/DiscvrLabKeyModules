@@ -28,6 +28,12 @@ public class ProcessSeuratObjectHandler extends AbstractSingleCellHandler implem
     }
 
     @Override
+    public ActionURL getButtonSuccessUrl(Container c, User u, List<Integer> outputFileIds)
+    {
+        return DetailsURL.fromString("/singlecell/singleCellProcessing.view?handlerClass=ProcessSeuratObjectHandler&outputFileIds=" + StringUtils.join(outputFileIds, ";"), c).getActionURL();
+    }
+
+    @Override
     public SequenceOutputProcessor getProcessor()
     {
         return new Processor(false);
