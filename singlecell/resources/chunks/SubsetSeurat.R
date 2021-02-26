@@ -2,7 +2,7 @@ for (datasetId in names(seuratObjects)) {
     seuratObj <- seuratObjects[[datasetId]]
     seuratObjects[[datasetId]] <- NULL
 
-    seuratObj <- subset(seuratObj, subset = <EXPRESSION>)
+    <SUBSETS>
 
     newSeuratObjects[[datasetId]] <- seuratObj
 

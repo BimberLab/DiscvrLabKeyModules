@@ -9,12 +9,12 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class SubsetSeurat extends AbstractCellMembraneStep
 {
@@ -28,12 +28,12 @@ public class SubsetSeurat extends AbstractCellMembraneStep
         public Provider()
         {
             super("SubsetSeurat", "Subset", "CellMembrane/Seurat", "The seurat object will be subset based on the expression below, which is passed directly to Seurat's subset(subset = X).", Arrays.asList(
-                    SeuratToolParameter.create("expression", "Expression", "Filter Expression", "textarea", new JSONObject(){{
+                    SeuratToolParameter.create("expression", "Expression", "Filter Expression(s)", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("allowBlank", false);
                         put("height", 150);
                         put("delimiter", ",");
                     }}, null)
-            ), null, null);
+            ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
 
@@ -54,22 +54,34 @@ public class SubsetSeurat extends AbstractCellMembraneStep
         return ret;
     }
 
-    final static String EXPRESSION = "<EXPRESSION>";
+    final static String EXPRESSION = "<SUBSETS>";
 
     @Override
     protected List<String> loadChunkFromFile() throws PipelineJobException
     {
         ToolParameterDescriptor pd = getProvider().getParameterByName("expression");
         final String val = StringUtils.trimToNull(pd.extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()));
+        final String[] values = val.split(",");
 
-        return super.loadChunkFromFile().stream().map(x -> {
-            if (x.contains(EXPRESSION))
+        List<String> ret = new ArrayList<>();
+        for (String line : super.loadChunkFromFile())
+        {
+            if (line.contains(EXPRESSION))
             {
-                x = x.replaceAll(EXPRESSION, val);
+                for (String subset : values)
+                {
+                    String toSub = "seuratObj <- subset(seuratObj, subset = " + subset + ")";
+                    ret.add(line.replaceAll(EXPRESSION, toSub));
+                    ret.add(line.replaceAll(EXPRESSION, "print(paste0('Cells after subset: ', ncol(seuratObj))"));
+                }
             }
+            else
+            {
+                ret.add(line);
+            }
+        }
 
-            return x;
-        }).collect(Collectors.toList());
+        return ret;
     }
 
     @Override
