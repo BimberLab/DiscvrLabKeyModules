@@ -72,7 +72,7 @@ public class SubsetSeurat extends AbstractCellMembraneStep
                 {
                     String toSub = "seuratObj <- subset(seuratObj, subset = " + subset + ")";
                     ret.add(line.replaceAll(EXPRESSION, toSub));
-                    ret.add(line.replaceAll(EXPRESSION, "print(paste0('Cells after subset: ', ncol(seuratObj))"));
+                    ret.add(line.replaceAll(EXPRESSION, "print(paste0('Cells after subset: ', ncol(seuratObj)))"));
                 }
             }
             else
