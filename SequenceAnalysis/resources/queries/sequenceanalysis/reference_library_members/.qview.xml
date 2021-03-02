@@ -2,6 +2,7 @@
    <columns>
        <column name="library_id" />
        <column name="ref_nt_id" />
+       <column name="alias" />
        <column name="start" />
        <column name="stop" />
        <column name="type" />

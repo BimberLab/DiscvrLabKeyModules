@@ -1,6 +1,7 @@
 Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
     extend: 'SequenceAnalysis.panel.BaseSequencePanel',
     alias: 'widget.singlecell-singlecellprocessingpanel',
+    handlerClass: 'ProcessSingleCellHandler',
 
     jobType: 'singleCell',
 
@@ -250,7 +251,7 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
 
         Ext4.Msg.wait('Submitting...');
         var json = {
-            handlerClass: 'org.labkey.singlecell.analysis.ProcessSingleCellHandler',
+            handlerClass: 'org.labkey.singlecell.analysis.' + this.handlerClass,
             outputFileIds: this.outputFileIds,
             params: Ext4.encode(values)
         };
