@@ -1,0 +1,1 @@
+ALTER TABLE sequenceanalysis.reference_library_members ADD alias VARCHAR(4000);
