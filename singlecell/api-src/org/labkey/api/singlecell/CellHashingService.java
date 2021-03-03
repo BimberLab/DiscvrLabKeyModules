@@ -45,6 +45,8 @@ abstract public class CellHashingService
         _instance = instance;
     }
 
+    abstract public void prepareHashingIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing) throws PipelineJobException;
+
     abstract public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, boolean failIfNoHashing, boolean failIfNoCiteSeq) throws PipelineJobException;
 
     abstract public File generateHashingCallsForRawMatrix(Readset parentReadset, PipelineOutputTracker output, SequenceOutputHandler.JobContext ctx, CellHashingParameters parameters, File rawCountMatrixDir) throws PipelineJobException;
