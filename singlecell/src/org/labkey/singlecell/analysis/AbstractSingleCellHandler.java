@@ -69,12 +69,6 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
     }
 
     @Override
-    public ActionURL getButtonSuccessUrl(Container c, User u, List<Integer> outputFileIds)
-    {
-        return DetailsURL.fromString("/singlecell/singleCellProcessing.view?outputFileIds=" + StringUtils.join(outputFileIds, ";"), c).getActionURL();
-    }
-
-    @Override
     public String getButtonJSHandler()
     {
         return null;

@@ -88,6 +88,9 @@ public class GenomicsDbImportWrapper extends AbstractGatk4Wrapper
             args.add(intervalList.getPath());
         }
 
+        args.add("-R");
+        args.add(genome.getWorkingFastaFile().getPath());
+
         execute(args);
 
         if (!outputFile.exists())

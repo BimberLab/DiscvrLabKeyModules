@@ -7,11 +7,19 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.DbScope;
+import org.labkey.api.data.Results;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.Selector;
+import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlSelector;
+import org.labkey.api.data.TableSelector;
+import org.labkey.api.query.FieldKey;
+import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.PageFlowUtil;
+import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -300,6 +308,23 @@ public class ChainFileValidator
                     }
                 }
             });
+
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("library_id"), genomeId);
+            filter.addCondition(FieldKey.fromString("alias"), null, CompareType.NONBLANK);
+            TableSelector ts = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS), PageFlowUtil.set("ref_nt_id", "alias"), filter, null);
+            if (ts.exists())
+            {
+                ts.forEachResults(new Selector.ForEachBlock<Results>()
+               {
+                   @Override
+                   public void exec(Results rs) throws SQLException
+                   {
+                       String name = RefNtSequenceModel.getForRowId(rs.getInt(FieldKey.fromString("ref_nt_id"))).getName();
+                       String alias = rs.getString(FieldKey.fromString("alias"));
+                       cachedReferences.put(alias, name);
+                   }
+               });
+            }
 
             _cachedReferencesByGenome.put(genomeId, cachedReferences);
         }
