@@ -169,7 +169,13 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
     }
 
     @Override
-    public boolean requiresHashingOrCiteSeq()
+    public boolean requiresHashing()
+    {
+        return false;
+    }
+
+    @Override
+    public boolean requiresCiteSeq()
     {
         return false;
     }
