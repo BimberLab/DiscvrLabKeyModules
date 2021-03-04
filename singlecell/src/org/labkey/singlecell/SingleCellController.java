@@ -393,6 +393,15 @@ public class SingleCellController extends SpringActionController
                         {
                             SimpleFilter sortFilter = new SimpleFilter(FieldKey.fromString("sampleId"), rowId);
                             sortFilter.addCondition(FieldKey.fromString("population"), r.get("population"));
+                            if (r.get("hto") == null)
+                            {
+                                sortFilter.addCondition(FieldKey.fromString("hto"), null, CompareType.ISBLANK);
+                            }
+                            else
+                            {
+                                sortFilter.addCondition(FieldKey.fromString("hto"), r.get("hto"));
+                            }
+
                             TableSelector tsSort = new TableSelector(tiSort, PageFlowUtil.set("rowId"), sortFilter, null);
                             long countSort = tsSort.getRowCount();
                             if (countSort == 1)

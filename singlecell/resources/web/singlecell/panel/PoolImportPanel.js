@@ -553,6 +553,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                 tissue: r.tissue,
                 objectId: r.objectId,
                 population: r.population,
+                hto: r.hto,
                 workbook: r.workbook
             });
         }, this);
