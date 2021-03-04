@@ -974,7 +974,29 @@ public class CellHashingServiceImpl extends CellHashingService
         {
             try (BufferedReader reader = Readers.getReader(callsFile))
             {
-                callFileValid = reader.readLine() != null;
+                int lineIdx = 0;
+                String line;
+                while ((line = reader.readLine()) != null)
+                {
+                    lineIdx++;
+                    line = StringUtils.trimToNull(line);
+                    if (line == null)
+                    {
+                        callFileValid = false;
+                        break;
+                    }
+
+                    if (lineIdx == 1 && !line.startsWith("cellbarcode"))
+                    {
+                        callFileValid = false;
+                        break;
+                    }
+
+                    if (lineIdx > 1)
+                    {
+                        break;
+                    }
+                }
             }
             catch (IOException e)
             {
