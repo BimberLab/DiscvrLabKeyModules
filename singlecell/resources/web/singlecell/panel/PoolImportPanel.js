@@ -1022,7 +1022,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
     },
 
     getSampleKey: function(data){
-        return [data.sampleId, data.subjectId, data.sample, data.assaytype, data.tissue, (Ext4.isDate(data.sampleDate) ? Ext4.Date.format(data.sampleDate, 'Y-m-d') : data.sampleDate)].join('|');
+        return [data.sampleId, data.subjectId, data.stim, data.assaytype, data.tissue, (Ext4.isDate(data.sampleDate) ? Ext4.Date.format(data.sampleDate, 'Y-m-d') : data.sampleDate)].join('|');
     },
 
     getSortKey: function(data){
