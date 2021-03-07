@@ -414,8 +414,9 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
     ILLUMINA_REGEX: /^(.+)_L(.+)_(R){0,1}([0-9])(_[0-9]+){0,1}(\.f(ast){0,1}q)(\.gz)?$/i,
 
     //Example from NextSeq: RNA160915BB_34A_22436_Gag120_Clone-10_S10_R1_001.fastq.gz
+    //OR: 	210304_NS500556_0465_AHHVNKAFX2.OSPHL00042_old_cdna_2.R2.fq.gz
     //This should also allow simple pairs, like: file1_1.fq.gz and file1_2.fq.gz
-    ILLUMINA_REGEX_NO_LANE: /^(.+)_(R){0,1}([0-9])(_[0-9]+){0,1}(\.f(ast){0,1}q)(\.gz)?$/i,
+    ILLUMINA_REGEX_NO_LANE: /^(.+)[\._](R){0,1}([0-9])(_[0-9]+){0,1}(\.f(ast){0,1}q)(\.gz)?$/i,
 
     //example: 214-3-6-GEX_1_S29_L002_R1_001.fastq.gz
     //<sample name>_<barcode sequence>_L<lane (0-padded to 3 digits)>_R<read number>_<set number (0-padded to 3 digits>.fastq.gz
