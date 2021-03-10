@@ -18,6 +18,8 @@ for (datasetId in names(seuratObjects)) {
         }
 
         P1 <- P1 + patchwork::plot_annotation(title = field) + patchwork::plot_layout(guides = "collect")
+
+        print(P1)
     }
 
     # Cleanup
