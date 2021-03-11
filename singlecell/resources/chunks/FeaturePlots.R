@@ -7,11 +7,11 @@ for (datasetId in names(seuratObjects)) {
             next
         }
 
-        P1 <- Seurat::FeaturePlot(seuratObj, features = c(field), reduction = 'tsne')
-        P2 <- Seurat::FeaturePlot(seuratObj, features = c(field), reduction = 'umap')
+        P1 <- Seurat::FeaturePlot(seuratObj, features = c(field), reduction = 'tsne', min.cutoff = 'q05', max.cutoff = 'q95')
+        P2 <- Seurat::FeaturePlot(seuratObj, features = c(field), reduction = 'umap', min.cutoff = 'q05', max.cutoff = 'q95')
 
         if ('wnn.umap' %in% names(seuratObj@reductions)) {
-            P3 <- Seurat::FeaturePlot(seuratObj, features = c(field), reduction = 'wnn.umap')
+            P3 <- Seurat::FeaturePlot(seuratObj, features = c(field), reduction = 'wnn.umap', min.cutoff = 'q05', max.cutoff = 'q95')
             P1 <- P1 | P2 | P3
         } else {
             P1 <- P1 | P2
