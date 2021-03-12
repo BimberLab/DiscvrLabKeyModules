@@ -21,7 +21,7 @@ public class FeaturePlots extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("FeaturePlots", "Create FeaturePlots", "Seurat", "This will generate FeaturePlots for each of the features/variables below. Any variable not present is skipped.", Arrays.asList(
+            super("FeaturePlots", "FeaturePlots", "Seurat", "This will generate FeaturePlots for each of the features/variables below. Any variable not present is skipped.", Arrays.asList(
                     SeuratToolParameter.create("fieldNames", "Fields To Plot", "Enter one field name per line", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("allowBlank", false);
                         put("height", 150);

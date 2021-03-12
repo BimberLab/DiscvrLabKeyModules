@@ -285,7 +285,8 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             if (val && !Ext4.isNumeric(val)) {
                 val = val.replace(/[^0-9]+/, '');
             }
-            if (workbook && Ext4.isNumeric(val) && workbook !== val){
+
+            if (workbook && Ext4.isNumeric(val)){
                 return workbook + '-' + val;
             }
 

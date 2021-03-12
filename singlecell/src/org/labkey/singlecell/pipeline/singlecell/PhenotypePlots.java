@@ -21,7 +21,7 @@ public class PhenotypePlots extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("PhenotypePlots", "Create Phenotype Plots", "Seurat", "This will generate FeaturePlots for a pre-defined set of immune markers. Any feature not present is skipped.", null, Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+            super("PhenotypePlots", "Immune Phenotype Plots", "Seurat", "This will generate FeaturePlots for a pre-defined set of immune markers. Any feature not present is skipped.", null, Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
         @Override
