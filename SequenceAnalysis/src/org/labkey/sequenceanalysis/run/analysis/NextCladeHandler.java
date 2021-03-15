@@ -333,8 +333,8 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             aaRow.put("pct", af);
 
             aaRow.put("createdby", job.getUser().getUserId());
-            aaRow.put("created", job.getUser().getUserId());
-            aaRow.put("modifiedby", new Date());
+            aaRow.put("created", new Date());
+            aaRow.put("modifiedby", job.getUser().getUserId());
             aaRow.put("modified", new Date());
             aaRow.put("container", job.getContainer());
 
