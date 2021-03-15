@@ -926,7 +926,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
                 if (vc.isFiltered())
                 {
-                    return;
+                    continue;
                 }
 
                 double pct = vc.getAttributeAsDouble("AF", 0.0);
