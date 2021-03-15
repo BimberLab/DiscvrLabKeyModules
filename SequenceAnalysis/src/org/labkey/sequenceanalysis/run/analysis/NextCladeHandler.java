@@ -267,7 +267,8 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
 
             JSONObject range = aa.getJSONObject("nucRange");
             List<Integer> positions = new ArrayList<>();
-            for (int p = range.getInt("begin");p <= range.getInt("end"); p++)
+            //Range is 0-based
+            for (int p = range.getInt("begin") + 1;p <= range.getInt("end"); p++)
             {
                 positions.add(p);
             }
