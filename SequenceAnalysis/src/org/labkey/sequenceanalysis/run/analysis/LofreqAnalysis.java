@@ -42,7 +42,6 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
-import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
@@ -422,7 +421,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         int totalIndelGTThreshold = 0;
         int totalConsensusInPBS= 0;
 
-        File loFreqConsensusVcf = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.consensus.vcf.gz");
+        File loFreqConsensusVcf = getConsensusVcf(outputDir, inputBam);
         File loFreqAllVcf = getAllVcf(outputDir, inputBam);
         Double strandBiasRecoveryAF = getProvider().getParameterByName("strandBiasRecoveryAF").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class, 1.0);
         SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(referenceGenome.getSequenceDictionary().toPath());
@@ -707,9 +706,19 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         return variantsBcftools;
     }
 
+    private File getConsensusVcf(File outputDir, File inputBam)
+    {
+        return new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.consensus.vcf.gz");
+    }
+
+    private File getConsensusFasta(File loFreqConsensusVcf)
+    {
+        return new File(loFreqConsensusVcf.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(loFreqConsensusVcf.getName()) + ".fasta");
+    }
+
     private File generateConsensus(File loFreqConsensusVcf, File fasta, File maskBed) throws PipelineJobException
     {
-        File ret = new File(loFreqConsensusVcf.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(loFreqConsensusVcf.getName()) + ".fasta");
+        File ret = getConsensusFasta(loFreqConsensusVcf);
         List<String> args = new ArrayList<>();
 
         args.add(SequencePipelineService.get().getExeForPackage("BCFTOOLS", "bcftools").getPath());
@@ -868,24 +877,19 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         if (runPangolinAndNextClade)
         {
             //Find the NextClade json:
-            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("analysis_id"), model.getRowId());
-            filter.addCondition(FieldKey.fromString("category"), NextCladeHandler.NEXTCLADE_JSON);
-            SequenceOutputFile jsonFileRecord = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), filter, null).getObject(SequenceOutputFile.class);
-            if (jsonFileRecord == null)
+            File jsonFile = NextCladeHandler.getJsonFile(outDir, getConsensusFasta(getConsensusVcf(outDir, inputBam)));
+            if (!jsonFile.exists())
             {
-                throw new PipelineJobException("Unable to find NextClade JSON record");
+                throw new PipelineJobException("Unable to find NextClade JSON record: " + jsonFile.getPath());
             }
 
-            //Find the NextClade json:
-            SimpleFilter filter2 = new SimpleFilter(FieldKey.fromString("analysis_id"), model.getRowId());
-            filter2.addCondition(FieldKey.fromString("category"), CATEGORY);
-            SequenceOutputFile vcfFileRecord = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), filter2, null).getObject(SequenceOutputFile.class);
-            if (vcfFileRecord == null)
+            File vcf = getAllVcf(outDir, inputBam);
+            if (!vcf.exists())
             {
-                throw new PipelineJobException("Unable to find LoFreq VCF record");
+                throw new PipelineJobException("Unable to find LoFreq VCF: " + vcf.getPath());
             }
 
-            NextCladeHandler.processAndImportNextCladeAa(getPipelineCtx().getJob(), jsonFileRecord, model.getRowId(), vcfFileRecord.getFile(), dbImport);
+            NextCladeHandler.processAndImportNextCladeAa(getPipelineCtx().getJob(), jsonFile, model.getRowId(), model.getLibraryId(), model.getAlignmentFile(), model.getReadset(), vcf, dbImport);
         }
         else
         {

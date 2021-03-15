@@ -117,7 +117,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
                     throw new PipelineJobException("Unable to find parent for output: " + so.getRowid());
                 }
 
-                processAndImportNextCladeAa(job, so, parent.getAnalysis_id(), parent.getFile(), true);
+                processAndImportNextCladeAa(job, so.getFile(), parent.getAnalysis_id(), so.getLibrary_id(), so.getDataId(), so.getReadset(), parent.getFile(), true);
             }
         }
 
@@ -132,6 +132,11 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
                 ctx.getFileManager().addSequenceOutput(nextCladeJson, "Nextclade: " + so.getName(), NEXTCLADE_JSON, so.getReadset(), null, so.getLibrary_id(), null);
             }
         }
+    }
+
+    public static File getJsonFile(File outputDir, File consensusFasta)
+    {
+        return new File(outputDir, FileUtil.getBaseName(consensusFasta) + ".json");
     }
 
     public static File runNextClade(File consensusFasta, Logger log, PipelineOutputTracker tracker, File outputDir) throws PipelineJobException
@@ -151,7 +156,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             }
         }
 
-        File jsonFile = new File(outputDir, FileUtil.getBaseName(consensusFasta) + ".json");
+        File jsonFile = getJsonFile(outputDir, consensusFasta);
 
         File localBashScript = new File(outputDir, "dockerWrapper.sh");
         try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
@@ -224,17 +229,18 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
         }
     }
 
-    public static void processAndImportNextCladeAa(PipelineJob job, SequenceOutputFile so, int analysisId, File consensusVCF, boolean dbImport) throws PipelineJobException
+    public static void processAndImportNextCladeAa(PipelineJob job, File jsonFile, int analysisId, int libraryId, int alignmentId, int readsetId, File consensusVCF, boolean dbImport) throws PipelineJobException
     {
-        JSONObject sample = parseNextClade(so.getFile());
+        JSONObject sample = parseNextClade(jsonFile);
 
-        ReferenceGenome genome = SequenceAnalysisService.get().getReferenceGenome(so.getLibrary_id(), job.getUser());
+        ReferenceGenome genome = SequenceAnalysisService.get().getReferenceGenome(libraryId, job.getUser());
         String clade = sample.getString("clade");
-        saveClade(so, clade, analysisId, job);
+        saveClade(clade, analysisId, alignmentId, readsetId, job);
 
         if (!dbImport)
         {
             job.getLogger().info("DB Import not selected, will not import AA SNPs");
+            return;
         }
 
         JSONArray aaSubstitutions = sample.getJSONArray("aaSubstitutions");
@@ -334,17 +340,17 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
         }
     }
 
-    private static void saveClade(SequenceOutputFile so, String clade, int analysisId, PipelineJob job) throws PipelineJobException
+    private static void saveClade(String clade, int analysisId, int alignmentId, int readsetId, PipelineJob job) throws PipelineJobException
     {
         List<Map<String, Object>> toInsert = new ArrayList<>();
         Map<String, Object> row1 = new CaseInsensitiveHashMap<>();
-        row1.put("dataid", so.getDataId());
-        row1.put("readset", so.getReadset());
+        row1.put("dataid", alignmentId);
+        row1.put("readset", readsetId);
         row1.put("analysis_id", analysisId);
         row1.put("category", "NextClade");
         row1.put("metricName", "NextCladeClade");
         row1.put("qualvalue", clade);
-        row1.put("container", so.getContainer());
+        row1.put("container", job.getContainer().getId());
         toInsert.add(row1);
 
         Container targetContainer = job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer();
