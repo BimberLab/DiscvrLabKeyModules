@@ -263,32 +263,57 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
         {
             JSONObject aa = aaSubstitutions.getJSONObject(i);
             int pos = aa.getInt("codon");
-            String alt = aa.getString("queryAA");
+            String aaName = aa.getString("gene");
 
-            List<VariantContext> vcList = consensusMap.get(pos);
-            if (vcList == null)
+            JSONObject range = aa.getJSONObject("nucRange");
+            List<Integer> positions = new ArrayList<>();
+            for (int p = range.getInt("begin");p <= range.getInt("end"); p++)
             {
-                throw new PipelineJobException("Expected variant for position: " + pos);
+                positions.add(p);
             }
 
-            VariantContext vc = null;
-            for (VariantContext v : vcList)
+            List<VariantContext> vcList = new ArrayList<>();
+            for (Integer ntPos : positions)
             {
-                if (v.getAlternateAlleles().get(0).getBaseString().equals(alt))
+                if (consensusMap.containsKey(ntPos))
                 {
-                    vc = v;
-                    break;
+                    vcList.addAll(consensusMap.get(ntPos));
                 }
             }
 
-            if (vc == null)
+            if (vcList.isEmpty())
             {
-                throw new PipelineJobException("Unable to find matching allele at position: " + pos);
+                throw new PipelineJobException("Expected variant for AA position: " + aaName + " " + pos);
             }
 
-            int depth = vc.getAttributeAsInt("GATK_DP", 0);
+            Double depth;
+            Double alleleDepth;
+            Double af;
+            Double dp;
 
-            String aaName = aa.getString("gene");
+            if (vcList.size() == 1)
+            {
+                depth = (double)vcList.get(0).getAttributeAsInt("GATK_DP", 0);
+
+                List<Integer> depths = vcList.get(0).getAttributeAsIntList("DP4", 0);
+                alleleDepth = (double)depths.get(2) + depths.get(3);
+                dp = (double)vcList.get(0).getAttributeAsInt("DP", 0);
+                af = vcList.get(0).getAttributeAsDouble("AF", 0.0);
+            }
+            else
+            {
+                job.getLogger().info("Multiple NT SNPs found at AA pos: " + aaName + " " + pos + ", was: " + vcList.size());
+                depth = vcList.stream().mapToInt(x -> x.getAttributeAsInt("GATK_DP", 0)).summaryStatistics().getAverage();
+
+                alleleDepth = vcList.stream().mapToDouble(x -> {
+                    List<Integer> dps = x.getAttributeAsIntList("DP4", 0);
+                    return dps.get(2) + dps.get(3);
+                }).summaryStatistics().getAverage();
+
+                af = vcList.stream().mapToDouble(x -> x.getAttributeAsDouble("AF", 0)).summaryStatistics().getAverage();
+                dp = vcList.stream().mapToDouble(x -> x.getAttributeAsDouble("DP", 0)).summaryStatistics().getAverage();
+            }
+
             int refAaId = ViralSnpUtil.resolveGene(refNtId, aaName);
 
             Map<String, Object> aaRow = new CaseInsensitiveHashMap<>();
@@ -300,22 +325,12 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             aaRow.put("ref_aa", aa.getString("refAA"));
             aaRow.put("q_aa", aa.getString("queryAA"));
             aaRow.put("codon", aa.getString("queryCodon"));
-
-            JSONObject range = aa.getJSONObject("nucRange");
-            List<String> positions = new ArrayList<>();
-            for (int p = range.getInt("begin");p <= range.getInt("end"); p++)
-            {
-                positions.add(String.valueOf(p));
-            }
             aaRow.put("ref_nt_positions", StringUtils.join(positions, ","));
-
-            List<Integer> depths = vc.getAttributeAsIntList("DP4", 0);
-            int alleleDepth = depths.get(2) + depths.get(3);
 
             aaRow.put("readcount", alleleDepth);
             aaRow.put("depth", depth);
-            aaRow.put("adj_depth", vc.getAttribute("DP"));
-            aaRow.put("pct", vc.getAttribute("AF"));
+            aaRow.put("adj_depth", dp);
+            aaRow.put("pct", af);
 
             aaRow.put("createdby", job.getUser().getUserId());
             aaRow.put("created", job.getUser().getUserId());
@@ -324,19 +339,6 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             aaRow.put("container", job.getContainer());
 
             Table.insert(job.getUser(), aaTable, aaRow);
-
-            consensusMap.get(pos).remove(vc);
-
-            if (consensusMap.get(pos).isEmpty())
-            {
-                consensusMap.remove(pos);
-            }
-        }
-
-        if (!consensusMap.isEmpty())
-        {
-            consensusMap.values().stream().flatMap(Collection::stream).collect(Collectors.toList()).stream().forEach(x -> job.getLogger().error("Unexpected variant: " + x.toString()));
-            throw new PipelineJobException("Not all variants translated!");
         }
     }
 
