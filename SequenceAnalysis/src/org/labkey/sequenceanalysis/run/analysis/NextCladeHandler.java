@@ -269,6 +269,8 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
         {
             JSONObject aa = aaSubstitutions.getJSONObject(i);
             int pos = aa.getInt("codon");
+            pos = pos + 1; //make 1-based
+
             String aaName = aa.getString("gene");
 
             JSONObject range = aa.getJSONObject("nucRange");
