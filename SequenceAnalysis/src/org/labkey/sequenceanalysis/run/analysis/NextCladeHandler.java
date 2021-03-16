@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
 import htsjdk.samtools.util.IOUtil;
+import htsjdk.samtools.util.Interval;
 import htsjdk.variant.variantcontext.VariantContext;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -292,6 +293,23 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
 
             if (vcList.isEmpty())
             {
+                //NOTE: if this is an indel, upstream variants could cause this:
+                for (int ntPos : consensusMap.keySet())
+                {
+                    job.getLogger().info("No identical position match found, inspecting overlapping variants:");
+                    for (VariantContext vc : consensusMap.get(ntPos))
+                    {
+                        if (vc.overlaps(new Interval(vc.getContig(), positions.get(0), positions.get(positions.size() - 1))))
+                        {
+                            vcList.add(vc);
+                        }
+                    }
+                }
+            }
+
+            if (vcList.isEmpty())
+            {
+                job.getLogger().error("Cannot find matching NT SNP: " + aa.toString());
                 throw new PipelineJobException("Expected variant for AA position: " + aaName + " " + pos);
             }
 
@@ -311,7 +329,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             }
             else
             {
-                job.getLogger().info("Multiple NT SNPs found at AA pos: " + aaName + " " + pos + ", was: " + vcList.size());
+                job.getLogger().warn("Multiple NT SNPs found at AA pos: " + aaName + " " + pos + ", was: " + vcList.size());
                 depth = vcList.stream().mapToInt(x -> x.getAttributeAsInt("GATK_DP", 0)).summaryStatistics().getAverage();
 
                 alleleDepth = vcList.stream().mapToDouble(x -> {
