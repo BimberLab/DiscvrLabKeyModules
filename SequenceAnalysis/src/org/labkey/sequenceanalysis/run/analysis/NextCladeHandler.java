@@ -243,11 +243,17 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             return;
         }
 
-        JSONArray aaSubstitutions = sample.getJSONArray("aaSubstitutions");
+        ViralSnpUtil.deleteExistingValues(job, analysisId, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, null);
 
+        if (!sample.containsKey("aaSubstitutions"))
+        {
+            job.getLogger().info("JSON does not contain aaSubstitutions, skipping");
+            return;
+        }
+
+        JSONArray aaSubstitutions = sample.getJSONArray("aaSubstitutions");
         Map<Integer, List<VariantContext>> consensusMap = ViralSnpUtil.readVcfToMap(consensusVCF);
 
-        ViralSnpUtil.deleteExistingValues(job, analysisId, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, null);
         TableInfo aaTable = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON);
 
         //This is SARS-CoV-2 specific, so this is a safe assumption
