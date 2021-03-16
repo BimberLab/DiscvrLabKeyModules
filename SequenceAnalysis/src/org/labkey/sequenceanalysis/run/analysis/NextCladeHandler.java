@@ -46,7 +46,6 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -294,14 +293,40 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             if (vcList.isEmpty())
             {
                 //NOTE: if this is an indel, upstream variants could cause this:
+                job.getLogger().info("No identical position match found, inspecting overlapping variants (" + consensusMap.size() + "):");
                 for (int ntPos : consensusMap.keySet())
                 {
-                    job.getLogger().info("No identical position match found, inspecting overlapping variants:");
                     for (VariantContext vc : consensusMap.get(ntPos))
                     {
                         if (vc.overlaps(new Interval(vc.getContig(), positions.get(0), positions.get(positions.size() - 1))))
                         {
                             vcList.add(vc);
+                        }
+                    }
+                }
+            }
+
+            // Try to recover frameshifts:
+            if (vcList.isEmpty())
+            {
+                List<Integer> potentialFs = new ArrayList<>();
+                potentialFs.addAll(consensusMap.keySet().stream().filter(x -> x < positions.get(0)).collect(Collectors.toList()));
+                Collections.sort(potentialFs, Collections.reverseOrder());
+                OUTER: for (int ntPos : potentialFs)
+                {
+                    if (positions.get(0) - ntPos > 100)
+                    {
+                        break;
+                    }
+
+                    for (VariantContext vc : consensusMap.get(ntPos))
+                    {
+                        if (vc.isIndel())
+                        {
+                            job.getLogger().info("Inferred associated NT is: " + vc.getStart());
+                            job.getLogger().info("for pos: " + aa.toString());
+                            vcList.add(vc);
+                            break OUTER;
                         }
                     }
                 }
