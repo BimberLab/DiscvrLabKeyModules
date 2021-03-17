@@ -966,6 +966,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                 ntRow.put("readcount", alleleDepth);
                 ntRow.put("depth", depth);
                 ntRow.put("adj_depth", vc.getAttribute("DP"));
+                ntRow.put("pct", vc.getAttribute("AF"));
                 ntRow.put("container", getPipelineCtx().getJob().getContainer().getEntityId());
                 ntRow.put("createdby", getPipelineCtx().getJob().getUser().getUserId());
                 ntRow.put("modifiedby", getPipelineCtx().getJob().getUser().getUserId());
