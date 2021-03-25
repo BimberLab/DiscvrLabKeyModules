@@ -8,8 +8,7 @@ for (datasetId in names(seuratObjects)) {
         tryCatch({
             seuratObj <- bindArgs(CellMembrane::CiteSeqDimRedux.Dist, seuratObj)()
         }, error = function(e){
-            conditionMessage(e)
-            print(paste0('Error running CiteSeqDimRedux.Dist'))
+            print(paste0('Error running CiteSeqDimRedux.Dist for: ', datasetId))
             print(conditionMessage(e))
             traceback()
         })
