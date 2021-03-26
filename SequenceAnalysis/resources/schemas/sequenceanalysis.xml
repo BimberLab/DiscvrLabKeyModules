@@ -2234,6 +2234,9 @@
                     <fkColumnName>rowid</fkColumnName>
                 </fk>
             </column>
+            <column columnName="alias">
+                <description>Optional.  Can be used to give the sequence a local name</description>
+            </column>
             <column columnName="start">
                 <description>Optional.  Can be used in conjunction with stop to select a subsequence of the reference.  If blank the region will begin at the first base of the reference</description>
             </column>

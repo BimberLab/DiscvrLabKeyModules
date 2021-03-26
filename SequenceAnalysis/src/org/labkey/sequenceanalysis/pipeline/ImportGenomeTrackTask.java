@@ -357,6 +357,8 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
 
         getJob().getLogger().info("building list of chromosome name translations");
         Map<String, Pair<String, Integer>> ret = new CaseInsensitiveHashMap<>();
+
+        TableInfo rlm = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS);
         for (RefNtSequenceModel m : refNtSequenceModels)
         {
             if (m.getOffsetsFile() != null && m.getOffsetsFile().exists())
@@ -445,6 +447,18 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
                     {
                         String strPart = m.getName().toLowerCase().replaceAll("^chr", "");
                         ret.put(strPart, Pair.of(m.getName(), 0));
+                    }
+
+                    SimpleFilter filter = new SimpleFilter(FieldKey.fromString("library_id"), getPipelineJob().getLibraryId());
+                    filter.addCondition(FieldKey.fromString("ref_nt_id"), m.getRowid());
+                    TableSelector ts = new TableSelector(rlm, PageFlowUtil.set("alias"), filter, null);
+                    if (ts.exists())
+                    {
+                        String alias = ts.getObject(String.class);
+                        if (alias != null)
+                        {
+                            ret.put(alias, Pair.of(m.getName(), 0));
+                        }
                     }
                 }
             }

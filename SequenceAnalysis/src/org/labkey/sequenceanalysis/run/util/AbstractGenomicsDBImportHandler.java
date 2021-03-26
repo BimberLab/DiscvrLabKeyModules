@@ -40,12 +40,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 abstract public class AbstractGenomicsDBImportHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> implements SequenceOutputHandler.TracksVCF, SequenceOutputHandler.HasCustomVariantMerge, VariantProcessingStep.MayRequirePrepareTask, VariantProcessingStep.SupportsScatterGather
 {
@@ -302,16 +304,28 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         return _contigsInInputs;
     }
 
-    private void copyToLevelFiles(PipelineJob job, File sourceWorkspace, File destinationWorkspace, boolean overwrite) throws IOException
+    private void copyToLevelFiles(PipelineJob job, File sourceWorkspace, File destinationWorkspace, boolean removeOtherFiles, boolean overwriteExisting) throws IOException
     {
         job.getLogger().info("Copying top-level files from: " + sourceWorkspace.getPath());
+        if (removeOtherFiles)
+        {
+            for (File f : destinationWorkspace.listFiles())
+            {
+                if (!f.isDirectory())
+                {
+                    job.getLogger().debug("deleting existing top-level file: " + f.getPath());
+                    f.delete();
+                }
+            }
+        }
+
         for (String fn : Arrays.asList("callset.json", "vidmap.json", "vcfheader.vcf", "__tiledb_workspace.tdb"))
         {
             File source = new File(sourceWorkspace, fn);
             File dest = new File(destinationWorkspace, fn);
             if (dest.exists())
             {
-                if (!overwrite)
+                if (!overwriteExisting)
                 {
                     job.getLogger().debug("workspace file exists, will not overwrite: " + dest.getPath());
                     continue;
@@ -457,7 +471,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 }
 
                 File sourceWorkspace = getSourceWorkspace(ctx.getParams(), ctx.getSequenceSupport());
-                copyWorkspace(ctx, sourceWorkspace, workingDestinationWorkspaceFolder, genome, toDelete, !genomicsDbCompleted);
+                copyWorkspace(ctx, sourceWorkspace, workingDestinationWorkspaceFolder, genome, toDelete, !genomicsDbCompleted, !genomicsDbCompleted, !genomicsDbCompleted);
             }
             else
             {
@@ -587,7 +601,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
 
             if (!copyToSourceDone.exists())
             {
-                copyWorkspace(ctx, workingDestinationWorkspaceFolder, workspaceLocalDir, genome, toDelete, true);
+                copyWorkspace(ctx, workingDestinationWorkspaceFolder, workspaceLocalDir, genome, toDelete, true, false, false);
 
                 try
                 {
@@ -635,7 +649,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         }
     }
 
-    private void copyWorkspace(JobContext ctx, File sourceWorkspace, File destinationWorkspaceFolder, ReferenceGenome genome, Collection<File> toDelete, boolean alwaysPerformRsync) throws PipelineJobException
+    private void copyWorkspace(JobContext ctx, File sourceWorkspace, File destinationWorkspaceFolder, ReferenceGenome genome, Collection<File> toDelete, boolean alwaysPerformRsync, boolean overwriteTopLevelFiles, boolean removeExistingTopLevelFiles) throws PipelineJobException
     {
         if (!destinationWorkspaceFolder.exists())
         {
@@ -665,6 +679,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                     else
                     {
                         ctx.getLogger().info("has been copied, skipping: " + i.getContig());
+                        assertContigFoldersEqual(sourceFolder, destContigFolder);
                         reportFragmentsPerContig(ctx, destContigFolder, i.getContig());
                         continue;
                     }
@@ -672,7 +687,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
 
                 if (!haveCopiedTopLevelFiles)
                 {
-                    copyToLevelFiles(ctx.getJob(), sourceWorkspace, destinationWorkspaceFolder, false);
+                    copyToLevelFiles(ctx.getJob(), sourceWorkspace, destinationWorkspaceFolder, removeExistingTopLevelFiles, overwriteTopLevelFiles);
                     haveCopiedTopLevelFiles = true;
                 }
 
@@ -704,6 +719,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 }
 
                 FileUtils.touch(copyDone);
+                assertContigFoldersEqual(sourceFolder, destContigFolder);
                 reportFragmentsPerContig(ctx, destContigFolder, i.getContig());
             }
             catch (IOException e)
@@ -718,20 +734,44 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         return new File(ctx.getSourceDirectory(), "copyToWebserver.done");
     }
 
+    private void assertContigFoldersEqual(File sourceFolder, File destContigFolder) throws IllegalArgumentException
+    {
+        List<String> sourceFiles = getFragmentsPerContig(sourceFolder);
+        List<String> destFiles = getFragmentsPerContig(destContigFolder);
+
+        if (!sourceFiles.equals(destFiles))
+        {
+            throw new IllegalArgumentException("Source and destination contig files not equal for: " + destContigFolder.getPath());
+        }
+    }
+
     private void reportFragmentsPerContig(JobContext ctx, File destContigFolder, String contigName)
     {
-        if (destContigFolder.exists())
-        {
-            File[] children = destContigFolder.listFiles(x -> {
-                return  x.isDirectory() && !"genomicsdb_meta_dir".equals(x.getName());
-            });
-
-            ctx.getLogger().info(contigName + " total fragments: " + children.length);
-        }
-        else
+        List<String> children = getFragmentsPerContig(destContigFolder);
+        if (children == null)
         {
             ctx.getLogger().warn("expected folder not found: " + destContigFolder.getPath());
         }
+        else
+        {
+            ctx.getLogger().info(contigName + " total fragments: " + children.size());
+        }
+    }
+
+    private List<String> getFragmentsPerContig(File destContigFolder)
+    {
+        if (destContigFolder.exists())
+        {
+            List<String> children = Arrays.stream(destContigFolder.listFiles(x -> {
+                return  x.isDirectory() && !"genomicsdb_meta_dir".equals(x.getName());
+            })).map(File::getName).collect(Collectors.toList());
+
+            Collections.sort(children);
+
+            return children;
+        }
+
+        return null;
     }
 
     private boolean doCopyLocal(JSONObject params)

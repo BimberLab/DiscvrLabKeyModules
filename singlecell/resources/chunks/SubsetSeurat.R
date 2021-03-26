@@ -2,7 +2,7 @@ for (datasetId in names(seuratObjects)) {
     seuratObj <- seuratObjects[[datasetId]]
     seuratObjects[[datasetId]] <- NULL
 
-    seuratObj <- CellMembrane::SubsetSeurat(seuratObj, expressionStrings = expressionStrings)
+    <SUBSETS>
 
     newSeuratObjects[[datasetId]] <- seuratObj
 
