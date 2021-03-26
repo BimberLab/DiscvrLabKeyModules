@@ -3,7 +3,8 @@
         var webpart = <%=webpartContext%>;
 
         Ext4.create('SingleCell.panel.SingleCellProcessingPanel', {
-            outputFileIds: LABKEY.ActionURL.getParameter("outputFileIds") ? LABKEY.ActionURL.getParameter("outputFileIds").split(';') : []
+            outputFileIds: LABKEY.ActionURL.getParameter("outputFileIds") ? LABKEY.ActionURL.getParameter("outputFileIds").split(';') : [],
+            handlerClass: LABKEY.ActionURL.getParameter("handlerClass") || 'ProcessSingleCellHandler'
         }).render(webpart.wrapperDivId);
     });
 
