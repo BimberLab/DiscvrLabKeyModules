@@ -348,7 +348,7 @@ public class SingleCellController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public static class GetMatchingSamplesAction extends ReadOnlyApiAction<SimpleApiJsonForm>
     {
-        final List<String> FIELDS = Arrays.asList("sampleId", "sampledate", "subjectid", "celltype", "tissue", "assaytype");
+        final List<String> FIELDS = Arrays.asList("subjectId", "sampledate", "subjectid", "celltype", "tissue", "assaytype", "stim");
 
         @Override
         public Object execute(SimpleApiJsonForm form, BindException errors) throws Exception
@@ -393,6 +393,15 @@ public class SingleCellController extends SpringActionController
                         {
                             SimpleFilter sortFilter = new SimpleFilter(FieldKey.fromString("sampleId"), rowId);
                             sortFilter.addCondition(FieldKey.fromString("population"), r.get("population"));
+                            if (r.get("hto") == null)
+                            {
+                                sortFilter.addCondition(FieldKey.fromString("hto"), null, CompareType.ISBLANK);
+                            }
+                            else
+                            {
+                                sortFilter.addCondition(FieldKey.fromString("hto"), r.get("hto"));
+                            }
+
                             TableSelector tsSort = new TableSelector(tiSort, PageFlowUtil.set("rowId"), sortFilter, null);
                             long countSort = tsSort.getRowCount();
                             if (countSort == 1)

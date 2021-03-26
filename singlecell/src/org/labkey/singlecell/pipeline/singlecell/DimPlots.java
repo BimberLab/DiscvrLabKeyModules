@@ -21,7 +21,7 @@ public class DimPlots extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("DimPlots", "Create DimPlots", "Seurat", "This will generate DimPlots grouped by the variables below. Any variable not present is skipped.", Arrays.asList(
+            super("DimPlots", "DimPlots", "Seurat", "This will generate DimPlots grouped by the variables below. Any variable not present is skipped.", Arrays.asList(
                     SeuratToolParameter.create("fieldNames", "Fields To Plot", "Enter one field name per line", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("allowBlank", false);
                         put("height", 150);

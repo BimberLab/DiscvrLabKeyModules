@@ -1,0 +1,1 @@
+ALTER TABLE sequenceanalysis.aa_snps_by_codon ALTER column codon type VARCHAR(4000);

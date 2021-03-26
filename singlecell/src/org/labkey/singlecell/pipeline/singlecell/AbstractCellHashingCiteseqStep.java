@@ -83,11 +83,5 @@ abstract public class AbstractCellHashingCiteseqStep extends AbstractSingleCellP
         return FileUtil.relativePath(outputDir.getPath(), target.getPath());
     }
 
-    @Override
-    public boolean requiresHashingOrCiteSeq()
-    {
-        return true;
-    }
-
     abstract protected Map<Integer, File> prepareCountData(SingleCellOutput output, SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException;
 }
