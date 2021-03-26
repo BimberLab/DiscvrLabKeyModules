@@ -42,8 +42,11 @@ public class NormalizeAndScale extends AbstractCellMembraneStep
                     }}, true),
                     SeuratToolParameter.create("blockSize", "Block Size", "This will be passed to block.size in Seurat::ScaleData, which determines the number of features processed as a time. Increasing might increase speed at a memory cost, and decreasing on large datasets might reduce memory at a cost of overall speed.", "ldk-integerfield", new JSONObject(){{
 
-                    }}, null, "block.size", false)
-            ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+                    }}, null, "block.size", false),
+                    SeuratToolParameter.create("useSCTransform", "Use SCTransform", "If checked, SCTransform will be used instead of the default NormalizeData -> ScaleData steps", "checkbox", new JSONObject(){{
+                        put("checked", false);
+                    }}, false)
+                ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
 
