@@ -43,6 +43,12 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
     }
 
     @Override
+    public boolean requiresHashing()
+    {
+        return true;
+    }
+
+    @Override
     public Collection<String> getRLibraries()
     {
         return PageFlowUtil.set("cellhashR");

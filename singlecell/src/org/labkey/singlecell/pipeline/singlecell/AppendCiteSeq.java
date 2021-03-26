@@ -58,6 +58,12 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
     }
 
     @Override
+    public boolean requiresCiteSeq()
+    {
+        return true;
+    }
+
+    @Override
     public String getFileSuffix()
     {
         return "cite";

@@ -2,7 +2,7 @@ for (datasetId in names(seuratObjects)) {
     seuratObj <- seuratObjects[[datasetId]]
     seuratObjects[[datasetId]] <- NULL
 
-    CellMembrane::DownsampleSeurat(seuratObj, targetCells = targetCells, subsetFields = subsetFields, seed = seed)
+    seuratObj <- CellMembrane::DownsampleSeurat(seuratObj, targetCells = targetCells, subsetFields = subsetFields, seed = seed)
 
     newSeuratObjects[[datasetId]] <- seuratObj
 

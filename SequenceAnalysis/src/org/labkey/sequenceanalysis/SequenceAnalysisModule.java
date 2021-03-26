@@ -94,6 +94,7 @@ import org.labkey.sequenceanalysis.run.analysis.HaplotypeCallerAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.ImmunoGenotypingAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.LofreqAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.MergeLoFreqVcfHandler;
+import org.labkey.sequenceanalysis.run.analysis.NextCladeHandler;
 import org.labkey.sequenceanalysis.run.analysis.PARalyzerAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.PangolinHandler;
 import org.labkey.sequenceanalysis.run.analysis.PindelAnalysis;
@@ -178,7 +179,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
     @Override
     public Double getSchemaVersion()
     {
-        return 12.324;
+        return 12.327;
     }
 
     @Override
@@ -349,6 +350,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new GenomicsDBAppendHandler());
         SequenceAnalysisService.get().registerFileHandler(new MergeLoFreqVcfHandler());
         SequenceAnalysisService.get().registerFileHandler(new PangolinHandler());
+        SequenceAnalysisService.get().registerFileHandler(new NextCladeHandler());
 
         SequenceAnalysisService.get().registerReadsetHandler(new MultiQCHandler());
 

@@ -69,12 +69,6 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
     }
 
     @Override
-    public ActionURL getButtonSuccessUrl(Container c, User u, List<Integer> outputFileIds)
-    {
-        return DetailsURL.fromString("/singlecell/singleCellProcessing.view?outputFileIds=" + StringUtils.join(outputFileIds, ";"), c).getActionURL();
-    }
-
-    @Override
     public String getButtonJSHandler()
     {
         return null;
@@ -142,16 +136,22 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
         @Override
         public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            boolean requiresHashingOrCite = false;
+            boolean requiresHashing = false;
+            boolean requiresCite = false;
             List<PipelineStepCtx<SingleCellStep>> steps = SequencePipelineService.get().getSteps(ctx.getJob(), SingleCellStep.class);
             for (PipelineStepCtx<SingleCellStep> stepCtx : steps)
             {
                 SingleCellStep step = stepCtx.getProvider().create(ctx);
                 step.init(ctx, inputFiles);
 
-                if (step.requiresHashingOrCiteSeq())
+                if (step.requiresCiteSeq())
                 {
-                    requiresHashingOrCite = true;
+                    requiresCite = true;
+                }
+
+                if (step.requiresHashing())
+                {
+                    requiresHashing = true;
                 }
 
                 for (ToolParameterDescriptor pd : stepCtx.getProvider().getParameters())
@@ -165,9 +165,9 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 }
             }
 
-            if (requiresHashingOrCite)
+            if (requiresCite || requiresHashing)
             {
-                CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getSourceDirectory(), ctx.getJob(), ctx.getSequenceSupport(), "readsetId", false, false);
+                CellHashingServiceImpl.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getSourceDirectory(), ctx.getJob(), ctx.getSequenceSupport(), "readsetId", false, false, true, requiresHashing, requiresCite);
             }
         }
 

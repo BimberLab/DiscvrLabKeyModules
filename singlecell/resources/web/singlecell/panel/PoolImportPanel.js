@@ -285,7 +285,8 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             if (val && !Ext4.isNumeric(val)) {
                 val = val.replace(/[^0-9]+/, '');
             }
-            if (workbook && Ext4.isNumeric(val) && workbook !== val){
+
+            if (workbook && Ext4.isNumeric(val)){
                 return workbook + '-' + val;
             }
 
@@ -553,6 +554,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                 tissue: r.tissue,
                 objectId: r.objectId,
                 population: r.population,
+                hto: r.hto,
                 workbook: r.workbook
             });
         }, this);
@@ -1021,7 +1023,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
     },
 
     getSampleKey: function(data){
-        return [data.sampleId, data.subjectId, data.sample, data.assaytype, data.tissue, (Ext4.isDate(data.sampleDate) ? Ext4.Date.format(data.sampleDate, 'Y-m-d') : data.sampleDate)].join('|');
+        return [data.sampleId, data.subjectId, data.stim, data.assaytype, data.tissue, (Ext4.isDate(data.sampleDate) ? Ext4.Date.format(data.sampleDate, 'Y-m-d') : data.sampleDate)].join('|');
     },
 
     getSortKey: function(data){
