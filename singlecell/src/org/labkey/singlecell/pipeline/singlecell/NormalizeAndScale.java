@@ -45,8 +45,11 @@ public class NormalizeAndScale extends AbstractCellMembraneStep
                     }}, null, "block.size", false),
                     SeuratToolParameter.create("useSCTransform", "Use SCTransform", "If checked, SCTransform will be used instead of the default NormalizeData -> ScaleData steps", "checkbox", new JSONObject(){{
                         put("checked", false);
-                    }}, false)
-                ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+                    }}, false),
+                    SeuratToolParameter.create("nVariableFeatures", "# Variable Features", "Controls the number of variable features that will be used. This only applies to the standard NormalizeData/ScaleData pipeline, not SCTransform", "ldk-integerfield", new JSONObject(){{
+                        put("minValue", 0);
+                    }}, null)
+                    ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
 
