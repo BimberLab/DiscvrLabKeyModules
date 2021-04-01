@@ -1542,7 +1542,7 @@
         </columns>
     </table>
     <table tableName="quality_metrics" tableDbType="TABLE" useColumnOrder="true">
-        <javaCustomizer class="org.labkey.ldk.query.BuiltInColumnsCustomizer" />
+        <javaCustomizer class="org.labkey.laboratory.query.LaboratoryTableCustomizer" />
         <auditLogging>DETAILED</auditLogging>
         <tableTitle>Quality Metrics</tableTitle>
         <tableUrl>/query/recordDetails.view?schemaName=sequenceanalysis&amp;query.queryName=Quality_Metrics&amp;keyField=rowid&amp;key=${rowid}</tableUrl>

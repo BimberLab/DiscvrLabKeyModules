@@ -9,6 +9,7 @@
        <column name="readset" />
        <column name="analysis_id" />
        <column name="runid" />
+       <column name="workbook" />
    </columns>
    <sorts>
        <sort column="dataid/Name"/>
