@@ -1,6 +1,9 @@
 savedFiles <- data.frame(datasetId = character(), datasetName = character(), filename = character(), outputFileId = character())
 for (datasetId in names(newSeuratObjects)) {
+    print(paste0('Saving dataset: ', datasetId))
+
     seuratObj <- newSeuratObjects[[datasetId]]
+    print(seuratObj)
 
     fn <- paste0(outputPrefix, '.', datasetId, '.seurat.rds')
     barcodeFile <- paste0(outputPrefix, '.', datasetId, '.cellBarcodes.csv')
