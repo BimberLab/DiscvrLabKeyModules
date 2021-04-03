@@ -23,7 +23,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.biojava3.core.sequence.DNASequence;
 import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
 import org.biojava3.core.sequence.compound.NucleotideCompound;
@@ -60,9 +59,11 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.run.util.DepthOfCoverageWrapper;
 import org.labkey.sequenceanalysis.run.variant.SNPEffStep;
 import org.labkey.sequenceanalysis.run.variant.SnpEffWrapper;
+import org.labkey.sequenceanalysis.util.ReferenceLibraryHelperImpl;
 
 import java.io.File;
 import java.io.IOException;
@@ -73,6 +74,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -137,7 +139,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                     {{
 
                     }}, false),
-                    ToolParameterDescriptor.create("runPangolin", "Run Pangolin", "If selected, Pangolin will be used to score the consensus against common SARS-CoV-2 lineages.", "checkbox", new JSONObject()
+                    ToolParameterDescriptor.create("runPangolin", "Run Pangolin and NextClade", "If selected, Pangolin and NextClade will be used to score the consensus against common SARS-CoV-2 lineages.", "checkbox", new JSONObject()
                     {{
 
                     }}, false),
@@ -146,8 +148,20 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                         put("minValue", 0.0);
                         put("maxValue", 1.0);
                         put("decimalPrecision", 2);
-                    }}, 0.1)
-                    ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "http://csb5.github.io/lofreq/");
+                    }}, 0.1),
+                    ToolParameterDescriptor.create("dbImport", "Import SNVs", "If selected, the LoFreq and pindel variants will be imported into the DB.", "checkbox", new JSONObject()
+                    {{
+
+                    }}, false),
+                    ToolParameterDescriptor.create("dbImportThreshold", "Variant Import AF Threshold", "If DB import is selected, variants above this AF threshold will be imported.", "ldk-numberfield", new JSONObject()
+                    {{
+
+                    }}, 0.1),
+                    ToolParameterDescriptor.create("dbImportDepthThreshold", "Variant Import Depth Threshold", "If DB import is selected, variants in a site with coverage greater than or equal to this value will be imported.", "ldk-integerfield", new JSONObject()
+                    {{
+
+                    }}, 20)
+            ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "http://csb5.github.io/lofreq/");
         }
 
 
@@ -407,8 +421,8 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         int totalIndelGTThreshold = 0;
         int totalConsensusInPBS= 0;
 
-        File loFreqConsensusVcf = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.consensus.vcf.gz");
-        File loFreqAllVcf = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.all.vcf.gz");
+        File loFreqConsensusVcf = getConsensusVcf(outputDir, inputBam);
+        File loFreqAllVcf = getAllVcf(outputDir, inputBam);
         Double strandBiasRecoveryAF = getProvider().getParameterByName("strandBiasRecoveryAF").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class, 1.0);
         SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(referenceGenome.getSequenceDictionary().toPath());
         VariantContextWriterBuilder writerBuilder1 = new VariantContextWriterBuilder().setOutputFile(loFreqConsensusVcf).setReferenceDictionary(dict);
@@ -591,7 +605,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         int minDepth = getProvider().getParameterByName("minDepth").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 0);
         int minInsertSize = getProvider().getParameterByName("minInsertSize").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 0);
 
-        boolean runPangolin = getProvider().getParameterByName("runPangolin").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+        boolean runPangolinAndNextClade = getProvider().getParameterByName("runPangolin").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
         boolean runPindel = getProvider().getParameterByName("runPindel").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
 
         if (runPindel)
@@ -600,10 +614,13 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         }
 
         String[] pangolinData = null;
-        if (runPangolin)
+        if (runPangolinAndNextClade)
         {
             PangolinHandler.updatePangolinRefs(getPipelineCtx().getLogger());
             pangolinData = PangolinHandler.runPangolin(consensusFastaLoFreq, getPipelineCtx().getLogger(), output);
+
+            File json = NextCladeHandler.runNextClade(consensusFastaLoFreq, getPipelineCtx().getLogger(), output, outputDir);
+            output.addSequenceOutput(json, "Nextclade: " + rs.getName(), "NextClade JSON", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
         }
 
         //write metrics:
@@ -638,6 +655,11 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         }
 
         return output;
+    }
+
+    private File getAllVcf(File outputDir, File inputBam)
+    {
+        return new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.all.vcf.gz");
     }
 
     private Set<String> runBcftools(File inputBam, ReferenceGenome referenceGenome, File mask, int minCoverage) throws PipelineJobException
@@ -684,9 +706,19 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         return variantsBcftools;
     }
 
+    private File getConsensusVcf(File outputDir, File inputBam)
+    {
+        return new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.consensus.vcf.gz");
+    }
+
+    private File getConsensusFasta(File loFreqConsensusVcf)
+    {
+        return new File(loFreqConsensusVcf.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(loFreqConsensusVcf.getName()) + ".fasta");
+    }
+
     private File generateConsensus(File loFreqConsensusVcf, File fasta, File maskBed) throws PipelineJobException
     {
-        File ret = new File(loFreqConsensusVcf.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(loFreqConsensusVcf.getName()) + ".fasta");
+        File ret = getConsensusFasta(loFreqConsensusVcf);
         List<String> args = new ArrayList<>();
 
         args.add(SequencePipelineService.get().getExeForPackage("BCFTOOLS", "bcftools").getPath());
@@ -769,8 +801,6 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
     @Override
     public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta, File outDir) throws PipelineJobException
     {
-        Map<String, String> valueMap = new HashMap<>();
-
         File metrics = getMetricsFile(outDir);
         if (metrics.exists())
         {
@@ -819,8 +849,6 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
                     Table.insert(getPipelineCtx().getJob().getUser(), ti, r);
                     total++;
-
-                    valueMap.put(line[1], value);
                 }
 
                 getPipelineCtx().getJob().getLogger().info("total metrics: " + total);
@@ -835,7 +863,119 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             throw new PipelineJobException("Unable to find metrics file: " + metrics.getPath());
         }
 
+        boolean dbImport = getProvider().getParameterByName("dbImport").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+        if (dbImport)
+        {
+            importNtSnps(model, inputBam, outDir);
+        }
+        else
+        {
+            getPipelineCtx().getLogger().info("NT SNP DB Import not selected");
+        }
+
+        boolean runPangolinAndNextClade = getProvider().getParameterByName("runPangolin").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+        if (runPangolinAndNextClade)
+        {
+            //Find the NextClade json:
+            File jsonFile = NextCladeHandler.getJsonFile(outDir, getConsensusFasta(getConsensusVcf(outDir, inputBam)));
+            if (!jsonFile.exists())
+            {
+                throw new PipelineJobException("Unable to find NextClade JSON record: " + jsonFile.getPath());
+            }
+
+            File vcf = getAllVcf(outDir, inputBam);
+            if (!vcf.exists())
+            {
+                throw new PipelineJobException("Unable to find LoFreq VCF: " + vcf.getPath());
+            }
+
+            NextCladeHandler.processAndImportNextCladeAa(getPipelineCtx().getJob(), jsonFile, model.getRowId(), model.getLibraryId(), model.getAlignmentFile(), model.getReadset(), vcf, dbImport);
+        }
+        else
+        {
+            getPipelineCtx().getLogger().info("NextClade was not run");
+        }
+
         return null;
+    }
+
+    private void importNtSnps(AnalysisModel model, File inputBam, File outDir) throws PipelineJobException
+    {
+        getPipelineCtx().getLogger().info("Importing variants into DB");
+
+        File vcf = getAllVcf(outDir, inputBam);
+        if (!vcf.exists())
+        {
+            throw new PipelineJobException("Unable to find file: " + vcf.getPath());
+        }
+
+        ReferenceGenome genome = SequenceAnalysisService.get().getReferenceGenome(model.getLibraryId(), getPipelineCtx().getJob().getUser());
+        ReferenceLibraryHelperImpl helper = new ReferenceLibraryHelperImpl(genome.getWorkingFastaFile(), getPipelineCtx().getLogger());
+
+        ViralSnpUtil.deleteExistingValues(getPipelineCtx().getJob(), model.getAnalysisId(), SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS, null);
+        Double afThreshold = getProvider().getParameterByName("dbImportThreshold").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class, 0.0);
+        Integer depthTheshold = getProvider().getParameterByName("dbImportDepthThreshold").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 0);
+
+        TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_NT_SNP_BY_POS);
+
+        try (VCFFileReader reader = new VCFFileReader(vcf);CloseableIterator<VariantContext> it = reader.iterator())
+        {
+            while (it.hasNext())
+            {
+                VariantContext vc = it.next();
+
+                if (vc.isFiltered())
+                {
+                    continue;
+                }
+
+                double pct = vc.getAttributeAsDouble("AF", 0.0);
+                if (pct < afThreshold)
+                {
+                    continue;
+                }
+
+                int depth = vc.getAttributeAsInt("GATK_DP", 0);
+                if (depth < depthTheshold)
+                {
+                    continue;
+                }
+
+                if (vc.getAlternateAlleles().size() != 1)
+                {
+                    throw new PipelineJobException("Expected a single ALT allele");
+                }
+
+                Map<String, Object> ntRow = new HashMap<>();
+                ntRow.put("analysis_id", model.getAnalysisId());
+
+                Integer refId = helper.resolveSequenceId(vc.getContig());
+                if (refId == null)
+                {
+                    getPipelineCtx().getLogger().error("unknown reference id: [" + vc.getContig() + "]");
+                }
+
+                ntRow.put("ref_nt_id", refId);
+                ntRow.put("ref_nt_position", vc.getStart()); //use 1-based
+                ntRow.put("ref_nt_insert_index", 0);
+                ntRow.put("ref_nt", vc.getReference().getBaseString());
+                ntRow.put("q_nt", vc.getAlternateAllele(0).getBaseString());
+
+                List<Integer> depths = vc.getAttributeAsIntList("DP4", 0);
+                int alleleDepth = depths.get(2) + depths.get(3);
+                ntRow.put("readcount", alleleDepth);
+                ntRow.put("depth", depth);
+                ntRow.put("adj_depth", vc.getAttribute("DP"));
+                ntRow.put("pct", vc.getAttribute("AF"));
+                ntRow.put("container", getPipelineCtx().getJob().getContainer().getEntityId());
+                ntRow.put("createdby", getPipelineCtx().getJob().getUser().getUserId());
+                ntRow.put("modifiedby", getPipelineCtx().getJob().getUser().getUserId());
+                ntRow.put("created", new Date());
+                ntRow.put("modified", new Date());
+
+                Table.insert(getPipelineCtx().getJob().getUser(), ti, ntRow);
+            }
+        }
     }
 
     private String getHashKey(VariantContext vc)

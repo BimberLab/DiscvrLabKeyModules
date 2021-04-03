@@ -43,6 +43,7 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.singlecell.run.CellRangerFeatureBarcodeHandler;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -82,12 +83,18 @@ public class CellHashingServiceImpl extends CellHashingService
     }
 
     @Override
-    public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing, final boolean failIfNoCiteSeq) throws PipelineJobException
+    public void prepareHashingIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing) throws PipelineJobException
     {
-        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashing, failIfNoCiteSeq, true);
+        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashing, false, true, true, false);
     }
 
-    public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing, final boolean failIfNoCiteSeq, final boolean cacheCountMatrixFiles) throws PipelineJobException
+    @Override
+    public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing, final boolean failIfNoCiteSeq) throws PipelineJobException
+    {
+        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashing, failIfNoCiteSeq, true, true, true);
+    }
+
+    public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing, final boolean failIfNoCiteSeq, final boolean cacheCountMatrixFiles, boolean requireValidHashingIfPresent, boolean requireValidCiteSeqIfPresent) throws PipelineJobException
     {
         Container target = job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer();
         UserSchema sequenceAnalysis = QueryService.get().getUserSchema(job.getUser(), target, SingleCellSchema.SEQUENCE_SCHEMA_NAME);
@@ -217,6 +224,7 @@ public class CellHashingServiceImpl extends CellHashingService
             HashMap<Integer, File> readsetToCountMap = new HashMap<>();
             if (distinctHTOs.size() > 1)
             {
+                Set<Integer> hashingToRemove = new HashSet<>();
                 readsetToHashingMap.forEach((readsetId, hashingReadsetId) -> {
                     if (cacheCountMatrixFiles)
                     {
@@ -226,7 +234,15 @@ public class CellHashingServiceImpl extends CellHashingService
                         TableSelector ts = new TableSelector(sequenceOutputs, filter, new org.labkey.api.data.Sort("-rowid"));
                         if (!ts.exists())
                         {
-                            throw new IllegalArgumentException("Unable to find existing count matrix for hashing readset: " + hashingReadsetId);
+                            if (requireValidHashingIfPresent)
+                            {
+                                throw new IllegalArgumentException("Unable to find existing count matrix for hashing readset: " + hashingReadsetId);
+                            }
+                            else
+                            {
+                                job.getLogger().warn("Unable to find existing count matrix for hashing readset: " + hashingReadsetId + ", skipping");
+                                hashingToRemove.add(readsetId);
+                            }
                         }
                         else
                         {
@@ -238,6 +254,8 @@ public class CellHashingServiceImpl extends CellHashingService
                     support.cacheReadset(hashingReadsetId, job.getUser());
 
                 });
+
+                hashingToRemove.forEach(readsetToHashingMap::remove);
             }
             else if (distinctHTOs.size() == 1)
             {
@@ -259,6 +277,7 @@ public class CellHashingServiceImpl extends CellHashingService
                 job.getLogger().info("distinct HTOs: " + distinctHTOs.size());
             }
 
+            Set<Integer> citeToRemove = new HashSet<>();
             readsetToCiteSeqMap.forEach((readsetId, citeseqReadsetId) -> {
                 if (cacheCountMatrixFiles)
                 {
@@ -268,7 +287,15 @@ public class CellHashingServiceImpl extends CellHashingService
                     TableSelector ts = new TableSelector(sequenceOutputs, filter, new org.labkey.api.data.Sort("-rowid"));
                     if (!ts.exists())
                     {
-                        throw new IllegalArgumentException("Unable to find existing count matrix for CITE-seq readset: " + citeseqReadsetId);
+                        if (requireValidCiteSeqIfPresent)
+                        {
+                            throw new IllegalArgumentException("Unable to find existing count matrix for CITE-seq readset: " + citeseqReadsetId);
+                        }
+                        else
+                        {
+                            job.getLogger().warn("Unable to find existing count matrix for CITE-seq readset: " + citeseqReadsetId + ", skipping");
+                            citeToRemove.add(readsetId);
+                        }
                     }
                     else
                     {
@@ -279,6 +306,8 @@ public class CellHashingServiceImpl extends CellHashingService
 
                 support.cacheReadset(citeseqReadsetId, job.getUser());
             });
+
+            citeToRemove.forEach(readsetToCiteSeqMap::remove);
 
             support.cacheObject(READSET_TO_HASHING_MAP, readsetToHashingMap);
             support.cacheObject(READSET_TO_CITESEQ_MAP, readsetToCiteSeqMap);
@@ -940,7 +969,42 @@ public class CellHashingServiceImpl extends CellHashingService
             throw new PipelineJobException("Unable to find HTML file: " + htmlFile.getPath());
         }
 
-        if (!callsFile.exists())
+        boolean callFileValid = callsFile.exists();
+        if (callFileValid)
+        {
+            try (BufferedReader reader = Readers.getReader(callsFile))
+            {
+                int lineIdx = 0;
+                String line;
+                while ((line = reader.readLine()) != null)
+                {
+                    lineIdx++;
+                    line = StringUtils.trimToNull(line);
+                    if (line == null)
+                    {
+                        callFileValid = false;
+                        break;
+                    }
+
+                    if (lineIdx == 1 && !line.startsWith("cellbarcode"))
+                    {
+                        callFileValid = false;
+                        break;
+                    }
+
+                    if (lineIdx > 1)
+                    {
+                        break;
+                    }
+                }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+
+        if (!callFileValid)
         {
             //copy HTML locally to make debugging easier:
             if (localPipelineDir != null)

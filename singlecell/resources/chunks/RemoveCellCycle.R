@@ -2,7 +2,7 @@ for (datasetId in names(seuratObjects)) {
     seuratObj <- seuratObjects[[datasetId]]
     seuratObjects[[datasetId]] <- NULL
 
-    seuratObj <- bindArgs(CellMembrane::RemoveCellCycle, seuratObj)()
+    seuratObj <- bindArgs(CellMembrane::RegressCellCycle, seuratObj)()
 
     newSeuratObjects[[datasetId]] <- seuratObj
 
