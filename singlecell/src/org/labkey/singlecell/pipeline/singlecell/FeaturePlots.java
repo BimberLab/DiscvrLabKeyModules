@@ -10,9 +10,9 @@ import org.labkey.api.util.PageFlowUtil;
 import java.util.Arrays;
 import java.util.Collection;
 
-public class PhenotypePlots extends AbstractCellMembraneStep
+public class FeaturePlots extends AbstractCellMembraneStep
 {
-    public PhenotypePlots(PipelineContext ctx, PhenotypePlots.Provider provider)
+    public FeaturePlots(PipelineContext ctx, FeaturePlots.Provider provider)
     {
         super(provider, ctx);
     }
@@ -21,13 +21,20 @@ public class PhenotypePlots extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("PhenotypePlots", "Immune Phenotype Plots", "Seurat", "This will generate FeaturePlots for a pre-defined set of immune markers. Any feature not present is skipped.", null, Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+            super("FeaturePlots", "FeaturePlots", "Seurat", "This will generate FeaturePlots for each of the features/variables below. Any variable not present is skipped.", Arrays.asList(
+                    SeuratToolParameter.create("fieldNames", "Fields To Plot", "Enter one field name per line", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
+                        put("allowBlank", false);
+                        put("height", 150);
+                        put("delimiter", ",");
+                    }}, null)
+            ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
+
         @Override
-        public PhenotypePlots create(PipelineContext ctx)
+        public FeaturePlots create(PipelineContext ctx)
         {
-            return new PhenotypePlots(ctx, this);
+            return new FeaturePlots(ctx, this);
         }
     }
 
@@ -46,6 +53,6 @@ public class PhenotypePlots extends AbstractCellMembraneStep
     @Override
     public String getFileSuffix()
     {
-        return "phenotype";
+        return "featureplot";
     }
 }
