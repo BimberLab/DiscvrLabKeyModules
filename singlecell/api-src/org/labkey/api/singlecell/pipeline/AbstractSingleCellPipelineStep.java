@@ -324,6 +324,11 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             String[] vals = val.split(",");
             return "c('" + StringUtils.join(vals, "','") + "')";
         }
+        else if (pd.isMultiValue())
+        {
+            String[] vals = val.split(pd.getDelimiter());
+            return "c('" + StringUtils.join(vals, "','") + "')";
+        }
 
         return  "'" + val + "'";
     }
