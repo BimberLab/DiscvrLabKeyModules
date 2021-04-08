@@ -370,8 +370,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
                 String[] line;
                 while ((line = reader.readNext()) != null)
                 {
-                    //TODO: allow database to pass pattern
-                    writer.writeNext(new String[]{line[1], line[1], "R2", "5P(BC)", line[0], "Antibody Capture"});
+                    writer.writeNext(new String[]{line[1], line[1], "R2", line[3], line[0], "Antibody Capture"});
                 }
             }
             catch (IOException e)

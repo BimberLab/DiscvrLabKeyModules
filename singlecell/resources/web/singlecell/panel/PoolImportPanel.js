@@ -256,12 +256,16 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                 else if (type === 'MultiSeq') {
                     return 'MS-' + val;
                 }
+                else if (type === 'BioLegend') {
+                    return 'BL-' + val;
+                }
             }
             else if (val) {
                 //Normalize hyphen use
                 val = String(val);
                 val = val.replace(/^MS(-)*/, 'MS-');
                 val = val.replace(/^HTO(-)*/, 'HTO-');
+                val = val.replace(/^BL(-)*/, 'BL-');
             }
 
             return val;

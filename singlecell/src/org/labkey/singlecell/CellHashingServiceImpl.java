@@ -314,15 +314,15 @@ public class CellHashingServiceImpl extends CellHashingService
             support.cacheObject(READSET_TO_COUNTS_MAP, readsetToCountMap);
 
             //infer groups:
-            TableInfo hashtagOligos = QueryService.get().getUserSchema(job.getUser(), target, SingleCellSchema.NAME).getTable("hashtag_oligos");
+            TableInfo hashtagOligos = QueryService.get().getUserSchema(job.getUser(), target, SingleCellSchema.NAME).getTable(SingleCellSchema.TABLE_HASHING_LABELS);
             Set<String> uniqueHashtagGroups = new HashSet<>();
             for (String hto : distinctHTOs)
             {
                 String[] tokens = hto.split("<>");
-                SimpleFilter filter = new SimpleFilter(FieldKey.fromString("tag_name"), tokens[0]);
-                filter.addCondition(FieldKey.fromString("sequence"), tokens[1]);
+                SimpleFilter filter = new SimpleFilter(FieldKey.fromString("name"), tokens[0]);
+                filter.addCondition(FieldKey.fromString("adaptersequence"), tokens[1]);
 
-                TableSelector ts = new TableSelector(hashtagOligos, PageFlowUtil.set("group_name"), filter, null);
+                TableSelector ts = new TableSelector(hashtagOligos, PageFlowUtil.set("groupname"), filter, null);
                 if (ts.exists())
                 {
                     uniqueHashtagGroups.addAll(ts.getArrayList(String.class));
@@ -736,10 +736,10 @@ public class CellHashingServiceImpl extends CellHashingService
         File output = getAllHashingBarcodesFile(webserverDir);
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(output), ',', CSVWriter.NO_QUOTE_CHARACTER))
         {
-            TableInfo ti = QueryService.get().getUserSchema(u, c, SingleCellSchema.SEQUENCE_SCHEMA_NAME).getTable(SingleCellSchema.TABLE_BARCODES, null);
-            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("sequence", "tag_name"), new SimpleFilter(FieldKey.fromString("group_name"), groupNames, CompareType.IN), new org.labkey.api.data.Sort("tag_name"));
+            TableInfo ti = QueryService.get().getUserSchema(u, c, SingleCellSchema.NAME).getTable(SingleCellSchema.TABLE_HASHING_LABELS, null);
+            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("adaptersequence", "name", "groupName", "barcodePattern"), new SimpleFilter(FieldKey.fromString("groupname"), groupNames, CompareType.IN), new org.labkey.api.data.Sort("tag_name"));
             ts.forEachResults(rs -> {
-                writer.writeNext(new String[]{rs.getString(FieldKey.fromString("sequence")), rs.getString(FieldKey.fromString("tag_name"))});
+                writer.writeNext(new String[]{rs.getString(FieldKey.fromString("adaptersequence")), rs.getString(FieldKey.fromString("name")), rs.getString(FieldKey.fromString("groupName")), rs.getString(FieldKey.fromString("barcodePattern"))});
             });
         }
         catch (IOException e)

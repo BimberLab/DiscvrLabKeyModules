@@ -45,6 +45,10 @@ public class SingleCellUserSchema extends SimpleUserSchema
         {
             return new ContainerScopedTable<>(this, sourceTable, cf, "antibodyName").init();
         }
+        else if (SingleCellSchema.TABLE_HASHING_LABELS.equalsIgnoreCase(name))
+        {
+            return new ContainerScopedTable<>(this, sourceTable, cf, "name").init();
+        }
         else if (SingleCellSchema.TABLE_STIM_TYPES.equalsIgnoreCase(name))
         {
             return new ContainerScopedTable<>(this, sourceTable, cf, "name").init();
