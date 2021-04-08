@@ -401,7 +401,27 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     public void addIntermediateFile(File f)
     {
         _job.getLogger().debug("adding intermediate file: " + f.getPath());
-        _intermediateFiles.add(f);
+        if (existsAsOutput(f))
+        {
+            _job.getLogger().debug("file exists as sequence output, will not put into intermediate files");
+        }
+        else
+        {
+            _intermediateFiles.add(f);
+        }
+    }
+
+    private boolean existsAsOutput(File f)
+    {
+        for (SequenceOutputFile so : _outputsToCreate)
+        {
+            if (so.getFile() != null && so.getFile().equals(f))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override

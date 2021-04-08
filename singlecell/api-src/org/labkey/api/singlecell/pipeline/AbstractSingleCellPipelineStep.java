@@ -100,6 +100,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         File intermediates = new File(ctx.getOutputDir(), "intermediateFiles.txt");
         if (intermediates.exists())
         {
+            getPipelineCtx().getLogger().debug("inspecting intermediateFiles.txt");
             try (CSVReader reader = new CSVReader(Readers.getReader(intermediates), '\t'))
             {
                 String[] line;
@@ -322,6 +323,11 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         else if ("sequenceanalysis-trimmingtextarea".equals(pd.getFieldXtype()))
         {
             String[] vals = val.split(",");
+            return "c('" + StringUtils.join(vals, "','") + "')";
+        }
+        else if (pd.isMultiValue())
+        {
+            String[] vals = val.split(pd.getDelimiter());
             return "c('" + StringUtils.join(vals, "','") + "')";
         }
 
