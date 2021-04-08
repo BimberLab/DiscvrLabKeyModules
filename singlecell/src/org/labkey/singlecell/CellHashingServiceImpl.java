@@ -737,7 +737,7 @@ public class CellHashingServiceImpl extends CellHashingService
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(output), ',', CSVWriter.NO_QUOTE_CHARACTER))
         {
             TableInfo ti = QueryService.get().getUserSchema(u, c, SingleCellSchema.NAME).getTable(SingleCellSchema.TABLE_HASHING_LABELS, null);
-            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("adaptersequence", "name", "groupName", "barcodePattern"), new SimpleFilter(FieldKey.fromString("groupname"), groupNames, CompareType.IN), new org.labkey.api.data.Sort("tag_name"));
+            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("adaptersequence", "name", "groupName", "barcodePattern"), new SimpleFilter(FieldKey.fromString("groupname"), groupNames, CompareType.IN), new org.labkey.api.data.Sort("name"));
             ts.forEachResults(rs -> {
                 writer.writeNext(new String[]{rs.getString(FieldKey.fromString("adaptersequence")), rs.getString(FieldKey.fromString("name")), rs.getString(FieldKey.fromString("groupName")), rs.getString(FieldKey.fromString("barcodePattern"))});
             });
