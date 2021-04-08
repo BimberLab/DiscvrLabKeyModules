@@ -105,7 +105,22 @@ public class DefaultPipelineStepOutput implements PipelineStepOutput
     @Override
     public void addSequenceOutput(File file, String label, String category, @Nullable Integer readsetId, @Nullable Integer analysisId, @Nullable Integer genomeId, @Nullable String description)
     {
+        _intermediateFiles.remove(file);
+
         _sequenceOutputs.add(new SequenceOutput(file, label, category, readsetId, analysisId, genomeId, description));
+    }
+
+    private boolean existsAsOutput(File f)
+    {
+        for (Pair<File, String> pair : _outputs)
+        {
+            if (pair.first != null && pair.first.equals(f))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
@@ -132,13 +147,16 @@ public class DefaultPipelineStepOutput implements PipelineStepOutput
         if (role != null)
             addOutput(file, role);
 
-        _intermediateFiles.add(file);
+        if (!existsAsOutput(file))
+        {
+            _intermediateFiles.add(file);
+        }
     }
 
     @Override
     public void addIntermediateFiles(Collection<File> files)
     {
-        _intermediateFiles.addAll(files);
+        files.forEach(this::addIntermediateFile);
     }
 
     public void addPicardMetricsFile(Readset rs, File metricFile, File inputFile)
