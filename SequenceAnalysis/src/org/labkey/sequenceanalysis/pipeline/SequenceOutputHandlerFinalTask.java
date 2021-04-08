@@ -87,7 +87,8 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
         //create analysisRecord
         AnalysisModelImpl am = new AnalysisModelImpl();
         am.setContainer(getJob().getContainerId());
-        am.setDescription(getPipelineJob().getDescription());
+        String description = getPipelineJob().getParameters().getOrDefault("jobDescription", null) != null ? getPipelineJob().getParameters().get("jobDescription") : getPipelineJob().getDescription();
+        am.setDescription(description);
         am.setRunId(runId);
 
 

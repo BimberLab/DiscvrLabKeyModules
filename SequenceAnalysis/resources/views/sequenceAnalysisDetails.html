@@ -68,7 +68,7 @@ Ext4.onReady(function (){
         queryName: 'quality_metrics',
         maxRows: 20,
         containerPath: Laboratory.Utils.getQueryContainerPath(),
-        columns: 'fileid,metricname,metricvalue,qualvalue,comment,workbook,readset,runid',
+        columns: 'dataid,metricname,metricvalue,qualvalue,comment,workbook,readset,runid',
         filterArray: [LABKEY.Filter.create('analysis_id', analysisId, LABKEY.Filter.Types.EQUAL)]
     }).render('qualityMetrics_'+webpart.wrapperDivId);
 

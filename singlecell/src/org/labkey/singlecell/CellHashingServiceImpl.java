@@ -905,6 +905,14 @@ public class CellHashingServiceImpl extends CellHashingService
         }
 
         File htmlFile = new File(outputDir, basename + ".html");
+        File localHtml = new File(localPipelineDir, htmlFile.getName());
+
+        // Note: if this job fails and then is resumed, having that pre-existing copy of the HTML can pose a problem
+        if (localHtml.exists())
+        {
+            log.debug("Deleting pre-existing HTML file: " + localHtml.getPath());
+        }
+
         File callsFile = new File(outputDir, basename + CALL_EXTENSION);
         File metricsFile = getMetricsFile(callsFile);
 
@@ -1011,7 +1019,6 @@ public class CellHashingServiceImpl extends CellHashingService
             {
                 try
                 {
-                    File localHtml = new File(localPipelineDir, htmlFile.getName());
                     log.info("copying HTML file locally for easier debugging: " + localHtml.getPath());
                     if (localHtml.exists())
                     {

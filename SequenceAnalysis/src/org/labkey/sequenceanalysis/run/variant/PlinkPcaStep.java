@@ -1,6 +1,9 @@
 package org.labkey.sequenceanalysis.run.variant;
 
+import au.com.bytecode.opencsv.CSVWriter;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -18,6 +21,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -36,13 +40,39 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
             super("PlinkPcaStep", "Plink/PCA", "", "This will run plink to generate the data for MDS/PCA", Arrays.asList(
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--not-chr"), "excludedContigs", "Excluded Contigs", "A comma separated list of contigs to exclude, such as X,Y,MT.", "textfield", new JSONObject(){{
 
-                    }}, "X,Y,MT")
-            ), null, "https://zzz.bwh.harvard.edu/plink/");
+                    }}, "X,Y,MT"),
+                    ToolParameterDescriptor.create(SelectSamplesStep.SAMPLE_INCLUDE, "Sample(s) Include", "Only the following samples will be included in the analysis.", "sequenceanalysis-trimmingtextarea", null, null),
+                    ToolParameterDescriptor.create(SelectSamplesStep.SAMPLE_EXCLUDE, "Samples(s) To Exclude", "The following samples will be excluded from the analysis.", "sequenceanalysis-trimmingtextarea", null, null)
+            ), Arrays.asList("sequenceanalysis/field/TrimmingTextArea.js"), "https://zzz.bwh.harvard.edu/plink/");
         }
 
         public PlinkPcaStep create(PipelineContext ctx)
         {
             return new PlinkPcaStep(this, ctx);
+        }
+    }
+
+    private void addSubjectSelectOptions(String text, List<String> args, String argName, File outputFile, VariantProcessingStepOutputImpl output) throws PipelineJobException
+    {
+        text = StringUtils.trimToNull(text);
+        if (text != null)
+        {
+            String[] names = text.split(";");
+            try (CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(outputFile), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+            {
+                Arrays.stream(names).forEach(x -> {
+                    writer.writeNext(new String[]{x, x});
+                });
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            args.add(argName);
+            args.add(outputFile.getPath());
+
+            output.addIntermediateFile(outputFile);
         }
     }
 
@@ -55,7 +85,13 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
         args.add(getWrapper().getExe().getPath());
         args.add("--pca");
         args.add("--allow-extra-chr");
-        args.add("--keep WGS.names");
+
+        String samplesToInclude = getProvider().getParameterByName(SelectSamplesStep.SAMPLE_INCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
+        addSubjectSelectOptions(samplesToInclude, args, "--keep", new File(outputDirectory, "samplesToKeep.txt"), output);
+
+        String samplesToExclude = getProvider().getParameterByName(SelectSamplesStep.SAMPLE_EXCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
+        addSubjectSelectOptions(samplesToExclude, args, "--exclude", new File(outputDirectory, "samplesToExclude.txt"), output);
+
         args.add("--vcf");
         args.add(inputVCF.getPath());
 
