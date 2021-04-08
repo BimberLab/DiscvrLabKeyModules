@@ -2,7 +2,6 @@ CREATE TABLE singlecell.hashing_labels (
   rowid serial,
   name varchar(100),
   groupName varchar(100),
-  markerLabel varchar(100),
   adaptersequence varchar(4000),
   barcodePattern varchar(100),
 

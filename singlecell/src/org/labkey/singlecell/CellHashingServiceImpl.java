@@ -110,7 +110,7 @@ public class CellHashingServiceImpl extends CellHashingService
                 FieldKey.fromString("sortId/sampleId/stim"),
                 FieldKey.fromString("sortId/population"),
                 FieldKey.fromString("sortId/hto"),
-                FieldKey.fromString("sortId/hto/sequence"),
+                FieldKey.fromString("sortId/hto/adaptersequence"),
                 FieldKey.fromString("hashingReadsetId"),
                 FieldKey.fromString("hashingReadsetId/totalFiles"),
                 FieldKey.fromString("citeseqReadsetId"),
@@ -153,7 +153,7 @@ public class CellHashingServiceImpl extends CellHashingService
                             String.valueOf(results.getObject(FieldKey.fromString("hashingReadsetId")) == null ? "" : results.getInt(FieldKey.fromString("hashingReadsetId"))),
                             String.valueOf(results.getObject(FieldKey.fromString("hashingReadsetId/totalFiles")) != null && results.getInt(FieldKey.fromString("hashingReadsetId/totalFiles")) > 0),
                             results.getString(FieldKey.fromString("sortId/hto")),
-                            results.getString(FieldKey.fromString("sortId/hto/sequence")),
+                            results.getString(FieldKey.fromString("sortId/hto/adaptersequence")),
                             String.valueOf(results.getObject(FieldKey.fromString("citeseqReadsetId")) == null ? "" : results.getInt(FieldKey.fromString("citeseqReadsetId"))),
                             String.valueOf(results.getObject(FieldKey.fromString("citeseqReadsetId/totalFiles")) != null && results.getInt(FieldKey.fromString("citeseqReadsetId/totalFiles")) > 0),
                             results.getString(FieldKey.fromString("citeseqPanel"))
@@ -173,14 +173,14 @@ public class CellHashingServiceImpl extends CellHashingService
                         {
                             readsetToHashingMap.put(rs.getReadsetId(), results.getInt(FieldKey.fromString("hashingReadsetId")));
 
-                            String hto = results.getString(FieldKey.fromString("sortId/hto")) + "<>" + results.getString(FieldKey.fromString("sortId/hto/sequence"));
-                            if (!distinctHTOs.contains(hto) && !StringUtils.isEmpty(results.getString(FieldKey.fromString("sortId/hto/sequence"))))
+                            String hto = results.getString(FieldKey.fromString("sortId/hto")) + "<>" + results.getString(FieldKey.fromString("sortId/hto/adaptersequence"));
+                            if (!distinctHTOs.contains(hto) && !StringUtils.isEmpty(results.getString(FieldKey.fromString("sortId/hto/adaptersequence"))))
                             {
                                 distinctHTOs.add(hto);
-                                bcWriter.writeNext(new String[]{results.getString(FieldKey.fromString("sortId/hto/sequence")), results.getString(FieldKey.fromString("sortId/hto"))});
+                                bcWriter.writeNext(new String[]{results.getString(FieldKey.fromString("sortId/hto/adaptersequence")), results.getString(FieldKey.fromString("sortId/hto"))});
                             }
 
-                            if (results.getObject(FieldKey.fromString("sortId/hto/sequence")) == null)
+                            if (results.getObject(FieldKey.fromString("sortId/hto/adaptersequence")) == null)
                             {
                                 job.getLogger().error("Unable to find sequence for HTO: " + results.getString(FieldKey.fromString("sortId/hto")));
                                 hasError.set(true);
