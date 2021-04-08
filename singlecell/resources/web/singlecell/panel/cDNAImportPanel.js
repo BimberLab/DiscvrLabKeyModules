@@ -142,11 +142,15 @@ Ext4.define('SingleCell.panel.cDNAImportPanel', {
             storeValues: ['SI-NA'],
             value: 'SI-NA'
         },{
-            xtype: 'ldk-simplecombo',
+            xtype: 'ldk-simplelabkeycombo',
             fieldLabel: 'Hashing Type',
             itemId: 'hashingType',
             forceSelection: true,
-            storeValues: ['CD298', 'MultiSeq'],
+            containerPath: Laboratory.Utils.getQueryContainerPath(),
+            schemaName: 'singlecell',
+            queryName: 'hashing_label_groups',
+            displayField: 'groupName',
+            valueField: 'groupName',
             value: 'MultiSeq'
         }, {
             xtype: 'textarea',
