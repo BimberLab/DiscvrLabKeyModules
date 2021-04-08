@@ -100,6 +100,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         File intermediates = new File(ctx.getOutputDir(), "intermediateFiles.txt");
         if (intermediates.exists())
         {
+            getPipelineCtx().getLogger().debug("inspecting intermediateFiles.txt");
             try (CSVReader reader = new CSVReader(Readers.getReader(intermediates), '\t'))
             {
                 String[] line;
