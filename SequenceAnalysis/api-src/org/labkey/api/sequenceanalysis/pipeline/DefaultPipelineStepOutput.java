@@ -112,9 +112,9 @@ public class DefaultPipelineStepOutput implements PipelineStepOutput
 
     private boolean existsAsOutput(File f)
     {
-        for (Pair<File, String> pair : _outputs)
+        for (SequenceOutput so  : _sequenceOutputs)
         {
-            if (pair.first != null && pair.first.equals(f))
+            if (so.getFile() != null && so.getFile().equals(f))
             {
                 return true;
             }
