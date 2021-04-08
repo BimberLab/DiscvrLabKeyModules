@@ -322,11 +322,20 @@ public class CellHashingServiceImpl extends CellHashingService
                 SimpleFilter filter = new SimpleFilter(FieldKey.fromString("name"), tokens[0]);
                 filter.addCondition(FieldKey.fromString("adaptersequence"), tokens[1]);
 
-                TableSelector ts = new TableSelector(hashtagOligos, PageFlowUtil.set("groupname"), filter, null);
+                TableSelector ts = new TableSelector(hashtagOligos, PageFlowUtil.set("groupName"), filter, null);
                 if (ts.exists())
                 {
                     uniqueHashtagGroups.addAll(ts.getArrayList(String.class));
                 }
+                else
+                {
+                    throw new PipelineJobException("Unable to find group for HTO: " + hto);
+                }
+            }
+
+            if (uniqueHashtagGroups.isEmpty())
+            {
+                throw new PipelineJobException("No hashing groups found!");
             }
 
             writeAllHashingBarcodes(uniqueHashtagGroups, job.getUser(), job.getContainer(), sourceDir);
@@ -736,8 +745,9 @@ public class CellHashingServiceImpl extends CellHashingService
         File output = getAllHashingBarcodesFile(webserverDir);
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(output), ',', CSVWriter.NO_QUOTE_CHARACTER))
         {
-            TableInfo ti = QueryService.get().getUserSchema(u, c, SingleCellSchema.NAME).getTable(SingleCellSchema.TABLE_HASHING_LABELS, null);
-            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("adaptersequence", "name", "groupName", "barcodePattern"), new SimpleFilter(FieldKey.fromString("groupname"), groupNames, CompareType.IN), new org.labkey.api.data.Sort("name"));
+            Container target = c.isWorkbook() ? c.getParent() : c;
+            TableInfo ti = QueryService.get().getUserSchema(u, target, SingleCellSchema.NAME).getTable(SingleCellSchema.TABLE_HASHING_LABELS, null);
+            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("adaptersequence", "name", "groupName", "barcodePattern"), new SimpleFilter(FieldKey.fromString("groupName"), groupNames, CompareType.IN), new org.labkey.api.data.Sort("name"));
             ts.forEachResults(rs -> {
                 writer.writeNext(new String[]{rs.getString(FieldKey.fromString("adaptersequence")), rs.getString(FieldKey.fromString("name")), rs.getString(FieldKey.fromString("groupName")), rs.getString(FieldKey.fromString("barcodePattern"))});
             });
