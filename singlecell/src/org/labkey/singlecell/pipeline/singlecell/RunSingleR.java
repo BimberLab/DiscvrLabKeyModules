@@ -1,7 +1,9 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
+import org.json.JSONObject;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
@@ -18,7 +20,9 @@ public class RunSingleR extends AbstractCellMembraneStep
         public Provider()
         {
             super("RunSingleR", "Run SingleR", "CellMembrane/SingleR", "This will run singleR on the input object(s), and save the results in metadata.", Arrays.asList(
+                    SeuratToolParameter.create("showHeatmap", "Generate Heatmaps", "If checked, the SingleR heatmaps will be generated. These can be expensive for large datasets and are often less useful than the DimPlots, so skipping them sometimes makes sense.", "checkbox", new JSONObject(){{
 
+                    }}, false, "showHeatmap", true)
             ), null, null);
         }
 
