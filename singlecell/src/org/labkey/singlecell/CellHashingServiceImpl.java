@@ -333,12 +333,16 @@ public class CellHashingServiceImpl extends CellHashingService
                 }
             }
 
-            if (uniqueHashtagGroups.isEmpty())
+            if (!distinctHTOs.isEmpty() && uniqueHashtagGroups.isEmpty())
             {
+
                 throw new PipelineJobException("No hashing groups found!");
             }
 
-            writeAllHashingBarcodes(uniqueHashtagGroups, job.getUser(), job.getContainer(), sourceDir);
+            if (!uniqueHashtagGroups.isEmpty())
+            {
+                writeAllHashingBarcodes(uniqueHashtagGroups, job.getUser(), job.getContainer(), sourceDir);
+            }
         }
         catch (IOException e)
         {
