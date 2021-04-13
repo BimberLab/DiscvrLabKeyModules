@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Sync Release Branches"
-        uses: bimberlabinternal/DevOps/githubActions/branch-create@master
+        uses: bimberlabinternal/DevOps/githubActions/branch-create@develop
         with:
           source_repo: "labkey/DiscvrLabKeyModules"
           source_branch_prefix: "release"
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Sync Develop Branch"
-        uses: bimberlabinternal/DevOps/githubActions/git-sync@master
+        uses: bimberlabinternal/DevOps/githubActions/git-sync@develop
         with:
           source_repo: "labkey/DiscvrLabKeyModules"
           source_branch: "develop"

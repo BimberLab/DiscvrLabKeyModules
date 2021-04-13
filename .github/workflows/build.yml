@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Build DISCVR"
-        uses: bimberlabinternal/DevOps/githubActions/discvr-build@master
+        uses: bimberlabinternal/DevOps/githubActions/discvr-build@develop
         with:
           artifactory_user: ${{secrets.artifactory_user}}
           artifactory_password: ${{secrets.artifactory_password}}
