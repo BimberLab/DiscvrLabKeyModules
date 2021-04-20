@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.biojava3.core.sequence.DNASequence;
 import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
 import org.biojava3.core.sequence.compound.AmbiguityRNACompoundSet;
+import org.biojava3.core.sequence.compound.AminoAcidCompound;
 import org.biojava3.core.sequence.compound.NucleotideCompound;
 import org.biojava3.core.sequence.template.Sequence;
 import org.biojava3.core.sequence.transcription.TranscriptionEngine;
@@ -132,7 +133,19 @@ public class SequenceTriggerHelper
             DNASequence dna = new DNASequence(toTranslate, AmbiguityDNACompoundSet.getDNACompoundSet());
             Sequence<NucleotideCompound> nts = isComplement ? dna.getReverseComplement() : dna;
 
-            return _engine.getRnaAminoAcidTranslator().createSequence(_engine.getDnaRnaTranslator().createSequence(nts)).getSequenceAsString();
+            Sequence<NucleotideCompound> rnaNts = _engine.getDnaRnaTranslator().createSequence(nts);
+            if (rnaNts == null)
+            {
+                throw new IllegalArgumentException("Unable to create RNA from: " + dna.toString());
+            }
+
+            Sequence<AminoAcidCompound> aas = _engine.getRnaAminoAcidTranslator().createSequence(rnaNts);
+            if (aas == null)
+            {
+                throw new IllegalArgumentException("Unable to create AA from: RNA" + rnaNts.toString() + " / DNA: " + dna.toString());
+            }
+
+            return aas.getSequenceAsString();
         }
         catch (Exception e)
         {
