@@ -28,7 +28,7 @@ function beforeUpsert(row, errors) {
 
     if (row.name){
         //trim name
-        row.name = row.name.replace(/^\s+|\s+$/g, '')
+        row.name = row.name.replace(/^\s+|\s+$/g, '');
 
         //enforce no pipe character in name
         if (row.name.match(/\|/)){
@@ -47,7 +47,7 @@ function beforeUpsert(row, errors) {
         exonArray = row.exons.split(';');
         for (var i = 0;i<exonArray.length; i++) {
             var exon = exonArray[i].split('-');
-            if (exon.length != 2 || isNaN(exon[0]) || isNaN(exon[1])){
+            if (exon.length !== 2 || isNaN(exon[0]) || isNaN(exon[1])){
                 addError(errors, 'exons', 'Improper exons: ' + row.exons);
                 return;
             }
@@ -59,7 +59,7 @@ function beforeUpsert(row, errors) {
     }
 
     //infer from coordinates:
-    if (row.ref_nt_id && exonArray.length){
+    if (!row.sequence && row.ref_nt_id && exonArray.length){
         row.isComplement = !!row.isComplement;
         var sequence = triggerHelper.extractAASequence(row.ref_nt_id, exonArray, row.isComplement);
         if (sequence && lengthFromExons !== sequence.length){
@@ -70,14 +70,14 @@ function beforeUpsert(row, errors) {
         row.sequence = sequence;
     }
 
-    if (row.exons && row.sequence && lengthFromExons != row.sequence.length){
+    if (row.exons && row.sequence && lengthFromExons !== row.sequence.length){
         addError(errors, 'sequence', 'The length of the sequence (' + row.sequence.length + ') does not match the exon boundaries (' + lengthFromExons + ')');
     }
 
     if (row.exons && row.exons.length){
         var exonArray = row.exons.split(';');
         var coordinates = exonArray[0].split('-');
-        if(coordinates.length == 2)
+        if(coordinates.length === 2)
             row.start_location = coordinates[0];
     }
 }
