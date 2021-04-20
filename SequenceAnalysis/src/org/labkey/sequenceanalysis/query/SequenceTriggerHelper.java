@@ -133,7 +133,7 @@ public class SequenceTriggerHelper
         }
         catch (Exception e)
         {
-            _log.error(e);
+            _log.error(e.getMessage() == null ? "There was an error" : e.getMessage(), e);
             throw e;
         }
 
