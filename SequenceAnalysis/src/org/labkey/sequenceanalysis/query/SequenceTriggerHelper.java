@@ -123,20 +123,21 @@ public class SequenceTriggerHelper
                 }
             }
 
-            if (writer.getBuffer().length() > 0)
+            String toTranslate = writer.toString();
+            if (StringUtils.isEmpty(toTranslate))
             {
-                DNASequence dna = new DNASequence(writer.getBuffer().toString(), AmbiguityDNACompoundSet.getDNACompoundSet());
-                Sequence<NucleotideCompound> toTranslate = isComplement ? dna.getReverseComplement() : dna;
-
-                return _engine.getRnaAminoAcidTranslator().createSequence(_engine.getDnaRnaTranslator().createSequence(toTranslate)).getSequenceAsString();
+                throw new IllegalStateException("NT string was empty for: " + refNtId);
             }
+
+            DNASequence dna = new DNASequence(toTranslate, AmbiguityDNACompoundSet.getDNACompoundSet());
+            Sequence<NucleotideCompound> nts = isComplement ? dna.getReverseComplement() : dna;
+
+            return _engine.getRnaAminoAcidTranslator().createSequence(_engine.getDnaRnaTranslator().createSequence(nts)).getSequenceAsString();
         }
         catch (Exception e)
         {
             _log.error(e.getMessage() == null ? "There was an error" : e.getMessage(), e);
             throw e;
         }
-
-        return null;
     }
 }
