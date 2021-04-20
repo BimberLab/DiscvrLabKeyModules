@@ -96,50 +96,53 @@ public class SequenceTriggerHelper
 
     public String extractAASequence(int refNtId, List<List<Number>> exons, boolean isComplement)
     {
-        try
+        RefNtSequenceModel model = RefNtSequenceModel.getForRowId(refNtId);
+        if (model == null)
         {
-            RefNtSequenceModel model = RefNtSequenceModel.getForRowId(refNtId);
-            if (model == null)
+            return null;
+        }
+
+        StringWriter writer = new StringWriter();
+        for (List<Number> exon : exons)
+        {
+            if (exon.size() != 2)
             {
+                throw new IllegalArgumentException("Improper exon: " + StringUtils.join(exon, "-"));
+            }
+
+            //exons supplied as 1-based coordinates
+            try
+            {
+                model.writeSequence(writer, -1, exon.get(0).intValue(), exon.get(1).intValue());
+            }
+            catch (IOException e)
+            {
+                _log.error(e);
                 return null;
             }
+        }
 
-            StringWriter writer = new StringWriter();
-            for (List<Number> exon : exons)
-            {
-                if (exon.size() != 2)
-                {
-                    throw new IllegalArgumentException("Improper exon: " + StringUtils.join(exon, "-"));
-                }
+        String toTranslate = writer.toString();
+        if (StringUtils.isEmpty(toTranslate))
+        {
+            throw new IllegalStateException("NT string was empty for: " + refNtId);
+        }
 
-                //exons supplied as 1-based coordinates
-                try
-                {
-                    model.writeSequence(writer, -1, exon.get(0).intValue(), exon.get(1).intValue());
-                }
-                catch (IOException e)
-                {
-                    _log.error(e);
-                    return null;
-                }
-            }
-
-            String toTranslate = writer.toString();
-            if (StringUtils.isEmpty(toTranslate))
-            {
-                throw new IllegalStateException("NT string was empty for: " + refNtId);
-            }
-
-            DNASequence dna = new DNASequence(toTranslate, AmbiguityDNACompoundSet.getDNACompoundSet());
+        DNASequence dna = null;
+        Sequence<NucleotideCompound> rnaNts = null;
+        Sequence<AminoAcidCompound> aas = null;
+        try
+        {
+            dna = new DNASequence(toTranslate, AmbiguityDNACompoundSet.getDNACompoundSet());
             Sequence<NucleotideCompound> nts = isComplement ? dna.getReverseComplement() : dna;
 
-            Sequence<NucleotideCompound> rnaNts = _engine.getDnaRnaTranslator().createSequence(nts);
+            rnaNts = _engine.getDnaRnaTranslator().createSequence(nts);
             if (rnaNts == null)
             {
                 throw new IllegalArgumentException("Unable to create RNA from: " + dna.toString());
             }
 
-            Sequence<AminoAcidCompound> aas = _engine.getRnaAminoAcidTranslator().createSequence(rnaNts);
+            aas = _engine.getRnaAminoAcidTranslator().createSequence(rnaNts);
             if (aas == null)
             {
                 throw new IllegalArgumentException("Unable to create AA from: RNA" + rnaNts.toString() + " / DNA: " + dna.toString());
@@ -147,9 +150,24 @@ public class SequenceTriggerHelper
 
             return aas.getSequenceAsString();
         }
-        catch (Exception e)
+        catch (NullPointerException e)
         {
             _log.error(e.getMessage() == null ? "There was an error" : e.getMessage(), e);
+            if (dna != null)
+            {
+                _log.info("DNA: " + dna.toString());
+            }
+
+            if (rnaNts != null)
+            {
+                _log.info("RNA: " + rnaNts.toString());
+            }
+
+            if (aas != null)
+            {
+                _log.info("AA: " + aas.toString());
+            }
+
             throw e;
         }
     }
