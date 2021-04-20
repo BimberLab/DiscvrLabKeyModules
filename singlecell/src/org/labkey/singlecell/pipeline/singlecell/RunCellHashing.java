@@ -123,6 +123,6 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
     @Override
     public String getFileSuffix()
     {
-        return "hashing";
+        return "appendHashing";
     }
 }
