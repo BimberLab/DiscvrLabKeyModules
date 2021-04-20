@@ -62,7 +62,7 @@ function beforeUpsert(row, errors) {
     if (row.ref_nt_id && exonArray.length){
         row.isComplement = !!row.isComplement;
         var sequence = triggerHelper.extractAASequence(row.ref_nt_id, exonArray, row.isComplement);
-        if (sequence && lengthFromExons != sequence.length){
+        if (sequence && lengthFromExons !== sequence.length){
             addError(errors, 'sequence', 'The length of the sequence (' + sequence.length + ') does not match the exon boundaries (' + lengthFromExons + ')');
             return;
         }

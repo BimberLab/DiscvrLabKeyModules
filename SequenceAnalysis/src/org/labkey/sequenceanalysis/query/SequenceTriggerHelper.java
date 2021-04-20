@@ -95,38 +95,46 @@ public class SequenceTriggerHelper
 
     public String extractAASequence(int refNtId, List<List<Number>> exons, boolean isComplement)
     {
-        RefNtSequenceModel model = RefNtSequenceModel.getForRowId(refNtId);
-        if (model == null)
+        try
         {
-            return null;
-        }
-
-        StringWriter writer = new StringWriter();
-        for (List<Number> exon : exons)
-        {
-            if (exon.size() != 2)
+            RefNtSequenceModel model = RefNtSequenceModel.getForRowId(refNtId);
+            if (model == null)
             {
-                throw new IllegalArgumentException("Improper exon: " + StringUtils.join(exon, "-"));
-            }
-
-            //exons supplied as 1-based coordinates
-            try
-            {
-                model.writeSequence(writer, -1, exon.get(0).intValue(), exon.get(1).intValue());
-            }
-            catch (IOException e)
-            {
-                _log.error(e);
                 return null;
             }
+
+            StringWriter writer = new StringWriter();
+            for (List<Number> exon : exons)
+            {
+                if (exon.size() != 2)
+                {
+                    throw new IllegalArgumentException("Improper exon: " + StringUtils.join(exon, "-"));
+                }
+
+                //exons supplied as 1-based coordinates
+                try
+                {
+                    model.writeSequence(writer, -1, exon.get(0).intValue(), exon.get(1).intValue());
+                }
+                catch (IOException e)
+                {
+                    _log.error(e);
+                    return null;
+                }
+            }
+
+            if (writer.getBuffer().length() > 0)
+            {
+                DNASequence dna = new DNASequence(writer.getBuffer().toString(), AmbiguityDNACompoundSet.getDNACompoundSet());
+                Sequence<NucleotideCompound> toTranslate = isComplement ? dna.getReverseComplement() : dna;
+
+                return _engine.getRnaAminoAcidTranslator().createSequence(_engine.getDnaRnaTranslator().createSequence(toTranslate)).getSequenceAsString();
+            }
         }
-
-        if (writer.getBuffer().length() > 0)
+        catch (Exception e)
         {
-            DNASequence dna = new DNASequence(writer.getBuffer().toString(), AmbiguityDNACompoundSet.getDNACompoundSet());
-            Sequence<NucleotideCompound> toTranslate = isComplement ? dna.getReverseComplement() : dna;
-
-            return _engine.getRnaAminoAcidTranslator().createSequence(_engine.getDnaRnaTranslator().createSequence(toTranslate)).getSequenceAsString();
+            _log.error(e);
+            throw e;
         }
 
         return null;
