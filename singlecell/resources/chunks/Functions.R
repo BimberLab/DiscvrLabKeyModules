@@ -1,10 +1,18 @@
 # Binds arguments from the environment to the target function
-bindArgs <- function(fun, seuratObj) {
+bindArgs <- function(fun, seuratObj, allowableArgNames = NULL, disallowedArgNames = NULL) {
     boundArgs <- list()
     boundArgs[['seuratObj']] <- seuratObj
 
     for (name in names(formals(fun))) {
-        if (exists(name)) {
+        if (!is.null(disallowedArgNames) && (name %in% disallowedArgNames)) {
+            next
+        }
+        else if (!is.null(allowableArgNames)) {
+            if ((name %in% allowableArgNames) && exists(name)) {
+                boundArgs[[name]] <- get(name)
+            }
+        }
+        else if (exists(name)) {
             boundArgs[[name]] <- get(name)
         }
     }
