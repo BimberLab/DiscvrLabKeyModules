@@ -21,11 +21,10 @@ jobs:
           github_token: ${{ secrets.PAT }}
 
       - name: Publish Release
-
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.PAT }}"
+          automatic_release_tag: "latest"
           prerelease: true
-          title: "Release "
-          files: |
-            /home/runner/work/_temp/_github_home/lkDist/discvr/DISCVR-*
+          title: "Development Build: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}"
+          files: /home/runner/work/_temp/_github_home/lkDist/discvr/DISCVR-*
