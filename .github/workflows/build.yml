@@ -2,8 +2,8 @@ name: Build DISCVR
 on:
   workflow_dispatch:
   push:
-    branches:
-      - !latest
+    tags-ignore:
+      - latest
   pull_request:
 jobs:
   build-modules:
