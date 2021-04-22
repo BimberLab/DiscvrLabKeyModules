@@ -14,14 +14,6 @@ jobs:
     if: github.repository == 'BimberLab/DiscvrLabKeyModules'
     runs-on: ubuntu-latest
     steps:
-      - name: "Build DISCVR"
-        uses: bimberlabinternal/DevOps/githubActions/discvr-build@master
-        with:
-          artifactory_user: ${{secrets.artifactory_user}}
-          artifactory_password: ${{secrets.artifactory_password}}
-          # NOTE: permissions are limited on the default secrets.GITHUB_TOKEN, including updating workflows, so use a personal access token
-          github_token: ${{ secrets.PAT }}
-
       - name: "Find default branch"
         uses: octokit/request-action@v2.x
         id: get_default_branch
@@ -32,6 +24,22 @@ jobs:
 
       - name: "Print default branch"
         run: "echo 'Default branch: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'"
+
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        id: extract_branch
+
+      - name: "Build DISCVR"
+        uses: bimberlabinternal/DevOps/githubActions/discvr-build@master
+        with:
+          artifactory_user: ${{secrets.artifactory_user}}
+          artifactory_password: ${{secrets.artifactory_password}}
+          # NOTE: permissions are limited on the default secrets.GITHUB_TOKEN, including updating workflows, so use a personal access token
+          github_token: ${{ secrets.PAT }}
+        env:
+          # Only generate the distribution if this is the default branch
+          GENERATE_DIST: ${{ github.ref == '/refs/heads/'fromJson(steps.get_default_branch.outputs.data).default_branch && '1' || '0' }}
 
       - name: Publish Release
         if: github.ref == '/refs/heads/${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
