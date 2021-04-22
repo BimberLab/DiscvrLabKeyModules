@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Build DISCVR"
-        uses: bimberlabinternal/DevOps/githubActions/discvr-build@develop
+        uses: bimberlabinternal/DevOps/githubActions/discvr-build@master
         with:
           artifactory_user: ${{secrets.artifactory_user}}
           artifactory_password: ${{secrets.artifactory_password}}
@@ -23,7 +23,7 @@ jobs:
 
       - name: Upload Artifacts
         if: github.event_name == 'release' && github.event.action == 'created'
-        uses: skx/github-action-publish-binaries@develop
+        uses: skx/github-action-publish-binaries@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

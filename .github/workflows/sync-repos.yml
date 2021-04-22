@@ -1,4 +1,4 @@
-# Designed to keep master branch as a perfect copy of LabKey fork
+# Designed to keep develop branch as a perfect copy of LabKey fork
 name: Sync Repos
 
 on:
@@ -19,7 +19,7 @@ jobs:
           destination_branch_prefix: "discvr-"
           # NOTE: permissions are limited on the default secrets.GITHUB_TOKEN, including updating workflows, so use a personal access token
           github_token: ${{ secrets.PAT }}
-  sync-master:
+  sync-develop:
     if: github.repository == 'BimberLab/DiscvrLabKeyModules'
     runs-on: ubuntu-latest
     steps:
@@ -27,6 +27,6 @@ jobs:
         uses: bimberlabinternal/DevOps/githubActions/git-sync@master
         with:
           source_repo: "labkey/DiscvrLabKeyModules"
-          source_branch: "master"
-          destination_branch: "master"
+          source_branch: "develop"
+          destination_branch: "develop"
           github_token: ${{ secrets.PAT }}
