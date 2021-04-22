@@ -2,6 +2,8 @@ name: Build DISCVR
 on:
   workflow_dispatch:
   push:
+    branches:
+      - "*"
     tags-ignore:
       - latest
   pull_request:
@@ -20,7 +22,19 @@ jobs:
           # NOTE: permissions are limited on the default secrets.GITHUB_TOKEN, including updating workflows, so use a personal access token
           github_token: ${{ secrets.PAT }}
 
+      - name: "Find default branch"
+        uses: octokit/request-action@v2.x
+        id: get_default_branch
+        with:
+          route: GET /repos/${{ github.repository }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+
+      - name: "Print default branch"
+        run: "echo 'Default branch: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'"
+
       - name: Publish Release
+        if: github.ref == '/refs/heads/${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.PAT }}"
