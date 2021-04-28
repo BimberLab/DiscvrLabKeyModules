@@ -1,9 +1,9 @@
 # Current Implementation
 
-This branch is a temporary solution and should not be used for serious use as it breaks good code practice and is based on an outdated version of @labkey/build (v 0.5.0), and may cause long-term development issues. The code in this branch serves more as a record for reference during  development of a proper solution.
+This branch is a temporary solution and should not be used for serious use as it breaks good code practice and may cause long-term development issues. The code in this branch serves more as a record for reference during  development of a proper solution.
 
 ## Instructions
-1. Clone repo, checkout 21.4-jbrowse2-0.5.0 branch
+1. Clone repo, checkout 21.4-jbrowse2-2.1.0 branch
 2. In jbrowse, run "npm install"
 3. Replace the contents of jbrowse/node_modules/@labkey/build/webpack/dev.config.js with that of jbrowse/dev.config.js
 4. In jbrowse, run "npm run build"
