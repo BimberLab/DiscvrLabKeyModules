@@ -23,12 +23,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PAT }}
 
       - name: "Print default branch"
-        run: "echo 'Default branch: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'"
+        run: |
+          echo 'Default branch: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
+          echo "##[set-output name=branch;]$(echo '${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}')"
+        id: default-branch
 
       - name: Extract branch name
         shell: bash
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-        id: extract_branch
+        id: extract-branch
 
       - name: "Build DISCVR"
         uses: bimberlabinternal/DevOps/githubActions/discvr-build@master
@@ -39,7 +42,7 @@ jobs:
           github_token: ${{ secrets.PAT }}
         env:
           # Only generate the distribution if this is the default branch
-          GENERATE_DIST: ${{ github.ref == '/refs/heads/'fromJson(steps.get_default_branch.outputs.data).default_branch && '1' || '0' }}
+          GENERATE_DIST: ${{ default-branch.branch == extract-branch.branch && '1' || '0' }}
 
       - name: Publish Release
         if: github.ref == '/refs/heads/${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
