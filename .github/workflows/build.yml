@@ -42,7 +42,7 @@ jobs:
           github_token: ${{ secrets.PAT }}
         env:
           # Only generate the distribution if this is the default branch
-          GENERATE_DIST: ${{ default-branch.branch == extract-branch.branch && '1' || '0' }}
+          GENERATE_DIST: ${{ steps.default-branch.branch == steps.extract-branch.branch && '1' || '0' }}
 
       - name: Publish Release
         if: github.ref == '/refs/heads/${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
