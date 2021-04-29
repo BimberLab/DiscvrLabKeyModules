@@ -17,7 +17,13 @@
     "regenerator-runtime": "^0.13.7",
     "typescript": "^3.5.2",
     "node-polyfill-webpack-plugin": "1.1.0",
-    "node-loader": ""
+    "buffer": "",
+    "path-browserify": "",
+    "stream-browserify": "",
+    "browserify-zlib": "",
+    "vm-browserify": "",
+    "assert": "",
+    "util": ""
   },
   "devDependencies": {
     "@labkey/build": "2.1.0",
