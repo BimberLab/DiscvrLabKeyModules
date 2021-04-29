@@ -5,8 +5,8 @@
  */
  // COPY THIS FILE TO node_modules/@labkey/build/webpack/dev.config.js
 const lkModule = process.env.LK_MODULE;
-const entryPoints = require('../../../../src/client/entryPoints');
-const constants = require('./constants');
+const entryPoints = require('./src/client/entryPoints');
+const constants = require('./node_modules/@labkey/build/webpack/constants');
 const webpack = require('webpack');
 const NodePolyfillPlugin = require("node-polyfill-webpack-plugin")
 
