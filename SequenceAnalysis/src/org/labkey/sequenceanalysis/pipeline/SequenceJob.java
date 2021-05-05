@@ -26,6 +26,7 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.HasJobParams;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputTracker;
 import org.labkey.api.assay.AssayFileWriter;
+import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
@@ -103,12 +104,21 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         _taskPipelineId = taskPipelineId;
         _folderPrefix = folderPrefix;
         _webserverJobDir = createLocalDirectory(pipeRoot);
+
+        addCustomParams(params);
         _params = params;
+
         writeParameters(params);
 
         _folderFileRoot = c.isWorkbook()? PipelineService.get().findPipelineRoot(c.getParent()) : pipeRoot;
 
         setLogFile(_getLogFile());
+    }
+
+    protected void addCustomParams(JSONObject params)
+    {
+        params.put("serverBaseUrl", AppProps.getInstance().getBaseServerUrl());
+        params.put("labkeyFolderPath", getContainer().isWorkbook() ? getContainer().getParent().getPath() : getContainer().getPath());
     }
 
     private File _getLogFile() throws IOException
