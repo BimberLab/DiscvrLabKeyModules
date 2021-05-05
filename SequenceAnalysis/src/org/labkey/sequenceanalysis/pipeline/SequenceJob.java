@@ -117,7 +117,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
 
     protected void addCustomParams(JSONObject params)
     {
-        params.put("serverBaseUrl", AppProps.getInstance().getBaseServerUrl());
+        params.put("serverBaseUrl", AppProps.getInstance().getBaseServerUrl() + AppProps.getInstance().getContextPath());
         params.put("labkeyFolderPath", getContainer().isWorkbook() ? getContainer().getParent().getPath() : getContainer().getPath());
     }
 
