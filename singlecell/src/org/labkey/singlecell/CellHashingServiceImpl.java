@@ -492,20 +492,29 @@ public class CellHashingServiceImpl extends CellHashingService
             throw new PipelineJobException("html file was null");
         }
 
-        String description = String.format("Min Reads/Cell: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nNegative: %,d\nUnique HTOs: %s", parameters.minCountPerCell, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("negative"), callMap.get("UniqueHtos"));
+        File rawCounts = (File) callMap.get("rawCounts");
+        if (rawCounts == null)
+        {
+            throw new PipelineJobException("rawCounts file was null");
+        }
+
+        ctx.getFileManager().addIntermediateFile(rawCounts);
+
+        StringBuilder description = new StringBuilder();
+        description.append(String.format("Min Reads/Cell: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nNegative: %,d\nUnique HTOs: %s", parameters.minCountPerCell, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("negative"), callMap.get("UniqueHtos")));
         for (CALLING_METHOD x : CALLING_METHOD.values())
         {
             String value = "singlet." + x.name();
             if (callMap.containsKey(value))
             {
-                description = description + ",\n" + callMap.get(value);
+                description.append(",\n").append(callMap.get(value));
             }
         }
 
         if (parameters.createOutputFiles)
         {
-            output.addSequenceOutput(htoCalls, parameters.getBasename() + ": Cell Hashing Calls", parameters.outputCategory, parameters.getEffectiveReadsetId(), null, parameters.genomeId, description);
-            output.addSequenceOutput(html, parameters.getBasename() + ": Cell Hashing Report", parameters.outputCategory + ": Report", parameters.getEffectiveReadsetId(), null, parameters.genomeId, description);
+            output.addSequenceOutput(htoCalls, parameters.getBasename() + ": Cell Hashing Calls", parameters.outputCategory, parameters.getEffectiveReadsetId(), null, parameters.genomeId, description.toString());
+            output.addSequenceOutput(html, parameters.getBasename() + ": Cell Hashing Report", parameters.outputCategory + ": Report", parameters.getEffectiveReadsetId(), null, parameters.genomeId, description.toString());
         }
         else
         {
@@ -845,6 +854,13 @@ public class CellHashingServiceImpl extends CellHashingService
             }
             ret.put("html", html);
 
+            File rawCounts = new File(htoCalls.getPath().replaceAll(CALL_EXTENSION, ".rawCounts.rds"));
+            if (!rawCounts.exists())
+            {
+                throw new PipelineJobException("Unable to find expected counts file: " + rawCounts.getPath());
+            }
+            ret.put("rawCounts", rawCounts);
+
             return ret;
         }
         catch (IOException e)
@@ -921,10 +937,18 @@ public class CellHashingServiceImpl extends CellHashingService
         File htmlFile = new File(outputDir, basename + ".html");
         File localHtml = new File(localPipelineDir, htmlFile.getName());
 
+        File countFile = new File(outputDir, basename + ".rawCounts.rds");
+        File localCounts = new File(localPipelineDir, countFile.getName());
+
         // Note: if this job fails and then is resumed, having that pre-existing copy of the HTML can pose a problem
         if (localHtml.exists())
         {
             log.debug("Deleting pre-existing HTML file: " + localHtml.getPath());
+        }
+
+        if (localCounts.exists())
+        {
+            log.debug("Deleting pre-existing raw count file: " + localCounts.getPath());
         }
 
         File callsFile = new File(outputDir, basename + CALL_EXTENSION);
@@ -940,7 +964,7 @@ public class CellHashingServiceImpl extends CellHashingService
             String allowableBarcodeParam = allowableBarcodes != null ? "c('" + StringUtils.join(allowableBarcodes, "','") + "')" : "NULL";
 
             String skipNormalizationQcString = parameters.skipNormalizationQc ? "TRUE" : "FALSE";
-            writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', skipNormalizationQc = " + skipNormalizationQcString + ", methods = c('" + StringUtils.join(methodNames, "','") + "'))");
+            writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', rawCountsExport = '/work/" + countFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', skipNormalizationQc = " + skipNormalizationQcString + ", methods = c('" + StringUtils.join(methodNames, "','") + "'))");
             writer.println("print('Rmarkdown complete')");
 
         }
@@ -1033,12 +1057,18 @@ public class CellHashingServiceImpl extends CellHashingService
             {
                 try
                 {
-                    log.info("copying HTML file locally for easier debugging: " + localHtml.getPath());
+                    log.info("copying HTML and counts files locally for easier debugging: " + localHtml.getPath() + " and " + localCounts.getPath());
                     if (localHtml.exists())
                     {
                         localHtml.delete();
                     }
                     FileUtils.copyFile(htmlFile, localHtml);
+
+                    if (localCounts.exists())
+                    {
+                        localCounts.delete();
+                    }
+                    FileUtils.copyFile(countFile, localCounts);
                 }
                 catch (IOException e)
                 {
