@@ -3,7 +3,7 @@ if (!file.exists('/homeDir/.netrc')) {
     stop('Unable to find file: /homeDir/.netrc')
 }
 
-Rlabkey::labkey.setCurlOptions(NETRC_FILE = '/homeDir/.netrc')
+invisible(Rlabkey::labkey.setCurlOptions(NETRC_FILE = '/homeDir/.netrc'))
 Rdiscvr::SetLabKeyDefaults(baseUrl = serverBaseUrl, defaultFolder = defaultLabKeyFolder)
 
 for (datasetId in names(seuratObjects)) {
