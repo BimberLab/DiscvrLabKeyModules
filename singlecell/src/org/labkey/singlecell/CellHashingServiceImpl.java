@@ -498,7 +498,14 @@ public class CellHashingServiceImpl extends CellHashingService
             throw new PipelineJobException("rawCounts file was null");
         }
 
-        ctx.getFileManager().addIntermediateFile(rawCounts);
+        if (!parameters.retainRawCountFile)
+        {
+            ctx.getFileManager().addIntermediateFile(rawCounts);
+        }
+        else
+        {
+            ctx.getLogger().debug("Raw counts export will be retained");
+        }
 
         StringBuilder description = new StringBuilder();
         description.append(String.format("Min Reads/Cell: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nNegative: %,d\nUnique HTOs: %s", parameters.minCountPerCell, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("negative"), callMap.get("UniqueHtos")));
@@ -732,7 +739,9 @@ public class CellHashingServiceImpl extends CellHashingService
     {
         List<ToolParameterDescriptor> ret = new ArrayList<>(Arrays.asList(
             ToolParameterDescriptor.create("minCountPerCell", "Min Reads/Cell", null, "ldk-integerfield", null, 5),
-            ToolParameterDescriptor.create("skipNormalizationQc", "Skip Normalization QC", null, "checkbox", null, true)
+            ToolParameterDescriptor.create("skipNormalizationQc", "Skip Normalization QC", null, "checkbox", null, true),
+            ToolParameterDescriptor.create("retainRawCountFile", "Retain Raw Counts File", null, "checkbox", null, true)
+
         ));
 
         ret.add(ToolParameterDescriptor.create("methods", "Calling Methods", "The set of methods to use in calling.", "ldk-simplecombo", new JSONObject()

@@ -86,6 +86,7 @@ abstract public class CellHashingService
 
         public boolean createOutputFiles = true;
         public @Nullable String outputCategory;
+        public boolean retainRawCountFile = false;
 
         public Readset htoReadset;
         public Readset parentReadset;
@@ -108,6 +109,7 @@ abstract public class CellHashingService
             ret.type = type;
             ret.skipNormalizationQc = step.getProvider().getParameterByName("skipNormalizationQc").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, false);
             ret.minCountPerCell = step.getProvider().getParameterByName("minCountPerCell").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Integer.class, 3);
+            ret.retainRawCountFile = step.getProvider().getParameterByName("retainRawCountFile").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, true);
             ret.htoReadset = htoReadset;
             ret.parentReadset = parentReadset;
             ret.htoBarcodesFile = new File(ctx.getSourceDirectory(), type.getAllBarcodeFileName());
@@ -135,6 +137,7 @@ abstract public class CellHashingService
             ret.type = type;
             ret.skipNormalizationQc = params.optBoolean("skipNormalizationQc", false);
             ret.minCountPerCell = params.optInt("minCountPerCell", 3);
+            ret.retainRawCountFile = params.optBoolean("retainRawCountFile", true);
             ret.htoReadset = htoReadset;
             ret.parentReadset = parentReadset;
             ret.htoBarcodesFile = new File(webserverDir, type.getAllBarcodeFileName());
