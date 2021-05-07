@@ -165,7 +165,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
 
     private TableInfo createReadDataTable(TableInfo sourceTable, ContainerFilter cf)
     {
-        SimpleTable ret = new SimpleTable(this, sourceTable, cf).init();
+        SimpleTable ret = new SimpleTable<>(this, sourceTable, cf).init();
 
         if (ret.getColumn("totalForwardReads") == null)
         {
@@ -197,7 +197,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
 
     private TableInfo createReadsetsTable(TableInfo sourceTable, ContainerFilter cf)
     {
-        SimpleTable ret = new SimpleTable(this, sourceTable, cf).init();
+        SimpleTable ret = new SimpleTable<>(this, sourceTable, cf).init();
         if (ret.getColumn("files") == null)
         {
             WrappedColumn newCol = new WrappedColumn(ret.getColumn("rowid"), "files");
@@ -383,7 +383,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
 
     private TableInfo createRefSequencesTable(TableInfo sourceTable)
     {
-        SharedDataTable ret = new SharedDataTable(this, sourceTable);
+        SharedDataTable ret = new SharedDataTable<>(this, sourceTable);
         String chr = sourceTable.getSqlDialect().isPostgreSQL() ? "chr" : "char";
         SQLFragment sql = new SQLFragment("(SELECT ").append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("r.name"), true, true, chr + "(10)")).append(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS + " rm JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_LIBRARIES + " r ON (rm.library_id = r.rowid) WHERE rm.ref_nt_id = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
         ExprColumn newCol = new ExprColumn(ret, "genomes", sql, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
