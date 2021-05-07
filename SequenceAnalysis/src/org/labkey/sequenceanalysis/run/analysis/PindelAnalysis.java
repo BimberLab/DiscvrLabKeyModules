@@ -1,8 +1,11 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
 import au.com.bytecode.opencsv.CSVWriter;
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.reader.Readers;
@@ -227,11 +230,11 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         File outTsv = new File(outDir, FileUtil.getBaseName(inputBam) + ".pindel.txt");
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(outTsv), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
-            writer.writeNext(new String[]{"Type", "Contig", "Start", "End", "Depth", "ReadSupport", "Fraction", "Alt"});
-            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_D"), minFraction, minDepth, gatkDepth);
-            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_SI"), minFraction, minDepth, gatkDepth);
-            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_LI"), minFraction, minDepth, gatkDepth);
-            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_INV"), minFraction, minDepth, gatkDepth);
+            writer.writeNext(new String[]{"Type", "Contig", "Start", "End", "Depth", "ReadSupport", "Fraction", "Alt", "MeanFlankingCoverage", "LeadingCoverage", "TrailingCoverage"});
+            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_D"), minFraction, minDepth, gatkDepth, fasta);
+            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_SI"), minFraction, minDepth, gatkDepth, fasta);
+            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_LI"), minFraction, minDepth, gatkDepth, fasta);
+            parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_INV"), minFraction, minDepth, gatkDepth, fasta);
         }
         catch (IOException e)
         {
@@ -241,7 +244,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         return outTsv;
     }
 
-    private static void parsePindelOutput(PipelineContext ctx, CSVWriter writer, File pindelFile, double minFraction, int minDepth, File gatkDepthFile) throws IOException
+    private static void parsePindelOutput(PipelineContext ctx, CSVWriter writer, File pindelFile, double minFraction, int minDepth, File gatkDepthFile, File fasta) throws IOException
     {
         ctx.getLogger().info("inspecting file: " + pindelFile.getName());
 
@@ -271,6 +274,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                     String contig = tokens[3].split(" ")[1];
                     int start = Integer.parseInt(tokens[4].split(" ")[1]);
 
+                    // Capture depth before/after event:
                     int depth = getGatkDepth(ctx, gatkDepthFile, contig, start);
                     if (depth == 0)
                     {
@@ -278,15 +282,54 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                         continue;
                     }
 
+                    int i = 0;
+                    double leadingCoverage = 0.0;
+                    while (i < 20) {
+                        int pos = start - i;
+                        if (pos < 1)
+                        {
+                            break;
+                        }
+
+                        leadingCoverage += getGatkDepth(ctx, gatkDepthFile, contig, pos);
+                        i++;
+                    }
+
+                    leadingCoverage = leadingCoverage / i;
+
                     String alt = tokens[2].split(" ")[2];
                     alt = alt.replaceAll("\"", "");
 
-                    double pct = (double)support / depth;
+                    File dict = new File(fasta.getPath().replace("fasta", "dict"));
+                    if (!dict.exists())
+                    {
+                        throw new IOException("Unable to find file: "+ dict.getPath());
+                    }
+
+                    SAMSequenceDictionary extractor = SAMSequenceDictionaryExtractor.extractDictionary(dict.toPath());
+                    SAMSequenceRecord rec = extractor.getSequence(contig);
+
+                    int end = Integer.parseInt(tokens[5]);
+                    int j = 0;
+                    double trailingCoverage = 0.0;
+                    while (j < 20)
+                    {
+                        int pos = end + j;
+                        if (pos > rec.getSequenceLength())
+                        {
+                            break;
+                        }
+
+                        trailingCoverage += getGatkDepth(ctx, gatkDepthFile, contig, pos);
+                        j++;
+                    }
+
+                    double meanCoverage = (leadingCoverage + trailingCoverage) / 2.0;
+                    double pct = (double)support / meanCoverage;
                     if (pct >= minFraction)
                     {
-                        int end = Integer.parseInt(tokens[5]);
                         String type = tokens[1].split(" ")[0];
-                        writer.writeNext(new String[]{type, contig, String.valueOf(start), String.valueOf(end), String.valueOf(depth), String.valueOf(support), String.valueOf(pct), alt});
+                        writer.writeNext(new String[]{type, contig, String.valueOf(start), String.valueOf(end), String.valueOf(depth), String.valueOf(support), String.valueOf(pct), alt, String.valueOf(meanCoverage), String.valueOf(leadingCoverage), String.valueOf(trailingCoverage)});
                         totalPassing++;
                     }
                     else
