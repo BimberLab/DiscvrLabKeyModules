@@ -46,11 +46,9 @@ const clientConfig = {
         }
     },
 
-    plugins: [new webpack.ProvidePlugin({
-        regeneratorRuntime: 'regenerator-runtime',
-    }), new NodePolyfillPlugin()],
-};
-
-
+      plugins: [new webpack.ProvidePlugin({
+            regeneratorRuntime: 'regenerator-runtime'
+        }), new NodePolyfillPlugin()].concat(constants.processPlugins(entryPoints)),
+}
 
 module.exports = [clientConfig]
