@@ -324,6 +324,8 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                         j++;
                     }
 
+                    trailingCoverage = trailingCoverage / j;
+
                     double meanCoverage = (leadingCoverage + trailingCoverage) / 2.0;
                     double pct = (double)support / meanCoverage;
                     if (pct >= minFraction)
