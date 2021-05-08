@@ -621,7 +621,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                         continue;
                     }
 
-                    if (Double.parseDouble(line[6]) > 0.75)
+                    if (Double.parseDouble(line[6]) >= 0.5)
                     {
                         indelMap.put(line[0], indelMap.getOrDefault(line[0], 0) + 1);
                     }

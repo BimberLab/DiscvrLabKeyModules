@@ -230,7 +230,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         File outTsv = new File(outDir, FileUtil.getBaseName(inputBam) + ".pindel.txt");
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(outTsv), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
-            writer.writeNext(new String[]{"Type", "Contig", "Start", "End", "Depth", "ReadSupport", "Fraction", "Alt", "MeanFlankingCoverage", "LeadingCoverage", "TrailingCoverage"});
+            writer.writeNext(new String[]{"Type", "Contig", "Start", "End", "Depth", "ReadSupport", "Fraction", "Alt", "MeanFlankingCoverage", "LeadingCoverage", "TrailingCoverage", "EventCoverage"});
             parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_D"), minFraction, minDepth, gatkDepth, fasta);
             parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_SI"), minFraction, minDepth, gatkDepth, fasta);
             parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_LI"), minFraction, minDepth, gatkDepth, fasta);
@@ -326,12 +326,26 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
 
                     trailingCoverage = trailingCoverage / j;
 
+                    String type = tokens[1].split(" ")[0];
+                    Double eventCoverage = null;
+                    if ("D".equals(type))
+                    {
+                        eventCoverage = 0.0;
+                        int pos = start;
+                        while (pos < end)
+                        {
+                            pos++;
+                            eventCoverage += getGatkDepth(ctx, gatkDepthFile, contig, pos);
+                        }
+
+                        eventCoverage = eventCoverage / (end - start - 1);
+                    }
+
                     double meanCoverage = (leadingCoverage + trailingCoverage) / 2.0;
                     double pct = (double)support / meanCoverage;
                     if (pct >= minFraction)
                     {
-                        String type = tokens[1].split(" ")[0];
-                        writer.writeNext(new String[]{type, contig, String.valueOf(start), String.valueOf(end), String.valueOf(depth), String.valueOf(support), String.valueOf(pct), alt, String.valueOf(meanCoverage), String.valueOf(leadingCoverage), String.valueOf(trailingCoverage)});
+                        writer.writeNext(new String[]{type, contig, String.valueOf(start), String.valueOf(end), String.valueOf(depth), String.valueOf(support), String.valueOf(pct), alt, String.valueOf(meanCoverage), String.valueOf(leadingCoverage), String.valueOf(trailingCoverage), (eventCoverage == null ? "" : String.valueOf(eventCoverage))});
                         totalPassing++;
                     }
                     else
