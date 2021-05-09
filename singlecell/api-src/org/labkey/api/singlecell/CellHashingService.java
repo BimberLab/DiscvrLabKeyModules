@@ -97,6 +97,7 @@ abstract public class CellHashingService
         public List<CALLING_METHOD> methods = CALLING_METHOD.getDefaultMethods();
         public String basename = null;
         public Integer cells = 0;
+        public boolean keepMarkdown = false;
 
         private CellHashingParameters()
         {

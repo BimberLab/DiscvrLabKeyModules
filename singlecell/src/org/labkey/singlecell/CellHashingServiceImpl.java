@@ -472,7 +472,27 @@ public class CellHashingServiceImpl extends CellHashingService
         parameters.validate();
 
         String outputBasename = parameters.getBasename() + "." + parameters.type.name();
-        File callsFile = generateCellHashingCalls(rawCountMatrixDir, ctx.getOutputDir(), outputBasename, ctx.getLogger(), ctx.getSourceDirectory(), parameters);
+        File callsFile = getExpectedCallsFile(ctx.getOutputDir(), outputBasename);
+        File doneFile = new File(callsFile.getPath() + ".done");
+        if (!doneFile.exists())
+        {
+            callsFile = generateCellHashingCalls(rawCountMatrixDir, ctx.getOutputDir(), outputBasename, ctx.getLogger(), ctx.getSourceDirectory(), parameters);
+
+            try
+            {
+                FileUtils.touch(doneFile);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+        else
+        {
+            ctx.getLogger().debug("Calling has been performed, skipping");
+        }
+        ctx.getFileManager().addIntermediateFile(doneFile);
+
         if (!callsFile.exists())
         {
             throw new PipelineJobException("No hashing calls generated");
@@ -922,6 +942,11 @@ public class CellHashingServiceImpl extends CellHashingService
         return input;
     }
 
+    private File getExpectedCallsFile(File outputDir, String basename)
+    {
+        return new File(outputDir, basename + CALL_EXTENSION);
+    }
+
     public File generateCellHashingCalls(File citeSeqCountOutDir, File outputDir, String basename, Logger log, File localPipelineDir, CellHashingService.CellHashingParameters parameters) throws PipelineJobException
     {
         log.debug("generating final calls from folder: " + citeSeqCountOutDir.getPath());
@@ -960,8 +985,12 @@ public class CellHashingServiceImpl extends CellHashingService
             log.debug("Deleting pre-existing raw count file: " + localCounts.getPath());
         }
 
-        File callsFile = new File(outputDir, basename + CALL_EXTENSION);
+        File callsFile = getExpectedCallsFile(outputDir, basename);
         File metricsFile = getMetricsFile(callsFile);
+        if (metricsFile.exists())
+        {
+            metricsFile.delete();
+        }
 
         File localRScript = new File(outputDir, "generateCallsWrapper.R");
         try (PrintWriter writer = PrintWriters.getPrintWriter(localRScript))
@@ -1009,7 +1038,6 @@ public class CellHashingServiceImpl extends CellHashingService
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");
             writer.println("\t-w /work \\");
-            //writer.println("\t-e HOME=/homeDir \\");
             writer.println("\tghcr.io/bimberlab/cellhashr:latest \\");
             writer.println("\tRscript --vanilla " + localRScript.getName());
         }
