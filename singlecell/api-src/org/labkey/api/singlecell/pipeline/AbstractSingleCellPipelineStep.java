@@ -128,7 +128,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         return output;
     }
 
-    private File getExpectedMarkdownFile(SequenceOutputHandler.JobContext ctx, String outputPrefix)
+    protected File getExpectedMarkdownFile(SequenceOutputHandler.JobContext ctx, String outputPrefix)
     {
         return new File(ctx.getOutputDir(), outputPrefix + ".md");
     }

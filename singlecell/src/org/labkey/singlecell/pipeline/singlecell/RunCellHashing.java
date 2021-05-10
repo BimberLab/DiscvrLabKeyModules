@@ -7,13 +7,17 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.singlecell.CellHashingService;
+import org.labkey.api.singlecell.pipeline.AbstractSingleCellPipelineStep;
 import org.labkey.api.singlecell.pipeline.SingleCellOutput;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.singlecell.CellHashingServiceImpl;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,6 +100,7 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
                 params.cellBarcodeWhitelistFile = cellBarcodesParsed;
                 File existingCountMatrixUmiDir = CellHashingService.get().getExistingFeatureBarcodeCountDir(parentReadset, CellHashingService.BARCODE_TYPE.hashing, ctx.getSequenceSupport());
                 params.allowableHtoBarcodes = htosPerReadset;
+                params.keepMarkdown = true;
 
                 hashingCalls = CellHashingService.get().generateHashingCallsForRawMatrix(parentReadset, output, ctx, params, existingCountMatrixUmiDir);
             }
@@ -124,5 +129,29 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
     public String getFileSuffix()
     {
         return "appendHashing";
+    }
+
+    @Override
+    protected List<Chunk> addAdditionalChunks(SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, Map<Integer, File> countData) throws PipelineJobException
+    {
+        List<Chunk> ret = new ArrayList<>();
+        for (SeuratObjectWrapper so : inputObjects)
+        {
+            Readset rs = ctx.getSequenceSupport().getCachedReadset(so.getSequenceOutputFile().getReadset());
+            File callsFile = countData.get(so.getSequenceOutputFileId());
+
+            File markdown = new File(callsFile.getPath().replace(CellHashingServiceImpl.CALL_EXTENSION, ".md"));
+            if (!markdown.exists())
+            {
+                throw new PipelineJobException("Unable to find markdown file: " + markdown.getPath());
+            }
+
+            ret.add(new AbstractSingleCellPipelineStep.Chunk(null, "Cell Hashing: " + rs.getName(), null, Collections.emptyList(), "child='" + markdown.getName() + "'"));
+
+            ctx.getFileManager().addIntermediateFile(markdown);
+            ctx.getFileManager().addIntermediateFile(new File(markdown.getParentFile(), FileUtil.getBaseName(markdown.getName()) + "_files"));
+        }
+
+        return ret;
     }
 }
