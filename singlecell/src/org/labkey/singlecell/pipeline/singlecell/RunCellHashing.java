@@ -1,6 +1,8 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
+import org.apache.commons.io.FileUtils;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
@@ -12,9 +14,13 @@ import org.labkey.api.singlecell.pipeline.SingleCellOutput;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.singlecell.CellHashingServiceImpl;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -146,7 +152,34 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
                 throw new PipelineJobException("Unable to find markdown file: " + markdown.getPath());
             }
 
-            ret.add(new AbstractSingleCellPipelineStep.Chunk(null, "Cell Hashing: " + rs.getName(), null, Collections.emptyList(), "child='" + markdown.getName() + "'"));
+            //Add one more indentation to headers:
+            try
+            {
+                File updated = File.createTempFile("headerUpdate", ".md");
+                try (PrintWriter writer = PrintWriters.getPrintWriter(updated); BufferedReader reader = Readers.getReader(markdown))
+                {
+                    String line;
+                    while ((line = reader.readLine()) != null)
+                    {
+                        if (line.startsWith("#"))
+                        {
+                            line = "##" + line;
+                        }
+
+                        writer.println(line);
+                    }
+                }
+
+                markdown.delete();
+                FileUtils.moveFile(updated, markdown);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            ret.add(new AbstractSingleCellPipelineStep.Chunk(null, "Cell Hashing: " + rs.getName(), null, Collections.emptyList(), null));
+            ret.add(new AbstractSingleCellPipelineStep.Chunk(null, null, null, Collections.emptyList(), "child='" + markdown.getName() + "'"));
 
             ctx.getFileManager().addIntermediateFile(markdown);
             ctx.getFileManager().addIntermediateFile(new File(markdown.getParentFile(), FileUtil.getBaseName(markdown.getName()) + "_files"));
