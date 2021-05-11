@@ -216,6 +216,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             ret.add("    keep_md: true");
             ret.add("    gallery: true");
             ret.add("    lightbox: true");
+            ret.add("    toc_depth: 3");
             ret.add("    cache: false");
             ret.add("    df_print: paged");
 
