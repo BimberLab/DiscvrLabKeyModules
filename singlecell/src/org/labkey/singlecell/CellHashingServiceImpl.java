@@ -528,7 +528,8 @@ public class CellHashingServiceImpl extends CellHashingService
         }
 
         StringBuilder description = new StringBuilder();
-        description.append(String.format("Min Reads/Cell: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nNegative: %,d\nUnique HTOs: %s", parameters.minCountPerCell, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("negative"), callMap.get("UniqueHtos")));
+        String methods = parameters.methods.stream().map(CALLING_METHOD::name).collect(Collectors.joining(","));
+        description.append(String.format("Min Reads/Cell: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nNegative: %,d\nUnique HTOs: %s\nMethods: %s", parameters.minCountPerCell, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("negative"), callMap.get("UniqueHtos"), methods));
         for (CALLING_METHOD x : CALLING_METHOD.values())
         {
             String value = "singlet." + x.name();
