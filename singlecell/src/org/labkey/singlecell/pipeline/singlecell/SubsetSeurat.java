@@ -61,6 +61,11 @@ public class SubsetSeurat extends AbstractCellMembraneStep
     {
         ToolParameterDescriptor pd = getProvider().getParameterByName("expression");
         final String val = StringUtils.trimToNull(pd.extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()));
+        if (val == null)
+        {
+            throw new PipelineJobException("A blank subset was provided. This should have been caught upstream");
+        }
+
         final String[] values = val.split(",");
 
         List<String> ret = new ArrayList<>();
