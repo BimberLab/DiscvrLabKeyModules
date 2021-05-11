@@ -145,6 +145,10 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
         {
             Readset rs = ctx.getSequenceSupport().getCachedReadset(so.getSequenceOutputFile().getReadset());
             File callsFile = countData.get(so.getSequenceOutputFileId());
+            if (callsFile == null)
+            {
+                continue;
+            }
 
             File markdown = new File(callsFile.getPath().replace(CellHashingServiceImpl.CALL_EXTENSION, ".md"));
             if (!markdown.exists())
