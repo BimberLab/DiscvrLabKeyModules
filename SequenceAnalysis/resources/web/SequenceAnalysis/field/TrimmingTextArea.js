@@ -22,7 +22,7 @@ Ext4.define('SequenceAnalysis.field.TrimmingTextArea', {
     getErrors: function(value){
         var errors = this.callParent(arguments);
 
-        if (!this.allowBlank && this.getSubmitValue() == null) {
+        if (!this.allowBlank && Ext4.isEmpty(this.getSubmitValue())) {
             errors = errors.concat('Must enter a value');
         }
 
