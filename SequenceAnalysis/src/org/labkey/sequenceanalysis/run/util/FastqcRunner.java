@@ -370,7 +370,7 @@ public class FastqcRunner
         if (!commonsMath.exists())
         {
             File[] files = coreLibDir.listFiles();
-            String contents = files == null ? "null" : Arrays.stream(files).map(File::getName).filter(x -> x.contains("math")).collect(Collectors.joining(","));
+            String contents = files == null ? "null" : Arrays.stream(files).map(File::getName).filter(x -> x.contains("jar")).collect(Collectors.joining(","));
             throw new RuntimeException("Not found: " + commonsMath.getPath() + ", files present: " + contents);
         }
 
