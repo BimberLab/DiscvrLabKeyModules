@@ -9,7 +9,7 @@ import java.util.Collection;
 
 abstract public class AbstractRDiscvrStep extends AbstractSingleCellPipelineStep
 {
-    public static String CONTINAER_NAME = "ghcr.io/bimberlabinternal/rdiscvr:latest";
+    public static String CONTAINER_NAME = "ghcr.io/bimberlabinternal/rdiscvr:latest";
 
     public AbstractRDiscvrStep(PipelineStepProvider provider, PipelineContext ctx)
     {
@@ -25,6 +25,6 @@ abstract public class AbstractRDiscvrStep extends AbstractSingleCellPipelineStep
     @Override
     public String getDockerContainerName()
     {
-        return CONTINAER_NAME;
+        return CONTAINER_NAME;
     }
 }
