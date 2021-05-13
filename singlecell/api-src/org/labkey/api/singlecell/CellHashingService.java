@@ -281,8 +281,8 @@ abstract public class CellHashingService
         multiseq(true),
         htodemux(false),
         dropletutils(true),
-        bff_quantile(true);
-        //bff_rec(true);
+        bff_quantile(true),
+        bff_threshold(false);
 
         boolean isDefault;
 
