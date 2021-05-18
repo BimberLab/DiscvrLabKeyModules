@@ -20,6 +20,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
+import org.junit.Assert;
+import org.junit.Test;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJobService;
@@ -409,6 +411,19 @@ public class FastqcRunner
         params.add("uk.ac.babraham.FastQC.FastQCApplication");
 
         return params;
+    }
+
+    public static class TestCase extends Assert
+    {
+        @Test
+        public void testApacheJar() throws Exception
+        {
+            //This will error if JARs are not found:
+            FastqcRunner runner = new FastqcRunner(null);
+            List<String> params = runner.getBaseParams();
+
+            assertEquals("Incorrect params", 5, params.size());
+        }
     }
 }
 
