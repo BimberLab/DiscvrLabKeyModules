@@ -597,7 +597,6 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
         output.addIntermediateFile(outputVcfSnpEff);
         output.addIntermediateFile(new File(outputVcfSnpEff.getPath() + ".tbi"));
-        output.addSequenceOutput(loFreqAllVcf, "LoFreq: " + rs.getName(), CATEGORY, rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
         output.addSequenceOutput(coverageOut, "Depth of Coverage: " + rs.getName(), "Depth of Coverage", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
         output.addSequenceOutput(consensusFastaLoFreq, "Consensus: " + rs.getName(), "Viral Consensus Sequence", rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
 
@@ -608,10 +607,38 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         boolean runPangolinAndNextClade = getProvider().getParameterByName("runPangolin").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
         boolean runPindel = getProvider().getParameterByName("runPindel").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
 
+        Map<String, Integer> indelMap = new HashMap<>();
         if (runPindel)
         {
-            PindelAnalysis.runPindel(output, getPipelineCtx(), rs, outputDir, inputBam, referenceGenome.getWorkingFastaFile(), minFraction, minDepth, true, coverageOut, minInsertSize);
+            File pindelOutput = PindelAnalysis.runPindel(output, getPipelineCtx(), rs, outputDir, inputBam, referenceGenome.getWorkingFastaFile(), minFraction, minDepth, true, coverageOut, minInsertSize);
+            try (CSVReader reader = new CSVReader(Readers.getReader(pindelOutput), '\t'))
+            {
+                String[] line;
+                while ((line = reader.readNext()) != null)
+                {
+                    if (!("D".equals(line[0]) || "I".equals(line[0])))
+                    {
+                        continue;
+                    }
+
+                    if (Double.parseDouble(line[6]) >= 0.35)
+                    {
+                        indelMap.put(line[0], indelMap.getOrDefault(line[0], 0) + 1);
+                    }
+                }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            for (String type : indelMap.keySet())
+            {
+                description += "\nPindel " + type + ": " + indelMap.get(type);
+            }
         }
+
+        output.addSequenceOutput(loFreqAllVcf, "LoFreq: " + rs.getName(), CATEGORY, rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
 
         String[] pangolinData = null;
         if (runPangolinAndNextClade)
@@ -638,6 +665,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             writer.writeNext(new String[]{"LoFreq Analysis", "MeanCoverage", String.valueOf(avgDepth)});
             writer.writeNext(new String[]{"LoFreq Analysis", "FilteredVariantsRecovered", String.valueOf(filteredVariantsRecovered)});
             writer.writeNext(new String[]{"LoFreq Analysis", "ConsensusFilteredVariantsRecovered", String.valueOf(consensusFilteredVariantsRecovered)});
+            writer.writeNext(new String[]{"LoFreq Analysis", "HighFreqPindelCalls", String.valueOf(indelMap.isEmpty() ? 0 : indelMap.values().stream().mapToInt(Integer::intValue).sum())});
 
             if (pangolinData != null)
             {

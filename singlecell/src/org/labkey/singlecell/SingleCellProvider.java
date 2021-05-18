@@ -112,7 +112,8 @@ public class SingleCellProvider extends AbstractSequenceDataProvider
                 new SimpleSettingsItem(this, SingleCellSchema.NAME, "stim_types", NAME, "Peptides/Stims"),
                 new SimpleSettingsItem(this, SingleCellSchema.NAME, "assay_types", NAME, "Single Cell Assay Types"),
                 new SimpleSettingsItem(this, SingleCellSchema.NAME, SingleCellSchema.TABLE_CITE_SEQ_ANTIBODIES, NAME, "CITE-seq Antibodies"),
-                new SimpleSettingsItem(this, SingleCellSchema.NAME, SingleCellSchema.TABLE_CITE_SEQ_PANELS, NAME, "CITE-seq Panels")
+                new SimpleSettingsItem(this, SingleCellSchema.NAME, SingleCellSchema.TABLE_CITE_SEQ_PANELS, NAME, "CITE-seq Panels"),
+                new SimpleSettingsItem(this, SingleCellSchema.NAME, SingleCellSchema.TABLE_HASHING_LABELS, NAME, "Cell Hashing Labels")
         );
     }
 

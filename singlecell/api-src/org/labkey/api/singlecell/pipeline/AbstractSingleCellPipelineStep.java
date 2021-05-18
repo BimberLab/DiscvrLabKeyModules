@@ -128,7 +128,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         return output;
     }
 
-    private File getExpectedMarkdownFile(SequenceOutputHandler.JobContext ctx, String outputPrefix)
+    protected File getExpectedMarkdownFile(SequenceOutputHandler.JobContext ctx, String outputPrefix)
     {
         return new File(ctx.getOutputDir(), outputPrefix + ".md");
     }
@@ -216,6 +216,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             ret.add("    keep_md: true");
             ret.add("    gallery: true");
             ret.add("    lightbox: true");
+            ret.add("    toc_depth: 3");
             ret.add("    cache: false");
             ret.add("    df_print: paged");
 
@@ -322,6 +323,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         }
         else if ("sequenceanalysis-trimmingtextarea".equals(pd.getFieldXtype()))
         {
+            val = val.replace("'", "\'");
             String[] vals = val.split(",");
             return "c('" + StringUtils.join(vals, "','") + "')";
         }
@@ -450,11 +452,15 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                 out.println("");
                 out.println(extraText);
             }
+
             out.println("");
-            out.println("```{r " + (chunkName == null ? "" : chunkName) + (chunkOpts == null ? "" : ", " + chunkOpts) + "}");
-            bodyLines.forEach(out::println);
-            out.println("");
-            out.println("```");
+            if (chunkOpts != null || chunkName != null || !bodyLines.isEmpty())
+            {
+                out.println("```{r " + (chunkName == null ? "" : chunkName) + (chunkOpts == null ? "" : ", " + chunkOpts) + "}");
+                bodyLines.forEach(out::println);
+                out.println("");
+                out.println("```");
+            }
         }
     }
 

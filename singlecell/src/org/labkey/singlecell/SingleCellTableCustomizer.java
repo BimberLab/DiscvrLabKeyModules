@@ -36,6 +36,14 @@ public class SingleCellTableCustomizer extends AbstractTableCustomizer
             {
                 customizeCdnas(ti);
             }
+            else if (matches(ti, SingleCellSchema.NAME, SingleCellSchema.TABLE_HASHING_LABELS))
+            {
+                LDKService.get().applyNaturalSort(ti, "name");
+            }
+            else if (matches(ti, SingleCellSchema.NAME, SingleCellSchema.TABLE_CITE_SEQ_ANTIBODIES))
+            {
+                LDKService.get().applyNaturalSort(ti, "antibodyName");
+            }
         }
     }
 

@@ -29,13 +29,13 @@ public class SingleCellSchema
     public static final String TABLE_SAMPLES = "samples";
     public static final String TABLE_CDNAS = "cdna_libraries";
     public static final String TABLE_CITE_SEQ_ANTIBODIES = "citeseq_antibodies";
+    public static final String TABLE_HASHING_LABELS = "hashing_labels";
     public static final String TABLE_CITE_SEQ_PANELS = "citeseq_panels";
     public static final String TABLE_STIM_TYPES = "stim_types";
     public static final String TABLE_ASSAY_TYPES = "assay_types";
 
     public static final String SEQUENCE_SCHEMA_NAME = "sequenceanalysis";
     public static final String TABLE_READSETS = "sequence_readsets";
-    public static final String TABLE_BARCODES = "barcodes";
     public static final String TABLE_QUALITY_METRICS = "quality_metrics";
 
     public static SingleCellSchema getInstance()

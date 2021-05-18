@@ -11,8 +11,8 @@ for (datasetId in names(seuratObjects)) {
         seuratObj <- cellhashR::AppendCellHashing(seuratObj, barcodeCallFile = callFile, barcodePrefix = datasetId)
     } else {
         # Add empty columns to keep objects consistent
-        seuratObj$HTO <- c(NA)
-        seuratObj$consensuscall.global <- c(NA)
+        seuratObj$HTO <- c('NotUsed')
+        seuratObj$HTO.Classification <- c('NotUsed')
     }
 
     newSeuratObjects[[datasetId]] <- seuratObj
