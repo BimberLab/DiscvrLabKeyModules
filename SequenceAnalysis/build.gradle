@@ -67,3 +67,21 @@ if (project.findProject(BuildUtils.getTestProjectPath(project.gradle)) != null &
       dependsOn(createPipelineConfigTask)
    }
 }
+
+project.task("copyJars",
+        type: Copy,
+        group: "Build",
+        description: "Copy JARs to external directory",
+        { CopySpec copy ->
+           copy.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+           copy.from(project.configurations.external)
+           copy.into new File("${project.labkey.explodedModuleLibDir}")
+           copy.include {
+              "**commons-math3-**.jar"
+           }
+        }
+).doFirst({
+   
+})
+
+project.tasks.processModuleResources.dependsOn(project.tasks.copyJars)

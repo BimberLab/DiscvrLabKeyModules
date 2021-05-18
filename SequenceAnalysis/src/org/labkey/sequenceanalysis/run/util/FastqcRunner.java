@@ -353,11 +353,6 @@ public class FastqcRunner
         }
 
         File libDir = new File(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getExplodedPath(), "lib");
-        File coreLibDir = new File(ModuleLoader.getInstance().getModule("core").getExplodedPath(), "lib");
-        if (!coreLibDir.exists())
-        {
-            throw new RuntimeException("Not found: " + coreLibDir.getPath());
-        }
 
         File fastqcDir = new File(libDir.getParentFile(), "external/fastqc");
         File bzJar = new File(libDir, "bzip2-0.9.1.jar");
@@ -368,12 +363,10 @@ public class FastqcRunner
         if (!samJar.exists())
             throw new RuntimeException("Not found: " + samJar.getPath());
 
-        File commonsMath = new File(coreLibDir, "commons-math3-3.6.1.jar");
+        File commonsMath = new File(libDir, "commons-math3-3.6.1.jar");
         if (!commonsMath.exists())
         {
-            File[] files = coreLibDir.listFiles();
-            String contents = files == null ? "null" : Arrays.stream(files).map(File::getName).filter(x -> x.contains("jar")).collect(Collectors.joining(","));
-            throw new RuntimeException("Not found: " + commonsMath.getPath() + ", files present: " + contents);
+            throw new RuntimeException("Not found: " + commonsMath.getPath());
         }
 
         List<String> classPath = new ArrayList<>();
