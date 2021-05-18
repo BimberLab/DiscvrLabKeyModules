@@ -100,7 +100,8 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
     },{
         name: 'hto_library_conc',
         labels: ['HTO Library Conc', 'HTO Library Conc (ng/uL)', 'HTO (qubit) ng/uL', 'HTO (quibit) ng/uL', 'MultiSeq Library Conc', 'MultiSeq Library (qubit) ng/uL', 'MultiSeq Library Conc (qubit) ng/uL'],
-        allowRowSpan: true
+        allowRowSpan: true,
+        transform: 'citeSeqPanel'
     },{
         name: 'citeseqpanel',
         labels: ['Cite-Seq Panel', 'Cite-Seq Panel Name', 'CiteSeq Panel', 'citeseqpanel'],
@@ -211,6 +212,12 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             }
 
             return val;
+        },
+
+        citeSeqPanel: function(val, panel) {
+            if (val && val.toLower() === 'no') {
+                return null;
+            }
         },
 
         citeSeqTenXBarcode: function(val, panel){
@@ -858,7 +865,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             }
 
             var requireTCR = this.down('#requireTCR').getValue();
-            rs = this.processReadsetForGroup(poolName, rowArr, ret.readsetRows, 'tcr', 'TCR', 'RNA-seq, Single Cell', '10x 5\' VDJ (Rhesus A/B/G)');
+            rs = this.processReadsetForGroup(poolName, rowArr, ret.readsetRows, 'tcr', 'TCR', 'RNA-seq, Single Cell', '10x 5\' VDJ (Rhesus A/B/D/G)');
             if (Ext4.isString(rs)) {
                 readsetGUIDs.tcrReadsetGUID = rs;
             }
