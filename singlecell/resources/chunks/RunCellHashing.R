@@ -12,7 +12,7 @@ for (datasetId in names(seuratObjects)) {
     } else {
         # Add empty columns to keep objects consistent
         seuratObj$HTO <- c('NotUsed')
-        seuratObj$consensuscall.global <- c('NotUsed')
+        seuratObj$HTO.Classification <- c('NotUsed')
     }
 
     newSeuratObjects[[datasetId]] <- seuratObj
