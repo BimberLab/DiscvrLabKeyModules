@@ -35,9 +35,23 @@ function beforeUpsert(row, oldRow, errors){
     else if (['perLN', 'PerLN'].indexOf(row.population) !== -1){
         row.population = 'pLN';
     }
+    else if (['mesLN'].indexOf(row.population) !== -1){
+        row.population = 'MesLN';
+    }
+    else if (['Bone Marrow', 'BoneMarrow'].indexOf(row.population) !== -1){
+        row.population = 'Bone marrow';
+    }
 
+
+    //Tissue:
     if (['perLN', 'PerLN'].indexOf(row.tissue) !== -1){
         row.tissue = 'pLN';
+    }
+    else if (['mesLN'].indexOf(row.tissue) !== -1){
+        row.tissue = 'MesLN';
+    }
+    else if (['Bone Marrow', 'BoneMarrow'].indexOf(row.tissue) !== -1){
+        row.tissue = 'Bone marrow';
     }
 
     //Naive cells
