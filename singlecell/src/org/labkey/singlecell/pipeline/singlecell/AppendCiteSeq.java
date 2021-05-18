@@ -78,7 +78,7 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
     @Override
     public String getDockerContainerName()
     {
-        return AbstractCellMembraneStep.CONTINAER_NAME;
+        return AbstractCellMembraneStep.CONTAINER_NAME;
     }
 
     @Override

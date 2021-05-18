@@ -250,8 +250,11 @@ public class SequenceTaskHelper implements PipelineContext
 
     public static void logModuleVersions(Logger log)
     {
-        log.info("SequenceAnalysis Module Version: " + ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getReleaseVersion() + " (r" + (ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getVcsRevision()) + ")");
-        log.info("Pipeline Module Version: " + ModuleLoader.getInstance().getModule("pipeline").getReleaseVersion() + " (r" + (ModuleLoader.getInstance().getModule("pipeline").getVcsRevision()) + ")");
+        String vcs1 = ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getVcsRevision();
+        log.info("SequenceAnalysis Module Version: " + ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getReleaseVersion() + (StringUtils.isEmpty(vcs1) ? "" : " (r" + vcs1 + ")"));
+
+        String vcs2 = ModuleLoader.getInstance().getModule("pipeline").getVcsRevision();
+        log.info("Pipeline Module Version: " + ModuleLoader.getInstance().getModule("pipeline").getReleaseVersion() + (StringUtils.isEmpty(vcs2) ? "" : " (r" + vcs2 + ")"));
         log.debug("java.io.tmpDir: " + System.getProperty("java.io.tmpdir"));
         try
         {

@@ -28,10 +28,10 @@ public class SubsetSeurat extends AbstractCellMembraneStep
         public Provider()
         {
             super("SubsetSeurat", "Subset", "CellMembrane/Seurat", "The seurat object will be subset based on the expression below, which is passed directly to Seurat's subset(subset = X).", Arrays.asList(
-                    SeuratToolParameter.create("expression", "Expression", "Filter Expression(s)", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
+                    ToolParameterDescriptor.create("expression", "Expression", "Filter Expression(s)", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("allowBlank", false);
                         put("height", 150);
-                        put("delimiter", ",");
+                        put("delimiter", DELIM);
                     }}, null)
             ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
@@ -55,13 +55,19 @@ public class SubsetSeurat extends AbstractCellMembraneStep
     }
 
     final static String EXPRESSION = "<SUBSETS>";
+    final static String DELIM = "<>";
 
     @Override
     protected List<String> loadChunkFromFile() throws PipelineJobException
     {
         ToolParameterDescriptor pd = getProvider().getParameterByName("expression");
         final String val = StringUtils.trimToNull(pd.extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()));
-        final String[] values = val.split(",");
+        if (val == null)
+        {
+            throw new PipelineJobException("A blank subset was provided. This should have been caught upstream");
+        }
+
+        final String[] values = val.split(DELIM);
 
         List<String> ret = new ArrayList<>();
         for (String line : super.loadChunkFromFile())

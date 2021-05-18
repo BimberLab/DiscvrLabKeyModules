@@ -57,7 +57,7 @@ public class SingleCellModule extends ExtendedSimpleModule
     @Override
     public @Nullable Double getSchemaVersion()
     {
-        return 20.002;
+        return 20.004;
     }
 
     @Override
@@ -159,6 +159,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new CiteSeqDimReduxPca.Provider());
         SequencePipelineService.get().registerPipelineStep(new CiteSeqPlots.Provider());
         SequencePipelineService.get().registerPipelineStep(new PhenotypePlots.Provider());
+        SequencePipelineService.get().registerPipelineStep(new AppendMetadata.Provider());
     }
 
     @Override
