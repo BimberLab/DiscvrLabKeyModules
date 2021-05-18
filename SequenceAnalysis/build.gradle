@@ -71,7 +71,7 @@ if (project.findProject(BuildUtils.getTestProjectPath(project.gradle)) != null &
 project.task("copyJars",
         type: Copy,
         group: "Build",
-        description: "Copy JARs to external directory",
+        description: "Copy commons-math3 JAR to module's lib directory",
         { CopySpec copy ->
            copy.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE)
            copy.from(project.configurations.external)
@@ -80,8 +80,6 @@ project.task("copyJars",
               "**commons-math3-**.jar"
            }
         }
-).doFirst({
-   
-})
+)
 
 project.tasks.processModuleResources.dependsOn(project.tasks.copyJars)
