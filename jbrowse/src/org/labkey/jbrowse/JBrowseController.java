@@ -16,14 +16,17 @@
 
 package org.labkey.jbrowse;
 
+import com.google.gson.stream.JsonReader;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.MutatingApiAction;
@@ -45,12 +48,15 @@ import org.labkey.api.data.StopIteratingException;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.module.Module;
+import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
+import org.labkey.api.resource.FileResource;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.AdminOperationsPermission;
 import org.labkey.api.security.permissions.AdminPermission;
@@ -59,6 +65,7 @@ import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.Path;
 import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.UnauthorizedException;
@@ -67,11 +74,17 @@ import org.labkey.api.view.template.PageConfig;
 import org.labkey.jbrowse.model.Database;
 import org.labkey.jbrowse.model.JsonFile;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
+import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -81,6 +94,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+
+import java.nio.file.Files;
 
 public class JBrowseController extends SpringActionController
 {
@@ -704,4 +720,63 @@ public class JBrowseController extends SpringActionController
             _stop = stop;
         }
     }
+
+    public static class GetSessionForm
+    {
+        private String session;
+
+        public String getSession()
+        {
+            return session;
+        }
+
+        public void setSession(String session)
+        {
+            this.session = session;
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public class GetSessionAction extends ReadOnlyApiAction<GetSessionForm>
+    {
+        private static final String DEMO = "demo";
+
+        @Override
+        public void validateForm(GetSessionForm form, Errors errors)
+        {
+            if (StringUtils.isEmpty(form.getSession()))
+            {
+                errors.reject(ERROR_MSG, "Must provide the session Id");
+            }
+        }
+
+        @Override
+        public Object execute(GetSessionForm form, BindException errors) throws Exception
+        {
+            JSONObject resp;
+            if (DEMO.equalsIgnoreCase(form.getSession()))
+            {
+                Module module = ModuleLoader.getInstance().getModule(JBrowseModule.class);
+                FileResource r = (FileResource)module.getModuleResolver().lookup(Path.parse("external/minimalSession.json"));
+                File jsonFile = r.getFile();
+                if (jsonFile == null)
+                {
+                    throw new FileNotFoundException("Unable to find JSON file: external/minimalSession.json");
+                }
+
+
+                try (InputStream is = new FileInputStream(jsonFile))
+                {
+                    resp = new JSONObject(IOUtils.toString(is, StandardCharsets.UTF_8));
+                }
+            }
+            else
+            {
+                resp = null;
+            }
+
+            return new ApiSimpleResponse(resp);
+        }
+    }
 }
+
