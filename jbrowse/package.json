@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@jbrowse/react-linear-genome-view": "^1.1.0",
-    "@labkey/components": "2.14.0",
+    "@labkey/components": "2.13.0",
     "regenerator-runtime": "^0.13.7",
     "typescript": "^3.5.2",
     "node-polyfill-webpack-plugin": "1.1.0",
