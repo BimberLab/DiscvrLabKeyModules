@@ -43,6 +43,7 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.singlecell.run.CellRangerFeatureBarcodeHandler;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -82,12 +83,18 @@ public class CellHashingServiceImpl extends CellHashingService
     }
 
     @Override
-    public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing, final boolean failIfNoCiteSeq) throws PipelineJobException
+    public void prepareHashingIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing) throws PipelineJobException
     {
-        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashing, failIfNoCiteSeq, true);
+        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashing, false, true, true, false);
     }
 
-    public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing, final boolean failIfNoCiteSeq, final boolean cacheCountMatrixFiles) throws PipelineJobException
+    @Override
+    public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing, final boolean failIfNoCiteSeq) throws PipelineJobException
+    {
+        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashing, failIfNoCiteSeq, true, true, true);
+    }
+
+    public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing, final boolean failIfNoCiteSeq, final boolean cacheCountMatrixFiles, boolean requireValidHashingIfPresent, boolean requireValidCiteSeqIfPresent) throws PipelineJobException
     {
         Container target = job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer();
         UserSchema sequenceAnalysis = QueryService.get().getUserSchema(job.getUser(), target, SingleCellSchema.SEQUENCE_SCHEMA_NAME);
@@ -103,7 +110,7 @@ public class CellHashingServiceImpl extends CellHashingService
                 FieldKey.fromString("sortId/sampleId/stim"),
                 FieldKey.fromString("sortId/population"),
                 FieldKey.fromString("sortId/hto"),
-                FieldKey.fromString("sortId/hto/sequence"),
+                FieldKey.fromString("sortId/hto/adaptersequence"),
                 FieldKey.fromString("hashingReadsetId"),
                 FieldKey.fromString("hashingReadsetId/totalFiles"),
                 FieldKey.fromString("citeseqReadsetId"),
@@ -146,7 +153,7 @@ public class CellHashingServiceImpl extends CellHashingService
                             String.valueOf(results.getObject(FieldKey.fromString("hashingReadsetId")) == null ? "" : results.getInt(FieldKey.fromString("hashingReadsetId"))),
                             String.valueOf(results.getObject(FieldKey.fromString("hashingReadsetId/totalFiles")) != null && results.getInt(FieldKey.fromString("hashingReadsetId/totalFiles")) > 0),
                             results.getString(FieldKey.fromString("sortId/hto")),
-                            results.getString(FieldKey.fromString("sortId/hto/sequence")),
+                            results.getString(FieldKey.fromString("sortId/hto/adaptersequence")),
                             String.valueOf(results.getObject(FieldKey.fromString("citeseqReadsetId")) == null ? "" : results.getInt(FieldKey.fromString("citeseqReadsetId"))),
                             String.valueOf(results.getObject(FieldKey.fromString("citeseqReadsetId/totalFiles")) != null && results.getInt(FieldKey.fromString("citeseqReadsetId/totalFiles")) > 0),
                             results.getString(FieldKey.fromString("citeseqPanel"))
@@ -166,14 +173,14 @@ public class CellHashingServiceImpl extends CellHashingService
                         {
                             readsetToHashingMap.put(rs.getReadsetId(), results.getInt(FieldKey.fromString("hashingReadsetId")));
 
-                            String hto = results.getString(FieldKey.fromString("sortId/hto")) + "<>" + results.getString(FieldKey.fromString("sortId/hto/sequence"));
-                            if (!distinctHTOs.contains(hto) && !StringUtils.isEmpty(results.getString(FieldKey.fromString("sortId/hto/sequence"))))
+                            String hto = results.getString(FieldKey.fromString("sortId/hto")) + "<>" + results.getString(FieldKey.fromString("sortId/hto/adaptersequence"));
+                            if (!distinctHTOs.contains(hto) && !StringUtils.isEmpty(results.getString(FieldKey.fromString("sortId/hto/adaptersequence"))))
                             {
                                 distinctHTOs.add(hto);
-                                bcWriter.writeNext(new String[]{results.getString(FieldKey.fromString("sortId/hto/sequence")), results.getString(FieldKey.fromString("sortId/hto"))});
+                                bcWriter.writeNext(new String[]{results.getString(FieldKey.fromString("sortId/hto/adaptersequence")), results.getString(FieldKey.fromString("sortId/hto"))});
                             }
 
-                            if (results.getObject(FieldKey.fromString("sortId/hto/sequence")) == null)
+                            if (results.getObject(FieldKey.fromString("sortId/hto/adaptersequence")) == null)
                             {
                                 job.getLogger().error("Unable to find sequence for HTO: " + results.getString(FieldKey.fromString("sortId/hto")));
                                 hasError.set(true);
@@ -217,6 +224,7 @@ public class CellHashingServiceImpl extends CellHashingService
             HashMap<Integer, File> readsetToCountMap = new HashMap<>();
             if (distinctHTOs.size() > 1)
             {
+                Set<Integer> hashingToRemove = new HashSet<>();
                 readsetToHashingMap.forEach((readsetId, hashingReadsetId) -> {
                     if (cacheCountMatrixFiles)
                     {
@@ -226,7 +234,15 @@ public class CellHashingServiceImpl extends CellHashingService
                         TableSelector ts = new TableSelector(sequenceOutputs, filter, new org.labkey.api.data.Sort("-rowid"));
                         if (!ts.exists())
                         {
-                            throw new IllegalArgumentException("Unable to find existing count matrix for hashing readset: " + hashingReadsetId);
+                            if (requireValidHashingIfPresent)
+                            {
+                                throw new IllegalArgumentException("Unable to find existing count matrix for hashing readset: " + hashingReadsetId);
+                            }
+                            else
+                            {
+                                job.getLogger().warn("Unable to find existing count matrix for hashing readset: " + hashingReadsetId + ", skipping");
+                                hashingToRemove.add(readsetId);
+                            }
                         }
                         else
                         {
@@ -238,6 +254,8 @@ public class CellHashingServiceImpl extends CellHashingService
                     support.cacheReadset(hashingReadsetId, job.getUser());
 
                 });
+
+                hashingToRemove.forEach(readsetToHashingMap::remove);
             }
             else if (distinctHTOs.size() == 1)
             {
@@ -259,6 +277,7 @@ public class CellHashingServiceImpl extends CellHashingService
                 job.getLogger().info("distinct HTOs: " + distinctHTOs.size());
             }
 
+            Set<Integer> citeToRemove = new HashSet<>();
             readsetToCiteSeqMap.forEach((readsetId, citeseqReadsetId) -> {
                 if (cacheCountMatrixFiles)
                 {
@@ -268,7 +287,15 @@ public class CellHashingServiceImpl extends CellHashingService
                     TableSelector ts = new TableSelector(sequenceOutputs, filter, new org.labkey.api.data.Sort("-rowid"));
                     if (!ts.exists())
                     {
-                        throw new IllegalArgumentException("Unable to find existing count matrix for CITE-seq readset: " + citeseqReadsetId);
+                        if (requireValidCiteSeqIfPresent)
+                        {
+                            throw new IllegalArgumentException("Unable to find existing count matrix for CITE-seq readset: " + citeseqReadsetId);
+                        }
+                        else
+                        {
+                            job.getLogger().warn("Unable to find existing count matrix for CITE-seq readset: " + citeseqReadsetId + ", skipping");
+                            citeToRemove.add(readsetId);
+                        }
                     }
                     else
                     {
@@ -280,27 +307,42 @@ public class CellHashingServiceImpl extends CellHashingService
                 support.cacheReadset(citeseqReadsetId, job.getUser());
             });
 
+            citeToRemove.forEach(readsetToCiteSeqMap::remove);
+
             support.cacheObject(READSET_TO_HASHING_MAP, readsetToHashingMap);
             support.cacheObject(READSET_TO_CITESEQ_MAP, readsetToCiteSeqMap);
             support.cacheObject(READSET_TO_COUNTS_MAP, readsetToCountMap);
 
             //infer groups:
-            TableInfo hashtagOligos = QueryService.get().getUserSchema(job.getUser(), target, SingleCellSchema.NAME).getTable("hashtag_oligos");
+            TableInfo hashtagOligos = QueryService.get().getUserSchema(job.getUser(), target, SingleCellSchema.NAME).getTable(SingleCellSchema.TABLE_HASHING_LABELS);
             Set<String> uniqueHashtagGroups = new HashSet<>();
             for (String hto : distinctHTOs)
             {
                 String[] tokens = hto.split("<>");
-                SimpleFilter filter = new SimpleFilter(FieldKey.fromString("tag_name"), tokens[0]);
-                filter.addCondition(FieldKey.fromString("sequence"), tokens[1]);
+                SimpleFilter filter = new SimpleFilter(FieldKey.fromString("name"), tokens[0]);
+                filter.addCondition(FieldKey.fromString("adaptersequence"), tokens[1]);
 
-                TableSelector ts = new TableSelector(hashtagOligos, PageFlowUtil.set("group_name"), filter, null);
+                TableSelector ts = new TableSelector(hashtagOligos, PageFlowUtil.set("groupName"), filter, null);
                 if (ts.exists())
                 {
                     uniqueHashtagGroups.addAll(ts.getArrayList(String.class));
                 }
+                else
+                {
+                    throw new PipelineJobException("Unable to find group for HTO: " + hto);
+                }
             }
 
-            writeAllHashingBarcodes(uniqueHashtagGroups, job.getUser(), job.getContainer(), sourceDir);
+            if (!distinctHTOs.isEmpty() && uniqueHashtagGroups.isEmpty())
+            {
+
+                throw new PipelineJobException("No hashing groups found!");
+            }
+
+            if (!uniqueHashtagGroups.isEmpty())
+            {
+                writeAllHashingBarcodes(uniqueHashtagGroups, job.getUser(), job.getContainer(), sourceDir);
+            }
         }
         catch (IOException e)
         {
@@ -430,7 +472,27 @@ public class CellHashingServiceImpl extends CellHashingService
         parameters.validate();
 
         String outputBasename = parameters.getBasename() + "." + parameters.type.name();
-        File callsFile = generateCellHashingCalls(rawCountMatrixDir, ctx.getOutputDir(), outputBasename, ctx.getLogger(), ctx.getSourceDirectory(), parameters);
+        File callsFile = getExpectedCallsFile(ctx.getOutputDir(), outputBasename);
+        File doneFile = new File(callsFile.getPath() + ".done");
+        if (!doneFile.exists())
+        {
+            callsFile = generateCellHashingCalls(rawCountMatrixDir, ctx.getOutputDir(), outputBasename, ctx.getLogger(), ctx.getSourceDirectory(), parameters);
+
+            try
+            {
+                FileUtils.touch(doneFile);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+        else
+        {
+            ctx.getLogger().debug("Calling has been performed, skipping");
+        }
+        ctx.getFileManager().addIntermediateFile(doneFile);
+
         if (!callsFile.exists())
         {
             throw new PipelineJobException("No hashing calls generated");
@@ -450,20 +512,37 @@ public class CellHashingServiceImpl extends CellHashingService
             throw new PipelineJobException("html file was null");
         }
 
-        String description = String.format("Min Reads/Cell: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nNegative: %,d\nUnique HTOs: %s", parameters.minCountPerCell, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("negative"), callMap.get("UniqueHtos"));
+        File rawCounts = (File) callMap.get("rawCounts");
+        if (rawCounts == null)
+        {
+            throw new PipelineJobException("rawCounts file was null");
+        }
+
+        if (!parameters.retainRawCountFile)
+        {
+            ctx.getFileManager().addIntermediateFile(rawCounts);
+        }
+        else
+        {
+            ctx.getLogger().debug("Raw counts export will be retained");
+        }
+
+        StringBuilder description = new StringBuilder();
+        String methods = parameters.methods.stream().map(CALLING_METHOD::name).collect(Collectors.joining(","));
+        description.append(String.format("Min Reads/Cell: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nNegative: %,d\nUnique HTOs: %s\nMethods: %s", parameters.minCountPerCell, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("negative"), callMap.get("UniqueHtos"), methods));
         for (CALLING_METHOD x : CALLING_METHOD.values())
         {
             String value = "singlet." + x.name();
             if (callMap.containsKey(value))
             {
-                description = description + ",\n" + callMap.get(value);
+                description.append(",\n").append(callMap.get(value));
             }
         }
 
         if (parameters.createOutputFiles)
         {
-            output.addSequenceOutput(htoCalls, parameters.getBasename() + ": Cell Hashing Calls", parameters.outputCategory, parameters.getEffectiveReadsetId(), null, parameters.genomeId, description);
-            output.addSequenceOutput(html, parameters.getBasename() + ": Cell Hashing Report", parameters.outputCategory + ": Report", parameters.getEffectiveReadsetId(), null, parameters.genomeId, description);
+            output.addSequenceOutput(htoCalls, parameters.getBasename() + ": Cell Hashing Calls", parameters.outputCategory, parameters.getEffectiveReadsetId(), null, parameters.genomeId, description.toString());
+            output.addSequenceOutput(html, parameters.getBasename() + ": Cell Hashing Report", parameters.outputCategory + ": Report", parameters.getEffectiveReadsetId(), null, parameters.genomeId, description.toString());
         }
         else
         {
@@ -681,7 +760,9 @@ public class CellHashingServiceImpl extends CellHashingService
     {
         List<ToolParameterDescriptor> ret = new ArrayList<>(Arrays.asList(
             ToolParameterDescriptor.create("minCountPerCell", "Min Reads/Cell", null, "ldk-integerfield", null, 5),
-            ToolParameterDescriptor.create("skipNormalizationQc", "Skip Normalization QC", null, "checkbox", null, true)
+            ToolParameterDescriptor.create("skipNormalizationQc", "Skip Normalization QC", null, "checkbox", null, true),
+            ToolParameterDescriptor.create("retainRawCountFile", "Retain Raw Counts File", null, "checkbox", null, true)
+
         ));
 
         ret.add(ToolParameterDescriptor.create("methods", "Calling Methods", "The set of methods to use in calling.", "ldk-simplecombo", new JSONObject()
@@ -707,10 +788,11 @@ public class CellHashingServiceImpl extends CellHashingService
         File output = getAllHashingBarcodesFile(webserverDir);
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(output), ',', CSVWriter.NO_QUOTE_CHARACTER))
         {
-            TableInfo ti = QueryService.get().getUserSchema(u, c, SingleCellSchema.SEQUENCE_SCHEMA_NAME).getTable(SingleCellSchema.TABLE_BARCODES, null);
-            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("sequence", "tag_name"), new SimpleFilter(FieldKey.fromString("group_name"), groupNames, CompareType.IN), new org.labkey.api.data.Sort("tag_name"));
+            Container target = c.isWorkbook() ? c.getParent() : c;
+            TableInfo ti = QueryService.get().getUserSchema(u, target, SingleCellSchema.NAME).getTable(SingleCellSchema.TABLE_HASHING_LABELS, null);
+            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("adaptersequence", "name", "groupName", "barcodePattern"), new SimpleFilter(FieldKey.fromString("groupName"), groupNames, CompareType.IN), new org.labkey.api.data.Sort("name"));
             ts.forEachResults(rs -> {
-                writer.writeNext(new String[]{rs.getString(FieldKey.fromString("sequence")), rs.getString(FieldKey.fromString("tag_name"))});
+                writer.writeNext(new String[]{rs.getString(FieldKey.fromString("adaptersequence")), rs.getString(FieldKey.fromString("name")), rs.getString(FieldKey.fromString("groupName")), rs.getString(FieldKey.fromString("barcodePattern"))});
             });
         }
         catch (IOException e)
@@ -802,6 +884,13 @@ public class CellHashingServiceImpl extends CellHashingService
             }
             ret.put("html", html);
 
+            File rawCounts = new File(htoCalls.getPath().replaceAll(CALL_EXTENSION, ".rawCounts.rds"));
+            if (!rawCounts.exists())
+            {
+                throw new PipelineJobException("Unable to find expected counts file: " + rawCounts.getPath());
+            }
+            ret.put("rawCounts", rawCounts);
+
             return ret;
         }
         catch (IOException e)
@@ -854,6 +943,11 @@ public class CellHashingServiceImpl extends CellHashingService
         return input;
     }
 
+    private File getExpectedCallsFile(File outputDir, String basename)
+    {
+        return new File(outputDir, basename + CALL_EXTENSION);
+    }
+
     public File generateCellHashingCalls(File citeSeqCountOutDir, File outputDir, String basename, Logger log, File localPipelineDir, CellHashingService.CellHashingParameters parameters) throws PipelineJobException
     {
         log.debug("generating final calls from folder: " + citeSeqCountOutDir.getPath());
@@ -876,8 +970,28 @@ public class CellHashingServiceImpl extends CellHashingService
         }
 
         File htmlFile = new File(outputDir, basename + ".html");
-        File callsFile = new File(outputDir, basename + CALL_EXTENSION);
+        File localHtml = new File(localPipelineDir, htmlFile.getName());
+
+        File countFile = new File(outputDir, basename + ".rawCounts.rds");
+        File localCounts = new File(localPipelineDir, countFile.getName());
+
+        // Note: if this job fails and then is resumed, having that pre-existing copy of the HTML can pose a problem
+        if (localHtml.exists())
+        {
+            log.debug("Deleting pre-existing HTML file: " + localHtml.getPath());
+        }
+
+        if (localCounts.exists())
+        {
+            log.debug("Deleting pre-existing raw count file: " + localCounts.getPath());
+        }
+
+        File callsFile = getExpectedCallsFile(outputDir, basename);
         File metricsFile = getMetricsFile(callsFile);
+        if (metricsFile.exists())
+        {
+            metricsFile.delete();
+        }
 
         File localRScript = new File(outputDir, "generateCallsWrapper.R");
         try (PrintWriter writer = PrintWriters.getPrintWriter(localRScript))
@@ -889,7 +1003,8 @@ public class CellHashingServiceImpl extends CellHashingService
             String allowableBarcodeParam = allowableBarcodes != null ? "c('" + StringUtils.join(allowableBarcodes, "','") + "')" : "NULL";
 
             String skipNormalizationQcString = parameters.skipNormalizationQc ? "TRUE" : "FALSE";
-            writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', skipNormalizationQc = " + skipNormalizationQcString + ", methods = c('" + StringUtils.join(methodNames, "','") + "'))");
+            String keepMarkdown = parameters.keepMarkdown ? "TRUE" : "FALSE";
+            writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', rawCountsExport = '/work/" + countFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', skipNormalizationQc = " + skipNormalizationQcString + ", methods = c('" + StringUtils.join(methodNames, "','") + "'), keepMarkdown = " + keepMarkdown + ")");
             writer.println("print('Rmarkdown complete')");
 
         }
@@ -925,7 +1040,6 @@ public class CellHashingServiceImpl extends CellHashingService
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");
             writer.println("\t-w /work \\");
-            //writer.println("\t-e HOME=/homeDir \\");
             writer.println("\tghcr.io/bimberlab/cellhashr:latest \\");
             writer.println("\tRscript --vanilla " + localRScript.getName());
         }
@@ -940,20 +1054,60 @@ public class CellHashingServiceImpl extends CellHashingService
             throw new PipelineJobException("Unable to find HTML file: " + htmlFile.getPath());
         }
 
-        if (!callsFile.exists())
+        boolean callFileValid = callsFile.exists();
+        if (callFileValid)
+        {
+            try (BufferedReader reader = Readers.getReader(callsFile))
+            {
+                int lineIdx = 0;
+                String line;
+                while ((line = reader.readLine()) != null)
+                {
+                    lineIdx++;
+                    line = StringUtils.trimToNull(line);
+                    if (line == null)
+                    {
+                        callFileValid = false;
+                        break;
+                    }
+
+                    if (lineIdx == 1 && !line.startsWith("cellbarcode"))
+                    {
+                        callFileValid = false;
+                        break;
+                    }
+
+                    if (lineIdx > 1)
+                    {
+                        break;
+                    }
+                }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+
+        if (!callFileValid)
         {
             //copy HTML locally to make debugging easier:
             if (localPipelineDir != null)
             {
                 try
                 {
-                    File localHtml = new File(localPipelineDir, htmlFile.getName());
-                    log.info("copying HTML file locally for easier debugging: " + localHtml.getPath());
+                    log.info("copying HTML and counts files locally for easier debugging: " + localHtml.getPath() + " and " + localCounts.getPath());
                     if (localHtml.exists())
                     {
                         localHtml.delete();
                     }
                     FileUtils.copyFile(htmlFile, localHtml);
+
+                    if (localCounts.exists())
+                    {
+                        localCounts.delete();
+                    }
+                    FileUtils.copyFile(countFile, localCounts);
                 }
                 catch (IOException e)
                 {

@@ -94,6 +94,7 @@ import org.labkey.sequenceanalysis.run.analysis.HaplotypeCallerAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.ImmunoGenotypingAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.LofreqAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.MergeLoFreqVcfHandler;
+import org.labkey.sequenceanalysis.run.analysis.NextCladeHandler;
 import org.labkey.sequenceanalysis.run.analysis.PARalyzerAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.PangolinHandler;
 import org.labkey.sequenceanalysis.run.analysis.PindelAnalysis;
@@ -130,6 +131,7 @@ import org.labkey.sequenceanalysis.run.reference.DNAReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.SavedReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.VirusReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.util.CombineGVCFsHandler;
+import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.run.util.GenomicsDBAppendHandler;
 import org.labkey.sequenceanalysis.run.util.GenomicsDBImportHandler;
 import org.labkey.sequenceanalysis.run.variant.CombineVariantsHandler;
@@ -138,6 +140,7 @@ import org.labkey.sequenceanalysis.run.variant.GenotypeConcordanceStep;
 import org.labkey.sequenceanalysis.run.variant.GenotypeFiltrationStep;
 import org.labkey.sequenceanalysis.run.variant.MendelianViolationReportStep;
 import org.labkey.sequenceanalysis.run.variant.MultiAllelicPositionsHandler;
+import org.labkey.sequenceanalysis.run.variant.PlinkPcaStep;
 import org.labkey.sequenceanalysis.run.variant.SNPEffStep;
 import org.labkey.sequenceanalysis.run.variant.SampleRenameStep;
 import org.labkey.sequenceanalysis.run.variant.SelectSNVsStep;
@@ -178,7 +181,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
     @Override
     public Double getSchemaVersion()
     {
-        return 12.325;
+        return 12.328;
     }
 
     @Override
@@ -321,6 +324,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new VariantEvalBySampleStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new VariantsToTableStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new VariantQCStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new PlinkPcaStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new MendelianViolationReportStep.Provider());
 
         //handlers
@@ -349,6 +353,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new GenomicsDBAppendHandler());
         SequenceAnalysisService.get().registerFileHandler(new MergeLoFreqVcfHandler());
         SequenceAnalysisService.get().registerFileHandler(new PangolinHandler());
+        SequenceAnalysisService.get().registerFileHandler(new NextCladeHandler());
 
         SequenceAnalysisService.get().registerReadsetHandler(new MultiQCHandler());
 
@@ -472,7 +477,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
                 ProcessVariantsHandler.TestCase.class,
                 VariantProcessingJob.TestCase.class,
                 ScatterGatherUtils.TestCase.class,
-                ChainFileValidator.TestCase.class
+                ChainFileValidator.TestCase.class,
+                FastqcRunner.TestCase.class
         );
     }
 

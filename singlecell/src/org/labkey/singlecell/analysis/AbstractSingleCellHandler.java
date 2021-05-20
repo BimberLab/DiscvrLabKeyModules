@@ -9,14 +9,11 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
-import org.labkey.api.data.Container;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
-import org.labkey.api.query.DetailsURL;
-import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractResumer;
@@ -30,7 +27,6 @@ import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.pipeline.AbstractSingleCellPipelineStep;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.view.ActionURL;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.singlecell.CellHashingServiceImpl;
 import org.labkey.singlecell.SingleCellModule;
@@ -136,16 +132,22 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
         @Override
         public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            boolean requiresHashingOrCite = false;
+            boolean requiresHashing = false;
+            boolean requiresCite = false;
             List<PipelineStepCtx<SingleCellStep>> steps = SequencePipelineService.get().getSteps(ctx.getJob(), SingleCellStep.class);
             for (PipelineStepCtx<SingleCellStep> stepCtx : steps)
             {
                 SingleCellStep step = stepCtx.getProvider().create(ctx);
                 step.init(ctx, inputFiles);
 
-                if (step.requiresHashingOrCiteSeq())
+                if (step.requiresCiteSeq())
                 {
-                    requiresHashingOrCite = true;
+                    requiresCite = true;
+                }
+
+                if (step.requiresHashing())
+                {
+                    requiresHashing = true;
                 }
 
                 for (ToolParameterDescriptor pd : stepCtx.getProvider().getParameters())
@@ -159,9 +161,9 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 }
             }
 
-            if (requiresHashingOrCite)
+            if (requiresCite || requiresHashing)
             {
-                CellHashingService.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getSourceDirectory(), ctx.getJob(), ctx.getSequenceSupport(), "readsetId", false, false);
+                CellHashingServiceImpl.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getSourceDirectory(), ctx.getJob(), ctx.getSequenceSupport(), "readsetId", false, false, true, requiresHashing, requiresCite);
             }
         }
 
@@ -169,6 +171,19 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
         public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
 
+        }
+
+        @Override
+        public void complete(PipelineJob job, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated, SequenceAnalysisJobSupport support) throws PipelineJobException
+        {
+            for (SequenceOutputFile so : outputsCreated)
+            {
+                if ("Seurat Cell Hashing Calls".equals(so.getCategory()))
+                {
+                    job.getLogger().info("Adding metrics for output: " + so.getName());
+                    CellHashingService.get().processMetrics(so, job, true);
+                }
+            }
         }
 
         @Override
@@ -347,7 +362,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             File finalHtml = new File(ctx.getOutputDir(), "finalHtml.html");
             List<String> lines = new ArrayList<>();
             lines.add("rmarkdown::render(output_file = '" + finalHtml.getName() + "', input = '" + finalMarkdownFile.getName() + "', intermediates_dir  = '/work')");
-            AbstractSingleCellPipelineStep.executeR(ctx, AbstractCellMembraneStep.CONTINAER_NAME, "pandoc", lines);
+            AbstractSingleCellPipelineStep.executeR(ctx, AbstractCellMembraneStep.CONTAINER_NAME, "pandoc", lines);
             _resumer.getFileManager().addIntermediateFile(finalMarkdownFile);
             _resumer.getFileManager().addIntermediateFiles(_resumer.getMarkdownsInOrder());
             _resumer.getFileManager().addIntermediateFiles(_resumer.getHtmlFilesInOrder());

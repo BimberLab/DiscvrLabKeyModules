@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.biojava3.core.sequence.DNASequence;
 import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
 import org.biojava3.core.sequence.compound.AmbiguityRNACompoundSet;
+import org.biojava3.core.sequence.compound.AminoAcidCompound;
 import org.biojava3.core.sequence.compound.NucleotideCompound;
 import org.biojava3.core.sequence.template.Sequence;
 import org.biojava3.core.sequence.transcription.TranscriptionEngine;
@@ -121,14 +122,53 @@ public class SequenceTriggerHelper
             }
         }
 
-        if (writer.getBuffer().length() > 0)
+        String toTranslate = writer.toString();
+        if (StringUtils.isEmpty(toTranslate))
         {
-            DNASequence dna = new DNASequence(writer.getBuffer().toString(), AmbiguityDNACompoundSet.getDNACompoundSet());
-            Sequence<NucleotideCompound> toTranslate = isComplement ? dna.getReverseComplement() : dna;
-
-            return _engine.getRnaAminoAcidTranslator().createSequence(_engine.getDnaRnaTranslator().createSequence(toTranslate)).getSequenceAsString();
+            throw new IllegalStateException("NT string was empty for: " + refNtId);
         }
 
-        return null;
+        DNASequence dna = null;
+        Sequence<NucleotideCompound> rnaNts = null;
+        Sequence<AminoAcidCompound> aas = null;
+        try
+        {
+            dna = new DNASequence(toTranslate, AmbiguityDNACompoundSet.getDNACompoundSet());
+            Sequence<NucleotideCompound> nts = isComplement ? dna.getReverseComplement() : dna;
+
+            rnaNts = _engine.getDnaRnaTranslator().createSequence(nts);
+            if (rnaNts == null)
+            {
+                throw new IllegalArgumentException("Unable to create RNA from: " + dna.toString());
+            }
+
+            aas = _engine.getRnaAminoAcidTranslator().createSequence(rnaNts);
+            if (aas == null)
+            {
+                throw new IllegalArgumentException("Unable to create AA from: RNA" + rnaNts.toString() + " / DNA: " + dna.toString());
+            }
+
+            return aas.getSequenceAsString();
+        }
+        catch (NullPointerException e)
+        {
+            _log.error(e.getMessage() == null ? "There was an error" : e.getMessage(), e);
+            if (dna != null)
+            {
+                _log.info("DNA: " + dna.toString());
+            }
+
+            if (rnaNts != null)
+            {
+                _log.info("RNA: " + rnaNts.toString());
+            }
+
+            if (aas != null)
+            {
+                _log.info("AA: " + aas.toString());
+            }
+
+            throw e;
+        }
     }
 }

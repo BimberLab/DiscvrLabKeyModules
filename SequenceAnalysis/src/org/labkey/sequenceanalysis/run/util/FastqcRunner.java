@@ -20,6 +20,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
+import org.junit.Assert;
+import org.junit.Test;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJobService;
@@ -44,11 +46,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -349,7 +353,7 @@ public class FastqcRunner
         }
 
         File libDir = new File(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getExplodedPath(), "lib");
-        File coreLibDir = new File(ModuleLoader.getInstance().getModule("core").getExplodedPath(), "lib");
+
         File fastqcDir = new File(libDir.getParentFile(), "external/fastqc");
         File bzJar = new File(libDir, "bzip2-0.9.1.jar");
         if (!bzJar.exists())
@@ -359,7 +363,7 @@ public class FastqcRunner
         if (!samJar.exists())
             throw new RuntimeException("Not found: " + samJar.getPath());
 
-        File commonsMath = new File(coreLibDir, "commons-math3-3.6.1.jar");
+        File commonsMath = new File(libDir, "commons-math3-3.6.1.jar");
         if (!commonsMath.exists())
         {
             throw new RuntimeException("Not found: " + commonsMath.getPath());
@@ -400,6 +404,19 @@ public class FastqcRunner
         params.add("uk.ac.babraham.FastQC.FastQCApplication");
 
         return params;
+    }
+
+    public static class TestCase extends Assert
+    {
+        @Test
+        public void testApacheJar() throws Exception
+        {
+            //This will error if JARs are not found:
+            FastqcRunner runner = new FastqcRunner(null);
+            List<String> params = runner.getBaseParams();
+
+            assertEquals("Incorrect params", 5, params.size());
+        }
     }
 }
 

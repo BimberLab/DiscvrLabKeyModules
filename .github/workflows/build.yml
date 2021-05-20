@@ -3,7 +3,9 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - !latest
+      - "*"
+    tags-ignore:
+      - latest
   pull_request:
 jobs:
   build-modules:
@@ -12,6 +14,25 @@ jobs:
     if: github.repository == 'BimberLab/DiscvrLabKeyModules'
     runs-on: ubuntu-latest
     steps:
+      - name: "Find default branch"
+        uses: octokit/request-action@v2.x
+        id: get_default_branch
+        with:
+          route: GET /repos/${{ github.repository }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+
+      - name: "Print default branch"
+        run: |
+          echo 'Default branch: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
+          echo "##[set-output name=branch;]$(echo '${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}')"
+        id: default-branch
+
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        id: extract-branch
+
       - name: "Build DISCVR"
         uses: bimberlabinternal/DevOps/githubActions/discvr-build@master
         with:
@@ -19,13 +40,16 @@ jobs:
           artifactory_password: ${{secrets.artifactory_password}}
           # NOTE: permissions are limited on the default secrets.GITHUB_TOKEN, including updating workflows, so use a personal access token
           github_token: ${{ secrets.PAT }}
+        env:
+          # Only generate the distribution if this is the default branch
+          GENERATE_DIST: ${{ steps.default-branch.branch == steps.extract-branch.branch && '1' || '0' }}
 
       - name: Publish Release
-
+        if: github.ref == '/refs/heads/${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.PAT }}"
+          automatic_release_tag: "latest"
           prerelease: true
-          title: "Release "
-          files: |
-            /home/runner/work/_temp/_github_home/lkDist/discvr/DISCVR-*
+          title: "Development Build: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}"
+          files: /home/runner/work/_temp/_github_home/lkDist/discvr/DISCVR-*

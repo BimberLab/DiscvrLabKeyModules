@@ -19,7 +19,7 @@
            </properties>
        </column>
        <column name="created" />
-       <column name="readset/workbook" />
+       <column name="workbook" />
    </columns>
    <sorts>
        <sort column="readset" />

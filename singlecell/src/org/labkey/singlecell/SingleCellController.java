@@ -46,6 +46,7 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.RequiresPermission;
+import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
@@ -200,6 +201,7 @@ public class SingleCellController extends SpringActionController
             try (DbScope.Transaction transaction = DbScope.getLabKeyScope().ensureTransaction())
             {
                 BatchValidationException bve = new BatchValidationException();
+                validateBarcodes(readsetRows, getContainer(), getUser());
 
                 Map<String, Integer> sampleMap = new HashMap<>();
                 final List<Map<String, Object>> sampleRowsToInsert = new ArrayList<>();
@@ -308,9 +310,33 @@ public class SingleCellController extends SpringActionController
             {
                 _log.error(e);
 
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
             }
 
             return new ApiSimpleResponse("success", true);
+        }
+    }
+
+    private static void validateBarcodes(List<Map<String, Object>> readsetRows, Container c, User u)
+    {
+        Set<String> uniqueBarcodeNames = new HashSet<>();
+        readsetRows.forEach(rs -> {
+            if (rs.get("barcode5") != null) {
+                uniqueBarcodeNames.add((String.valueOf(rs.get("barcode5"))));
+            }
+        });
+
+        if (!uniqueBarcodeNames.isEmpty())
+        {
+            TableInfo barcodes = QueryService.get().getUserSchema(u, c, SingleCellSchema.SEQUENCE_SCHEMA_NAME).getTable("barcodes");
+            Set<String> foundTags = new HashSet<>(new TableSelector(barcodes, PageFlowUtil.set("tag_name"), new SimpleFilter(FieldKey.fromString("tag_name"), uniqueBarcodeNames, CompareType.IN), null).getArrayList(String.class));
+            if (foundTags.size() != uniqueBarcodeNames.size())
+            {
+                uniqueBarcodeNames.removeAll(foundTags);
+
+                throw new ApiUsageException("The following barcodes were not found: " + StringUtils.join(uniqueBarcodeNames, ","));
+            }
         }
     }
 
@@ -348,7 +374,7 @@ public class SingleCellController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public static class GetMatchingSamplesAction extends ReadOnlyApiAction<SimpleApiJsonForm>
     {
-        final List<String> FIELDS = Arrays.asList("sampleId", "sampledate", "subjectid", "celltype", "tissue", "assaytype");
+        final List<String> FIELDS = Arrays.asList("subjectId", "sampledate", "subjectid", "celltype", "tissue", "assaytype", "stim");
 
         @Override
         public Object execute(SimpleApiJsonForm form, BindException errors) throws Exception
@@ -393,6 +419,15 @@ public class SingleCellController extends SpringActionController
                         {
                             SimpleFilter sortFilter = new SimpleFilter(FieldKey.fromString("sampleId"), rowId);
                             sortFilter.addCondition(FieldKey.fromString("population"), r.get("population"));
+                            if (r.get("hto") == null)
+                            {
+                                sortFilter.addCondition(FieldKey.fromString("hto"), null, CompareType.ISBLANK);
+                            }
+                            else
+                            {
+                                sortFilter.addCondition(FieldKey.fromString("hto"), r.get("hto"));
+                            }
+
                             TableSelector tsSort = new TableSelector(tiSort, PageFlowUtil.set("rowId"), sortFilter, null);
                             long countSort = tsSort.getRowCount();
                             if (countSort == 1)

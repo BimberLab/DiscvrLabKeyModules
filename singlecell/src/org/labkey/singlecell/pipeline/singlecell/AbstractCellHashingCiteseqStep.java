@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +38,7 @@ abstract public class AbstractCellHashingCiteseqStep extends AbstractSingleCellP
             markdown.chunks = new ArrayList<>();
             markdown.chunks.add(createParamChunk(inputObjects, outputPrefix));
             markdown.chunks.add(createDataChunk(countData, ctx.getOutputDir()));
+            markdown.chunks.addAll(addAdditionalChunks(ctx, inputObjects, countData));
 
             markdown.chunks.addAll(getChunks());
             markdown.chunks.add(createFinalChunk());
@@ -49,6 +51,11 @@ abstract public class AbstractCellHashingCiteseqStep extends AbstractSingleCellP
         }
 
         return outfile;
+    }
+
+    protected List<Chunk> addAdditionalChunks(SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, Map<Integer, File> countData) throws PipelineJobException
+    {
+        return Collections.emptyList();
     }
 
     protected Chunk createDataChunk(Map<Integer, File> hashingData, File outputDir)
@@ -81,12 +88,6 @@ abstract public class AbstractCellHashingCiteseqStep extends AbstractSingleCellP
     protected String getRelativePath(File target, File outputDir)
     {
         return FileUtil.relativePath(outputDir.getPath(), target.getPath());
-    }
-
-    @Override
-    public boolean requiresHashingOrCiteSeq()
-    {
-        return true;
     }
 
     abstract protected Map<Integer, File> prepareCountData(SingleCellOutput output, SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException;

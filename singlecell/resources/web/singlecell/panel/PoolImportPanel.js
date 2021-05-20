@@ -100,7 +100,8 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
     },{
         name: 'hto_library_conc',
         labels: ['HTO Library Conc', 'HTO Library Conc (ng/uL)', 'HTO (qubit) ng/uL', 'HTO (quibit) ng/uL', 'MultiSeq Library Conc', 'MultiSeq Library (qubit) ng/uL', 'MultiSeq Library Conc (qubit) ng/uL'],
-        allowRowSpan: true
+        allowRowSpan: true,
+        transform: 'citeSeqPanel'
     },{
         name: 'citeseqpanel',
         labels: ['Cite-Seq Panel', 'Cite-Seq Panel Name', 'CiteSeq Panel', 'citeseqpanel'],
@@ -202,9 +203,21 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
 
                     return val;
                 }
+                else if (val && type === 'BioLegend') {
+                    val = String(val);
+                    if (val.indexOf('SI-NA') === -1) {
+                        val = 'SI-NA-' + val;
+                    }
+                }
             }
 
             return val;
+        },
+
+        citeSeqPanel: function(val, panel) {
+            if (val && val.toLower() === 'no') {
+                return null;
+            }
         },
 
         citeSeqTenXBarcode: function(val, panel){
@@ -256,12 +269,16 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                 else if (type === 'MultiSeq') {
                     return 'MS-' + val;
                 }
+                else if (type === 'BioLegend') {
+                    return 'BL-' + val;
+                }
             }
             else if (val) {
                 //Normalize hyphen use
                 val = String(val);
                 val = val.replace(/^MS(-)*/, 'MS-');
                 val = val.replace(/^HTO(-)*/, 'HTO-');
+                val = val.replace(/^BL(-)*/, 'BL-');
             }
 
             return val;
@@ -285,7 +302,8 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             if (val && !Ext4.isNumeric(val)) {
                 val = val.replace(/[^0-9]+/, '');
             }
-            if (workbook && Ext4.isNumeric(val) && workbook !== val){
+
+            if (workbook && Ext4.isNumeric(val)){
                 return workbook + '-' + val;
             }
 
@@ -491,11 +509,15 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             storeValues: ['SI-NA'],
             value: 'SI-NA'
         },{
-            xtype: 'ldk-simplecombo',
+            xtype: 'ldk-simplelabkeycombo',
             fieldLabel: 'Hashing Type',
             itemId: 'hashingType',
             forceSelection: true,
-            storeValues: ['CD298', 'MultiSeq'],
+            containerPath: Laboratory.Utils.getQueryContainerPath(),
+            schemaName: 'singlecell',
+            queryName: 'hashing_label_groups',
+            displayField: 'groupName',
+            valueField: 'groupName',
             value: 'MultiSeq'
         },{
             xtype: 'textarea',
@@ -553,6 +575,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                 tissue: r.tissue,
                 objectId: r.objectId,
                 population: r.population,
+                hto: r.hto,
                 workbook: r.workbook
             });
         }, this);
@@ -805,6 +828,9 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             else if (hashingType === 'MultiSeq'){
                 libraryType = 'MultiSeq';
             }
+            else if (hashingType === 'BioLegend'){
+                libraryType = 'BioLegend';
+            }
 
             var rs = this.processReadsetForGroup(poolName, rowArr, ret.readsetRows, 'hto', 'HTO', 'Cell Hashing', libraryType);
             if (Ext4.isString(rs)) {
@@ -839,7 +865,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             }
 
             var requireTCR = this.down('#requireTCR').getValue();
-            rs = this.processReadsetForGroup(poolName, rowArr, ret.readsetRows, 'tcr', 'TCR', 'RNA-seq, Single Cell', '10x 5\' VDJ (Rhesus A/B/G)');
+            rs = this.processReadsetForGroup(poolName, rowArr, ret.readsetRows, 'tcr', 'TCR', 'RNA-seq, Single Cell', '10x 5\' VDJ (Rhesus A/B/D/G)');
             if (Ext4.isString(rs)) {
                 readsetGUIDs.tcrReadsetGUID = rs;
             }
@@ -1021,7 +1047,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
     },
 
     getSampleKey: function(data){
-        return [data.sampleId, data.subjectId, data.sample, data.assaytype, data.tissue, (Ext4.isDate(data.sampleDate) ? Ext4.Date.format(data.sampleDate, 'Y-m-d') : data.sampleDate)].join('|');
+        return [data.sampleId, data.subjectId, data.stim, data.assaytype, data.tissue, (Ext4.isDate(data.sampleDate) ? Ext4.Date.format(data.sampleDate, 'Y-m-d') : data.sampleDate)].join('|');
     },
 
     getSortKey: function(data){

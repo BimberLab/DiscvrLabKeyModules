@@ -45,6 +45,8 @@ abstract public class CellHashingService
         _instance = instance;
     }
 
+    abstract public void prepareHashingIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing) throws PipelineJobException;
+
     abstract public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, boolean failIfNoHashing, boolean failIfNoCiteSeq) throws PipelineJobException;
 
     abstract public File generateHashingCallsForRawMatrix(Readset parentReadset, PipelineOutputTracker output, SequenceOutputHandler.JobContext ctx, CellHashingParameters parameters, File rawCountMatrixDir) throws PipelineJobException;
@@ -84,6 +86,7 @@ abstract public class CellHashingService
 
         public boolean createOutputFiles = true;
         public @Nullable String outputCategory;
+        public boolean retainRawCountFile = false;
 
         public Readset htoReadset;
         public Readset parentReadset;
@@ -94,6 +97,7 @@ abstract public class CellHashingService
         public List<CALLING_METHOD> methods = CALLING_METHOD.getDefaultMethods();
         public String basename = null;
         public Integer cells = 0;
+        public boolean keepMarkdown = false;
 
         private CellHashingParameters()
         {
@@ -106,6 +110,7 @@ abstract public class CellHashingService
             ret.type = type;
             ret.skipNormalizationQc = step.getProvider().getParameterByName("skipNormalizationQc").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, false);
             ret.minCountPerCell = step.getProvider().getParameterByName("minCountPerCell").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Integer.class, 3);
+            ret.retainRawCountFile = step.getProvider().getParameterByName("retainRawCountFile").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, true);
             ret.htoReadset = htoReadset;
             ret.parentReadset = parentReadset;
             ret.htoBarcodesFile = new File(ctx.getSourceDirectory(), type.getAllBarcodeFileName());
@@ -133,6 +138,7 @@ abstract public class CellHashingService
             ret.type = type;
             ret.skipNormalizationQc = params.optBoolean("skipNormalizationQc", false);
             ret.minCountPerCell = params.optInt("minCountPerCell", 3);
+            ret.retainRawCountFile = params.optBoolean("retainRawCountFile", true);
             ret.htoReadset = htoReadset;
             ret.parentReadset = parentReadset;
             ret.htoBarcodesFile = new File(webserverDir, type.getAllBarcodeFileName());
@@ -275,9 +281,8 @@ abstract public class CellHashingService
         multiseq(true),
         htodemux(false),
         dropletutils(true),
-        threshold(false),
-        peaknd(false),
-        seqnd(false);
+        bff_quantile(true),
+        bff_threshold(false);
 
         boolean isDefault;
 

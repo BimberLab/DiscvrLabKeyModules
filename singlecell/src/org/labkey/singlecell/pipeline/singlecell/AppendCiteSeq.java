@@ -58,6 +58,12 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
     }
 
     @Override
+    public boolean requiresCiteSeq()
+    {
+        return true;
+    }
+
+    @Override
     public String getFileSuffix()
     {
         return "cite";
@@ -72,7 +78,7 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
     @Override
     public String getDockerContainerName()
     {
-        return AbstractCellMembraneStep.CONTINAER_NAME;
+        return AbstractCellMembraneStep.CONTAINER_NAME;
     }
 
     @Override
