@@ -1,153 +1,78 @@
-import React from 'react'
+import React, {useState, useEffect} from 'react'
 //import 'fontsource-roboto'
 import {
   createViewState,
   createJBrowseTheme,
   JBrowseLinearGenomeView,
+  loadPlugins,
   ThemeProvider,
 } from '@jbrowse/react-linear-genome-view'
+import { PluginConstructor } from '@jbrowse/core/Plugin'
+import { Ajax, Utils, ActionURL } from '@labkey/api'
 
 const theme = createJBrowseTheme()
 
-const assembly = {
-  name: 'GRCh38',
-  sequence: {
-    type: 'ReferenceSequenceTrack',
-    trackId: 'GRCh38-ReferenceSequenceTrack',
-    adapter: {
-      type: 'BgzipFastaAdapter',
-      fastaLocation: {
-        uri:
-          'http://ftp.ensembl.org/pub/release-100/fasta/homo_sapiens/dna_index/Homo_sapiens.GRCh38.dna.toplevel.fa.gz',
-      },
-      faiLocation: {
-        uri:
-          'http://ftp.ensembl.org/pub/release-100/fasta/homo_sapiens/dna_index/Homo_sapiens.GRCh38.dna.toplevel.fa.gz.fai',
-      },
-      gziLocation: {
-        uri:
-          'http://ftp.ensembl.org/pub/release-100/fasta/homo_sapiens/dna_index/Homo_sapiens.GRCh38.dna.toplevel.fa.gz.gzi',
-      },
-    },
-  },
-  aliases: ['hg38'],
-  refNameAliases: {
-    adapter: {
-      type: 'RefNameAliasAdapter',
-      location: {
-        uri:
-          'https://s3.amazonaws.com/jbrowse.org/genomes/GRCh38/hg38_aliases.txt',
-      },
-    },
-  },
-}
 
-const tracks = [
-  {
-    type: 'FeatureTrack',
-    trackId: 'ncbi_refseq_109_hg38',
-    name: 'NCBI RefSeq (GFF3Tabix)',
-    assemblyNames: ['GRCh38'],
-    category: ['Annotation'],
-    adapter: {
-      type: 'Gff3TabixAdapter',
-      gffGzLocation: {
-        uri:
-          'https://s3.amazonaws.com/jbrowse.org/genomes/GRCh38/ncbi_refseq/GCA_000001405.15_GRCh38_full_analysis_set.refseq_annotation.sorted.gff.gz',
-      },
-      index: {
-        location: {
-          uri:
-            'https://s3.amazonaws.com/jbrowse.org/genomes/GRCh38/ncbi_refseq/GCA_000001405.15_GRCh38_full_analysis_set.refseq_annotation.sorted.gff.gz.tbi',
-        },
-      },
-    },
-  },
-]
 
-const defaultSession = {
-  name: 'My session',
-  view: {
-    id: 'linearGenomeView',
-    type: 'LinearGenomeView',
-    tracks: [
-      {
-        type: 'ReferenceSequenceTrack',
-        configuration: 'GRCh38-ReferenceSequenceTrack',
-        displays: [
-          {
-            type: 'LinearReferenceSequenceDisplay',
-            configuration:
-              'GRCh38-ReferenceSequenceTrack-LinearReferenceSequenceDisplay',
-          },
-        ],
-      },
-      {
-        type: 'FeatureTrack',
-        configuration: 'ncbi_refseq_109_hg38',
-        displays: [
-          {
-            type: 'LinearBasicDisplay',
-            configuration: 'ncbi_refseq_109_hg38-LinearBasicDisplay',
-          },
-        ],
-      },
-    ],
-  },
-}
+function generateViewState(genome){
+/* TODO - Fix plugin functionality
+  const [plugins, setPlugins] = useState<PluginConstructor[]>()
 
-function View() {
-  const state = createViewState({
-    assembly,
-    tracks,
-    location: '10:29,838,737..29,838,819',
-    defaultSession,
-  })
-  return (
-    <ThemeProvider theme={theme}>
-      <JBrowseLinearGenomeView viewState={state} />
-    </ThemeProvider>
-  )
-}
-
-export default View
-// In components/Browser.js
-/*
-import React from 'react'
-import {
-  createViewState,
-  createJBrowseTheme,
-  JBrowseLinearGenomeView,
-  ThemeProvider,
-} from '@jbrowse/react-linear-genome-view'
-
-const theme = createJBrowseTheme()
-
-const assembly = {
-  // configuration
-}
-
-const tracks = [
-  // configuration
-]
-
-const defaultSession = {
-  // configuration
-}
-
-function View() {
-  const state = createViewState({
-    assembly,
-    tracks,
-    location: '10:29,838,737..29,838,819',
-    defaultSession,
-  })
-  return (
-    <ThemeProvider theme={theme}>
-      <JBrowseLinearGenomeView viewState={state} />
-    </ThemeProvider>
-  )
-}
-
-export default View
+  useEffect(() => {
+    async function getPlugins() {
+      const loadedPlugins = await loadPlugins(genome.plugins)
+      setPlugins(loadedPlugins)
+    }
+    getPlugins()
+  }, [setPlugins])
 */
+  return createViewState({
+      assembly: genome.assembly ?? genome.assemblies,
+      tracks: genome.tracks,
+      configuration: genome.configuration,
+      //plugins: plugins,
+      location: genome.location,
+      defaultSession: genome.defaultSession,
+      onChange: genome.onChange
+  })
+
+}
+
+function View(){
+    const queryParam = new URLSearchParams(window.location.search);
+    const session = queryParam.get('session')
+
+    const [state, setState] = useState(null);
+    useEffect(() => {
+        Ajax.request({
+            url: ActionURL.buildURL('jbrowse', 'getSession.api'),
+            method: 'GET',
+            success: function(res){ // TODO - handle empty request better
+                setState(generateViewState(JSON.parse(res.response)));
+                console.log(res);
+            },
+            failure: function(res){
+                setState("invalid");
+                console.log(res);
+            },
+            params: {session: session}
+        });
+    }, []);
+
+    if(session === null){
+        return(<p>Error - no session provided.</p>)
+    }
+    else if (state === null){
+        return (<p>Loading...</p>)
+    }
+    else if (state == "invalid") {
+        return (<p>"Error fetching config. See console for more details"</p>)
+    }
+    return (
+      <ThemeProvider theme={theme}>
+          <JBrowseLinearGenomeView viewState={state} />
+      </ThemeProvider>
+    )
+}
+
+export default View

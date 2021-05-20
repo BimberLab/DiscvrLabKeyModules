@@ -2,21 +2,15 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import View from './Browser';
-require("regenerator-runtime/runtime")
+import { Ajax, Utils, ActionURL } from '@labkey/api'
+
+const queryParam = new URLSearchParams(window.location.search);
+const session = queryParam.get('session')
+
+
 // Need to wait for container element to be available in labkey wrapper before render
 window.addEventListener('DOMContentLoaded', (event) => {
-    ReactDOM.render(<View />, document.getElementById('app'));
+    //requestConfig(session)
+
+    ReactDOM.render(<View />, document.getElementById('app'))
 });
-
-
-/*
-// in pages/index.js
-import React, {lazy} from 'react'
-//import dynamic from 'next/dynamic'
-
-const Browser = lazy(() => import("./Browser"));
-//const Browser = dynamic(() => import('./Browser'), { ssr: false })
-
-window.addEventListener('DOMContentLoaded', (event) => {
-    ReactDOM.render(<Browser />, document.getElementById('app'));
-});*/
