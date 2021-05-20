@@ -5,9 +5,9 @@
   "scripts": {
     "setup": "npm ci",
     "build": "npm run build-dev",
-    "start": "cross-env NODE_ENV=development LK_MODULE_CONTAINER=DiscvrLabKeyModules LK_MODULE=jbrowse webpack-dev-server --config watch.config.js",
-    "build-dev": "npm run clean && cross-env NODE_ENV=development LK_MODULE_CONTAINER=DiscvrLabKeyModules LK_MODULE=jbrowse webpack --config dev.config.js --progress --profile",
-    "build-prod": "npm run clean && cross-env NODE_ENV=production PROD_SOURCE_MAP=source-map LK_MODULE_CONTAINER=DiscvrLabKeyModules LK_MODULE=jbrowse webpack --config prod.config.js --progress --profile --colors",
+    "start": "cross-env NODE_ENV=development LK_MODULE_CONTAINER=DiscvrLabKeyModules LK_MODULE=jbrowse webpack-dev-server --config config/watch.config.js",
+    "build-dev": "npm run clean && cross-env NODE_ENV=development LK_MODULE_CONTAINER=DiscvrLabKeyModules LK_MODULE=jbrowse webpack --config config/dev.config.js --progress --profile",
+    "build-prod": "npm run clean && cross-env NODE_ENV=production PROD_SOURCE_MAP=source-map LK_MODULE_CONTAINER=DiscvrLabKeyModules LK_MODULE=jbrowse webpack --config config/prod.config.js --progress --profile --colors",
     "clean": "rimraf resources/web/jbrowse/gen && rimraf resources/views/gen && rimraf resources/views/browser*",
     "test": "cross-env NODE_ENV=test jest"
   },
