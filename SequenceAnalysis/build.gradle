@@ -83,4 +83,4 @@ project.tasks.register("copyJars", Copy) {
    }
 
 project.tasks.module.dependsOn(project.tasks.copyJars)
-project.tasks.copyJars.mustRunAfter(project.tasks.populateExplodedLib)
+project.tasks.copyJars.mustRunAfter(project.tasks.processResources)
