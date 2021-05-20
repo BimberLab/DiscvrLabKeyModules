@@ -102,7 +102,7 @@ describe('JBrowse 2 Browser', () => {
 
 
     test('Renders browser if config provided', async () => {
-        jest.spyOn(URLSearchParams.prototype, "get").mockImplementation(() => "demo") // in theory this should set session to "demo" when queryParam.get is called.
+        jest.spyOn(URLSearchParams.prototype, "get").mockImplementation(() => "demo") // Set session to "demo" when queryParam.get is called.
 
         mockedRequest.request.mockReset();
         mockedRequest.request.mockImplementation(({ success }) => {

@@ -10,7 +10,5 @@ const session = queryParam.get('session')
 
 // Need to wait for container element to be available in labkey wrapper before render
 window.addEventListener('DOMContentLoaded', (event) => {
-    //requestConfig(session)
-
     ReactDOM.render(<View />, document.getElementById('app'))
 });
