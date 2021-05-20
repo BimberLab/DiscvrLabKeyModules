@@ -68,18 +68,19 @@ if (project.findProject(BuildUtils.getTestProjectPath(project.gradle)) != null &
    }
 }
 
-project.task("copyJars",
-        type: Copy,
-        group: "Build",
-        description: "Copy commons-math3 JAR to module's lib directory",
-        { CopySpec copy ->
-           copy.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE)
-           copy.from(project.configurations.external)
-           copy.into new File("${project.labkey.explodedModuleLibDir}")
-           copy.include {
+project.tasks.register("copyJars", Copy) {
+   Copy copy ->
+        { CopySpec copySpec ->
+           copySpec.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+           copySpec.from(project.configurations.external)
+           copySpec.into new File("${project.labkey.explodedModuleLibDir}")
+           copySpec.include {
               "**commons-math3-**.jar"
            }
         }
-)
+      copy.setGroup("Build")
+      copy.setDescription("Copy commons-math3 JAR to module's lib directory")
+   }
 
-project.tasks.processModuleResources.dependsOn(project.tasks.copyJars)
+project.tasks.module.dependsOn(project.tasks.copyJars)
+project.tasks.copyJars.mustRunAfter(project.tasks.populateExplodedLib)
