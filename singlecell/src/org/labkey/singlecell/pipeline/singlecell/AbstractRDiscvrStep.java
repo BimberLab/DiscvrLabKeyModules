@@ -7,11 +7,11 @@ import org.labkey.api.util.PageFlowUtil;
 
 import java.util.Collection;
 
-abstract public class AbstractCellMembraneStep extends AbstractSingleCellPipelineStep
+abstract public class AbstractRDiscvrStep extends AbstractSingleCellPipelineStep
 {
-    public static String CONTAINER_NAME = "ghcr.io/bimberlabinternal/cellmembrane:latest";
+    public static String CONTAINER_NAME = "ghcr.io/bimberlabinternal/rdiscvr:latest";
 
-    public AbstractCellMembraneStep(PipelineStepProvider provider, PipelineContext ctx)
+    public AbstractRDiscvrStep(PipelineStepProvider provider, PipelineContext ctx)
     {
         super(provider, ctx);
     }
@@ -19,7 +19,7 @@ abstract public class AbstractCellMembraneStep extends AbstractSingleCellPipelin
     @Override
     public Collection<String> getRLibraries()
     {
-        return PageFlowUtil.set("CellMembrane");
+        return PageFlowUtil.set("Rdiscvr");
     }
 
     @Override

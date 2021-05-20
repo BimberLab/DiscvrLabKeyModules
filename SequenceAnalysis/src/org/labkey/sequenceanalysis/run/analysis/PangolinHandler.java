@@ -3,6 +3,7 @@ package org.labkey.sequenceanalysis.run.analysis;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.util.IOUtil;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
@@ -30,6 +31,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
@@ -192,6 +194,11 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         wrapper.execute(Arrays.asList("/bin/bash", pangolin.getPath()));
     }
 
+    public static File getRenamedPangolinOutput(File consensusFasta)
+    {
+        return new File(consensusFasta.getParentFile(), FileUtil.getBaseName(consensusFasta) + ".pandolin.csv");
+    }
+
     public static String[] runPangolin(File consensusFasta, Logger log, PipelineOutputTracker tracker) throws PipelineJobException
     {
         SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
@@ -211,17 +218,21 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
             throw new PipelineJobException("Pangolin output not found: " + output.getPath());
         }
 
-        tracker.addIntermediateFile(output);
-        try (CSVReader reader = new CSVReader(Readers.getReader(output)))
+        try
         {
-            reader.readNext(); //header
-            String[] line = reader.readNext();
+            File outputMoved = getRenamedPangolinOutput(consensusFasta);
+            FileUtils.moveFile(output, outputMoved);
+            try (CSVReader reader = new CSVReader(Readers.getReader(outputMoved)))
+            {
+                reader.readNext(); //header
+                String[] line = reader.readNext();
 
-            return line;
+                return line;
+            }
         }
         catch (IOException e)
         {
-            throw new PipelineJobException();
+            throw new PipelineJobException(e);
         }
     }
 }

@@ -20,17 +20,38 @@ function beforeUpsert(row, oldRow, errors){
         row.well = row.well.toUpperCase();
     }
 
-    if (['TNF+', 'TNF Pos', 'CD69/TNF', 'CD69+/TNF+', 'CD69-Pos/TNF-Pos', 'CD69/TNFa', 'TNF+/CD69+'].indexOf(row.population) !== -1){
+    if (['TNF+', 'TNF Pos', 'CD69/TNF', 'CD69+/TNF+', 'CD69-Pos/TNF-Pos', 'CD69/TNFa', 'TNF+/CD69+', 'CD69+/TNFa+'].indexOf(row.population) !== -1){
         row.population = 'TNF-Pos';
     }
     else if (['TNF-', 'CD69-/TNF-', 'TNF Neg', 'CD69-Neg/TNF-Neg'].indexOf(row.population) !== -1){
         row.population = 'TNF-Neg';
     }
-    else if (['Bulk CD8', 'Bulk CD8 T-cells', 'Bulk-CD8', 'CD8+', 'CD8', 'CD8s'].indexOf(row.population) !== -1){
+    else if (['Bulk CD8', 'Bulk CD8 T-cells', 'Bulk-CD8', 'CD8+', 'CD8', 'CD8s', 'BULK CD8'].indexOf(row.population) !== -1){
         row.population = 'Bulk CD8s';
     }
     else if (['CD8-CD69-Pos', 'CD69-Pos/TNF-Neg', 'TNF-/CD69+', 'CD69+', 'CD69+/TNF-'].indexOf(row.population) !== -1){
         row.population = 'CD69-Pos';
+    }
+    else if (['perLN', 'PerLN'].indexOf(row.population) !== -1){
+        row.population = 'pLN';
+    }
+    else if (['mesLN'].indexOf(row.population) !== -1){
+        row.population = 'MesLN';
+    }
+    else if (['Bone Marrow', 'BoneMarrow'].indexOf(row.population) !== -1){
+        row.population = 'Bone marrow';
+    }
+
+
+    //Tissue:
+    if (['perLN', 'PerLN'].indexOf(row.tissue) !== -1){
+        row.tissue = 'pLN';
+    }
+    else if (['mesLN'].indexOf(row.tissue) !== -1){
+        row.tissue = 'MesLN';
+    }
+    else if (['Bone Marrow', 'BoneMarrow'].indexOf(row.tissue) !== -1){
+        row.tissue = 'Bone marrow';
     }
 
     //Naive cells

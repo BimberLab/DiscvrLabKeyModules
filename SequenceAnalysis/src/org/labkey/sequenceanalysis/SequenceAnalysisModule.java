@@ -131,6 +131,7 @@ import org.labkey.sequenceanalysis.run.reference.DNAReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.SavedReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.VirusReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.util.CombineGVCFsHandler;
+import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.run.util.GenomicsDBAppendHandler;
 import org.labkey.sequenceanalysis.run.util.GenomicsDBImportHandler;
 import org.labkey.sequenceanalysis.run.variant.CombineVariantsHandler;
@@ -476,7 +477,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
                 ProcessVariantsHandler.TestCase.class,
                 VariantProcessingJob.TestCase.class,
                 ScatterGatherUtils.TestCase.class,
-                ChainFileValidator.TestCase.class
+                ChainFileValidator.TestCase.class,
+                FastqcRunner.TestCase.class
         );
     }
 
