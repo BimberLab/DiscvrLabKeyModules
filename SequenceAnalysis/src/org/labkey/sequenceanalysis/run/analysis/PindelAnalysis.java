@@ -376,10 +376,12 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                             ref = sequence.getBaseString().substring(basePriorToStart-1, trueEnd);
                             alt = sequence.getBaseString().substring(basePriorToStart-1, basePriorToStart);
 
-                            String predictedPindelAllele = ref + pindelAllele;
+                            // Pindel reports the region over the deletion. so add the leading base to match the reference (VCF-style)
+                            // Our sequence based on coordinates should match what pindel reported
+                            String predictedPindelAllele = alt + pindelAllele;
                             if (!predictedPindelAllele.equals(ref))
                             {
-                                throw new IllegalArgumentException("Unexpected pindel allele: " + ref + " / " + predictedPindelAllele);
+                                throw new IllegalArgumentException("Unexpected pindel allele: " + ref + " / " + predictedPindelAllele + " / " + pindelAllele);
                             }
                         }
 
