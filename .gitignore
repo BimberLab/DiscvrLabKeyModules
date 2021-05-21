@@ -11,3 +11,6 @@
 
 # Ignore labkey-npm build artifacts
 **/gen/**
+
+# Ignore MacOS .DS_Store artifacts
+**/.DS_Store
