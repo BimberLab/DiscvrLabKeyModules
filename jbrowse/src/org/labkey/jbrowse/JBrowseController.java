@@ -771,7 +771,7 @@ public class JBrowseController extends SpringActionController
             }
             else
             {
-                resp = null;
+                throw new FileNotFoundException("File not found.");
             }
 
             return new ApiSimpleResponse(resp);

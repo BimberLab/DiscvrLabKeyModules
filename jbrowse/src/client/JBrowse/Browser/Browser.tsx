@@ -47,7 +47,7 @@ function View(){
         Ajax.request({
             url: ActionURL.buildURL('jbrowse', 'getSession.api'),
             method: 'GET',
-            success: function(res){ // TODO - handle empty request better
+            success: function(res){
                 setState(generateViewState(JSON.parse(res.response)));
                 console.log(res);
             },
@@ -66,7 +66,7 @@ function View(){
         return (<p>Loading...</p>)
     }
     else if (state == "invalid") {
-        return (<p>"Error fetching config. See console for more details"</p>)
+        return (<p>Error fetching config. See console for more details</p>)
     }
     return (
       <ThemeProvider theme={theme}>
