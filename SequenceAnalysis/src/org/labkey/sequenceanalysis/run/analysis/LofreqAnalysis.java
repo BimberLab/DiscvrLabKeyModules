@@ -613,6 +613,11 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             File pindelOutput = PindelAnalysis.runPindel(output, getPipelineCtx(), rs, outputDir, inputBam, referenceGenome.getWorkingFastaFile(), minFraction, minDepth, true, coverageOut, minInsertSize);
             try (CSVReader reader = new CSVReader(Readers.getReader(pindelOutput), '\t'))
             {
+                final int MAX_DEL_EVENT_COVERAGE = 20;
+                final double MIN_AF = 0.25;
+                final int MIN_LENGTH_TO_CONSIDER = 10;
+                final int MAX_DELETION_LENGTH = 5000;
+
                 String[] line;
                 while ((line = reader.readNext()) != null)
                 {
@@ -621,10 +626,50 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                         continue;
                     }
 
-                    if (Double.parseDouble(line[6]) >= 0.35)
+                    int start = Integer.parseInt(line[2]);  //1-based, coordinate prior, like VCF
+                    int end = Integer.parseInt(line[3]);  //1-based, actual coordinate, like VCF
+                    String refAllele = line[11];
+                    String altAllele = line[12];
+                    int refLength = end - start;
+                    int altLength = altAllele.length();
+
+                    // Assume LoFreq calls these well enough:
+                    if (refLength < MIN_LENGTH_TO_CONSIDER && altLength < MIN_LENGTH_TO_CONSIDER)
                     {
-                        indelMap.put(line[0], indelMap.getOrDefault(line[0], 0) + 1);
+                        continue;
                     }
+
+                    if ("D".equals(line[0]) && refLength > MAX_DELETION_LENGTH)
+                    {
+                        continue;
+                    }
+
+                    if (Double.parseDouble(line[6]) < MIN_AF)
+                    {
+                        continue;
+                    }
+
+                    double eventCoverage = 0.0;
+                    if (StringUtils.trimToNull(line[11]) != null)
+                    {
+                        eventCoverage = Double.parseDouble(line[11]);
+                    }
+
+                    if ("D".equals(line[0]) && eventCoverage > MAX_DEL_EVENT_COVERAGE)
+                    {
+                        continue;
+                    }
+
+                    indelMap.put(line[0], indelMap.getOrDefault(line[0], 0) + 1);
+
+                    VariantContextBuilder vcb = new VariantContextBuilder();
+                    vcb.start(start);
+                    vcb.stop(end);
+                    vcb.chr(line[1]);
+                    vcb.alleles(Arrays.asList(Allele.create(refAllele, true), Allele.create(altAllele)));
+                    vcb.attribute("AF", Double.parseDouble(line[6]));
+                    int dp = "I".equals(line[0]) ? Integer.parseInt(line[4]) : (int)Double.parseDouble(line[10]);
+                    vcb.attribute("DP", dp);
                 }
             }
             catch (IOException e)
@@ -670,7 +715,9 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             if (pangolinData != null)
             {
                 writer.writeNext(new String[]{"Pangolin", "PangolinLineage", pangolinData[1]});
-                writer.writeNext(new String[]{"Pangolin", "PangolinLineageConfidence", pangolinData[2]});
+                writer.writeNext(new String[]{"Pangolin", "PangolinConflicts", pangolinData[2]});
+                writer.writeNext(new String[]{"Pangolin", "PangolinVersions", pangolinData[3]});
+                writer.writeNext(new String[]{"Pangolin", "PangolinVersions", pangolinData[4]});
             }
             else
             {

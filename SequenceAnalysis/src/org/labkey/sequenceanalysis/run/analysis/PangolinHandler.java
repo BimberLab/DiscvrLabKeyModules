@@ -104,6 +104,10 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
                     row1.put("metricName", "PangolinLineage");
                     row1.put("qualvalue", line[1]);
                     row1.put("container", so.getContainer());
+                    if (StringUtils.trimToNull(line[3]) != null)
+                    {
+                        row1.put("comment", line[3]);
+                    }
                     toInsert.add(row1);
 
                     if (StringUtils.trimToNull(line[2]) != null)
@@ -113,10 +117,31 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
                         row2.put("readset", so.getReadset());
                         row2.put("analysis_id", so.getAnalysis_id());
                         row2.put("category", "Pangolin");
-                        row2.put("metricName", "PangolinLineageConfidence");
+                        row2.put("metricName", "PangolinConflicts");
                         row2.put("value", Double.parseDouble(line[2]));
                         row2.put("container", so.getContainer());
+                        if (StringUtils.trimToNull(line[3]) != null)
+                        {
+                            row2.put("comment", line[3]);
+                        }
                         toInsert.add(row2);
+                    }
+
+                    if (StringUtils.trimToNull(line[4]) != null)
+                    {
+                        Map<String, Object> row = new CaseInsensitiveHashMap<>();
+                        row.put("dataid", so.getDataId());
+                        row.put("readset", so.getReadset());
+                        row.put("analysis_id", so.getAnalysis_id());
+                        row.put("category", "Pangolin");
+                        row.put("metricName", "PangolinSummary");
+                        row.put("qualvalue", line[4]);
+                        row.put("container", so.getContainer());
+                        if (StringUtils.trimToNull(line[3]) != null)
+                        {
+                            row.put("comment", line[3]);
+                        }
+                        toInsert.add(row);
                     }
                 }
             }
@@ -169,7 +194,29 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
                 for (SequenceOutputFile so : inputFiles)
                 {
                     String[] pangolinData = runPangolin(so.getFile(), ctx.getLogger(), ctx.getFileManager());
-                    writer.writeNext(new String[]{String.valueOf(so.getRowid()), (pangolinData == null ? "QC Fail" : pangolinData[1]), (pangolinData == null ? "" : pangolinData[2])});
+
+                    List<String> versions = new ArrayList<>();
+                    if (pangolinData != null)
+                    {
+                        if (StringUtils.trimToNull(pangolinData[3]) != null)
+                        {
+                            versions.add("Pangolin version: " + pangolinData[3]);
+                        }
+
+                        if (StringUtils.trimToNull(pangolinData[4]) != null)
+                        {
+                            versions.add("pangoLEARN version: " + pangolinData[4]);
+                        }
+
+                        if (StringUtils.trimToNull(pangolinData[5]) != null)
+                        {
+                            versions.add("pango version: " + pangolinData[5]);
+                        }
+                    }
+
+                    String comment = StringUtils.join(versions, ",");
+
+                    writer.writeNext(new String[]{String.valueOf(so.getRowid()), (pangolinData == null ? "QC Fail" : pangolinData[1]), (pangolinData == null ? "" : pangolinData[2]), comment, (pangolinData == null ? "" : pangolinData[7])});
                 }
             }
             catch (IOException e)
@@ -196,7 +243,7 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
 
     public static File getRenamedPangolinOutput(File consensusFasta)
     {
-        return new File(consensusFasta.getParentFile(), FileUtil.getBaseName(consensusFasta) + ".pandolin.csv");
+        return new File(consensusFasta.getParentFile(), FileUtil.getBaseName(consensusFasta) + ".pangolin.csv");
     }
 
     public static String[] runPangolin(File consensusFasta, Logger log, PipelineOutputTracker tracker) throws PipelineJobException
