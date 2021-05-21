@@ -771,7 +771,8 @@ public class JBrowseController extends SpringActionController
             }
             else
             {
-                throw new FileNotFoundException("File not found.");
+                errors.reject(ERROR_MSG, "Unknown session: " + form.getSession());
+                return null;
             }
 
             return new ApiSimpleResponse(resp);
