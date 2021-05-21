@@ -93,6 +93,11 @@ project.task("copyJBrowseCss",
 	}
 })
 
+project.tasks.register("cleanJBrowse", Delete) {
+	delete files("./resources/web/jbrowseApp")
+}
+
+project.tasks.cleanModule.dependsOn(project.tasks.named('cleanJBrowse'))
 
 project.tasks.copyJBrowse.dependsOn(project.tasks.npmInstall)
 

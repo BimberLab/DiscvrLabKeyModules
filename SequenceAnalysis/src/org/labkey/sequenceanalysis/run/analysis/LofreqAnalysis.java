@@ -621,7 +621,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                 String[] line;
                 while ((line = reader.readNext()) != null)
                 {
-                    if (!("D".equals(line[0]) || "I".equals(line[0])))
+                    if (!("D".equals(line[0]) || "I".equals(line[0]) || "S".equals(line[0])))
                     {
                         continue;
                     }
@@ -639,7 +639,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                         continue;
                     }
 
-                    if ("D".equals(line[0]) && refLength > MAX_DELETION_LENGTH)
+                    if (("D".equals(line[0]) || "S".equals(line[0])) && refLength > MAX_DELETION_LENGTH)
                     {
                         continue;
                     }
@@ -655,7 +655,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                         eventCoverage = Double.parseDouble(line[11]);
                     }
 
-                    if ("D".equals(line[0]) && eventCoverage > MAX_DEL_EVENT_COVERAGE)
+                    if (("D".equals(line[0]) || "S".equals(line[0])) && eventCoverage > MAX_DEL_EVENT_COVERAGE)
                     {
                         continue;
                     }

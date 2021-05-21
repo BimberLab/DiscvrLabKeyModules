@@ -8,6 +8,7 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
+import org.apache.commons.lang.StringUtils;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.reader.Readers;
@@ -308,7 +309,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
 
                     //NOTE: this is the indel region itself, no flanking. so for a deletion with REF/ALT of ATTC / A--C, it reports TT. for an insertion of ATT / AGTT, it reports G
                     String pindelAllele = tokens[2].split(" ")[2];
-                    pindelAllele = pindelAllele.replaceAll("\"", "");
+                    pindelAllele = StringUtils.trimToNull(pindelAllele.replaceAll("\"", ""));
 
                     File dict = new File(fasta.getPath().replace("fasta", "dict"));
                     if (!dict.exists())
@@ -353,6 +354,10 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
 
                         eventCoverage = eventCoverage / (baseAfterEnd - basePriorToStart - 1);
                     }
+                    else if ("I".equals(type))
+                    {
+                        eventCoverage = (double)depth;
+                    }
 
                     double meanCoverage = (leadingCoverage + trailingCoverage) / 2.0;
                     double pct = (double)support / meanCoverage;
@@ -368,6 +373,11 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                         String ref = "";
                         if ("I".equals(type))
                         {
+                            if (pindelAllele == null)
+                            {
+                                throw new IllegalArgumentException("Unexpected empty allele for insertion: " + basePriorToStart);
+                            }
+
                             ref = sequence.getBaseString().substring(basePriorToStart-1, basePriorToStart);
                             alt = ref + pindelAllele;
                         }
@@ -375,17 +385,19 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                         {
                             ref = sequence.getBaseString().substring(basePriorToStart-1, trueEnd);
                             alt = sequence.getBaseString().substring(basePriorToStart-1, basePriorToStart);
-
-                            // Pindel reports the region over the deletion. so add the leading base to match the reference (VCF-style)
-                            // Our sequence based on coordinates should match what pindel reported
-                            String predictedPindelAllele = alt + pindelAllele;
-                            if (!predictedPindelAllele.equals(ref))
+                            if (pindelAllele != null)
                             {
-                                throw new IllegalArgumentException("Unexpected pindel allele: " + ref + " / " + predictedPindelAllele + " / " + pindelAllele);
+                                type = "S";
+                                alt = alt + pindelAllele;
+
+                                if (alt.length() != ref.length())
+                                {
+                                    throw new IllegalArgumentException("Unexpected pindel allele at " + basePriorToStart + ": " + ref + " / " + alt + " / " + pindelAllele);
+                                }
                             }
                         }
 
-                        writer.writeNext(new String[]{type, contig, String.valueOf(basePriorToStart), String.valueOf(trueEnd), String.valueOf(depth), String.valueOf(support), String.valueOf(pct), String.valueOf(meanCoverage), String.valueOf(leadingCoverage), String.valueOf(trailingCoverage), (eventCoverage == null ? "" : String.valueOf(eventCoverage)), ref, alt, pindelAllele});
+                        writer.writeNext(new String[]{type, contig, String.valueOf(basePriorToStart), String.valueOf(trueEnd), String.valueOf(depth), String.valueOf(support), String.valueOf(pct), String.valueOf(meanCoverage), String.valueOf(leadingCoverage), String.valueOf(trailingCoverage), (eventCoverage == null ? "" : String.valueOf(eventCoverage)), ref, alt, (pindelAllele == null ? "" : pindelAllele)});
                         totalPassing++;
                     }
                     else
