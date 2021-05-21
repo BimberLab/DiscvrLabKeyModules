@@ -93,6 +93,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+
+import java.nio.file.Files;
+
 public class JBrowseController extends SpringActionController
 {
     private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(JBrowseController.class);
@@ -716,6 +719,22 @@ public class JBrowseController extends SpringActionController
         }
     }
 
+
+    public static class GetSessionForm
+    {
+        private String session;
+
+        public String getSession()
+        {
+            return session;
+        }
+
+        public void setSession(String session)
+        {
+            this.session = session;
+        }
+    }
+
     @RequiresPermission(ReadPermission.class)
     public class GetSessionAction extends ReadOnlyApiAction<GetSessionForm>
     {
@@ -752,26 +771,12 @@ public class JBrowseController extends SpringActionController
             }
             else
             {
-                resp = new JSONObject();
-                resp.put("session", form.getSession());
+                errors.reject(ERROR_MSG, "Unknown session: " + form.getSession());
+                return null;
             }
 
             return new ApiSimpleResponse(resp);
         }
     }
-
-    public static class GetSessionForm
-    {
-        private String session;
-
-        public String getSession()
-        {
-            return session;
-        }
-
-        public void setSession(String session)
-        {
-            this.session = session;
-        }
-    }
 }
+

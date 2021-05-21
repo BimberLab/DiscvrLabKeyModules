@@ -8,3 +8,9 @@
 /jbrowse/jb_run.js
 /jbrowse/jb_setup.js
 /jbrowse/.gradle
+
+# Ignore labkey-npm build artifacts
+**/gen/**
+
+# Ignore MacOS .DS_Store artifacts
+**/.DS_Store

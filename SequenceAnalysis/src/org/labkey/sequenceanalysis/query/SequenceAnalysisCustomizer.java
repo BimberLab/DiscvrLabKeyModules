@@ -161,7 +161,7 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
         COL_ENUM(Class dataType, @Nullable Collection<String> alternateNames){
             this.dataType = dataType;
             if (alternateNames != null)
-            this.alternateNames.addAll(alternateNames);
+                this.alternateNames.addAll(alternateNames);
         }
 
         public Collection<String> getAlternateNames()
@@ -181,8 +181,8 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
             if (col.getFk() == null)
             {
                 col.setFk(QueryForeignKey.from(DefaultSchema.get(u,c),null)
-                    .schema(schema, c)
-                    .to(query, pkCol, displayCol));
+                        .schema(schema, c)
+                        .to(query, pkCol, displayCol));
             }
         }
 
