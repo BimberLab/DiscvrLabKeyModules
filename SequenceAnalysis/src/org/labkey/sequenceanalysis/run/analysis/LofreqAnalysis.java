@@ -423,7 +423,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
         boolean runPindel = getProvider().getParameterByName("runPindel").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
 
-        List<VariantContext> pindelConsensusVariants = null;
+        List<VariantContext> pindelConsensusVariants = new ArrayList<>();
         int totalPindelConsensusVariants = 0;
         if (runPindel)
         {
