@@ -268,6 +268,11 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         try
         {
             File outputMoved = getRenamedPangolinOutput(consensusFasta);
+            if (outputMoved.exists())
+            {
+                outputMoved.delete();
+            }
+
             FileUtils.moveFile(output, outputMoved);
             try (CSVReader reader = new CSVReader(Readers.getReader(outputMoved)))
             {
