@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
+import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
@@ -8,7 +9,13 @@ import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
-import org.apache.commons.lang.StringUtils;
+import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
+import htsjdk.variant.variantcontext.writer.Options;
+import htsjdk.variant.variantcontext.writer.VariantContextWriter;
+import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
+import htsjdk.variant.vcf.VCFHeader;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.reader.Readers;
@@ -389,12 +396,6 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                             {
                                 type = "S";
                                 alt = alt + pindelAllele;
-
-                                //NOTE: allele length can legitimately differ
-                                //if (alt.length() != ref.length())
-                                //{
-                                //    throw new IllegalArgumentException("Unexpected pindel allele at " + basePriorToStart + ": " + ref + " / " + alt + " / " + pindelAllele);
-                                //}
                             }
                         }
 
@@ -433,5 +434,94 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
             ctx.getLogger().error("Error parsing GATK depth: " + gatkDepth.getPath() + " / " + lineNo);
             throw new IOException(e);
         }
+    }
+
+    public static class PindelSettings
+    {
+        public int MAX_DEL_EVENT_COVERAGE = 20;
+        public double MIN_AF = 0.25;
+        public int MIN_LENGTH_TO_CONSIDER = 10;
+        public int MAX_DELETION_LENGTH = 5000;
+    }
+
+    public static File createVcf(File pindelOutput, File vcfOutput, ReferenceGenome genome, PindelSettings settings) throws PipelineJobException
+    {
+        SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath());
+
+        VariantContextWriterBuilder b = new VariantContextWriterBuilder()
+                .setOutputFile(vcfOutput)
+                .setOption(Options.USE_ASYNC_IO)
+                .setReferenceDictionary(dict);
+
+        try (CSVReader reader = new CSVReader(Readers.getReader(pindelOutput), '\t'); VariantContextWriter writer = b.build())
+        {
+            VCFHeader header = new VCFHeader();
+            header.setSequenceDictionary(dict);
+            LofreqAnalysis.addMetaLines(header);
+
+            String[] line;
+            while ((line = reader.readNext()) != null)
+            {
+                if (!("D".equals(line[0]) || "I".equals(line[0]) || "S".equals(line[0])))
+                {
+                    continue;
+                }
+
+                int start = Integer.parseInt(line[2]);  //1-based, coordinate prior, like VCF
+                int end = Integer.parseInt(line[3]);  //1-based, actual coordinate, like VCF
+                String refAllele = line[11];
+                String altAllele = line[12];
+                int refLength = end - start;
+                int altLength = altAllele.length();
+
+                // Assume LoFreq calls these well enough:
+                if (refLength < settings.MIN_LENGTH_TO_CONSIDER && altLength < settings.MIN_LENGTH_TO_CONSIDER)
+                {
+                    continue;
+                }
+
+                if (("D".equals(line[0]) || "S".equals(line[0])) && refLength > settings.MAX_DELETION_LENGTH)
+                {
+                    continue;
+                }
+
+                if (Double.parseDouble(line[6]) < settings.MIN_AF)
+                {
+                    continue;
+                }
+
+                double eventCoverage = 0.0;
+                if (StringUtils.trimToNull(line[11]) != null)
+                {
+                    eventCoverage = Double.parseDouble(line[11]);
+                }
+
+                if (("D".equals(line[0]) || "S".equals(line[0])) && eventCoverage > settings.MAX_DEL_EVENT_COVERAGE)
+                {
+                    continue;
+                }
+
+                VariantContextBuilder vcb = new VariantContextBuilder();
+                vcb.start(start);
+                vcb.stop(end);
+                vcb.chr(line[1]);
+                vcb.alleles(Arrays.asList(Allele.create(refAllele, true), Allele.create(altAllele)));
+                vcb.attribute("AF", Double.parseDouble(line[6]));
+
+                vcb.attribute("IN_CONSENSUS", 1);
+                vcb.attribute("GATK_DP", (int)Double.parseDouble(line[7]));
+
+                int dp = "I".equals(line[0]) ? Integer.parseInt(line[4]) : (int) Double.parseDouble(line[10]);
+                vcb.attribute("DP", dp);
+
+                writer.add(vcb.make());
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        return vcfOutput;
     }
 }
