@@ -492,9 +492,9 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                 }
 
                 double eventCoverage = 0.0;
-                if (StringUtils.trimToNull(line[11]) != null)
+                if (StringUtils.trimToNull(line[10]) != null)
                 {
-                    eventCoverage = Double.parseDouble(line[11]);
+                    eventCoverage = Double.parseDouble(line[10]);
                 }
 
                 if (("D".equals(line[0]) || "S".equals(line[0])) && eventCoverage > settings.MAX_DEL_EVENT_COVERAGE)

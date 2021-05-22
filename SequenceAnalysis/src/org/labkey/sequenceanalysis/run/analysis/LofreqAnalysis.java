@@ -230,6 +230,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         int gapIntervals = 0;
         double avgDepth;
 
+        //TODO: rescue pindel?
         File mask = new File(outputDir, "mask.bed");
         Map<String, Integer> gatkDepth = new HashMap<>();
         try (CSVReader reader = new CSVReader(Readers.getReader(coverageOut), '\t');CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(mask), '\t', CSVWriter.NO_QUOTE_CHARACTER))
@@ -449,6 +450,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                 }
             }
 
+            getPipelineCtx().getLogger().info("Total consensus pindel variants: " + totalPindelConsensusVariants);
             if (totalPindelConsensusVariants == 0)
             {
                 getPipelineCtx().getLogger().info("deleting empty pindel VCF: " + pindelVcf.getPath());
