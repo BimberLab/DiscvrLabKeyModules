@@ -331,7 +331,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
 
                     String type = tokens[1].split(" ")[0];
                     int baseAfterEnd = Integer.parseInt(tokens[5]);
-                    int trueEnd = "I".equals(type) ? baseAfterEnd : baseAfterEnd - 1;
+                    int trueEnd = baseAfterEnd - 1;
 
                     // Capture depth before/after event:
                     int j = 0;
