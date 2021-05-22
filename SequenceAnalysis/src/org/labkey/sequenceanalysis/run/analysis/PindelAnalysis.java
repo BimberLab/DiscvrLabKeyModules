@@ -458,6 +458,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
             VCFHeader header = new VCFHeader();
             header.setSequenceDictionary(dict);
             LofreqAnalysis.addMetaLines(header);
+            writer.writeHeader(header);
 
             String[] line;
             while ((line = reader.readNext()) != null)
