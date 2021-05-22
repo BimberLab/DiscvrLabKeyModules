@@ -390,10 +390,11 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                                 type = "S";
                                 alt = alt + pindelAllele;
 
-                                if (alt.length() != ref.length())
-                                {
-                                    throw new IllegalArgumentException("Unexpected pindel allele at " + basePriorToStart + ": " + ref + " / " + alt + " / " + pindelAllele);
-                                }
+                                //NOTE: allele length can legitimately differ
+                                //if (alt.length() != ref.length())
+                                //{
+                                //    throw new IllegalArgumentException("Unexpected pindel allele at " + basePriorToStart + ": " + ref + " / " + alt + " / " + pindelAllele);
+                                //}
                             }
                         }
 
