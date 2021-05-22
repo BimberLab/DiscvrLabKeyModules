@@ -14,7 +14,9 @@ import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
+import htsjdk.variant.vcf.VCFConstants;
 import htsjdk.variant.vcf.VCFHeader;
+import htsjdk.variant.vcf.VCFStandardHeaderLines;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -458,6 +460,9 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
             VCFHeader header = new VCFHeader();
             header.setSequenceDictionary(dict);
             LofreqAnalysis.addMetaLines(header);
+            header.addMetaDataLine(VCFStandardHeaderLines.getInfoLine(VCFConstants.ALLELE_FREQUENCY_KEY));
+            header.addMetaDataLine(VCFStandardHeaderLines.getInfoLine(VCFConstants.DEPTH_KEY));
+
             writer.writeHeader(header);
 
             String[] line;
@@ -507,13 +512,13 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                 vcb.stop(end);
                 vcb.chr(line[1]);
                 vcb.alleles(Arrays.asList(Allele.create(refAllele, true), Allele.create(altAllele)));
-                vcb.attribute("AF", Double.parseDouble(line[6]));
+                vcb.attribute(VCFConstants.ALLELE_FREQUENCY_KEY, Double.parseDouble(line[6]));
 
                 vcb.attribute("IN_CONSENSUS", 1);
                 vcb.attribute("GATK_DP", (int)Double.parseDouble(line[7]));
 
                 int dp = "I".equals(line[0]) ? Integer.parseInt(line[4]) : (int) Double.parseDouble(line[10]);
-                vcb.attribute("DP", dp);
+                vcb.attribute(VCFConstants.DEPTH_KEY, dp);
 
                 writer.add(vcb.make());
             }
