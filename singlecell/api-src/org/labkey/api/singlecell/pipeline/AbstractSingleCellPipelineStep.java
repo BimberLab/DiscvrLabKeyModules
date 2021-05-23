@@ -323,7 +323,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         }
         else if ("sequenceanalysis-trimmingtextarea".equals(pd.getFieldXtype()))
         {
-            val = val.replace("'", "\'");
+            val = val.replace("'", "\\\'");
             String[] vals = val.split(",");
             return "c('" + StringUtils.join(vals, "','") + "')";
         }

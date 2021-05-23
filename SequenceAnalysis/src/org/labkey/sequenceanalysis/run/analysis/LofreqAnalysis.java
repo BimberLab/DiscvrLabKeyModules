@@ -227,10 +227,51 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         //Create a BED file with all regions of coverage below MIN_COVERAGE:
         int minCoverage = getProvider().getParameterByName("minCoverage").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
         int positionsSkipped = 0;
+        int basesRecoveredFromDeletions = 0;
         int gapIntervals = 0;
         double avgDepth;
 
-        //TODO: rescue pindel?
+        boolean runPindel = getProvider().getParameterByName("runPindel").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+
+        List<VariantContext> pindelConsensusVariants = new ArrayList<>();
+        int totalPindelConsensusVariants = 0;
+        int totalPindelVariants = 0;
+        if (runPindel)
+        {
+            Double minFraction = getProvider().getParameterByName("minFraction").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class, 0.0);
+            int minDepth = getProvider().getParameterByName("minDepth").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 0);
+            int minInsertSize = getProvider().getParameterByName("minInsertSize").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 0);
+
+            PindelAnalysis.PindelSettings settings = new PindelAnalysis.PindelSettings();
+
+            File pindelOutput = PindelAnalysis.runPindel(output, getPipelineCtx(), rs, outputDir, inputBam, referenceGenome.getWorkingFastaFile(), minFraction, minDepth, true, coverageOut, minInsertSize);
+            File pindelVcf = PindelAnalysis.createVcf(pindelOutput, new File(pindelOutput.getParentFile(), FileUtil.getBaseName(pindelOutput) + ".all.vcf.gz"), referenceGenome, settings);
+
+            try (VCFFileReader reader = new VCFFileReader(pindelVcf);CloseableIterator<VariantContext> it = reader.iterator())
+            {
+                while (it.hasNext())
+                {
+                    VariantContext vc = it.next();
+                    if (vc.hasAttribute("IN_CONSENSUS"))
+                    {
+                        pindelConsensusVariants.add(vc);
+                        totalPindelConsensusVariants++;
+                    }
+
+                    totalPindelVariants++;
+                }
+            }
+
+            getPipelineCtx().getLogger().info("Total pindel variants: " + totalPindelVariants);
+            getPipelineCtx().getLogger().info("Total consensus pindel variants: " + totalPindelConsensusVariants);
+            if (totalPindelConsensusVariants == 0)
+            {
+                getPipelineCtx().getLogger().info("deleting empty pindel VCF: " + pindelVcf.getPath());
+                pindelVcf.delete();
+                new File(pindelVcf.getPath() + ".tbi").delete();
+            }
+        }
+
         File mask = new File(outputDir, "mask.bed");
         Map<String, Integer> gatkDepth = new HashMap<>();
         try (CSVReader reader = new CSVReader(Readers.getReader(coverageOut), '\t');CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(mask), '\t', CSVWriter.NO_QUOTE_CHARACTER))
@@ -259,40 +300,63 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
                 if (depth < minCoverage)
                 {
-                    positionsSkipped++;
-
-                    if (intervalOfCurrentGap != null)
+                    //Check if within pindel SNV calls:
+                    Interval currentPosition = new Interval(tokens[0], Integer.parseInt(tokens[1]), Integer.parseInt(tokens[1]));
+                    boolean withinDeletion = false;
+                    for (VariantContext vc : pindelConsensusVariants)
                     {
-                        if (intervalOfCurrentGap.getContig().equals(tokens[0]))
+                        if (vc.isIndel())
                         {
-                            //extend
-                            intervalOfCurrentGap = new Interval(intervalOfCurrentGap.getContig(), intervalOfCurrentGap.getStart(), Integer.parseInt(tokens[1]));
+                            // If we overlap the SNV (which should be just deletions (note: the first position of the variant is the non-indel REF base), allow low coverage:
+                            if (currentPosition.overlaps(vc) && currentPosition.getStart() != vc.getStart())
+                            {
+                                basesRecoveredFromDeletions++;
+
+                                //TODO: enable this once sure:
+                                //withinDeletion = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!withinDeletion)
+                    {
+                        positionsSkipped++;
+
+                        if (intervalOfCurrentGap != null)
+                        {
+                            if (intervalOfCurrentGap.getContig().equals(tokens[0]))
+                            {
+                                //extend
+                                intervalOfCurrentGap = new Interval(intervalOfCurrentGap.getContig(), intervalOfCurrentGap.getStart(), Integer.parseInt(tokens[1]));
+                            }
+                            else
+                            {
+                                //switched contigs, write and make new:
+                                writer.writeNext(new String[]{intervalOfCurrentGap.getContig(), String.valueOf(intervalOfCurrentGap.getStart() - 1), String.valueOf(intervalOfCurrentGap.getEnd())});
+                                gapIntervals++;
+                                intervalOfCurrentGap = currentPosition;
+                            }
                         }
                         else
                         {
-                            //switched contigs, write and make new:
-                            writer.writeNext(new String[]{intervalOfCurrentGap.getContig(), String.valueOf(intervalOfCurrentGap.getStart()-1), String.valueOf(intervalOfCurrentGap.getEnd())});
-                            gapIntervals++;
-                            intervalOfCurrentGap = new Interval(tokens[0], Integer.parseInt(tokens[1]), Integer.parseInt(tokens[1]));
+                            //Not existing gap, just start one:
+                            intervalOfCurrentGap = currentPosition;
                         }
-                    }
-                    else
-                    {
-                        //Not existing gap, just start one:
-                        intervalOfCurrentGap = new Interval(tokens[0], Integer.parseInt(tokens[1]), Integer.parseInt(tokens[1]));
-                    }
-                }
-                else
-                {
-                    //We just existed a gap, so write:
-                    if (intervalOfCurrentGap != null)
-                    {
-                        writer.writeNext(new String[]{intervalOfCurrentGap.getContig(), String.valueOf(intervalOfCurrentGap.getStart()-1), String.valueOf(intervalOfCurrentGap.getEnd())});
-                        gapIntervals++;
-                    }
 
-                    intervalOfCurrentGap = null;
+                        continue;
+                    }
                 }
+
+                //Otherwise this is a valid position to report:
+                //We just exited a gap, so write:
+                if (intervalOfCurrentGap != null)
+                {
+                    writer.writeNext(new String[]{intervalOfCurrentGap.getContig(), String.valueOf(intervalOfCurrentGap.getStart()-1), String.valueOf(intervalOfCurrentGap.getEnd())});
+                    gapIntervals++;
+                }
+
+                intervalOfCurrentGap = null;
             }
 
             //Ensure we count final gap
@@ -421,43 +485,6 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         //generate bcftools consensus
         Set<String> variantsBcftools = runBcftools(inputBam, referenceGenome, mask, minCoverage);
         int variantsBcftoolsTotal = variantsBcftools.size();
-
-        boolean runPindel = getProvider().getParameterByName("runPindel").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
-
-        List<VariantContext> pindelConsensusVariants = new ArrayList<>();
-        int totalPindelConsensusVariants = 0;
-        if (runPindel)
-        {
-            Double minFraction = getProvider().getParameterByName("minFraction").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class, 0.0);
-            int minDepth = getProvider().getParameterByName("minDepth").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 0);
-            int minInsertSize = getProvider().getParameterByName("minInsertSize").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 0);
-
-            PindelAnalysis.PindelSettings settings = new PindelAnalysis.PindelSettings();
-
-            File pindelOutput = PindelAnalysis.runPindel(output, getPipelineCtx(), rs, outputDir, inputBam, referenceGenome.getWorkingFastaFile(), minFraction, minDepth, true, coverageOut, minInsertSize);
-            File pindelVcf = PindelAnalysis.createVcf(pindelOutput, new File(pindelOutput.getParentFile(), FileUtil.getBaseName(pindelOutput) + ".vcf.gz"), referenceGenome, settings);
-
-            try (VCFFileReader reader = new VCFFileReader(pindelVcf);CloseableIterator<VariantContext> it = reader.iterator())
-            {
-                while (it.hasNext())
-                {
-                    VariantContext vc = it.next();
-                    if (vc.hasAttribute("IN_CONSENSUS"))
-                    {
-                        pindelConsensusVariants.add(vc);
-                        totalPindelConsensusVariants++;
-                    }
-                }
-            }
-
-            getPipelineCtx().getLogger().info("Total consensus pindel variants: " + totalPindelConsensusVariants);
-            if (totalPindelConsensusVariants == 0)
-            {
-                getPipelineCtx().getLogger().info("deleting empty pindel VCF: " + pindelVcf.getPath());
-                pindelVcf.delete();
-                new File(pindelVcf.getPath() + ".tbi").delete();
-            }
-        }
 
         //Create final VCF:
         int totalVariants = 0;
@@ -602,10 +629,11 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                 }
             }
 
-            //TODO: add pindel
             if (!pindelConsensusVariants.isEmpty())
             {
-
+                //TODO: enable once sure:
+                //pindelConsensusVariants.stream().forEach(consensusVariants::add);
+                getPipelineCtx().getLogger().info("total consensus variants that would be added: " + pindelConsensusVariants.size());
             }
 
             try (CloseableIterator<VariantContext> iterator = allVariants.iterator())
@@ -634,6 +662,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         double pctNoCover = positionsSkipped / (double)dict.getReferenceLength();
         getPipelineCtx().getLogger().info("Total positions with coverage below threshold (" + minCoverage + "): " + positionsSkipped + "(" + fmt.format(pctNoCover) + ")");
         getPipelineCtx().getLogger().info("Total # gap intervals: " + gapIntervals);
+        getPipelineCtx().getLogger().info("Total # of low coverage bases recovered within consensus deletions: " + basesRecoveredFromDeletions);
 
         String description = String.format("Total Variants: %s\nTotal GT 1 PCT: %s\nTotal GT 50 PCT: %s\nTotal Indel GT 1 PCT: %s\nPositions Below Coverage: %s\nTotal In LoFreq Consensus: %s\nTotal Indel In LoFreq Consensus: %s\nTotal Consensus Variant in PBS: %s", totalVariants, totalGT1, totalGT50, totalIndelGT1, positionsSkipped, totalGTThreshold, totalIndelGTThreshold, totalConsensusInPBS);
         description += "\n" + "Strand Bias Recovered: " + filteredVariantsRecovered;

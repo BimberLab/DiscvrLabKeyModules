@@ -468,6 +468,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
             String[] line;
             while ((line = reader.readNext()) != null)
             {
+                int inConsensus = 1;
                 if (!("D".equals(line[0]) || "I".equals(line[0]) || "S".equals(line[0])))
                 {
                     continue;
@@ -483,17 +484,17 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                 // Assume LoFreq calls these well enough:
                 if (refLength < settings.MIN_LENGTH_TO_CONSIDER && altLength < settings.MIN_LENGTH_TO_CONSIDER)
                 {
-                    continue;
+                    inConsensus = 0;
                 }
 
                 if (("D".equals(line[0]) || "S".equals(line[0])) && refLength > settings.MAX_DELETION_LENGTH)
                 {
-                    continue;
+                    inConsensus = 0;
                 }
 
                 if (Double.parseDouble(line[6]) < settings.MIN_AF)
                 {
-                    continue;
+                    inConsensus = 0;
                 }
 
                 double eventCoverage = 0.0;
@@ -504,7 +505,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
 
                 if (("D".equals(line[0]) || "S".equals(line[0])) && eventCoverage > settings.MAX_DEL_EVENT_COVERAGE)
                 {
-                    continue;
+                    inConsensus = 0;
                 }
 
                 VariantContextBuilder vcb = new VariantContextBuilder();
@@ -514,7 +515,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                 vcb.alleles(Arrays.asList(Allele.create(refAllele, true), Allele.create(altAllele)));
                 vcb.attribute(VCFConstants.ALLELE_FREQUENCY_KEY, Double.parseDouble(line[6]));
 
-                vcb.attribute("IN_CONSENSUS", 1);
+                vcb.attribute("IN_CONSENSUS", inConsensus);
                 vcb.attribute("GATK_DP", (int)Double.parseDouble(line[7]));
 
                 int dp = "I".equals(line[0]) ? Integer.parseInt(line[4]) : (int) Double.parseDouble(line[10]);
