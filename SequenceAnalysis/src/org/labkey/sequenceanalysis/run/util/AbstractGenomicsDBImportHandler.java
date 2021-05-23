@@ -82,12 +82,9 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             return;
         }
 
-        if (vj.getScatterGatherMethod() == VariantProcessingStep.ScatterGatherMethod.fixedJobs || vj.getScatterGatherMethod() == VariantProcessingStep.ScatterGatherMethod.chunked)
+        if (vj.doAllowSplitContigs())
         {
-            if (vj.doAllowSplitContigs())
-            {
-                throw new IllegalArgumentException("This job does not support scatter methods with allowSplitContigs=true");
-            }
+            throw new IllegalArgumentException("This job does not support scatter methods with allowSplitContigs=true");
         }
     }
 

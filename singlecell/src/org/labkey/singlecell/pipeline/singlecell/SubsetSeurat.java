@@ -79,23 +79,25 @@ public class SubsetSeurat extends AbstractCellMembraneStep
                 {
                     String subsetEscaped = subset.replace("'", "\\\'");
 
-                    ret.add("\tcells <- c()");
-                    ret.add("\ttryCatch({");
-                    ret.add("\t\tcells <- WhichCells(so, expression = " + subset + ")");
-                    ret.add("\t}, error = function(e){");
-                    ret.add("\t\tif (!is.null(e) && e$message == 'Cannot find cells provided') {");
-                    ret.add("\t\t\tprint(paste0('There were no cells remaining after the subset: ', '" + subsetEscaped + "'))");
+                    ret.add("\tif (!is.null(seuratObj)) {");
+                    ret.add("\t\tcells <- c()");
+                    ret.add("\t\ttryCatch({");
+                    ret.add("\t\t\tcells <- WhichCells(seuratObj, expression = " + subset + ")");
+                    ret.add("\t\t}, error = function(e){");
+                    ret.add("\t\t\tif (!is.null(e) && e$message == 'Cannot find cells provided') {");
+                    ret.add("\t\t\t\tprint(paste0('There were no cells remaining after the subset: ', '" + subsetEscaped + "'))");
+                    ret.add("\t\t\t}");
+                    ret.add("\t\t})");
+                    ret.add("");
+                    ret.add("\t\tif (length(cells) == 0) {");
+                    ret.add("\t\t\tprint(paste0('There were no cells after subsetting for dataset: ', datasetId, ', with subset: ', '" + subsetEscaped + "'))");
+                    ret.add("\t\t\tseuratObj <- NULL");
+                    ret.add("\t\t} else {");
+                    ret.add("\t\t\tseuratObj <- subset(seuratObj, cells = cells)");
+                    ret.add("\t\t\tprint(paste0('Cells after subset: ', ncol(seuratObj)))");
+                    ret.add("\t\t\tnewSeuratObjects[[datasetId]] <- seuratObj");
                     ret.add("\t\t}");
-                    ret.add("\t})");
-                    ret.add("");
-                    ret.add("\tif (length(cells) == 0) {");
-                    ret.add("\t\tprint(paste0('There were no cells after subsetting for dataset: ', datasetId, ', with subset: ', '" + subsetEscaped + "'))");
-                    ret.add("\t} else {");
-                    ret.add("\t\tseuratObj <- subset(seuratObj, cells = cells)");
-                    ret.add("\t\tprint(paste0('Cells after subset: ', ncol(seuratObj)))");
-                    ret.add("\t\tnewSeuratObjects[[datasetId]] <- seuratObj");
-                    ret.add("\t}");
-                    ret.add("");
+                    ret.add("}");
                 }
             }
             else
