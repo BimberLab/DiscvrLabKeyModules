@@ -246,7 +246,10 @@ define([
                         title: 'ClinVar RS Numbers'
                     },
                     LiftedContig: {
-                        title: 'Lifted Position'
+                        title: 'Contig (Lifted to Human)'
+                    },
+                    LiftedStart: {
+                        title: 'Start (Lifted to Human)'
                     }
                 },
 

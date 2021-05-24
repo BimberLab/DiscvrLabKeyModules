@@ -298,7 +298,7 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 				additionalExtConfig: {
 					hidden: true,
 					isToolParam: false,
-					width: 500,
+					width: 600,
 					allowBlank: true //toggle value based on checkbox
 				},
 				defaultValue: null
@@ -329,7 +329,7 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 					fieldLabel: 'Merge Priority Order',
 					style: 'padding: 10px;padding-bottom: 30px;',
 					border: true,
-					width: 500,
+					width: 600,
 					autoScroll: true,
 					helpPopup: 'This is the priority order in which files will be merged, top being highest priority',
 					displayField: 'name',
