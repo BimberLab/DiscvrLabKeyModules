@@ -32,7 +32,6 @@ import org.labkey.remoteapi.query.SelectRowsCommand;
 import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.remoteapi.query.Sort;
 import org.labkey.serverapi.reader.Readers;
-import org.labkey.serverapi.writer.PrintWriters;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.TestFileUtils;
@@ -46,6 +45,7 @@ import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.PasswordUtil;
 import org.labkey.test.util.SimpleHttpResponse;
 import org.labkey.test.util.TextSearcher;
+import org.labkey.test.util.core.webdav.WebDavUploadHelper;
 import org.labkey.test.util.ext4cmp.Ext4CmpRef;
 import org.labkey.test.util.ext4cmp.Ext4ComboRef;
 import org.labkey.test.util.ext4cmp.Ext4FieldRef;
@@ -59,7 +59,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -1461,7 +1460,7 @@ public class SequenceTest extends BaseWebDriverTest
     public static int addReferenceGenomeTracks(BaseWebDriverTest test, String projectName, String genomeName, Integer genomeId, int startedPipelineJobs) throws Exception
     {
         test.log("adding resources to genome: " + genomeName);
-        test.beginAt("/sequenceanalysis/" + test.getContainerId() + "/begin.view");
+        test.beginAt(WebTestHelper.buildURL("sequenceanalysis", projectName, "begin"));
 
         test.waitAndClickAndWait(Locator.linkContainingText("Reference Genomes"));
         DataRegionTable dr = new DataRegionTable("query", test);
@@ -1474,10 +1473,8 @@ public class SequenceTest extends BaseWebDriverTest
 
         //first do single file
         File dataDir = TestFileUtils.getSampleData("sequenceAnalysis/genomeAnnotations");
-        File fileRoot = TestFileUtils.getDefaultFileRoot(projectName);
 
-        File f = new File(dataDir, "fakeData.bed");
-        f = replaceContigName(f, new File(fileRoot, "fakeData.bed"), genomeName);
+        File f = replaceContigName(new File(dataDir, "fakeData.bed"), genomeName);
 
         test.log("adding track: " + f.getName());
         DataRegionTable dr2 = DataRegionTable.findDataRegionWithinWebpart(test, "Annotations/Tracks");
@@ -1498,15 +1495,11 @@ public class SequenceTest extends BaseWebDriverTest
 
         //now test bulk import
         List<String> fileNames = Arrays.asList("fakeData.gff", "fakeData.bed");
+        WebDavUploadHelper uploadHelper = new WebDavUploadHelper(projectName);
         for (String fn : fileNames)
         {
-            File target = new File(fileRoot, fn);
-            if (target.exists())
-            {
-               Assert.assertTrue("Unable to delete file: " + target.getPath(), target.delete());
-            }
-
-            replaceContigName(new File(dataDir, fn), target, genomeName);
+            File tempFile = replaceContigName(new File(dataDir, fn), genomeName);
+            uploadHelper.uploadFile(tempFile);
         }
 
         LabModuleHelper helper = new LabModuleHelper(test);
@@ -1535,18 +1528,12 @@ public class SequenceTest extends BaseWebDriverTest
         return startedPipelineJobs;
     }
 
-    private static File replaceContigName(File input, File output, String genomeName) throws IOException
+    private static File replaceContigName(File input, String genomeName) throws IOException
     {
-        try (BufferedReader reader = Readers.getReader(input); PrintWriter writer = PrintWriters.getPrintWriter(output))
-        {
-            String line;
-            while ((line = reader.readLine()) != null)
-            {
-                writer.println(line.replaceAll("SIVmac239", genomeName));
-            }
-        }
+        String contents = TestFileUtils.getFileContents(input);
+        contents = contents.replaceAll("SIVmac239", genomeName);
 
-        return output;
+        return TestFileUtils.writeTempFile(input.getName(), contents);
     }
 
     public static void addOutputFile(BaseWebDriverTest test, File toAdd, String genomeName, String name, String category, String description, boolean isWorkbook) throws Exception
