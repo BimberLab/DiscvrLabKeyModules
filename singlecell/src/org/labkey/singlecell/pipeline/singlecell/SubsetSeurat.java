@@ -30,6 +30,7 @@ public class SubsetSeurat extends AbstractCellMembraneStep
             super("SubsetSeurat", "Subset", "CellMembrane/Seurat", "The seurat object will be subset based on the expression below, which is passed directly to Seurat's subset(subset = X).", Arrays.asList(
                     ToolParameterDescriptor.create("expression", "Expression", "Filter Expression(s)", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("allowBlank", false);
+                        put("replaceAllWhitespace", false);
                         put("height", 150);
                         put("width", 600);
                         put("delimiter", DELIM);
