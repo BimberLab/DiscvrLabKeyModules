@@ -3,6 +3,7 @@ package org.labkey.sequenceanalysis.run.analysis;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.util.IOUtil;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
@@ -30,6 +31,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
@@ -102,6 +104,10 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
                     row1.put("metricName", "PangolinLineage");
                     row1.put("qualvalue", line[1]);
                     row1.put("container", so.getContainer());
+                    if (StringUtils.trimToNull(line[3]) != null)
+                    {
+                        row1.put("comment", line[3]);
+                    }
                     toInsert.add(row1);
 
                     if (StringUtils.trimToNull(line[2]) != null)
@@ -111,10 +117,31 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
                         row2.put("readset", so.getReadset());
                         row2.put("analysis_id", so.getAnalysis_id());
                         row2.put("category", "Pangolin");
-                        row2.put("metricName", "PangolinLineageConfidence");
+                        row2.put("metricName", "PangolinConflicts");
                         row2.put("value", Double.parseDouble(line[2]));
                         row2.put("container", so.getContainer());
+                        if (StringUtils.trimToNull(line[3]) != null)
+                        {
+                            row2.put("comment", line[3]);
+                        }
                         toInsert.add(row2);
+                    }
+
+                    if (StringUtils.trimToNull(line[4]) != null)
+                    {
+                        Map<String, Object> row = new CaseInsensitiveHashMap<>();
+                        row.put("dataid", so.getDataId());
+                        row.put("readset", so.getReadset());
+                        row.put("analysis_id", so.getAnalysis_id());
+                        row.put("category", "Pangolin");
+                        row.put("metricName", "PangolinSummary");
+                        row.put("qualvalue", line[4]);
+                        row.put("container", so.getContainer());
+                        if (StringUtils.trimToNull(line[3]) != null)
+                        {
+                            row.put("comment", line[3]);
+                        }
+                        toInsert.add(row);
                     }
                 }
             }
@@ -167,7 +194,29 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
                 for (SequenceOutputFile so : inputFiles)
                 {
                     String[] pangolinData = runPangolin(so.getFile(), ctx.getLogger(), ctx.getFileManager());
-                    writer.writeNext(new String[]{String.valueOf(so.getRowid()), (pangolinData == null ? "QC Fail" : pangolinData[1]), (pangolinData == null ? "" : pangolinData[2])});
+
+                    List<String> versions = new ArrayList<>();
+                    if (pangolinData != null)
+                    {
+                        if (StringUtils.trimToNull(pangolinData[3]) != null)
+                        {
+                            versions.add("Pangolin version: " + pangolinData[3]);
+                        }
+
+                        if (StringUtils.trimToNull(pangolinData[4]) != null)
+                        {
+                            versions.add("pangoLEARN version: " + pangolinData[4]);
+                        }
+
+                        if (StringUtils.trimToNull(pangolinData[5]) != null)
+                        {
+                            versions.add("pango version: " + pangolinData[5]);
+                        }
+                    }
+
+                    String comment = StringUtils.join(versions, ",");
+
+                    writer.writeNext(new String[]{String.valueOf(so.getRowid()), (pangolinData == null ? "QC Fail" : pangolinData[1]), (pangolinData == null ? "" : pangolinData[2]), comment, (pangolinData == null ? "" : pangolinData[7])});
                 }
             }
             catch (IOException e)
@@ -192,6 +241,11 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         wrapper.execute(Arrays.asList("/bin/bash", pangolin.getPath()));
     }
 
+    public static File getRenamedPangolinOutput(File consensusFasta)
+    {
+        return new File(consensusFasta.getParentFile(), FileUtil.getBaseName(consensusFasta) + ".pangolin.csv");
+    }
+
     public static String[] runPangolin(File consensusFasta, Logger log, PipelineOutputTracker tracker) throws PipelineJobException
     {
         SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
@@ -211,17 +265,21 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
             throw new PipelineJobException("Pangolin output not found: " + output.getPath());
         }
 
-        tracker.addIntermediateFile(output);
-        try (CSVReader reader = new CSVReader(Readers.getReader(output)))
+        try
         {
-            reader.readNext(); //header
-            String[] line = reader.readNext();
+            File outputMoved = getRenamedPangolinOutput(consensusFasta);
+            FileUtils.moveFile(output, outputMoved);
+            try (CSVReader reader = new CSVReader(Readers.getReader(outputMoved)))
+            {
+                reader.readNext(); //header
+                String[] line = reader.readNext();
 
-            return line;
+                return line;
+            }
         }
         catch (IOException e)
         {
-            throw new PipelineJobException();
+            throw new PipelineJobException(e);
         }
     }
 }

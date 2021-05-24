@@ -5,6 +5,8 @@ import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.metrics.MetricsFile;
+import htsjdk.samtools.reference.IndexedFastaSequenceFile;
+import htsjdk.samtools.reference.ReferenceSequence;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -36,7 +38,9 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
@@ -230,7 +234,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         File outTsv = new File(outDir, FileUtil.getBaseName(inputBam) + ".pindel.txt");
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(outTsv), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
-            writer.writeNext(new String[]{"Type", "Contig", "Start", "End", "Depth", "ReadSupport", "Fraction", "Alt", "MeanFlankingCoverage", "LeadingCoverage", "TrailingCoverage", "EventCoverage"});
+            writer.writeNext(new String[]{"Type", "Contig", "Start", "End", "Depth", "ReadSupport", "Fraction", "MeanFlankingCoverage", "LeadingCoverage", "TrailingCoverage", "EventCoverage", "Ref", "Alt", "PindelAllele"});
             parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_D"), minFraction, minDepth, gatkDepth, fasta);
             parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_SI"), minFraction, minDepth, gatkDepth, fasta);
             parsePindelOutput(ctx, writer, new File(outPrefix.getPath() + "_LI"), minFraction, minDepth, gatkDepth, fasta);
@@ -256,8 +260,11 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
 
         int totalPassing = 0;
         int totalFiltered = 0;
-        try (BufferedReader reader = Readers.getReader(pindelFile))
+        Map<String, ReferenceSequence> contigMap = new HashMap<>();
+        try (BufferedReader reader = Readers.getReader(pindelFile);IndexedFastaSequenceFile iff = new IndexedFastaSequenceFile(fasta))
         {
+            final int WINDOW_SIZE = 50;
+
             String line;
             while ((line = reader.readLine()) != null)
             {
@@ -272,10 +279,12 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                     }
 
                     String contig = tokens[3].split(" ")[1];
-                    int start = Integer.parseInt(tokens[4].split(" ")[1]);
+
+                    // Example 26154-26158 (3 bp, reporting padded borders)
+                    int basePriorToStart = Integer.parseInt(tokens[4].split(" ")[1]);
 
                     // Capture depth before/after event:
-                    int depth = getGatkDepth(ctx, gatkDepthFile, contig, start);
+                    int depth = getGatkDepth(ctx, gatkDepthFile, contig, basePriorToStart);
                     if (depth == 0)
                     {
                         totalFiltered++;
@@ -284,8 +293,8 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
 
                     int i = 0;
                     double leadingCoverage = 0.0;
-                    while (i < 20) {
-                        int pos = start - i;
+                    while (i < WINDOW_SIZE) {
+                        int pos = basePriorToStart - i;
                         if (pos < 1)
                         {
                             break;
@@ -297,8 +306,9 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
 
                     leadingCoverage = leadingCoverage / i;
 
-                    String alt = tokens[2].split(" ")[2];
-                    alt = alt.replaceAll("\"", "");
+                    //NOTE: this is the indel region itself, no flanking. so for a deletion with REF/ALT of ATTC / A--C, it reports TT. for an insertion of ATT / AGTT, it reports G
+                    String pindelAllele = tokens[2].split(" ")[2];
+                    pindelAllele = pindelAllele.replaceAll("\"", "");
 
                     File dict = new File(fasta.getPath().replace("fasta", "dict"));
                     if (!dict.exists())
@@ -309,12 +319,16 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                     SAMSequenceDictionary extractor = SAMSequenceDictionaryExtractor.extractDictionary(dict.toPath());
                     SAMSequenceRecord rec = extractor.getSequence(contig);
 
-                    int end = Integer.parseInt(tokens[5]);
+                    String type = tokens[1].split(" ")[0];
+                    int baseAfterEnd = Integer.parseInt(tokens[5]);
+                    int trueEnd = "I".equals(type) ? baseAfterEnd : baseAfterEnd - 1;
+
+                    // Capture depth before/after event:
                     int j = 0;
                     double trailingCoverage = 0.0;
-                    while (j < 20)
+                    while (j < WINDOW_SIZE)
                     {
-                        int pos = end + j;
+                        int pos = baseAfterEnd + j;
                         if (pos > rec.getSequenceLength())
                         {
                             break;
@@ -326,26 +340,50 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
 
                     trailingCoverage = trailingCoverage / j;
 
-                    String type = tokens[1].split(" ")[0];
                     Double eventCoverage = null;
-                    if ("D".equals(type))
+                    if ("D".equals(type) || "INV".equals(type))
                     {
                         eventCoverage = 0.0;
-                        int pos = start;
-                        while (pos < end)
+                        int pos = basePriorToStart;
+                        while (pos < baseAfterEnd)
                         {
                             pos++;
                             eventCoverage += getGatkDepth(ctx, gatkDepthFile, contig, pos);
                         }
 
-                        eventCoverage = eventCoverage / (end - start - 1);
+                        eventCoverage = eventCoverage / (baseAfterEnd - basePriorToStart - 1);
                     }
 
                     double meanCoverage = (leadingCoverage + trailingCoverage) / 2.0;
                     double pct = (double)support / meanCoverage;
                     if (pct >= minFraction)
                     {
-                        writer.writeNext(new String[]{type, contig, String.valueOf(start), String.valueOf(end), String.valueOf(depth), String.valueOf(support), String.valueOf(pct), alt, String.valueOf(meanCoverage), String.valueOf(leadingCoverage), String.valueOf(trailingCoverage), (eventCoverage == null ? "" : String.valueOf(eventCoverage))});
+                        if (!contigMap.containsKey(contig))
+                        {
+                            contigMap.put(contig, iff.getSequence(contig));
+                        }
+
+                        ReferenceSequence sequence = contigMap.get(contig);
+                        String alt = "";
+                        String ref = "";
+                        if ("I".equals(type))
+                        {
+                            ref = sequence.getBaseString().substring(basePriorToStart-1, basePriorToStart);
+                            alt = ref + pindelAllele;
+                        }
+                        else if ("D".equals(type))
+                        {
+                            ref = sequence.getBaseString().substring(basePriorToStart-1, trueEnd);
+                            alt = sequence.getBaseString().substring(basePriorToStart-1, basePriorToStart);
+
+                            String predictedPindelAllele = ref + pindelAllele;
+                            if (!predictedPindelAllele.equals(ref))
+                            {
+                                throw new IllegalArgumentException("Unexpected pindel allele: " + ref + " / " + predictedPindelAllele);
+                            }
+                        }
+
+                        writer.writeNext(new String[]{type, contig, String.valueOf(basePriorToStart), String.valueOf(trueEnd), String.valueOf(depth), String.valueOf(support), String.valueOf(pct), String.valueOf(meanCoverage), String.valueOf(leadingCoverage), String.valueOf(trailingCoverage), (eventCoverage == null ? "" : String.valueOf(eventCoverage)), ref, alt, pindelAllele});
                         totalPassing++;
                     }
                     else

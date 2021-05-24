@@ -31,6 +31,7 @@ public class SubsetSeurat extends AbstractCellMembraneStep
                     ToolParameterDescriptor.create("expression", "Expression", "Filter Expression(s)", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("allowBlank", false);
                         put("height", 150);
+                        put("width", 600);
                         put("delimiter", DELIM);
                     }}, null)
             ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);

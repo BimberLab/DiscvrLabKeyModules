@@ -1503,7 +1503,7 @@ public class SequenceTest extends BaseWebDriverTest
             File target = new File(fileRoot, fn);
             if (target.exists())
             {
-                target.delete();
+               Assert.assertTrue("Unable to delete file: " + target.getPath(), target.delete());
             }
 
             replaceContigName(new File(dataDir, fn), target, genomeName);
