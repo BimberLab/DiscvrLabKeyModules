@@ -8,8 +8,11 @@ import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.SortingCollection;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
@@ -462,8 +465,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
             LofreqAnalysis.addMetaLines(header);
             header.addMetaDataLine(VCFStandardHeaderLines.getInfoLine(VCFConstants.ALLELE_FREQUENCY_KEY));
             header.addMetaDataLine(VCFStandardHeaderLines.getInfoLine(VCFConstants.DEPTH_KEY));
-
-            writer.writeHeader(header);
+            SortingCollection<VariantContext> toWrite = LofreqAnalysis.getVariantSorter(header);
 
             String[] line;
             while ((line = reader.readNext()) != null)
@@ -521,8 +523,17 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                 int dp = "I".equals(line[0]) ? Integer.parseInt(line[4]) : (int) Double.parseDouble(line[10]);
                 vcb.attribute(VCFConstants.DEPTH_KEY, dp);
 
-                writer.add(vcb.make());
+                toWrite.add(vcb.make());
             }
+
+            try (CloseableIterator<VariantContext> iterator = toWrite.iterator())
+            {
+                while (iterator.hasNext())
+                {
+                    writer.add(iterator.next());
+                }
+            }
+            toWrite.cleanup();
         }
         catch (IOException e)
         {
