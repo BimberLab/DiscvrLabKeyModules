@@ -246,25 +246,27 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
             File pindelOutput = PindelAnalysis.runPindel(output, getPipelineCtx(), rs, outputDir, inputBam, referenceGenome.getWorkingFastaFile(), minFraction, minDepth, true, coverageOut, minInsertSize);
             File pindelVcf = PindelAnalysis.createVcf(pindelOutput, new File(pindelOutput.getParentFile(), FileUtil.getBaseName(pindelOutput) + ".all.vcf.gz"), referenceGenome, settings);
-
-            try (VCFFileReader reader = new VCFFileReader(pindelVcf);CloseableIterator<VariantContext> it = reader.iterator())
+            if (pindelVcf.exists())
             {
-                while (it.hasNext())
+                try (VCFFileReader reader = new VCFFileReader(pindelVcf); CloseableIterator<VariantContext> it = reader.iterator())
                 {
-                    VariantContext vc = it.next();
-                    if (vc.hasAttribute("IN_CONSENSUS"))
+                    while (it.hasNext())
                     {
-                        pindelConsensusVariants.add(vc);
-                        totalPindelConsensusVariants++;
-                    }
+                        VariantContext vc = it.next();
+                        if (vc.hasAttribute("IN_CONSENSUS"))
+                        {
+                            pindelConsensusVariants.add(vc);
+                            totalPindelConsensusVariants++;
+                        }
 
-                    totalPindelVariants++;
+                        totalPindelVariants++;
+                    }
                 }
             }
 
             getPipelineCtx().getLogger().info("Total pindel variants: " + totalPindelVariants);
             getPipelineCtx().getLogger().info("Total consensus pindel variants: " + totalPindelConsensusVariants);
-            if (totalPindelConsensusVariants == 0)
+            if (totalPindelConsensusVariants == 0 && pindelVcf.exists())
             {
                 getPipelineCtx().getLogger().info("deleting empty pindel VCF: " + pindelVcf.getPath());
                 pindelVcf.delete();

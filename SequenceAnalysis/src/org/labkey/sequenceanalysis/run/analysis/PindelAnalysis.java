@@ -458,7 +458,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                 .setOption(Options.USE_ASYNC_IO)
                 .setReferenceDictionary(dict);
 
-        try (CSVReader reader = new CSVReader(Readers.getReader(pindelOutput), '\t'); VariantContextWriter writer = b.build())
+        try (CSVReader reader = new CSVReader(Readers.getReader(pindelOutput), '\t'))
         {
             VCFHeader header = new VCFHeader();
             header.setSequenceDictionary(dict);
@@ -466,6 +466,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
             header.addMetaDataLine(VCFStandardHeaderLines.getInfoLine(VCFConstants.ALLELE_FREQUENCY_KEY));
             header.addMetaDataLine(VCFStandardHeaderLines.getInfoLine(VCFConstants.DEPTH_KEY));
             SortingCollection<VariantContext> toWrite = LofreqAnalysis.getVariantSorter(header);
+            int totalAdded = 0;
 
             String[] line;
             while ((line = reader.readNext()) != null)
@@ -518,21 +519,27 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                 vcb.attribute(VCFConstants.ALLELE_FREQUENCY_KEY, Double.parseDouble(line[6]));
 
                 vcb.attribute("IN_CONSENSUS", inConsensus);
-                vcb.attribute("GATK_DP", (int)Double.parseDouble(line[7]));
+                vcb.attribute("GATK_DP", (int) Double.parseDouble(line[7]));
 
                 int dp = "I".equals(line[0]) ? Integer.parseInt(line[4]) : (int) Double.parseDouble(line[10]);
                 vcb.attribute(VCFConstants.DEPTH_KEY, dp);
 
+                totalAdded++;
                 toWrite.add(vcb.make());
             }
 
-            try (CloseableIterator<VariantContext> iterator = toWrite.iterator())
+            if (totalAdded > 0)
             {
-                while (iterator.hasNext())
+                try (CloseableIterator<VariantContext> iterator = toWrite.iterator(); VariantContextWriter writer = b.build())
                 {
-                    writer.add(iterator.next());
+                    writer.writeHeader(header);
+                    while (iterator.hasNext())
+                    {
+                        writer.add(iterator.next());
+                    }
                 }
             }
+
             toWrite.cleanup();
         }
         catch (IOException e)
