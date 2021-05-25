@@ -1223,7 +1223,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         }
     }
 
-    private SortingCollection<VariantContext> getVariantSorter(VCFHeader outputHeader) {
+    public static SortingCollection<VariantContext> getVariantSorter(VCFHeader outputHeader) {
         File tmpDir = IOUtil.getDefaultTmpDir();
         if (!tmpDir.exists()) {
             tmpDir.mkdirs();
