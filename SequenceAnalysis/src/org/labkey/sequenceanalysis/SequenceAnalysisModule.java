@@ -134,7 +134,7 @@ import org.labkey.sequenceanalysis.run.util.CombineGVCFsHandler;
 import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.run.util.GenomicsDBAppendHandler;
 import org.labkey.sequenceanalysis.run.util.GenomicsDBImportHandler;
-import org.labkey.sequenceanalysis.run.variant.CombineVariantsHandler;
+import org.labkey.sequenceanalysis.run.variant.MergeVcfsAndGenotypesHandler;
 import org.labkey.sequenceanalysis.run.variant.DepthOfCoverageHandler;
 import org.labkey.sequenceanalysis.run.variant.GenotypeConcordanceStep;
 import org.labkey.sequenceanalysis.run.variant.GenotypeFiltrationStep;
@@ -343,7 +343,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new SbtGeneCountHandler());
         SequenceAnalysisService.get().registerFileHandler(new ProcessVariantsHandler());
         SequenceAnalysisService.get().registerFileHandler(new UnmappedReadExportHandler());
-        SequenceAnalysisService.get().registerFileHandler(new CombineVariantsHandler());
+        SequenceAnalysisService.get().registerFileHandler(new MergeVcfsAndGenotypesHandler());
         SequenceAnalysisService.get().registerFileHandler(new DepthOfCoverageHandler());
         SequenceAnalysisService.get().registerFileHandler(new MultiAllelicPositionsHandler());
         SequenceAnalysisService.get().registerFileHandler(new RecalculateSequenceMetricsHandler());
