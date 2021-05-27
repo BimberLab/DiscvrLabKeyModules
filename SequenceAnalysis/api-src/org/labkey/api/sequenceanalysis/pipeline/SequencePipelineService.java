@@ -93,10 +93,15 @@ abstract public class SequencePipelineService
     abstract public CommandWrapper getCommandWrapper(Logger log);
 
     /**
-     * This allows instances to override the default docker exeutable. If DOCKER_EXE is provided in pipelineConfig.xml, this
-     * will be used. Otherise this defaults to 'docker'
+     * This allows instances to override the default docker executable. If DOCKER_EXE is provided in pipelineConfig.xml, this
+     * will be used. Otherwise this defaults to 'docker'
      */
     abstract public String getDockerCommand();
+
+    /**
+     * This allows instances to supply a user that will be passed to 'docker login'. This is rarely needed. It can be set using DOCKER_USER in pipelineConfig.xml
+     */
+    abstract public String getDockerUser();
 
     abstract public List<File> getSequenceJobInputFiles(PipelineJob job);
 
