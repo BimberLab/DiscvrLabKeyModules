@@ -236,7 +236,7 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         return new File(consensusFasta.getParentFile(), FileUtil.getBaseName(consensusFasta) + ".pangolin.csv");
     }
 
-    private static void runUsingDocker(File outputDir, Logger log, File consensusFasta) throws PipelineJobException
+    private static File runUsingDocker(File outputDir, Logger log, File consensusFasta) throws PipelineJobException
     {
         File localBashScript = new File(outputDir, "dockerWrapper.sh");
         try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
@@ -281,17 +281,20 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         rWrapper.setWorkingDir(outputDir);
         rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
 
-        localBashScript.delete();
-    }
-
-    public static String[] runPangolin(File consensusFasta, Logger log, PipelineOutputTracker tracker) throws PipelineJobException
-    {
-        runUsingDocker(consensusFasta.getParentFile(), log, consensusFasta);
         File output = new File(consensusFasta.getParentFile(), "lineage_report.csv");
         if (!output.exists())
         {
             throw new PipelineJobException("Pangolin output not found: " + output.getPath());
         }
+
+        localBashScript.delete();
+
+        return output;
+    }
+
+    public static String[] runPangolin(File consensusFasta, Logger log, PipelineOutputTracker tracker) throws PipelineJobException
+    {
+        File output = runUsingDocker(consensusFasta.getParentFile(), log, consensusFasta);
 
         try
         {
