@@ -33,12 +33,14 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -246,19 +248,57 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         return new File(consensusFasta.getParentFile(), FileUtil.getBaseName(consensusFasta) + ".pangolin.csv");
     }
 
+    private static void runUsingDocker(File outputDir, Logger log, File consensusFasta) throws PipelineJobException
+    {
+        File localBashScript = new File(outputDir, "dockerWrapper.sh");
+        try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
+        {
+            writer.println("#!/bin/bash");
+            writer.println("set -x");
+            writer.println("WD=`pwd`");
+            writer.println("HOME=`echo ~/`");
+
+            writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
+            writer.println("sudo $DOCKER pull staphb/pangolin");
+            writer.println("sudo $DOCKER run --rm=true \\");
+
+            if (SequencePipelineService.get().getMaxThreads(log) != null)
+            {
+                writer.println("\t-e SEQUENCEANALYSIS_MAX_THREADS \\");
+            }
+
+            Integer maxRam = SequencePipelineService.get().getMaxRam();
+            if (maxRam != null)
+            {
+                writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM \\");
+                writer.println("\t--memory='" + maxRam + "g' \\");
+            }
+
+            writer.println("\t-v \"${WD}:/work\" \\");
+            writer.println("\t-u $UID \\");
+            writer.println("\t-e USERID=$UID \\");
+            writer.println("\t-w /work \\");
+            writer.println("\tstaphb/pangolin \\");
+            writer.println("\tpangolin --update && pangolin '/work/" + consensusFasta.getName() + "'");
+            writer.println("");
+            writer.println("echo 'Bash script complete'");
+            writer.println("");
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        SimpleScriptWrapper rWrapper = new SimpleScriptWrapper(log);
+        rWrapper.setWorkingDir(outputDir);
+        rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
+
+        localBashScript.delete();
+    }
+
     public static String[] runPangolin(File consensusFasta, Logger log, PipelineOutputTracker tracker) throws PipelineJobException
     {
-        SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
-        wrapper.setWorkingDir(consensusFasta.getParentFile());
-
-        File pangolin = SequencePipelineService.get().getExeForPackage("PANGOLINPATH", "pangolin");
-
-        List<String> args = new ArrayList<>();
-        args.add(pangolin.getPath());
-        args.add(consensusFasta.getPath());
-
-        wrapper.execute(args);
-
+        runUsingDocker(consensusFasta.getParentFile(), log, consensusFasta);
         File output = new File(consensusFasta.getParentFile(), "lineage_report.csv");
         if (!output.exists())
         {
