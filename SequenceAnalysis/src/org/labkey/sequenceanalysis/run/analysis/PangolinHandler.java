@@ -188,8 +188,6 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         @Override
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
-            PangolinHandler.updatePangolinRefs(ctx.getLogger());
-
             //write metrics:
             try (CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(getMetricsFile(ctx.getSourceDirectory())), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
@@ -231,16 +229,6 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         {
             return new File(webserverDir, "metrics.txt");
         }
-    }
-
-    public static void updatePangolinRefs(Logger log) throws PipelineJobException
-    {
-        log.info("Updating pangolin lineages");
-
-        SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
-
-        File pangolin = SequencePipelineService.get().getExeForPackage("PANGOLINPATH", "pangolin-update.sh");
-        wrapper.execute(Arrays.asList("/bin/bash", pangolin.getPath()));
     }
 
     public static File getRenamedPangolinOutput(File consensusFasta)
