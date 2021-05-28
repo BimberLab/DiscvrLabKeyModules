@@ -233,11 +233,11 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
 
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
             String dockerUser = SequencePipelineService.get().getDockerUser();
-            if (dockerUser != null)
-            {
-                // NOTE: the exacloud wrapper script strips -u, so we need to pass on stdin
-                writer.println("echo '" + dockerUser + "' | $DOCKER login -p $(cat ~/.ghcr) ghcr.io");
-            }
+            //if (dockerUser != null)
+            //{
+            //    // NOTE: the exacloud wrapper script strips -u, so we need to pass on stdin
+            //    writer.println("echo '" + dockerUser + "' | $DOCKER login -p $(cat ~/.ghcr) ghcr.io");
+            //}
 
             writer.println("sudo $DOCKER pull ghcr.io/bimberlabinternal/pangolin:latest");
             writer.println("sudo $DOCKER run --rm=true \\");
