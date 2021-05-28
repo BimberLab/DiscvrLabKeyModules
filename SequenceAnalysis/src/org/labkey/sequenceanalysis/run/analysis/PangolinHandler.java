@@ -251,7 +251,7 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
             if (dockerUser != null)
             {
                 // NOTE: the exacloud wrapper script strips -u, so we need to pass on stdin
-                writer.println("echo $DOCKER_USER | $DOCKER login -p $(cat ~/.ghcr) ghcr.io");
+                writer.println("echo '" + dockerUser + "' | $DOCKER login -p $(cat ~/.ghcr) ghcr.io");
             }
 
             writer.println("sudo $DOCKER pull ghcr.io/bimberlabinteral/pangolin:latest");
