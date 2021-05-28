@@ -259,7 +259,7 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
             writer.println("\t-e USERID=$UID \\");
             writer.println("\t-w /work \\");
             writer.println("\tghcr.io/bimberlabinternal/pangolin:latest \\");
-            writer.println("\t/bin/bash -c \"pangolin --update && pangolin '/work/" + consensusFasta.getName() + "'\"");
+            writer.println("\tpangolin '/work/" + consensusFasta.getName() + "'");
             writer.println("");
             writer.println("echo 'Bash script complete'");
             writer.println("");
