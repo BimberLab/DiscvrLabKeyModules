@@ -254,7 +254,7 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
                 writer.println("echo '" + dockerUser + "' | $DOCKER login -p $(cat ~/.ghcr) ghcr.io");
             }
 
-            writer.println("sudo $DOCKER pull ghcr.io/bimberlabinteral/pangolin:latest");
+            writer.println("sudo $DOCKER pull ghcr.io/bimberlabinternal/pangolin:latest");
             writer.println("sudo $DOCKER run --rm=true \\");
 
             if (SequencePipelineService.get().getMaxThreads(log) != null)
@@ -273,7 +273,7 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");
             writer.println("\t-w /work \\");
-            writer.println("\tghcr.io/bimberlabinteral/pangolin:latest \\");
+            writer.println("\tghcr.io/bimberlabinternal/pangolin:latest \\");
             writer.println("\tpangolin --update && pangolin '/work/" + consensusFasta.getName() + "'");
             writer.println("");
             writer.println("echo 'Bash script complete'");
