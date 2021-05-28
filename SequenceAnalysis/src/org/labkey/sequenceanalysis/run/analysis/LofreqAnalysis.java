@@ -741,11 +741,10 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
             if (pangolinData != null)
             {
-                writer.writeNext(new String[]{"Pangolin", "PangolinLineage", pangolinData[1]});
-                writer.writeNext(new String[]{"Pangolin", "PangolinConflicts", pangolinData[2]});
+                writer.writeNext(new String[]{"Pangolin", "PangolinLineage", pangolinData[0]});
+                writer.writeNext(new String[]{"Pangolin", "PangolinConflicts", pangolinData[1]});
+                writer.writeNext(new String[]{"Pangolin", "PangolinAmbiguity", pangolinData[2]});
                 writer.writeNext(new String[]{"Pangolin", "PangolinVersions", pangolinData[3]});
-                //TODO: consider parsing
-                writer.writeNext(new String[]{"Pangolin", "PangolinComment", pangolinData[4]});
             }
             else
             {
