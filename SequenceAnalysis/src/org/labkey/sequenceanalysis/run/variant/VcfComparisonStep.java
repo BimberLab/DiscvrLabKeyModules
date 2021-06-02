@@ -114,6 +114,8 @@ public class VcfComparisonStep extends AbstractCommandPipelineStep<VcfComparison
             args.add("-O");
             args.add(outputTable.getPath());
 
+            args.add("--ignore-variants-starting-outside-interval");
+
             args.add("-sites-output");
             args.add(outputTableSites.getPath());
 

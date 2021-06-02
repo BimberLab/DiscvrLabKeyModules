@@ -35,6 +35,7 @@ public class VariantQCWrapper extends AbstractDiscvrSeqWrapper
         args.add(inputVCF.getPath());
         args.add("-O");
         args.add(outputHtml.getPath());
+        args.add("--ignore-variants-starting-outside-interval");
         if (options != null)
         {
             args.addAll(options);

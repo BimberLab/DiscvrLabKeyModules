@@ -47,6 +47,7 @@ public class MergeVcfsAndGenotypesWrapper extends AbstractDiscvrSeqWrapper
         args.add("MergeVcfsAndGenotypes");
         args.add("-R");
         args.add(referenceFasta.getPath());
+        args.add("--ignore-variants-starting-outside-interval");
 
         List<String> priorities = new ArrayList<>();
         int idx = 0;
