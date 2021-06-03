@@ -4,8 +4,9 @@ for (datasetId in names(seuratObjects)) {
     seuratObjects[[datasetId]] <- NULL
 
     outFile = paste0(outputPrefix, '.', datasetId, '.markers.txt')
+    datasetName <- datasetIdToName[[datasetId]]
+
     dt <- bindArgs(CellMembrane::Find_Markers, seuratObj)()
-    dt$x$caption <- paste0('<caption>Top DE Genes: ', datasetId, '</caption>')
     plotList[[datasetId]] <- dt
 
     # Cleanup
