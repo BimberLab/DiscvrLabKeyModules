@@ -116,8 +116,9 @@ public class AppendSaturation extends AbstractCellMembraneStep
         lines.add(")");
         lines.add("");
 
-        List<Chunk> ret = super.getChunks(ctx);
+        List<Chunk> ret = new ArrayList<>();
         ret.add(new Chunk("molInfoFiles", null, null, lines, null));
+        ret.addAll(super.getChunks(ctx));
 
         return ret;
     }
