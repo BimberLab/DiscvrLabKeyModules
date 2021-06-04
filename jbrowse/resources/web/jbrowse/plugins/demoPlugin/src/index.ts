@@ -13,22 +13,10 @@ import {
 } from '@jbrowse/core/pluggableElementTypes/models'
 
 import AdapterType from "@jbrowse/core/pluggableElementTypes/AdapterType";
-import { AdapterClass, configSchema } from "./LinearGenomeViewHelloAdapter";
 
 export default class MyProjectPlugin extends Plugin {
   name = 'MyProject'
   version = version
-/*
-  install(pluginManager: any) {
-    pluginManager.addAdapterType(
-      () =>
-        new AdapterType ({
-          name: "LGVHelloAdapter",
-          configSchema,
-          AdapterClass,
-        })
-    )
-  }*/
 
   install(pluginManager: PluginManager) {
     console.log("Installing plugins")

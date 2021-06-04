@@ -577,18 +577,6 @@
       _this.version = version;
       return _this;
     }
-    /*
-      install(pluginManager: any) {
-        pluginManager.addAdapterType(
-          () =>
-            new AdapterType ({
-              name: "LGVHelloAdapter",
-              configSchema,
-              AdapterClass,
-            })
-        )
-      }*/
-
 
     _createClass(MyProjectPlugin, [{
       key: "install",
