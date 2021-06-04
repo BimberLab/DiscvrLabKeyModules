@@ -1,4 +1,4 @@
-plotlist <- list()
+plotList <- list()
 for (datasetId in names(seuratObjects)) {
     seuratObj <- seuratObjects[[datasetId]]
     seuratObjects[[datasetId]] <- NULL
@@ -14,4 +14,4 @@ for (datasetId in names(seuratObjects)) {
     gc()
 }
 
-htmltools::tagList(setNames(plotlist, NULL))
+htmltools::tagList(setNames(plotList, NULL))
