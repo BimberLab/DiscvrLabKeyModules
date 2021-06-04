@@ -1,3 +1,12 @@
+import React from 'react';
+import { mount } from 'enzyme';
+import { mocked } from 'ts-jest/utils';
+import { jest, beforeEach, describe, expect, test } from '@jest/globals';
+
+import { Ajax, Utils, ActionURL} from '@labkey/api';
+import View from "./Browser"
+
+const mockData =
 {
   "configuration": {},
   "assemblies":
@@ -69,3 +78,39 @@
   ],
   "connections": []
 }
+
+jest.mock('@labkey/api', () => {
+    return {
+        Ajax: {
+            request: jest.fn()
+        },
+        ActionURL: {
+            buildURL: jest.fn()
+        }
+    }
+})
+const mockedRequest = mocked(Ajax, true)
+
+describe('JBrowse 2 Browser', () => {
+
+
+    test('Renders error string if no config provided', async () => {
+
+        const wrapper = mount(<View />);
+        expect(wrapper.contains(<p>Error - no session provided.</p>)).toEqual(true);
+    });
+
+
+    test('Renders browser if config provided', async () => {
+        jest.spyOn(URLSearchParams.prototype, "get").mockImplementation(() => "demo") // Set session to "demo" when queryParam.get is called.
+
+        mockedRequest.request.mockReset();
+        mockedRequest.request.mockImplementation(({ success }) => {
+             success({ response: JSON.stringify(mockData) } as XMLHttpRequest, null);
+             return {} as XMLHttpRequest;
+         });
+        const wrapper = mount(<View />);
+        expect(wrapper.find('.MuiPaper-root')).toHaveLength(2)
+    });
+
+});

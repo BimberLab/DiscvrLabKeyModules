@@ -5,7 +5,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.AbstractTableInfo;
-import org.labkey.api.data.BaseColumnInfo;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DataColumn;
@@ -162,7 +161,7 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
         COL_ENUM(Class dataType, @Nullable Collection<String> alternateNames){
             this.dataType = dataType;
             if (alternateNames != null)
-            this.alternateNames.addAll(alternateNames);
+                this.alternateNames.addAll(alternateNames);
         }
 
         public Collection<String> getAlternateNames()
@@ -170,7 +169,7 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
             return alternateNames;
         }
 
-        private static void setNonEditable(BaseColumnInfo col)
+        private static void setNonEditable(MutableColumnInfo col)
         {
             col.setUserEditable(false);
             col.setShownInInsertView(false);
@@ -182,8 +181,8 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
             if (col.getFk() == null)
             {
                 col.setFk(QueryForeignKey.from(DefaultSchema.get(u,c),null)
-                    .schema(schema, c)
-                    .to(query, pkCol, displayCol));
+                        .schema(schema, c)
+                        .to(query, pkCol, displayCol));
             }
         }
 

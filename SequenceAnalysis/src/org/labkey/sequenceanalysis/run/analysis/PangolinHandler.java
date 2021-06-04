@@ -30,15 +30,18 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineOutputTracker;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,7 +55,9 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
 {
     public PangolinHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), "Pangolin", "Runs pangolin, a tool for assigning SARS-CoV-2 data to lineage", null, Collections.emptyList());
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), "Pangolin", "Runs pangolin, a tool for assigning SARS-CoV-2 data to lineage", null, Arrays.asList(
+                //ToolParameterDescriptor.create()
+        ));
     }
 
     @Override
@@ -104,9 +109,9 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
                     row1.put("metricName", "PangolinLineage");
                     row1.put("qualvalue", line[1]);
                     row1.put("container", so.getContainer());
-                    if (StringUtils.trimToNull(line[3]) != null)
+                    if (StringUtils.trimToNull(line[4]) != null)
                     {
-                        row1.put("comment", line[3]);
+                        row1.put("comment", line[4]);
                     }
                     toInsert.add(row1);
 
@@ -120,26 +125,26 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
                         row2.put("metricName", "PangolinConflicts");
                         row2.put("value", Double.parseDouble(line[2]));
                         row2.put("container", so.getContainer());
-                        if (StringUtils.trimToNull(line[3]) != null)
+                        if (StringUtils.trimToNull(line[4]) != null)
                         {
-                            row2.put("comment", line[3]);
+                            row2.put("comment", line[4]);
                         }
                         toInsert.add(row2);
                     }
 
-                    if (StringUtils.trimToNull(line[4]) != null)
+                    if (StringUtils.trimToNull(line[3]) != null)
                     {
                         Map<String, Object> row = new CaseInsensitiveHashMap<>();
                         row.put("dataid", so.getDataId());
                         row.put("readset", so.getReadset());
                         row.put("analysis_id", so.getAnalysis_id());
                         row.put("category", "Pangolin");
-                        row.put("metricName", "PangolinSummary");
-                        row.put("qualvalue", line[4]);
+                        row.put("metricName", "PangolinAmbiguity");
+                        row.put("qualvalue", line[3]);
                         row.put("container", so.getContainer());
-                        if (StringUtils.trimToNull(line[3]) != null)
+                        if (StringUtils.trimToNull(line[4]) != null)
                         {
-                            row.put("comment", line[3]);
+                            row.put("comment", line[4]);
                         }
                         toInsert.add(row);
                     }
@@ -186,37 +191,17 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         @Override
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
-            PangolinHandler.updatePangolinRefs(ctx.getLogger());
-
             //write metrics:
             try (CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(getMetricsFile(ctx.getSourceDirectory())), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
                 for (SequenceOutputFile so : inputFiles)
                 {
                     String[] pangolinData = runPangolin(so.getFile(), ctx.getLogger(), ctx.getFileManager());
+                    List<String> vals = new ArrayList<>();
+                    vals.add(String.valueOf(so.getRowid()));
+                    vals.addAll(Arrays.asList(pangolinData));
 
-                    List<String> versions = new ArrayList<>();
-                    if (pangolinData != null)
-                    {
-                        if (StringUtils.trimToNull(pangolinData[3]) != null)
-                        {
-                            versions.add("Pangolin version: " + pangolinData[3]);
-                        }
-
-                        if (StringUtils.trimToNull(pangolinData[4]) != null)
-                        {
-                            versions.add("pangoLEARN version: " + pangolinData[4]);
-                        }
-
-                        if (StringUtils.trimToNull(pangolinData[5]) != null)
-                        {
-                            versions.add("pango version: " + pangolinData[5]);
-                        }
-                    }
-
-                    String comment = StringUtils.join(versions, ",");
-
-                    writer.writeNext(new String[]{String.valueOf(so.getRowid()), (pangolinData == null ? "QC Fail" : pangolinData[1]), (pangolinData == null ? "" : pangolinData[2]), comment, (pangolinData == null ? "" : pangolinData[7])});
+                    writer.writeNext(vals.toArray(new String[0]));
                 }
             }
             catch (IOException e)
@@ -231,33 +216,62 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         }
     }
 
-    public static void updatePangolinRefs(Logger log) throws PipelineJobException
-    {
-        log.info("Updating pangolin lineages");
-
-        SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
-
-        File pangolin = SequencePipelineService.get().getExeForPackage("PANGOLINPATH", "pangolin-update.sh");
-        wrapper.execute(Arrays.asList("/bin/bash", pangolin.getPath()));
-    }
-
     public static File getRenamedPangolinOutput(File consensusFasta)
     {
         return new File(consensusFasta.getParentFile(), FileUtil.getBaseName(consensusFasta) + ".pangolin.csv");
     }
 
-    public static String[] runPangolin(File consensusFasta, Logger log, PipelineOutputTracker tracker) throws PipelineJobException
+    private static File runUsingDocker(File outputDir, Logger log, File consensusFasta) throws PipelineJobException
     {
-        SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
-        wrapper.setWorkingDir(consensusFasta.getParentFile());
+        File localBashScript = new File(outputDir, "dockerWrapper.sh");
+        try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
+        {
+            writer.println("#!/bin/bash");
+            writer.println("set -x");
+            writer.println("WD=`pwd`");
+            writer.println("HOME=`echo ~/`");
 
-        File pangolin = SequencePipelineService.get().getExeForPackage("PANGOLINPATH", "pangolin");
+            writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
+            String dockerUser = SequencePipelineService.get().getDockerUser();
+            //if (dockerUser != null)
+            //{
+            //    // NOTE: the exacloud wrapper script strips -u, so we need to pass on stdin
+            //    writer.println("echo '" + dockerUser + "' | $DOCKER login -p $(cat ~/.ghcr) ghcr.io");
+            //}
 
-        List<String> args = new ArrayList<>();
-        args.add(pangolin.getPath());
-        args.add(consensusFasta.getPath());
+            writer.println("sudo $DOCKER pull ghcr.io/bimberlabinternal/pangolin:latest");
+            writer.println("sudo $DOCKER run --rm=true \\");
 
-        wrapper.execute(args);
+            if (SequencePipelineService.get().getMaxThreads(log) != null)
+            {
+                writer.println("\t-e SEQUENCEANALYSIS_MAX_THREADS \\");
+            }
+
+            Integer maxRam = SequencePipelineService.get().getMaxRam();
+            if (maxRam != null)
+            {
+                writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM \\");
+                writer.println("\t--memory='" + maxRam + "g' \\");
+            }
+
+            writer.println("\t-v \"${WD}:/work\" \\");
+            writer.println("\t-u $UID \\");
+            writer.println("\t-e USERID=$UID \\");
+            writer.println("\t-w /work \\");
+            writer.println("\tghcr.io/bimberlabinternal/pangolin:latest \\");
+            writer.println("\tpangolin '/work/" + consensusFasta.getName() + "'");
+            writer.println("");
+            writer.println("echo 'Bash script complete'");
+            writer.println("");
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        SimpleScriptWrapper rWrapper = new SimpleScriptWrapper(log);
+        rWrapper.setWorkingDir(outputDir);
+        rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
 
         File output = new File(consensusFasta.getParentFile(), "lineage_report.csv");
         if (!output.exists())
@@ -265,16 +279,51 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
             throw new PipelineJobException("Pangolin output not found: " + output.getPath());
         }
 
+        localBashScript.delete();
+
+        return output;
+    }
+
+    public static String[] runPangolin(File consensusFasta, Logger log, PipelineOutputTracker tracker) throws PipelineJobException
+    {
+        File output = runUsingDocker(consensusFasta.getParentFile(), log, consensusFasta);
+
         try
         {
             File outputMoved = getRenamedPangolinOutput(consensusFasta);
+            if (outputMoved.exists())
+            {
+                outputMoved.delete();
+            }
+
             FileUtils.moveFile(output, outputMoved);
             try (CSVReader reader = new CSVReader(Readers.getReader(outputMoved)))
             {
                 reader.readNext(); //header
-                String[] line = reader.readNext();
+                String[] pangolinData = reader.readNext();
 
-                return line;
+                List<String> versions = new ArrayList<>();
+                if (pangolinData != null)
+                {
+                    if (StringUtils.trimToNull(pangolinData[8]) != null)
+                    {
+                        versions.add("Pangolin version: " + pangolinData[8]);
+                    }
+
+                    if (StringUtils.trimToNull(pangolinData[9]) != null)
+                    {
+                        versions.add("pangoLEARN version: " + pangolinData[9]);
+                    }
+
+                    if (StringUtils.trimToNull(pangolinData[10]) != null)
+                    {
+                        versions.add("pango version: " + pangolinData[10]);
+                    }
+                }
+
+                String comment = StringUtils.join(versions, ",");
+
+                return new String[]{(pangolinData == null ? "QC Fail" : pangolinData[1]), (pangolinData == null ? "" : pangolinData[2]), (pangolinData == null ? "" : pangolinData[3]), comment};
             }
         }
         catch (IOException e)

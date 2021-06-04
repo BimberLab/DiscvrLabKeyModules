@@ -4,7 +4,14 @@ for (datasetId in names(seuratObjects)) {
 
     for (field in fieldNames) {
         if (!(field %in% names(seuratObj@meta.data))) {
+            print(paste0('Field missing, skipping: ', field))
             next
+        }
+
+        if (length((unique(seuratObj@meta.data))) <= 1) {
+            next
+        } else {
+            print(paste0('Object has one or fewer values, skipping: ', field))
         }
 
         P1 <- Seurat::DimPlot(seuratObj, group.by = field, reduction = 'tsne')

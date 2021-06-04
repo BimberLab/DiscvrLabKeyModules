@@ -30,6 +30,7 @@ public class SubsetSeurat extends AbstractCellMembraneStep
             super("SubsetSeurat", "Subset", "CellMembrane/Seurat", "The seurat object will be subset based on the expression below, which is passed directly to Seurat's subset(subset = X).", Arrays.asList(
                     ToolParameterDescriptor.create("expression", "Expression", "Filter Expression(s)", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("allowBlank", false);
+                        put("replaceAllWhitespace", false);
                         put("height", 150);
                         put("width", 600);
                         put("delimiter", DELIM);
@@ -55,7 +56,7 @@ public class SubsetSeurat extends AbstractCellMembraneStep
         return ret;
     }
 
-    final static String EXPRESSION = "<SUBSETS>";
+    final static String EXPRESSION = "<SUBSET_CODE>";
     final static String DELIM = "<>";
 
     @Override
@@ -77,9 +78,27 @@ public class SubsetSeurat extends AbstractCellMembraneStep
             {
                 for (String subset : values)
                 {
-                    String toSub = "seuratObj <- subset(seuratObj, subset = " + subset + ")";
-                    ret.add(line.replaceAll(EXPRESSION, toSub));
-                    ret.add(line.replaceAll(EXPRESSION, "print(paste0('Cells after subset: ', ncol(seuratObj)))"));
+                    String subsetEscaped = subset.replace("'", "\\\'");
+
+                    ret.add("\tif (!is.null(seuratObj)) {");
+                    ret.add("\t\tcells <- c()");
+                    ret.add("\t\ttryCatch({");
+                    ret.add("\t\t\tcells <- WhichCells(seuratObj, expression = " + subset + ")");
+                    ret.add("\t\t}, error = function(e){");
+                    ret.add("\t\t\tif (!is.null(e) && e$message == 'Cannot find cells provided') {");
+                    ret.add("\t\t\t\tprint(paste0('There were no cells remaining after the subset: ', '" + subsetEscaped + "'))");
+                    ret.add("\t\t\t}");
+                    ret.add("\t\t})");
+                    ret.add("");
+                    ret.add("\t\tif (length(cells) == 0) {");
+                    ret.add("\t\t\tprint(paste0('There were no cells after subsetting for dataset: ', datasetId, ', with subset: ', '" + subsetEscaped + "'))");
+                    ret.add("\t\t\tseuratObj <- NULL");
+                    ret.add("\t\t} else {");
+                    ret.add("\t\t\tseuratObj <- subset(seuratObj, cells = cells)");
+                    ret.add("\t\t\tprint(paste0('Cells after subset: ', ncol(seuratObj)))");
+                    ret.add("\t\t\tnewSeuratObjects[[datasetId]] <- seuratObj");
+                    ret.add("\t\t}");
+                    ret.add("}");
                 }
             }
             else

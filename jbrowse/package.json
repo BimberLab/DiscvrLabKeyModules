@@ -1,19 +1,30 @@
 {
   "name": "jbrowse-lk",
   "version": "0.0.0",
+  "private": true,
   "scripts": {
-    "clean": "bnr clean",
-    "build": "npm run clean",
-    "build-prod": "npm run build",
-    "prebuild": "npm run clean",
-    "setup": "npm install"
+    "setup": "npm ci",
+    "build": "npm run build-dev",
+    "start": "cross-env NODE_ENV=development LK_MODULE_CONTAINER=DiscvrLabKeyModules LK_MODULE=jbrowse webpack-dev-server --config config/watch.config.js",
+    "build-dev": "npm run clean && cross-env NODE_ENV=development LK_MODULE_CONTAINER=DiscvrLabKeyModules LK_MODULE=jbrowse webpack --config config/dev.config.js --progress --profile",
+    "build-prod": "npm run clean && cross-env NODE_ENV=production PROD_SOURCE_MAP=source-map LK_MODULE_CONTAINER=DiscvrLabKeyModules LK_MODULE=jbrowse webpack --config config/prod.config.js --progress --profile",
+    "clean": "rimraf resources/web/jbrowse/gen && rimraf resources/views/gen && rimraf resources/views/browser*",
+    "test": "cross-env NODE_ENV=test jest"
   },
-  "betterScripts": {
-    "clean": {
-      "command": "rimraf resources/web/jbrowseApp"
-    }
+  "dependencies": {
+    "@jbrowse/react-linear-genome-view": "^1.1.0",
+    "@labkey/components": "2.13.0",
+    "regenerator-runtime": "^0.13.7",
+    "typescript": "^3.5.2",
+    "node-polyfill-webpack-plugin": "1.1.0",
+    "buffer": "",
+    "path-browserify": "",
+    "stream-browserify": "",
+    "browserify-zlib": "",
+    "vm-browserify": "",
+    "assert": "",
+    "util": ""
   },
-  "dependencies": {},
   "devDependencies": {
     "better-npm-run": "~0.1.0",
     "@gmod/jbrowse": "github:GMOD/jbrowse#1.12.4-release",
@@ -21,6 +32,46 @@
     "lodash": ">=4.17.21",
     "growl": ">=1.10.2",
     "dojox": ">=1.16.3",
-    "dijit": ">=1.16.3"
+    "dijit": ">=1.16.3",
+    "@labkey/build": "2.1.0",
+    "@types/enzyme": "3.10.7",
+    "@types/jest": "26.0.14",
+    "@types/react": "16.9.51",
+    "@types/react-dom": "16.9.8",
+    "enzyme": "3.11.0",
+    "enzyme-adapter-react-16": "1.15.5",
+    "enzyme-to-json": "3.6.1",
+    "jest": "26.5.2",
+    "jest-teamcity-reporter": "0.9.0",
+    "jest-cli": "26.5.2",
+    "react-test-renderer": "16.13.1",
+    "ts-jest": "26.4.1"
+  },
+  "browser": {
+    "fs": false,
+    "path": false,
+    "os": false,
+    "net": false,
+    "tls": false
+  },
+  "jest": {
+    "globals": {
+      "LABKEY": {}
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/test/jest.setup.ts"
+    ],
+    "moduleNameMapper": {
+      "\\.(scss)$": "<rootDir>/test/styleMock.ts"
+    },
+    "testRegex": "(\\.(test|spec))\\.(ts|tsx)$",
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    }
   }
 }

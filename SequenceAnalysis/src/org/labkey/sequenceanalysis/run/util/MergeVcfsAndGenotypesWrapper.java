@@ -2,10 +2,9 @@ package org.labkey.sequenceanalysis.run.util;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
-import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
+import org.labkey.api.sequenceanalysis.run.AbstractDiscvrSeqWrapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,9 +14,9 @@ import java.util.List;
 /**
  * Created by bimber on 4/4/2017.
  */
-public class CombineVariantsWrapper extends AbstractGatkWrapper
+public class MergeVcfsAndGenotypesWrapper extends AbstractDiscvrSeqWrapper
 {
-    public CombineVariantsWrapper(Logger log)
+    public MergeVcfsAndGenotypesWrapper(Logger log)
     {
         super(log);
     }
@@ -29,7 +28,7 @@ public class CombineVariantsWrapper extends AbstractGatkWrapper
 
     public void execute(File referenceFasta, List<File> inputVcfs, File outputVcf, List<String> options, boolean inPriorityOrder) throws PipelineJobException
     {
-        getLogger().info("Running GATK CombineVariants");
+        getLogger().info("Running DISCVR-seq MergeVcfsAndGenotypes");
 
         ensureDictionary(referenceFasta);
         try
@@ -45,10 +44,10 @@ public class CombineVariantsWrapper extends AbstractGatkWrapper
         }
 
         List<String> args = new ArrayList<>(getBaseArgs());
-        args.add("-T");
-        args.add("CombineVariants");
+        args.add("MergeVcfsAndGenotypes");
         args.add("-R");
         args.add(referenceFasta.getPath());
+        args.add("--ignore-variants-starting-outside-interval");
 
         List<String> priorities = new ArrayList<>();
         int idx = 0;
@@ -62,7 +61,7 @@ public class CombineVariantsWrapper extends AbstractGatkWrapper
             args.add(f.getPath());
         }
 
-        args.add("-o");
+        args.add("-O");
         args.add(outputVcf.getPath());
 
         if (inPriorityOrder)

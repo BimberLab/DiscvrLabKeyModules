@@ -12,7 +12,7 @@ import java.util.List;
 
 public class ProcessSingleCellHandler extends AbstractSingleCellHandler
 {
-    private static FileType LOUPE_TYPE = new FileType("cloupe", false);
+    public static FileType LOUPE_TYPE = new FileType("cloupe", false);
 
     @Override
     public String getName()
