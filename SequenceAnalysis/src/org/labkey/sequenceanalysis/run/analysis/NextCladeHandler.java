@@ -124,8 +124,6 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
         @Override
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
-            PangolinHandler.updatePangolinRefs(ctx.getLogger());
-
             for (SequenceOutputFile so : inputFiles)
             {
                 File nextCladeJson = runNextClade(so.getFile(), ctx.getLogger(), ctx.getFileManager(), ctx.getOutputDir());

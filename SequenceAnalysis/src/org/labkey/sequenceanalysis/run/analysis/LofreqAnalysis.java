@@ -246,25 +246,27 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
             File pindelOutput = PindelAnalysis.runPindel(output, getPipelineCtx(), rs, outputDir, inputBam, referenceGenome.getWorkingFastaFile(), minFraction, minDepth, true, coverageOut, minInsertSize);
             File pindelVcf = PindelAnalysis.createVcf(pindelOutput, new File(pindelOutput.getParentFile(), FileUtil.getBaseName(pindelOutput) + ".all.vcf.gz"), referenceGenome, settings);
-
-            try (VCFFileReader reader = new VCFFileReader(pindelVcf);CloseableIterator<VariantContext> it = reader.iterator())
+            if (pindelVcf.exists())
             {
-                while (it.hasNext())
+                try (VCFFileReader reader = new VCFFileReader(pindelVcf); CloseableIterator<VariantContext> it = reader.iterator())
                 {
-                    VariantContext vc = it.next();
-                    if (vc.hasAttribute("IN_CONSENSUS"))
+                    while (it.hasNext())
                     {
-                        pindelConsensusVariants.add(vc);
-                        totalPindelConsensusVariants++;
-                    }
+                        VariantContext vc = it.next();
+                        if (vc.hasAttribute("IN_CONSENSUS"))
+                        {
+                            pindelConsensusVariants.add(vc);
+                            totalPindelConsensusVariants++;
+                        }
 
-                    totalPindelVariants++;
+                        totalPindelVariants++;
+                    }
                 }
             }
 
             getPipelineCtx().getLogger().info("Total pindel variants: " + totalPindelVariants);
             getPipelineCtx().getLogger().info("Total consensus pindel variants: " + totalPindelConsensusVariants);
-            if (totalPindelConsensusVariants == 0)
+            if (totalPindelConsensusVariants == 0 && pindelVcf.exists())
             {
                 getPipelineCtx().getLogger().info("deleting empty pindel VCF: " + pindelVcf.getPath());
                 pindelVcf.delete();
@@ -714,7 +716,6 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         String[] pangolinData = null;
         if (runPangolinAndNextClade)
         {
-            PangolinHandler.updatePangolinRefs(getPipelineCtx().getLogger());
             pangolinData = PangolinHandler.runPangolin(consensusFastaLoFreq, getPipelineCtx().getLogger(), output);
 
             File json = NextCladeHandler.runNextClade(consensusFastaLoFreq, getPipelineCtx().getLogger(), output, outputDir);
@@ -740,11 +741,10 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
             if (pangolinData != null)
             {
-                writer.writeNext(new String[]{"Pangolin", "PangolinLineage", pangolinData[1]});
-                writer.writeNext(new String[]{"Pangolin", "PangolinConflicts", pangolinData[2]});
+                writer.writeNext(new String[]{"Pangolin", "PangolinLineage", pangolinData[0]});
+                writer.writeNext(new String[]{"Pangolin", "PangolinConflicts", pangolinData[1]});
+                writer.writeNext(new String[]{"Pangolin", "PangolinAmbiguity", pangolinData[2]});
                 writer.writeNext(new String[]{"Pangolin", "PangolinVersions", pangolinData[3]});
-                //TODO: consider parsing
-                writer.writeNext(new String[]{"Pangolin", "PangolinComment", pangolinData[4]});
             }
             else
             {
@@ -1223,7 +1223,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         }
     }
 
-    private SortingCollection<VariantContext> getVariantSorter(VCFHeader outputHeader) {
+    public static SortingCollection<VariantContext> getVariantSorter(VCFHeader outputHeader) {
         File tmpDir = IOUtil.getDefaultTmpDir();
         if (!tmpDir.exists()) {
             tmpDir.mkdirs();

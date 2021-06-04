@@ -160,6 +160,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new CiteSeqPlots.Provider());
         SequencePipelineService.get().registerPipelineStep(new PhenotypePlots.Provider());
         SequencePipelineService.get().registerPipelineStep(new AppendMetadata.Provider());
+        SequencePipelineService.get().registerPipelineStep(new AppendSaturation.Provider());
     }
 
     @Override

@@ -8,8 +8,11 @@ import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.metrics.MetricsFile;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.samtools.util.SortingCollection;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.variantcontext.VariantContextBuilder;
 import htsjdk.variant.variantcontext.writer.Options;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
@@ -455,15 +458,15 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                 .setOption(Options.USE_ASYNC_IO)
                 .setReferenceDictionary(dict);
 
-        try (CSVReader reader = new CSVReader(Readers.getReader(pindelOutput), '\t'); VariantContextWriter writer = b.build())
+        try (CSVReader reader = new CSVReader(Readers.getReader(pindelOutput), '\t'))
         {
             VCFHeader header = new VCFHeader();
             header.setSequenceDictionary(dict);
             LofreqAnalysis.addMetaLines(header);
             header.addMetaDataLine(VCFStandardHeaderLines.getInfoLine(VCFConstants.ALLELE_FREQUENCY_KEY));
             header.addMetaDataLine(VCFStandardHeaderLines.getInfoLine(VCFConstants.DEPTH_KEY));
-
-            writer.writeHeader(header);
+            SortingCollection<VariantContext> toWrite = LofreqAnalysis.getVariantSorter(header);
+            int totalAdded = 0;
 
             String[] line;
             while ((line = reader.readNext()) != null)
@@ -516,13 +519,28 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
                 vcb.attribute(VCFConstants.ALLELE_FREQUENCY_KEY, Double.parseDouble(line[6]));
 
                 vcb.attribute("IN_CONSENSUS", inConsensus);
-                vcb.attribute("GATK_DP", (int)Double.parseDouble(line[7]));
+                vcb.attribute("GATK_DP", (int) Double.parseDouble(line[7]));
 
                 int dp = "I".equals(line[0]) ? Integer.parseInt(line[4]) : (int) Double.parseDouble(line[10]);
                 vcb.attribute(VCFConstants.DEPTH_KEY, dp);
 
-                writer.add(vcb.make());
+                totalAdded++;
+                toWrite.add(vcb.make());
             }
+
+            if (totalAdded > 0)
+            {
+                try (CloseableIterator<VariantContext> iterator = toWrite.iterator(); VariantContextWriter writer = b.build())
+                {
+                    writer.writeHeader(header);
+                    while (iterator.hasNext())
+                    {
+                        writer.add(iterator.next());
+                    }
+                }
+            }
+
+            toWrite.cleanup();
         }
         catch (IOException e)
         {
