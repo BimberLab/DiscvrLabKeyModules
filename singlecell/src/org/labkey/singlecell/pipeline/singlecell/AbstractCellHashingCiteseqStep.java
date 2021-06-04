@@ -40,7 +40,7 @@ abstract public class AbstractCellHashingCiteseqStep extends AbstractSingleCellP
             markdown.chunks.add(createDataChunk(countData, ctx.getOutputDir()));
             markdown.chunks.addAll(addAdditionalChunks(ctx, inputObjects, countData));
 
-            markdown.chunks.addAll(getChunks());
+            markdown.chunks.addAll(getChunks(ctx));
             markdown.chunks.add(createFinalChunk());
 
             markdown.print(out);
