@@ -43,7 +43,7 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.run.util.AbstractGenomicsDBImportHandler;
-import org.labkey.sequenceanalysis.run.util.CombineVariantsWrapper;
+import org.labkey.sequenceanalysis.run.util.MergeVcfsAndGenotypesWrapper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -524,7 +524,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 }
 
                 ReferenceGenome rg = ctx.getSequenceSupport().getCachedGenome(genomes.iterator().next());
-                CombineVariantsWrapper cv = new CombineVariantsWrapper(ctx.getLogger());
+                MergeVcfsAndGenotypesWrapper cv = new MergeVcfsAndGenotypesWrapper(ctx.getLogger());
 
                 Map<Integer, Integer> fileMap = new HashMap<>();
                 inputFiles.forEach(x -> fileMap.put(x.getRowid(), x.getDataId()));
@@ -559,7 +559,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 else
                 {
                     List<String> args = new ArrayList<>();
-                    args.add("-genotypeMergeOptions");
+                    args.add("-genotypeMergeOption");
                     args.add("PRIORITIZE");
 
                     List<Interval> intervals = getIntervals(ctx);

@@ -22,77 +22,82 @@ dependencies {
 
 ConfigurableFileTree copyDestination = fileTree("./resources/web/jbrowseApp/");
 project.task("copyJBrowse",
-        type: Copy,
-        group: "Build",
-        description: "Copy jbrowse app into webapp directory",
-        { CopySpec copy ->
-            copy.from fileTree("./node_modules/@gmod/jbrowse").exclude('css/main.css')
-            copy.into copyDestination.getDir()
-        }
+		type: Copy,
+		group: "Build",
+		description: "Copy jbrowse app into webapp directory",
+		{ CopySpec copy ->
+			copy.from fileTree("./node_modules/@gmod/jbrowse").exclude('css/main.css')
+			copy.into copyDestination.getDir()
+		}
 ).doFirst({
-    File f = project.file('./node_modules/@gmod/jbrowse');
-    if (!f.exists()){
-        throw new GradleException("Input source for copyJBrowse doesn't exist: " + f.getAbsolutePath())
-    }
+	File f = project.file('./node_modules/@gmod/jbrowse');
+	if (!f.exists()){
+		throw new GradleException("Input source for copyJBrowse doesn't exist: " + f.getAbsolutePath())
+	}
 }).onlyIf({
-    //this is a very expensive step and the input should rarely change
-    if (copyDestination.getDir().exists()) {
-        List<File> copiedFiles = copyDestination.exclude("./resources/web/jbrowseApp/css/").sort {it.lastModified()};
-        if (copiedFiles.isEmpty()) {
-            return true;
-        }
-        
-        File firstModifiedCopiedFile = copiedFiles.first()
-        File lastModifiedSourceFile = fileTree('./node_modules/@gmod/jbrowse').exclude('package.json').sort {it.lastModified()}.last()
-        if (firstModifiedCopiedFile.lastModified() < lastModifiedSourceFile.lastModified()) {
-            println("Source has been modified, need to copy again")
-            println("Copy last copied: " + new Date(firstModifiedCopiedFile.lastModified()))
-            println("First modified file: " + firstModifiedCopiedFile.getPath())
+	//this is a very expensive step and the input should rarely change
+	if (copyDestination.getDir().exists()) {
+		List<File> copiedFiles = copyDestination.exclude("./resources/web/jbrowseApp/css/").sort {it.lastModified()};
+		if (copiedFiles.isEmpty()) {
+			return true;
+		}
 
-            println("Source last modified: " + new Date(lastModifiedSourceFile.lastModified()))
-            println("Last modified file: " + lastModifiedSourceFile.getPath())
+		File firstModifiedCopiedFile = copiedFiles.first()
+		File lastModifiedSourceFile = fileTree('./node_modules/@gmod/jbrowse').exclude('package.json').sort {it.lastModified()}.last()
+		if (firstModifiedCopiedFile.lastModified() < lastModifiedSourceFile.lastModified()) {
+			println("Source has been modified, need to copy again")
+			println("Copy last copied: " + new Date(firstModifiedCopiedFile.lastModified()))
+			println("First modified file: " + firstModifiedCopiedFile.getPath())
 
-            return true;
-        }
-        else {
-            println("Up to date, no need to copy")
-            return false;
-        }
-    }
+			println("Source last modified: " + new Date(lastModifiedSourceFile.lastModified()))
+			println("Last modified file: " + lastModifiedSourceFile.getPath())
 
-    return true;
+			return true;
+		}
+		else {
+			println("Up to date, no need to copy")
+			return false;
+		}
+	}
+
+	return true;
 })
 
 project.task("copyJBrowseCss",
-        type: Copy,
-        group: "Build",
-        description: "Copy jbrowse main.css into webapp directory",
-        { CopySpec copy ->
-            copy.from new File("./webpack/main.css")
-            copy.into new File("./resources/web/jbrowseApp/css/")
-        }
+		type: Copy,
+		group: "Build",
+		description: "Copy jbrowse main.css into webapp directory",
+		{ CopySpec copy ->
+			copy.from new File("./webpack/main.css")
+			copy.into new File("./resources/web/jbrowseApp/css/")
+		}
 ).doFirst({
-    File f = project.file('./resources/web/jbrowseApp/index.html');
-    if (!f.exists())
-    {
-        throw new GradleException("copyJBrowse was not successful.  missing: " + f.getAbsolutePath())
-    }
+	File f = project.file('./resources/web/jbrowseApp/index.html');
+	if (!f.exists())
+	{
+		throw new GradleException("copyJBrowse was not successful.  missing: " + f.getAbsolutePath())
+	}
 
-    File f2 = project.file('./resources/web/jbrowseApp/src/dijit/themes/dijit.css');
-    if (!f2.exists())
-    {
-        throw new GradleException("copyJBrowse was not successful.  missing jbrowse dependencies: " + f2.getAbsolutePath())
-    }
+	File f2 = project.file('./resources/web/jbrowseApp/src/dijit/themes/dijit.css');
+	if (!f2.exists())
+	{
+		throw new GradleException("copyJBrowse was not successful.  missing jbrowse dependencies: " + f2.getAbsolutePath())
+	}
 
-    // NOTE: due to bug/inconsistency in how the jbrowse postinstall script is run, several modules may not be copied to /src.  This is a check against this.
-    // There's a jbrowse PR around this as well.
-    File f3 = project.file('./resources/web/jbrowseApp/src/jszlib');
-    if (!f3.exists())
-    {
-        throw new GradleException("copyJBrowse was not successful.  missing jbrowse dependencies: " + f3.getAbsolutePath())
-    }
+	// NOTE: due to bug/inconsistency in how the jbrowse postinstall script is run, several modules may not be copied to /src.  This is a check against this.
+	// There's a jbrowse PR around this as well.
+	File f3 = project.file('./resources/web/jbrowseApp/src/jszlib');
+	if (!f3.exists())
+	{
+		throw new GradleException("copyJBrowse was not successful.  missing jbrowse dependencies: " + f3.getAbsolutePath())
+	}
 })
 
+project.tasks.register("cleanJBrowse", Delete) {
+	delete files("./resources/web/jbrowseApp")
+}
+
+project.tasks.cleanModule.dependsOn(project.tasks.named('cleanJBrowse'))
 
 project.tasks.copyJBrowse.dependsOn(project.tasks.npmInstall)
 

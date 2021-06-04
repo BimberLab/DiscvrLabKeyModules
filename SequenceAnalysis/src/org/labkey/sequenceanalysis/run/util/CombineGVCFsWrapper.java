@@ -41,6 +41,7 @@ public class CombineGVCFsWrapper extends AbstractGatk4Wrapper
             args.add(gvcf.getPath());
         }
 
+        args.add("--ignore-variants-starting-outside-interval");
         args.add("-O");
         args.add(outputFile.getPath());
 

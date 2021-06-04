@@ -148,7 +148,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             markdown.setup = new SetupChunk(getRLibraries());
             markdown.chunks = new ArrayList<>();
             markdown.chunks.add(createParamChunk(inputObjects, outputPrefix));
-            markdown.chunks.addAll(getChunks());
+            markdown.chunks.addAll(getChunks(ctx));
             markdown.chunks.add(createFinalChunk());
 
             markdown.print(out);
@@ -161,7 +161,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         return outfile;
     }
 
-    protected List<Chunk> getChunks() throws PipelineJobException
+    protected List<Chunk> getChunks(SequenceOutputHandler.JobContext ctx) throws PipelineJobException
     {
         List<Chunk> ret = new ArrayList<>();
         ret.add(new Chunk(getProvider().getName(), getProvider().getLabel(), null, loadChunkFromFile()));
@@ -323,7 +323,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         }
         else if ("sequenceanalysis-trimmingtextarea".equals(pd.getFieldXtype()))
         {
-            val = val.replace("'", "\'");
+            val = val.replace("'", "\\\'");
             String[] vals = val.split(",");
             return "c('" + StringUtils.join(vals, "','") + "')";
         }

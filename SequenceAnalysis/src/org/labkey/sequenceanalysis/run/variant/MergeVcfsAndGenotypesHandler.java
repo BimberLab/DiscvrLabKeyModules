@@ -12,7 +12,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
-import org.labkey.sequenceanalysis.run.util.CombineVariantsWrapper;
+import org.labkey.sequenceanalysis.run.util.MergeVcfsAndGenotypesWrapper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -25,11 +25,11 @@ import java.util.Set;
 /**
  * Created by bimber on 4/4/2017.
  */
-public class CombineVariantsHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
+public class MergeVcfsAndGenotypesHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
-    public CombineVariantsHandler()
+    public MergeVcfsAndGenotypesHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Combine Variants", "Combine multiple VCF files", null, Arrays.asList(
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Merge Vcfs And Genotypes", "Combine multiple VCF files", null, Arrays.asList(
             ToolParameterDescriptor.create("basename", "Output File Name", "This will be used as the name for the output VCF.", "textfield", null, "")
         ));
     }
@@ -85,7 +85,7 @@ public class CombineVariantsHandler extends AbstractParameterizedOutputHandler<S
             inputFiles.forEach(x -> action.addInput(x.getFile(), "Combined VCF"));
 
             ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(genomeIds.iterator().next());
-            new CombineVariantsWrapper(ctx.getLogger()).execute(genome.getWorkingFastaFile(), inputVCFs, outputVcf, null);
+            new MergeVcfsAndGenotypesWrapper(ctx.getLogger()).execute(genome.getWorkingFastaFile(), inputVCFs, outputVcf, null);
             if (!outputVcf.exists())
             {
                 throw new PipelineJobException("unable to find output: " + outputVcf.getPath());

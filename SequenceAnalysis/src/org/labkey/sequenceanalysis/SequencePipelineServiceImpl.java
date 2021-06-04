@@ -404,6 +404,18 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     }
 
     @Override
+    public String getDockerUser()
+    {
+        String val = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("DOCKER_USER");
+        if (StringUtils.trimToNull(val) != null)
+        {
+            return val;
+        }
+
+        return null;
+    }
+
+    @Override
     public List<File> getSequenceJobInputFiles(PipelineJob job)
     {
         if (!(job instanceof SequenceJob))

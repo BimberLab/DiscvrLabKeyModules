@@ -134,11 +134,11 @@ import org.labkey.sequenceanalysis.run.util.CombineGVCFsHandler;
 import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.run.util.GenomicsDBAppendHandler;
 import org.labkey.sequenceanalysis.run.util.GenomicsDBImportHandler;
-import org.labkey.sequenceanalysis.run.variant.CombineVariantsHandler;
 import org.labkey.sequenceanalysis.run.variant.DepthOfCoverageHandler;
 import org.labkey.sequenceanalysis.run.variant.GenotypeConcordanceStep;
 import org.labkey.sequenceanalysis.run.variant.GenotypeFiltrationStep;
 import org.labkey.sequenceanalysis.run.variant.MendelianViolationReportStep;
+import org.labkey.sequenceanalysis.run.variant.MergeVcfsAndGenotypesHandler;
 import org.labkey.sequenceanalysis.run.variant.MultiAllelicPositionsHandler;
 import org.labkey.sequenceanalysis.run.variant.PlinkPcaStep;
 import org.labkey.sequenceanalysis.run.variant.SNPEffStep;
@@ -152,6 +152,7 @@ import org.labkey.sequenceanalysis.run.variant.VariantEvalStep;
 import org.labkey.sequenceanalysis.run.variant.VariantFiltrationStep;
 import org.labkey.sequenceanalysis.run.variant.VariantQCStep;
 import org.labkey.sequenceanalysis.run.variant.VariantsToTableStep;
+import org.labkey.sequenceanalysis.run.variant.VcfComparisonStep;
 import org.labkey.sequenceanalysis.util.Barcoder;
 import org.labkey.sequenceanalysis.util.ChainFileValidator;
 import org.labkey.sequenceanalysis.util.ScatterGatherUtils;
@@ -326,6 +327,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new VariantQCStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new PlinkPcaStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new MendelianViolationReportStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new VcfComparisonStep.Provider());
 
         //handlers
         SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
@@ -343,7 +345,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new SbtGeneCountHandler());
         SequenceAnalysisService.get().registerFileHandler(new ProcessVariantsHandler());
         SequenceAnalysisService.get().registerFileHandler(new UnmappedReadExportHandler());
-        SequenceAnalysisService.get().registerFileHandler(new CombineVariantsHandler());
+        SequenceAnalysisService.get().registerFileHandler(new MergeVcfsAndGenotypesHandler());
         SequenceAnalysisService.get().registerFileHandler(new DepthOfCoverageHandler());
         SequenceAnalysisService.get().registerFileHandler(new MultiAllelicPositionsHandler());
         SequenceAnalysisService.get().registerFileHandler(new RecalculateSequenceMetricsHandler());
