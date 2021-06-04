@@ -34,6 +34,7 @@
       "name": "MyProject",
       "url": "<CONTEXT_PATH>/jbrowse/plugins/demoPlugin/dist/jbrowse-plugin-my-project.umd.development.js"
     },],
+  "location": "1:196,734,341..197,535,702",
   "tracks": [
     {
       "type": "VariantTrack",
