@@ -8,10 +8,10 @@ for (datasetId in names(seuratObjects)) {
             next
         }
 
-        if (length((unique(seuratObj@meta.data))) <= 1) {
+        if (length(unique(na.omit(seuratObj@meta.data[[field]]))) == 0) {
             next
         } else {
-            print(paste0('Object has one or fewer values, skipping: ', field))
+            print(paste0('Object has no non-NA values, skipping: ', field))
         }
 
         P1 <- Seurat::DimPlot(seuratObj, group.by = field, reduction = 'tsne')

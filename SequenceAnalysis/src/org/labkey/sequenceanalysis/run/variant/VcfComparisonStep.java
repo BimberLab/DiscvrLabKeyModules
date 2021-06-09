@@ -57,7 +57,7 @@ public class VcfComparisonStep extends AbstractCommandPipelineStep<VcfComparison
     public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable List<Interval> intervals) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
-        getPipelineCtx().getLogger().info("Running SNPEff");
+        getPipelineCtx().getLogger().info("Running VcfComparison");
 
         Integer refFileId = getProvider().getParameterByName(REF_VCF).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
         File refVcf = getPipelineCtx().getSequenceSupport().getCachedData(refFileId);

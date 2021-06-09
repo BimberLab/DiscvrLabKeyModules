@@ -100,15 +100,8 @@ public class GenotypeConcordanceStep extends AbstractCommandPipelineStep<Variant
             options.add("-A");
             options.add("GenotypeConcordanceBySite");
 
-            options.add("-resource:GT_SOURCE");
+            options.add("-rg");
             options.add(refVCF.getPath());
-
-            Integer threads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
-            if (threads != null)
-            {
-                options.add("-nt");
-                options.add(String.valueOf(Math.min(threads, 8)));
-            }
 
             if (intervals != null)
             {
