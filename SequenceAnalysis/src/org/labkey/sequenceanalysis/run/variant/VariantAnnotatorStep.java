@@ -88,13 +88,6 @@ public class VariantAnnotatorStep extends AbstractCommandPipelineStep<VariantAnn
             options.add("MinorAlleleFrequency");
         }
 
-        Integer threads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
-        if (threads != null)
-        {
-            options.add("-nt");
-            options.add(String.valueOf(Math.min(threads, 8)));
-        }
-
         if (intervals != null)
         {
             intervals.forEach(interval -> {
@@ -102,14 +95,6 @@ public class VariantAnnotatorStep extends AbstractCommandPipelineStep<VariantAnn
                 options.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
             });
         }
-
-         //TODO: allow annotation using fields from another VCF:
-        /**
-         -resource:indian "$INDIAN_SUBSET" \
-         -E indian.AF \
-         -resource:chinese "$CHINESE_SUBSET" \
-         -E chinese.AF \
-         */
 
         getWrapper().execute(genome.getWorkingFastaFile(), inputVCF, outputVcf, options);
         if (!outputVcf.exists())
