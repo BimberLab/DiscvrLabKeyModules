@@ -29,7 +29,7 @@
     "util": "^0.12.0"
   },
   "devDependencies": {
-    "@gmod/jbrowse": "github:GMOD/jbrowse#1.12.4-release",
+    "@gmod/jbrowse": "git+https://git@github.com/GMOD/jbrowse.git#1.12.4-release",
     "rimraf": "~2.6.2",
     "lodash": ">=4.17.21",
     "growl": ">=1.10.2",
