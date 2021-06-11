@@ -50,9 +50,13 @@ import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class JBrowseManager
 {
@@ -216,6 +220,23 @@ public class JBrowseManager
         else
         {
             throw new PipelineJobException("Unknown OS: " + SystemUtils.OS_NAME);
+        }
+
+        try
+        {
+            if (FileSystems.getFileSystem(exe.toURI()).supportedFileAttributeViews().contains("posix"))
+            {
+                Set<PosixFilePermission> perms = Files.getPosixFilePermissions(exe.toPath());
+                if (!perms.contains(PosixFilePermission.OWNER_EXECUTE))
+                {
+                    perms.add(PosixFilePermission.OWNER_EXECUTE);
+                    Files.setPosixFilePermissions(exe.toPath(), perms);
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
         }
 
         if (!exe.exists())
