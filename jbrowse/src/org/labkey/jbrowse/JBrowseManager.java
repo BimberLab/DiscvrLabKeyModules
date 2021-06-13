@@ -224,7 +224,7 @@ public class JBrowseManager
 
         try
         {
-            if (FileSystems.getFileSystem(exe.toURI()).supportedFileAttributeViews().contains("posix"))
+            if (exe.toPath().getFileSystem().supportedFileAttributeViews().contains("posix"))
             {
                 Set<PosixFilePermission> perms = Files.getPosixFilePermissions(exe.toPath());
                 if (!perms.contains(PosixFilePermission.OWNER_EXECUTE))
