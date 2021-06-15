@@ -215,7 +215,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         },
 
         citeSeqPanel: function(val, panel) {
-            if (val && val.toLower() === 'no') {
+            if (val && val.toLowerCase() === 'no') {
                 return null;
             }
         },
