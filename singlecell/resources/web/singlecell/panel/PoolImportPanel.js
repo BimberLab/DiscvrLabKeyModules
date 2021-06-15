@@ -100,12 +100,12 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
     },{
         name: 'hto_library_conc',
         labels: ['HTO Library Conc', 'HTO Library Conc (ng/uL)', 'HTO (qubit) ng/uL', 'HTO (quibit) ng/uL', 'MultiSeq Library Conc', 'MultiSeq Library (qubit) ng/uL', 'MultiSeq Library Conc (qubit) ng/uL'],
-        allowRowSpan: true,
-        transform: 'citeSeqPanel'
+        allowRowSpan: true
     },{
         name: 'citeseqpanel',
         labels: ['Cite-Seq Panel', 'Cite-Seq Panel Name', 'CiteSeq Panel', 'citeseqpanel'],
-        allowRowSpan: true
+        allowRowSpan: true,
+        transform: 'citeSeqPanel'
     },{
         name: 'citeseq_library_index',
         labels: ['Cite-Seq Library Index', 'Cite-Seq Index', 'CiteSeq Library Index', 'CiteSeq Index', 'Cite-Seq Library Index', 'Cite-Seq Index', 'CiteSeq Library (qubit) ng/uL'],
@@ -215,14 +215,16 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         },
 
         citeSeqPanel: function(val, panel) {
-            if (val && val.toLowerCase() === 'no') {
+            if (val && (val.toLowerCase() === 'no' || val.toLowerCase() === 'n')) {
                 return null;
             }
+
+            return val;
         },
 
         citeSeqTenXBarcode: function(val, panel){
             if (!val){
-                return;
+                return null;
             }
 
             var barcodeSeries = panel.down('#citeseqBarcodeSeries').getValue();
