@@ -342,11 +342,13 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             {
                 job.getLogger().debug("workspace file exists, will not overwrite: " + metaDirDest.getPath());
             }
-
-            FileUtils.deleteDirectory(metaDirDest);
+            else
+            {
+                FileUtils.deleteDirectory(metaDirDest);
+            }
         }
 
-        if (!metaDirDest.exists())
+        if (metaDir.exists() && !metaDirDest.exists())
         {
             job.getLogger().debug("Copying directory with rsync: " + metaDir.getPath());
             new SimpleScriptWrapper(job.getLogger()).execute(Arrays.asList(
