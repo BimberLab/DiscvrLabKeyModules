@@ -4,6 +4,7 @@ import org.labkey.gradle.plugin.extension.TeamCityExtension
 import org.labkey.gradle.util.BuildUtils
 import org.labkey.gradle.util.GroupNames
 import org.labkey.gradle.util.PropertiesUtils
+import org.labkey.gradle.util.ExternalDependency
 
 import java.util.regex.Matcher
 
@@ -16,26 +17,118 @@ repositories {
 
 dependencies {
    apiImplementation "com.github.samtools:htsjdk:${htsjdkVersion}"
-   external "com.github.samtools:htsjdk:${htsjdkVersion}"
+   BuildUtils.addExternalDependency(
+           project,
+           new ExternalDependency(
+                   "com.github.samtools:htsjdk:${htsjdkVersion}",
+                   'htsjdk',
+                   'htsjdk',
+                   'http://samtools.github.io/htsjdk/',
+                   ExternalDependency.MIT_LICENSE_NAME,
+                   ExternalDependency.MIT_LICENSE_URL,
+                   'A Java API for high-throughput sequencing data (HTS) formats'
+           )
+   )
+
    BuildUtils.addLabKeyDependency(project: project, config: "implementation", depProjectPath: ":server:modules:LabDevKitModules:laboratory", depProjectConfig: "apiJarFile")
    BuildUtils.addLabKeyDependency(project: project, config: "implementation", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "apiJarFile")
-   external 'org.biojava:biojava3-core:3.0.7'
-   external 'org.biojava:biojava3-genome:3.0.7'
-   external 'org.itadaki:bzip2:0.9.1'
-   external 'org.clojars.chapmanb:sam:1.96'
-   external "org.apache.commons:commons-math3:${commonsMath3Version}"
+   BuildUtils.addExternalDependency(
+           project,
+           new ExternalDependency(
+                   'org.biojava:biojava3-core:3.0.7',
+                   'biojava3-core',
+                   'biojava',
+                   'http://biojava.org/wiki/Main_Page',
+                   ExternalDependency.GNU_LESSER_GPL_21_NAME,
+                   ExternalDependency.GNU_LESSER_GPL_21_URL,
+                   'Java framework for processing biological data'
+           )
+   )
+
+   BuildUtils.addExternalDependency(
+           project,
+           new ExternalDependency(
+                   'org.biojava:biojava3-genome:3.0.7',
+                   'biojava3-genome',
+                   'biojava',
+                   'http://biojava.org/wiki/Main_Page',
+                   ExternalDependency.GNU_LESSER_GPL_21_NAME,
+                   ExternalDependency.GNU_LESSER_GPL_21_URL,
+                   'Java framework for processing biological data'
+           )
+   )
+
+   BuildUtils.addExternalDependency(
+           project,
+           new ExternalDependency(
+                   'org.itadaki:bzip2:0.9.1',
+                   'jbzip2',
+                   'jbzip2',
+                   'http://code.google.com/p/jbzip2/',
+                   ExternalDependency.MIT_LICENSE_NAME,
+                   ExternalDependency.MIT_LICENSE_URL,
+                   'BZIP compression/decompression library.  Used by FastQC'
+           )
+   )
+
+   BuildUtils.addExternalDependency(
+           project,
+           new ExternalDependency(
+                   'org.clojars.chapmanb:sam:1.96',
+                   'picard tools',
+                   'picard tools',
+                   'http://sourceforge.net/projects/picard/',
+                   ExternalDependency.MIT_LICENSE_NAME,
+                   ExternalDependency.MIT_LICENSE_URL,
+                   'Library for working with SAM/BAM files.  Used by FastQC'
+           )
+   )
    implementation "net.sf.opencsv:opencsv:${opencsvVersion}"
 
    // picard brings in a version of servlet-api and a very old one at that, so we excluded it
    // Note: if changing this, we might need to match the htsjdk version set in gradle.properties
-   external("com.github.broadinstitute:picard:2.22.4") {
-      exclude group: "javax.servlet", module: "servlet-api"
-      exclude group: "org.apache.commons", module: "commons-collections4"
-   }
+   BuildUtils.addExternalDependency(
+           project,
+           new ExternalDependency(
+                   "com.github.broadinstitute:picard:2.22.4",
+                   "Picard Tools Lib",
+                   "PicardTools",
+                   "https://github.com/broadinstitute/picard",
+                   ExternalDependency.APACHE_2_LICENSE_NAME,
+                   ExternalDependency.APACHE_2_LICENSE_URL,
+                   "Manipulating Sequence Data"
+           ),
+           {
+              exclude group: "javax.servlet", module: "servlet-api"
+              exclude group: "org.apache.commons", module: "commons-collections4"
+           }
+   )
 
-   external "commons-net:commons-net:${commonsNetVersion}"
+   BuildUtils.addExternalDependency(
+           project,
+           new ExternalDependency(
+                   "commons-net:commons-net:${commonsNetVersion}",
+                   "Commons Net",
+                   "Apache",
+                   "http://jakarta.apache.org/commons/net/",
+                   ExternalDependency.APACHE_2_LICENSE_NAME,
+                   ExternalDependency.APACHE_2_LICENSE_URL,
+                   "FTPClient used to retrieve resources from other servers (e.g., GO annotations)"
+           )
+   )
+   BuildUtils.addExternalDependency(
+           project,
+           new ExternalDependency(
+                   "org.apache.commons:commons-math3:${commonsMath3Version}",
+                   "Commons Math",
+                   "Apache",
+                   "http://commons.apache.org/math/",
+                   ExternalDependency.APACHE_2_LICENSE_NAME,
+                   ExternalDependency.APACHE_2_LICENSE_URL,
+                   "Lightweight, self-contained mathematics and statistics components"
+           )
+   )
    apiImplementation "org.apache.commons:commons-math3:${commonsMath3Version}"
-   external "org.apache.commons:commons-math3:${commonsMath3Version}"
    BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:LabDevKitModules:laboratory", depProjectConfig: "published", depExtension: "module")
    BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "published", depExtension: "module")
 }
