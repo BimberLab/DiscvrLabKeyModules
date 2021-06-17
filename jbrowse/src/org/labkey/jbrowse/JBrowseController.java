@@ -767,10 +767,10 @@ public class JBrowseController extends SpringActionController
                 try (InputStream is = new FileInputStream(jsonFile))
                 {
                     resp = new JSONObject(IOUtils.toString(is, StandardCharsets.UTF_8));
-                    String url = resp.getJSONArray("plugins").getJSONObject(0).getString("url");
-                    url = url.replace("<CONTEXT_PATH>", AppProps.getInstance().getContextPath());
-                    resp.getJSONArray("plugins").getJSONObject(0).put("url", url);
-                    System.out.println(resp);
+                    //String url = resp.getJSONArray("plugins").getJSONObject(0).getString("url");
+                    //url = url.replace("<CONTEXT_PATH>", AppProps.getInstance().getContextPath());
+                    //resp.getJSONArray("plugins").getJSONObject(0).put("url", url);
+                    //System.out.println(resp);
                 }
             }
             else

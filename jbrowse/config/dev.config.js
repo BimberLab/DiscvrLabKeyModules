@@ -25,7 +25,21 @@ clientConfig.resolve.fallback =
 
 clientConfig.plugins =
     [new webpack.ProvidePlugin({regeneratorRuntime: 'regenerator-runtime'}),
-     new NodePolyfillPlugin()].concat(constants.processPlugins(entryPoints))
+     new NodePolyfillPlugin(),].concat(constants.processPlugins(entryPoints))
 
+clientConfig.module.rules = clientConfig.module.rules.concat(
+{
+    test: /\.m?js$/,
+    exclude: /node_modules/,
+    use: {
+        loader: 'babel-loader',
+        options: {
+            presets: [
+                ['@babel/preset-env', { targets: "defaults" }],
+                ['@babel/preset-react']
+            ]
+        }
+    }
+})
 
 module.exports = [clientConfig]

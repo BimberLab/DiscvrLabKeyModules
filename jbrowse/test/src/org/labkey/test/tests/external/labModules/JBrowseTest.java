@@ -19,11 +19,15 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.labkey.serverapi.reader.Readers;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
+import org.labkey.test.Locators;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.TestTimeoutException;
+import org.labkey.test.categories.External;
+import org.labkey.test.categories.LabModule;
 import org.labkey.test.components.ext4.Window;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Ext4Helper;
@@ -45,13 +49,19 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import java.util.Set;
+import org.jetbrains.annotations.NotNull;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.By;
+import org.openqa.selenium.interactions.Actions;
 
 /**
  * Created by bimber on 1/20/2015.
  */
 
 //disabled until we have a solution to install the jbrowse scripts on team city
-//@Category({External.class, LabModule.class})
+@Category({External.class, LabModule.class})
 public class JBrowseTest extends BaseWebDriverTest
 {
     protected LabModuleHelper _helper = new LabModuleHelper(this);
@@ -67,18 +77,33 @@ public class JBrowseTest extends BaseWebDriverTest
     public void testSteps() throws Exception
     {
         setUpTest();
-
+        testDemoNoSession();
         testDemoUi();
         //testOutputFileProcessing();
     }
 
+    private void testDemoNoSession()
+    {
+        beginAt("/home/jbrowse-jbrowse.view?");
+        assertElementVisible(Locator.xpath("/html/body/div[2]/div/div[3]/div/div/div/p"));
+    }
+
     private void testDemoUi()
     {
-        beginAt("/home/jbrowse-jbrowse.view");
+        beginAt("/home/jbrowse-jbrowse.view?session=demo");
 
-        waitAndClick(Locator.tagWithClass("span", "MuiButton-label"));
-
-        waitAndClick(Locator.tagWithClass("span", "MuiButton-label").containing("Open track selector"));
+        waitAndClick(Locator.xpath("//*[text() = 'Open track selector']/.."));
+        waitAndClick(Locator.xpath("//*[text() = 'ClinVar variants (NCBI)']")); // Display the relevant variants
+        Locator.css("body").findElement(getDriver()).sendKeys(Keys.ESCAPE); // exit out of our modal
+        while (isTextPresent("Loading")){ // wait for loading to finish up
+            sleep(10);
+        }
+        waitAndClick(Locator.xpath("//span[text()='ClinVar variants (NCBI)']/../button[2]")); // three dots
+        waitAndClick(Locator.xpath("//span[text()='WidgetDisplay']")); // WidgetDisplay option
+        Actions actions = new Actions(getDriver());
+        WebElement toClick = getDriver().findElement(By.xpath("//*[name()='text' and contains(text(), '294665')]/..")); // 294665 is a visible element given minimalSession's location
+        actions.click(toClick).perform();
+        assertTextPresent("Hello"); // Check our modal displayed correctly
 
     }
 
@@ -94,10 +119,11 @@ public class JBrowseTest extends BaseWebDriverTest
         _containerHelper.enableModule("JBrowse");
 
         //create genome and add resources
-        Integer genomeId = SequenceTest.createReferenceGenome(this, _completedPipelineJobs);
+        /*Integer genomeId = SequenceTest.createReferenceGenome(this, _completedPipelineJobs);
         _completedPipelineJobs++;  //keep track of pipeline jobs
 
         _completedPipelineJobs = SequenceTest.addReferenceGenomeTracks(this, getProjectName(), SequenceTest.TEST_GENOME_NAME, genomeId, _completedPipelineJobs);
+    */
     }
 
     @Override
@@ -164,4 +190,6 @@ public class JBrowseTest extends BaseWebDriverTest
 //        //TODO: reprocess one of these JSONFiles.  make sure original files are deleted + session reprocessed
 //        beginAt("/sequenceanalysis/" + getContainerId() + "/begin.view");
 //    }
+
+
 }

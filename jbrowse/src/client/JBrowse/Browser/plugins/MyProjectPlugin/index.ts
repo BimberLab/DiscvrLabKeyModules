@@ -2,7 +2,7 @@ import { ConfigurationSchema } from '@jbrowse/core/configuration'
 import Plugin from '@jbrowse/core/Plugin'
 import PluginManager from '@jbrowse/core/PluginManager'
 import { isAbstractMenuManager } from '@jbrowse/core/util'
-import { version } from '../package.json'
+//import { version } from '../package.json'
 import { ReactComponent } from './HelloView'
 import HelloWidget from './HelloWidget'
 import WidgetDisplay from './WidgetDisplay'
@@ -16,7 +16,7 @@ import AdapterType from "@jbrowse/core/pluggableElementTypes/AdapterType";
 
 export default class MyProjectPlugin extends Plugin {
   name = 'MyProject'
-  version = version
+  version = "0.0.1"//version
 
   install(pluginManager: PluginManager) {
     console.log("Installing plugins")
