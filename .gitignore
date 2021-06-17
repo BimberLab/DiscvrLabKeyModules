@@ -5,9 +5,10 @@
 /travisSettings.sh
 
 # Created by npm install
-/jbrowse/jb_run.js
-/jbrowse/jb_setup.js
-/jbrowse/.gradle
+jbrowse/jb_run.js
+jbrowse/jb_setup.js
+jbrowse/.gradle
+jbrowse/resources/external/jb-cli/*
 
 # Ignore labkey-npm build artifacts
 **/gen/**

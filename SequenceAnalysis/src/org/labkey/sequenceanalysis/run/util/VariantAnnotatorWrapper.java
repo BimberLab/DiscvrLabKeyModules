@@ -1,9 +1,8 @@
 package org.labkey.sequenceanalysis.run.util;
 
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
+import org.labkey.api.sequenceanalysis.run.AbstractDiscvrSeqWrapper;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -12,7 +11,7 @@ import java.util.List;
 /**
  * Created by bimber on 8/8/2014.
  */
-public class VariantAnnotatorWrapper extends AbstractGatkWrapper
+public class VariantAnnotatorWrapper extends AbstractDiscvrSeqWrapper
 {
     public VariantAnnotatorWrapper(Logger log)
     {
@@ -21,20 +20,19 @@ public class VariantAnnotatorWrapper extends AbstractGatkWrapper
 
     public void execute(File referenceFasta, File inputVcf, File outputVcf, List<String> options) throws PipelineJobException
     {
-        getLogger().info("Running GATK VariantAnnotator");
+        getLogger().info("Running DiscvrVariantAnnotator");
 
         ensureDictionary(referenceFasta);
 
         List<String> args = new ArrayList<>(getBaseArgs());
-        args.add("-T");
-        args.add("VariantAnnotator");
+        args.add("DiscvrVariantAnnotator");
         args.add("-R");
         args.add(referenceFasta.getPath());
 
         args.add("-V");
         args.add(inputVcf.getPath());
 
-        args.add("-o");
+        args.add("-O");
         args.add(outputVcf.getPath());
 
         if (options != null)

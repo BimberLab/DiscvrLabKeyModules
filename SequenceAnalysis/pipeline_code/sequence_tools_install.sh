@@ -276,13 +276,14 @@ else
     echo "Already installed"
 fi
 
+
 #
-# GATK
+# GATK3
 #
 echo ""
 echo ""
 echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install GATK"
+echo "Install GATK3"
 echo ""
 cd $LKSRC_DIR
 
@@ -319,21 +320,6 @@ then
     cd ../../../
     cp gatk-protected/public/VectorPairHMM/target/libVectorLoglessPairHMM.so ${LKTOOLS_DIR}
 
-    #this is a custom extension: https://github.com/biodev/HTCondor_drivers
-    #git clone https://github.com/biodev/HTCondor_drivers.git
-    #mkdir ./gatk-protected/public/gatk-queue/src/main/scala/org/broadinstitute/gatk/queue/engine/condor
-    #cp ./HTCondor_drivers/Queue/CondorJob* ./gatk-protected/public/gatk-queue/src/main/scala/org/broadinstitute/gatk/queue/engine/condor/
-
-    #another, for MV checking
-    mkdir -p ${LK_HOME}/svn/trunk/pipeline_code/
-    svn co --no-auth-cache https://github.com/BimberLab/DiscvrLabkeyModules/trunk/SequenceAnalysis/pipeline_code/gatk ${LK_HOME}/svn/trunk/pipeline_code/gatk/
-
-    mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MendelianViolationCount.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
-    mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MendelianViolationBySample.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
-    mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/GenotypeConcordance.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
-    mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/GenotypeConcordanceBySite.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
-    mv ${LK_HOME}/svn/trunk/pipeline_code/gatk/MinorAlleleFrequency.java ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/annotator/
-
     cd gatk-protected
 
     #remove due to compilation / dependency resolution error
@@ -348,35 +334,14 @@ then
     cp ./protected/gatk-queue-package-distribution/target/gatk-queue-package-distribution-3.7.jar ${LKTOOLS_DIR}/Queue.jar
 fi
 
+
 if [[ ! -e ${LKTOOLS_DIR}/DISCVRSeq.jar || ! -z $FORCE_REINSTALL ]];
 then
     rm -Rf DISCVRSeq*
     rm -Rf ${LKTOOLS_DIR}/DISCVRSeq.jar
 
-    wget $WGET_OPTS https://github.com/BimberLab/DISCVRSeq/releases/download/1.0/DISCVRSeq-1.0.jar
-    cp DISCVRSeq-1.0.jar ${LKTOOLS_DIR}/DISCVRSeq.jar
-fi
-
-if [[ ! -e ${LKTOOLS_DIR}/GenomeAnalysisTK-discvr.jar || ! -z $FORCE_REINSTALL ]];
-then
-    rm -Rf ${LKTOOLS_DIR}/GenomeAnalysisTK-discvr.jar
-    rm -Rf ${LKSRC_DIR}/gatk-discvr
-
-    mkdir -p gatk-discvr
-    cd gatk-discvr
-
-    echo "Downloading GATK from GIT"
-    git clone git://github.com/bbimber/gatk-protected.git
-    cd gatk-protected
-
-    #remove due to compilation error
-    rm ./public/external-example/src/main/java/org/mycompany/app/*
-    rm ./public/external-example/src/test/java/org/mycompany/app/*
-
-    mvn verify -U -P\!queue
-    mvn package -P\!queue
-
-    cp ./protected/gatk-package-distribution/target/gatk-package-distribution-3.7.jar ${LKTOOLS_DIR}/GenomeAnalysisTK-discvr.jar
+    wget $WGET_OPTS https://github.com/BimberLab/DISCVRSeq/releases/download/1.29/DISCVRSeq-1.29.jar
+    cp DISCVRSeq-1.29.jar ${LKTOOLS_DIR}/DISCVRSeq.jar
 fi
 
 
@@ -1336,7 +1301,7 @@ fi
 echo ""
 echo ""
 echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Installing Trimmomatic"
+echo "Installing lofreq"
 echo ""
 cd $LKSRC_DIR
 
@@ -1354,29 +1319,6 @@ else
     echo "Already installed"
 fi
 
-
-#
-#CITE-seq-count
-#
-#
-#echo ""
-#echo ""
-#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-#echo "Installing CITE-seq-count"
-#echo ""
-#cd $LKSRC_DIR
-#
-#if [[ ! -e ${LKTOOLS_DIR}/CITE-seq-Count || ! -z $FORCE_REINSTALL ]];
-#then
-#    rm -Rf ${LKTOOLS_DIR}/CITE-seq*
-#    mkdir -p ${LKTOOLS_DIR}/CITE-seq-count-base
-#
-#    pip install CITE-seq-Count --upgrade --install-option="--prefix=${LKTOOLS_DIR}/CITE-seq-count-base"
-#    mv ${LKTOOLS_DIR}/CITE-seq-count-base/bin/* ${LKTOOLS_DIR}
-#
-#else
-#    echo "Already installed"
-#fi
 
 if [ ! -z $LK_USER ];
 then

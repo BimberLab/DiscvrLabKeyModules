@@ -301,7 +301,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         return _contigsInInputs;
     }
 
-    private void copyToLevelFiles(PipelineJob job, File sourceWorkspace, File destinationWorkspace, boolean removeOtherFiles, boolean overwriteExisting) throws IOException
+    private void copyTopLevelFiles(PipelineJob job, File sourceWorkspace, File destinationWorkspace, boolean removeOtherFiles, boolean overwriteExisting) throws IOException, PipelineJobException
     {
         job.getLogger().info("Copying top-level files from: " + sourceWorkspace.getPath());
         if (removeOtherFiles)
@@ -332,6 +332,28 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             }
 
             FileUtils.copyFile(source, dest);
+        }
+
+        File metaDir = new File(sourceWorkspace, "genomicsdb_meta_dir");
+        File metaDirDest = new File(sourceWorkspace, "genomicsdb_meta_dir");
+        if (metaDirDest.exists())
+        {
+            if (!overwriteExisting)
+            {
+                job.getLogger().debug("workspace file exists, will not overwrite: " + metaDirDest.getPath());
+            }
+            else
+            {
+                FileUtils.deleteDirectory(metaDirDest);
+            }
+        }
+
+        if (metaDir.exists() && !metaDirDest.exists())
+        {
+            job.getLogger().debug("Copying directory with rsync: " + metaDir.getPath());
+            new SimpleScriptWrapper(job.getLogger()).execute(Arrays.asList(
+                    "rsync", "-r", "-a", "--delete", "--no-owner", "--no-group", "--no-perms", "--chmod=D2770,F660", metaDir.getPath(), metaDirDest.getParentFile().getPath()
+            ));
         }
     }
 
@@ -684,7 +706,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
 
                 if (!haveCopiedTopLevelFiles)
                 {
-                    copyToLevelFiles(ctx.getJob(), sourceWorkspace, destinationWorkspaceFolder, removeExistingTopLevelFiles, overwriteTopLevelFiles);
+                    copyTopLevelFiles(ctx.getJob(), sourceWorkspace, destinationWorkspaceFolder, removeExistingTopLevelFiles, overwriteTopLevelFiles);
                     haveCopiedTopLevelFiles = true;
                 }
 
@@ -707,7 +729,6 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 }
                 else
                 {
-                    //TODO: dest permissions?
                     ctx.getLogger().debug("Copying directory with rsync: " + sourceFolder.getPath());
                     //NOTE: since neither path will end in slashes, rsync to the parent folder should result in the correct placement
                     new SimpleScriptWrapper(ctx.getLogger()).execute(Arrays.asList(
