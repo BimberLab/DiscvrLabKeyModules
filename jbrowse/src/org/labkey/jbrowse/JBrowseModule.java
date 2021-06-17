@@ -29,6 +29,7 @@ import org.labkey.api.query.DetailsURL;
 import org.labkey.api.security.permissions.AdminOperationsPermission;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.settings.AdminConsole;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.api.webdav.WebdavService;
@@ -118,5 +119,14 @@ public class JBrowseModule extends ExtendedSimpleModule
     public Set<String> getSchemaNames()
     {
         return Collections.singleton(JBrowseSchema.NAME);
+    }
+
+    @Override
+    @NotNull
+    public Set<Class> getUnitTests()
+    {
+        return PageFlowUtil.set(
+                JBrowseManager.TestCase.class
+        );
     }
 }
