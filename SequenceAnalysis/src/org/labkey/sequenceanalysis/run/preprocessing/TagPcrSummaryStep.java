@@ -69,7 +69,7 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
     {
         public Provider()
         {
-            super("Tag-PCR", "Tag-PCR Integration Sites", null, "This will produce a table summarizing unique alignments in this BAM.  It was originally created to summarize genomic insertions.", Arrays.asList(
+            super("Tag-PCR", "Map Integration Sites", null, "This will produce a table summarizing unique genome/transgene junctions using a BAM.", Arrays.asList(
                     ToolParameterDescriptor.create(OUTPUT_GENBANK, "Create Genbank Output", "If selected, this will output a genbank file summarizing amplicons and primers", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true),
@@ -349,7 +349,7 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
             List<String> args = new ArrayList<>();
             args.addAll(getBaseArgs());
 
-            args.add("TagPcrSummary");
+            args.add("IntegrationSiteMapper");
 
             args.add("--bam");
             args.add(bamFile.getPath());
