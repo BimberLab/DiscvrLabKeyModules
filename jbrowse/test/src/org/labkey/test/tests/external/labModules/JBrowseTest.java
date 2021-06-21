@@ -85,7 +85,7 @@ public class JBrowseTest extends BaseWebDriverTest
     private void testDemoNoSession()
     {
         beginAt("/home/jbrowse-jbrowse.view?");
-        assertElementVisible(Locator.xpath("/html/body/div[2]/div/div[3]/div/div/div/p"));
+        waitForElement(Locator.xpath("//*[text() = 'Error - no session provided.']"));
     }
 
     private void testDemoUi()
