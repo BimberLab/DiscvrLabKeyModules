@@ -25,7 +25,7 @@ clientConfig.resolve.fallback =
 
 clientConfig.plugins =
     [new webpack.ProvidePlugin({regeneratorRuntime: 'regenerator-runtime'}),
-     new NodePolyfillPlugin(),].concat(constants.processPlugins(entryPoints))
+     new NodePolyfillPlugin()].concat(constants.processPlugins(entryPoints))
 
 clientConfig.module.rules = clientConfig.module.rules.concat(
 {
