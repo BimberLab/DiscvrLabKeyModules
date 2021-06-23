@@ -9,33 +9,19 @@ import {
 } from '@jbrowse/react-linear-genome-view'
 import { PluginConstructor } from '@jbrowse/core/Plugin'
 import { Ajax, Utils, ActionURL } from '@labkey/api'
-
+import MyProjectPlugin from "./plugins/MyProjectPlugin/index"
 const theme = createJBrowseTheme()
 
-
-
-function generateViewState(genome){
-/* TODO - Fix plugin functionality
-  const [plugins, setPlugins] = useState<PluginConstructor[]>()
-
-  useEffect(() => {
-    async function getPlugins() {
-      const loadedPlugins = await loadPlugins(genome.plugins)
-      setPlugins(loadedPlugins)
-    }
-    getPlugins()
-  }, [setPlugins])
-*/
+function generateViewState(genome, plugins){
   return createViewState({
       assembly: genome.assembly ?? genome.assemblies,
       tracks: genome.tracks,
       configuration: genome.configuration,
-      //plugins: plugins,
+      plugins: plugins.concat(MyProjectPlugin), //plugins,
       location: genome.location,
       defaultSession: genome.defaultSession,
       onChange: genome.onChange
   })
-
 }
 
 function View(){
@@ -43,13 +29,25 @@ function View(){
     const session = queryParam.get('session')
 
     const [state, setState] = useState(null);
+    const [plugins, setPlugins] = useState<PluginConstructor[]>();
     useEffect(() => {
         Ajax.request({
             url: ActionURL.buildURL('jbrowse', 'getSession.api'),
             method: 'GET',
-            success: function(res){
-                setState(generateViewState(JSON.parse(res.response)));
-                console.log(res);
+            success: async function(res){
+                let jsonRes = JSON.parse(res.response);
+                var loadedPlugins = null
+                if (jsonRes.plugins != null){
+                    try {
+                        loadedPlugins = await loadPlugins(jsonRes.plugins);
+                    } catch (error) {
+                        console.error("Error: ", error)
+                    }
+                    setPlugins(loadedPlugins);
+                } else {
+                    loadedPlugins = []
+                }
+                setState(generateViewState(jsonRes, loadedPlugins));
             },
             failure: function(res){
                 setState("invalid");
@@ -76,3 +74,4 @@ function View(){
 }
 
 export default View
+

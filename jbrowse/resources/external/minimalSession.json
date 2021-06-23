@@ -29,6 +29,7 @@
       }
     }
   },
+  "location": "1:196,734,341..197,535,702",
   "tracks": [
     {
       "type": "VariantTrack",
@@ -67,5 +68,5 @@
       }
     }
   ],
-  "connections": []
+  "connections": [],
 }
