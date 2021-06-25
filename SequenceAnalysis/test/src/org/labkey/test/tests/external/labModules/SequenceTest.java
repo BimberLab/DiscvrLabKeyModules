@@ -1511,6 +1511,7 @@ public class SequenceTest extends BaseWebDriverTest
         }
 
         LabModuleHelper helper = new LabModuleHelper(test);
+        fileNames = Arrays.asList("fakeData2.gff", "fakeData2.bed");
         helper.initiatePipelineJob("Import Genome Tracks", fileNames, projectName);
 
         Ext4GridRef grid = test._ext4Helper.queryOne("grid", Ext4GridRef.class);
