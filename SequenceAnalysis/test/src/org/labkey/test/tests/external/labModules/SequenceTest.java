@@ -1500,7 +1500,8 @@ public class SequenceTest extends BaseWebDriverTest
         List<String> fileNames = Arrays.asList("fakeData.gff", "fakeData.bed");
         for (String fn : fileNames)
         {
-            File target = new File(fileRoot, fn);
+            //NOTE: this name change is to avoid an issue that seems to happen with certain FF versions, where the upload above leaves this file unable to get deleted
+            File target = new File(fileRoot, fn.replaceAll("fakeData", "fakeData2"));
             if (target.exists())
             {
                Assert.assertTrue("Unable to delete file: " + target.getPath(), target.delete());
