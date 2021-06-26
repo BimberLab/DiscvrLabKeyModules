@@ -57,13 +57,6 @@ public class MendelianViolationReportStep extends AbstractPipelineStep implement
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
 
         List<String> options = new ArrayList<>();
-        Integer maxThreads = SequenceTaskHelper.getMaxThreads(getPipelineCtx().getLogger());
-        if (maxThreads != null)
-        {
-            options.add("-nt");
-            options.add(maxThreads.toString());
-        }
-
         if (getProvider().getParameterByName("excludeFiltered").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false))
         {
             options.add("--excludeFiltered");

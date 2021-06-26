@@ -148,7 +148,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                         }
 
                         //NOTE: this allows dual TRA/TRD segments
-                        String[] loci = nt.getLocus().split("/");
+                        String[] loci = nt.getLocus().split("[/,]");
                         for (String locus : loci)
                         {
                             i.getAndIncrement(); //cant use sequenceId since sequences might be represented multiple times across loci

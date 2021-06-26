@@ -226,7 +226,11 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
                 {
                     ctx.getLogger().info("Files will be marked for deletion after this step");
                     toDelete.add(movedFile);
-                    toDelete.add(movedIdx);
+                    if (movedIdx != null)
+                    {
+                        toDelete.add(movedIdx);
+                    }
+
                     if (doneFile.exists())
                     {
                         toDelete.add(doneFile);

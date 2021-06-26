@@ -17,6 +17,11 @@
 package org.labkey.jbrowse;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.junit.Assert;
+import org.junit.Test;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
@@ -25,23 +30,33 @@ import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.module.Module;
+import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.resource.DirectoryResource;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.InsertPermission;
+import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.Path;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.jbrowse.model.Database;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class JBrowseManager
 {
@@ -177,5 +192,72 @@ public class JBrowseManager
     public TableInfo getSequenceAnalysisTable(String tableName)
     {
         return DbSchema.get(SEQUENCE_ANALYSIS, DbSchemaType.Module).getTable(tableName);
+    }
+
+    public File getJbrowseCli() throws PipelineJobException
+    {
+        Module module = ModuleLoader.getInstance().getModule(JBrowseModule.NAME);
+        DirectoryResource resource = (DirectoryResource) module.getModuleResolver().lookup(Path.parse("external/jb-cli"));
+        File toolDir = resource.getDir();
+        if (!toolDir.exists())
+        {
+            throw new PipelineJobException("Unable to find expected folder: " + toolDir.getPath());
+        }
+
+        File exe = null;
+        if (SystemUtils.IS_OS_WINDOWS)
+        {
+            exe = new File(toolDir, "cli-win.exe");
+        }
+        else if (SystemUtils.IS_OS_LINUX)
+        {
+            exe = new File(toolDir, "cli-linux");
+        }
+        else if (SystemUtils.IS_OS_MAC_OSX)
+        {
+            exe = new File(toolDir, "cli-macos");
+        }
+        else
+        {
+            throw new PipelineJobException("Unknown OS: " + SystemUtils.OS_NAME);
+        }
+
+        try
+        {
+            if (exe.toPath().getFileSystem().supportedFileAttributeViews().contains("posix"))
+            {
+                Set<PosixFilePermission> perms = Files.getPosixFilePermissions(exe.toPath());
+                if (!perms.contains(PosixFilePermission.OWNER_EXECUTE))
+                {
+                    perms.add(PosixFilePermission.OWNER_EXECUTE);
+                    Files.setPosixFilePermissions(exe.toPath(), perms);
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        if (!exe.exists())
+        {
+            throw new PipelineJobException("Unable to find file: " + exe.getPath());
+        }
+
+        return exe;
+    }
+
+    public static class TestCase extends Assert
+    {
+        private static final Logger _log = LogManager.getLogger(JBrowseManager.TestCase.class);
+
+        @Test
+        public void testJBrowseCli() throws Exception
+        {
+            File exe = JBrowseManager.get().getJbrowseCli();
+            String output = new SimpleScriptWrapper(_log).executeWithOutput(Arrays.asList(exe.getPath(), "help"));
+
+            assertTrue("Malformed output", output.contains("Add an assembly to a JBrowse 2 configuration"));
+        }
     }
 }
