@@ -282,7 +282,7 @@ abstract public class CellHashingService
         htodemux(false),
         dropletutils(true),
         gmm_demux(true),
-        bff_quantile(true),
+        bff_cluster(true),
         bff_threshold(false);
 
         boolean isDefault;

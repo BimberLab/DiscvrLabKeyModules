@@ -6,8 +6,9 @@
 module.exports = {
     apps: [{
         name: 'jbrowse',
-        title: 'BROWSER',
+        title: 'JBrowse Genome Browser',
         permission: 'read',
-        path: './src/client/JBrowse/Browser',
+        template: 'app',
+        path: './src/client/JBrowse/Browser'
     }]
 };

@@ -92,8 +92,8 @@
                     var config = {
                         containerID: "GenomeBrowser",
                         baseUrl: "<%=h(base)%>",
-                        browserRoot: <%=PageFlowUtil.jsString(browserRoot)%>,
-                        dataRoot: <%=PageFlowUtil.jsString(dataRoot)%>,
+                        browserRoot: <%=q(browserRoot)%>,
+                        dataRoot: <%=q(dataRoot)%>,
                         queryParams: queryParams,
                         location: queryParams.loc,
                         forceTracks: queryParams.tracks,

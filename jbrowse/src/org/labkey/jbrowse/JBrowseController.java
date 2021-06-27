@@ -61,6 +61,7 @@ import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
+import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
@@ -762,7 +763,6 @@ public class JBrowseController extends SpringActionController
                 {
                     throw new FileNotFoundException("Unable to find JSON file: external/minimalSession.json");
                 }
-
 
                 try (InputStream is = new FileInputStream(jsonFile))
                 {
