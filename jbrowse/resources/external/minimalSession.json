@@ -30,6 +30,12 @@
     }
   },
   "location": "1:196,734,341..197,535,702",
+  "displays": [
+    { "name": "Predicted Function",
+      "properties": ["AF_ESP", "ALLELEID"]},
+    { "name": "Regulatory Data",
+      "properties": ["CLNDN", "CLNVC"]}
+  ],
   "tracks": [
     {
       "type": "VariantTrack",
