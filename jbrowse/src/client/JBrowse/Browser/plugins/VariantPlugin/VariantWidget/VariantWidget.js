@@ -104,11 +104,13 @@ export default jbrowse => {
         for(var display in displays){
             var tempProp = []
             for(var property in displays[display].properties){
-                tempProp.push(
-                    <TableRow>
-                        {displays[display].properties[property]}: {feat["INFO"][displays[display].properties[property]]}
-                    </TableRow>
-                )
+                if(feat["INFO"][displays[display].properties[property]]){
+                    tempProp.push(
+                        <TableRow>
+                            {displays[display].properties[property]}: {feat["INFO"][displays[display].properties[property]]}
+                        </TableRow>
+                    )
+                }
             }
             propertyJSX.push(tempProp)
         }
