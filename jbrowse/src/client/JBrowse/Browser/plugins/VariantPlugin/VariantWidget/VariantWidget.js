@@ -135,22 +135,9 @@ export default jbrowse => {
         const { feature } = props
         const { model } = props
         const feat = JSON.parse(JSON.stringify(model.featureData))
-        const [displays, setDisplays] = useState(null);
-        useEffect(() => {
-            Ajax.request({
-                url: ActionURL.buildURL('jbrowse', 'getSession.api'),
-                method: 'GET',
-                success: async function(res){
-                    let jsonRes = JSON.parse(res.response);
-                    setDisplays(makeDisplays(feat, jsonRes.displays))
-                },
-                failure: function(res){
-                    console.error("ERROR: Could not get displays from config file.");
-                },
-                params: {session: session}
-            })
-        }, []);
         const { samples, ...rest } = feat
+        var displays;
+
 
         var MCJSX = MC(feat)
         if(MCJSX){
@@ -162,6 +149,7 @@ export default jbrowse => {
             feat["INFO"]["CLNREVSTAT"] = null
         }
 
+        displays = makeDisplays(feat, JSON.parse(window.sessionStorage.getItem("displays")))
         return (
             <Paper className={classes.root} data-testid="variant-widget">
                 <FeatureDetails

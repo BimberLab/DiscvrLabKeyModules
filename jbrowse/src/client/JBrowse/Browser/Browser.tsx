@@ -39,6 +39,9 @@ function View(){
             success: async function(res){
                 let jsonRes = JSON.parse(res.response);
                 var loadedPlugins = null
+                if (jsonRes.displays != null){
+                    window.sessionStorage.setItem("displays", JSON.stringify(jsonRes.displays))
+                }
                 if (jsonRes.plugins != null){
                     try {
                         loadedPlugins = await loadPlugins(jsonRes.plugins);
