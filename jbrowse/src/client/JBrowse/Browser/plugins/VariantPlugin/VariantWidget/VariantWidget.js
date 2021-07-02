@@ -1,5 +1,3 @@
-//import BaseFeatureDetailWidget from '@jbrowse/plugin-alignments'
-//import { Ajax, Utils, ActionURL } from '@labkey/api'
 
 export default jbrowse => {
   const {
