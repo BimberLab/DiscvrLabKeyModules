@@ -149,7 +149,14 @@ export default jbrowse => {
             feat["INFO"]["CLNREVSTAT"] = null
         }
 
-        displays = makeDisplays(feat, JSON.parse(window.sessionStorage.getItem("displays")))
+        var configDisplays = JSON.parse(window.sessionStorage.getItem("displays"))
+        displays = makeDisplays(feat, configDisplays)
+        for(var i in configDisplays){
+            for(var j in configDisplays[i].properties){
+                feat["INFO"][configDisplays[i].properties] = null
+            }
+        }
+
         return (
             <Paper className={classes.root} data-testid="variant-widget">
                 <FeatureDetails
