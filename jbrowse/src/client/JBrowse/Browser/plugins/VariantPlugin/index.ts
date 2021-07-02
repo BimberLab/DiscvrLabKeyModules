@@ -3,7 +3,6 @@ import Plugin from '@jbrowse/core/Plugin'
 import PluginManager from '@jbrowse/core/PluginManager'
 import { isAbstractMenuManager } from '@jbrowse/core/util'
 //import { version } from '../package.json'
-import { ReactComponent } from './VariantView'
 import VariantWidget from './VariantWidget'
 import VariantDisplay from './VariantDisplay'
 import DisplayType from '@jbrowse/core/pluggableElementTypes/DisplayType'
@@ -64,22 +63,10 @@ export default class VariantPlugin extends Plugin {
       })
     })
 
-    pluginManager.addViewType(() => {
-      return new ViewType({ name: 'VariantView', stateModel, ReactComponent })
-    })
   }
 
   configure(pluginManager: PluginManager) {
-    if (isAbstractMenuManager(pluginManager.rootModel)) {
-      // @ts-ignore
-      pluginManager.rootModel.appendToSubMenu(['File', 'Add'], {
-        label: 'Open Hello!',
-        // @ts-ignore
-        onClick: session => {
-          session.addView('VariantView', {})
-        },
-      })
-    }
+
   }
   
 }
