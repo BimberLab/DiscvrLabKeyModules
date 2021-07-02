@@ -135,7 +135,6 @@ export default jbrowse => {
         const { feature } = props
         const { model } = props
         const feat = JSON.parse(JSON.stringify(model.featureData))
-        const { samples, ...rest } = feat
         var displays;
 
 
@@ -153,14 +152,14 @@ export default jbrowse => {
         displays = makeDisplays(feat, configDisplays)
         for(var i in configDisplays){
             for(var j in configDisplays[i].properties){
-                feat["INFO"][configDisplays[i].properties] = null
+                feat["INFO"][configDisplays[i].properties[j]] = null
             }
         }
 
         return (
             <Paper className={classes.root} data-testid="variant-widget">
                 <FeatureDetails
-                 feature={rest}
+                 feature={feat}
                  {...props}
                  />
                 {displays}
