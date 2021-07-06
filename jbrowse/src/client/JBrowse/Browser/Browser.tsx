@@ -39,8 +39,10 @@ function View(){
             success: async function(res){
                 let jsonRes = JSON.parse(res.response);
                 var loadedPlugins = null
-                if (jsonRes.displays != null){
-                    window.sessionStorage.setItem("displays", JSON.stringify(jsonRes.displays))
+                for (var i in jsonRes.tracks){
+                    if (jsonRes.tracks[i].variantDisplays != null){
+                        window.sessionStorage.setItem(jsonRes.tracks[i].trackId, JSON.stringify(jsonRes.tracks[i].variantDisplays))
+                    }
                 }
                 if (jsonRes.plugins != null){
                     try {

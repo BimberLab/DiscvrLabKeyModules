@@ -1,6 +1,6 @@
 import { ConfigurationReference } from '@jbrowse/core/configuration'
 import { getParentRenderProps } from '@jbrowse/core/util/tracks'
-import { getSession } from '@jbrowse/core/util'
+import { getContainingTrack, getSession } from '@jbrowse/core/util'
 import FilterListIcon from '@material-ui/icons/FilterList'
 import configSchemaF from './configSchema'
 
@@ -24,19 +24,16 @@ export default jbrowse => {
     )
 
     .actions(self => ({
-      /*openFilterConfig() {
-        const session = getSession(self)
-        const editor = session.addWidget('HelloWidget', {
-          target: self.parentTrack.configuration,
-        })
-        session.showWidget(editor)
-      },*/
-
       selectFeature(feature) {
+        const trackId = getContainingTrack(self).configuration.trackId
         const session = getSession(self)
+        //var featureJSON = feature.toJSON()
+        var widgetId = 'Variant-' + trackId;
+        //featureJSON["parentTrackId"] = trackId
+
         const featureWidget = session.addWidget(
           'VariantWidget',
-          'hWidget',
+          widgetId,
           { featureData: feature.toJSON() },
         )
         session.showWidget(featureWidget)

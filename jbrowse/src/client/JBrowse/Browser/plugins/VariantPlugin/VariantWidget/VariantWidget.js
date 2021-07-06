@@ -150,7 +150,8 @@ export default jbrowse => {
             feat["INFO"]["CLNREVSTAT"] = null
         }
 
-        var configDisplays = JSON.parse(window.sessionStorage.getItem("displays"))
+        var parentTrackId = model.id.slice(8)
+        var configDisplays = JSON.parse(window.sessionStorage.getItem(parentTrackId))
         displays = makeDisplays(feat, configDisplays)
         for(var i in configDisplays){
             for(var j in configDisplays[i].properties){

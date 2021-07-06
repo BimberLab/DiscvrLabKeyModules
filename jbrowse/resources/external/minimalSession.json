@@ -30,12 +30,7 @@
     }
   },
   "location": "1:196,734,341..197,535,702",
-  "displays": [
-    { "name": "Predicted Function",
-      "properties": ["AF_ESP", "ALLELEID"]},
-    { "name": "Regulatory Data",
-      "properties": ["CLNDN", "CLNVC"]}
-  ],
+
   "tracks": [
     {
       "type": "VariantTrack",
@@ -53,7 +48,37 @@
             "uri": "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz.tbi"
           }
         }
-      }
+      },
+      "variantDisplays": [
+        { "name": "Predicted Function",
+          "properties": ["AF_ESP", "ALLELEID"]},
+        { "name": "Regulatory Data",
+          "properties": ["CLNDN", "CLNVC"]}
+      ],
+    },
+    {
+      "type": "VariantTrack",
+      "trackId": "clinvar_ncbi_hg38-2",
+      "name": "ClinVar variants (NCBI)-2",
+      "assemblyNames": ["hg38"],
+      "category": ["Annotation"],
+      "adapter": {
+        "type": "VcfTabixAdapter",
+        "vcfGzLocation": {
+          "uri": "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz"
+        },
+        "index": {
+          "location": {
+            "uri": "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz.tbi"
+          }
+        }
+      },
+      "variantDisplays": [
+        { "name": "Predicted Function",
+          "properties": ["ALLELEID"]},
+        { "name": "Regulatory Data",
+          "properties": ["CLNVC"]}
+      ],
     },
     {
       "type": "FeatureTrack",
