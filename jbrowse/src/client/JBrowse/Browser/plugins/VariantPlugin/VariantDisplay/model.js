@@ -27,9 +27,7 @@ export default jbrowse => {
       selectFeature(feature) {
         const trackId = getContainingTrack(self).configuration.trackId
         const session = getSession(self)
-        //var featureJSON = feature.toJSON()
         var widgetId = 'Variant-' + trackId;
-        //featureJSON["parentTrackId"] = trackId
 
         const featureWidget = session.addWidget(
           'VariantWidget',
