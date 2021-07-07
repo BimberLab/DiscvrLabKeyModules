@@ -50,9 +50,9 @@
         }
       },
       "variantDisplays": [
-        { "name": "Predicted Function",
+        { "name": "Predicted Function - 1",
           "properties": ["AF_ESP", "ALLELEID"]},
-        { "name": "Regulatory Data",
+        { "name": "Regulatory Data - 1",
           "properties": ["CLNDN", "CLNVC"]}
       ],
     },
@@ -74,9 +74,9 @@
         }
       },
       "variantDisplays": [
-        { "name": "Predicted Function",
+        { "name": "Predicted Function - 2",
           "properties": ["ALLELEID"]},
-        { "name": "Regulatory Data",
+        { "name": "Regulatory Data - 2",
           "properties": ["CLNVC"]}
       ],
     },
