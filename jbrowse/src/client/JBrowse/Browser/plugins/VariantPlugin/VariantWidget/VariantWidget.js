@@ -139,17 +139,6 @@ export default jbrowse => {
         const feat = JSON.parse(JSON.stringify(model.featureData))
         var displays;
 
-
-        var MCJSX = MC(feat)
-        if(MCJSX){
-            feat["INFO"]["MC"] = null
-        }
-
-        var CLNREVSTAT = VariantTable(feat)
-        if(CLNREVSTAT){
-            feat["INFO"]["CLNREVSTAT"] = null
-        }
-
         var parentTrackId = model.id.slice(8)
         var configDisplays = JSON.parse(window.sessionStorage.getItem(parentTrackId))
         displays = makeDisplays(feat, configDisplays)
@@ -166,8 +155,6 @@ export default jbrowse => {
                  {...props}
                  />
                 {displays}
-                {MCJSX}
-                {CLNREVSTAT}
             </Paper>
         )
     }
