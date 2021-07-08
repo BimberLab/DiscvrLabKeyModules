@@ -10,6 +10,8 @@ import {
 import { PluginConstructor } from '@jbrowse/core/Plugin'
 import { Ajax, Utils, ActionURL } from '@labkey/api'
 import MyProjectPlugin from "./plugins/MyProjectPlugin/index"
+import VariantPlugin from "./plugins/VariantPlugin/index"
+
 const theme = createJBrowseTheme()
 
 function generateViewState(genome, plugins){
@@ -17,7 +19,7 @@ function generateViewState(genome, plugins){
       assembly: genome.assembly ?? genome.assemblies,
       tracks: genome.tracks,
       configuration: genome.configuration,
-      plugins: plugins.concat(MyProjectPlugin), //plugins,
+      plugins: plugins.concat(VariantPlugin, MyProjectPlugin), //plugins,
       location: genome.location,
       defaultSession: genome.defaultSession,
       onChange: genome.onChange
@@ -37,6 +39,11 @@ function View(){
             success: async function(res){
                 let jsonRes = JSON.parse(res.response);
                 var loadedPlugins = null
+                for (var i in jsonRes.tracks){
+                    if (jsonRes.tracks[i].variantDisplays != null){
+                        window.sessionStorage.setItem(jsonRes.tracks[i].trackId, JSON.stringify(jsonRes.tracks[i].variantDisplays))
+                    }
+                }
                 if (jsonRes.plugins != null){
                     try {
                         loadedPlugins = await loadPlugins(jsonRes.plugins);
