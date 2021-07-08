@@ -42,63 +42,6 @@ export default jbrowse => {
         },
     }))
 
-
-    function MC(feat) {
-        const classes = useStyles()
-        if (!feat["INFO"]["MC"]){
-            return null
-        }
-        var lines = feat["INFO"]["MC"][0].split("|")
-        var linesJSX = []
-        for (let i = 0; i < lines.length; i++) {
-            linesJSX.push(lines[i], <br />)
-        }
-        return (
-            <BaseCard title="MC">
-               <div style={{ padding: '7px', width: '100%', maxHeight: 600, overflow: 'auto' }}>
-                    <Table className={classes.table}>
-                        <TableHead>
-                            <TableRow>
-                                {linesJSX}
-                            </TableRow>
-                        </TableHead>
-                    </Table>
-               </div>
-            </BaseCard>
-        )
-    }
-
-
-    function VariantTable(feat) {
-        const classes = useStyles()
-        if (!feat["INFO"]["CLNREVSTAT"]){
-          return null
-        }
-        var headers = []
-        var rows = []
-        for (let i = 0; i<feat["INFO"]["CLNREVSTAT"].length; i++){
-          headers.push(<TableCell>{i}</TableCell>)
-          rows.push(<TableCell>{feat["INFO"]["CLNREVSTAT"][i]}</TableCell>)
-        }
-
-        return (
-          <BaseCard title="CLNREVSTAT">
-            <div style={{ width: '100%', maxHeight: 600, overflow: 'auto' }}>
-                <Table className={classes.table}>
-                    <TableHead>
-                        <TableRow>
-                            {headers}
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {rows}
-                    </TableBody>
-                </Table>
-            </div>
-          </BaseCard>
-        )
-    }
-
     function makeDisplays(feat, displays){
         var propertyJSX = []
         for(var display in displays){
