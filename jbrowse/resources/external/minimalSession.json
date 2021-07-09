@@ -30,7 +30,10 @@
     }
   },
   "location": "1:196,734,341..197,535,702",
-
+  "nativePlugins": [
+    "VariantPlugin",
+    "MyProjectPlugin"
+  ],
   "tracks": [
     {
       "type": "VariantTrack",

@@ -14,12 +14,13 @@ import VariantPlugin from "./plugins/VariantPlugin/index"
 
 const theme = createJBrowseTheme()
 
-function generateViewState(genome, plugins){
+function generateViewState(genome, plugins, nativePlugins){
   return createViewState({
       assembly: genome.assembly ?? genome.assemblies,
       tracks: genome.tracks,
       configuration: genome.configuration,
-      plugins: plugins.concat(VariantPlugin, MyProjectPlugin), //plugins,
+      //plugins: plugins.concat(VariantPlugin, MyProjectPlugin),
+      plugins: plugins.concat(nativePlugins),
       location: genome.location,
       defaultSession: genome.defaultSession,
       onChange: genome.onChange
@@ -29,9 +30,9 @@ function generateViewState(genome, plugins){
 function View(){
     const queryParam = new URLSearchParams(window.location.search);
     const session = queryParam.get('session')
-
+    const nativePluginList = [MyProjectPlugin, VariantPlugin]
     const [state, setState] = useState(null);
-    const [plugins, setPlugins] = useState<PluginConstructor[]>();
+    //const [plugins, setPlugins] = useState<PluginConstructor[]>();
     useEffect(() => {
         Ajax.request({
             url: ActionURL.buildURL('jbrowse', 'getSession.api'),
@@ -50,11 +51,21 @@ function View(){
                     } catch (error) {
                         console.error("Error: ", error)
                     }
-                    setPlugins(loadedPlugins);
+                    //setPlugins(loadedPlugins);
                 } else {
                     loadedPlugins = []
                 }
-                setState(generateViewState(jsonRes, loadedPlugins));
+                var nativePluginsSelected = []
+                if (jsonRes.nativePlugins != null){
+                    for(var i in jsonRes.nativePlugins){
+                        for(var j in nativePluginList){
+                            if (nativePluginList[j].name == jsonRes.nativePlugins[i]){
+                                nativePluginsSelected.push(nativePluginList[j])
+                            }
+                        }
+                    }
+                }
+                setState(generateViewState(jsonRes, loadedPlugins, nativePluginsSelected));
             },
             failure: function(res){
                 setState("invalid");
