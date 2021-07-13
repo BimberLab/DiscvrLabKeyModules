@@ -19,7 +19,6 @@ function generateViewState(genome, plugins, nativePlugins){
       assembly: genome.assembly ?? genome.assemblies,
       tracks: genome.tracks,
       configuration: genome.configuration,
-      //plugins: plugins.concat(VariantPlugin, MyProjectPlugin),
       plugins: plugins.concat(nativePlugins),
       location: genome.location,
       defaultSession: genome.defaultSession,
@@ -32,7 +31,6 @@ function View(){
     const session = queryParam.get('session')
     const nativePluginList = [MyProjectPlugin, VariantPlugin]
     const [state, setState] = useState(null);
-    //const [plugins, setPlugins] = useState<PluginConstructor[]>();
     useEffect(() => {
         Ajax.request({
             url: ActionURL.buildURL('jbrowse', 'getSession.api'),
@@ -51,7 +49,6 @@ function View(){
                     } catch (error) {
                         console.error("Error: ", error)
                     }
-                    //setPlugins(loadedPlugins);
                 } else {
                     loadedPlugins = []
                 }
