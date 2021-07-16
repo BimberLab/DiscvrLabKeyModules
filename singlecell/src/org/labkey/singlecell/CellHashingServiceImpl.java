@@ -193,7 +193,7 @@ public class CellHashingServiceImpl extends CellHashingService
                     {
                         if (results.getObject(FieldKey.fromString("citeseqReadsetId")) == null)
                         {
-                            job.getLogger().error("cDNA specifies cite-seq readset but does not list panel: " + results.getString(FieldKey.fromString("rowid")));
+                            job.getLogger().error("cDNA specifies cite-seq panel, but cite-seq readset is empty: " + results.getString(FieldKey.fromString("rowid")));
                             hasError.set(true);
                         }
                         else
