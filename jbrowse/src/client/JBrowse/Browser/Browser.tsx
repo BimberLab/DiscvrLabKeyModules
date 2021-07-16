@@ -10,16 +10,17 @@ import {
 import { PluginConstructor } from '@jbrowse/core/Plugin'
 import { Ajax, Utils, ActionURL } from '@labkey/api'
 import MyProjectPlugin from "./plugins/MyProjectPlugin/index"
-import VariantPlugin from "./plugins/VariantPlugin/index"
+import ExtendedVariantPlugin from "./plugins/ExtendedVariantPlugin/index"
 
 const theme = createJBrowseTheme()
+const nativePlugins = [MyProjectPlugin, ExtendedVariantPlugin]
 
 function generateViewState(genome, plugins){
   return createViewState({
       assembly: genome.assembly ?? genome.assemblies,
       tracks: genome.tracks,
       configuration: genome.configuration,
-      plugins: plugins.concat(VariantPlugin, MyProjectPlugin), //plugins,
+      plugins: plugins.concat(nativePlugins),
       location: genome.location,
       defaultSession: genome.defaultSession,
       onChange: genome.onChange

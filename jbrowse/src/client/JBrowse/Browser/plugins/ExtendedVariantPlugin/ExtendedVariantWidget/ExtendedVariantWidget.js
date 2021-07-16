@@ -92,7 +92,8 @@ export default jbrowse => {
         }
 
         return (
-            <Paper className={classes.root} data-testid="variant-widget">
+            <Paper className={classes.root} data-testid="extended-
+            variant-widget">
                 <FeatureDetails
                  feature={feat}
                  {...props}

@@ -5,7 +5,7 @@ export default pluginManager => {
     'LinearGenomeViewPlugin',
   ).exports
   return ConfigurationSchema(
-    'VariantDisplay',
+    'ExtendedVariantDisplay',
     { renderer: pluginManager.pluggableConfigSchemaType('renderer') },
     { baseConfiguration: baseLinearDisplayConfigSchema, explicitlyTyped: true },
   )
