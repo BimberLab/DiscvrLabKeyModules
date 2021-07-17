@@ -1,14 +1,14 @@
 import { ConfigurationSchema } from '@jbrowse/core/configuration'
 import { ElementId } from '@jbrowse/core/util/types/mst'
-import VariantWidget from './VariantWidget'
+import ExtendedVariantWidget from './ExtendedVariantWidget'
 
 export default jbrowse => {
   const { types } = jbrowse.jbrequire('mobx-state-tree')
-  const configSchema = ConfigurationSchema('VariantWidget', {})
+  const configSchema = ConfigurationSchema('ExtendedVariantWidget', {})
   const stateModel = types
-    .model('VariantWidget', {
+    .model('ExtendedVariantWidget', {
       id: ElementId,
-      type: types.literal('VariantWidget'),
+      type: types.literal('ExtendedVariantWidget'),
       featureData: types.frozen({}),
     })
     .actions(self => ({
@@ -20,7 +20,7 @@ export default jbrowse => {
       },
     }))
 
-  const ReactComponent = jbrowse.jbrequire(VariantWidget)
+  const ReactComponent = jbrowse.jbrequire(ExtendedVariantWidget)
 
   return { configSchema, stateModel, ReactComponent }
 }

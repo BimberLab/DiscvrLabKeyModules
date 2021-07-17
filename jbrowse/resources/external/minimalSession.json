@@ -33,7 +33,7 @@
 
   "tracks": [
     {
-      "type": "VariantTrack",
+      "type": "ExtendedVariantTrack",
       "trackId": "clinvar_ncbi_hg38",
       "name": "ClinVar variants (NCBI)",
       "assemblyNames": ["hg38"],
@@ -54,10 +54,10 @@
           "properties": ["AF_ESP", "ALLELEID"]},
         { "name": "Regulatory Data - 1",
           "properties": ["CLNDN", "CLNVC"]}
-      ],
+      ]
     },
     {
-      "type": "VariantTrack",
+      "type": "DemoTrack",
       "trackId": "clinvar_ncbi_hg38-2",
       "name": "ClinVar variants (NCBI)-2",
       "assemblyNames": ["hg38"],
@@ -78,7 +78,7 @@
           "properties": ["ALLELEID"]},
         { "name": "Regulatory Data - 2",
           "properties": ["CLNVC"]}
-      ],
+      ]
     },
     {
       "type": "FeatureTrack",

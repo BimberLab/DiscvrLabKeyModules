@@ -18,7 +18,7 @@ export default jbrowse => {
       'WidgetDisplay',
       BaseLinearDisplay,
       types.model({
-        type: types.literal('VariantDisplay'),
+        type: types.literal('ExtendedVariantDisplay'),
         configuration: ConfigurationReference(configSchema),
       }),
     )
@@ -30,7 +30,7 @@ export default jbrowse => {
         var widgetId = 'Variant-' + trackId;
 
         const featureWidget = session.addWidget(
-          'VariantWidget',
+          'ExtendedVariantWidget',
           widgetId,
           { featureData: feature.toJSON() },
         )
