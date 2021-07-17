@@ -101,8 +101,13 @@ define([
                     var thisB = this;
 
                     if (this.config.hideNotFilterPass) {
-                        this.addFeatureFilter(function (f) {
-                            return this._isPassing(f);
+                        this.addFeatureFilter(function (feat) {
+                            var f = feat.get('filter');
+                            try {
+                                return f === null || f === undefined || f.values.join('').toUpperCase() === 'PASS';
+                            } catch(e) {
+                                return f.toUpperCase() === 'PASS';
+                            }
                         }, 'hideNotFilterPass');
                     }
 
