@@ -93,16 +93,18 @@ public class JBrowseTest extends BaseWebDriverTest
     {
         beginAt("/home/jbrowse-jbrowse.view?session=demo");
 
-        waitAndClick(Locator.xpath("//*[text() = 'Open track selector']/.."));
-        waitAndClick(Locator.xpath("//*[text() = 'ClinVar variants (NCBI)-2']")); // Display the relevant variants
-        Locator.css("body").findElement(getDriver()).sendKeys(Keys.ESCAPE); // exit out of our modal
-        while (isTextPresent("Loading")){ // wait for loading to finish up
+        // Asser that the demo widget displays properly
+
+        while (!isTextPresent("Loading")){
+            sleep(10);
+        }
+        while (isTextPresent("Loading")){
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElement(By.xpath("//*[name()='text' and contains(text(), '294665')]/..")); // 294665 is a visible element given minimalSession's location
-        actions.click(toClick).perform();
-        assertTextPresent("Hello"); // Check our modal displayed correctly
+        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), '294665')]/..")); // 294665 is a visible element given minimalSession's location
+        actions.click(toClick.get(2)).perform();
+        assertTextPresent("Hello");
 
     }
 
@@ -110,10 +112,11 @@ public class JBrowseTest extends BaseWebDriverTest
     {
         beginAt("/home/jbrowse-jbrowse.view?session=demo");
 
-        waitAndClick(Locator.xpath("//*[text() = 'Open track selector']/.."));
-        waitAndClick(Locator.xpath("//*[text() = 'ClinVar variants (NCBI)']"));
-        waitAndClick(Locator.xpath("//*[text() = 'ClinVar variants (NCBI)-2']"));
-        Locator.css("body").findElement(getDriver()).sendKeys(Keys.ESCAPE); // exit out of our modal
+        // Assert that the custom widget displays properly
+
+        while (!isTextPresent("Loading")){
+            sleep(10);
+        }
         while (isTextPresent("Loading")){
             sleep(10);
         }
@@ -121,10 +124,6 @@ public class JBrowseTest extends BaseWebDriverTest
         var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), '294665')]/..")); // 294665 is a visible element given minimalSession's location
         actions.click(toClick.get(0)).perform();
         assertTextPresent("Predicted Function - 1");
-        Locator.css("body").findElement(getDriver()).sendKeys(Keys.ESCAPE); // exit out of our modal
-        sleep(100);
-        actions.click(toClick.get(2)).perform();
-        assertTextPresent("Hello");
 
 
     }
