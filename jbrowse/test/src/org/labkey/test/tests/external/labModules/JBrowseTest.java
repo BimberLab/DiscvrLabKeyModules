@@ -15,46 +15,18 @@
  */
 package org.labkey.test.tests.external.labModules;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.SystemUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.labkey.serverapi.reader.Readers;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
-import org.labkey.test.Locators;
-import org.labkey.test.TestFileUtils;
 import org.labkey.test.TestTimeoutException;
 import org.labkey.test.categories.External;
 import org.labkey.test.categories.LabModule;
-import org.labkey.test.components.ext4.Window;
-import org.labkey.test.util.DataRegionTable;
-import org.labkey.test.util.Ext4Helper;
-import org.labkey.test.util.ext4cmp.Ext4ComboRef;
-import org.labkey.test.util.ext4cmp.Ext4FieldRef;
 import org.labkey.test.util.external.labModules.LabModuleHelper;
+import org.openqa.selenium.Keys;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import java.util.Set;
-import org.jetbrains.annotations.NotNull;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.By;
-import org.openqa.selenium.interactions.Actions;
 
 /**
  * Created by bimber on 1/20/2015.
@@ -120,9 +92,11 @@ public class JBrowseTest extends BaseWebDriverTest
         while (isTextPresent("Loading")){
             sleep(10);
         }
-        Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), '294665')]/..")); // 294665 is a visible element given minimalSession's location
-        actions.click(toClick.get(0)).perform();
+
+        // 294665 is a visible element given minimalSession's location
+        Locator l = Locator.xpath("//*[name()='text' and contains(text(), '294665')]/..");
+
+        waitAndClick(l.index(0));
         assertTextPresent("Predicted Function - 1");
 
 
