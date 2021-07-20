@@ -23,8 +23,9 @@ import org.labkey.test.TestTimeoutException;
 import org.labkey.test.categories.External;
 import org.labkey.test.categories.LabModule;
 import org.labkey.test.util.external.labModules.LabModuleHelper;
-import org.openqa.selenium.Keys;
 
+import org.openqa.selenium.By;
+import org.openqa.selenium.interactions.Actions;
 import java.util.Arrays;
 import java.util.List;
 
@@ -65,7 +66,7 @@ public class JBrowseTest extends BaseWebDriverTest
     {
         beginAt("/home/jbrowse-jbrowse.view?session=demo");
 
-        // Asser that the demo widget displays properly
+        // Assert that the demo widget displays properly
 
         while (!isTextPresent("Loading")){
             sleep(10);
@@ -94,9 +95,9 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // 294665 is a visible element given minimalSession's location
-        Locator l = Locator.xpath("//*[name()='text' and contains(text(), '294665')]/..");
-
-        waitAndClick(l.index(0));
+        Actions actions = new Actions(getDriver());
+        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), '294665')]/..")); // 294665 is a visible element given minimalSession's location
+        actions.click(toClick.get(0)).perform();
         assertTextPresent("Predicted Function - 1");
 
 
