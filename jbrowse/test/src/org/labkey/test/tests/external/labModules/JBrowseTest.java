@@ -23,8 +23,9 @@ import org.labkey.test.TestTimeoutException;
 import org.labkey.test.categories.External;
 import org.labkey.test.categories.LabModule;
 import org.labkey.test.util.external.labModules.LabModuleHelper;
-import org.openqa.selenium.Keys;
 
+import org.openqa.selenium.By;
+import org.openqa.selenium.interactions.Actions;
 import java.util.Arrays;
 import java.util.List;
 
@@ -65,18 +66,18 @@ public class JBrowseTest extends BaseWebDriverTest
     {
         beginAt("/home/jbrowse-jbrowse.view?session=demo");
 
-        waitAndClick(Locator.xpath("//*[text() = 'Open track selector']/.."));
-        waitAndClick(Locator.xpath("//*[text() = 'ClinVar variants (NCBI)-2']")); // Display the relevant variants
-        Locator.css("body").findElement(getDriver()).sendKeys(Keys.ESCAPE); // exit out of our modal
-        while (isTextPresent("Loading"))
-        {
-            // wait for loading to finish up
+        // Assert that the demo widget displays properly
+
+        while (!isTextPresent("Loading")){
             sleep(10);
         }
-
-        // Position 294665 is a visible element given minimalSession's location
-        waitAndClick(Locator.xpath("//*[name()='text' and contains(text(), '294665')]/.."));
-        assertTextPresent("Hello"); // Check our modal displayed correctly
+        while (isTextPresent("Loading")){
+            sleep(10);
+        }
+        Actions actions = new Actions(getDriver());
+        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), '294665')]/..")); // 294665 is a visible element given minimalSession's location
+        actions.click(toClick.get(2)).perform();
+        assertTextPresent("Hello");
 
     }
 
@@ -84,24 +85,20 @@ public class JBrowseTest extends BaseWebDriverTest
     {
         beginAt("/home/jbrowse-jbrowse.view?session=demo");
 
-        waitAndClick(Locator.xpath("//*[text() = 'Open track selector']/.."));
-        waitAndClick(Locator.xpath("//*[text() = 'ClinVar variants (NCBI)']"));
-        waitAndClick(Locator.xpath("//*[text() = 'ClinVar variants (NCBI)-2']"));
-        Locator.css("body").findElement(getDriver()).sendKeys(Keys.ESCAPE); // exit out of our modal
+        // Assert that the custom widget displays properly
+
+        while (!isTextPresent("Loading")){
+            sleep(10);
+        }
         while (isTextPresent("Loading")){
             sleep(10);
         }
 
         // 294665 is a visible element given minimalSession's location
-        Locator l = Locator.xpath("//*[name()='text' and contains(text(), '294665')]/..");
-
-        waitAndClick(l.index(0));
+        Actions actions = new Actions(getDriver());
+        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), '294665')]/..")); // 294665 is a visible element given minimalSession's location
+        actions.click(toClick.get(0)).perform();
         assertTextPresent("Predicted Function - 1");
-
-        Locator.css("body").findElement(getDriver()).sendKeys(Keys.ESCAPE); // exit out of our modal
-        sleep(100);
-        waitAndClick(l.index(2));
-        assertTextPresent("Hello");
 
 
     }
