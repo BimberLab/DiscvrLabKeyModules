@@ -10,6 +10,7 @@ export default jbrowse => {
       id: ElementId,
       type: types.literal('ExtendedVariantWidget'),
       featureData: types.frozen({}),
+      extendedVariantDisplayConfig: types.frozen([])
     })
     .actions(self => ({
       setFeatureData(data) {
@@ -17,7 +18,7 @@ export default jbrowse => {
       },
       clearFeatureData() {
         self.featureData = {}
-      },
+      }
     }))
 
   const ReactComponent = jbrowse.jbrequire(ExtendedVariantWidget)

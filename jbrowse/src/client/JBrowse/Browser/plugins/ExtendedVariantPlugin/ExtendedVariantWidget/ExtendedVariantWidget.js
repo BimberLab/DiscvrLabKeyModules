@@ -12,7 +12,6 @@ export default jbrowse => {
     Tooltip,
     Link,
   } = jbrowse.jbrequire('@material-ui/core')
-
     var Ajax = require('@labkey/api').Ajax
     var Utils = require('@labkey/api').Utils
     var ActionURL = require('@labkey/api').ActionURL
@@ -82,8 +81,7 @@ export default jbrowse => {
         const feat = JSON.parse(JSON.stringify(model.featureData))
         var displays;
 
-        var parentTrackId = model.id.slice(8)
-        var configDisplays = JSON.parse(window.sessionStorage.getItem(parentTrackId))
+        var configDisplays = model.extendedVariantDisplayConfig
         displays = makeDisplays(feat, configDisplays)
         for(var i in configDisplays){
             for(var j in configDisplays[i].properties){
