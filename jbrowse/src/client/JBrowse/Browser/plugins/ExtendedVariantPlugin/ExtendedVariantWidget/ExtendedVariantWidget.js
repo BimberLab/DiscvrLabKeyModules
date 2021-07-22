@@ -12,7 +12,7 @@ export default jbrowse => {
     Tooltip,
     Link,
   } = jbrowse.jbrequire('@material-ui/core')
-
+    //import { readConfObject } from '@jbrowse/core/configuration'
     var Ajax = require('@labkey/api').Ajax
     var Utils = require('@labkey/api').Utils
     var ActionURL = require('@labkey/api').ActionURL
@@ -20,6 +20,7 @@ export default jbrowse => {
     var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
     var _core = require("@material-ui/core");
     var _SanitizedHTML = _interopRequireDefault(require("@jbrowse/core/ui/SanitizedHTML"));
+    var _configuration = _interopRequireDefault(require("@jbrowse/core/configuration"))
     const queryParam = new URLSearchParams(window.location.search);
     const session = queryParam.get('session')
 
@@ -83,7 +84,7 @@ export default jbrowse => {
         var displays;
 
         var parentTrackId = model.id.slice(8)
-        var configDisplays = JSON.parse(window.sessionStorage.getItem(parentTrackId))
+        var configDisplays = model.widgetDisplayInfo
         displays = makeDisplays(feat, configDisplays)
         for(var i in configDisplays){
             for(var j in configDisplays[i].properties){
