@@ -49,12 +49,14 @@
           }
         }
       },
-      "metadata": [
-        { "name": "Predicted Function - 1",
-          "properties": ["AF_ESP", "ALLELEID"]},
-        { "name": "Regulatory Data - 1",
-          "properties": ["CLNDN", "CLNVC"]}
-      ]
+      "metadata": {
+        "extendedVariantDisplayConfig" : [
+          { "name": "Predicted Function - 1",
+            "properties": ["AF_ESP", "ALLELEID"]},
+          { "name": "Regulatory Data - 1",
+            "properties": ["CLNDN", "CLNVC"]}
+        ]
+      }
     },
     {
       "type": "DemoTrack",

@@ -81,7 +81,7 @@ export default jbrowse => {
         const feat = JSON.parse(JSON.stringify(model.featureData))
         var displays;
 
-        var configDisplays = model.widgetDisplayInfo
+        var configDisplays = model.extendedVariantDisplayConfig
         displays = makeDisplays(feat, configDisplays)
         for(var i in configDisplays){
             for(var j in configDisplays[i].properties){

@@ -10,7 +10,7 @@ export default jbrowse => {
       id: ElementId,
       type: types.literal('ExtendedVariantWidget'),
       featureData: types.frozen({}),
-      widgetDisplayInfo: types.frozen([])
+      extendedVariantDisplayConfig: types.frozen([])
     })
     .actions(self => ({
       setFeatureData(data) {
