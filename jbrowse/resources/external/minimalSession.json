@@ -49,12 +49,14 @@
           }
         }
       },
-      "variantDisplays": [
-        { "name": "Predicted Function - 1",
-          "properties": ["AF_ESP", "ALLELEID"]},
-        { "name": "Regulatory Data - 1",
-          "properties": ["CLNDN", "CLNVC"]}
-      ]
+      "metadata": {
+        "extendedVariantDisplayConfig" : [
+          { "name": "Predicted Function - 1",
+            "properties": ["AF_ESP", "ALLELEID"]},
+          { "name": "Regulatory Data - 1",
+            "properties": ["CLNDN", "CLNVC"]}
+        ]
+      }
     },
     {
       "type": "DemoTrack",
@@ -72,13 +74,7 @@
             "uri": "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz.tbi"
           }
         }
-      },
-      "variantDisplays": [
-        { "name": "Predicted Function - 2",
-          "properties": ["ALLELEID"]},
-        { "name": "Regulatory Data - 2",
-          "properties": ["CLNVC"]}
-      ]
+      }
     },
     {
       "type": "FeatureTrack",
