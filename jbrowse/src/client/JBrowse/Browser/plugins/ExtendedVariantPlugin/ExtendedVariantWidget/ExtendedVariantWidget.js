@@ -35,23 +35,132 @@ export default jbrowse => {
     const useStyles = makeStyles(() => ({
         table: {
             padding: 0,
+
         },
         link: {
             color: 'rgb(0, 0, 238)',
         },
     }))
 
+    function makeGenotypes( parentElement, track, f, featDiv, genotypes ) {
+        var thisB = this;
+        if( ! genotypes )
+            return;
+
+        var trackId = track.config.label;
+        var contig = f.get('seq_id');
+        var start = f.get('start') + 1; //convert to 1-based
+        var end = f.get('end');
+
+        var keys = Util.dojof.keys( genotypes ).sort();
+        var gCount = keys.length;
+        if( ! gCount )
+            return;
+
+        // get variants and coerce to an array
+        var alt = f.get('alternative_alleles');
+        if( alt &&  typeof alt == 'object' && 'values' in alt )
+            alt = alt.values;
+        if (lang.isArray(alt) &&  alt.match( /,/ ) ) {
+            alt = alt.split( /,/ );
+        }
+        if( alt && ! lang.isArray( alt ) )
+            alt = [alt];
+
+        var gContainer = domConstruct.create(
+                'div',
+                { className: 'genotypes',
+                    innerHTML: '<h2 class="sectiontitle">Genotypes ('
+                    + gCount + ')</h2>'
+                },
+                parentElement );
+
+
+        var gtUrl = track.browser.config.contextPath + track.browser.config.containerPath + '/jbrowse-genotypeTable.view?trackId=' + trackId + '&chr=' + contig + '&start=' + start + '&stop=' + end;
+        var linkContainer = domConstruct.create(
+                'a',
+                {
+                    className: 'value_container genotypes',
+                    innerHTML: 'Click here to view sample-level genotypes',
+                    target: '_blank',
+                    style: 'margin-top: 10px;',
+                    href: gtUrl
+                }, parentElement );
+
+        function render( underlyingRefSeq ) {
+            var summaryElement = thisB._renderGenotypeHistogram( gContainer, genotypes, alt, underlyingRefSeq, f );
+        };
+
+        track.browser.getStore('refseqs', function( refSeqStore ) {
+            if( refSeqStore ) {
+                refSeqStore.getReferenceSequence(
+                        { ref: track.refSeq.name,
+                            start: f.get('start'),
+                            end: f.get('end')
+                        },
+                        render,
+                        function() { render(); }
+                );
+            }
+            else {
+                render();
+            }
+        });
+    }
+
+    function makeTable(data){
+        var tableBodyRows = []
+        for(var i in data){
+            var line = data[i].split('|')
+            tableBodyRows.push(
+                <TableRow>
+                    <TableCell>{line[1]}</TableCell>
+                    <TableCell>{line[2]}</TableCell>
+                    <TableCell>{line[3]}</TableCell>
+                    <TableCell>{line[9]}</TableCell>
+                </TableRow>
+            )
+        }
+        return(
+        <Table>
+        <TableHead>
+            <TableRow>
+                <TableCell>Effect</TableCell>
+                <TableCell>Impact</TableCell>
+                <TableCell>Gene Name</TableCell>
+                <TableCell>Position/Consequence</TableCell>
+            </TableRow>
+        </TableHead>
+        <TableBody>
+            {tableBodyRows}
+        </TableBody>
+        </Table>
+        )
+// A|intron_variant|MODIFIER|NTNG1|ENSMMUG00000008197|transcript|ENSMMUT00000072133.2|protein_coding|2/9|c.247-3863G>T||||||
+// A|intron_variant|MODIFIER|NTNG1|ENSMMUG00000008197|transcript|ENSMMUT00000046534.3|protein_coding|1/3|c.247-3863G>T||||||
+// Effect | Impact | Gene Name | Position / Consequence
+// downstream_gene_variant | MODIFIER | LTB-TNF(ENSMMUG...-ENSMMUT...) | c.247-3863G
+// 1 | 2 | 3+4(+6?) | 9+10
+
+    }
+
     function makeDisplays(feat, displays){
         var propertyJSX = []
+
         for(var display in displays){
             var tempProp = []
             for(var property in displays[display].properties){
                 if(feat["INFO"][displays[display].properties[property]]){
-                    tempProp.push(
-                        <TableRow>
-                            {displays[display].properties[property]}: {feat["INFO"][displays[display].properties[property]]}
-                        </TableRow>
-                    )
+                    //if(displays[display].properties[property] == "ANN"){
+                     //   annTable = makeTable(feat["INFO"]["ANN"])
+                    //}
+                   // else{
+                        tempProp.push(
+                            <TableRow>
+                                 {displays[display].properties[property]}: {feat["INFO"][displays[display].properties[property]]}
+                            </TableRow>
+                        )
+                    //}
                 }
             }
             propertyJSX.push(tempProp)
@@ -88,14 +197,23 @@ export default jbrowse => {
                 feat["INFO"][configDisplays[i].properties[j]] = null
             }
         }
-
+        feat["samples"] = null
+        var annTable;
+        if (feat["INFO"]["ANN"]){
+            annTable = makeTable(feat["INFO"]["ANN"])
+            feat["INFO"]["ANN"] = null
+        }
         return (
             <Paper className={classes.root} data-testid="extended-variant-widget">
                 <FeatureDetails
                  feature={feat}
                  {...props}
                  />
-                {displays}
+                 <BaseCard>
+                 <div>
+                {annTable}
+                </div>
+                </BaseCard>
             </Paper>
         )
     }

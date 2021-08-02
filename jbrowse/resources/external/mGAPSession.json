@@ -40,11 +40,11 @@
       "adapter": {
         "type": "VcfTabixAdapter",
         "vcfGzLocation": {
-          "uri": "https://prime-seq.ohsu.edu/_webdav/Labs/Bimber/Collaborations/Public/%40files/mGap.v2.1.vcf.gz"
+          "uri": "http://localhost:8080/labkey/jbrowse/mgap/mGap.v2.1.subset.vcf.gz"
         },
         "index": {
           "location": {
-            "uri": "https://prime-seq.ohsu.edu/_webdav/Labs/Bimber/Collaborations/Public/%40files/mGap.v2.1.vcf.gz.tbi"
+            "uri": "http://localhost:8080/labkey/jbrowse/mgap/mGap.v2.1.subset.vcf.gz.tbi"
           }
         }
       }
