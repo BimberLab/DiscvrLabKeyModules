@@ -87,16 +87,11 @@ export default jbrowse => {
             var tempProp = []
             for(var property in displays[display].properties){
                 if(feat["INFO"][displays[display].properties[property]]){
-                    //if(displays[display].properties[property] == "ANN"){
-                     //   annTable = makeTable(feat["INFO"]["ANN"])
-                    //}
-                   // else{
                         tempProp.push(
                             <TableRow>
                                  {displays[display].properties[property]}: {feat["INFO"][displays[display].properties[property]]}
                             </TableRow>
                         )
-                    //}
                 }
             }
             propertyJSX.push(tempProp)
@@ -119,9 +114,6 @@ export default jbrowse => {
         return displayJSX
     }
 
-function sleep (time) {
-  return new Promise((resolve) => setTimeout(resolve, time));
-}
     function makeChart(samples){
         const [state, setState] = useState(null)
         useEffect(() => {
