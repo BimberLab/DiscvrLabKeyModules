@@ -12,6 +12,7 @@ export default jbrowse => {
     Tooltip,
     Link,
   } = jbrowse.jbrequire('@material-ui/core')
+    var Chart = require("react-google-charts").Chart
     var Ajax = require('@labkey/api').Ajax
     var Utils = require('@labkey/api').Utils
     var ActionURL = require('@labkey/api').ActionURL
@@ -118,13 +119,97 @@ export default jbrowse => {
         return displayJSX
     }
 
+function sleep (time) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
+    function makeChart(samples){
+        const [state, setState] = useState(null)
+        useEffect(() => {
+            setState(
+                <BaseCard title="Genotypes">
+                    <div>
+                    Loading genotypes...
+                    </div>
+                </BaseCard>
+            )
+            var gtCounts = {}
+            var gtTotal = 0;
+            for(var i in samples){ // samples
+                for(var gt in samples[i]){ // genotypes
+                    if(samples[i][gt]){ // if genotype is not null, increment count
+                        if(gtCounts[gt]){// if gtCounts entry is not null, or we have a preexisting entry for it
+                            gtCounts[gt] = gtCounts[gt] + 1 // increment count for that gt
+                            gtTotal = gtTotal + 1 // increment our total count
+                        }
+                        else { // else if gtCounts entry is null, or we don't have an entry, set to 1
+                            gtCounts[gt] = 1
+                            gtTotal = gtTotal + 1 // increment our total count
+                        }
+                    }
+                    else if(!samples[i][gt] && !gtCounts[gt]){ // if genotype is null and we don't have an entry for it
+                        gtCounts[gt] = 0 // make an entry with no counts
+                    }
+                }
+            }
+            var gtBarData = [
+            [
+                'Genotype',
+                'Percent',
+                { role: 'style' },
+                {
+                  sourceColumn: 0,
+                  role: 'annotation',
+                  type: 'string',
+                  calc: 'stringify',
+                },
+            ]]
+            var color = 0
+            for(var entry in gtCounts){
+                if(color == 0){
+                    gtBarData.push(
+                        [entry, gtCounts[entry]/gtTotal, "#0088FF", null] // blue
+                    )
+                    color = 1
+                }
+                else if(color == 1){
+                    gtBarData.push(
+                        [entry, gtCounts[entry]/gtTotal, "#76BEFE", null] // light blue
+                    )
+                    color = 0
+                }
+            }
+            setState(
+                <BaseCard title="Genotypes">
+                     <Chart
+                       width={'250px'}
+                       height={'200px'}
+                       chartType="BarChart"
+                       loader={<div>Loading Chart</div>}
+                       data={gtBarData}
+                       options={{
+                         title: 'Genotype Frequency',
+                         width: 300,
+                         height: 200,
+                         bar: { groupWidth: '95%' },
+                         legend: { position: 'none' },
+                       }}
+                       // For tests
+                       rootProps={{ 'data-testid': '6' }}
+                     />
+                </BaseCard>)
+        }, []);
+        return state
+    }
     function NewTable(props) {
         const classes = useStyles()
         const { feature } = props
         const { model } = props
         const feat = JSON.parse(JSON.stringify(model.featureData))
-        var displays;
+        const samples = model.featureData.samples
+        console.log(model.featureData)
+        feat["samples"] = null
 
+        var displays;
         var configDisplays = model.extendedVariantDisplayConfig
         displays = makeDisplays(feat, configDisplays)
         for(var i in configDisplays){
@@ -132,7 +217,7 @@ export default jbrowse => {
                 feat["INFO"][configDisplays[i].properties[j]] = null
             }
         }
-        feat["samples"] = null
+
         var annTable;
         if (feat["INFO"]["ANN"]){
             annTable = makeTable(feat["INFO"]["ANN"])
@@ -144,11 +229,12 @@ export default jbrowse => {
                  feature={feat}
                  {...props}
                  />
-                 <BaseCard>
-                 <div>
-                {annTable}
-                </div>
+                 <BaseCard title="Predicted Function">
+                    <div>
+                        {annTable}
+                    </div>
                 </BaseCard>
+                {makeChart(samples)}
             </Paper>
         )
     }
