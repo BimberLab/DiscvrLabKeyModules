@@ -37,6 +37,7 @@ export default jbrowse => {
       return {
           table: {
               padding: 0,
+              display: 'block'
           },
           link: {
               color: 'rgb(0, 0, 238)',
@@ -90,6 +91,7 @@ export default jbrowse => {
         }
       };
     });
+
     /*const useStyles = makeStyles(() => ({
         table: {
             padding: 0,
@@ -101,31 +103,27 @@ export default jbrowse => {
     }))*/
 
 
-    function makeTable(data){
+    function makeTable(data, classes){
         var tableBodyRows = []
         for(var i in data){
             var line = data[i].split('|')
             tableBodyRows.push(
                 <TableRow>
-                    <div className={classes.fieldValue}>
                         <TableCell>{line[1]}</TableCell>
                         <TableCell>{line[2]}</TableCell>
                         <TableCell>{line[3]}</TableCell>
                         <TableCell>{line[9]}</TableCell>
-                    </div>
                 </TableRow>
             )
         }
         return(
-        <Table>
+        <Table className={classes.table}>
         <TableHead>
             <TableRow>
-                <div className={classes.fieldName}>
                     <TableCell>Effect</TableCell>
                     <TableCell>Impact</TableCell>
                     <TableCell>Gene Name</TableCell>
                     <TableCell>Position/Consequence</TableCell>
-                </div>
             </TableRow>
         </TableHead>
         <TableBody>
@@ -278,7 +276,7 @@ export default jbrowse => {
 
         var annTable;
         if (feat["INFO"]["ANN"]){
-            annTable = makeTable(feat["INFO"]["ANN"])
+            annTable = makeTable(feat["INFO"]["ANN"], classes)
             feat["INFO"]["ANN"] = null
         }
         return (
