@@ -19,6 +19,7 @@ export default jbrowse => {
     const { makeStyles } = jbrowse.jbrequire('@material-ui/core/styles')
     var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
     var _core = require("@material-ui/core");
+    var _styles = require("@material-ui/core/styles")
     var _SanitizedHTML = _interopRequireDefault(require("@jbrowse/core/ui/SanitizedHTML"));
     const queryParam = new URLSearchParams(window.location.search);
     const session = queryParam.get('session')
@@ -32,8 +33,64 @@ export default jbrowse => {
     const { FeatureDetails, BaseFeatureDetails, BaseCard } = jbrowse.jbrequire(
       '@jbrowse/core/BaseFeatureWidget/BaseFeatureDetail',
     )
-
-    const useStyles = makeStyles(() => ({
+   var useStyles = (0, _styles.makeStyles)(function (theme) {
+      return {
+          table: {
+              padding: 0,
+          },
+          link: {
+              color: 'rgb(0, 0, 238)',
+          },
+        expansionPanelDetails: {
+          display: 'block',
+          padding: theme.spacing(1)
+        },
+        expandIcon: {
+          color: '#FFFFFF'
+        },
+        paperRoot: {
+          background: theme.palette.grey[100]
+        },
+        field: {
+          display: 'flex',
+          flexWrap: 'wrap'
+        },
+        fieldDescription: {
+          '&:hover': {
+            background: 'yellow'
+          }
+        },
+        fieldName: {
+          wordBreak: 'break-all',
+          minWidth: '90px',
+          maxWidth: '150px',
+          borderBottom: '1px solid #0003',
+          background: theme.palette.grey[200],
+          marginRight: theme.spacing(1),
+          padding: theme.spacing(0.5)
+        },
+        fieldValue: {
+          wordBreak: 'break-word',
+          maxHeight: 300,
+          padding: theme.spacing(0.5),
+          overflow: 'auto'
+        },
+        fieldSubvalue: {
+          wordBreak: 'break-word',
+          maxHeight: 300,
+          padding: theme.spacing(0.5),
+          background: theme.palette.grey[100],
+          border: "1px solid ".concat(theme.palette.grey[300]),
+          boxSizing: 'border-box',
+          overflow: 'auto'
+        },
+        accordionBorder: {
+          marginTop: '4px',
+          border: '1px solid #444'
+        }
+      };
+    });
+    /*const useStyles = makeStyles(() => ({
         table: {
             padding: 0,
 
@@ -41,7 +98,7 @@ export default jbrowse => {
         link: {
             color: 'rgb(0, 0, 238)',
         },
-    }))
+    }))*/
 
 
     function makeTable(data){
@@ -50,10 +107,12 @@ export default jbrowse => {
             var line = data[i].split('|')
             tableBodyRows.push(
                 <TableRow>
-                    <TableCell>{line[1]}</TableCell>
-                    <TableCell>{line[2]}</TableCell>
-                    <TableCell>{line[3]}</TableCell>
-                    <TableCell>{line[9]}</TableCell>
+                    <div className={classes.fieldValue}>
+                        <TableCell>{line[1]}</TableCell>
+                        <TableCell>{line[2]}</TableCell>
+                        <TableCell>{line[3]}</TableCell>
+                        <TableCell>{line[9]}</TableCell>
+                    </div>
                 </TableRow>
             )
         }
@@ -61,10 +120,12 @@ export default jbrowse => {
         <Table>
         <TableHead>
             <TableRow>
-                <TableCell>Effect</TableCell>
-                <TableCell>Impact</TableCell>
-                <TableCell>Gene Name</TableCell>
-                <TableCell>Position/Consequence</TableCell>
+                <div className={classes.fieldName}>
+                    <TableCell>Effect</TableCell>
+                    <TableCell>Impact</TableCell>
+                    <TableCell>Gene Name</TableCell>
+                    <TableCell>Position/Consequence</TableCell>
+                </div>
             </TableRow>
         </TableHead>
         <TableBody>
@@ -89,7 +150,12 @@ export default jbrowse => {
                 if(feat["INFO"][displays[display].properties[property]]){
                         tempProp.push(
                             <TableRow>
-                                 {displays[display].properties[property]}: {feat["INFO"][displays[display].properties[property]]}
+                                <div className={classes.fieldName}>
+                                    {displays[display].properties[property]}
+                                </div>
+                                <div className={classes.fieldValue}>
+                                    {feat["INFO"][displays[display].properties[property]]}
+                                </div>
                             </TableRow>
                         )
                 }
