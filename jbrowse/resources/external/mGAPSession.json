@@ -50,11 +50,11 @@
       },
       "metadata": {
         "extendedVariantDisplayConfig" : [
-          { "name": "AC - AF",
+          { "name": "AC, AF",
             "properties": ["AC", "AF"]},
-          { "name": "LF - MAF",
+          { "name": "LF, MAF",
             "properties": ["LF", "MAF"]},
-          { "name": "ERBSEG",
+          { "name": "ERBSEG_NM, ERBSEG_CT, SX",
             "properties": ["ERBSEG_NM", "ERBSEG_CT", "SX"]
           }
         ],
