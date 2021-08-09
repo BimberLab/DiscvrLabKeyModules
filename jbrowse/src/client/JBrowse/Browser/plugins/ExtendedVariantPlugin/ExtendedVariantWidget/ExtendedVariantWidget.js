@@ -308,21 +308,25 @@ export default jbrowse => {
     }
 
     function makeTable(data, classes){
+        var geneNames = []
         var tableBodyRows = []
         for(var i in data){
             var line = data[i].split('|')
             if(line[10]){
                 line[10] = <div>{line[10]}</div>
             }
-
-            tableBodyRows.push(
-                <TableRow>
-                        <TableCell>{line[1]}</TableCell>
-                        <TableCell>{line[2]}</TableCell>
-                        <TableCell>{line[3]} {line[4]}</TableCell>
-                        <TableCell>{line[9]} {line[10]}</TableCell>
-                </TableRow>
-            )
+            var geneName = line[3]+" "+line[4]
+            if (!geneNames.includes(geneName)){
+                tableBodyRows.push(
+                    <TableRow>
+                            <TableCell>{line[1]}</TableCell>
+                            <TableCell>{line[2]}</TableCell>
+                            <TableCell>{geneName}</TableCell>
+                            <TableCell>{line[9]} {line[10]}</TableCell>
+                    </TableRow>
+                )
+                geneNames.push(geneName)
+            }
         }
         return(
         <BaseCard title="Predicted Function">
