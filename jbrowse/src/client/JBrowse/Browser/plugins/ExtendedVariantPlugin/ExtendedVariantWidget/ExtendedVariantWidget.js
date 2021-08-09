@@ -262,7 +262,7 @@ export default jbrowse => {
             var gtBarData = [
             [
                 'Genotype',
-                'Proportion',
+                'Total Count',
                 { role: 'style' },
                 {
                   sourceColumn: 0,
@@ -274,7 +274,7 @@ export default jbrowse => {
             for(var entry in gtCounts){
                 var rounded = round(gtCounts[entry]/gtTotal*100, 1)
                 gtBarData.push(
-                    [entry, gtCounts[entry]/gtTotal, "#0088FF", rounded+"%"] // blue
+                    [entry, gtCounts[entry], "#0088FF", rounded+"%"]
                 )
             }
             setState(
