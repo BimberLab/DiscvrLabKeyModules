@@ -98,7 +98,9 @@ export default jbrowse => {
       };
     });
 
-
+    function round(value, decimals) {
+        return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
+    }
 
     function makeTable(data, classes){
         var tableBodyRows = []
@@ -201,7 +203,7 @@ export default jbrowse => {
         return displayJSX
     }
 
-    function makeChart(samples){
+    function makeChart(samples, ref, alt){
         const [state, setState] = useState(null)
         useEffect(() => {
             setState(
@@ -212,28 +214,55 @@ export default jbrowse => {
                 </BaseCard>
             )
             var gtCounts = {}
-            var gtTotal = 0;
-            for(var i in samples){ // samples
-                for(var gt in samples[i]){ // genotypes
-                    if(samples[i][gt]){ // if genotype is not null, increment count
-                        if(gtCounts[gt]){// if gtCounts entry is not null, or we have a preexisting entry for it
-                            gtCounts[gt] = gtCounts[gt] + 1 // increment count for that gt
-                            gtTotal = gtTotal + 1 // increment our total count
+            var gtTotal = 0
+            for(var sample in samples){
+                var gt = samples[sample]["GT"]
+                for(var entry in gt){
+                    // CASES
+                    // ./. -- no call
+                    if(gt[entry] == "./."){
+                        if(gtCounts["No Call"]){                          // if gtCounts entry is not null, or we have a preexisting entry for it
+                            gtCounts["No Call"] = gtCounts["No Call"] + 1 // increment count for that gt
+                            gtTotal = gtTotal + 1                         // increment our total count
                         }
-                        else { // else if gtCounts entry is null, or we don't have an entry, set to 1
-                            gtCounts[gt] = 1
-                            gtTotal = gtTotal + 1 // increment our total count
+                        else {                                   // else if gtCounts entry is null, or we don't have an entry, set to 1
+                            gtCounts["No Call"] = 1
+                            gtTotal = gtTotal + 1                // increment our total count
                         }
                     }
-                    else if(!samples[i][gt] && !gtCounts[gt]){ // if genotype is null and we don't have an entry for it
-                        gtCounts[gt] = 0 // make an entry with no counts
+                    // int / int
+                    else if(gt[entry]){
+                        var gtKey;                               // should be an array of len 2 after split
+                        if (gt[entry].includes("/")){            // unphased gts split on /
+                            gtKey = gt[entry].split("/")
+                        }
+                        else if(gt[entry].includes("|")){        // phased gts split on |
+                            gtKey = gt[entry].split("|")
+                        }
+                        for(var gtVal in gtKey){
+                            if(gtKey[gtVal] == 0){
+                                gtKey[gtVal] = ref
+                            }
+                            else{
+                                gtKey[gtVal] = alt[gtKey[gtVal]-1]
+                            }
+                        }
+                        gtKey = gtKey[0] + "/" + gtKey[1]         // for the purposes of the chart, phased/unphased can be counted as the same
+                       if(gtCounts[gtKey]){                       // if gtCounts entry is not null, or we have a preexisting entry for it
+                            gtCounts[gtKey] = gtCounts[gtKey] + 1 // increment count for that gt
+                            gtTotal = gtTotal + 1                 // increment our total count
+                        }
+                        else {                                    // else if gtCounts entry is null, or we don't have an entry, set to 1
+                            gtCounts[gtKey] = 1
+                            gtTotal = gtTotal + 1                 // increment our total count
+                        }
                     }
                 }
             }
             var gtBarData = [
             [
                 'Genotype',
-                'Percent',
+                'Proportion',
                 { role: 'style' },
                 {
                   sourceColumn: 0,
@@ -242,20 +271,11 @@ export default jbrowse => {
                   calc: 'stringify',
                 },
             ]]
-            var color = 0
             for(var entry in gtCounts){
-                if(color == 0){
-                    gtBarData.push(
-                        [entry, gtCounts[entry]/gtTotal, "#0088FF", null] // blue
-                    )
-                    color = 1
-                }
-                else if(color == 1){
-                    gtBarData.push(
-                        [entry, gtCounts[entry]/gtTotal, "#76BEFE", null] // light blue
-                    )
-                    color = 0
-                }
+                var rounded = round(gtCounts[entry]/gtTotal*100, 1)
+                gtBarData.push(
+                    [entry, gtCounts[entry]/gtTotal, "#0088FF", rounded+"%"] // blue
+                )
             }
             setState(
                 <BaseCard title="Genotypes">
@@ -316,7 +336,7 @@ export default jbrowse => {
                  />
                  {displays}
                  {annTable}
-                 {makeChart(samples)}
+                 {makeChart(samples, feat["REF"], feat["ALT"])}
             </Paper>
         )
     }
