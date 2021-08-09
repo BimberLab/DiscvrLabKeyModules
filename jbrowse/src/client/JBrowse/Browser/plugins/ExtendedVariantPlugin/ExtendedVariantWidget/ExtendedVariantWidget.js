@@ -183,7 +183,9 @@ export default jbrowse => {
                     }
                 }
             }
-            propertyJSX.push(tempProp)
+            if(tempProp.length != 0){
+                propertyJSX.push(tempProp)
+            }
         }
                  /* <div style={{ padding: '7px', width: '100%', maxHeight: 600, overflow: 'auto' }}>
                         <Table className={displays[i].name}>
@@ -193,7 +195,7 @@ export default jbrowse => {
                         </Table>
                    </div>*/
         var displayJSX = []
-        for(var i = 0; i < displays.length; i++){
+        for(var i = 0; i < propertyJSX.length; i++){
             displayJSX.push(
                 <BaseCard title={displays[i].name}>
                     {propertyJSX[i]}
