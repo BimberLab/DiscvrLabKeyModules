@@ -28,13 +28,15 @@ export default jbrowse => {
         const extendedVariantDisplayConfig = getContainingTrack(self).configuration.metadata.value.extendedVariantDisplayConfig
         const trackId = getContainingTrack(self).configuration.trackId
         const session = getSession(self)
+        const message = getContainingTrack(self).configuration.metadata.value.message
         var widgetId = 'Variant-' + trackId;
 
         const featureWidget = session.addWidget(
           'ExtendedVariantWidget',
           widgetId,
           { featureData: feature.toJSON(),
-            extendedVariantDisplayConfig: extendedVariantDisplayConfig },
+            extendedVariantDisplayConfig: extendedVariantDisplayConfig,
+            message: message },
         )
         session.showWidget(featureWidget)
         session.setSelection(feature)

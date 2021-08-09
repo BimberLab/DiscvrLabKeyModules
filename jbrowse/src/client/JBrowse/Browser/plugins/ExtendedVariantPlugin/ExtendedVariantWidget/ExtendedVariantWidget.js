@@ -42,6 +42,12 @@ export default jbrowse => {
           link: {
               color: 'rgb(0, 0, 238)',
           },
+          message: {
+              paddingTop: theme.spacing(5),
+              paddingLeft: theme.spacing(5),
+              paddingRight: theme.spacing(5),
+              maxWidth: 500
+          },
         expansionPanelDetails: {
           display: 'block',
           padding: theme.spacing(1)
@@ -76,7 +82,7 @@ export default jbrowse => {
           padding: theme.spacing(0.5),
           overflow: 'auto'
         },
-        fieldSubvalue: {
+        fieldSubValue: {
           wordBreak: 'break-word',
           maxHeight: 300,
           padding: theme.spacing(0.5),
@@ -92,86 +98,103 @@ export default jbrowse => {
       };
     });
 
-    /*const useStyles = makeStyles(() => ({
-        table: {
-            padding: 0,
-
-        },
-        link: {
-            color: 'rgb(0, 0, 238)',
-        },
-    }))*/
 
 
     function makeTable(data, classes){
         var tableBodyRows = []
         for(var i in data){
             var line = data[i].split('|')
+            if(line[10]){
+                line[10] = <div>{line[10]}</div>
+            }
+
             tableBodyRows.push(
                 <TableRow>
                         <TableCell>{line[1]}</TableCell>
                         <TableCell>{line[2]}</TableCell>
-                        <TableCell>{line[3]}</TableCell>
-                        <TableCell>{line[9]}</TableCell>
+                        <TableCell>{line[3]} {line[4]}</TableCell>
+                        <TableCell>{line[9]} {line[10]}</TableCell>
                 </TableRow>
             )
         }
         return(
-        <Table className={classes.table}>
-        <TableHead>
-            <TableRow>
-                    <TableCell>Effect</TableCell>
-                    <TableCell>Impact</TableCell>
-                    <TableCell>Gene Name</TableCell>
-                    <TableCell>Position/Consequence</TableCell>
-            </TableRow>
-        </TableHead>
-        <TableBody>
-            {tableBodyRows}
-        </TableBody>
-        </Table>
+        <BaseCard title="Predicted Function">
+            <Table className={classes.table}>
+                <TableHead>
+                    <TableRow className={classes.paperRoot}>
+                            <TableCell>Effect</TableCell>
+                            <TableCell>Impact</TableCell>
+                            <TableCell>Gene Name</TableCell>
+                            <TableCell>Position/Consequence</TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {tableBodyRows}
+                </TableBody>
+            </Table>
+        </BaseCard>
         )
+
 // A|intron_variant|MODIFIER|NTNG1|ENSMMUG00000008197|transcript|ENSMMUT00000072133.2|protein_coding|2/9|c.247-3863G>T||||||
-// A|intron_variant|MODIFIER|NTNG1|ENSMMUG00000008197|transcript|ENSMMUT00000046534.3|protein_coding|1/3|c.247-3863G>T||||||
+// 0|1             |2       |3    |4                 |5         |6                   |7             |8  |9            ||||||
 // Effect | Impact | Gene Name | Position / Consequence
 // downstream_gene_variant | MODIFIER | LTB-TNF(ENSMMUG...-ENSMMUT...) | c.247-3863G
-// 1 | 2 | 3+4(+6?) | 9+10
+// 1 | 2 | 3+4 ask | 9+10
 
     }
 
-    function makeDisplays(feat, displays){
+    function makeDisplays(feat, displays, classes){
         var propertyJSX = []
 
         for(var display in displays){
             var tempProp = []
             for(var property in displays[display].properties){
                 if(feat["INFO"][displays[display].properties[property]]){
+                    if(feat["INFO"][displays[display].properties[property]].length == 1){
                         tempProp.push(
-                            <TableRow>
+                            <div className={classes.field}>
                                 <div className={classes.fieldName}>
                                     {displays[display].properties[property]}
                                 </div>
                                 <div className={classes.fieldValue}>
                                     {feat["INFO"][displays[display].properties[property]]}
                                 </div>
-                            </TableRow>
+                            </div>
                         )
+                    }else if(feat["INFO"][displays[display].properties[property]].length > 1){
+                        var children = []
+                        for(var val in feat["INFO"][displays[display].properties[property]]){
+                            children.push(
+                                <div className={classes.fieldSubValue}>
+                                    {feat["INFO"][displays[display].properties[property]][val]}
+                                </div>
+                            )
+                        }
+                        tempProp.push(
+                            <div className={classes.field}>
+                                <div className={classes.fieldName}>
+                                    {displays[display].properties[property]}
+                                </div>
+                                {children}
+                            </div>
+                        )
+                    }
                 }
             }
             propertyJSX.push(tempProp)
         }
-
-        var displayJSX = []
-        for(var i = 0; i < displays.length; i++){
-            displayJSX.push(
-                <BaseCard title={displays[i].name}>
-                   <div style={{ padding: '7px', width: '100%', maxHeight: 600, overflow: 'auto' }}>
+                 /* <div style={{ padding: '7px', width: '100%', maxHeight: 600, overflow: 'auto' }}>
                         <Table className={displays[i].name}>
                             <TableHead>
                                 {propertyJSX[i]}
                             </TableHead>
                         </Table>
-                   </div>
+                   </div>*/
+        var displayJSX = []
+        for(var i = 0; i < displays.length; i++){
+            displayJSX.push(
+                <BaseCard title={displays[i].name}>
+                    {propertyJSX[i]}
                 </BaseCard>
             )
         }
@@ -267,7 +290,7 @@ export default jbrowse => {
 
         var displays;
         var configDisplays = model.extendedVariantDisplayConfig
-        displays = makeDisplays(feat, configDisplays)
+        displays = makeDisplays(feat, configDisplays, classes)
         for(var i in configDisplays){
             for(var j in configDisplays[i].properties){
                 feat["INFO"][configDisplays[i].properties[j]] = null
@@ -279,18 +302,21 @@ export default jbrowse => {
             annTable = makeTable(feat["INFO"]["ANN"], classes)
             feat["INFO"]["ANN"] = null
         }
+
+        var message;
+        if (model.message){
+            message = <div className={classes.message} >{model.message}</div>
+        }
         return (
             <Paper className={classes.root} data-testid="extended-variant-widget">
+                {message}
                 <FeatureDetails
                  feature={feat}
                  {...props}
                  />
-                 <BaseCard title="Predicted Function">
-                    <div>
-                        {annTable}
-                    </div>
-                </BaseCard>
-                {makeChart(samples)}
+                 {displays}
+                 {annTable}
+                 {makeChart(samples)}
             </Paper>
         )
     }
