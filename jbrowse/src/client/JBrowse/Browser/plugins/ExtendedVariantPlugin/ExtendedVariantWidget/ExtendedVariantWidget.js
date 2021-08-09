@@ -205,7 +205,7 @@ export default jbrowse => {
         return displayJSX
     }
 
-    function makeChart(samples, ref, alt){
+    function makeChart(samples, ref, alt, classes){
         const [state, setState] = useState(null)
         useEffect(() => {
             setState(
@@ -215,6 +215,12 @@ export default jbrowse => {
                     </div>
                 </BaseCard>
             )
+            var alleleCounts = {}
+            var alleleTotal = 0
+            alleleCounts[ref] = 0
+            for(var i in alt){
+                alleleCounts[alt[i]] = 0
+            }
             var gtCounts = {}
             var gtTotal = 0
             for(var sample in samples){
@@ -244,9 +250,13 @@ export default jbrowse => {
                         for(var gtVal in gtKey){
                             if(gtKey[gtVal] == 0){
                                 gtKey[gtVal] = ref
+                                alleleCounts[ref] = alleleCounts[ref] + 1 // tick up allele count
+                                alleleTotal = alleleTotal + 1
                             }
                             else{
                                 gtKey[gtVal] = alt[gtKey[gtVal]-1]
+                                alleleCounts[gtKey[gtVal]] = alleleCounts[gtKey[gtVal]] + 1 // tick up allele count
+                                alleleTotal = alleleTotal + 1
                             }
                         }
                         gtKey = gtKey[0] + "/" + gtKey[1]         // for the purposes of the chart, phased/unphased can be counted as the same
@@ -279,7 +289,31 @@ export default jbrowse => {
                     [entry, gtCounts[entry], "#0088FF", rounded+"%"]
                 )
             }
+
+            var alleleTableRows = []
+            for(var allele in alleleCounts){
+                alleleTableRows.push(
+                    <TableRow>
+                            <TableCell>{allele}</TableCell>
+                            <TableCell>{round(alleleCounts[allele]/alleleTotal, 4)}</TableCell>
+                    </TableRow>
+                )
+            }
             setState(
+            <div>
+                <BaseCard title="Allele Frequencies">
+                    <Table className={classes.table}>
+                        <TableHead>
+                            <TableRow className={classes.paperRoot}>
+                                    <TableCell>Sequence</TableCell>
+                                    <TableCell>Fraction</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {alleleTableRows}
+                        </TableBody>
+                    </Table>
+                </BaseCard>
                 <BaseCard title="Genotypes">
                      <Chart
                        width={'250px'}
@@ -297,7 +331,8 @@ export default jbrowse => {
                        // For tests
                        rootProps={{ 'data-testid': '6' }}
                      />
-                </BaseCard>)
+                </BaseCard>
+            </div>)
         }, []);
         return state
     }
@@ -338,7 +373,7 @@ export default jbrowse => {
                  />
                  {displays}
                  {annTable}
-                 {makeChart(samples, feat["REF"], feat["ALT"])}
+                 {makeChart(samples, feat["REF"], feat["ALT"], classes)}
             </Paper>
         )
     }
