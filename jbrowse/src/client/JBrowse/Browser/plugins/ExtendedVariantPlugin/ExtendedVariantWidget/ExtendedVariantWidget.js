@@ -215,8 +215,24 @@ export default jbrowse => {
                   calc: 'stringify',
                 },
             ]]
+
+            var rounds = 0
+            var decimal = 1
+            while(decimal != 2){
+                for(var entry in gtCounts){
+                    rounds = rounds + round(gtCounts[entry]/gtTotal*100, decimal)
+                }
+                if(rounds == 100){
+                    break
+                }
+                rounds = 0
+                decimal = decimal + 1
+            }
             for(var entry in gtCounts){
-                var rounded = round(gtCounts[entry]/gtTotal*100, 1)
+                var rounded = round(gtCounts[entry]/gtTotal*100, decimal)
+                if(rounds != 100){
+                    rounded = "~" + rounded
+                }
                 gtBarData.push(
                     [entry, gtCounts[entry], "#0088FF", rounded+"%"]
                 )
@@ -231,6 +247,7 @@ export default jbrowse => {
                     </TableRow>
                 )
             }
+            var gtTitle = "Genotype Frequency ("+gtTotal.toString()+")"
             setState(
             <div>
                 <BaseCard title="Allele Frequencies">
@@ -246,7 +263,7 @@ export default jbrowse => {
                         </TableBody>
                     </Table>
                 </BaseCard>
-                <BaseCard title="Genotypes">
+                <BaseCard title={gtTitle}>
                      <Chart
                        width={'250px'}
                        height={'200px'}
@@ -254,7 +271,7 @@ export default jbrowse => {
                        loader={<div>Loading Chart</div>}
                        data={gtBarData}
                        options={{
-                         title: 'Genotype Frequency',
+                         title: "Genotypes",
                          width: 300,
                          height: 200,
                          bar: { groupWidth: '95%' },
