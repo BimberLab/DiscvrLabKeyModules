@@ -19,6 +19,7 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryService;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -35,6 +36,7 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.singlecell.CellHashingServiceImpl;
 import org.labkey.singlecell.SingleCellModule;
+import org.labkey.singlecell.SingleCellSchema;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,13 +44,16 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceReadsetProcessor>
 {
     public static final String HASHING_CATEGORY = "Cell Hashing Counts";
     public static final String CITESEQ_CATEGORY = "CITE-seq Counts";
+    private static final String FEATURE_TO_GEX = "FEATURE_TO_GEX";
 
     public CellRangerFeatureBarcodeHandler()
     {
@@ -56,6 +61,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
             ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
                 put("checked", true);
             }}, false),
+            ToolParameterDescriptor.create("useGEX", "Merge With GEX Data", "To use this option, the readset must be linked to a cDNA record, with GEX data. The reason for this option is that sometimes the GEX fraction can contain valid feature reads.", "checkbox", null, null),
             ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--chemistry"), "chemistry", "Chemistry", "This is usually left blank, in which case cellranger will auto-detect. Example values are: SC3Pv1, SC3Pv2, SC3Pv3, SC5P-PE, SC5P-R2, or SC5P-R1", "textfield", new JSONObject(){{
 
             }}, null)
@@ -127,6 +133,22 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
             }
 
             CellHashingServiceImpl.get().prepareHashingAndCiteSeqFilesIfNeeded(outputDir, job, support, field, failIfNoHashing, failIfNoCiteseq, false, failIfNoHashing, failIfNoCiteseq);
+
+            boolean useGEX = params.optBoolean("useGEX", false);
+            if (useGEX)
+            {
+                TableInfo cDNATable = QueryService.get().getUserSchema(job.getUser(), job.getContainer(), SingleCellSchema.NAME).getTable(SingleCellSchema.TABLE_CDNAS, null);
+                Set<Integer> gexReadsetIds = new HashSet<>(new TableSelector(cDNATable, PageFlowUtil.set("readsetid"), new SimpleFilter(FieldKey.fromString(field), rs.getRowId()), null).getArrayList(Integer.class));
+                if (gexReadsetIds.size() == 1)
+                {
+                    support.cacheReadset(gexReadsetIds.iterator().next(), job.getUser());
+                    support.cacheObject(FEATURE_TO_GEX, gexReadsetIds.iterator().next());
+                }
+                else
+                {
+                    job.getLogger().warn("Expected a single GEX readset for " + rs.getRowId() + ", found: " + gexReadsetIds.size());
+                }
+            }
         }
 
         @Override
@@ -183,6 +205,18 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
                 action.addInputIfNotPresent(rd.getFile1(), "Input FASTQ");
                 action.addInputIfNotPresent(rd.getFile2(), "Input FASTQ");
             });
+
+            Integer gexReadsetId = ctx.getSequenceSupport().getCachedObject(FEATURE_TO_GEX, Integer.class);
+            if (gexReadsetId != null)
+            {
+                ctx.getLogger().info("Adding GEX FASTQs");
+                Readset gexRS = ctx.getSequenceSupport().getCachedReadset(gexReadsetId);
+                gexRS.getReadData().forEach(rd -> {
+                    inputFastqs.add(Pair.of(rd.getFile1(), rd.getFile2()));
+                    action.addInputIfNotPresent(rd.getFile1(), "Input GEX FASTQ");
+                    action.addInputIfNotPresent(rd.getFile2(), "Input GEX FASTQ");
+                });
+            }
 
             List<String> args = wrapper.prepareCountArgs(output, id, ctx.getOutputDir(), rs, inputFastqs, extraArgs, false);
 
@@ -242,12 +276,14 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
                     outputHtmlRename.delete();
                 }
                 FileUtils.moveFile(outputHtml, outputHtmlRename);
-                output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x " + rs.getApplication() + " Summary", "10x Run Summary", rs.getRowId(), null, null, null);
+
+                String description = ctx.getParams().optBoolean("useGEX", false) ? "HTO and GEX Counts" : null;
+                output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x " + rs.getApplication() + " Summary", "10x Run Summary", rs.getRowId(), null, null, description);
 
                 File rawCounts = new File(outdir, "raw_feature_bc_matrix/matrix.mtx.gz");
                 if (rawCounts.exists())
                 {
-                    output.addSequenceOutput(rawCounts, rs.getName() + ": " + rs.getApplication() + " Raw Counts", category, rs.getRowId(), null, null, null);
+                    output.addSequenceOutput(rawCounts, rs.getName() + ": " + rs.getApplication() + " Raw Counts", category, rs.getRowId(), null, null, description);
                     output.addOutput(rawCounts, "Count Matrix");
                 }
                 else
