@@ -5,6 +5,9 @@ export const style = (0, _styles.makeStyles)(function (theme) {
        padding: 0,
        display: 'block'
      },
+     link: {
+       padding: theme.spacing(5)
+     },
      message: {
        paddingTop: theme.spacing(5),
        paddingLeft: theme.spacing(5),

@@ -16,6 +16,7 @@ export default jbrowse => {
     var Ajax = require('@labkey/api').Ajax
     var Utils = require('@labkey/api').Utils
     var ActionURL = require('@labkey/api').ActionURL
+    var getServerContext = require('@labkey/api').getServerContext
     const { makeStyles } = jbrowse.jbrequire('@material-ui/core/styles')
     var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
     var _core = require("@material-ui/core");
@@ -244,10 +245,20 @@ export default jbrowse => {
                     <TableRow>
                             <TableCell>{allele}</TableCell>
                             <TableCell>{round(alleleCounts[allele]/alleleTotal, 4)}</TableCell>
+                            <TableCell>{alleleCounts[allele]}</TableCell>
                     </TableRow>
                 )
             }
             var gtTitle = "Genotype Frequency ("+gtTotal.toString()+")"
+
+            // TODO - get variables, prepare genotypeTable link
+            var trackId = 0
+            var contig = 0
+            var start = 0
+            var end = 0
+            var link = ActionURL.buildURL("jbrowse", "genotypeTable.view", null, {trackId: trackId, chr: contig, start: start, stop: end})
+            var href = <a href={link}>Click here to view sample-level genotypes</a>
+
             setState(
             <div>
                 <BaseCard title="Allele Frequencies">
@@ -256,6 +267,7 @@ export default jbrowse => {
                             <TableRow className={classes.paperRoot}>
                                     <TableCell>Sequence</TableCell>
                                     <TableCell>Fraction</TableCell>
+                                    <TableCell>Count</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -280,6 +292,9 @@ export default jbrowse => {
                        // For tests
                        rootProps={{ 'data-testid': '6' }}
                      />
+                     <div className={classes.link}>
+                        {href}
+                     </div>
                 </BaseCard>
             </div>)
         }, []);
