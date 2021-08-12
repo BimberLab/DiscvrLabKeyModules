@@ -161,13 +161,14 @@ export default jbrowse => {
                 for(var entry in gt){
                     // CASES
                     // ./. -- no call
+                    let nc = "No Call"
                     if(gt[entry] == "./."){
-                        if(gtCounts["No Call"]){                          // if gtCounts entry is not null, or we have a preexisting entry for it
-                            gtCounts["No Call"] = gtCounts["No Call"] + 1 // increment count for that gt
+                        if(gtCounts[nc]){                          // if gtCounts entry is not null, or we have a preexisting entry for it
+                            gtCounts[nc] = gtCounts[nc] + 1 // increment count for that gt
                             gtTotal = gtTotal + 1                         // increment our total count
                         }
                         else {                                   // else if gtCounts entry is null, or we don't have an entry, set to 1
-                            gtCounts["No Call"] = 1
+                            gtCounts[nc] = 1
                             gtTotal = gtTotal + 1                // increment our total count
                         }
                     }
