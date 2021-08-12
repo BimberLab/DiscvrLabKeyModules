@@ -310,7 +310,7 @@ export default jbrowse => {
         feat["samples"] = null
 
         var displays;
-        var configDisplays = model.metadata.extendedVariantDisplayConfig
+        var configDisplays = model.extendedVariantDisplayConfig
         displays = makeDisplays(feat, configDisplays, classes)
         for(var i in configDisplays){
             for(var j in configDisplays[i].properties){
@@ -325,8 +325,8 @@ export default jbrowse => {
         }
 
         var message;
-        if (model.metadata.message){
-            message = <div className={classes.message} >{model.metadata.message}</div>
+        if (model.message){
+            message = <div className={classes.message} >{model.message}</div>
         }
 
         var infoConfig = [{
