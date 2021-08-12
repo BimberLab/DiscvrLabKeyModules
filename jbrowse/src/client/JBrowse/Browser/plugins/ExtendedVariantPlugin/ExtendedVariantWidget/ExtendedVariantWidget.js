@@ -179,17 +179,11 @@ export default jbrowse => {
                         if (regex.exec(gt[entry])){
                             gtKey = gt[entry].split(regex)
                         }
+                        let alleles = [ref].concat(alt)
                         for(var gtVal in gtKey){
-                            if(gtKey[gtVal] == 0){
-                                gtKey[gtVal] = ref
-                                alleleCounts[ref] = alleleCounts[ref] + 1 // tick up allele count
-                                alleleTotal = alleleTotal + 1
-                            }
-                            else{
-                                gtKey[gtVal] = alt[gtKey[gtVal]-1]
-                                alleleCounts[gtKey[gtVal]] = alleleCounts[gtKey[gtVal]] + 1 // tick up allele count
-                                alleleTotal = alleleTotal + 1
-                            }
+                            gtKey[gtVal] = alleles[gtKey[gtVal]]
+                            alleleCounts[gtKey[gtVal]] = alleleCounts[gtKey[gtVal]] + 1 // tick up allele count
+                            alleleTotal = alleleTotal + 1
                         }
                         gtKey = gtKey[0] + "/" + gtKey[1]         // for the purposes of the chart, phased/unphased can be counted as the same
                        if(gtCounts[gtKey]){                       // if gtCounts entry is not null, or we have a preexisting entry for it
