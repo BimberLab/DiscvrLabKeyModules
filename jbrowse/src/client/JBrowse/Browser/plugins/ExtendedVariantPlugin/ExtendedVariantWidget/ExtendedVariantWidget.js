@@ -299,7 +299,6 @@ export default jbrowse => {
         const { model } = props
         const feat = JSON.parse(JSON.stringify(model.featureData))
         const samples = model.featureData.samples
-        console.log(model.featureData)
         feat["samples"] = null
 
         var displays;
