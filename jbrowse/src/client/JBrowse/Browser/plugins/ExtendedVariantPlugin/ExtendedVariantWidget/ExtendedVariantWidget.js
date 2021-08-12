@@ -174,12 +174,10 @@ export default jbrowse => {
                     }
                     // int / int
                     else if(gt[entry]){
-                        var gtKey;                               // should be an array of len 2 after split
-                        if (gt[entry].includes("/")){            // unphased gts split on /
-                            gtKey = gt[entry].split("/")
-                        }
-                        else if(gt[entry].includes("|")){        // phased gts split on |
-                            gtKey = gt[entry].split("|")
+                        let gtKey
+                        let regex = /\/|\|/                     // unphased gts split on /, phased on |
+                        if (regex.exec(gt[entry])){
+                            gtKey = gt[entry].split(regex)
                         }
                         for(var gtVal in gtKey){
                             if(gtKey[gtVal] == 0){
