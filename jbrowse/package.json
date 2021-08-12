@@ -26,7 +26,8 @@
     "browserify-zlib": "^0.2.0",
     "vm-browserify": "^1.1.2",
     "assert": "^2.0.0",
-    "util": "^0.12.0"
+    "util": "^0.12.0",
+    "react-google-charts": "^3.0.15"
   },
   "devDependencies": {
     "@gmod/jbrowse": "git+https://git@github.com/GMOD/jbrowse.git#1.12.4-release",

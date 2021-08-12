@@ -740,6 +740,7 @@ public class JBrowseController extends SpringActionController
     public class GetSessionAction extends ReadOnlyApiAction<GetSessionForm>
     {
         private static final String DEMO = "demo";
+        private static final String MGAP = "mGAP";
 
         @Override
         public void validateForm(GetSessionForm form, Errors errors)
@@ -762,6 +763,21 @@ public class JBrowseController extends SpringActionController
                 if (jsonFile == null)
                 {
                     throw new FileNotFoundException("Unable to find JSON file: external/minimalSession.json");
+                }
+
+                try (InputStream is = new FileInputStream(jsonFile))
+                {
+                    resp = new JSONObject(IOUtils.toString(is, StandardCharsets.UTF_8));
+                }
+            }
+            else if (MGAP.equalsIgnoreCase(form.getSession()))
+            {
+                Module module = ModuleLoader.getInstance().getModule(JBrowseModule.class);
+                FileResource r = (FileResource)module.getModuleResolver().lookup(Path.parse("external/mGAPSession.json"));
+                File jsonFile = r.getFile();
+                if (jsonFile == null)
+                {
+                    throw new FileNotFoundException("Unable to find JSON file: external/mGAPSession.json");
                 }
 
                 try (InputStream is = new FileInputStream(jsonFile))
