@@ -249,7 +249,7 @@ public class CellHashingServiceImpl extends CellHashingService
                             List<SequenceOutputFile> sos = ts.getArrayList(SequenceOutputFile.class);
                             if (sos.size() > 1)
                             {
-                                job.getLogger().info("Multiple hashing count matrices found, using most recent");
+                                job.getLogger().info("Multiple hashing count matrices found, using most recent: " + sos.get(0).getRowid());
                             }
 
                             SequenceOutputFile so = ts.getArrayList(SequenceOutputFile.class).get(0);
@@ -308,7 +308,7 @@ public class CellHashingServiceImpl extends CellHashingService
                         List<SequenceOutputFile> sos = ts.getArrayList(SequenceOutputFile.class);
                         if (sos.size() > 1)
                         {
-                            job.getLogger().info("Multiple CITE-seq count matrices found, using most recent");
+                            job.getLogger().info("Multiple CITE-seq count matrices found, using most recent: " + sos.get(0).getRowid());
                         }
                         SequenceOutputFile so = sos.get(0);
                         readsetToCountMap.put(citeseqReadsetId, so.getFile().getParentFile());  //this is the umi_count dir
