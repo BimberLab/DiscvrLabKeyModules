@@ -1,4 +1,10 @@
 export const fields = {
+    AF: {
+        title: 'Allele Frequency'
+    },
+    AC: {
+        title: 'Allele Count'
+    },
     ANN: {
         title: 'Predicted Impact (SnpEff)'
     },

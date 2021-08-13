@@ -1,53 +1,38 @@
 
 export default jbrowse => {
   const {
-    Divider,
     Paper,
     Table,
     TableBody,
     TableCell,
     TableHead,
-    TableRow,
-    Chip,
-    Tooltip,
-    Link,
+    TableRow
   } = jbrowse.jbrequire('@material-ui/core')
-    var Chart = require("react-google-charts").Chart
-    var Ajax = require('@labkey/api').Ajax
-    var Utils = require('@labkey/api').Utils
-    var ActionURL = require('@labkey/api').ActionURL
-    var getServerContext = require('@labkey/api').getServerContext
-    const { makeStyles } = jbrowse.jbrequire('@material-ui/core/styles')
-    var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-    var _core = require("@material-ui/core");
-    var _SanitizedHTML = _interopRequireDefault(require("@jbrowse/core/ui/SanitizedHTML"));
-    const queryParam = new URLSearchParams(window.location.search);
-    const session = queryParam.get('session')
-    var fields = require("./fields").fields
-    var styles = require("./style").style
+    const Chart = require("react-google-charts").Chart
+    const ActionURL = require('@labkey/api').ActionURL
+    const fields = require("./fields").fields
+    const styles = require("./style").style
     const { observer, PropTypes: MobxPropTypes } = jbrowse.jbrequire('mobx-react')
-    const PropTypes = jbrowse.jbrequire('prop-types')
     const React = jbrowse.jbrequire('react')
     const { useState, useEffect } = React
-
     const { FeatureDetails, BaseFeatureDetails, BaseCard } = jbrowse.jbrequire(
       '@jbrowse/core/BaseFeatureWidget/BaseFeatureDetail',
     )
-    var useStyles = styles;
 
     function round(value, decimals) {
         return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
     }
 
     function makeTable(data, classes){
-        var geneNames = []
-        var tableBodyRows = []
-        for(var i in data){
-            var line = data[i].split('|')
-            if(line[10]){
+        const geneNames = []
+        const tableBodyRows = []
+        for (let i in data){
+            let line = data[i].split('|')
+            if (line[10]){
                 line[10] = <div>{line[10]}</div>
             }
-            var geneName = line[3]+" "+line[4]
+
+            const geneName = line[3] + (line[4] ? " (" + line[4] + ")" : "");
             if (!geneNames.includes(geneName)){
                 tableBodyRows.push(
                     <TableRow>
@@ -60,6 +45,7 @@ export default jbrowse => {
                 geneNames.push(geneName)
             }
         }
+
         return(
             <BaseCard title="Predicted Function">
                 <Table className={classes.table}>
@@ -80,14 +66,14 @@ export default jbrowse => {
     }
 
     function makeDisplays(feat, displays, classes){
-        var propertyJSX = []
-        for(var display in displays){
-            var tempProp = []
-            for(var property in displays[display].properties){
-                if(feat["INFO"][displays[display].properties[property]]){
-                    if(feat["INFO"][displays[display].properties[property]].length == 1){
-                        var tempName
-                        if(fields[displays[display].properties[property]]){
+        const propertyJSX = []
+        for (let display in displays){
+            const tempProp = []
+            for (let property in displays[display].properties){
+                if (feat["INFO"][displays[display].properties[property]]){
+                    if (feat["INFO"][displays[display].properties[property]].length === 1){
+                        let tempName
+                        if (fields[displays[display].properties[property]]){
                             tempName = fields[displays[display].properties[property]].title
                         }
                         else {
@@ -103,9 +89,10 @@ export default jbrowse => {
                                 </div>
                             </div>
                         )
-                    }else if(feat["INFO"][displays[display].properties[property]].length > 1){
-                        var children = []
-                        for(var val in feat["INFO"][displays[display].properties[property]]){
+                    }
+                    else if (feat["INFO"][displays[display].properties[property]].length > 1){
+                        const children = []
+                        for (let val in feat["INFO"][displays[display].properties[property]]){
                             children.push(
                                 <div className={classes.fieldSubValue}>
                                     {feat["INFO"][displays[display].properties[property]][val]}
@@ -123,12 +110,13 @@ export default jbrowse => {
                     }
                 }
             }
-            if(tempProp.length != 0){
+
+            if (tempProp.length !== 0){
                 propertyJSX.push(tempProp)
             }
         }
-        var displayJSX = []
-        for(var i = 0; i < propertyJSX.length; i++){
+        const displayJSX = []
+        for (let i = 0; i < propertyJSX.length; i++){
             displayJSX.push(
                 <BaseCard title={displays[i].name}>
                     {propertyJSX[i]}
@@ -138,7 +126,10 @@ export default jbrowse => {
         return displayJSX
     }
 
-    function makeChart(samples, ref, alt, classes){
+    function makeChart(samples, feat, classes){
+        const ref = feat["REF"];
+        const alt = feat["ALT"]
+
         const [state, setState] = useState(null)
         useEffect(() => {
             setState(
@@ -148,22 +139,22 @@ export default jbrowse => {
                     </div>
                 </BaseCard>
             )
-            var alleleCounts = {}
-            var alleleTotal = 0
+            const alleleCounts = {}
+            let alleleTotal = 0
             alleleCounts[ref] = 0
-            for(var i in alt){
+            for (let i in alt){
                 alleleCounts[alt[i]] = 0
             }
-            var gtCounts = {}
-            var gtTotal = 0
-            for(var sample in samples){
-                var gt = samples[sample]["GT"]
-                for(var entry in gt){
+            const gtCounts = {}
+            let gtTotal = 0
+            for (let sample in samples){
+                const gt = samples[sample]["GT"]
+                for (let entry in gt){
                     // CASES
                     // ./. -- no call
-                    let nc = "No Call"
-                    if(gt[entry] == "./."){
-                        if(gtCounts[nc]){                          // if gtCounts entry is not null, or we have a preexisting entry for it
+                    const nc = "No Call"
+                    if (gt[entry] === "./."){
+                        if (gtCounts[nc]){                          // if gtCounts entry is not null, or we have a preexisting entry for it
                             gtCounts[nc] = gtCounts[nc] + 1 // increment count for that gt
                             gtTotal = gtTotal + 1                         // increment our total count
                         }
@@ -173,20 +164,20 @@ export default jbrowse => {
                         }
                     }
                     // int / int
-                    else if(gt[entry]){
+                    else if (gt[entry]){
                         let gtKey
                         let regex = /\/|\|/                     // unphased gts split on /, phased on |
                         if (regex.exec(gt[entry])){
                             gtKey = gt[entry].split(regex)
                         }
                         let alleles = [ref].concat(alt)
-                        for(var gtVal in gtKey){
+                        for (let gtVal in gtKey){
                             gtKey[gtVal] = alleles[gtKey[gtVal]]
                             alleleCounts[gtKey[gtVal]] = alleleCounts[gtKey[gtVal]] + 1 // tick up allele count
                             alleleTotal = alleleTotal + 1
                         }
                         gtKey = gtKey[0] + "/" + gtKey[1]         // for the purposes of the chart, phased/unphased can be counted as the same
-                       if(gtCounts[gtKey]){                       // if gtCounts entry is not null, or we have a preexisting entry for it
+                       if (gtCounts[gtKey]){                       // if gtCounts entry is not null, or we have a preexisting entry for it
                             gtCounts[gtKey] = gtCounts[gtKey] + 1 // increment count for that gt
                             gtTotal = gtTotal + 1                 // increment our total count
                         }
@@ -197,8 +188,7 @@ export default jbrowse => {
                     }
                 }
             }
-            var gtBarData = [
-            [
+            const gtBarData = [[
                 'Genotype',
                 'Total Count',
                 { role: 'style' },
@@ -210,21 +200,22 @@ export default jbrowse => {
                 },
             ]]
 
-            var rounds = 0
-            var decimal = 1
-            while(decimal != 2){
-                for(var entry in gtCounts){
+            let rounds = 0
+            let decimal = 1
+            while (decimal !== 2){
+                for (let entry in gtCounts){
                     rounds = rounds + round(gtCounts[entry]/gtTotal*100, decimal)
                 }
-                if(rounds == 100){
+                if (rounds === 100){
                     break
                 }
                 rounds = 0
                 decimal = decimal + 1
             }
-            for(var entry in gtCounts){
-                var rounded = round(gtCounts[entry]/gtTotal*100, decimal)
-                if(rounds != 100){
+
+            for (let entry in gtCounts){
+                let rounded = round(gtCounts[entry]/gtTotal*100, decimal)
+                if (rounds !== 100){
                     rounded = "~" + rounded
                 }
                 gtBarData.push(
@@ -232,8 +223,8 @@ export default jbrowse => {
                 )
             }
 
-            var alleleTableRows = []
-            for(var allele in alleleCounts){
+            let alleleTableRows = []
+            for (let allele in alleleCounts){
                 alleleTableRows.push(
                     <TableRow>
                             <TableCell>{allele}</TableCell>
@@ -242,15 +233,16 @@ export default jbrowse => {
                     </TableRow>
                 )
             }
-            var gtTitle = "Genotype Frequency ("+gtTotal.toString()+")"
+            const gtTitle = "Genotype Frequency (" + gtTotal.toString() + ")"
 
             // TODO - get variables, prepare genotypeTable link
-            var trackId = 0
-            var contig = 0
-            var start = 0
-            var end = 0
-            var link = ActionURL.buildURL("jbrowse", "genotypeTable.view", null, {trackId: trackId, chr: contig, start: start, stop: end})
-            var href = <a href={link}>Click here to view sample-level genotypes</a>
+            const trackId = 0
+            const contig = feat["CHROM"];
+            const start = feat["POS"];
+            const end = feat["end"];
+
+            const link = ActionURL.buildURL("jbrowse", "genotypeTable.view", null, {trackId: trackId, chr: contig, start: start, stop: end})
+            const href = <a href={link} target="_blank">Click here to view sample-level genotypes</a>
 
             setState(
             <div>
@@ -294,41 +286,40 @@ export default jbrowse => {
         return state
     }
     function NewTable(props) {
-        const classes = useStyles()
-        const { feature } = props
+        const classes = styles()
         const { model } = props
         const feat = JSON.parse(JSON.stringify(model.featureData))
         const samples = model.featureData.samples
         feat["samples"] = null
 
-        var displays;
-        var configDisplays = model.extendedVariantDisplayConfig
-        displays = makeDisplays(feat, configDisplays, classes)
-        for(var i in configDisplays){
-            for(var j in configDisplays[i].properties){
-                feat["INFO"][configDisplays[i].properties[j]] = null
+        const configDisplays = model.extendedVariantDisplayConfig
+        const displays = makeDisplays(feat, configDisplays, classes)
+        for (let i in configDisplays){
+            for (let j in configDisplays[i].properties){
+                feat["INFO"][configDisplays[i].properties[j]] = null;
             }
         }
 
-        var annTable;
+        let annTable;
         if (feat["INFO"]["ANN"]){
-            annTable = makeTable(feat["INFO"]["ANN"], classes)
-            feat["INFO"]["ANN"] = null
+            annTable = makeTable(feat["INFO"]["ANN"], classes);
+            feat["INFO"]["ANN"] = null;
         }
 
-        var message;
+        let message;
         if (model.message){
             message = <div className={classes.message} >{model.message}</div>
         }
 
-        var infoConfig = [{
+        const infoConfig = [{
             name: "Info",
             properties: []
         }]
-        for(var infoEntry in feat["INFO"]){
+        for (let infoEntry in feat["INFO"]){
             infoConfig[0].properties.push(infoEntry)
         }
-        var infoDisplays = makeDisplays(feat, infoConfig, classes)
+
+        const infoDisplays = makeDisplays(feat, infoConfig, classes)
         feat["INFO"] = null
 
         return (
@@ -341,7 +332,7 @@ export default jbrowse => {
                  {infoDisplays}
                  {displays}
                  {annTable}
-                 {makeChart(samples, feat["REF"], feat["ALT"], classes)}
+                 {makeChart(samples, feat, classes)}
             </Paper>
         )
     }
