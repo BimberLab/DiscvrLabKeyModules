@@ -1,22 +1,22 @@
+import {fields} from "./fields";
+import {ActionURL} from "@labkey/api";
+import {Chart} from "react-google-charts";
+import {style as styles} from "./style";
 
 export default jbrowse => {
-  const {
-    Paper,
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableRow
-  } = jbrowse.jbrequire('@material-ui/core')
-    const Chart = require("react-google-charts").Chart
-    const ActionURL = require('@labkey/api').ActionURL
-    const fields = require("./fields").fields
-    const styles = require("./style").style
+    const {
+        Paper,
+        Table,
+        TableBody,
+        TableCell,
+        TableHead,
+        TableRow
+    } = jbrowse.jbrequire('@material-ui/core')
     const { observer, PropTypes: MobxPropTypes } = jbrowse.jbrequire('mobx-react')
     const React = jbrowse.jbrequire('react')
     const { useState, useEffect } = React
-    const { FeatureDetails, BaseFeatureDetails, BaseCard } = jbrowse.jbrequire(
-      '@jbrowse/core/BaseFeatureWidget/BaseFeatureDetail',
+    const { FeatureDetails, BaseCard } = jbrowse.jbrequire(
+            '@jbrowse/core/BaseFeatureWidget/BaseFeatureDetail',
     )
 
     function round(value, decimals) {
@@ -35,33 +35,33 @@ export default jbrowse => {
             const geneName = line[3] + (line[4] ? " (" + line[4] + ")" : "");
             if (!geneNames.includes(geneName)){
                 tableBodyRows.push(
-                    <TableRow>
+                        <TableRow>
                             <TableCell>{line[1]}</TableCell>
                             <TableCell>{line[2]}</TableCell>
                             <TableCell>{geneName}</TableCell>
                             <TableCell>{line[9]} {line[10]}</TableCell>
-                    </TableRow>
+                        </TableRow>
                 )
                 geneNames.push(geneName)
             }
         }
 
         return(
-            <BaseCard title="Predicted Function">
-                <Table className={classes.table}>
-                    <TableHead>
-                        <TableRow className={classes.paperRoot}>
+                <BaseCard title="Predicted Function">
+                    <Table className={classes.table}>
+                        <TableHead>
+                            <TableRow className={classes.paperRoot}>
                                 <TableCell>Effect</TableCell>
                                 <TableCell>Impact</TableCell>
                                 <TableCell>Gene Name</TableCell>
                                 <TableCell>Position/Consequence</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {tableBodyRows}
-                    </TableBody>
-                </Table>
-            </BaseCard>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {tableBodyRows}
+                        </TableBody>
+                    </Table>
+                </BaseCard>
         )
     }
 
@@ -80,32 +80,32 @@ export default jbrowse => {
                             tempName = displays[display].properties[property]
                         }
                         tempProp.push(
-                            <div className={classes.field}>
-                                <div className={classes.fieldName}>
-                                    {tempName}
+                                <div className={classes.field}>
+                                    <div className={classes.fieldName}>
+                                        {tempName}
+                                    </div>
+                                    <div className={classes.fieldValue}>
+                                        {feat["INFO"][displays[display].properties[property]]}
+                                    </div>
                                 </div>
-                                <div className={classes.fieldValue}>
-                                    {feat["INFO"][displays[display].properties[property]]}
-                                </div>
-                            </div>
                         )
                     }
                     else if (feat["INFO"][displays[display].properties[property]].length > 1){
                         const children = []
                         for (let val in feat["INFO"][displays[display].properties[property]]){
                             children.push(
-                                <div className={classes.fieldSubValue}>
-                                    {feat["INFO"][displays[display].properties[property]][val]}
-                                </div>
+                                    <div className={classes.fieldSubValue}>
+                                        {feat["INFO"][displays[display].properties[property]][val]}
+                                    </div>
                             )
                         }
                         tempProp.push(
-                            <div className={classes.field}>
-                                <div className={classes.fieldName}>
-                                    {displays[display].properties[property]}
+                                <div className={classes.field}>
+                                    <div className={classes.fieldName}>
+                                        {displays[display].properties[property]}
+                                    </div>
+                                    {children}
                                 </div>
-                                {children}
-                            </div>
                         )
                     }
                 }
@@ -118,26 +118,31 @@ export default jbrowse => {
         const displayJSX = []
         for (let i = 0; i < propertyJSX.length; i++){
             displayJSX.push(
-                <BaseCard title={displays[i].name}>
-                    {propertyJSX[i]}
-                </BaseCard>
+                    <BaseCard title={displays[i].name}>
+                        {propertyJSX[i]}
+                    </BaseCard>
             )
         }
         return displayJSX
     }
 
     function makeChart(samples, feat, classes){
+        // Abort if there are no samples
+        if (Object.keys(samples).length === 0) {
+            return null;
+        }
+
         const ref = feat["REF"];
         const alt = feat["ALT"]
 
         const [state, setState] = useState(null)
         useEffect(() => {
             setState(
-                <BaseCard title="Genotypes">
-                    <div>
-                    Loading genotypes...
-                    </div>
-                </BaseCard>
+                    <BaseCard title="Genotypes">
+                        <div>
+                            Loading genotypes...
+                        </div>
+                    </BaseCard>
             )
             const alleleCounts = {}
             let alleleTotal = 0
@@ -177,7 +182,7 @@ export default jbrowse => {
                             alleleTotal = alleleTotal + 1
                         }
                         gtKey = gtKey[0] + "/" + gtKey[1]         // for the purposes of the chart, phased/unphased can be counted as the same
-                       if (gtCounts[gtKey]){                       // if gtCounts entry is not null, or we have a preexisting entry for it
+                        if (gtCounts[gtKey]){                       // if gtCounts entry is not null, or we have a preexisting entry for it
                             gtCounts[gtKey] = gtCounts[gtKey] + 1 // increment count for that gt
                             gtTotal = gtTotal + 1                 // increment our total count
                         }
@@ -193,10 +198,10 @@ export default jbrowse => {
                 'Total Count',
                 { role: 'style' },
                 {
-                  sourceColumn: 0,
-                  role: 'annotation',
-                  type: 'string',
-                  calc: 'stringify',
+                    sourceColumn: 0,
+                    role: 'annotation',
+                    type: 'string',
+                    calc: 'stringify',
                 },
             ]]
 
@@ -219,18 +224,18 @@ export default jbrowse => {
                     rounded = "~" + rounded
                 }
                 gtBarData.push(
-                    [entry, gtCounts[entry], "#0088FF", rounded+"%"]
+                        [entry, gtCounts[entry], "#0088FF", rounded+"%"]
                 )
             }
 
             let alleleTableRows = []
             for (let allele in alleleCounts){
                 alleleTableRows.push(
-                    <TableRow>
+                        <TableRow>
                             <TableCell>{allele}</TableCell>
                             <TableCell>{round(alleleCounts[allele]/alleleTotal, 4)}</TableCell>
                             <TableCell>{alleleCounts[allele]}</TableCell>
-                    </TableRow>
+                        </TableRow>
                 )
             }
             const gtTitle = "Genotype Frequency (" + gtTotal.toString() + ")"
@@ -245,43 +250,43 @@ export default jbrowse => {
             const href = <a href={link} target="_blank">Click here to view sample-level genotypes</a>
 
             setState(
-            <div>
-                <BaseCard title="Allele Frequencies">
-                    <Table className={classes.table}>
-                        <TableHead>
-                            <TableRow className={classes.paperRoot}>
-                                    <TableCell>Sequence</TableCell>
-                                    <TableCell>Fraction</TableCell>
-                                    <TableCell>Count</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {alleleTableRows}
-                        </TableBody>
-                    </Table>
-                </BaseCard>
-                <BaseCard title={gtTitle}>
-                     <Chart
-                       width={'250px'}
-                       height={'200px'}
-                       chartType="BarChart"
-                       loader={<div>Loading Chart</div>}
-                       data={gtBarData}
-                       options={{
-                         title: "Genotypes",
-                         width: 300,
-                         height: 200,
-                         bar: { groupWidth: '95%' },
-                         legend: { position: 'none' },
-                       }}
-                       // For tests
-                       rootProps={{ 'data-testid': '6' }}
-                     />
-                     <div className={classes.link}>
-                        {href}
-                     </div>
-                </BaseCard>
-            </div>)
+                    <div>
+                        <BaseCard title="Allele Frequencies">
+                            <Table className={classes.table}>
+                                <TableHead>
+                                    <TableRow className={classes.paperRoot}>
+                                        <TableCell>Sequence</TableCell>
+                                        <TableCell>Fraction</TableCell>
+                                        <TableCell>Count</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {alleleTableRows}
+                                </TableBody>
+                            </Table>
+                        </BaseCard>
+                        <BaseCard title={gtTitle}>
+                            <Chart
+                                    width={'250px'}
+                                    height={'200px'}
+                                    chartType="BarChart"
+                                    loader={<div>Loading Chart</div>}
+                                    data={gtBarData}
+                                    options={{
+                                        title: "Genotypes",
+                                        width: 300,
+                                        height: 200,
+                                        bar: { groupWidth: '95%' },
+                                        legend: { position: 'none' },
+                                    }}
+                                    // For tests
+                                    rootProps={{ 'data-testid': '6' }}
+                            />
+                            <div className={classes.link}>
+                                {href}
+                            </div>
+                        </BaseCard>
+                    </div>)
         }, []);
         return state
     }
@@ -323,23 +328,23 @@ export default jbrowse => {
         feat["INFO"] = null
 
         return (
-            <Paper className={classes.root} data-testid="extended-variant-widget">
-                {message}
-                <FeatureDetails
-                 feature={feat}
-                 {...props}
-                 />
-                 {infoDisplays}
-                 {displays}
-                 {annTable}
-                 {makeChart(samples, feat, classes)}
-            </Paper>
+                <Paper className={classes.root} data-testid="extended-variant-widget">
+                    {message}
+                    <FeatureDetails
+                            feature={feat}
+                            {...props}
+                    />
+                    {infoDisplays}
+                    {displays}
+                    {annTable}
+                    {makeChart(samples, feat, classes)}
+                </Paper>
         )
     }
 
-  NewTable.propTypes = {
-    model: MobxPropTypes.observableObject.isRequired,
-  }
+    NewTable.propTypes = {
+        model: MobxPropTypes.observableObject.isRequired,
+    }
 
-  return observer(NewTable)
+    return observer(NewTable)
 }
