@@ -364,17 +364,17 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
                     {
                         if (StringUtils.trimToNull(pangolinData[8]) != null)
                         {
-                            versions.add("Pangolin version: " + pangolinData[8]);
+                            versions.add("Pangolin: " + pangolinData[8]);
                         }
 
                         if (StringUtils.trimToNull(pangolinData[9]) != null)
                         {
-                            versions.add("pangoLEARN version: " + pangolinData[9]);
+                            versions.add("pangoLEARN: " + pangolinData[9]);
                         }
 
                         if (StringUtils.trimToNull(pangolinData[10]) != null)
                         {
-                            versions.add("pango version: " + pangolinData[10]);
+                            versions.add("pango: " + pangolinData[10]);
                         }
                     }
 
@@ -415,7 +415,13 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         Map<String, String> map = new HashMap<>();
         for (String key : ret.keySet())
         {
-            map.put(key, StringUtils.join(ret.get(key), ","));
+            String val = StringUtils.join(ret.get(key), ",");
+            if ("PangolinVersions".equals(key))
+            {
+                val = StringUtils.join(new HashSet<>(Arrays.asList(val.split(","))), ",");
+            }
+
+            map.put(key, val);
         }
 
         return map;
