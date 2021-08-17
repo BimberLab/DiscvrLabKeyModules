@@ -82,7 +82,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
     @Override
     public SequenceOutputProcessor getProcessor()
     {
-        return new PangolinHandler.Processor();
+        return new NextCladeHandler.Processor();
     }
 
     public static class Processor implements SequenceOutputProcessor
