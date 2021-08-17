@@ -415,7 +415,9 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         Map<String, String> map = new HashMap<>();
         for (String key : ret.keySet())
         {
-            String val = StringUtils.join(ret.get(key), ",");
+            Set<String> vals = ret.get(key);
+            vals.remove("");
+            String val = StringUtils.join(vals, ",");
             if ("PangolinVersions".equals(key))
             {
                 val = StringUtils.join(new HashSet<>(Arrays.asList(val.split(","))), ",");
