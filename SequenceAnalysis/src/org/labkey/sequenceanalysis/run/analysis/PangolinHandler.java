@@ -261,8 +261,20 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
                 writer.println("\t--memory='" + maxRam + "g' \\");
             }
 
-            String extraArgString = extraArgs == null ? "" : " " + StringUtils.join(extraArgs, " ");
+            //Note: ensure FASTA is in the local folder to avoid docker permission problems:
+            File tmpFasta = null;
+            if (consensusFasta.getParentFile().equals(outputDir))
+            {
+                tmpFasta = new File(outputDir, consensusFasta.getName());
+                if (tmpFasta.exists())
+                {
+                    tmpFasta.delete();
+                }
 
+                FileUtils.copyFile(consensusFasta, tmpFasta);
+            }
+
+            String extraArgString = extraArgs == null ? "" : " " + StringUtils.join(extraArgs, " ");
             writer.println("\t-v \"${WD}:/work\" \\");
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");
@@ -272,6 +284,11 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
             writer.println("");
             writer.println("echo 'Bash script complete'");
             writer.println("");
+
+            if (tmpFasta != null)
+            {
+                tmpFasta.delete();
+            }
         }
         catch (IOException e)
         {

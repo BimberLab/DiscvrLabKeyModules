@@ -164,6 +164,19 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             writer.println("WD=`pwd`");
             writer.println("HOME=`echo ~/`");
 
+            //Note: ensure FASTA is in the local folder to avoid docker permission problems:
+            File tmpFasta = null;
+            if (consensusFasta.getParentFile().equals(outputDir))
+            {
+                tmpFasta = new File(outputDir, consensusFasta.getName());
+                if (tmpFasta.exists())
+                {
+                    tmpFasta.delete();
+                }
+
+                FileUtils.copyFile(consensusFasta, tmpFasta);
+            }
+
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
             writer.println("sudo $DOCKER pull neherlab/nextclade");
             writer.println("sudo $DOCKER run --rm=true \\");
@@ -189,6 +202,11 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             writer.println("");
             writer.println("echo 'Bash script complete'");
             writer.println("");
+
+            if (tmpFasta != null)
+            {
+                tmpFasta.delete();
+            }
         }
         catch (IOException e)
         {
