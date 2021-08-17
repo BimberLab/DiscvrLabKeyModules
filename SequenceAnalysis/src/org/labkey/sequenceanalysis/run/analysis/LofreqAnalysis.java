@@ -719,7 +719,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         if (runPangolinAndNextClade)
         {
             PangolinHandler.PANGO_MODE pangoMode = PangolinHandler.PANGO_MODE.valueOf(getProvider().getParameterByName(PangolinHandler.PANGO_MODE.class.getSimpleName()).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, PangolinHandler.PANGO_MODE.both.name()));
-            pangolinData = PangolinHandler.runPangolin(consensusFastaLoFreq, getPipelineCtx().getLogger(), pangoMode);
+            pangolinData = PangolinHandler.runPangolin(outputDir, consensusFastaLoFreq, output, getPipelineCtx().getLogger(), pangoMode);
 
             File json = NextCladeHandler.runNextClade(consensusFastaLoFreq, getPipelineCtx().getLogger(), output, outputDir);
             output.addSequenceOutput(json, "Nextclade: " + rs.getName(), "NextClade JSON", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);

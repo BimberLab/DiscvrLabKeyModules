@@ -126,7 +126,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
         {
             for (SequenceOutputFile so : inputFiles)
             {
-                File nextCladeJson = runNextClade(so.getFile(), ctx.getLogger(), ctx.getFileManager(), ctx.getOutputDir());
+                File nextCladeJson = runNextClade(so.getFile(), ctx.getLogger(), ctx.getFileManager(), ctx.getWorkingDirectory());
                 ctx.getFileManager().addSequenceOutput(nextCladeJson, "Nextclade: " + so.getName(), NEXTCLADE_JSON, so.getReadset(), null, so.getLibrary_id(), null);
             }
         }
@@ -144,6 +144,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             try
             {
                 File consensusFastaLocal = new File(outputDir, consensusFasta.getName());
+                log.info("Copying FASTA locally: " + consensusFastaLocal.getPath());
                 FileUtils.copyFile(consensusFasta, consensusFastaLocal);
                 tracker.addIntermediateFile(consensusFastaLocal);
                 consensusFasta = consensusFastaLocal;
@@ -163,19 +164,6 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             writer.println("set -x");
             writer.println("WD=`pwd`");
             writer.println("HOME=`echo ~/`");
-
-            //Note: ensure FASTA is in the local folder to avoid docker permission problems:
-            File tmpFasta = null;
-            if (consensusFasta.getParentFile().equals(outputDir))
-            {
-                tmpFasta = new File(outputDir, consensusFasta.getName());
-                if (tmpFasta.exists())
-                {
-                    tmpFasta.delete();
-                }
-
-                FileUtils.copyFile(consensusFasta, tmpFasta);
-            }
 
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
             writer.println("sudo $DOCKER pull neherlab/nextclade");
@@ -202,11 +190,6 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             writer.println("");
             writer.println("echo 'Bash script complete'");
             writer.println("");
-
-            if (tmpFasta != null)
-            {
-                tmpFasta.delete();
-            }
         }
         catch (IOException e)
         {

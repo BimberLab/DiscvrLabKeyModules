@@ -26,6 +26,7 @@ import org.labkey.api.query.QueryUpdateServiceException;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineOutputTracker;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -233,7 +234,7 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
                 for (SequenceOutputFile so : inputFiles)
                 {
                     PangolinHandler.PANGO_MODE pangoMode = PangolinHandler.PANGO_MODE.valueOf(ctx.getParams().optString(PangolinHandler.PANGO_MODE.class.getSimpleName(), PANGO_MODE.both.name()));
-                    Map<String, String> pangolinData = runPangolin(so.getFile(), ctx.getLogger(), pangoMode);
+                    Map<String, String> pangolinData = runPangolin(ctx.getWorkingDirectory(), so.getFile(), ctx.getFileManager(), ctx.getLogger(), pangoMode);
                     List<String> vals = new ArrayList<>();
                     vals.add(String.valueOf(so.getRowid()));
                     for (String key : PANGO_FIELDS)
@@ -261,8 +262,24 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         return new File(consensusFasta.getParentFile(), FileUtil.getBaseName(consensusFasta) + "." + mode.name() + ".pangolin.csv");
     }
 
-    private static File runUsingDocker(File outputDir, Logger log, File consensusFasta, List<String> extraArgs) throws PipelineJobException
+    private static File runUsingDocker(File outputDir, Logger log, File consensusFasta, PipelineOutputTracker tracker, List<String> extraArgs) throws PipelineJobException
     {
+        if (!consensusFasta.getParentFile().equals(outputDir))
+        {
+            try
+            {
+                File consensusFastaLocal = new File(outputDir, consensusFasta.getName());
+                log.info("Copying FASTA locally: " + consensusFastaLocal.getPath());
+                FileUtils.copyFile(consensusFasta, consensusFastaLocal);
+                tracker.addIntermediateFile(consensusFastaLocal);
+                consensusFasta = consensusFastaLocal;
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+
         File localBashScript = new File(outputDir, "dockerWrapper.sh");
         try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
         {
@@ -272,13 +289,6 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
             writer.println("HOME=`echo ~/`");
 
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-            String dockerUser = SequencePipelineService.get().getDockerUser();
-            //if (dockerUser != null)
-            //{
-            //    // NOTE: the exacloud wrapper script strips -u, so we need to pass on stdin
-            //    writer.println("echo '" + dockerUser + "' | $DOCKER login -p $(cat ~/.ghcr) ghcr.io");
-            //}
-
             writer.println("sudo $DOCKER pull ghcr.io/bimberlabinternal/pangolin:latest");
             writer.println("sudo $DOCKER run --rm=true \\");
 
@@ -294,19 +304,6 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
                 writer.println("\t--memory='" + maxRam + "g' \\");
             }
 
-            //Note: ensure FASTA is in the local folder to avoid docker permission problems:
-            File tmpFasta = null;
-            if (consensusFasta.getParentFile().equals(outputDir))
-            {
-                tmpFasta = new File(outputDir, consensusFasta.getName());
-                if (tmpFasta.exists())
-                {
-                    tmpFasta.delete();
-                }
-
-                FileUtils.copyFile(consensusFasta, tmpFasta);
-            }
-
             String extraArgString = extraArgs == null ? "" : " " + StringUtils.join(extraArgs, " ");
             writer.println("\t-v \"${WD}:/work\" \\");
             writer.println("\t-u $UID \\");
@@ -317,11 +314,6 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
             writer.println("");
             writer.println("echo 'Bash script complete'");
             writer.println("");
-
-            if (tmpFasta != null)
-            {
-                tmpFasta.delete();
-            }
         }
         catch (IOException e)
         {
@@ -331,19 +323,18 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         SimpleScriptWrapper rWrapper = new SimpleScriptWrapper(log);
         rWrapper.setWorkingDir(outputDir);
         rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
+        tracker.addIntermediateFile(localBashScript);
 
-        File output = new File(consensusFasta.getParentFile(), "lineage_report.csv");
+        File output = new File(outputDir, "lineage_report.csv");
         if (!output.exists())
         {
             throw new PipelineJobException("Pangolin output not found: " + output.getPath());
         }
 
-        localBashScript.delete();
-
         return output;
     }
 
-    public static Map<String, String> runPangolin(File consensusFasta, Logger log, PANGO_MODE pangoMode) throws PipelineJobException
+    public static Map<String, String> runPangolin(File workDir, File consensusFasta, PipelineOutputTracker tracker, Logger log, PANGO_MODE pangoMode) throws PipelineJobException
     {
         List<PANGO_MODE> modes = PANGO_MODE.getModes(pangoMode);
 
@@ -352,7 +343,7 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         for (PANGO_MODE mode : modes)
         {
             List<String> extraArgs = mode == PANGO_MODE.usher ? Collections.singletonList("--usher") : null;
-            File output = runUsingDocker(consensusFasta.getParentFile(), log, consensusFasta, extraArgs);
+            File output = runUsingDocker(workDir, log, consensusFasta, tracker, extraArgs);
 
             try
             {
