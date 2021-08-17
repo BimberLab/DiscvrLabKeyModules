@@ -45,6 +45,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,18 +54,46 @@ import java.util.stream.Collectors;
 
 public class PangolinHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
-    public static final String USE_USHER = "useUsher";
+    public static final String[] PANGO_FIELDS = new String[]{"PangolinLineage", "PangolinConflicts", "PangolinAmbiguity", "PangolinVersions"};
+
+    public enum PANGO_MODE
+    {
+        pangoLEARN(),
+        usher(),
+        both();
+
+        PANGO_MODE()
+        {
+
+        }
+
+        public static List<PANGO_MODE> getModes(PANGO_MODE mode)
+        {
+            return switch (mode)
+                    {
+                        case pangoLEARN -> Collections.singletonList(pangoLEARN);
+                        case usher -> Collections.singletonList(usher);
+                        case both -> Arrays.asList(pangoLEARN, usher);
+                    };
+        }
+    }
 
     public PangolinHandler()
     {
         super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), "Pangolin", "Runs pangolin, a tool for assigning SARS-CoV-2 data to lineage", null, Arrays.asList(
-                getUsherOption()
+                getPangoModeOption()
         ));
     }
 
-    public static ToolParameterDescriptor getUsherOption()
+    public static ToolParameterDescriptor getPangoModeOption()
     {
-        return ToolParameterDescriptor.create(USE_USHER, "Use UShER", "If checked, this tool will run in Usher mode", "checkbox", null, null);
+        return ToolParameterDescriptor.create(PANGO_MODE.class.getSimpleName(), "Pangolin Mode", "Pangolin can run in either pangoLEARN mode, Usher, or both. If the latter is selected, both are run and the unique values returned.", "ldk-simplecombo", new JSONObject()
+        {{
+            put("multiSelect", false);
+            put("allowBlank", false);
+            put("storeValues", StringUtils.join(Arrays.stream(PANGO_MODE.values()).map(Enum::name).collect(Collectors.toList()), ";"));
+            put("initialValues", PANGO_MODE.both.name());
+        }}, null);
     }
 
     @Override
@@ -202,11 +232,14 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
             {
                 for (SequenceOutputFile so : inputFiles)
                 {
-                    boolean useUsher = ctx.getParams().optBoolean(USE_USHER, false);
-                    String[] pangolinData = runPangolin(so.getFile(), ctx.getLogger(), useUsher);
+                    PangolinHandler.PANGO_MODE pangoMode = PangolinHandler.PANGO_MODE.valueOf(ctx.getParams().optString(PangolinHandler.PANGO_MODE.class.getSimpleName(), PANGO_MODE.both.name()));
+                    Map<String, String> pangolinData = runPangolin(so.getFile(), ctx.getLogger(), pangoMode);
                     List<String> vals = new ArrayList<>();
                     vals.add(String.valueOf(so.getRowid()));
-                    vals.addAll(Arrays.asList(pangolinData));
+                    for (String key : PANGO_FIELDS)
+                    {
+                        vals.add(pangolinData.containsKey(key) ? pangolinData.get(key) : "");
+                    }
 
                     writer.writeNext(vals.toArray(new String[0]));
                 }
@@ -223,9 +256,9 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         }
     }
 
-    public static File getRenamedPangolinOutput(File consensusFasta)
+    public static File getRenamedPangolinOutput(File consensusFasta, PANGO_MODE mode)
     {
-        return new File(consensusFasta.getParentFile(), FileUtil.getBaseName(consensusFasta) + ".pangolin.csv");
+        return new File(consensusFasta.getParentFile(), FileUtil.getBaseName(consensusFasta) + "." + mode.name() + ".pangolin.csv");
     }
 
     private static File runUsingDocker(File outputDir, Logger log, File consensusFasta, List<String> extraArgs) throws PipelineJobException
@@ -310,52 +343,90 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         return output;
     }
 
-    public static String[] runPangolin(File consensusFasta, Logger log, boolean useUsher) throws PipelineJobException
+    public static Map<String, String> runPangolin(File consensusFasta, Logger log, PANGO_MODE pangoMode) throws PipelineJobException
     {
-        List<String> extraArgs = useUsher ? Collections.singletonList("--usher") : null;
-        File output = runUsingDocker(consensusFasta.getParentFile(), log, consensusFasta, extraArgs);
+        List<PANGO_MODE> modes = PANGO_MODE.getModes(pangoMode);
 
-        try
+        Map<String, Set<String>> ret = new HashMap<>();
+
+        for (PANGO_MODE mode : modes)
         {
-            File outputMoved = getRenamedPangolinOutput(consensusFasta);
-            if (outputMoved.exists())
-            {
-                outputMoved.delete();
-            }
+            List<String> extraArgs = mode == PANGO_MODE.usher ? Collections.singletonList("--usher") : null;
+            File output = runUsingDocker(consensusFasta.getParentFile(), log, consensusFasta, extraArgs);
 
-            FileUtils.moveFile(output, outputMoved);
-            try (CSVReader reader = new CSVReader(Readers.getReader(outputMoved)))
+            try
             {
-                reader.readNext(); //header
-                String[] pangolinData = reader.readNext();
-
-                List<String> versions = new ArrayList<>();
-                if (pangolinData != null)
+                File outputMoved = getRenamedPangolinOutput(consensusFasta, mode);
+                if (outputMoved.exists())
                 {
-                    if (StringUtils.trimToNull(pangolinData[8]) != null)
-                    {
-                        versions.add("Pangolin version: " + pangolinData[8]);
-                    }
-
-                    if (StringUtils.trimToNull(pangolinData[9]) != null)
-                    {
-                        versions.add("pangoLEARN version: " + pangolinData[9]);
-                    }
-
-                    if (StringUtils.trimToNull(pangolinData[10]) != null)
-                    {
-                        versions.add("pango version: " + pangolinData[10]);
-                    }
+                    outputMoved.delete();
                 }
 
-                String comment = StringUtils.join(versions, ",");
+                FileUtils.moveFile(output, outputMoved);
+                try (CSVReader reader = new CSVReader(Readers.getReader(outputMoved)))
+                {
+                    reader.readNext(); //header
+                    String[] pangolinData = reader.readNext();
 
-                return new String[]{(pangolinData == null ? "QC Fail" : pangolinData[1]), (pangolinData == null ? "" : pangolinData[2]), (pangolinData == null ? "" : pangolinData[3]), comment};
+                    List<String> versions = new ArrayList<>();
+                    if (pangolinData != null)
+                    {
+                        if (StringUtils.trimToNull(pangolinData[8]) != null)
+                        {
+                            versions.add("Pangolin version: " + pangolinData[8]);
+                        }
+
+                        if (StringUtils.trimToNull(pangolinData[9]) != null)
+                        {
+                            versions.add("pangoLEARN version: " + pangolinData[9]);
+                        }
+
+                        if (StringUtils.trimToNull(pangolinData[10]) != null)
+                        {
+                            versions.add("pango version: " + pangolinData[10]);
+                        }
+                    }
+
+                    if (pangolinData != null)
+                    {
+                        Set<String> vals;
+
+                        vals = ret.containsKey("PangolinLineage") ? ret.get("PangolinLineage") : new HashSet<>();
+                        vals.add(pangolinData[1]);
+                        ret.put("PangolinLineage", vals);
+
+                        vals = ret.containsKey("PangolinConflicts") ? ret.get("PangolinConflicts") : new HashSet<>();
+                        vals.add(pangolinData[2]);
+                        ret.put("PangolinConflicts", vals);
+
+                        vals = ret.containsKey("PangolinAmbiguity") ? ret.get("PangolinAmbiguity") : new HashSet<>();
+                        vals.add(pangolinData[3]);
+                        ret.put("PangolinAmbiguity", vals);
+
+                        vals = ret.containsKey("PangolinVersions") ? ret.get("PangolinVersions") : new HashSet<>();
+                        vals.add(StringUtils.join(versions, ","));
+                        ret.put("PangolinVersions", vals);
+                    }
+                    else
+                    {
+                        Set<String> vals = ret.containsKey("PangolinLineage") ? ret.get("PangolinLineage") : new HashSet<>();
+                        vals.add("QC Fail");
+                        ret.put("PangolinLineage", vals);
+                    }
+                }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
             }
         }
-        catch (IOException e)
+
+        Map<String, String> map = new HashMap<>();
+        for (String key : ret.keySet())
         {
-            throw new PipelineJobException(e);
+            map.put(key, StringUtils.join(ret.get(key), ","));
         }
+
+        return map;
     }
 }
