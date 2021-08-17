@@ -147,6 +147,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                     {{
 
                     }}, false),
+                    PangolinHandler.getUsherOption(),
                     ToolParameterDescriptor.create("strandBiasRecoveryAF", "Strand Bias Recovery AF", "LoFreq by default filters variants with strand bias; however, some library types can create these. If provided, any site filtered with sb_fdr that is above the provided AF will be unfiltered.", "ldk-numberfield", new JSONObject()
                     {{
                         put("minValue", 0.0);
@@ -716,7 +717,8 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         String[] pangolinData = null;
         if (runPangolinAndNextClade)
         {
-            pangolinData = PangolinHandler.runPangolin(consensusFastaLoFreq, getPipelineCtx().getLogger(), output);
+            boolean useUsher = getProvider().getParameterByName(PangolinHandler.USE_USHER).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+            pangolinData = PangolinHandler.runPangolin(consensusFastaLoFreq, getPipelineCtx().getLogger(), useUsher);
 
             File json = NextCladeHandler.runNextClade(consensusFastaLoFreq, getPipelineCtx().getLogger(), output, outputDir);
             output.addSequenceOutput(json, "Nextclade: " + rs.getName(), "NextClade JSON", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);

@@ -26,7 +26,6 @@ import org.labkey.api.query.QueryUpdateServiceException;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
-import org.labkey.api.sequenceanalysis.pipeline.PipelineOutputTracker;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -53,11 +52,18 @@ import java.util.stream.Collectors;
 
 public class PangolinHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
+    public static final String USE_USHER = "useUsher";
+
     public PangolinHandler()
     {
         super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), "Pangolin", "Runs pangolin, a tool for assigning SARS-CoV-2 data to lineage", null, Arrays.asList(
-                //ToolParameterDescriptor.create()
+                getUsherOption()
         ));
+    }
+
+    public static ToolParameterDescriptor getUsherOption()
+    {
+        return ToolParameterDescriptor.create(USE_USHER, "Use UShER", "If checked, this tool will run in Usher mode", "checkbox", null, null);
     }
 
     @Override
@@ -196,7 +202,8 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
             {
                 for (SequenceOutputFile so : inputFiles)
                 {
-                    String[] pangolinData = runPangolin(so.getFile(), ctx.getLogger(), ctx.getFileManager());
+                    boolean useUsher = ctx.getParams().optBoolean(USE_USHER, false);
+                    String[] pangolinData = runPangolin(so.getFile(), ctx.getLogger(), useUsher);
                     List<String> vals = new ArrayList<>();
                     vals.add(String.valueOf(so.getRowid()));
                     vals.addAll(Arrays.asList(pangolinData));
@@ -221,7 +228,7 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         return new File(consensusFasta.getParentFile(), FileUtil.getBaseName(consensusFasta) + ".pangolin.csv");
     }
 
-    private static File runUsingDocker(File outputDir, Logger log, File consensusFasta) throws PipelineJobException
+    private static File runUsingDocker(File outputDir, Logger log, File consensusFasta, List<String> extraArgs) throws PipelineJobException
     {
         File localBashScript = new File(outputDir, "dockerWrapper.sh");
         try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
@@ -254,12 +261,14 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
                 writer.println("\t--memory='" + maxRam + "g' \\");
             }
 
+            String extraArgString = extraArgs == null ? "" : " " + StringUtils.join(extraArgs, " ");
+
             writer.println("\t-v \"${WD}:/work\" \\");
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");
             writer.println("\t-w /work \\");
             writer.println("\tghcr.io/bimberlabinternal/pangolin:latest \\");
-            writer.println("\tpangolin '/work/" + consensusFasta.getName() + "'");
+            writer.println("\tpangolin" + extraArgString + " '/work/" + consensusFasta.getName() + "'");
             writer.println("");
             writer.println("echo 'Bash script complete'");
             writer.println("");
@@ -284,9 +293,10 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         return output;
     }
 
-    public static String[] runPangolin(File consensusFasta, Logger log, PipelineOutputTracker tracker) throws PipelineJobException
+    public static String[] runPangolin(File consensusFasta, Logger log, boolean useUsher) throws PipelineJobException
     {
-        File output = runUsingDocker(consensusFasta.getParentFile(), log, consensusFasta);
+        List<String> extraArgs = useUsher ? Collections.singletonList("--usher") : null;
+        File output = runUsingDocker(consensusFasta.getParentFile(), log, consensusFasta, extraArgs);
 
         try
         {
