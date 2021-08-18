@@ -160,7 +160,7 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
                         row2.put("analysis_id", so.getAnalysis_id());
                         row2.put("category", "Pangolin");
                         row2.put("metricName", "PangolinConflicts");
-                        row2.put("value", Double.parseDouble(line[2]));
+                        row2.put("qualvalue", line[2]);
                         row2.put("container", so.getContainer());
                         if (StringUtils.trimToNull(line[4]) != null)
                         {
