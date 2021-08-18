@@ -48,6 +48,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -239,7 +240,7 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
                     vals.add(String.valueOf(so.getRowid()));
                     for (String key : PANGO_FIELDS)
                     {
-                        vals.add(pangolinData.containsKey(key) ? pangolinData.get(key) : "");
+                        vals.add(pangolinData.getOrDefault(key, ""));
                     }
 
                     writer.writeNext(vals.toArray(new String[0]));
@@ -382,25 +383,25 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
                     {
                         Set<String> vals;
 
-                        vals = ret.containsKey("PangolinLineage") ? ret.get("PangolinLineage") : new HashSet<>();
+                        vals = ret.containsKey("PangolinLineage") ? ret.get("PangolinLineage") : new LinkedHashSet<>();
                         vals.add(pangolinData[1]);
                         ret.put("PangolinLineage", vals);
 
-                        vals = ret.containsKey("PangolinConflicts") ? ret.get("PangolinConflicts") : new HashSet<>();
+                        vals = ret.containsKey("PangolinConflicts") ? ret.get("PangolinConflicts") : new LinkedHashSet<>();
                         vals.add(pangolinData[2]);
                         ret.put("PangolinConflicts", vals);
 
-                        vals = ret.containsKey("PangolinAmbiguity") ? ret.get("PangolinAmbiguity") : new HashSet<>();
+                        vals = ret.containsKey("PangolinAmbiguity") ? ret.get("PangolinAmbiguity") : new LinkedHashSet<>();
                         vals.add(pangolinData[3]);
                         ret.put("PangolinAmbiguity", vals);
 
-                        vals = ret.containsKey("PangolinVersions") ? ret.get("PangolinVersions") : new HashSet<>();
+                        vals = ret.containsKey("PangolinVersions") ? ret.get("PangolinVersions") : new LinkedHashSet<>();
                         vals.add(StringUtils.join(versions, ","));
                         ret.put("PangolinVersions", vals);
                     }
                     else
                     {
-                        Set<String> vals = ret.containsKey("PangolinLineage") ? ret.get("PangolinLineage") : new HashSet<>();
+                        Set<String> vals = ret.containsKey("PangolinLineage") ? ret.get("PangolinLineage") : new LinkedHashSet<>();
                         vals.add("QC Fail");
                         ret.put("PangolinLineage", vals);
                     }
