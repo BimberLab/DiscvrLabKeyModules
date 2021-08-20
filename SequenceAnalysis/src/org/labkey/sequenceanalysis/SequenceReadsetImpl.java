@@ -72,6 +72,11 @@ public class SequenceReadsetImpl implements Readset
         return _rowId == null ? 0 : _rowId;
     }
 
+    public void unsetRowId()
+    {
+        _rowId = null;
+    }
+
     public void setRowId(int rowId)
     {
         _rowId = rowId;
