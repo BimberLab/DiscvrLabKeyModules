@@ -263,16 +263,17 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             writer.println("sudo $DOCKER pull " + dockerContainerName);
             writer.println("sudo $DOCKER run --rm=true \\");
 
-            if (SequencePipelineService.get().getMaxThreads(ctx.getLogger()) != null)
+            Integer maxThreads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
+            if (maxThreads != null)
             {
-                writer.println("\t-e SEQUENCEANALYSIS_MAX_THREADS \\");
+                writer.println("\t-e SEQUENCEANALYSIS_MAX_THREADS=" + maxThreads + " \\");
             }
 
             Integer maxRam = SequencePipelineService.get().getMaxRam();
             if (maxRam != null)
             {
                 //int swap = 4*maxRam;
-                writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM \\");
+                writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM=" + maxRam + " \\");
                 writer.println("\t--memory='" + maxRam + "g' \\");
             }
 

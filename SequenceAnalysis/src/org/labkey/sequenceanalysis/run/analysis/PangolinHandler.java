@@ -46,6 +46,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,11 +56,46 @@ import java.util.stream.Collectors;
 
 public class PangolinHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
+    public static final String[] PANGO_FIELDS = new String[]{"PangolinLineage", "PangolinConflicts", "PangolinAmbiguity", "PangolinVersions"};
+
+    public enum PANGO_MODE
+    {
+        pangoLEARN(),
+        usher(),
+        both();
+
+        PANGO_MODE()
+        {
+
+        }
+
+        public static List<PANGO_MODE> getModes(PANGO_MODE mode)
+        {
+            return switch (mode)
+                    {
+                        case pangoLEARN -> Collections.singletonList(pangoLEARN);
+                        case usher -> Collections.singletonList(usher);
+                        case both -> Arrays.asList(pangoLEARN, usher);
+                    };
+        }
+    }
+
     public PangolinHandler()
     {
         super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), "Pangolin", "Runs pangolin, a tool for assigning SARS-CoV-2 data to lineage", null, Arrays.asList(
-                //ToolParameterDescriptor.create()
+                getPangoModeOption()
         ));
+    }
+
+    public static ToolParameterDescriptor getPangoModeOption()
+    {
+        return ToolParameterDescriptor.create(PANGO_MODE.class.getSimpleName(), "Pangolin Mode", "Pangolin can run in either pangoLEARN mode, Usher, or both. If the latter is selected, both are run and the unique values returned.", "ldk-simplecombo", new JSONObject()
+        {{
+            put("multiSelect", false);
+            put("allowBlank", false);
+            put("storeValues", StringUtils.join(Arrays.stream(PANGO_MODE.values()).map(Enum::name).collect(Collectors.toList()), ";"));
+            put("initialValues", PANGO_MODE.both.name());
+        }}, null);
     }
 
     @Override
@@ -123,7 +161,7 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
                         row2.put("analysis_id", so.getAnalysis_id());
                         row2.put("category", "Pangolin");
                         row2.put("metricName", "PangolinConflicts");
-                        row2.put("value", Double.parseDouble(line[2]));
+                        row2.put("qualvalue", line[2]);
                         row2.put("container", so.getContainer());
                         if (StringUtils.trimToNull(line[4]) != null)
                         {
@@ -196,10 +234,14 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
             {
                 for (SequenceOutputFile so : inputFiles)
                 {
-                    String[] pangolinData = runPangolin(so.getFile(), ctx.getLogger(), ctx.getFileManager());
+                    PangolinHandler.PANGO_MODE pangoMode = PangolinHandler.PANGO_MODE.valueOf(ctx.getParams().optString(PangolinHandler.PANGO_MODE.class.getSimpleName(), PANGO_MODE.both.name()));
+                    Map<String, String> pangolinData = runPangolin(ctx.getWorkingDirectory(), so.getFile(), ctx.getFileManager(), ctx.getLogger(), pangoMode);
                     List<String> vals = new ArrayList<>();
                     vals.add(String.valueOf(so.getRowid()));
-                    vals.addAll(Arrays.asList(pangolinData));
+                    for (String key : PANGO_FIELDS)
+                    {
+                        vals.add(pangolinData.getOrDefault(key, ""));
+                    }
 
                     writer.writeNext(vals.toArray(new String[0]));
                 }
@@ -216,13 +258,29 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         }
     }
 
-    public static File getRenamedPangolinOutput(File consensusFasta)
+    public static File getRenamedPangolinOutput(File consensusFasta, PANGO_MODE mode)
     {
-        return new File(consensusFasta.getParentFile(), FileUtil.getBaseName(consensusFasta) + ".pangolin.csv");
+        return new File(consensusFasta.getParentFile(), FileUtil.getBaseName(consensusFasta) + "." + mode.name() + ".pangolin.csv");
     }
 
-    private static File runUsingDocker(File outputDir, Logger log, File consensusFasta) throws PipelineJobException
+    private static File runUsingDocker(File outputDir, Logger log, File consensusFasta, PipelineOutputTracker tracker, List<String> extraArgs) throws PipelineJobException
     {
+        if (!consensusFasta.getParentFile().equals(outputDir))
+        {
+            try
+            {
+                File consensusFastaLocal = new File(outputDir, consensusFasta.getName());
+                log.info("Copying FASTA locally: " + consensusFastaLocal.getPath());
+                FileUtils.copyFile(consensusFasta, consensusFastaLocal);
+                tracker.addIntermediateFile(consensusFastaLocal);
+                consensusFasta = consensusFastaLocal;
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+
         File localBashScript = new File(outputDir, "dockerWrapper.sh");
         try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
         {
@@ -232,13 +290,6 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
             writer.println("HOME=`echo ~/`");
 
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-            String dockerUser = SequencePipelineService.get().getDockerUser();
-            //if (dockerUser != null)
-            //{
-            //    // NOTE: the exacloud wrapper script strips -u, so we need to pass on stdin
-            //    writer.println("echo '" + dockerUser + "' | $DOCKER login -p $(cat ~/.ghcr) ghcr.io");
-            //}
-
             writer.println("sudo $DOCKER pull ghcr.io/bimberlabinternal/pangolin:latest");
             writer.println("sudo $DOCKER run --rm=true \\");
 
@@ -254,12 +305,13 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
                 writer.println("\t--memory='" + maxRam + "g' \\");
             }
 
+            String extraArgString = extraArgs == null ? "" : " " + StringUtils.join(extraArgs, " ");
             writer.println("\t-v \"${WD}:/work\" \\");
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");
             writer.println("\t-w /work \\");
             writer.println("\tghcr.io/bimberlabinternal/pangolin:latest \\");
-            writer.println("\tpangolin '/work/" + consensusFasta.getName() + "'");
+            writer.println("\tpangolin" + extraArgString + " '/work/" + consensusFasta.getName() + "'");
             writer.println("");
             writer.println("echo 'Bash script complete'");
             writer.println("");
@@ -272,63 +324,109 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         SimpleScriptWrapper rWrapper = new SimpleScriptWrapper(log);
         rWrapper.setWorkingDir(outputDir);
         rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
+        tracker.addIntermediateFile(localBashScript);
 
-        File output = new File(consensusFasta.getParentFile(), "lineage_report.csv");
+        File output = new File(outputDir, "lineage_report.csv");
         if (!output.exists())
         {
             throw new PipelineJobException("Pangolin output not found: " + output.getPath());
         }
 
-        localBashScript.delete();
-
         return output;
     }
 
-    public static String[] runPangolin(File consensusFasta, Logger log, PipelineOutputTracker tracker) throws PipelineJobException
+    public static Map<String, String> runPangolin(File workDir, File consensusFasta, PipelineOutputTracker tracker, Logger log, PANGO_MODE pangoMode) throws PipelineJobException
     {
-        File output = runUsingDocker(consensusFasta.getParentFile(), log, consensusFasta);
+        List<PANGO_MODE> modes = PANGO_MODE.getModes(pangoMode);
 
-        try
+        Map<String, Set<String>> ret = new HashMap<>();
+
+        for (PANGO_MODE mode : modes)
         {
-            File outputMoved = getRenamedPangolinOutput(consensusFasta);
-            if (outputMoved.exists())
-            {
-                outputMoved.delete();
-            }
+            List<String> extraArgs = mode == PANGO_MODE.usher ? Collections.singletonList("--usher") : null;
+            File output = runUsingDocker(workDir, log, consensusFasta, tracker, extraArgs);
 
-            FileUtils.moveFile(output, outputMoved);
-            try (CSVReader reader = new CSVReader(Readers.getReader(outputMoved)))
+            try
             {
-                reader.readNext(); //header
-                String[] pangolinData = reader.readNext();
-
-                List<String> versions = new ArrayList<>();
-                if (pangolinData != null)
+                File outputMoved = getRenamedPangolinOutput(consensusFasta, mode);
+                if (outputMoved.exists())
                 {
-                    if (StringUtils.trimToNull(pangolinData[8]) != null)
-                    {
-                        versions.add("Pangolin version: " + pangolinData[8]);
-                    }
-
-                    if (StringUtils.trimToNull(pangolinData[9]) != null)
-                    {
-                        versions.add("pangoLEARN version: " + pangolinData[9]);
-                    }
-
-                    if (StringUtils.trimToNull(pangolinData[10]) != null)
-                    {
-                        versions.add("pango version: " + pangolinData[10]);
-                    }
+                    outputMoved.delete();
                 }
 
-                String comment = StringUtils.join(versions, ",");
+                FileUtils.moveFile(output, outputMoved);
+                try (CSVReader reader = new CSVReader(Readers.getReader(outputMoved)))
+                {
+                    reader.readNext(); //header
+                    String[] pangolinData = reader.readNext();
 
-                return new String[]{(pangolinData == null ? "QC Fail" : pangolinData[1]), (pangolinData == null ? "" : pangolinData[2]), (pangolinData == null ? "" : pangolinData[3]), comment};
+                    List<String> versions = new ArrayList<>();
+                    if (pangolinData != null)
+                    {
+                        if (StringUtils.trimToNull(pangolinData[8]) != null)
+                        {
+                            versions.add("Pangolin: " + pangolinData[8]);
+                        }
+
+                        if (StringUtils.trimToNull(pangolinData[9]) != null)
+                        {
+                            versions.add("pangoLEARN: " + pangolinData[9]);
+                        }
+
+                        if (StringUtils.trimToNull(pangolinData[10]) != null)
+                        {
+                            versions.add("pango: " + pangolinData[10]);
+                        }
+                    }
+
+                    if (pangolinData != null)
+                    {
+                        Set<String> vals;
+
+                        vals = ret.containsKey("PangolinLineage") ? ret.get("PangolinLineage") : new LinkedHashSet<>();
+                        vals.add(pangolinData[1]);
+                        ret.put("PangolinLineage", vals);
+
+                        vals = ret.containsKey("PangolinConflicts") ? ret.get("PangolinConflicts") : new LinkedHashSet<>();
+                        vals.add(pangolinData[2]);
+                        ret.put("PangolinConflicts", vals);
+
+                        vals = ret.containsKey("PangolinAmbiguity") ? ret.get("PangolinAmbiguity") : new LinkedHashSet<>();
+                        vals.add(pangolinData[3]);
+                        ret.put("PangolinAmbiguity", vals);
+
+                        vals = ret.containsKey("PangolinVersions") ? ret.get("PangolinVersions") : new LinkedHashSet<>();
+                        vals.add(StringUtils.join(versions, ","));
+                        ret.put("PangolinVersions", vals);
+                    }
+                    else
+                    {
+                        Set<String> vals = ret.containsKey("PangolinLineage") ? ret.get("PangolinLineage") : new LinkedHashSet<>();
+                        vals.add("QC Fail");
+                        ret.put("PangolinLineage", vals);
+                    }
+                }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
             }
         }
-        catch (IOException e)
+
+        Map<String, String> map = new HashMap<>();
+        for (String key : ret.keySet())
         {
-            throw new PipelineJobException(e);
+            Set<String> vals = ret.get(key);
+            vals.remove("");
+            String val = StringUtils.join(vals, ",");
+            if ("PangolinVersions".equals(key))
+            {
+                val = StringUtils.join(new HashSet<>(Arrays.asList(val.split(","))), ",");
+            }
+
+            map.put(key, val);
         }
+
+        return map;
     }
 }

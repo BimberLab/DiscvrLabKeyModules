@@ -59,6 +59,7 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
     private Logger _log;
     public static final String PREPARING = "PREPARING";
     public static final String NOT_SUBMITTED = "NOT_SUBMITTED";
+    public static final String JOB_DELETED = "JOB_DELETED";
 
     //TODO: allow a site param to set this
     protected boolean _debug = false;
@@ -404,7 +405,7 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
         //first see if we have any submissions to check
         DbSchema schema = ClusterSchema.getInstance().getSchema();
         TableInfo ti = schema.getTable(ClusterSchema.CLUSTER_JOBS);
-        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("status"), PageFlowUtil.set(PipelineJob.TaskStatus.error.name().toUpperCase(), PipelineJob.TaskStatus.complete.name().toUpperCase(), PipelineJob.TaskStatus.cancelled.name().toUpperCase(), PREPARING, NOT_SUBMITTED), CompareType.NOT_IN);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("status"), PageFlowUtil.set(PipelineJob.TaskStatus.error.name().toUpperCase(), PipelineJob.TaskStatus.complete.name().toUpperCase(), PipelineJob.TaskStatus.cancelled.name().toUpperCase(), PREPARING, NOT_SUBMITTED, JOB_DELETED), CompareType.NOT_IN);
         filter.addCondition(FieldKey.fromString("location"), getConfig().getLocation());
 
         TableSelector ts = new TableSelector(ti, filter, null);
@@ -590,8 +591,18 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
             }
             else
             {
-                _log.error("unable to find statusfile for job: " + j.getClusterId() + ", status: " + j.getStatus(), new Exception());
-                j.setStatus("UNKNOWN");
+                boolean isComplete = PipelineJob.TaskStatus.complete.matches(status) || PipelineJob.TaskStatus.cancelled.matches(status);
+
+                // This generally indicates that the pipeline job was deleted prior to the cluster job completing
+                if (isComplete && j.getStatusFileId() > 0)
+                {
+                    j.setStatus(JOB_DELETED);
+                }
+                else
+                {
+                    _log.error("unable to find statusfile for job: " + j.getClusterId() + ", status: " + j.getStatus(), new Exception());
+                    j.setStatus("UNKNOWN");
+                }
             }
 
             Table.update(null, ClusterSchema.getInstance().getSchema().getTable(ClusterSchema.CLUSTER_JOBS), j, j.getRowId());

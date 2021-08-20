@@ -1,0 +1,25 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" label="SRA Info" canOverride="true">
+   <columns>
+       <column name="rowid" />
+       <column name="name" />
+       <column name="subjectid" />
+       <column name="sampledate"/>
+       <column name="platform" />
+       <column name="librarytype" />
+       <column name="application" />
+       <column name="sampletype" />
+       <column name="comments" />
+
+       <column name="runIds"/>
+       <column name="jobIds"/>
+       <column name="created" />
+       <column name="status" />
+       <column name="workbook" />
+       <column name="sraRuns" />
+       <column name="isArchived" />
+       <column name="files" />
+   </columns>
+   <sorts>
+       <sort column="rowid" descending="true"/>
+   </sorts>
+</customView>
