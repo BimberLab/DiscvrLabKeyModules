@@ -24,7 +24,7 @@ public class SplitNCigarReadsWrapper extends AbstractGatk4Wrapper
         super(log);
     }
 
-    public void execute(File referenceFasta, File inputBam, File outputBam, boolean doReassignMappingQual) throws PipelineJobException
+    public void execute(File referenceFasta, File inputBam, File outputBam, List<String> extraArgs) throws PipelineJobException
     {
         getLogger().info("Running GATK SplitNCigarReads");
 
@@ -39,6 +39,11 @@ public class SplitNCigarReadsWrapper extends AbstractGatk4Wrapper
         args.add(inputBam.getPath());
         args.add("-O");
         args.add(outputBam.getPath());
+
+        if (extraArgs != null)
+        {
+            args.addAll(extraArgs);
+        }
 
         execute(args);
 

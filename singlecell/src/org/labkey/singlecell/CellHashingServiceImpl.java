@@ -193,7 +193,7 @@ public class CellHashingServiceImpl extends CellHashingService
                     {
                         if (results.getObject(FieldKey.fromString("citeseqReadsetId")) == null)
                         {
-                            job.getLogger().error("cDNA specifies cite-seq readset but does not list panel: " + results.getString(FieldKey.fromString("rowid")));
+                            job.getLogger().error("cDNA specifies cite-seq panel, but cite-seq readset is empty: " + results.getString(FieldKey.fromString("rowid")));
                             hasError.set(true);
                         }
                         else
@@ -246,7 +246,13 @@ public class CellHashingServiceImpl extends CellHashingService
                         }
                         else
                         {
-                            SequenceOutputFile so = ts.getObject(SequenceOutputFile.class);
+                            List<SequenceOutputFile> sos = ts.getArrayList(SequenceOutputFile.class);
+                            if (sos.size() > 1)
+                            {
+                                job.getLogger().info("Multiple hashing count matrices found, using most recent: " + sos.get(0).getRowid());
+                            }
+
+                            SequenceOutputFile so = ts.getArrayList(SequenceOutputFile.class).get(0);
                             readsetToCountMap.put(hashingReadsetId, so.getFile().getParentFile());  //this is the umi_counts dir
                         }
                     }
@@ -299,7 +305,12 @@ public class CellHashingServiceImpl extends CellHashingService
                     }
                     else
                     {
-                        SequenceOutputFile so = ts.getObject(SequenceOutputFile.class);
+                        List<SequenceOutputFile> sos = ts.getArrayList(SequenceOutputFile.class);
+                        if (sos.size() > 1)
+                        {
+                            job.getLogger().info("Multiple CITE-seq count matrices found, using most recent: " + sos.get(0).getRowid());
+                        }
+                        SequenceOutputFile so = sos.get(0);
                         readsetToCountMap.put(citeseqReadsetId, so.getFile().getParentFile());  //this is the umi_count dir
                     }
                 }

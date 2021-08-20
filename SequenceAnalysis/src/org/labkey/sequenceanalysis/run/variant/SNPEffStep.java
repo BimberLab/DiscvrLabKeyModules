@@ -108,6 +108,7 @@ public class SNPEffStep extends AbstractCommandPipelineStep<SnpEffWrapper> imple
             intFile = new File(outputVcf.getParentFile(), "snpEffintervals.bed");
             try (PrintWriter writer = PrintWriters.getPrintWriter(intFile))
             {
+                getPipelineCtx().getLogger().debug("Adding SnpEff intervals: " + intervals.size());
                 intervals.forEach(interval -> {
                     writer.println(interval.getContig() + "\t" + (interval.getStart() - 1) + '\t' + interval.getEnd());
                 });

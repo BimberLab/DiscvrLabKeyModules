@@ -19,7 +19,7 @@ public class FindClustersAndDimRedux extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("FindClustersAndDimRedux", "Find Clusters And Dim Redux", "CellMembrane/Seurat", "This will run tSNA and UMAP for the input object.", Arrays.asList(
+            super("FindClustersAndDimRedux", "Find Clusters And Dim Redux", "CellMembrane/Seurat", "This will run tSNE and UMAP for the input object.", Arrays.asList(
                     SeuratToolParameter.create("minDimsToUse", "Min. PCs to Use", "The minimum number of PCs to use", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, 15)

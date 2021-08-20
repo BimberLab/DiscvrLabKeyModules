@@ -791,7 +791,9 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                             var barcode5s = r[fieldName + '/barcode5/sequence'] ? r[fieldName + '/barcode5/sequence'].split(',') : [];
                             if (!barcode5s.length) {
-                                LDK.Utils.logError('Sample missing barcode: ' + sampleName);
+                                var msg = 'Sample missing barcode: ' + sampleName;
+                                Ext4.Msg.alert('Error', msg);
+                                return;
                             }
 
                             barcodeCombosUsed.push([r[fieldName + '/barcode5'], '', r.laneAssignment || ''].join('/'));
@@ -804,7 +806,9 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                     Ext4.Msg.alert('Error', msg);
                                     return;
                                 }
-                                barcode5s = [barcode5s.join(',')];
+
+                                //NOTE: Novogene now wants one/line
+                                //barcode5s = [barcode5s.join(',')];
                             }
 
                             Ext4.Array.forEach(barcode5s, function (bc, idx) {
@@ -840,13 +844,10 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                     data.push(''); //P5
                                     data.push(size);
                                     data.push('Others'); //Library Status
-                                    data.push('ddH2O');
-                                    data.push('Partial Lane sequencing-lib QC');
                                     data.push(200); //Total data
                                     data.push('M raw reads');
                                     data.push(r[fieldName + '/concentration'] || '');
                                     data.push(defaultVolume);
-                                    data.push(comment || 'Please QC individually and pool in equal amounts per lane');
 
                                     //data.push(phiX);  //PhiX
                                     data.push(r.laneAssignment || '');

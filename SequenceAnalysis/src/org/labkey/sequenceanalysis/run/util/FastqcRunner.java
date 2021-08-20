@@ -122,6 +122,10 @@ public class FastqcRunner
 
                 filesCreated.add(expectedHtml);
             }
+            else
+            {
+                _logger.debug("Existing FASTQC output found, will not re-run");
+            }
         }
 
         return processOutput(uniqueFiles, filesCreated, fileLabels);
