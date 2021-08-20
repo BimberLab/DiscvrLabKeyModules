@@ -986,18 +986,18 @@ public class SequenceTest extends BaseWebDriverTest
         sleep(200);
         waitForElement(Locator.tagContainingText("span", "5' Barcode").notHidden());
         Assert.assertEquals("Incorrect value for input file-handling field after barcode toggle", "compress", treatmentField.getValue());
-        Assert.assertEquals("The test is looking for the wrong column index for 5' barcode", "barcode5", readsetGrid.getEval("columns[2].dataIndex"));
-        Assert.assertEquals("The test is looking for the wrong column index for 3' barcode", "barcode3", readsetGrid.getEval("columns[3].dataIndex"));
+        Assert.assertEquals("The test is looking for the wrong column index for 5' barcode", "barcode5", readsetGrid.getEval("columns[3].dataIndex"));
+        Assert.assertEquals("The test is looking for the wrong column index for 3' barcode", "barcode3", readsetGrid.getEval("columns[4].dataIndex"));
 
-        Assert.assertFalse("5' barcode column should not be hidden", (Boolean) readsetGrid.getEval("columns[2].hidden"));
-        Assert.assertFalse("3' barcode column should not be hidden", (Boolean) readsetGrid.getEval("columns[3].hidden"));
+        Assert.assertFalse("5' barcode column should not be hidden", (Boolean) readsetGrid.getEval("columns[3].hidden"));
+        Assert.assertFalse("3' barcode column should not be hidden", (Boolean) readsetGrid.getEval("columns[4].hidden"));
 
         barcodeField.setChecked(false);
         sleep(200);
         waitForElementToDisappear(Locator.tagContainingText("span", "5' Barcode").notHidden());
         assertEquals("Incorrect value for input file-handling field after barcode toggle", "delete", treatmentField.getValue());
-        assertTrue("5' barcode column should be hidden", (Boolean) readsetGrid.getEval("columns[2].hidden"));
-        assertTrue("3' barcode column should be hidden", (Boolean) readsetGrid.getEval("columns[3].hidden"));
+        assertTrue("5' barcode column should be hidden", (Boolean) readsetGrid.getEval("columns[3].hidden"));
+        assertTrue("3' barcode column should be hidden", (Boolean) readsetGrid.getEval("columns[4].hidden"));
 
         waitAndClick(Ext4Helper.Locators.ext4Button("Import Data"));
         new Window.WindowFinder(getDriver()).withTitle("Error").waitFor();
