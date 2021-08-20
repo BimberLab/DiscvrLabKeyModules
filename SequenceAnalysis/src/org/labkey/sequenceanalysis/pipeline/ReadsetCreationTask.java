@@ -17,10 +17,14 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import au.com.bytecode.opencsv.CSVReader;
 import org.jetbrains.annotations.NotNull;
+import org.labkey.api.collections.CaseInsensitiveHashMap;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
+import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.api.ExpRun;
@@ -31,9 +35,12 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.reader.Readers;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
@@ -44,12 +51,15 @@ import org.labkey.sequenceanalysis.util.FastqUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * User: bbimber
@@ -153,12 +163,21 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
             for (Readset rs : getPipelineJob().getSequenceSupport().getCachedReadsets())
             {
                 SequenceReadsetImpl r = (SequenceReadsetImpl)rs;
-                boolean updateExisting = r.getReadsetId() != null && r.getReadsetId() > 0;
-
                 getJob().getLogger().info("Starting readset " + r.getName());
 
+                boolean readsetExists = r.getReadsetId() != null && r.getReadsetId() > 0;
+                List<ReadDataImpl> preexistingReadData;
+                if (readsetExists)
+                {
+                    preexistingReadData = ((SequenceReadsetImpl)SequenceAnalysisService.get().getReadset(r.getReadsetId(), getJob().getUser())).getReadDataImpl();
+                }
+                else
+                {
+                    preexistingReadData = Collections.emptyList();
+                }
+
                 SequenceReadsetImpl row;
-                if (!updateExisting)
+                if (!readsetExists)
                 {
                     row = new SequenceReadsetImpl();
 
@@ -195,18 +214,25 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                         throw new PipelineJobException("Readset lacks a rowid: " + r.getReadsetId());
                     }
 
-                    if (row.getReadData() != null && !row.getReadData().isEmpty())
-                    {
-                        throw new PipelineJobException("Readset already has data imported: " + row.getReadsetId());
-                    }
-
                     if (row.getInstrumentRunId() == null)
                     {
                         row.setInstrumentRunId(r.getInstrumentRunId());
                     }
+
+                    if (!preexistingReadData.isEmpty())
+                    {
+                        getJob().getLogger().debug("Existing readset found with " + preexistingReadData.size() + " read pairs, will clone and merge data");
+
+                        row.unsetRowId();
+                        row.setCreatedBy(getJob().getUser().getUserId());
+                        row.setCreated(new Date());
+                        row.setModifiedBy(getJob().getUser().getUserId());
+                        row.setModified(new Date());
+                        readsetExists = false;
+                    }
                 }
 
-                //now add readData
+                //now add readData created in this run:
                 List<ReadDataImpl> readDatas = new ArrayList<>();
                 for (ReadDataImpl rd : r.getReadDataImpl())
                 {
@@ -269,8 +295,45 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                     }
 
                     rd.setRunId(runId);
-
                     readDatas.add(rd);
+                }
+
+                List<Map<String, Object>> qualMetricsToAdd = new ArrayList<>();
+                if (!preexistingReadData.isEmpty())
+                {
+                    preexistingReadData.forEach(rd -> {
+                        rd.setRowid(null);
+                        rd.setReadset(null);
+
+                        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("category"), "Readset", CompareType.EQUAL);
+                        filter.addCondition(FieldKey.fromString("readset"), r.getRowId());
+                        if (rd.getFile2() == null)
+                        {
+                            filter.addCondition(FieldKey.fromString("dataid"), rd.getFileId1(), CompareType.EQUAL);
+                        }
+                        else
+                        {
+                            filter.addCondition(FieldKey.fromString("dataid"), Arrays.asList(rd.getFileId1(), rd.getFileId2()), CompareType.IN);
+                        }
+
+                        final Set<String> fields = PageFlowUtil.set("dataid", "category", "metricname", "metricvalue", "qualvalue", "comment", "container", "created", "createdby", "modified", "modifiedby");
+                        new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), fields, filter, null).forEachResults(results -> {
+                            Map<String, Object> map = new CaseInsensitiveHashMap<>();
+
+                            fields.stream().forEach(f -> {
+                                try
+                                {
+                                    map.put(f, results.getObject(FieldKey.fromString(f)));
+                                }
+                                catch (SQLException e)
+                                {
+                                    throw new RuntimeException(e);
+                                }
+                            });
+
+                            qualMetricsToAdd.add(map);
+                        });
+                    });
                 }
 
                 row.setRunId(runId);
@@ -286,7 +349,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 row.setReadData(readDatas);
 
                 SequenceReadsetImpl newRow;
-                if (!updateExisting)
+                if (!readsetExists)
                 {
                     newRow = Table.insert(getJob().getUser(), readsetTable, row);
                     getJob().getLogger().info("Created readset: " + newRow.getReadsetId());
@@ -327,6 +390,17 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                     rd.setModified(new Date());
 
                     Table.insert(getJob().getUser(), readDataTable, rd);
+
+                    TableInfo metricsTable = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
+                    if (!qualMetricsToAdd.isEmpty())
+                    {
+                        getJob().getLogger().info("Copying " + qualMetricsToAdd.size() + " quality metrics from pre-existing readdata");
+                        for (Map<String, Object> qm : qualMetricsToAdd)
+                        {
+                            qm.put("readset", newRow.getReadsetId());
+                            Table.insert(getJob().getUser(), metricsTable, qm);
+                        }
+                    }
                 }
             }
 
@@ -417,6 +491,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 metricsMap = FastqUtils.getQualityMetrics(d.getFile(), job.getLogger());
             }
 
+            TableInfo metricsTable = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
             for (String metricName : metricsMap.keySet())
             {
                 Map<String, Object> r = new HashMap<>();
@@ -428,7 +503,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 r.put("container", rs.getContainer() == null ? job.getContainer() : rs.getContainer());
                 r.put("createdby", job.getUser().getUserId());
 
-                Table.insert(job.getUser(), SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), r);
+                Table.insert(job.getUser(), metricsTable, r);
             }
 
             if (cachedMetrics.exists())

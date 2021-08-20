@@ -30,11 +30,38 @@
     }
   },
   "location": "1:196,734,341..197,535,702",
+
   "tracks": [
     {
-      "type": "VariantTrack",
+      "type": "ExtendedVariantTrack",
       "trackId": "clinvar_ncbi_hg38",
       "name": "ClinVar variants (NCBI)",
+      "assemblyNames": ["hg38"],
+      "category": ["Annotation"],
+      "adapter": {
+        "type": "VcfTabixAdapter",
+        "vcfGzLocation": {
+          "uri": "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz"
+        },
+        "index": {
+          "location": {
+            "uri": "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz.tbi"
+          }
+        }
+      },
+      "metadata": {
+        "extendedVariantDisplayConfig" : [
+          { "name": "Predicted Function - 1",
+            "properties": ["AF_ESP", "ALLELEID"]},
+          { "name": "Regulatory Data - 1",
+            "properties": ["CLNDN", "CLNVC"]}
+        ]
+      }
+    },
+    {
+      "type": "DemoTrack",
+      "trackId": "clinvar_ncbi_hg38_2",
+      "name": "ClinVar variants (NCBI)-2",
       "assemblyNames": ["hg38"],
       "category": ["Annotation"],
       "adapter": {
@@ -68,5 +95,35 @@
       }
     }
   ],
+  "defaultSession": {
+    "name": "Test Session",
+    "view": {
+      "id": "linearGenomeView",
+      "type": "LinearGenomeView",
+      "tracks": [
+        {
+          "type": "ExtendedVariantTrack",
+          "configuration": "clinvar_ncbi_hg38",
+          "displays": [
+            {
+              "type": "ExtendedVariantDisplay",
+              "configuration":
+              "clinvar_ncbi_hg38-ExtendedVariantDisplay",
+            },
+          ]
+        },
+        {
+          "type": "DemoTrack",
+          "configuration": "clinvar_ncbi_hg38_2",
+          "displays": [
+            {
+              "type": "WidgetDisplay",
+              "configuration": "clinvar_ncbi_hg38_2-WidgetDisplay",
+            },
+          ]
+        }
+      ],
+    }
+  },
   "connections": [],
 }

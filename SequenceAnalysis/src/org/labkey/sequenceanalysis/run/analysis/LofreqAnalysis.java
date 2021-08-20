@@ -87,6 +87,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static org.labkey.sequenceanalysis.run.analysis.PangolinHandler.PANGO_FIELDS;
 import static picard.sam.AbstractAlignmentMerger.MAX_RECORDS_IN_RAM;
 
 public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.LofreqWrapper> implements AnalysisStep
@@ -147,6 +148,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                     {{
 
                     }}, false),
+                    PangolinHandler.getPangoModeOption(),
                     ToolParameterDescriptor.create("strandBiasRecoveryAF", "Strand Bias Recovery AF", "LoFreq by default filters variants with strand bias; however, some library types can create these. If provided, any site filtered with sb_fdr that is above the provided AF will be unfiltered.", "ldk-numberfield", new JSONObject()
                     {{
                         put("minValue", 0.0);
@@ -713,10 +715,11 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
         output.addSequenceOutput(loFreqAllVcf, "LoFreq: " + rs.getName(), CATEGORY, rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
 
-        String[] pangolinData = null;
+        Map<String, String> pangolinData = null;
         if (runPangolinAndNextClade)
         {
-            pangolinData = PangolinHandler.runPangolin(consensusFastaLoFreq, getPipelineCtx().getLogger(), output);
+            PangolinHandler.PANGO_MODE pangoMode = PangolinHandler.PANGO_MODE.valueOf(getProvider().getParameterByName(PangolinHandler.PANGO_MODE.class.getSimpleName()).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, PangolinHandler.PANGO_MODE.both.name()));
+            pangolinData = PangolinHandler.runPangolin(outputDir, consensusFastaLoFreq, output, getPipelineCtx().getLogger(), pangoMode);
 
             File json = NextCladeHandler.runNextClade(consensusFastaLoFreq, getPipelineCtx().getLogger(), output, outputDir);
             output.addSequenceOutput(json, "Nextclade: " + rs.getName(), "NextClade JSON", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
@@ -741,10 +744,13 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
             if (pangolinData != null)
             {
-                writer.writeNext(new String[]{"Pangolin", "PangolinLineage", pangolinData[0]});
-                writer.writeNext(new String[]{"Pangolin", "PangolinConflicts", pangolinData[1]});
-                writer.writeNext(new String[]{"Pangolin", "PangolinAmbiguity", pangolinData[2]});
-                writer.writeNext(new String[]{"Pangolin", "PangolinVersions", pangolinData[3]});
+                for (String val : PANGO_FIELDS)
+                {
+                    if (pangolinData.containsKey(val))
+                    {
+                        writer.writeNext(new String[]{"Pangolin", val, pangolinData.get(val)});
+                    }
+                }
             }
             else
             {

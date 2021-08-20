@@ -70,7 +70,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
     private FileAnalysisJobSupport _support;
 
     private static final String ACTION_NAME = "IMPORTING READSET";
-    private static String COMPRESS_INPUT_ACTIONNAME = "Compressing FASTQ Files";
+    private static final String COMPRESS_INPUT_ACTIONNAME = "Compressing FASTQ Files";
 
     protected ReadsetInitTask(Factory factory, PipelineJob job)
     {

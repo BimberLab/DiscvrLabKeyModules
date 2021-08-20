@@ -262,6 +262,15 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             ret.addColumn(newCol3);
         }
 
+        if (ret.getColumn("isArchived") == null)
+        {
+            SQLFragment sql = new SQLFragment("CASE WHEN (select count(*) as expr from " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd where rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid and rd.archived = " + ret.getSqlDialect().getBooleanTRUE() + ") > 0 THEN " + ret.getSqlDialect().getBooleanTRUE() + " ELSE " + ret.getSqlDialect().getBooleanFALSE() + " END");
+            ExprColumn newCol = new ExprColumn(ret, "isArchived", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
+            newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=readData&query.readset~eq=${rowid}"));
+            newCol.setLabel("Archived To SRA?");
+            ret.addColumn(newCol);
+        }
+
         if (ret.getColumn("totalAlignments") == null)
         {
             SQLFragment sql = new SQLFragment("(SELECT COUNT(rd.rowid) FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " rd WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
