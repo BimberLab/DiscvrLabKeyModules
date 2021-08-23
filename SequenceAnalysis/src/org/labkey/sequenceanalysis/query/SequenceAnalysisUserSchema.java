@@ -260,6 +260,13 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             newCol3.setLabel("SRA Runs");
             newCol3.setDescription("This will display a comma-separated list of all distinct SRA runs associated with this readset.");
             ret.addColumn(newCol3);
+
+            SQLFragment sql4 = new SQLFragment("(SELECT count(*) as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid AND rd.sra_accession IS NULL)");
+            ExprColumn newCol4 = new ExprColumn(ret, "readdataWithoutSra", sql4, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
+            newCol4.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=readData&query.readset~eq=${rowid}"));
+            newCol4.setLabel("Read Pairs Not In SRA");
+            newCol4.setDescription("This will show the total number of read pairs for this readset that do not like an SRA Run.");
+            ret.addColumn(newCol4);
         }
 
         if (ret.getColumn("isArchived") == null)
