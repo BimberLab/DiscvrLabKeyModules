@@ -263,7 +263,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public AlignmentStep.AlignmentOutput performAlignment(Readset rs, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException
+        public AlignmentStep.AlignmentOutput performAlignment(Readset rs, List<File> inputFastqs1, @Nullable List<File> inputFastqs2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
 
