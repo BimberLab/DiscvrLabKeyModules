@@ -1290,7 +1290,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
             getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING: " + alignmentStep.getProvider().getLabel().toUpperCase() + msgSuffix);
             List<File> forwardFastqs = inputFiles.stream().map(Pair::getKey).collect(Collectors.toList());
-            List<File> reverseFastqs = inputFiles.get(0).getValue() == null ? null : inputFiles.stream().map(Pair::getKey).collect(Collectors.toList());
+            List<File> reverseFastqs = inputFiles.get(0).getValue() == null ? null : inputFiles.stream().map(Pair::getValue).collect(Collectors.toList());
 
             AlignmentStep.AlignmentOutput alignmentOutput = alignmentStep.performAlignment(rs, forwardFastqs, reverseFastqs, outputDirectory, referenceGenome, SequenceTaskHelper.getUnzippedBaseName(inputFiles.get(0).first.getName()) + "." + alignmentStep.getProvider().getName().toLowerCase(), String.valueOf(lowestReadDataId), platformUnit);
             getHelper().getFileManager().addStepOutputs(alignmentAction, alignmentOutput);
