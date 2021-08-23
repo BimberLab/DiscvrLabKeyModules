@@ -8,17 +8,18 @@ import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.SortSamWrapper;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -37,7 +38,7 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
     /**
      * If the output file is null, the original will be deleted and replaced by the fixed BAM
      */
-    public File executeCommand(File refFasta, File alignedBam, File inputFastq1, @Nullable File inputFastq2, @Nullable File outputFile) throws PipelineJobException
+    public File executeCommand(File refFasta, File alignedBam, List<Pair<File, File>> inputFastqs, @Nullable File outputFile) throws PipelineJobException
     {
         try
         {
@@ -65,7 +66,6 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
             //getLogger().info("total alignments in starting BAM: ");
             //SequenceUtil.logAlignmentCount(alignedBam, getLogger());
 
-            File unmappedReadsBam;
             SamReaderFactory fact = SamReaderFactory.makeDefault();
             SAMReadGroupRecord rg = null;
             try (SamReader reader = fact.open(alignedBam))
@@ -83,21 +83,39 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
                 {
                     rg = header.getReadGroups().get(0);
                 }
+            }
 
+            List<File> unmappedReadsBams =  new ArrayList<>();
+            for (Pair<File, File> pair : inputFastqs)
+            {
                 FastqToSamWrapper fq = new FastqToSamWrapper(getLogger());
                 fq.setOutputDir(alignedBam.getParentFile());
                 fq.setStringency(ValidationStringency.SILENT);
-                unmappedReadsBam = fq.execute(inputFastq1, inputFastq2, SAMFileHeader.SortOrder.queryname, rg);
+                File unmappedReadsBam = fq.execute(pair.getKey(), pair.getValue(), SAMFileHeader.SortOrder.queryname, rg);
                 if (!unmappedReadsBam.exists())
                 {
                     throw new PipelineJobException("BAM file not created, expected: " + unmappedReadsBam.getPath());
                 }
+
+                unmappedReadsBams.add(unmappedReadsBam);
+            }
+
+            File finalUnmappedReadsBam;
+            if (unmappedReadsBams.size() == 1)
+            {
+                finalUnmappedReadsBam = unmappedReadsBams.get(0);
+            }
+            else
+            {
+                finalUnmappedReadsBam = new File(unmappedReadsBams.get(0).getParentFile(), "unmappedReads.bam");
+                MergeSamFilesWrapper wrapper = new MergeSamFilesWrapper(getLogger());
+                wrapper.execute(unmappedReadsBams, finalUnmappedReadsBam, true);
             }
 
             SortSamWrapper sorter = new SortSamWrapper(getLogger());
-            unmappedReadsBam = sorter.execute(unmappedReadsBam, null, SAMFileHeader.SortOrder.queryname);
+            finalUnmappedReadsBam = sorter.execute(finalUnmappedReadsBam, null, SAMFileHeader.SortOrder.queryname);
 
-            params.add("UNMAPPED_BAM=" + unmappedReadsBam.getPath());
+            params.add("UNMAPPED_BAM=" + finalUnmappedReadsBam.getPath());
 
             //TODO: bisulfiteSequence
 
@@ -137,7 +155,12 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
 
             //getLogger().info("\ttotal alignments in unmapped reads BAM: ");
             //SequenceUtil.logAlignmentCount(unmappedReadsBam, getLogger());
-            unmappedReadsBam.delete();
+            finalUnmappedReadsBam.delete();
+            File bai = new File(finalUnmappedReadsBam.getPath() + ".bai");
+            if (bai.exists())
+            {
+                bai.delete();
+            }
 
             if (outputFile == null)
             {
