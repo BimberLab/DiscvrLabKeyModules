@@ -256,10 +256,15 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
 
                 //recache if not already
                 AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, getIndexCachedDirName(getPipelineCtx().getJob()), referenceGenome);
-
             }
 
             return output;
+        }
+
+        @Override
+        public boolean canAlignMultiplePairsAtOnce()
+        {
+            return true;
         }
 
         @Override

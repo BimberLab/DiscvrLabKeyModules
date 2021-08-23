@@ -281,6 +281,12 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
     }
 
     @Override
+    public boolean canAlignMultiplePairsAtOnce()
+    {
+        return true;
+    }
+
+    @Override
     public AlignmentOutput performAlignment(Readset rs, List<File> inputFastqs1, @Nullable List<File> inputFastqs2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException
     {
         AlignmentOutputImpl output = new AlignmentOutputImpl();
