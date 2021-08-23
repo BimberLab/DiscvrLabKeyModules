@@ -57,6 +57,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -155,6 +156,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
 
         List<SequenceReadsetImpl> newReadsets = new ArrayList<>();
 
+        Set<Integer> fileIdsWithExistingMetrics = new HashSet<>();
         try (DbScope.Transaction transaction = schema.getScope().ensureTransaction())
         {
             TableInfo readsetTable = schema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
@@ -233,7 +235,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 }
 
                 //now add readData created in this run:
-                List<ReadDataImpl> readDatas = new ArrayList<>();
+                List<ReadDataImpl> readDatasToCreate = new ArrayList<>();
                 for (ReadDataImpl rd : r.getReadDataImpl())
                 {
                     File f1 = rd.getFile1();
@@ -295,7 +297,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                     }
 
                     rd.setRunId(runId);
-                    readDatas.add(rd);
+                    readDatasToCreate.add(rd);
                 }
 
                 List<Map<String, Object>> qualMetricsToAdd = new ArrayList<>();
@@ -333,6 +335,8 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
 
                             qualMetricsToAdd.add(map);
                         });
+
+                        fileIdsWithExistingMetrics.add(rd.getFileId1());
                     });
                 }
 
@@ -341,12 +345,12 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 row.setModifiedBy(getJob().getUser().getUserId());
 
                 //then import
-                if (readDatas.isEmpty())
+                if (readDatasToCreate.isEmpty())
                 {
                     getJob().getLogger().info("no reads found for readset: " + r.getName() + ", skipping import");
                     continue;
                 }
-                row.setReadData(readDatas);
+                row.setReadData(readDatasToCreate);
 
                 SequenceReadsetImpl newRow;
                 if (!readsetExists)
@@ -374,8 +378,8 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 }
 
                 //create ReadData
-                getJob().getLogger().debug(readDatas.size() + " file pairs to insert");
-                for (ReadDataImpl rd : readDatas)
+                getJob().getLogger().debug(readDatasToCreate.size() + " file pairs to insert");
+                for (ReadDataImpl rd : readDatasToCreate)
                 {
                     getJob().getLogger().debug("creating read data for readset: " + newRow.getReadsetId());
                     if (newRow.getReadsetId() == null)
@@ -390,16 +394,33 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                     rd.setModified(new Date());
 
                     Table.insert(getJob().getUser(), readDataTable, rd);
+                }
 
-                    TableInfo metricsTable = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
-                    if (!qualMetricsToAdd.isEmpty())
+                TableInfo metricsTable = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
+                if (!qualMetricsToAdd.isEmpty())
+                {
+                    getJob().getLogger().info("Copying " + qualMetricsToAdd.size() + " quality metrics from pre-existing readdata");
+                    for (Map<String, Object> qm : qualMetricsToAdd)
                     {
-                        getJob().getLogger().info("Copying " + qualMetricsToAdd.size() + " quality metrics from pre-existing readdata");
-                        for (Map<String, Object> qm : qualMetricsToAdd)
-                        {
-                            qm.put("readset", newRow.getReadsetId());
-                            Table.insert(getJob().getUser(), metricsTable, qm);
-                        }
+                        qm.put("readset", newRow.getReadsetId());
+                        Table.insert(getJob().getUser(), metricsTable, qm);
+                    }
+                }
+
+                if (!preexistingReadData.isEmpty())
+                {
+                    getJob().getLogger().debug("Copying " + preexistingReadData.size() + " pre-existing read data for readset: " + newRow.getReadsetId());
+                    for (ReadDataImpl rd : preexistingReadData)
+                    {
+                        rd.setRowid(null);
+                        rd.setReadset(newRow.getReadsetId());
+                        rd.setContainer(getJob().getContainer().getId());
+                        rd.setCreatedBy(getJob().getUser().getUserId());
+                        rd.setCreated(new Date());
+                        rd.setModifiedBy(getJob().getUser().getUserId());
+                        rd.setModified(new Date());
+
+                        Table.insert(getJob().getUser(), readDataTable, rd);
                     }
                 }
             }
@@ -416,6 +437,12 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
             long totalReads = 0L;
             for (ReadDataImpl d : model.getReadDataImpl())
             {
+                if (fileIdsWithExistingMetrics.contains(d.getFileId1()))
+                {
+                    totalReads += getTotalReadsForFile(d.getFileId1(), model.getReadsetId());
+                    continue;
+                }
+
                 getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING QUALITY METRICS (" + idx + " of " + newReadsets.size() + ")");
                 totalReads += addQualityMetricsForReadset(model, d.getFileId1(), getJob());
                 if (d.getFileId2() != null)
@@ -462,6 +489,25 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 throw new PipelineJobException(e);
             }
         }
+    }
+
+    private Long getTotalReadsForFile(int fileId, int readsetId)
+    {
+        TableInfo metricsTable = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
+
+        // Determine if we have saved metrics:
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), readsetId);
+        filter.addCondition(FieldKey.fromString("category"), "Readset");
+        filter.addCondition(FieldKey.fromString("metricname"), "Total Reads");
+        filter.addCondition(FieldKey.fromString("dataid"), fileId);
+
+        TableSelector ts = new TableSelector(metricsTable, PageFlowUtil.set("metricvalue"), filter, null);
+        if (ts.exists())
+        {
+            return ts.getObject(Long.class);
+        }
+
+        return 0L;
     }
 
     public static long addQualityMetricsForReadset(Readset rs, int fileId, PipelineJob job) throws PipelineJobException

@@ -50,7 +50,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRangerWrapper> implements AlignmentStep
 {
@@ -282,7 +281,13 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
     }
 
     @Override
-    public AlignmentOutput performAlignment(Readset rs, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException
+    public boolean canAlignMultiplePairsAtOnce()
+    {
+        return true;
+    }
+
+    @Override
+    public AlignmentOutput performAlignment(Readset rs, List<File> inputFastqs1, @Nullable List<File> inputFastqs2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException
     {
         AlignmentOutputImpl output = new AlignmentOutputImpl();
 
@@ -292,24 +297,24 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         AbstractAlignmentStepProvider.ALIGNMENT_MODE mode = AbstractAlignmentStepProvider.ALIGNMENT_MODE.valueOf(alignmentMode);
 
         List<Pair<File, File>> inputFastqs = new ArrayList<>();
-        if (!inputFastq1.equals(rs.getReadData().get(0).getFile1()))
+        for (int i = 0; i < inputFastqs1.size();i++)
         {
-            getPipelineCtx().getLogger().info("FASTQs appear to have been pre-processed, using local copies:");
-            if (rs.getReadData().size() > 1)
+            File inputFastq1 = inputFastqs1.get(i);
+            File inputFastq2 = inputFastqs2.get(i);
+
+            if (!inputFastq1.equals(rs.getReadData().get(0).getFile1()))
             {
-                if (mode != AbstractAlignmentStepProvider.ALIGNMENT_MODE.MERGE_THEN_ALIGN)
+                getPipelineCtx().getLogger().info("FASTQs appear to have been pre-processed, using local copies:");
+                if (rs.getReadData().size() > 1)
                 {
-                    throw new PipelineJobException("cellranger cannot be used with pre-processing unless MERGE_THEN_ALIGN is used");
+                    if (mode != AbstractAlignmentStepProvider.ALIGNMENT_MODE.MERGE_THEN_ALIGN)
+                    {
+                        throw new PipelineJobException("cellranger cannot be used with pre-processing unless MERGE_THEN_ALIGN is used");
+                    }
                 }
             }
 
             inputFastqs.add(Pair.of(inputFastq1, inputFastq2));
-        }
-        else
-        {
-            rs.getReadData().forEach(rd -> {
-                inputFastqs.add(Pair.of(rd.getFile1(), rd.getFile2()));
-            });
         }
 
         List<String> args = new ArrayList<>(getWrapper().prepareCountArgs(output, id, outputDirectory, rs, inputFastqs, getClientCommandArgs("="), true));
