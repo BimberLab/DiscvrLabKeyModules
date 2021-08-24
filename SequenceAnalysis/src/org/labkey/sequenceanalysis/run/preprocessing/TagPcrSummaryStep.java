@@ -167,7 +167,7 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
         }
         else
         {
-            getPipelineCtx().getLogger().info("will not design primers")
+            getPipelineCtx().getLogger().info("will not design primers");
         }
 
         File genbank = null;
@@ -177,7 +177,7 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
         }
         else
         {
-            getPipelineCtx().getLogger().info("will not output genbank file")
+            getPipelineCtx().getLogger().info("will not output genbank file");
         }
 
         File metrics = getMetricsFile(inputBam, outputDir);
