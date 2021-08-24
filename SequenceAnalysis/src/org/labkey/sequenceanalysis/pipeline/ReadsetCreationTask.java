@@ -19,6 +19,7 @@ import au.com.bytecode.opencsv.CSVReader;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
+import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SimpleFilter;
@@ -35,7 +36,11 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
+import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.InvalidKeyException;
+import org.labkey.api.query.QueryService;
+import org.labkey.api.query.QueryUpdateServiceException;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -159,6 +164,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         Set<Integer> fileIdsWithExistingMetrics = new HashSet<>();
         try (DbScope.Transaction transaction = schema.getScope().ensureTransaction())
         {
+            Set<Integer> readsetsToDeactivate = new HashSet<>();
             TableInfo readsetTable = schema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
             TableInfo readDataTable = schema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
 
@@ -171,6 +177,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 List<ReadDataImpl> preexistingReadData;
                 if (readsetExists)
                 {
+                    readsetsToDeactivate.add(r.getReadsetId());
                     preexistingReadData = ((SequenceReadsetImpl)SequenceAnalysisService.get().getReadset(r.getReadsetId(), getJob().getUser())).getReadDataImpl();
                 }
                 else
@@ -425,7 +432,32 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 }
             }
 
+            if (!readsetsToDeactivate.isEmpty())
+            {
+                getJob().getLogger().info("Setting " + readsetsToDeactivate.size() + " readsets to status=replaced");
+                List<Map<String, Object>> toUpdate = new ArrayList<>();
+                List<Map<String, Object>> toUpdateKeys = new ArrayList<>();
+                readsetsToDeactivate.forEach(rs -> {
+                    Map<String, Object> row = new CaseInsensitiveHashMap<>();
+                    row.put("rowid", rs);
+                    row.put("status", "Replaced");
+                    toUpdate.add(row);
+
+                    row = new CaseInsensitiveHashMap<>();
+                    row.put("rowid", rs);
+                    toUpdateKeys.add(row);
+                });
+
+                Container targetContainer = getJob().getContainer().isWorkbook() ? getJob().getContainer().getParent() : getJob().getContainer();
+                TableInfo ti = QueryService.get().getUserSchema(getJob().getUser(), targetContainer, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_READSETS);
+                ti.getUpdateService().updateRows(getJob().getUser(), targetContainer, toUpdate, toUpdateKeys, null, null);
+            }
+
             transaction.commit();
+        }
+        catch (SQLException | InvalidKeyException | BatchValidationException | QueryUpdateServiceException e)
+        {
+            throw new PipelineJobException(e);
         }
 
         //NOTE: this is outside the transaction because it can take a long time.
