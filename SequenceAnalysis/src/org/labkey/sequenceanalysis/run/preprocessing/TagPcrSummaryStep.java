@@ -165,12 +165,21 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
         {
             primerTable = new File(outputDir, basename + ".primers.txt");
         }
+        else
+        {
+            getPipelineCtx().getLogger().info("will not design primers")
+        }
 
         File genbank = null;
         if (outputGenbank)
         {
             genbank = new File(outputDir, basename + ".sites.gb");
         }
+        else
+        {
+            getPipelineCtx().getLogger().info("will not output genbank file")
+        }
+
         File metrics = getMetricsFile(inputBam, outputDir);
 
         List<String> extraArgs = new ArrayList<>(getClientCommandArgs());
