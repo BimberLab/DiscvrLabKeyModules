@@ -53,6 +53,15 @@
           }
         }
       },
+      "displays": [
+        {
+          "type": "ExtendedVariantDisplay",
+          "displayId": "volvox_filtered_vcf_color-ExtendedVariantDisplay",
+          "renderer": {
+            "type": "SvgFeatureRenderer",
+          }
+        }
+      ],
       "metadata": {
         "extendedVariantDisplayConfig": [
           {
@@ -83,23 +92,4 @@
     }
   ],
   "connections": [],
-  "defaultSession": {
-    "name": "Test Session",
-    "view": {
-      "id": "linearGenomeView",
-      "type": "LinearGenomeView",
-      "tracks": [
-        {
-          "type": "ExtendedVariantTrack",
-          "configuration": "mgap_hg38",
-          "displays": [
-            {
-              "type": "ExtendedVariantDisplay",
-              "configuration": "mgap_hg38-ExtendedVariantDisplay"
-            }
-          ]
-        }
-      ]
-    }
-  }
 }
