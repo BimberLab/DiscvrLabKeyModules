@@ -8,6 +8,9 @@ import { autorun, observable } from 'mobx'
 import PaletteIcon from '@material-ui/icons/Palette'
 import PluginManager from '@jbrowse/core/PluginManager'
 
+const attributes = ['SNV', 'Insertion', 'Deletion', 'High', 'Moderate', 'Other']
+const colors = ['green', 'red', 'blue', 'gray', 'goldenrod']
+
 export default jbrowse => {
   const configSchema = jbrowse.jbrequire(configSchemaF)
   const { BaseLinearDisplay } = jbrowse.getPlugin(
@@ -23,21 +26,33 @@ export default jbrowse => {
         configuration: ConfigurationReference(configSchema),
         colorSNV: types.maybe(types.string),
         colorDeletion: types.maybe(types.string),
-        colorInsertion: types.maybe(types.string)
+        colorInsertion: types.maybe(types.string),
+        colorOther: types.maybe(types.string)
       }),
     )
     .actions(self => ({
        setReady(flag) {
           self.ready = flag
         },
-        setSNV(color) {
-          self.colorSNV = color
-        },
-        setInsertion(color) {
-          self.colorInsertion = color
-        },
-        setDeletion(color) {
-          self.colorDeletion = color
+        setColor(attr, color){
+            if (attr == "SNV"){
+                self.colorSNV = color
+            }
+            else if (attr == "Insertion"){
+                self.colorInsertion = color
+            }
+            else if (attr == "Deletion"){
+                self.colorDeletion = color
+            }
+            else if (attr == "Other"){
+                self.colorOther = color
+            }
+            else if (attr == "High"){
+                self.colorHigh = color
+            }
+            else if (attr == "Moderate"){
+                self.colorModerate = color
+            }
         },
     }))
     .actions(self => ({
@@ -52,7 +67,10 @@ export default jbrowse => {
                 const colorSNV = self.colorSNV ?? 'green'
                 const colorDeletion = self.colorDeletion ?? 'red'
                 const colorInsertion = self.colorInsertion ?? 'blue'
-                const color = "jexl:get(feature,'type')=='SNV'?'"+colorSNV+"':get(feature,'type')=='deletion'?'"+colorDeletion+"':get(feature,'type')=='insertion'?'"+colorInsertion+"':'gray'"
+                const colorOther = self.colorOther ?? 'gray'
+                const colorHigh = self.colorHigh ?? 'red'
+                const colorModerate = self.colorModerate ?? 'goldenrod'
+                const color = "jexl:get(feature,'type')=='SNV'?'"+colorSNV+"':get(feature,'type')=='deletion'?'"+colorDeletion+"':get(feature,'type')=='insertion'?'"+colorInsertion+"':'HIGH' in (get(feature,'INFO'))?'"+colorHigh+"':'MODERATE' in (get(feature,'INFO'))?'"+colorModerate+"':'"+colorOther+"'"
                 renderProps.config.color1.set(color)
                 const view = getContainingView(self)
 
@@ -68,7 +86,6 @@ export default jbrowse => {
                     assemblyName,
                   }
 
-                  console.log("starting await")
                   await (self.rendererType).renderInClient(rpcManager, {
                     assemblyName,
                     regions: [region],
@@ -78,7 +95,6 @@ export default jbrowse => {
                     timeout: 1000000,
                     ...renderProps,
                   })
-                  console.log('await done')
                   self.setReady(true)
               } else {
                   self.setReady(true)
@@ -137,26 +153,34 @@ export default jbrowse => {
       get rendererTypeName() {
         return self.configuration.renderer.type
       },
+
         get composedTrackMenuItems() {
           return [
             {
               label: 'Color',
               icon: PaletteIcon,
               subMenu: [
-                ...['red', 'green', 'blue'].map(
+                ...attributes.map(
                   option => {
                     return {
                       label: option,
-                      onClick: () => {
-                        self.setSNV(option)
-                        self.setDeletion(option)
-                        self.setInsertion(option)
-                        self.ready = false
-                      },
-                      }
-                    },
-                  ),
-                ],
+                      subMenu: [
+                        ...colors.map(
+                            color => {
+                                return {
+                                    label: color,
+                                    onClick: () => {
+                                        self.setColor(option, color)
+                                        self.ready = false
+                                    }
+                                }
+                            }
+                        )
+                      ]
+                    }
+                  },
+                ),
+              ],
              },
              ]},
 
