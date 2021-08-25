@@ -31,6 +31,7 @@ public class ReadDataImpl implements ReadData
     private Integer _modifiedBy;
     private Integer _runId;
     private boolean _archived = false;
+    private String sra_accession;
 
     private Map<Integer, File> _cachedFiles = new HashMap<>();
 
@@ -258,5 +259,16 @@ public class ReadDataImpl implements ReadData
     public void setArchived(boolean archived)
     {
         _archived = archived;
+    }
+
+    @Override
+    public String getSra_accession()
+    {
+        return sra_accession;
+    }
+
+    public void setSra_accession(String sra_accession)
+    {
+        this.sra_accession = sra_accession;
     }
 }
