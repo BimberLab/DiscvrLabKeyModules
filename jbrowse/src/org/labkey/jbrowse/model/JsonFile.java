@@ -479,7 +479,7 @@ public class JsonFile
 
         //TODO: if not gzipped, we need to process it:
 
-        String adapterType = SequenceUtil.FILETYPE.gff.getFileType().isType(targetFile.getFile()) ? "Gff3TabixAdapter" : "GtfTabixAdapter";;
+        String adapterType = SequenceUtil.FILETYPE.gff.getFileType().isType(targetFile.getFile()) ? "Gff3TabixAdapter" : "GtfTabixAdapter";
         String prefix = SequenceUtil.FILETYPE.gff.getFileType().isType(targetFile.getFile()) ? "gff" : "gtf";
 
         String url = targetFile.getWebDavURL(ExpData.PathType.full);

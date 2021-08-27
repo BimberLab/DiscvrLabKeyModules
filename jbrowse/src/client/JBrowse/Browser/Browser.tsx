@@ -70,7 +70,7 @@ function View(){
         return (<p>Error fetching config. See console for more details</p>)
     }
     return (
-      <ThemeProvider theme={theme}>
+      <ThemeProvider _theme={theme}>
           <JBrowseLinearGenomeView viewState={state} />
       </ThemeProvider>
     )

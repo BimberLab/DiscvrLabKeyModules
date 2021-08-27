@@ -227,10 +227,7 @@ public class JBrowseSession
             throw new IllegalArgumentException("Unable to find genome: " + _libraryId);
         }
 
-        ret.put("assemblies", new JSONArray(){{
-            put(getAssemblyJson(rg));
-        }});
-
+        ret.put("assembly", getAssemblyJson(rg));
         ret.put("configuration", new JSONObject());
         ret.put("connections", new JSONArray());
 
