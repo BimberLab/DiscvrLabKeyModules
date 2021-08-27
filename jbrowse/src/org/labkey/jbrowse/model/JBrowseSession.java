@@ -313,16 +313,21 @@ public class JBrowseSession
         ret.put("name", rg.getName());
         ret.put("sequence", new JSONObject(){{
             put("type", "ReferenceSequenceTrack");
-            put("trackId", getAssemblyName(rg));
+            put("trackId", getAssemblyTrackId(rg));
             put("adapter", getIndexedFastaAdapter(rg));
         }});
 
         return ret;
     }
 
-    public static String getAssemblyName(ReferenceGenome rg)
+    public static String getAssemblyTrackId(ReferenceGenome rg)
     {
         return FileUtil.makeLegalName(rg.getName()) + "-ReferenceSequenceTrack";
+    }
+
+    public static String getAssemblyName(ReferenceGenome rg)
+    {
+        return FileUtil.makeLegalName(rg.getName());
     }
 
     public static JSONObject getIndexedFastaAdapter(ReferenceGenome rg)

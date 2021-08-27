@@ -267,15 +267,19 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
                 if ("lenient".equals(alignTemplate))
                 {
                     json.put("num_mismatches", 10);
-                    json.put("intersect_level", 1);
-                    json.put("score_filter", 50);
-                    //discard_multiple_matches
+                    json.put("intersect_level", 0);
+                    json.put("score_threshold", 50);
+                    json.put("score_filter", 25);
+                    //discard_multiple_matches: false
+                    //discard_multi_hits: ?
+                    //require_valid_pair: false
                 }
                 else if ("strict".equals(alignTemplate))
                 {
                     json.put("num_mismatches", 0);
-                    json.put("intersect_level", 1);
-                    json.put("score_filter", 50);
+                    json.put("intersect_level", 0);
+                    json.put("score_threshold", 50);
+                    json.put("score_filter", 25);
                 }
 
                 boolean groupByLineage = ctx.getParams().optBoolean(GROUP_BY_LINEAGE, false);

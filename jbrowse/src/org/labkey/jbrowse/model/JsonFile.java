@@ -381,10 +381,11 @@ public class JsonFile
         }
         else if (SequenceUtil.FILETYPE.gtf.getFileType().isType(targetFile.getFile()))
         {
-            return null;
+            ret = getGxfTrack(targetFile, rg);
         }
         else if (SequenceUtil.FILETYPE.bed.getFileType().isType(targetFile.getFile()))
         {
+            //TODO
             return null;
         }
         else
