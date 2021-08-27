@@ -21,6 +21,8 @@ import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -70,7 +72,7 @@ import org.labkey.api.view.NavTree;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.api.view.WebPartView;
 import org.labkey.api.view.template.PageConfig;
-import org.labkey.jbrowse.model.Database;
+import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
 import org.springframework.validation.BindException;
@@ -94,6 +96,8 @@ import java.util.regex.Matcher;
 
 public class JBrowseController extends SpringActionController
 {
+    private static final Logger _log = LogManager.getLogger(JBrowseController.class);
+
     private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(JBrowseController.class);
     public static final String NAME = "jbrowse";
 
@@ -411,7 +415,7 @@ public class JBrowseController extends SpringActionController
         @Override
         public ModelAndView getView(BrowserForm form, BindException errors) throws Exception
         {
-            Database db = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), form.getDatabase()), null).getObject(Database.class);
+            JBrowseSession db = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), form.getDatabase()), null).getObject(JBrowseSession.class);
             _title = db == null ? "Not Found" : db.getName();
             form.setPageTitle(_title);
 
@@ -760,8 +764,14 @@ public class JBrowseController extends SpringActionController
             }
             else
             {
-                errors.reject(ERROR_MSG, "Unknown session: " + form.getSession());
-                return null;
+                JBrowseSession db = JBrowseSession.getForId(form.getSession());
+                if (db == null)
+                {
+                    errors.reject(ERROR_MSG, "Unknown session: " + form.getSession());
+                    return null;
+                }
+
+                resp = db.getConfigJson(getUser(), _log);
             }
 
             return new ApiSimpleResponse(resp);

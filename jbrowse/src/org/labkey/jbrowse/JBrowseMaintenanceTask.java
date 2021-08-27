@@ -3,7 +3,6 @@ package org.labkey.jbrowse;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SQLFragment;
@@ -20,7 +19,7 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.SystemMaintenance.MaintenanceTask;
-import org.labkey.jbrowse.model.Database;
+import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
 
 import java.io.File;
@@ -68,12 +67,12 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
             for (String objectId : toDelete)
             {
                 log.info("deleting JBrowse session because genome does not exist: " + objectId);
-                Database db = new TableSelector(JBrowseSchema.getInstance().getSchema().getTable(JBrowseSchema.TABLE_DATABASES)).getObject(objectId, Database.class);
+                JBrowseSession db = JBrowseSession.getForId(objectId);
                 Table.delete(JBrowseSchema.getInstance().getSchema().getTable(JBrowseSchema.TABLE_DATABASES), objectId);
 
                 try
                 {
-                    Database.onDatabaseDelete(db.getContainer(), db.getObjectId(), false);
+                    JBrowseSession.onDatabaseDelete(db.getContainer(), db.getObjectId(), false);
                 }
                 catch (IOException e)
                 {
