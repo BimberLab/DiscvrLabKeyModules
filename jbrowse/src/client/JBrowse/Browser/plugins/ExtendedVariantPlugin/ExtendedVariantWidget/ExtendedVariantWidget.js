@@ -35,7 +35,7 @@ export default jbrowse => {
             const geneName = line[3] + (line[4] ? " (" + line[4] + ")" : "");
             if (!geneNames.includes(geneName)){
                 tableBodyRows.push(
-                        <TableRow>
+                        <TableRow key={geneName}>
                             <TableCell>{line[1]}</TableCell>
                             <TableCell>{line[2]}</TableCell>
                             <TableCell>{geneName}</TableCell>
@@ -231,7 +231,7 @@ export default jbrowse => {
             let alleleTableRows = []
             for (let allele in alleleCounts){
                 alleleTableRows.push(
-                        <TableRow>
+                        <TableRow key={allele}>
                             <TableCell>{allele}</TableCell>
                             <TableCell>{round(alleleCounts[allele]/alleleTotal, 4)}</TableCell>
                             <TableCell>{alleleCounts[allele]}</TableCell>
@@ -274,10 +274,11 @@ export default jbrowse => {
                                     data={gtBarData}
                                     options={{
                                         title: "Genotypes",
-                                        width: 300,
+                                        width: 400,
                                         height: 200,
-                                        bar: { groupWidth: '95%' },
+                                        bar: { groupWidth: '60%' },
                                         legend: { position: 'none' },
+                                        fontSize: 14
                                     }}
                                     // For tests
                                     rootProps={{ 'data-testid': '6' }}
@@ -290,7 +291,7 @@ export default jbrowse => {
         }, []);
         return state
     }
-    function NewTable(props) {
+    function CreatePanel(props) {
         const classes = styles()
         const { model } = props
         const feat = JSON.parse(JSON.stringify(model.featureData))
@@ -342,9 +343,9 @@ export default jbrowse => {
         )
     }
 
-    NewTable.propTypes = {
+    CreatePanel.propTypes = {
         model: MobxPropTypes.observableObject.isRequired,
     }
 
-    return observer(NewTable)
+    return observer(CreatePanel)
 }
