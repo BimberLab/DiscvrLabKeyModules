@@ -27,7 +27,9 @@ export default jbrowse => {
         colorSNV: types.maybe(types.string),
         colorDeletion: types.maybe(types.string),
         colorInsertion: types.maybe(types.string),
-        colorOther: types.maybe(types.string)
+        colorOther: types.maybe(types.string),
+        colorModerate: types.maybe(types.string),
+        colorHigh: types.maybe(types.string)
       }),
     )
     .actions(self => ({
@@ -70,11 +72,12 @@ export default jbrowse => {
                 const colorOther = self.colorOther ?? 'gray'
                 const colorHigh = self.colorHigh ?? 'red'
                 const colorModerate = self.colorModerate ?? 'goldenrod'
-                const color = "jexl:get(feature,'type')=='SNV'?'"+colorSNV+"':get(feature,'type')=='deletion'?'"+colorDeletion+"':get(feature,'type')=='insertion'?'"+colorInsertion+"':'HIGH' in (get(feature,'INFO'))?'"+colorHigh+"':'MODERATE' in (get(feature,'INFO'))?'"+colorModerate+"':'"+colorOther+"'"
+
+                const color = "jexl:'|MODERATE|' in get(feature,'INFO').ANN[0]?'"+colorModerate+"':'|HIGH|' in get(feature,'INFO').ANN[0]?'"+colorHigh+":'get(feature,'type')=='SNV'?'"+colorSNV+"':get(feature,'type')=='deletion'?'"+colorDeletion+"':get(feature,'type')=='insertion'?'"+colorInsertion+"':'"+colorOther+"'"
                 renderProps.config.color1.set(color)
                 const view = getContainingView(self)
 
-                if (self.colorSNV || self.colorDeletion || self.colorInsertion) {
+                if (self.colorSNV || self.colorDeletion || self.colorInsertion || self.colorHigh || self.colorModerate || self.colorOther) {
                   const { centerLineInfo } = getContainingView(self)
                   const { refName, assemblyName, offset } = centerLineInfo
                   const centerBp = Math.round(offset) + 1
