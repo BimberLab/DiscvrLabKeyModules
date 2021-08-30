@@ -50,13 +50,13 @@ public class SnpEffWrapper extends AbstractCommandWrapper
         params.add("-configOption");
         params.add(basename + ".genome=" + basename);
 
-        params.add(input.getPath());
-
         if (intervalsFile != null)
         {
             params.add("-interval");
             params.add(intervalsFile.getPath());
         }
+
+        params.add(input.getPath());
 
         File unzippedVcf = new File(getOutputDir(output), "snpEff.vcf");
         execute(params, unzippedVcf);

@@ -56,5 +56,7 @@ public interface ReadData extends Serializable
 
     public Integer getModifiedBy();
 
+    public String getSra_accession();
+
     public boolean isArchived();
 }

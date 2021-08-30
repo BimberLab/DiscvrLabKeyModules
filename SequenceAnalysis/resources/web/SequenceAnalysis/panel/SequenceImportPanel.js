@@ -36,6 +36,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     {name: 'fileGroupId', allowBlank: false},
                     {name: 'readset', allowBlank: false},
                     {name: 'readsetname', useNull: true},
+                    {name: 'importType', useNull: true},
                     {name: 'barcode5', useNull: true},
                     {name: 'barcode3', useNull: true},
                     {name: 'platform', allowBlank: false},
@@ -794,6 +795,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 barcode3: r.get('barcode3'),
                 readset: r.get('readset'),
                 readsetname: r.get('readsetname'),
+                importType: r.get('importType'),
                 platform: r.get('platform'),
                 application: r.get('application'),
                 chemistry: r.get('chemistry'),
@@ -1643,6 +1645,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         Ext4.Msg.wait('Loading...');
         var doDemultiplex = this.down('#doDemultiplex').getValue();
         var showBarcodes = this.down('#showBarcodes').getValue();
+        var allowReadsetMerge = this.down('#allowReadsetMerge').getValue();
 
         LABKEY.Query.selectRows({
             method: 'POST',
@@ -1659,8 +1662,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 if (results && results.rows && results.rows.length){
                     Ext4.Array.forEach(results.rows, function(row) {
                         var records = recordsById[row.rowid];
-                        if (row.totalFiles) {
-                            msgs.push('Readset ' + row.rowid + 'has already been associated with files and cannot be re-used.  If you would like to reanalyze this readset, load the table of readsets and look for the \'Analyze Data\' button.');
+                        if (!allowReadsetMerge && row.totalFiles) {
+                            msgs.push('Readset ' + row.rowid + ' has already been associated with files and cannot be re-used.  If you would like to reanalyze this readset, load the table of readsets and look for the \'Analyze Data\' button.');
                             Ext4.Array.forEach(records, function(record) {
                                 record.data.readset = null;
                             }, this);
@@ -1675,18 +1678,16 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                             return;
                         }
                         else if (!doDemultiplex && !showBarcodes && (row.barcode3 || row.barcode5)) {
-                            msgs.push('Readset ' + row.rowid + ' has barcodes, but you have not selected to either show barcodes or perform demultiplexing');
-                            Ext4.Array.forEach(records, function(record) {
-                                record.data.readset = null;
-                            }, this);
-
-                            return;
+                            this.down('#showBarcodes').setValue(true);
+                            showBarcodes = true;
                         }
 
                         //update row based on saved readset.  avoid firing event
                         Ext4.Array.forEach(records, function(record) {
+                            var importType = !record.data.readset ? null : row.totalFiles ? 'Merge With Existing' : 'New Data';
                             Ext4.apply(record.data, {
                                 readsetname: row.name,
+                                importType: importType,
                                 platform: row.platform,
                                 application: row.application,
                                 chemistry: row.chemistry,
@@ -1716,6 +1717,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         Ext4.apply(record.data, {
                             readset: null,
                             readsetname: null,
+                            importType: null,
                             platform: null,
                             application: null,
                             chemistry: null,
@@ -1866,7 +1868,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
 
                     var grid = btn.up('panel').down('ldk-gridpanel');
                     Ext4.Array.forEach(grid.columns, function(c){
-                        if (c.dataIndex === 'readset'){
+                        if (c.dataIndex === 'readset' || c.dataIndex === 'importType'){
                             c.setVisible(val);
                         }
                     }, this);
@@ -1881,12 +1883,18 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 hideMode: 'offsets',
                 width: 'auto',
                 itemId: 'existingReadsetOptions',
+                border: false,
                 fieldDefaults: {
                     width: 350
                 },
                 items: [{
                     html: 'It is possible to import readset information before you import the actual read data.  This is most commonly done when you plan a run upfront (such as the Illumina workflow).  If you did this, just enter the readset Id below and the details will automatically populate.  Note: when this option is selected the readset details are not editable through this form.',
                     border: false
+                },{
+                    itemId: 'allowReadsetMerge',
+                    xtype: 'checkbox',
+                    fieldLabel: 'Allow Merge If Existing Readset Has Data',
+                    helpPopup: 'If there is already data for the selected readset(s), the original readset will be copied (same attrbitues), and a new readset will be creating using these reads and the original data. The original readset will remain.'
                 }]
             },{
                 xtype: 'ldk-gridpanel',
@@ -1964,6 +1972,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                                                 if (records && records.length) {
                                                     records[0].set({
                                                         readset: null,
+                                                        importType: null,
                                                         readsetname: null,
                                                         platform: null,
                                                         application: null,
@@ -1988,6 +1997,18 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                                 }
                             }
                         }
+                    }
+                }, {
+                    text: 'Import Status',
+                    tdCls: 'ldk-wrap-text',
+                    name: 'importType',
+                    hidden: true,
+                    dataIndex: 'importType',
+                    width: 110,
+                    editable: true,
+                    editor: {
+                        xtype: 'displayfield',
+                        allowBlank: true
                     }
                 },{
                     text: '5\' Barcode',
@@ -2615,7 +2636,12 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     }
 
                     if (obj.readset){
-                        readsetsToUpdate.push(obj.readset);
+                        if (!Ext4.isNumeric(obj.readset)) {
+                            errors.push('Readset Id should be an integer: ' + obj.readset);
+                        }
+                        else {
+                            readsetsToUpdate.push(obj.readset);
+                        }
                     }
                 }, this);
 

@@ -25,6 +25,7 @@ export default class MyProjectPlugin extends Plugin {
 
     const ViewType = jbrequire('@jbrowse/core/pluggableElementTypes/ViewType')
     const WidgetType = jbrequire('@jbrowse/core/pluggableElementTypes/WidgetType')
+    const TrackType = jbrequire('@jbrowse/core/pluggableElementTypes/TrackType')
     const LGVPlugin = pluginManager.getPlugin('LinearGenomeViewPlugin',) as import('@jbrowse/plugin-linear-genome-view').default
     const { BaseLinearDisplayComponent } = LGVPlugin.exports
 
@@ -36,13 +37,33 @@ export default class MyProjectPlugin extends Plugin {
         },
       }))
 
+    pluginManager.addTrackType(() => {
+      const configSchema = ConfigurationSchema(
+        'DemoTrack',
+        {},
+        {
+          baseConfiguration: createBaseTrackConfig(pluginManager),
+          explicitIdentifier: 'trackId',
+        },
+      )
+      return new TrackType({
+        name: 'DemoTrack',
+        configSchema,
+        stateModel: createBaseTrackModel(
+          pluginManager,
+          'DemoTrack',
+          configSchema,
+        ),
+      })
+    })
+
     pluginManager.addDisplayType(() => {
       const { configSchema, stateModel } = pluginManager.load(WidgetDisplay)
       return new DisplayType({
         name: 'WidgetDisplay',
         configSchema,
         stateModel,
-        trackType: 'VariantTrack',
+        trackType: 'DemoTrack',
         viewType: 'LinearGenomeView',
         ReactComponent: BaseLinearDisplayComponent,
       })
