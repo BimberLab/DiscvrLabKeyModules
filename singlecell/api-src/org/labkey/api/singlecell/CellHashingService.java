@@ -278,12 +278,12 @@ abstract public class CellHashingService
 
     public enum CALLING_METHOD
     {
-        multiseq(true),
+        multiseq(false),
         htodemux(false),
         dropletutils(true),
         gmm_demux(true),
         bff_cluster(true),
-        bff_threshold(false);
+        bff_raw(false);
 
         boolean isDefault;
 

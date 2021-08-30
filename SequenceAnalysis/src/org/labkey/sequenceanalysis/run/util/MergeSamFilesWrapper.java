@@ -4,7 +4,6 @@ import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
@@ -26,15 +25,10 @@ public class MergeSamFilesWrapper extends PicardWrapper
         super(logger);
     }
 
-    public File execute(List<File> files, @Nullable String outputPath) throws PipelineJobException
-    {
-        return execute(files, outputPath, false);
-    }
-
     /**
      * If output path is null, the original file will be replaced
      */
-    public File execute(List<File> files, @Nullable String outputPath, boolean deleteOriginalFiles) throws PipelineJobException
+    public File execute(List<File> files, @Nullable File outputPath, boolean deleteOriginalFiles) throws PipelineJobException
     {
         Date start = new Date();
         getLogger().info("Merging BAM files: ");
@@ -48,12 +42,12 @@ public class MergeSamFilesWrapper extends PicardWrapper
         boolean replaceOriginal = false;
         if (outputPath == null)
         {
-            outputPath = files.get(0).getPath() + ".tmp";
+            outputPath = new File(files.get(0).getPath() + ".tmp");
             getLogger().info("\tOriginal BAM file will be replaced with merged file");
             replaceOriginal = true;
         }
 
-        File output = new File(outputPath);
+        File output = outputPath;
         execute(getParams(outputPath, files));
 
         if (!output.exists())
@@ -116,7 +110,7 @@ public class MergeSamFilesWrapper extends PicardWrapper
         return output;
     }
 
-    private List<String> getParams(String outputPath, List<File> files) throws PipelineJobException
+    private List<String> getParams(File outputPath, List<File> files)
     {
         List<String> params = getBaseArgs();
 
@@ -125,13 +119,14 @@ public class MergeSamFilesWrapper extends PicardWrapper
             params.add("INPUT=" + f.getPath());
         }
 
-        params.add("OUTPUT=" + outputPath);
+        params.add("OUTPUT=" + outputPath.getPath());
         inferMaxRecordsInRam(params);
         //USE_THREADING=true ?
 
         return params;
     }
 
+    @Override
     protected String getToolName()
     {
         return "MergeSamFiles";

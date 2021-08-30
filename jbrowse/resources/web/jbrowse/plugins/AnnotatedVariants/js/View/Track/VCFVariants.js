@@ -20,9 +20,9 @@ define([
                 _isPassing: function(feat){
                     var f = feat.get('filter');
                     try {
-                        return f === null || f === undefined || f.values.join('').toUpperCase() == 'PASS';
+                        return f === null || f === undefined || f.values.join('').toUpperCase() === 'PASS';
                     } catch(e) {
-                        return f.toUpperCase() == 'PASS';
+                        return f.toUpperCase() === 'PASS';
                     }
                 },
 
@@ -100,16 +100,27 @@ define([
                 _trackMenuOptions: function() {
                     var thisB = this;
 
+                    if (this.config.hideNotFilterPass) {
+                        this.addFeatureFilter(function (feat) {
+                            var f = feat.get('filter');
+                            try {
+                                return f === null || f === undefined || f.values.join('').toUpperCase() === 'PASS';
+                            } catch(e) {
+                                return f.toUpperCase() === 'PASS';
+                            }
+                        }, 'hideNotFilterPass');
+                    }
+
                     // disable default VCF FILTER column filters
                     return all([ this.inherited(arguments), this._snpeffImpactFilterTrackMenuOptions() ])
                             .then( function( options ) {
                                 var o = options.shift();
                                 var blackList = ['About this track', 'Pin to top', 'Edit config', 'Delete track'];
                                 o = array.filter(o, function(item) {
-                                    return blackList.indexOf(item.label) == -1;
+                                    return blackList.indexOf(item.label) === -1;
                                 });
 
-                                if (o[0].type == 'dijit/MenuSeparator'){
+                                if (o[0].type === 'dijit/MenuSeparator'){
                                     o.shift();
                                 }
 
@@ -117,24 +128,19 @@ define([
                                 o.push({
                                     label: 'Show sites not passing filters',
                                     type: "dijit/CheckedMenuItem",
-                                    checked: thisB.config.filterEnabled['SHOW_FILTERED'] !== false,
+                                    checked: thisB.config.hideNotFilterPass !== true,
                                     onClick: (function(filterName){ return function() {
                                         if (!this.checked) {
                                             thisB.addFeatureFilter(function(f) {
-                                                var f = f.get('filter');
-                                                try {
-                                                    return f === null || f === undefined || f.values.join('').toUpperCase() == 'PASS';
-                                                } catch(e) {
-                                                    return f.toUpperCase() == 'PASS';
-                                                }
+                                                return thisB._isPassing(f);
                                             }, filterName);
                                         }
                                         else {
                                             thisB.removeFeatureFilter(filterName);
                                         }
-                                        thisB.config.filterEnabled[filterName] = this.checked;
+                                        thisB.config.hideNotFilterPass = !this.checked;
                                         thisB.redraw();
-                                    }})('SHOW_FILTERED')
+                                    }})('hideNotFilterPass')
                                 });
 
                                 return o.concat.apply( o, options );
@@ -150,7 +156,7 @@ define([
                         if (!(thisB.config.filterEnabled))
                             thisB.config.filterEnabled = {};
                         // default to true if not set or not already false due to a menu click
-                        if (thisB.config.filterEnabled[filterName] != false) {
+                        if (thisB.config.filterEnabled[filterName] !== false) {
                             thisB.config.filterEnabled[filterName] = true;
                         }
                         opts.push({

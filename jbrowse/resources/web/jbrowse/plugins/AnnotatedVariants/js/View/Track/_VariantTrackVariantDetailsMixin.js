@@ -583,7 +583,7 @@ define([
                     var alt = f.get('alternative_alleles');
                     if( alt &&  typeof alt == 'object' && 'values' in alt )
                         alt = alt.values;
-                    if ( alt.match( /,/ ) ) {
+                    if (lang.isArray(alt) &&  alt.match( /,/ ) ) {
                         alt = alt.split( /,/ );
                     }
                     if( alt && ! lang.isArray( alt ) )
@@ -673,6 +673,9 @@ define([
                     }
                     if( alt && ! lang.isArray( alt ) )
                         alt = [alt];
+
+                    if (!alt)
+                        alt = [];
 
                     var haveLongSeq = false;
                     if (ref.length > 5) {

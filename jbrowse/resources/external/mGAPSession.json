@@ -1,0 +1,105 @@
+{
+  "configuration": {},
+  "assemblies": {
+    "name": "hg38",
+    "aliases": [
+      "GRCh38"
+    ],
+    "sequence": {
+      "type": "ReferenceSequenceTrack",
+      "trackId": "P6R5xbRqRr",
+      "adapter": {
+        "type": "BgzipFastaAdapter",
+        "fastaLocation": {
+          "uri": "https://jbrowse.org/genomes/GRCh38/fasta/hg38.prefix.fa.gz"
+        },
+        "faiLocation": {
+          "uri": "https://jbrowse.org/genomes/GRCh38/fasta/hg38.prefix.fa.gz.fai"
+        },
+        "gziLocation": {
+          "uri": "https://jbrowse.org/genomes/GRCh38/fasta/hg38.prefix.fa.gz.gzi"
+        }
+      }
+    },
+    "refNameAliases": {
+      "adapter": {
+        "type": "RefNameAliasAdapter",
+        "location": {
+          "uri": "https://s3.amazonaws.com/jbrowse.org/genomes/GRCh38/hg38_aliases.txt"
+        }
+      }
+    }
+  },
+  "location": "1:1..248,956,422",
+  "tracks": [
+    {
+      "type": "ExtendedVariantTrack",
+      "trackId": "mgap_hg38",
+      "name": "mgap",
+      "assemblyNames": [
+        "hg38"
+      ],
+      "category": [
+        "Annotation"
+      ],
+      "adapter": {
+        "type": "VcfTabixAdapter",
+        "vcfGzLocation": {
+          "uri": "<%=contextPath%>/jbrowse/mgap/mGap.v2.1.subset.vcf.gz"
+        },
+        "index": {
+          "location": {
+            "uri": "<%=contextPath%>/jbrowse/mgap/mGap.v2.1.subset.vcf.gz.tbi"
+          }
+        }
+      },
+      "metadata": {
+        "extendedVariantDisplayConfig": [
+          {
+            "name": "AC, AF",
+            "properties": [
+              "AC",
+              "AF"
+            ]
+          },
+          {
+            "name": "LF, MAF",
+            "properties": [
+              "LF",
+              "MAF"
+            ]
+          },
+          {
+            "name": "ERBSEG_NM, ERBSEG_CT, SX",
+            "properties": [
+              "ERBSEG_NM",
+              "ERBSEG_CT",
+              "SX"
+            ]
+          }
+        ],
+        "message": "\n\nAut molestiae temporibus nesciunt. Sed repellendus incidunt et. Inventore vitae tempora consequuntur maiores veritatis blanditiis voluptates explicabo.\n\nSimilique aliquid vel occaecati labore corporis adipisci provident voluptas."
+      }
+    }
+  ],
+  "connections": [],
+  "defaultSession": {
+    "name": "Test Session",
+    "view": {
+      "id": "linearGenomeView",
+      "type": "LinearGenomeView",
+      "tracks": [
+        {
+          "type": "ExtendedVariantTrack",
+          "configuration": "mgap_hg38",
+          "displays": [
+            {
+              "type": "ExtendedVariantDisplay",
+              "configuration": "mgap_hg38-ExtendedVariantDisplay"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

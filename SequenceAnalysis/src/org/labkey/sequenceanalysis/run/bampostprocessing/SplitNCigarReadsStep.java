@@ -6,6 +6,7 @@ import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.BamProcessingOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
+import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -34,7 +35,9 @@ public class SplitNCigarReadsStep extends AbstractCommandPipelineStep<SplitNCiga
     {
         public Provider()
         {
-            super("SplitNCigarReads", "Split N Cigar Reads", "GATK", "This will use GATK to Splits reads that contain Ns in their CIGAR string.  It is most commonly used for RNA-Seq", Collections.emptyList(), null, "https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_rnaseq_SplitNCigarReads.php");
+            super("SplitNCigarReads", "Split N Cigar Reads", "GATK", "This will use GATK to Splits reads that contain Ns in their CIGAR string.  It is most commonly used for RNA-Seq", Collections.singletonList(
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-skip-mq-transform"), "skip-mq-transform", "Skip Mapping Quality Transform", "This flag turns off the mapping quality 255 -> 60 read transformer. The transformer is on by default to ensure that uniquely mapping reads assigned STAR's default 255 MQ aren't filtered out by HaplotypeCaller.", "checkbox", null, false)
+            ), null, "https://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_rnaseq_SplitNCigarReads.php");
         }
 
         @Override
@@ -50,12 +53,10 @@ public class SplitNCigarReadsStep extends AbstractCommandPipelineStep<SplitNCiga
         BamProcessingOutputImpl output = new BamProcessingOutputImpl();
         getWrapper().setOutputDir(outputDirectory);
 
-        boolean doReassignMappingQual = getProvider().getParameterByName("doReassignMappingQual").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true);
-
         File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".splitncigar.bam");
         output.addIntermediateFile(outputBam);
 
-        getWrapper().execute(referenceGenome.getWorkingFastaFile(), inputBam, outputBam, doReassignMappingQual);
+        getWrapper().execute(referenceGenome.getWorkingFastaFile(), inputBam, outputBam, getClientCommandArgs());
 
         if (!outputBam.exists())
         {

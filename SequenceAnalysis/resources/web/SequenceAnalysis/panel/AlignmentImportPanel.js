@@ -610,7 +610,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
             },
             scope: this,
             success: this.onFileLoad,
-            failure: LDK.Utils.getErrorCallback
+            failure: LDK.Utils.getErrorCallback()
         });
 
         this.fileNameStore = Ext4.create('Ext.data.Store', {
@@ -860,7 +860,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
 
                     var found = false;
                     Ext4.each(cols, function(col, idx){
-                        if (col.name == field || col.text == field || col.dataIndex.toLowerCase() == field.toLowerCase()){
+                        if (col.name === field || col.text === field || col.dataIndex.toLowerCase() === field.toLowerCase()){
                             columns.push(col);
                             found = true;
                             return false;
@@ -918,11 +918,11 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                                 var recIdx = col.editor.store.find(col.editor.valueField, value, null, false, false);
 
                                 //attempt to resolve by displayField
-                                if (recIdx == -1) {
+                                if (recIdx === -1) {
                                     recIdx = col.editor.store.find(col.editor.displayField, value, null, false, false);
                                 }
 
-                                if (recIdx == -1) {
+                                if (recIdx === -1) {
                                     errors.push('Invalid value for field ' + col.text + ': ' + value);
                                 }
                                 else {
@@ -930,6 +930,10 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                                     value = col.editor.store.getAt(recIdx).get(col.editor.valueField);
                                 }
                             }
+                        }
+
+                        if (value && col.dataIndex === 'readset' && !Ext4.isNumeric(value)) {
+                            errors.push('Readset Id should be an integer: ' + value);
                         }
 
                         if (!Ext4.isEmpty(value)){
