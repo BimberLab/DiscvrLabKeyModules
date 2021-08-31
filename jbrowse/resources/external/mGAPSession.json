@@ -43,7 +43,7 @@
         "Annotation"
       ],
       "adapter": {
-        "type": "VcfTabixAdapter",
+        "type": "ExtendedVariantAdapter",
         "vcfGzLocation": {
           "uri": "http://localhost:8080/labkey/jbrowse/mgap/mGap.v2.1.subset.vcf.gz"
         },

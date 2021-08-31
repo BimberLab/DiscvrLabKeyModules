@@ -12,6 +12,8 @@ import {
 } from '@jbrowse/core/pluggableElementTypes/models'
 
 import AdapterType from "@jbrowse/core/pluggableElementTypes/AdapterType";
+import {configSchema as EVAdapterConfigSchema} from './ExtendedVariantAdapter'
+import {EVAdapterClass} from './ExtendedVariantAdapter'
 
 export default class ExtendedVariantPlugin extends Plugin {
   name = 'ExtendedVariantPlugin'
@@ -35,6 +37,14 @@ export default class ExtendedVariantPlugin extends Plugin {
           // unused but required by your view
         },
       }))
+
+    pluginManager.addAdapterType(() =>
+        new AdapterType({
+            name: "ExtendedVariantAdapter",
+            configSchema: EVAdapterConfigSchema,
+            AdapterClass: EVAdapterClass
+        }),
+    )
 
     pluginManager.addTrackType(() => {
       const configSchema = ConfigurationSchema(

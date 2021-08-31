@@ -7,8 +7,9 @@ import { cast, types, addDisposer, getEnv, Instance } from 'mobx-state-tree'
 import { autorun, observable } from 'mobx'
 import PaletteIcon from '@material-ui/icons/Palette'
 import PluginManager from '@jbrowse/core/PluginManager'
+import {getSnapshot} from 'mobx-state-tree'
 
-const attributes = ['SNV', 'Insertion', 'Deletion', 'High', 'Moderate', 'Other']
+const attributes = ['SNV', 'Insertion', 'Deletion', 'High', 'Moderate', 'Low', 'Other']
 const colors = ['green', 'red', 'blue', 'gray', 'goldenrod']
 
 export default jbrowse => {
@@ -29,7 +30,8 @@ export default jbrowse => {
         colorInsertion: types.maybe(types.string),
         colorOther: types.maybe(types.string),
         colorModerate: types.maybe(types.string),
-        colorHigh: types.maybe(types.string)
+        colorHigh: types.maybe(types.string),
+        colorLow: types.maybe(types.string)
       }),
     )
     .actions(self => ({
@@ -55,6 +57,9 @@ export default jbrowse => {
             else if (attr == "Moderate"){
                 self.colorModerate = color
             }
+            else if (attr == "Low"){
+                self.colorLow = color
+            }
         },
     }))
     .actions(self => ({
@@ -72,8 +77,8 @@ export default jbrowse => {
                 const colorOther = self.colorOther ?? 'gray'
                 const colorHigh = self.colorHigh ?? 'red'
                 const colorModerate = self.colorModerate ?? 'goldenrod'
-
-                const color = "jexl:'|MODERATE|' in get(feature,'INFO').ANN[0]?'"+colorModerate+"':'|HIGH|' in get(feature,'INFO').ANN[0]?'"+colorHigh+":'get(feature,'type')=='SNV'?'"+colorSNV+"':get(feature,'type')=='deletion'?'"+colorDeletion+"':get(feature,'type')=='insertion'?'"+colorInsertion+"':'"+colorOther+"'"
+                const colorLow = self.colorLow ?? 'black'
+                const color = "jexl:get(feature,'INFO').ANN['IMPACT']=='MODERATE'?'"+colorModerate+"':get(feature,'INFO').ANN['IMPACT']=='HIGH'?'"+colorHigh+"':get(feature,'INFO').ANN['IMPACT']=='LOW'?'"+colorLow+"':get(feature,'type')=='SNV'?'"+colorSNV+"':get(feature,'type')=='deletion'?'"+colorDeletion+"':get(feature,'type')=='insertion'?'"+colorInsertion+"':'"+colorOther+"'"
                 renderProps.config.color1.set(color)
                 const view = getContainingView(self)
 
@@ -189,7 +194,14 @@ export default jbrowse => {
 
       get trackMenuItems() {
         return [
-          ...this.composedTrackMenuItems
+          ...this.composedTrackMenuItems,
+          {
+            label: 'Get Session',
+            onClick: ()  => {
+              console.log(getSnapshot(getSession(self)))
+            },
+            icon: FilterListIcon,
+          },
         ]
       },
     }))
