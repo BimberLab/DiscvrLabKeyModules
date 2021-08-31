@@ -104,9 +104,8 @@ public class JBrowseTest extends BaseWebDriverTest
         Actions actions = new Actions(getDriver());
         var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), '294665')]/..")); // 294665 is a visible element given minimalSession's location
         actions.click(toClick.get(0)).perform();
-        assertTextPresent("Predicted Function - 1");
-
-
+        waitForElement(Locator.tagWithText("div", "1:197,268,209..197,268,209 "));
+        assertElementPresent(Locator.tagWithText("span", "Predicted Function - 1"));
     }
 
     private void testMessageDisplay()
@@ -122,9 +121,9 @@ public class JBrowseTest extends BaseWebDriverTest
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV A -> T')]/..")); // 294665 is a visible element given minimalSession's location
+        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV A -> T')]/.."));
         actions.click(toClick.get(0)).perform();
-        assertTextPresent("Aut molestiae temporibus nesciunt.");
+        waitForElement(Locator.tagContainingText("div", "Aut molestiae temporibus nesciunt."));
     }
 
     private void testSessionCardDisplay()
@@ -140,14 +139,14 @@ public class JBrowseTest extends BaseWebDriverTest
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV A -> T')]/..")); // 294665 is a visible element given minimalSession's location
+        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV A -> T')]/.."));
         actions.click(toClick.get(0)).perform();
-        assertTextPresent("AC, AF");
+        waitForElement(Locator.tagWithText("span", "AC, AF"));
     }
 
     private void testTitleMapping()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:116981284..116981627");
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:116981373..116981544");
 
         while (!isTextPresent("Loading"))
         {
@@ -160,12 +159,13 @@ public class JBrowseTest extends BaseWebDriverTest
         Actions actions = new Actions(getDriver());
         var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV T -> C')]/..")); // 1:116,981,406..116,981,406
         actions.click(toClick.get(0)).perform();
-        assertTextPresent("Unable to Lift to Human");
+        waitForElement(Locator.tagWithText("div", "1:116,981,406..116,981,406 "));
+        assertElementPresent(Locator.tagWithText("div", "Unable to Lift to Human"));
     }
 
     private void testPredictedFunction()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:116981284..116981627");
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:116981373..116981544");
 
         while (!isTextPresent("Loading"))
         {
@@ -178,17 +178,18 @@ public class JBrowseTest extends BaseWebDriverTest
         Actions actions = new Actions(getDriver());
         var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV T -> C')]/..")); // 1:116,981,406..116,981,406
         actions.click(toClick.get(0)).perform();
-        assertTextPresent("Effect");
-        assertTextPresent("Impact");
-        assertTextPresent("Gene Name");
-        assertTextPresent("Position/Consequence");
-        assertTextPresent("intron_variant");
-        assertTextPresent("custom");
+        waitForElement(Locator.tagWithText("div", "1:116,981,406..116,981,406 "));
+        assertElementPresent(Locator.tagWithText("th", "Effect"));
+        assertElementPresent(Locator.tagWithText("th", "Impact"));
+        assertElementPresent(Locator.tagWithText("th", "Gene Name"));
+        assertElementPresent(Locator.tagWithText("th", "Position/Consequence"));
+        assertElementPresent(Locator.tagWithText("td", "intron_variant"));
+        assertElementPresent(Locator.tagWithText("td", "custom"));
     }
 
     private void testAlleleFrequencies()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap?1:116999734..116999776");
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:116999734..116999776");
 
         while (!isTextPresent("Loading"))
         {
@@ -201,16 +202,17 @@ public class JBrowseTest extends BaseWebDriverTest
         Actions actions = new Actions(getDriver());
         var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV C -> A')]/..")); // 1:116,999,755
         actions.click(toClick.get(0)).perform();
-        assertTextPresent("Sequence");
-        assertTextPresent("Fraction");
-        assertTextPresent("Count");
-        assertTextPresent("3041");
-        assertTextPresent("3");
+        waitForElement(Locator.tagWithText("div", "1:116,999,755..116,999,755 "));
+        assertElementPresent(Locator.tagWithText("th", "Sequence"));
+        assertElementPresent(Locator.tagWithText("th", "Fraction"));
+        assertElementPresent(Locator.tagWithText("th", "Count"));
+        assertElementPresent(Locator.tagWithText("td", "3041"));
+        assertElementPresent(Locator.tagWithText("td", "3"));
     }
 
     private void testGenotypeFrequencies()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap?1:116999734..116999776");
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:116999734..116999776");
 
         while (!isTextPresent("Loading"))
         {
@@ -223,16 +225,15 @@ public class JBrowseTest extends BaseWebDriverTest
         Actions actions = new Actions(getDriver());
         var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV C -> A')]/..")); // 1:116,999,755
         actions.click(toClick.get(0)).perform();
-        assertTextPresent("3041");
-        assertTextPresent("Click here to view sample-level genotypes");
+        waitForElement(Locator.tagWithText("div", "1:116,999,755..116,999,755 "));
+        assertElementPresent(Locator.tagWithText("td", "3041"));
+        assertElementPresent(Locator.tagWithText("span", "Genotype Frequency (2329)"));
+        assertElementPresent(Locator.tagWithText("a", "Click here to view sample-level genotypes"));
         while(isTextPresent("Loading")){
             sleep(10);
         }
         assertElementPresent(Locator.tagWithAttributeContaining("div","id","reactgooglegraph"));
     }
-
-
-
 
     @Override
     protected void doCleanup(boolean afterTest) throws TestTimeoutException
