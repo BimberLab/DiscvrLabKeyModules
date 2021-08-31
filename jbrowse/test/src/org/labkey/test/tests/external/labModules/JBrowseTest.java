@@ -147,7 +147,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testTitleMapping()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap");
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:116981284..116981627");
 
         while (!isTextPresent("Loading"))
         {
@@ -158,14 +158,14 @@ public class JBrowseTest extends BaseWebDriverTest
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV A -> T')]/..")); // 294665 is a visible element given minimalSession's location
+        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV T -> C')]/..")); // 1:116,981,406..116,981,406
         actions.click(toClick.get(0)).perform();
         assertTextPresent("Unable to Lift to Human");
     }
 
     private void testPredictedFunction()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap");
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:116981284..116981627");
 
         while (!isTextPresent("Loading"))
         {
@@ -176,7 +176,7 @@ public class JBrowseTest extends BaseWebDriverTest
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV A -> T')]/..")); // 294665 is a visible element given minimalSession's location
+        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV T -> C')]/..")); // 1:116,981,406..116,981,406
         actions.click(toClick.get(0)).perform();
         assertTextPresent("Effect");
         assertTextPresent("Impact");
@@ -188,7 +188,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testAlleleFrequencies()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap");
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap?1:116999734..116999776");
 
         while (!isTextPresent("Loading"))
         {
@@ -199,7 +199,7 @@ public class JBrowseTest extends BaseWebDriverTest
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV A -> T')]/..")); // 294665 is a visible element given minimalSession's location
+        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV C -> A')]/..")); // 1:116,999,755
         actions.click(toClick.get(0)).perform();
         assertTextPresent("Sequence");
         assertTextPresent("Fraction");
@@ -210,7 +210,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testGenotypeFrequencies()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap");
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap?1:116999734..116999776");
 
         while (!isTextPresent("Loading"))
         {
@@ -221,9 +221,9 @@ public class JBrowseTest extends BaseWebDriverTest
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV A -> T')]/..")); // 294665 is a visible element given minimalSession's location
+        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV C -> A')]/..")); // 1:116,999,755
         actions.click(toClick.get(0)).perform();
-        assertTextPresent("2329");
+        assertTextPresent("3041");
         assertTextPresent("Click here to view sample-level genotypes");
         while(isTextPresent("Loading")){
             sleep(10);
