@@ -84,8 +84,8 @@ public class JBrowseTest extends BaseWebDriverTest
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        By by = getVariantWithinTrack("clinvar_ncbi_hg38_2", "294665");
-        WebElement toClick = getDriver().findElements(by).stream().filter(WebElement::isDisplayed).collect(Collectors.toList()).get(1);
+        By by = getVariantWithinTrack("clinvar_ncbi_hg38_2", "294665", true);
+        WebElement toClick = getDriver().findElements(by).stream().filter(WebElement::isDisplayed).findFirst().orElseThrow();
         actions.click(toClick).perform();
         assertElementPresent(Locator.tagWithText("th", "Hello"));
     }
@@ -105,18 +105,23 @@ public class JBrowseTest extends BaseWebDriverTest
 
         // 294665 is a visible element given minimalSession's location
         Actions actions = new Actions(getDriver());
-        By by = getVariantWithinTrack("clinvar_ncbi_hg38", "294665");
+        By by = getVariantWithinTrack("clinvar_ncbi_hg38", "294665", true);
         WebElement toClick = getDriver().findElements(by).stream().filter(WebElement::isDisplayed).findFirst().orElseThrow();
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:197,268,209..197,268,209"));
         assertElementPresent(Locator.tagWithText("span", "Predicted Function - 1"));
     }
 
-    private By getVariantWithinTrack(String trackId, String variantText)
+    private By getVariantWithinTrack(String trackId, String variantText, boolean waitFor)
     {
         trackId = "trackRenderingContainer-linearGenomeView-" + trackId;
         Locator.XPathLocator l = Locator.tagWithAttributeContaining("div", "data-testid", trackId);
-        l = l.append(Locator.xpath("//*[name()='text' and contains(text(), '" + variantText + "')]/.."));
+        l = l.append(Locator.xpath("//*[name()='text' and contains(text(), '" + variantText + "')]/..")).notHidden();
+
+        if (waitFor)
+        {
+            waitForElement(l);
+        }
 
         return By.xpath(l.toXpath());
     }
