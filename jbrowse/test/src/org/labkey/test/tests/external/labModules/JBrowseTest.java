@@ -25,9 +25,12 @@ import org.labkey.test.categories.LabModule;
 import org.labkey.test.util.external.labModules.LabModuleHelper;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 /**
  * Created by bimber on 1/20/2015.
@@ -81,10 +84,9 @@ public class JBrowseTest extends BaseWebDriverTest
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), '294665')]/..")); // 294665 is a visible element given minimalSession's location
-        actions.click(toClick.get(2)).perform();
-        assertTextPresent("Hello");
-
+        WebElement toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), '294665')]/..")).stream().filter(WebElement::isDisplayed).collect(Collectors.toList()).get(2);
+        actions.click(toClick).perform();
+        assertElementPresent(Locator.tagWithText("th", "Hello"));
     }
 
     private void testConfigWidgetUi()
@@ -102,8 +104,8 @@ public class JBrowseTest extends BaseWebDriverTest
 
         // 294665 is a visible element given minimalSession's location
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), '294665')]/..")); // 294665 is a visible element given minimalSession's location
-        actions.click(toClick.get(0)).perform();
+        WebElement toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), '294665')]/..")).stream().filter(WebElement::isDisplayed).findFirst().orElseThrow();
+        actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:197,268,209..197,268,209"));
         assertElementPresent(Locator.tagWithText("span", "Predicted Function - 1"));
     }
@@ -121,8 +123,8 @@ public class JBrowseTest extends BaseWebDriverTest
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV A -> T')]/.."));
-        actions.click(toClick.get(0)).perform();
+        WebElement toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV A -> T')]/..")).stream().filter(WebElement::isDisplayed).collect(toSingleton());
+        actions.click(toClick).perform();
         waitForElement(Locator.tagContainingText("div", "Aut molestiae temporibus nesciunt."));
     }
 
@@ -139,8 +141,8 @@ public class JBrowseTest extends BaseWebDriverTest
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV A -> T')]/.."));
-        actions.click(toClick.get(0)).perform();
+        WebElement toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV A -> T')]/..")).stream().filter(WebElement::isDisplayed).collect(toSingleton());
+        actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("span", "AC, AF"));
     }
 
@@ -157,8 +159,8 @@ public class JBrowseTest extends BaseWebDriverTest
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV T -> C')]/..")); // 1:116,981,406..116,981,406
-        actions.click(toClick.get(0)).perform();
+        WebElement toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV T -> C')]/..")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,981,406..116,981,406
+        actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:116,981,406..116,981,406"));
         assertElementPresent(Locator.tagWithText("div", "Unable to Lift to Human"));
     }
@@ -176,8 +178,8 @@ public class JBrowseTest extends BaseWebDriverTest
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV T -> C')]/..")); // 1:116,981,406..116,981,406
-        actions.click(toClick.get(0)).perform();
+        WebElement toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV T -> C')]/..")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,981,406..116,981,406
+        actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:116,981,406..116,981,406"));
         assertElementPresent(Locator.tagWithText("th", "Effect"));
         assertElementPresent(Locator.tagWithText("th", "Impact"));
@@ -200,8 +202,8 @@ public class JBrowseTest extends BaseWebDriverTest
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV C -> A')]/..")); // 1:116,999,755
-        actions.click(toClick.get(0)).perform();
+        WebElement toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV C -> A')]/..")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,999,755
+        actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:116,999,755..116,999,755"));
         assertElementPresent(Locator.tagWithText("th", "Sequence"));
         assertElementPresent(Locator.tagWithText("th", "Fraction"));
@@ -223,8 +225,8 @@ public class JBrowseTest extends BaseWebDriverTest
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV C -> A')]/..")); // 1:116,999,755
-        actions.click(toClick.get(0)).perform();
+        WebElement toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV C -> A')]/..")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,999,755
+        actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:116,999,755..116,999,755"));
         assertElementPresent(Locator.tagWithText("td", "3041"));
         assertElementPresent(Locator.tagWithText("span", "Genotype Frequency (2329)"));
@@ -319,5 +321,16 @@ public class JBrowseTest extends BaseWebDriverTest
 //        beginAt("/sequenceanalysis/" + getContainerId() + "/begin.view");
 //    }
 
+    public static <T> Collector<T, ?, T> toSingleton() {
+        return Collectors.collectingAndThen(
+                Collectors.toList(),
+                list -> {
+                    if (list.size() != 1) {
+                        throw new IllegalStateException();
+                    }
+                    return list.get(0);
+                }
+        );
+    }
 
 }
