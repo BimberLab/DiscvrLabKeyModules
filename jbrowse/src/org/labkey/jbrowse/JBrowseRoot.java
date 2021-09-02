@@ -48,7 +48,7 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
-import org.labkey.jbrowse.model.Database;
+import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
 
 import java.io.BufferedReader;
@@ -447,7 +447,7 @@ public class JBrowseRoot
         return jsonFile;
     }
 
-    public void prepareDatabase(Database database, User u, @Nullable PipelineJob job) throws IOException, PipelineJobException
+    public void prepareDatabase(JBrowseSession database, User u, @Nullable PipelineJob job) throws IOException, PipelineJobException
     {
         File outDir = new File(getDatabaseDir(database.getContainerObj()), database.getObjectId());
 
@@ -485,7 +485,7 @@ public class JBrowseRoot
         jsonFiles.addAll(ts2.getArrayList(JsonFile.class));
 
         //also add library members:
-        Database db = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), database.getObjectId()), null).getObject(Database.class);
+        JBrowseSession db = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), database.getObjectId()), null).getObject(JBrowseSession.class);
         if (db != null)
         {
             getLogger().info("adding library: " + db.getLibraryId());

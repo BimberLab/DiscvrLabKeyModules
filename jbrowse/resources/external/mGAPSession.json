@@ -1,6 +1,6 @@
 {
   "configuration": {},
-  "assemblies": {
+  "assembly": {
     "name": "hg38",
     "aliases": [
       "GRCh38"

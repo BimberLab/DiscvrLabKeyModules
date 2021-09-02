@@ -3,6 +3,7 @@ import { getParentRenderProps } from '@jbrowse/core/util/tracks'
 import { getSession } from '@jbrowse/core/util'
 import FilterListIcon from '@material-ui/icons/FilterList'
 import configSchemaF from './configSchema'
+import {getSnapshot} from "mobx-state-tree";
 
 export default jbrowse => {
   const { types } = jbrowse.jbrequire('mobx-state-tree')
@@ -24,14 +25,6 @@ export default jbrowse => {
     )
 
     .actions(self => ({
-      /*openFilterConfig() {
-        const session = getSession(self)
-        const editor = session.addWidget('HelloWidget', {
-          target: self.parentTrack.configuration,
-        })
-        session.showWidget(editor)
-      },*/
-
       selectFeature(feature) {
         const session = getSession(self)
         const featureWidget = session.addWidget(
@@ -44,27 +37,33 @@ export default jbrowse => {
       },
     }))
 
-    .views(self => ({
-      get renderProps() {
-        return {
-          ...self.composedRenderProps,
-          ...getParentRenderProps(self),
-          config: self.configuration.renderer,
+    .views(self => {
+      const { renderProps: superRenderProps } = self
+      const { trackMenuItems: superTrackMenuItems } = self
+
+      return {
+        renderProps() {
+          return {
+            ...superRenderProps(),
+            config: self.configuration.renderer,
+          }
+        },
+
+        get rendererTypeName() {
+          return self.configuration.renderer.type
+        },
+
+        trackMenuItems() {
+          return [
+            {
+              label: 'Get Session',
+              onClick: ()  => {
+                console.log(getSnapshot(getSession(self)))
+              },
+              icon: FilterListIcon,
+            },
+          ]
         }
-      },
-
-      get rendererTypeName() {
-        return self.configuration.renderer.type
-      },
-
-      get trackMenuItems() {
-        return [
-          {
-            label: 'Filter',
-            onClick: self.openFilterConfig,
-            icon: FilterListIcon,
-          },
-        ]
-      },
-    }))
+      }
+    })
 }
