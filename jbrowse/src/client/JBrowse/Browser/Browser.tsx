@@ -30,6 +30,7 @@ function generateViewState(genome, plugins){
 function View(){
     const queryParam = new URLSearchParams(window.location.search);
     const session = queryParam.get('session')
+    const location = queryParam.get('location')
 
     const [state, setState] = useState(null);
     const [plugins, setPlugins] = useState<PluginConstructor[]>();
@@ -39,6 +40,10 @@ function View(){
             method: 'GET',
             success: async function(res){
                 let jsonRes = JSON.parse(res.response);
+                if (location) {
+                    jsonRes.location = location;
+                }
+
                 var loadedPlugins = null
                 if (jsonRes.plugins != null){
                     try {
@@ -70,7 +75,7 @@ function View(){
         return (<p>Error fetching config. See console for more details</p>)
     }
     return (
-      <ThemeProvider theme={theme}>
+      <ThemeProvider _theme={theme}>
           <JBrowseLinearGenomeView viewState={state} />
       </ThemeProvider>
     )

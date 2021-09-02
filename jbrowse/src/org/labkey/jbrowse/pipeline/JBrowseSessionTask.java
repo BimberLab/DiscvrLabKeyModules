@@ -37,7 +37,7 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.jbrowse.JBrowseManager;
 import org.labkey.jbrowse.JBrowseRoot;
 import org.labkey.jbrowse.JBrowseSchema;
-import org.labkey.jbrowse.model.Database;
+import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
 
 import java.io.File;
@@ -126,7 +126,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
         {
             getJob().getLogger().info("preparing session JSON files");
             TableSelector ts = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null);
-            Database db = ts.getObject(Database.class);
+            JBrowseSession db = ts.getObject(JBrowseSession.class);
             if (db == null)
             {
                 throw new IllegalArgumentException("Unknown database: " + databaseGuid);
@@ -242,7 +242,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
             }
 
             TableSelector dbTs = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null);
-            Database db = dbTs.getObject(Database.class);
+            JBrowseSession db = dbTs.getObject(JBrowseSession.class);
             if (db == null)
             {
                 throw new IllegalArgumentException("Unknown database: " + databaseGuid);

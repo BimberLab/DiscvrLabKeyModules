@@ -1,5 +1,4 @@
 import { ConfigurationReference } from '@jbrowse/core/configuration'
-import { getParentRenderProps } from '@jbrowse/core/util/tracks'
 import { getContainingTrack, getSession } from '@jbrowse/core/util'
 import FilterListIcon from '@material-ui/icons/FilterList'
 import configSchemaF from './configSchema'
@@ -34,7 +33,7 @@ export default jbrowse => {
         }
 
         var message
-        if(getContainingTrack(self).configuration.metadata.value.message){
+        if (getContainingTrack(self).configuration.metadata.value.message){
             message = getContainingTrack(self).configuration.metadata.value.message
         }
         else{
@@ -56,27 +55,31 @@ export default jbrowse => {
       },
     }))
 
-    .views(self => ({
-      get renderProps() {
+    .views(self => {
+        const { renderProps: superRenderProps } = self
+        const { trackMenuItems: superTrackMenuItems } = self
         return {
-          ...self.composedRenderProps,
-          ...getParentRenderProps(self),
-          config: self.configuration.renderer,
+            renderProps() {
+                return {
+                    ...superRenderProps(),
+                    config: self.configuration.renderer,
+                }
+            },
+
+            get rendererTypeName() {
+                return self.configuration.renderer.type
+            },
+
+            trackMenuItems() {
+                return [
+                    ...superTrackMenuItems(),
+                    {
+                        label: 'Filter',
+                        onClick: self.openFilterConfig,
+                        icon: FilterListIcon,
+                    },
+                ]
+            }
         }
-      },
-
-      get rendererTypeName() {
-        return self.configuration.renderer.type
-      },
-
-      get trackMenuItems() {
-        return [
-          {
-            label: 'Filter',
-            onClick: self.openFilterConfig,
-            icon: FilterListIcon,
-          },
-        ]
-      },
-    }))
+    })
 }

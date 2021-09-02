@@ -25,9 +25,12 @@ import org.labkey.test.categories.LabModule;
 import org.labkey.test.util.external.labModules.LabModuleHelper;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 /**
  * Created by bimber on 1/20/2015.
@@ -81,10 +84,10 @@ public class JBrowseTest extends BaseWebDriverTest
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), '294665')]/..")); // 294665 is a visible element given minimalSession's location
-        actions.click(toClick.get(2)).perform();
-        assertTextPresent("Hello");
-
+        By by = getVariantWithinTrack("clinvar_ncbi_hg38_2", "294665", true);
+        WebElement toClick = getDriver().findElements(by).stream().filter(WebElement::isDisplayed).findFirst().orElseThrow();
+        actions.click(toClick).perform();
+        assertElementPresent(Locator.tagWithText("th", "Hello"));
     }
 
     private void testConfigWidgetUi()
@@ -102,11 +105,25 @@ public class JBrowseTest extends BaseWebDriverTest
 
         // 294665 is a visible element given minimalSession's location
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), '294665')]/..")); // 294665 is a visible element given minimalSession's location
-        actions.click(toClick.get(0)).perform();
-        assertTextPresent("Predicted Function - 1");
+        By by = getVariantWithinTrack("clinvar_ncbi_hg38", "294665", true);
+        WebElement toClick = getDriver().findElements(by).stream().filter(WebElement::isDisplayed).findFirst().orElseThrow();
+        actions.click(toClick).perform();
+        waitForElement(Locator.tagWithText("div", "1:197,268,209..197,268,209"));
+        assertElementPresent(Locator.tagWithText("span", "Predicted Function - 1"));
+    }
 
+    private By getVariantWithinTrack(String trackId, String variantText, boolean waitFor)
+    {
+        trackId = "trackRenderingContainer-linearGenomeView-" + trackId;
+        Locator.XPathLocator l = Locator.tagWithAttributeContaining("div", "data-testid", trackId);
+        l = l.append(Locator.xpath("//*[name()='text' and contains(text(), '" + variantText + "')]/..")).notHidden();
 
+        if (waitFor)
+        {
+            waitForElement(l);
+        }
+
+        return By.xpath(l.toXpath());
     }
 
     private void testMessageDisplay()
@@ -122,9 +139,9 @@ public class JBrowseTest extends BaseWebDriverTest
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV A -> T')]/..")); // 294665 is a visible element given minimalSession's location
-        actions.click(toClick.get(0)).perform();
-        assertTextPresent("Aut molestiae temporibus nesciunt.");
+        WebElement toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV A -> T')]/..")).stream().filter(WebElement::isDisplayed).collect(toSingleton());
+        actions.click(toClick).perform();
+        waitForElement(Locator.tagContainingText("div", "Aut molestiae temporibus nesciunt."));
     }
 
     private void testSessionCardDisplay()
@@ -140,14 +157,14 @@ public class JBrowseTest extends BaseWebDriverTest
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV A -> T')]/..")); // 294665 is a visible element given minimalSession's location
-        actions.click(toClick.get(0)).perform();
-        assertTextPresent("AC, AF");
+        WebElement toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV A -> T')]/..")).stream().filter(WebElement::isDisplayed).collect(toSingleton());
+        actions.click(toClick).perform();
+        waitForElement(Locator.tagWithText("span", "AC, AF"));
     }
 
     private void testTitleMapping()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap");
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:116981373..116981544");
 
         while (!isTextPresent("Loading"))
         {
@@ -158,14 +175,15 @@ public class JBrowseTest extends BaseWebDriverTest
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV A -> T')]/..")); // 294665 is a visible element given minimalSession's location
-        actions.click(toClick.get(0)).perform();
-        assertTextPresent("Unable to Lift to Human");
+        WebElement toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV T -> C')]/..")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,981,406..116,981,406
+        actions.click(toClick).perform();
+        waitForElement(Locator.tagWithText("div", "1:116,981,406..116,981,406"));
+        assertElementPresent(Locator.tagWithText("div", "Unable to Lift to Human"));
     }
 
     private void testPredictedFunction()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap");
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:116981373..116981544");
 
         while (!isTextPresent("Loading"))
         {
@@ -176,19 +194,20 @@ public class JBrowseTest extends BaseWebDriverTest
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV A -> T')]/..")); // 294665 is a visible element given minimalSession's location
-        actions.click(toClick.get(0)).perform();
-        assertTextPresent("Effect");
-        assertTextPresent("Impact");
-        assertTextPresent("Gene Name");
-        assertTextPresent("Position/Consequence");
-        assertTextPresent("intron_variant");
-        assertTextPresent("custom");
+        WebElement toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV T -> C')]/..")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,981,406..116,981,406
+        actions.click(toClick).perform();
+        waitForElement(Locator.tagWithText("div", "1:116,981,406..116,981,406"));
+        assertElementPresent(Locator.tagWithText("th", "Effect"));
+        assertElementPresent(Locator.tagWithText("th", "Impact"));
+        assertElementPresent(Locator.tagWithText("th", "Gene Name"));
+        assertElementPresent(Locator.tagWithText("th", "Position/Consequence"));
+        assertElementPresent(Locator.tagWithText("td", "intron_variant"));
+        assertElementPresent(Locator.tagWithText("td", "custom"));
     }
 
     private void testAlleleFrequencies()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap");
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:116999734..116999776");
 
         while (!isTextPresent("Loading"))
         {
@@ -199,18 +218,19 @@ public class JBrowseTest extends BaseWebDriverTest
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV A -> T')]/..")); // 294665 is a visible element given minimalSession's location
-        actions.click(toClick.get(0)).perform();
-        assertTextPresent("Sequence");
-        assertTextPresent("Fraction");
-        assertTextPresent("Count");
-        assertTextPresent("3041");
-        assertTextPresent("3");
+        WebElement toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV C -> A')]/..")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,999,755
+        actions.click(toClick).perform();
+        waitForElement(Locator.tagWithText("div", "1:116,999,755..116,999,755"));
+        assertElementPresent(Locator.tagWithText("th", "Sequence"));
+        assertElementPresent(Locator.tagWithText("th", "Fraction"));
+        assertElementPresent(Locator.tagWithText("th", "Count"));
+        assertElementPresent(Locator.tagWithText("td", "3041"));
+        assertElementPresent(Locator.tagWithText("td", "3"));
     }
 
     private void testGenotypeFrequencies()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap");
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:116999734..116999776");
 
         while (!isTextPresent("Loading"))
         {
@@ -221,18 +241,17 @@ public class JBrowseTest extends BaseWebDriverTest
             sleep(10);
         }
         Actions actions = new Actions(getDriver());
-        var toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV A -> T')]/..")); // 294665 is a visible element given minimalSession's location
-        actions.click(toClick.get(0)).perform();
-        assertTextPresent("2329");
-        assertTextPresent("Click here to view sample-level genotypes");
+        WebElement toClick = getDriver().findElements(By.xpath("//*[name()='text' and contains(text(), 'SNV C -> A')]/..")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,999,755
+        actions.click(toClick).perform();
+        waitForElement(Locator.tagWithText("div", "1:116,999,755..116,999,755"));
+        assertElementPresent(Locator.tagWithText("td", "3041"));
+        assertElementPresent(Locator.tagWithText("span", "Genotype Frequency (2329)"));
+        assertElementPresent(Locator.tagWithText("a", "Click here to view sample-level genotypes"));
         while(isTextPresent("Loading")){
             sleep(10);
         }
         assertElementPresent(Locator.tagWithAttributeContaining("div","id","reactgooglegraph"));
     }
-
-
-
 
     @Override
     protected void doCleanup(boolean afterTest) throws TestTimeoutException
@@ -318,5 +337,16 @@ public class JBrowseTest extends BaseWebDriverTest
 //        beginAt("/sequenceanalysis/" + getContainerId() + "/begin.view");
 //    }
 
+    public static <T> Collector<T, ?, T> toSingleton() {
+        return Collectors.collectingAndThen(
+                Collectors.toList(),
+                list -> {
+                    if (list.size() != 1) {
+                        throw new IllegalStateException();
+                    }
+                    return list.get(0);
+                }
+        );
+    }
 
 }
