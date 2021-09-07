@@ -4,6 +4,7 @@ import au.com.bytecode.opencsv.CSVWriter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
@@ -204,11 +205,12 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
                 File genomeCsv = getGenomeCsv(genomeId, ctx);
                 File genomeFasta = getGenomeFasta(genomeId, ctx);
 
-                File refJsonGz = prepareReference(ctx, genomeCsv, genomeFasta);
-                File results = doAlignment(ctx, genomeId, refJsonGz, genomeFasta, so);
+                File refJson = prepareReference(ctx, genomeCsv, genomeFasta);
+                File results = doAlignment(ctx, genomeId, refJson, genomeFasta, so);
 
                 ctx.getFileManager().addIntermediateFile(genomeCsv);
                 ctx.getFileManager().addIntermediateFile(genomeFasta);
+                ctx.getFileManager().addIntermediateFile(refJson);
 
                 ctx.getFileManager().addSequenceOutput(results, so.getName() + ": nimble align", "Nimble Alignment", so.getReadset(), null, genomeId, null);
             }
@@ -220,28 +222,20 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
             genomeFasta = ensureLocalCopy(genomeFasta, ctx);
 
             File nimbleJson = new File(ctx.getWorkingDirectory(), FileUtil.getBaseName(genomeFasta) + ".json");
-            File configFile = new File(ctx.getWorkingDirectory(), FileUtil.getBaseName(genomeFasta) + ".config.json");
-            runUsingDocker(ctx, Arrays.asList("generate", "/work/" + genomeFasta.getName(), "/work/" + nimbleJson.getName(), "/work/" + configFile.getName()));
+            runUsingDocker(ctx, Arrays.asList("generate", "/work/" + genomeFasta.getName(), "/work/" + genomeCsv.getName(), "/work/" + nimbleJson.getName()));
             if (!nimbleJson.exists())
             {
                 throw new PipelineJobException("Unable to find expected file: " + nimbleJson.getPath());
             }
 
-            updateNimbleConfigFile(ctx, configFile);
+            updateNimbleConfigFile(ctx, nimbleJson);
 
-            File nimbleCompile = new File(ctx.getWorkingDirectory(), FileUtil.getBaseName(genomeFasta) + ".json.gz");
-            runUsingDocker(ctx, Arrays.asList("compile", "/work/" + nimbleJson.getName(), "/work/" + configFile.getName(), "/work/" + nimbleCompile.getName()));
-            if (!nimbleCompile.exists())
-            {
-                throw new PipelineJobException("Unable to find expected file: " + nimbleCompile.getPath());
-            }
-
-            return nimbleCompile;
+            return nimbleJson;
         }
 
         private void updateNimbleConfigFile(JobContext ctx, File configFile) throws PipelineJobException
         {
-            JSONObject json;
+            JSONArray json;
             try (BufferedReader reader = Readers.getReader(configFile))
             {
                 String line;
@@ -254,40 +248,42 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
                     stringBuilder.append(ls);
                 }
 
-                json = new JSONObject(stringBuilder.toString());
+                json = new JSONArray(stringBuilder.toString());
             }
             catch (IOException e)
             {
                 throw new PipelineJobException(e);
             }
 
+            JSONObject config = json.getJSONObject(0);
             try (PrintWriter writer = PrintWriters.getPrintWriter(configFile))
             {
                 String alignTemplate = ctx.getParams().optString(ALIGN_TEMPLATE, "lenient");
                 if ("lenient".equals(alignTemplate))
                 {
-                    json.put("num_mismatches", 10);
-                    json.put("intersect_level", 0);
-                    json.put("score_threshold", 50);
-                    json.put("score_filter", 25);
+                    config.put("num_mismatches", 10);
+                    config.put("intersect_level", 0);
+                    config.put("score_threshold", 50);
+                    config.put("score_filter", 25);
                     //discard_multiple_matches: false
                     //discard_multi_hits: ?
                     //require_valid_pair: false
                 }
                 else if ("strict".equals(alignTemplate))
                 {
-                    json.put("num_mismatches", 0);
-                    json.put("intersect_level", 0);
-                    json.put("score_threshold", 50);
-                    json.put("score_filter", 25);
+                    config.put("num_mismatches", 0);
+                    config.put("intersect_level", 0);
+                    config.put("score_threshold", 50);
+                    config.put("score_filter", 25);
                 }
 
                 boolean groupByLineage = ctx.getParams().optBoolean(GROUP_BY_LINEAGE, false);
                 if (groupByLineage)
                 {
-                    json.put("group_on", "lineage");
+                    config.put("group_on", "lineage");
                 }
 
+                json.put(0, config);
                 IOUtils.write(json.toString(), writer);
             }
             catch (IOException e)
