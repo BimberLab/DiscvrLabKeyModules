@@ -173,7 +173,11 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
             {
                 SimpleFilter filter = new SimpleFilter(FieldKey.fromString("runId"), runId, CompareType.EQUAL);
                 filter.addCondition(FieldKey.fromString("dataId"), o.getDataId(), CompareType.EQUAL);
-                filter.addCondition(FieldKey.fromString("category"), o.getCategory(), CompareType.EQUAL);
+                if (o.getCategory() != null)
+                {
+                    filter.addCondition(FieldKey.fromString("category"), o.getCategory(), CompareType.EQUAL);
+                }
+                
                 filter.addCondition(FieldKey.fromString("name"), o.getName(), CompareType.EQUAL);
                 TableSelector ts = new TableSelector(ti, filter, null);
                 if (ts.exists())
