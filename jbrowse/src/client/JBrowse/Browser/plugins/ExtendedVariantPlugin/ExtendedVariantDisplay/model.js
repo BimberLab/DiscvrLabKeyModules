@@ -164,7 +164,6 @@ export default jbrowse => {
                 return self.configuration.renderer.type
             },
 
-<<<<<<< HEAD
         get composedTrackMenuItems() {
           return [
             {
@@ -208,18 +207,4 @@ export default jbrowse => {
         ]
       },
     }))
-=======
-            trackMenuItems() {
-                return [
-                    ...superTrackMenuItems(),
-                    {
-                        label: 'Filter',
-                        onClick: self.openFilterConfig,
-                        icon: FilterListIcon,
-                    },
-                ]
-            }
-        }
-    })
->>>>>>> discvr-21.3
 }
