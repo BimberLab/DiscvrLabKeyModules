@@ -98,7 +98,7 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
     @Override
     public SequenceOutputHandler.SequenceOutputProcessor getProcessor()
     {
-        return null;
+        return new Processor();
     }
 
     @Override
