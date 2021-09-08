@@ -139,7 +139,7 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
 
             ctx.getSequenceSupport().cacheGenome(rg);
             ctx.getLogger().info("Preparing genome CSV/FASTA for " + rg.getName());
-            try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(getGenomeCsv(id, ctx)));PrintWriter fastaWriter = PrintWriters.getPrintWriter(getGenomeFasta(id, ctx)))
+            try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(getGenomeCsv(id, ctx)), ',', CSVWriter.NO_QUOTE_CHARACTER);PrintWriter fastaWriter = PrintWriters.getPrintWriter(getGenomeFasta(id, ctx)))
             {
                 writer.writeNext(new String[]{"reference_genome", "name", "nt_length", "genbank", "category", "subset", "locus", "lineage", "sequence"});
 
