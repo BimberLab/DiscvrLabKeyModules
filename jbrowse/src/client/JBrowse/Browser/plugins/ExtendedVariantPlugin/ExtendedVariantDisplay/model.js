@@ -70,7 +70,6 @@ export default jbrowse => {
             async () => {
               try {
                 const { rpcManager } = getSession(self)
-                const { renderProps } = self
                 const colorSNV = self.colorSNV ?? 'green'
                 const colorDeletion = self.colorDeletion ?? 'red'
                 const colorInsertion = self.colorInsertion ?? 'blue'
@@ -79,7 +78,7 @@ export default jbrowse => {
                 const colorModerate = self.colorModerate ?? 'goldenrod'
                 const colorLow = self.colorLow ?? 'black'
                 const color = "jexl:get(feature,'INFO').ANN['IMPACT']=='MODERATE'?'"+colorModerate+"':get(feature,'INFO').ANN['IMPACT']=='HIGH'?'"+colorHigh+"':get(feature,'INFO').ANN['IMPACT']=='LOW'?'"+colorLow+"':get(feature,'type')=='SNV'?'"+colorSNV+"':get(feature,'type')=='deletion'?'"+colorDeletion+"':get(feature,'type')=='insertion'?'"+colorInsertion+"':'"+colorOther+"'"
-                renderProps.config.color1.set(color)
+                self.renderProps().config.color1.set(color)
                 const view = getContainingView(self)
 
                 if (self.colorSNV || self.colorDeletion || self.colorInsertion || self.colorHigh || self.colorModerate || self.colorOther) {
@@ -101,7 +100,7 @@ export default jbrowse => {
                     rendererType: self.rendererType.name,
                     sessionId: getRpcSessionId(self),
                     timeout: 1000000,
-                    ...renderProps,
+                    ...self.renderProps(),
                   })
                   self.setReady(true)
               } else {
@@ -194,7 +193,7 @@ export default jbrowse => {
              },
              ]},
 
-      get trackMenuItems() {
+      trackMenuItems() {
         return [
           ...this.composedTrackMenuItems,
           {
@@ -206,5 +205,5 @@ export default jbrowse => {
           },
         ]
       },
-    }))
+    }})
 }
