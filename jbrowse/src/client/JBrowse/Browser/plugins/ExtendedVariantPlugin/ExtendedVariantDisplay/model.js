@@ -127,7 +127,7 @@ export default jbrowse => {
         }
 
         var message
-        if(getContainingTrack(self).configuration.metadata.value.message){
+        if (getContainingTrack(self).configuration.metadata.value.message){
             message = getContainingTrack(self).configuration.metadata.value.message
         }
         else{
@@ -149,19 +149,22 @@ export default jbrowse => {
       },
     }))
 
-    .views(self => ({
-      get renderProps() {
+    .views(self => {
+        const { renderProps: superRenderProps } = self
+        const { trackMenuItems: superTrackMenuItems } = self
         return {
-          ...self.composedRenderProps,
-          ...getParentRenderProps(self),
-          config: self.configuration.renderer,
-        }
-      },
+            renderProps() {
+                return {
+                    ...superRenderProps(),
+                    config: self.configuration.renderer,
+                }
+            },
 
-      get rendererTypeName() {
-        return self.configuration.renderer.type
-      },
+            get rendererTypeName() {
+                return self.configuration.renderer.type
+            },
 
+<<<<<<< HEAD
         get composedTrackMenuItems() {
           return [
             {
@@ -205,4 +208,18 @@ export default jbrowse => {
         ]
       },
     }))
+=======
+            trackMenuItems() {
+                return [
+                    ...superTrackMenuItems(),
+                    {
+                        label: 'Filter',
+                        onClick: self.openFilterConfig,
+                        icon: FilterListIcon,
+                    },
+                ]
+            }
+        }
+    })
+>>>>>>> discvr-21.3
 }

@@ -1,9 +1,9 @@
 package org.labkey.jbrowse.model;
 
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.simple.JSONArray;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
@@ -12,12 +12,18 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.files.FileContentService;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.services.ServiceRegistry;
+import org.labkey.api.security.User;
+import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.view.UnauthorizedException;
 import org.labkey.jbrowse.JBrowseManager;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.Arrays;
 
@@ -342,5 +348,162 @@ public class JsonFile
         }
 
         return null;
+    }
+
+    public @Nullable
+    JSONObject toTrackJson(User u, ReferenceGenome rg, Logger log) throws PipelineJobException
+    {
+        // For legacy reasons we used to map individual seqs. No longer needed:
+        if (getSequenceId() != null)
+        {
+            return null;
+        }
+
+        ExpData targetFile = getExpData();
+        if (!targetFile.getContainer().hasPermission(u, ReadPermission.class))
+        {
+            //TODO: this should never be allowed to get to this point...
+            throw new UnauthorizedException("The current user does not have read permission for: " + targetFile.getContainer().getPath());
+        }
+
+        JSONObject ret;
+        if (SequenceUtil.FILETYPE.vcf.getFileType().isType(targetFile.getFile()))
+        {
+            ret = getVcfTrack(targetFile, rg);
+        }
+        else if (SequenceUtil.FILETYPE.bam.getFileType().isType(targetFile.getFile()))
+        {
+            ret = getBamTrack(targetFile, rg);
+        }
+        else if (SequenceUtil.FILETYPE.gff.getFileType().isType(targetFile.getFile()))
+        {
+            ret = getGxfTrack(targetFile, rg);
+        }
+        else if (SequenceUtil.FILETYPE.gtf.getFileType().isType(targetFile.getFile()))
+        {
+            ret = getGxfTrack(targetFile, rg);
+        }
+        else if (SequenceUtil.FILETYPE.bed.getFileType().isType(targetFile.getFile()))
+        {
+            //TODO
+            return null;
+        }
+        else
+        {
+            //TODO:
+            log.error("Unsupported track type: " + targetFile.getFile().getName());
+            return null;
+        }
+
+        //TODO: Search config
+
+        //TODO: additional properties:
+        if (getTrackJson() != null)
+        {
+            JSONObject json = getExtraTrackConfig(log);
+            ret.putAll(json);
+        }
+
+        return ret;
+    }
+
+    private JSONObject getVcfTrack(ExpData targetFile, ReferenceGenome rg)
+    {
+        JSONObject ret = new JSONObject();
+        ret.put("type", "VariantTrack");
+        ret.put("trackId", _objectId);
+        ret.put("name", getLabel());
+        ret.put("assemblyNames", new JSONArray(){{
+            add(JBrowseSession.getAssemblyName(rg));
+        }});
+
+        String url = targetFile.getWebDavURL(ExpData.PathType.full);
+        ret.put("adapter", new JSONObject(){{
+            put("type", "VcfTabixAdapter");
+            put("vcfGzLocation", new JSONObject(){{
+                put("uri", url);
+            }});
+
+            put("index", new JSONObject(){{
+                put("location", new JSONObject(){{
+                    put("uri", url + ".tbi");
+                }});
+                put("indexType", "TBI");
+            }});
+        }});
+
+        return ret;
+    }
+
+    private JSONObject getBamTrack(ExpData targetFile, ReferenceGenome rg) throws PipelineJobException
+    {
+        JSONObject ret = new JSONObject();
+        ret.put("type", "AlignmentsTrack");
+        ret.put("trackId", _objectId);
+        ret.put("name", getLabel());
+        ret.put("assemblyNames", new JSONArray(){{
+            add(JBrowseSession.getAssemblyName(rg));
+        }});
+
+        String url = targetFile.getWebDavURL(ExpData.PathType.full);
+        ret.put("adapter", new JSONObject(){{
+            put("type", "BamAdapter");
+            put("bamLocation", new JSONObject(){{
+                put("uri", url);
+            }});
+
+            put("index", new JSONObject(){{
+                put("location", new JSONObject(){{
+                    put("uri", url + ".bai");
+                }});
+                put("indexType", "BAI");
+            }});
+
+            put("sequenceAdapter", JBrowseSession.getIndexedFastaAdapter(rg));
+        }});
+
+        return ret;
+    }
+
+    private JSONObject getGxfTrack(ExpData targetFile, ReferenceGenome rg)
+    {
+        JSONObject ret = new JSONObject();
+        ret.put("type", "FeatureTrack");
+        ret.put("trackId", _objectId);
+        ret.put("name", getLabel());
+        ret.put("category", new JSONArray(){{
+            add(getCategory());
+        }});
+        ret.put("assemblyNames", new JSONArray(){{
+            add(JBrowseSession.getAssemblyName(rg));
+        }});
+
+        //TODO: if not gzipped, we need to process it:
+
+        String adapterType = SequenceUtil.FILETYPE.gff.getFileType().isType(targetFile.getFile()) ? "Gff3TabixAdapter" : "GtfTabixAdapter";
+        String prefix = SequenceUtil.FILETYPE.gff.getFileType().isType(targetFile.getFile()) ? "gff" : "gtf";
+
+        String url = targetFile.getWebDavURL(ExpData.PathType.full);
+        if (url == null)
+        {
+            //TODO:
+            return null;
+        }
+
+        ret.put("adapter", new JSONObject(){{
+            put("type", adapterType);
+            put(prefix + "GzLocation", new JSONObject(){{
+                put("uri", url);
+            }});
+
+            put("index", new JSONObject(){{
+                put("location", new JSONObject(){{
+                    put("uri", url + ".tbi");
+                }});
+                put("indexType", "TBI");
+            }});
+        }});
+
+        return ret;
     }
 }

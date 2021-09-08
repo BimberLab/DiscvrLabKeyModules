@@ -1,6 +1,6 @@
 {
   "configuration": {},
-  "assemblies": {
+  "assembly": {
     "name": "hg38",
     "aliases": [
       "GRCh38"
@@ -45,11 +45,11 @@
       "adapter": {
         "type": "ExtendedVariantAdapter",
         "vcfGzLocation": {
-          "uri": "http://localhost:8080/labkey/jbrowse/mgap/mGap.v2.1.subset.vcf.gz"
+          "uri": "<%=contextPath%>/jbrowse/mgap/mGap.v2.1.subset.vcf.gz"
         },
         "index": {
           "location": {
-            "uri": "http://localhost:8080/labkey/jbrowse/mgap/mGap.v2.1.subset.vcf.gz.tbi"
+            "uri": "<%=contextPath%>/jbrowse/mgap/mGap.v2.1.subset.vcf.gz.tbi"
           }
         }
       },

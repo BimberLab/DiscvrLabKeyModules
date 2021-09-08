@@ -1,9 +1,7 @@
 package org.labkey.jbrowse;
 
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.labkey.api.data.Container;
-import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.module.ModuleLoader;
@@ -14,7 +12,7 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.GenomeTrigger;
 import org.labkey.api.util.PageFlowUtil;
-import org.labkey.jbrowse.model.Database;
+import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
 
 import java.io.IOException;
@@ -64,7 +62,7 @@ public class JBrowseGenomeTrigger implements GenomeTrigger
             try
             {
                 log.info("attempting to recreate jbrowse session");
-                Database db = ts.getObject(Database.class);
+                JBrowseSession db = ts.getObject(JBrowseSession.class);
                 PipeRoot root = PipelineService.get().getPipelineRootSetting(db.getContainerObj());
                 PipelineService.get().queueJob(JBrowseSessionPipelineJob.recreateDatabase(db.getContainerObj(), u, root, db.getObjectId()));
             }

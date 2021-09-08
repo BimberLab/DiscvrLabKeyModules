@@ -20,8 +20,9 @@ import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -54,6 +55,7 @@ import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.resource.FileResource;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.AdminOperationsPermission;
@@ -70,20 +72,17 @@ import org.labkey.api.view.NavTree;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.api.view.WebPartView;
 import org.labkey.api.view.template.PageConfig;
-import org.labkey.jbrowse.model.Database;
+import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
-import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -93,12 +92,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-
-import java.nio.file.Files;
+import java.util.regex.Matcher;
 
 public class JBrowseController extends SpringActionController
 {
+    private static final Logger _log = LogManager.getLogger(JBrowseController.class);
+
     private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(JBrowseController.class);
     public static final String NAME = "jbrowse";
 
@@ -416,7 +415,7 @@ public class JBrowseController extends SpringActionController
         @Override
         public ModelAndView getView(BrowserForm form, BindException errors) throws Exception
         {
-            Database db = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), form.getDatabase()), null).getObject(Database.class);
+            JBrowseSession db = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), form.getDatabase()), null).getObject(JBrowseSession.class);
             _title = db == null ? "Not Found" : db.getName();
             form.setPageTitle(_title);
 
@@ -757,41 +756,51 @@ public class JBrowseController extends SpringActionController
             JSONObject resp;
             if (DEMO.equalsIgnoreCase(form.getSession()))
             {
-                Module module = ModuleLoader.getInstance().getModule(JBrowseModule.class);
-                FileResource r = (FileResource)module.getModuleResolver().lookup(Path.parse("external/minimalSession.json"));
-                File jsonFile = r.getFile();
-                if (jsonFile == null)
-                {
-                    throw new FileNotFoundException("Unable to find JSON file: external/minimalSession.json");
-                }
-
-                try (InputStream is = new FileInputStream(jsonFile))
-                {
-                    resp = new JSONObject(IOUtils.toString(is, StandardCharsets.UTF_8));
-                }
+                resp = getDemoSession("external/minimalSession.json");
             }
             else if (MGAP.equalsIgnoreCase(form.getSession()))
             {
-                Module module = ModuleLoader.getInstance().getModule(JBrowseModule.class);
-                FileResource r = (FileResource)module.getModuleResolver().lookup(Path.parse("external/mGAPSession.json"));
-                File jsonFile = r.getFile();
-                if (jsonFile == null)
-                {
-                    throw new FileNotFoundException("Unable to find JSON file: external/mGAPSession.json");
-                }
-
-                try (InputStream is = new FileInputStream(jsonFile))
-                {
-                    resp = new JSONObject(IOUtils.toString(is, StandardCharsets.UTF_8));
-                }
+                resp = getDemoSession("external/mGAPSession.json");
             }
             else
             {
-                errors.reject(ERROR_MSG, "Unknown session: " + form.getSession());
-                return null;
+                JBrowseSession db = JBrowseSession.getForId(form.getSession());
+                if (db == null)
+                {
+                    errors.reject(ERROR_MSG, "Unknown session: " + form.getSession());
+                    return null;
+                }
+
+                resp = db.getConfigJson(getUser(), _log);
             }
 
             return new ApiSimpleResponse(resp);
+        }
+
+        private JSONObject getDemoSession(String path) throws IOException
+        {
+            final String contextPath = AppProps.getInstance().getContextPath();
+
+            Module module = ModuleLoader.getInstance().getModule(JBrowseModule.class);
+            FileResource r = (FileResource)module.getModuleResolver().lookup(Path.parse(path));
+            File jsonFile = r.getFile();
+            if (jsonFile == null)
+            {
+                throw new FileNotFoundException("Unable to find JSON file: " + path);
+            }
+
+            try (BufferedReader reader = Readers.getReader(jsonFile))
+            {
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null)
+                {
+                    line = line.replaceAll("<%=\\s*contextPath\\s*%>", Matcher.quoteReplacement(contextPath));
+                    sb.append(line);
+                }
+
+                return new JSONObject(sb.toString());
+            }
         }
     }
 }

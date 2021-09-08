@@ -22,6 +22,7 @@ import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * User: bimber
@@ -43,12 +44,27 @@ public interface AlignmentStep extends PipelineStep
 
     /**
      * Performs a reference guided alignment using the provided files.
-     * @param inputFastq1 The forward FASTQ file
-     * @param inputFastq2 The second FASTQ, if using paired end data
+     * @param inputFastqs1 The forward FASTQ file(s). In most cases this is a single FASTQ. The aligner must return true for canAlignMultiplePairsAtOnce() otherwise.
+     * @param inputFastqs2 The second FASTQ(s), if using paired end data
      * @param basename The basename to use as the output
      * @throws PipelineJobException
      */
-    public AlignmentOutput performAlignment(Readset rs, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException;
+    public AlignmentOutput performAlignment(Readset rs, List<File> inputFastqs1, @Nullable List<File> inputFastqs2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException;
+
+    default boolean canAlignMultiplePairsAtOnce()
+    {
+        return false;
+    }
+
+    default File assertSingleFile(List<File> inputs)
+    {
+        if (inputs != null && inputs.size() > 1)
+        {
+            throw new IllegalArgumentException("This aligner only supports a single pair of input FASTQs");
+        }
+
+        return inputs == null ? null : inputs.get(0);
+    }
 
     public boolean doAddReadGroups();
 
