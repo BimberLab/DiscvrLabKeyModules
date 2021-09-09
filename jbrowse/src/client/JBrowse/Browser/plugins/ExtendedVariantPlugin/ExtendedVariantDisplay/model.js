@@ -78,10 +78,11 @@ export default jbrowse => {
                 const colorModerate = self.colorModerate ?? 'goldenrod'
                 const colorLow = self.colorLow ?? 'black'
                 const color = "jexl:get(feature,'INFO').ANN['IMPACT']=='MODERATE'?'"+colorModerate+"':get(feature,'INFO').ANN['IMPACT']=='HIGH'?'"+colorHigh+"':get(feature,'INFO').ANN['IMPACT']=='LOW'?'"+colorLow+"':get(feature,'type')=='SNV'?'"+colorSNV+"':get(feature,'type')=='deletion'?'"+colorDeletion+"':get(feature,'type')=='insertion'?'"+colorInsertion+"':'"+colorOther+"'"
-                self.renderProps().config.color1.set(color)
-                const view = getContainingView(self)
 
-                if (self.colorSNV || self.colorDeletion || self.colorInsertion || self.colorHigh || self.colorModerate || self.colorOther) {
+                if(self.renderProps().config.color1.value != color){
+                  self.renderProps().config.color1.set(color)
+                  const view = getContainingView(self)
+
                   const { centerLineInfo } = getContainingView(self)
                   const { refName, assemblyName, offset } = centerLineInfo
                   const centerBp = Math.round(offset) + 1
