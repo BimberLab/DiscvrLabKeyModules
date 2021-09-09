@@ -70,9 +70,9 @@ export default jbrowse => {
             async () => {
               try {
                 const { rpcManager } = getSession(self)
-                const colorSNV = self.colorSNV ?? 'green'
+                const colorSNV = self.colorSNV ?? 'blue'
                 const colorDeletion = self.colorDeletion ?? 'red'
-                const colorInsertion = self.colorInsertion ?? 'blue'
+                const colorInsertion = self.colorInsertion ?? 'green'
                 const colorOther = self.colorOther ?? 'gray'
                 const colorHigh = self.colorHigh ?? 'red'
                 const colorModerate = self.colorModerate ?? 'goldenrod'

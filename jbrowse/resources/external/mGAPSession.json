@@ -58,7 +58,7 @@
           "type": "ExtendedVariantDisplay",
           "displayId": "volvox_filtered_vcf_color-ExtendedVariantDisplay",
           "renderer": {
-            "type": "SvgFeatureRenderer",
+            "type": "ExtendedVariantRenderer",
           }
         }
       ],
