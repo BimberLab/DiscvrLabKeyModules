@@ -298,30 +298,14 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
             ensureLocalCopy(new File(so.getFile().getPath() + ".bai"), ctx);
 
             File localRefJson = ensureLocalCopy(refJson, ctx);
-
-            runUsingDocker(ctx, Arrays.asList("align", "/work/" + localRefJson.getName(), "/work/" + refFasta.getName(), "/work/" + localBam.getName()));
-            File results = new File(ctx.getWorkingDirectory(), "results.tsv");
-            if (!results.exists())
+            File resultsTsv = getResultTsv(genomeId, ctx);
+            runUsingDocker(ctx, Arrays.asList("align", "/work/" + localRefJson.getName(), "/work/" + resultsTsv.getName(), "/work/" + localBam.getName()));
+            if (!resultsTsv.exists())
             {
-                throw new PipelineJobException("Expected to find file: " + results.getPath());
+                throw new PipelineJobException("Expected to find file: " + resultsTsv.getPath());
             }
 
-            File movedResults = getResultTsv(genomeId, ctx);
-            if (movedResults.exists())
-            {
-                movedResults.delete();
-            }
-
-            try
-            {
-                FileUtils.moveFile(results, movedResults);
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-
-            return movedResults;
+            return resultsTsv;
         }
 
         public static String DOCKER_CONTAINER_NAME = "ghcr.io/bimberlab/nimble:latest";
