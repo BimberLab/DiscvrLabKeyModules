@@ -354,6 +354,7 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
                 writer.println("\t-v \"${HOME}:/homeDir\" \\");
                 writer.println("\t-u $UID \\");
                 writer.println("\t-e USERID=$UID \\");
+                writer.println("\t-e TMPDIR=/work \\");
                 writer.println("\t-w /work \\");
                 writer.println("\t" + DOCKER_CONTAINER_NAME + " \\");
                 writer.println("\t" + StringUtils.join(nimbleArgs, " "));
