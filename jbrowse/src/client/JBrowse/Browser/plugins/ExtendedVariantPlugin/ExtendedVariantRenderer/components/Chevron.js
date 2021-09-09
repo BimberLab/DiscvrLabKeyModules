@@ -70,7 +70,7 @@ function Chevron(props) {
           ]}
         />
       ) : null}
-      {leftWithinBlock + widthWithinBlock < screenWidth ? (
+      {direction > 0 && leftWithinBlock + widthWithinBlock < screenWidth ? (
         <polygon
           stroke={selected ? color2 : undefined}
           fill={selected ? emphasizedColor : color}

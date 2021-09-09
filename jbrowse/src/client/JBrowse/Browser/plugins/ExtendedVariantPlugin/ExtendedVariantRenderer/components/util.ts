@@ -4,10 +4,11 @@ import { Feature } from '@jbrowse/core/util/simpleFeature'
 import { AnyConfigurationModel } from '@jbrowse/core/configuration/configurationSchema'
 import Box from './Box'
 import Chevron from './Chevron'
-import Diamond from './Diamond'
+import Diamond from './Diamond'         // new
 import ProcessedTranscript from './ProcessedTranscript'
 import Segments from './Segments'
 import Subfeatures from './Subfeatures'
+// TODO - replacing these with @jbrowse/plugin-svg/src/SvgFeatureRenderer/components/x paths produces loader error
 
 interface Glyph extends React.FunctionComponent {
   layOut?: Function
@@ -34,9 +35,9 @@ export function chooseGlyphComponent(feature: Feature): Glyph {
     }
     return Segments
   }
-  if(type === "SNV"){
-    return Diamond
-  }
+  if(type === "SNV"){       // new for diamond implementation
+    return Diamond          // .
+  }                         // .
   return [1, -1].includes(strand) ? Chevron : Box
 }
 

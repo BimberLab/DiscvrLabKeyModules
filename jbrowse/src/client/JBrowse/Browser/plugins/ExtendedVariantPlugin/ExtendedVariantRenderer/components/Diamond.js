@@ -8,6 +8,8 @@ import { isUTR } from './util'
 
 const utrHeightFraction = 0.65
 
+
+// New glyph Diamond for SNV rendering. Based off Chevron.js
 function Diamond(props) {
   const {
     feature,
@@ -90,23 +92,3 @@ Diamond.defaultProps = {
 }
 
 export default observer(Diamond)
-
- /*       <polygon
-          stroke={selected ? color2 : undefined}
-          fill={selected ? emphasizedColor : color}
-          points={[
-            [leftWithinBlock - height/2 + widthWithinBlock, top],
-            [leftWithinBlock + widthWithinBlock/2, top + height / 2],
-            [leftWithinBlock - height/2 + widthWithinBlock, top + height],
-          ]}
-
-                <rect
-                  data-testid={feature.id()}
-                  stroke={selected ? color2 : undefined}
-                  fill={selected ? emphasizedColor : color}
-                  x={leftWithinBlock+height}
-                  y={top}
-                  width={widthWithinBlock-(height*2)}
-                  height={height}
-                />
-        />*/
