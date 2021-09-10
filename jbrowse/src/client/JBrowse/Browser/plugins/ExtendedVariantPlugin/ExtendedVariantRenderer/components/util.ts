@@ -8,7 +8,7 @@ import Diamond from './Diamond'         // new
 import ProcessedTranscript from './ProcessedTranscript'
 import Segments from './Segments'
 import Subfeatures from './Subfeatures'
-// TODO - replacing these with @jbrowse/plugin-svg/src/SvgFeatureRenderer/components/x paths produces loader error
+// TODO - better extend SvgFeatureRenderer plugin
 
 interface Glyph extends React.FunctionComponent {
   layOut?: Function

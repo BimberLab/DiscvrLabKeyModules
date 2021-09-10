@@ -5,7 +5,7 @@ import SceneGraph from '@jbrowse/core/util/layouts/SceneGraph'
 import { observer } from 'mobx-react'
 import ReactPropTypes from 'prop-types'
 import React, { useEffect, useRef, useState, useCallback } from 'react'
-import FeatureGlyph from './FeatureGlyph' // TODO - replacing this with @jbrowse/plugin-svg/src/SvgFeatureRenderer/components/FeatureGlyph path produces loader error
+import FeatureGlyph from './FeatureGlyph' // TODO - better extend SvgFeatureRenderer plugin
 import SvgOverlay from '@jbrowse/plugin-svg/src/SvgFeatureRenderer/components/SvgOverlay'
 import { chooseGlyphComponent, layOut } from './util' // chooseGlyphComponent in util updated to add Diamond.js as a glyph to SNVs
 
