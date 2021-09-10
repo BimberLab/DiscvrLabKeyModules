@@ -81,7 +81,6 @@ export default jbrowse => {
 
                         if (self.renderProps().config.color1.value != color){
                            self.renderProps().config.color1.set(color)
-                           const view = getContainingView(self)
 
                            const { centerLineInfo } = getContainingView(self)
                            const { refName, assemblyName, offset } = centerLineInfo
