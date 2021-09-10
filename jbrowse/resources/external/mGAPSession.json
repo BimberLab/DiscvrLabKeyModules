@@ -104,7 +104,7 @@
           "displays": [
             {
               "type": "ExtendedVariantDisplay",
-              "configuration": "mgap_hg38-ExtendedVariantDisplay",
+              "configuration": "mgap_hg38-ExtendedVariantDisplay"
             }
           ]
         }
