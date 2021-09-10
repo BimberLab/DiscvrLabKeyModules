@@ -184,11 +184,6 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
             return new File(ctx.getSourceDirectory(), "genome." + id + ".fasta");
         }
 
-        private File getResultTsv(int id, JobContext ctx)
-        {
-            return new File(ctx.getSourceDirectory(), "results." + id + ".tsv");
-        }
-
         @Override
         public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
@@ -298,7 +293,7 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
             ensureLocalCopy(new File(so.getFile().getPath() + ".bai"), ctx);
 
             File localRefJson = ensureLocalCopy(refJson, ctx);
-            File resultsTsv = getResultTsv(genomeId, ctx);
+            File resultsTsv = new File(ctx.getWorkingDirectory(), "results." + genomeId + ".txt");
             runUsingDocker(ctx, Arrays.asList("align", "/work/" + localRefJson.getName(), "/work/" + resultsTsv.getName(), "/work/" + localBam.getName()));
             if (!resultsTsv.exists())
             {
