@@ -1,3 +1,4 @@
+
 import { ConfigurationSchema } from '@jbrowse/core/configuration'
 import Plugin from '@jbrowse/core/Plugin'
 import PluginManager from '@jbrowse/core/PluginManager'
@@ -12,7 +13,18 @@ import {
 } from '@jbrowse/core/pluggableElementTypes/models'
 
 import AdapterType from "@jbrowse/core/pluggableElementTypes/AdapterType";
+import {configSchema as EVAdapterConfigSchema} from './ExtendedVariantAdapter'
+import {EVAdapterClass} from './ExtendedVariantAdapter'
 
+import {
+    configSchema as EVRendererConfigSchema,
+    ReactComponent as EVRendererReactComponent
+} from './ExtendedVariantRenderer'
+
+import BoxRendererType from '@jbrowse/core/pluggableElementTypes/renderers/BoxRendererType'
+class ExtendedVariantRenderer extends BoxRendererType {
+  supportsSVG = true
+}
 export default class ExtendedVariantPlugin extends Plugin {
   name = 'ExtendedVariantPlugin'
   version = "0.0.1"//version
@@ -35,6 +47,24 @@ export default class ExtendedVariantPlugin extends Plugin {
           // unused but required by your view
         },
       }))
+
+    pluginManager.addRendererType(
+      () =>
+        new ExtendedVariantRenderer({
+          name: 'ExtendedVariantRenderer',
+          ReactComponent: EVRendererReactComponent,
+          configSchema: EVRendererConfigSchema,
+          pluginManager,
+        }),
+    )
+
+    pluginManager.addAdapterType(() =>
+        new AdapterType({
+            name: "ExtendedVariantAdapter",
+            configSchema: EVAdapterConfigSchema,
+            AdapterClass: EVAdapterClass
+        }),
+    )
 
     pluginManager.addTrackType(() => {
       const configSchema = ConfigurationSchema(
@@ -91,3 +121,5 @@ export default class ExtendedVariantPlugin extends Plugin {
   }
   
 }
+
+// 1:116,984,152..116,984,360
