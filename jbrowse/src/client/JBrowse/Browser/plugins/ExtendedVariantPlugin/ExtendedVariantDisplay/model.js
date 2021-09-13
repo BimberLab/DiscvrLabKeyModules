@@ -77,7 +77,7 @@ export default jbrowse => {
                         const colorHigh = self.colorHigh ?? 'red'
                         const colorModerate = self.colorModerate ?? 'goldenrod'
                         const colorLow = self.colorLow ?? 'black'
-                        const color = "jexl:get(feature,'INFO').ANN['IMPACT']=='MODERATE'?'"+colorModerate+"':get(feature,'INFO').ANN['IMPACT']=='HIGH'?'"+colorHigh+"':get(feature,'INFO').ANN['IMPACT']=='LOW'?'"+colorLow+"':get(feature,'type')=='SNV'?'"+colorSNV+"':get(feature,'type')=='deletion'?'"+colorDeletion+"':get(feature,'type')=='insertion'?'"+colorInsertion+"':'"+colorOther+"'"
+                        const color = "jexl:get(feature,'INFO').IMPACT=='MODERATE'?'"+colorModerate+"':get(feature,'INFO').IMPACT=='HIGH'?'"+colorHigh+"':get(feature,'INFO').IMPACT=='LOW'?'"+colorLow+"':get(feature,'type')=='SNV'?'"+colorSNV+"':get(feature,'type')=='deletion'?'"+colorDeletion+"':get(feature,'type')=='insertion'?'"+colorInsertion+"':'"+colorOther+"'"
 
                         if (self.renderProps().config.color1.value != color){
                            self.renderProps().config.color1.set(color)

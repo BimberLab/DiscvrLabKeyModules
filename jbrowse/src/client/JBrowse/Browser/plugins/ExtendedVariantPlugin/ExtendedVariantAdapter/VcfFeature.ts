@@ -20,7 +20,7 @@ export default class ExtendedVcfFeature extends VCFFeature {
             }
         }
     }
-    INFO["ANN"]["IMPACT"] = IMPACT
+    INFO["IMPACT"] = IMPACT
     const start = POS - 1
     const [SO_term, description] = this._getSOTermAndDescription(REF, ALT)
     const isTRA = ALT && ALT.some((f: string | Breakend) => f === '<TRA>')
