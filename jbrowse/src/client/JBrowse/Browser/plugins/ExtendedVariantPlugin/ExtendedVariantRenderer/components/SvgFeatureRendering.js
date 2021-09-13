@@ -1,3 +1,5 @@
+// File copied and updated from original file in @jbrowse/plugin-svg/src/SvgFeatureRenderer/components
+
 import { readConfObject } from '@jbrowse/core/configuration'
 import { PropTypes as CommonPropTypes } from '@jbrowse/core/util/types/mst'
 import { bpToPx, measureText } from '@jbrowse/core/util'
@@ -5,9 +7,9 @@ import SceneGraph from '@jbrowse/core/util/layouts/SceneGraph'
 import { observer } from 'mobx-react'
 import ReactPropTypes from 'prop-types'
 import React, { useEffect, useRef, useState, useCallback } from 'react'
-import FeatureGlyph from './FeatureGlyph' // TODO - better extend SvgFeatureRenderer plugin
-import SvgOverlay from '@jbrowse/plugin-svg/src/SvgFeatureRenderer/components/SvgOverlay'
-import { chooseGlyphComponent, layOut } from './util' // chooseGlyphComponent in util updated to add Diamond.js as a glyph to SNVs
+import FeatureGlyph from './FeatureGlyph' // FeatureGlyph copied over. Referencing original produces errors. Compare to line 11
+import SvgOverlay from '@jbrowse/plugin-svg/src/SvgFeatureRenderer/components/SvgOverlay' // NEW: Updated SvgOverlay to reference original file in @jbrowse. No errors produced.
+import { chooseGlyphComponent, layOut } from './util' // NEW: chooseGlyphComponent() in util updated to render SNVs as a diamond
 
 const renderingStyle = {
   position: 'relative',

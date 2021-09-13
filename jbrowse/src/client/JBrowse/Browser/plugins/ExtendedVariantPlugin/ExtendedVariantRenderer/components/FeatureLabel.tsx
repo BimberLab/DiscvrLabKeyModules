@@ -1,3 +1,5 @@
+// File copied directly from @jbrowse/plugin-svg/src/SvgFeatureRenderer/components
+
 import React from 'react'
 import { measureText } from '@jbrowse/core/util'
 

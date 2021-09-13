@@ -1,3 +1,5 @@
+// File copied directly from @jbrowse/plugin-svg/src/SvgFeatureRenderer/components
+
 import { readConfObject } from '@jbrowse/core/configuration'
 import { PropTypes as CommonPropTypes } from '@jbrowse/core/util/types/mst'
 import { emphasize } from '@jbrowse/core/util/color'

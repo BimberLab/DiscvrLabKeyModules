@@ -1,3 +1,5 @@
+// File copied directly from @jbrowse/plugin-svg/src/SvgFeatureRenderer/components
+
 import { readConfObject } from '@jbrowse/core/configuration'
 import { observer } from 'mobx-react'
 import PropTypes from 'prop-types'

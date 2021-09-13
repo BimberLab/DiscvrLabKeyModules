@@ -1,3 +1,5 @@
+// File copied directly from @jbrowse/plugin-svg/src/SvgFeatureRenderer/components
+
 import { observer } from 'mobx-react'
 import React from 'react'
 import SimpleFeature from '@jbrowse/core/util/simpleFeature'

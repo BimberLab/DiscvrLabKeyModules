@@ -1,3 +1,5 @@
+// NEW: Diamond glyph for SNV rendering. Based off Chevron.js
+
 import { readConfObject } from '@jbrowse/core/configuration'
 import { PropTypes as CommonPropTypes } from '@jbrowse/core/util/types/mst'
 import { emphasize } from '@jbrowse/core/util/color'
@@ -9,7 +11,6 @@ import { isUTR } from './util'
 const utrHeightFraction = 0.65
 
 
-// New glyph Diamond for SNV rendering. Based off Chevron.js
 function Diamond(props) {
   const {
     feature,

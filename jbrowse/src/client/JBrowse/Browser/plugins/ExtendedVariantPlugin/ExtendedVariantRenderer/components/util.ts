@@ -1,14 +1,15 @@
+// File copied and updated from original file in @jbrowse/plugin-svg/src/SvgFeatureRenderer/components
+
 import { readConfObject } from '@jbrowse/core/configuration'
 import SceneGraph from '@jbrowse/core/util/layouts/SceneGraph'
 import { Feature } from '@jbrowse/core/util/simpleFeature'
 import { AnyConfigurationModel } from '@jbrowse/core/configuration/configurationSchema'
 import Box from './Box'
 import Chevron from './Chevron'
-import Diamond from './Diamond'         // new
+import Diamond from './Diamond'         // NEW: Added new Diamond file
 import ProcessedTranscript from './ProcessedTranscript'
 import Segments from './Segments'
 import Subfeatures from './Subfeatures'
-// TODO - better extend SvgFeatureRenderer plugin
 
 interface Glyph extends React.FunctionComponent {
   layOut?: Function
@@ -35,7 +36,7 @@ export function chooseGlyphComponent(feature: Feature): Glyph {
     }
     return Segments
   }
-  if(type === "SNV"){       // new for diamond implementation
+  if(type === "SNV"){       // NEW: Check if type is SNV, and if so return Diamond glyph
     return Diamond          // .
   }                         // .
   return [1, -1].includes(strand) ? Chevron : Box
