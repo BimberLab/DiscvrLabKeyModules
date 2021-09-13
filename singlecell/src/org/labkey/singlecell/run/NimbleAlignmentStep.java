@@ -294,7 +294,21 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
 
             File localRefJson = ensureLocalCopy(refJson, ctx);
             File resultsTsv = new File(ctx.getWorkingDirectory(), "results." + genomeId + ".txt");
-            runUsingDocker(ctx, Arrays.asList("align", "/work/" + localRefJson.getName(), "/work/" + resultsTsv.getName(), "/work/" + localBam.getName()));
+
+            List<String> alignArgs = new ArrayList<>();
+            alignArgs.add("align");
+            Integer maxThreads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
+            if (maxThreads != null)
+            {
+                alignArgs.add("-c");
+                alignArgs.add(String.valueOf(maxThreads));
+            }
+
+            alignArgs.add("/work/" + localRefJson.getName());
+            alignArgs.add("/work/" + resultsTsv.getName());
+            alignArgs.add("/work/" + localBam.getName());
+
+            runUsingDocker(ctx, alignArgs);
             if (!resultsTsv.exists())
             {
                 throw new PipelineJobException("Expected to find file: " + resultsTsv.getPath());
