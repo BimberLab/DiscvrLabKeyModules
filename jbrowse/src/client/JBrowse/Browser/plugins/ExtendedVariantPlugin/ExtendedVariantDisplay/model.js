@@ -1,4 +1,4 @@
-import { ConfigurationReference } from '@jbrowse/core/configuration'
+import { ConfigurationReference, getConf } from '@jbrowse/core/configuration'
 import { getParentRenderProps, getRpcSessionId } from '@jbrowse/core/util/tracks'
 import { getContainingTrack, getSession, getContainingView } from '@jbrowse/core/util'
 import FilterListIcon from '@material-ui/icons/FilterList'
@@ -116,22 +116,24 @@ export default jbrowse => {
             )
          },
          selectFeature(feature){
+            const track = getContainingTrack(self)
+            const metadata = getConf(track, 'metadata')
             var extendedVariantDisplayConfig
-            if (getContainingTrack(self).configuration.metadata.value.extendedVariantDisplayConfig){
-               extendedVariantDisplayConfig = getContainingTrack(self).configuration.metadata.value.extendedVariantDisplayConfig
+            if (metadata.extendedVariantDisplayConfig){
+               extendedVariantDisplayConfig = metadata.extendedVariantDisplayConfig
             }
             else {
                extendedVariantDisplayConfig = []
             }
 
             var message
-            if (getContainingTrack(self).configuration.metadata.value.message){
-               message = getContainingTrack(self).configuration.metadata.value.message
+            if (metadata.message){
+               message = metadata.message
             }
             else {
                message = ""
             }
-            const trackId = getContainingTrack(self).configuration.trackId
+            const trackId = getConf(track, 'trackId')
             const session = getSession(self)
             var widgetId = 'Variant-' + trackId;
 
