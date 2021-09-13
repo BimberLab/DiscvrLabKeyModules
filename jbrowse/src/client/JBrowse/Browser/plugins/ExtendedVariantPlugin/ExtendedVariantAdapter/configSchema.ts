@@ -1,24 +1,9 @@
 import { types } from 'mobx-state-tree'
 import { ConfigurationSchema } from '@jbrowse/core/configuration'
+import configSchema from '@jbrowse/plugin-variants/src/VcfTabixAdapter/configSchema'
 
 export default ConfigurationSchema(
   'ExtendedVariantAdapter',
-  {
-    vcfGzLocation: {
-      type: 'fileLocation',
-      defaultValue: { uri: '/path/to/my.vcf.gz' },
-    },
-    index: ConfigurationSchema('VcfIndex', {
-      indexType: {
-        model: types.enumeration('IndexType', ['TBI', 'CSI']),
-        type: 'stringEnum',
-        defaultValue: 'TBI',
-      },
-      location: {
-        type: 'fileLocation',
-        defaultValue: { uri: '/path/to/my.vcf.gz.tbi' },
-      },
-    }),
-  },
+  configSchema.jbrowseSchemaDefinition,
   { explicitlyTyped: true },
 )
