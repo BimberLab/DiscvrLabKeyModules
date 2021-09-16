@@ -1,5 +1,4 @@
 import Plugin from '@jbrowse/core/Plugin'
-import { isAbstractMenuManager } from '@jbrowse/core/util'
 import InfoIcon from '@material-ui/icons/Info'
 import { getSnapshot } from "mobx-state-tree";
 import { getSession } from '@jbrowse/core/util'
@@ -14,12 +13,12 @@ export default class LogSession extends Plugin {
       (pluggableElement) => {
         if (pluggableElement.name === 'LinearGenomeView') {
           const {stateModel} = pluggableElement
-          const newStateModel = stateModel.extend((self) => {
+          pluggableElement.stateModel = stateModel.extend((self) => {
             const superMenuItems = self.menuItems
             return {
               views: {
                 menuItems() {
-                  const newMenuItems = [
+                  return [
                     ...superMenuItems(),
                     {type: 'divider'},
                     {
@@ -30,13 +29,10 @@ export default class LogSession extends Plugin {
                       },
                     },
                   ]
-                  return newMenuItems
                 },
               },
             }
           })
-
-          pluggableElement.stateModel = newStateModel
         }
         return pluggableElement
       }

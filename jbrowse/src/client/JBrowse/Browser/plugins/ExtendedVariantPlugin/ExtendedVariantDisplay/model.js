@@ -79,7 +79,7 @@ export default jbrowse => {
                         const colorLow = self.colorLow ?? 'black'
                         const color = "jexl:get(feature,'INFO').IMPACT=='MODERATE'?'"+colorModerate+"':get(feature,'INFO').IMPACT=='HIGH'?'"+colorHigh+"':get(feature,'INFO').IMPACT=='LOW'?'"+colorLow+"':get(feature,'type')=='SNV'?'"+colorSNV+"':get(feature,'type')=='deletion'?'"+colorDeletion+"':get(feature,'type')=='insertion'?'"+colorInsertion+"':'"+colorOther+"'"
 
-                        if (self.renderProps().config.color1.value != color){
+                        if (self.renderProps().config.color1.value !== color){
                            self.renderProps().config.color1.set(color)
 
                            const { centerLineInfo } = getContainingView(self)

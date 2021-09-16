@@ -160,6 +160,7 @@ public class JBrowseTest extends BaseWebDriverTest
         WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T", true)).stream().filter(WebElement::isDisplayed).collect(toSingleton());
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("span", "AC, AF"));
+        waitForElement(Locator.tagWithText("div", "UNKNOWN")); //the IMPACT field calculated in ExtendedVariantAdapter
     }
 
     private void testTitleMapping()

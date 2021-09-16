@@ -1,45 +1,50 @@
-import {default as VCFFeature} from '@jbrowse/plugin-variants/src/VcfTabixAdapter/VcfFeature'
-import { Breakend } from '@jbrowse/plugin-variants/src/VcfTabixAdapter/VcfFeature'
+import { VcfFeature } from '@jbrowse/plugin-variants'
 
-export default class ExtendedVcfFeature extends VCFFeature {
+export default class ExtendedVcfFeature extends VcfFeature {
+    constructor(args: { variant: any; parser: any; id: string }) {
+        args.variant = ExtendedVcfFeature.extractImpact(args.variant)
 
-  dataFromVariant(variant: any) {
-    const { REF, ALT, POS, CHROM, INFO, ID } = variant
-    let IMPACT = null
-    let regex = /HIGH/
-    if(INFO["ANN"]){
-        for(let i = 0; i < INFO["ANN"].length; i++){
-            if(/HIGH/g.exec(INFO["ANN"][i])){
-                IMPACT = "HIGH"
+        super(args);
+    }
+
+    static extractImpact(variant:  {
+        REF: string
+        POS: number
+        ALT: string[]
+        CHROM: string
+        INFO: any
+        ID: string[]
+    }) {
+        if (!variant.INFO["ANN"]) {
+            return;
+        }
+
+        let IMPACTs = new Set<String>()
+        for (let i = 0; i < variant.INFO["ANN"].length; i++){
+            if (/HIGH/g.exec(variant.INFO["ANN"][i])){
+                IMPACTs.add("HIGH")
             }
-            else if(IMPACT != "HIGH" && /MODERATE/g.exec(INFO["ANN"][i])){
-                IMPACT = "MODERATE"
+            else if (/MODERATE/g.exec(variant.INFO["ANN"][i])){
+                IMPACTs.add("MODERATE")
             }
-            else if(IMPACT != "HIGH" && IMPACT != "MODERATE" && /LOW/g.exec(INFO["ANN"][i])){
-                IMPACT = "LOW"
+            else if ("MODERATE" && /LOW/g.exec(variant.INFO["ANN"][i])){
+                IMPACTs.add("LOW")
             }
         }
-    }
-    INFO["IMPACT"] = IMPACT
-    const start = POS - 1
-    const [SO_term, description] = this._getSOTermAndDescription(REF, ALT)
-    const isTRA = ALT && ALT.some((f: string | Breakend) => f === '<TRA>')
-    const isSymbolic =
-      ALT &&
-      ALT.some(
-        (f: string | Breakend) =>
-          typeof f === 'string' && f.indexOf('<') !== -1,
-      )
-    const featureData = {
-      refName: CHROM,
-      start,
-      end: isSymbolic && INFO.END && !isTRA ? +INFO.END[0] : start + REF.length,
-      description,
-      type: SO_term,
-      name: ID ? ID[0] : undefined,
-      aliases: ID && ID.length > 1 ? variant.ID.slice(1) : undefined
-    }
 
-    return featureData
-  }
+        if (IMPACTs.has('HIGH')) {
+            variant.INFO["IMPACT"] = 'HIGH'
+        }
+        else if (IMPACTs.has('MODERATE')) {
+            variant.INFO["IMPACT"] = 'MODERATE'
+        }
+        else if (IMPACTs.has('LOW')) {
+            variant.INFO["IMPACT"] = 'LOW'
+        }
+        else {
+            variant.INFO["IMPACT"] = 'UNKNOWN'
+        }
+
+        return(variant)
+    }
 }
