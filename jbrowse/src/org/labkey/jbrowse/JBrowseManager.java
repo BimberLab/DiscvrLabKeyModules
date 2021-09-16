@@ -114,7 +114,14 @@ public class JBrowseManager
 
             JBrowseSession session = JBrowseSession.getGenericGenomeSession(genomeId);
             List<String> jsonfilesProcess = session.getJsonFiles(u, true).stream().map(JsonFile::getObjectId).collect(Collectors.toList());
-            PipelineService.get().queueJob(JBrowseSessionPipelineJob.refreshResources(c, u, root, jsonfilesProcess));
+            if (!jsonfilesProcess.isEmpty())
+            {
+                PipelineService.get().queueJob(JBrowseSessionPipelineJob.refreshResources(c, u, root, jsonfilesProcess));
+            }
+            else
+            {
+                log.info("No JsonFiles exist for genome " + genomeId + " skipping processing");
+            }
         }
         catch (PipelineValidationException e)
         {

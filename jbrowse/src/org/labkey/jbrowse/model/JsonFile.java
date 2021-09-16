@@ -684,9 +684,27 @@ public class JsonFile
                     throw new IllegalStateException("This track should have been previously gzipped: " + expData.getFile().getName());
                 }
 
-                File bgZipped = SequenceAnalysisService.get().bgzipFile(targetFile, log);
+                if (!targetFile.exists())
+                {
+                    throw new PipelineJobException("Source file does not exist: " + targetFile.getPath());
+                }
+
                 try
                 {
+                    if (!targetFile.getParentFile().equals(finalLocation.getParentFile()))
+                    {
+                        // Make local copy so we dont delete the original
+                        File local = new File(finalLocation.getParentFile(), targetFile.getName());
+                        if (local.exists())
+                        {
+                            local.delete();
+                        }
+
+                        FileUtils.copyFile(targetFile, local);
+                        targetFile = local;
+                    }
+
+                    File bgZipped = SequenceAnalysisService.get().bgzipFile(targetFile, log);
                     FileUtils.moveFile(bgZipped, finalLocation);
                 }
                 catch (IOException e)

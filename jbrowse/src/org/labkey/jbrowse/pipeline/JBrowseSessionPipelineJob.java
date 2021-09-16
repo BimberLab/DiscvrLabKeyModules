@@ -63,6 +63,11 @@ public class JBrowseSessionPipelineJob extends PipelineJob
 
     public static JBrowseSessionPipelineJob refreshResources(Container c, User user, PipeRoot pipeRoot, List<String> jsonFiles)
     {
+        if (jsonFiles == null || jsonFiles.isEmpty())
+        {
+            throw new IllegalArgumentException("Need to provide a list of JsonFiles to reprocess");
+        }
+
         return new JBrowseSessionPipelineJob(c, user, pipeRoot, jsonFiles, null, Mode.ReprocessResources);
     }
 

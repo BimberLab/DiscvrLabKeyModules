@@ -115,6 +115,11 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
 
     private void reprocessResources() throws PipelineJobException
     {
+        if (getPipelineJob().getJsonFiles() == null || getPipelineJob().getJsonFiles().isEmpty())
+        {
+            throw new PipelineJobException("No JsonFiles provided, this is likely an upstream problem");
+        }
+
         TableInfo ti = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
         TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("objectid"), getPipelineJob().getJsonFiles(), CompareType.IN), null);
         List<JsonFile> jsonFiles = ts.getArrayList(JsonFile.class);
