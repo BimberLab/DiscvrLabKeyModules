@@ -317,7 +317,7 @@ public class JsonFile
             return null;
         }
 
-        ret = possiblyAddSearchConfig(ret);
+        ret = possiblyAddSearchConfig(ret, rg);
 
         //TODO: validate/document additional properties:
         if (getTrackJson() != null)
@@ -425,7 +425,7 @@ public class JsonFile
         return doIndex;
     }
 
-    private JSONObject possiblyAddSearchConfig(JSONObject json)
+    private JSONObject possiblyAddSearchConfig(JSONObject json, ReferenceGenome rg)
     {
         if (!doIndex())
         {
@@ -448,6 +448,10 @@ public class JsonFile
 
             put("metaFilePath", new JSONObject(){{
                 put("uri", getWebDavURL(getExpectedLocationOfIndexFile("_meta.json", true)));
+            }});
+
+            put("assemblyNames", new JSONArray(){{
+                put(JBrowseSession.getAssemblyName(rg));
             }});
         }});
 
@@ -701,7 +705,7 @@ public class JsonFile
                         Index index = IndexFactory.createIndex(finalLocation.toPath(), new BEDCodec(), IndexFactory.IndexType.TABIX);
                         index.write(idx);
                     }
-                    if (TRACK_TYPES.gtf.getFileType().isType(finalLocation) || TRACK_TYPES.gff.getFileType().isType(finalLocation))
+                    else if (TRACK_TYPES.gtf.getFileType().isType(finalLocation) || TRACK_TYPES.gff.getFileType().isType(finalLocation))
                     {
                         Index index = IndexFactory.createIndex(finalLocation.toPath(), new Gff3Codec(), IndexFactory.IndexType.TABIX);
                         index.write(idx);

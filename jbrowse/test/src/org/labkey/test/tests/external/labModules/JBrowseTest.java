@@ -160,7 +160,7 @@ public class JBrowseTest extends BaseWebDriverTest
         WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T", true)).stream().filter(WebElement::isDisplayed).collect(toSingleton());
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("span", "AC, AF"));
-        waitForElement(Locator.tagWithText("div", "UNKNOWN")); //the IMPACT field calculated in ExtendedVariantAdapter
+        waitForElement(Locator.tagWithText("div", "HIGH")); //the IMPACT field calculated in ExtendedVariantAdapter
     }
 
     private void testTitleMapping()
@@ -172,7 +172,7 @@ public class JBrowseTest extends BaseWebDriverTest
         WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C", true)).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,981,406..116,981,406
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:116,981,406..116,981,406"));
-        assertElementPresent(Locator.tagWithText("div", "Unable to Lift to Human"));
+        assertElementPresent(Locator.tagWithText("div", "MismatchedRefAllele"));
     }
 
     private void testPredictedFunction()
