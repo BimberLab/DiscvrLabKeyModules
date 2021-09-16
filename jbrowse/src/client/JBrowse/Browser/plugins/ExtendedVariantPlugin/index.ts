@@ -18,7 +18,6 @@ export default class ExtendedVariantPlugin extends Plugin {
   version = "0.0.1"//version
 
   install(pluginManager: PluginManager) {
-    console.log("Installing plugins")
     const { jbrequire } = pluginManager
     const { types } = pluginManager.lib['mobx-state-tree']
 

@@ -304,6 +304,9 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
                 alignArgs.add(String.valueOf(maxThreads));
             }
 
+            alignArgs.add("-l");
+            alignArgs.add("/work/nimbleDebug.txt");
+
             alignArgs.add("/work/" + localRefJson.getName());
             alignArgs.add("/work/" + resultsTsv.getName());
             alignArgs.add("/work/" + localBam.getName());

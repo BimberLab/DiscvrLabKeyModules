@@ -16,6 +16,7 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.reference.FastaSequenceIndexCreator;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
@@ -56,6 +57,7 @@ import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
+import picard.sam.CreateSequenceDictionary;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -314,7 +316,8 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             }
             catch (PipelineJobException e)
             {
-                getJob().getLogger().warn("Unable to create FASTA index");
+                getJob().getLogger().warn("Unable to create FASTA index with samtools, creating with HTSJDK");
+                FastaSequenceIndexCreator.create(fasta.toPath(), true);
             }
 
             try

@@ -21,7 +21,7 @@ public class DatabaseDisplayColumnFactory implements DisplayColumnFactory
     @Override
     public DisplayColumn createRenderer(ColumnInfo colInfo)
     {
-        DisplayColumn ret = new UrlColumn(DetailsURL.fromString("/jbrowse/browser.view?database=${objectid}", colInfo.getParentTable().getContainerContext()), "View In JBrowse");
+        DisplayColumn ret = new UrlColumn(DetailsURL.fromString("/jbrowse/jbrowse.view?session=${objectid}", colInfo.getParentTable().getContainerContext()), "View In JBrowse");
         ret.setName(colInfo.getName());
         ret.setCaption(colInfo.getLabel());
 

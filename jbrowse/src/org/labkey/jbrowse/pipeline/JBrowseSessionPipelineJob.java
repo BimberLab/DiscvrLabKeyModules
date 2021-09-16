@@ -1,6 +1,7 @@
 package org.labkey.jbrowse.pipeline;
 
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
@@ -14,12 +15,11 @@ import org.labkey.api.pipeline.TaskPipeline;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
-import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
-import org.labkey.jbrowse.JBrowseRoot;
+import org.labkey.jbrowse.JBrowseManager;
 import org.labkey.jbrowse.JBrowseSchema;
 
 import java.util.List;
@@ -40,8 +40,6 @@ public class JBrowseSessionPipelineJob extends PipelineJob
     private String _description = null;
     private List<String> _jsonFiles = null;
     private Mode _mode;
-    private boolean _primaryDb;
-    private boolean _createOwnIndex;
     private boolean _isTemporarySession;
     private String _sourceContainerId = null;
 
@@ -60,7 +58,7 @@ public class JBrowseSessionPipelineJob extends PipelineJob
             throw new IllegalArgumentException("Unknown database: " + databaseGuid);
         }
 
-        return new JBrowseSessionPipelineJob(c, user, pipeRoot, (String)existingRow.get("name"), (String)existingRow.get("description"), null, trackIds, outputFileIds, databaseGuid, (existingRow.get("primarydb") == null ? false : (boolean)existingRow.get("primarydb")), (existingRow.get("createOwnIndex") == null ? false : (boolean)existingRow.get("createOwnIndex")), (existingRow.get("temporary") == null ? false : (boolean)existingRow.get("temporary")));
+        return new JBrowseSessionPipelineJob(c, user, pipeRoot, (String)existingRow.get("name"), (String)existingRow.get("description"), null, trackIds, outputFileIds, databaseGuid, (existingRow.get("temporary") == null ? false : (boolean)existingRow.get("temporary")));
     }
 
     public static JBrowseSessionPipelineJob refreshResources(Container c, User user, PipeRoot pipeRoot, List<String> jsonFiles)
@@ -68,14 +66,9 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         return new JBrowseSessionPipelineJob(c, user, pipeRoot, jsonFiles, null, Mode.ReprocessResources);
     }
 
-    public static JBrowseSessionPipelineJob recreateDatabase(Container c, User user, PipeRoot pipeRoot, String databaseGuid)
+    public static JBrowseSessionPipelineJob createNewDatabase(Container c, User user, PipeRoot pipeRoot, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> outputFileIds, boolean isTemporarySession)
     {
-        return new JBrowseSessionPipelineJob(c, user, pipeRoot, null, databaseGuid, Mode.RecreateDatabase);
-    }
-
-    public static JBrowseSessionPipelineJob createNewDatabase(Container c, User user, PipeRoot pipeRoot, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> outputFileIds, boolean isPrimaryDb, boolean shouldCreateOwnIndex, boolean isTemporarySession)
-    {
-        return new JBrowseSessionPipelineJob(c, user, pipeRoot, name, description, libraryId, trackIds, outputFileIds, null, isPrimaryDb, shouldCreateOwnIndex, isTemporarySession);
+        return new JBrowseSessionPipelineJob(c, user, pipeRoot, name, description, libraryId, trackIds, outputFileIds, null, isTemporarySession);
     }
 
     private JBrowseSessionPipelineJob(Container c, User user, PipeRoot pipeRoot, List<String> jsonFiles, String databaseGuid, Mode mode)
@@ -86,10 +79,10 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         _sourceContainerId = databaseGuid == null ? getContainerId() : getSourceContainerId(databaseGuid);
         _mode = mode;
 
-        setLogFile(AssayFileWriter.findUniqueFileName("jbrowse-" + (new GUID().toString()) + ".log", JBrowseRoot.getBaseDir(c)));
+        setLogFile(AssayFileWriter.findUniqueFileName("jbrowse-" + new GUID() + ".log", JBrowseManager.get().getBaseDir(c, true)));
     }
 
-    private JBrowseSessionPipelineJob(Container c, User user, PipeRoot pipeRoot, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> outputFileIds, @Nullable String existingDatabaseGuid, boolean isPrimaryDb, boolean shouldCreateOwnIndex, boolean isTemporarySession)
+    private JBrowseSessionPipelineJob(Container c, User user, PipeRoot pipeRoot, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> outputFileIds, @Nullable String existingDatabaseGuid, boolean isTemporarySession)
     {
         super(JBrowseSessionPipelineProvider.NAME, new ViewBackgroundInfo(c, user, null), pipeRoot);
         _libraryId = libraryId;
@@ -101,11 +94,9 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         _mode = existingDatabaseGuid == null ? Mode.CreateNew : Mode.AddToExisting;
         _databaseGuid = existingDatabaseGuid == null ? new GUID().toString().toUpperCase() : existingDatabaseGuid;
         _sourceContainerId = existingDatabaseGuid == null ? getContainerId() : getSourceContainerId(existingDatabaseGuid);
-        _createOwnIndex = shouldCreateOwnIndex;
-        _primaryDb = isPrimaryDb;
         _isTemporarySession = isTemporarySession;
 
-        setLogFile(AssayFileWriter.findUniqueFileName("jbrowse-" + _databaseGuid + ".log", JBrowseRoot.getBaseDir(c)));
+        setLogFile(AssayFileWriter.findUniqueFileName("jbrowse-" + _databaseGuid + ".log", JBrowseManager.get().getBaseDir(c, true)));
     }
 
     private String getSourceContainerId(String databaseGuid)
@@ -132,7 +123,7 @@ public class JBrowseSessionPipelineJob extends PipelineJob
                 c = ContainerManager.getForId(_sourceContainerId);
             }
 
-            return DetailsURL.fromString("jbrowse/browser.view?database=" + getDatabaseGuid(), (c == null ? getContainer() : c)).getActionURL();
+            return DetailsURL.fromString("jbrowse/jbrowse.view?session=" + getDatabaseGuid(), (c == null ? getContainer() : c)).getActionURL();
         }
 
         return null;
@@ -188,8 +179,7 @@ public class JBrowseSessionPipelineJob extends PipelineJob
     {
         CreateNew("Create New Session"),
         AddToExisting("Add To Existing Session"),
-        ReprocessResources("Recreating Resources"),
-        RecreateDatabase("Recreate Session");
+        ReprocessResources("Recreating Resources");
 
         private String _description;
 
@@ -202,16 +192,6 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         {
             return _description;
         }
-    }
-
-    public boolean isPrimaryDb()
-    {
-        return _primaryDb;
-    }
-
-    public boolean isCreateOwnIndex()
-    {
-        return _createOwnIndex;
     }
 
     public boolean isTemporarySession()

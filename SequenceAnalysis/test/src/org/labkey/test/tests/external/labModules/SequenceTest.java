@@ -88,7 +88,6 @@ public class SequenceTest extends BaseWebDriverTest
 
     private final String TEMPLATE_NAME = "SequenceTest Saved Template";
     private Integer _readsetCt = 0;
-    private int _startedPipelineJobs = 0;
     private final String ILLUMINA_CSV = "SequenceImport.csv";
 
     @Override
@@ -101,7 +100,7 @@ public class SequenceTest extends BaseWebDriverTest
 
     private boolean isExternalPipelineEnabled()
     {
-        SimpleHttpResponse httpResponse = WebTestHelper.getHttpResponse(getBaseURL() + "/sequenceanalysis/" + getProjectName() + "/getSequencePipelineEnabled.view");
+        SimpleHttpResponse httpResponse = WebTestHelper.getHttpResponse(WebTestHelper.getBaseURL() + "/sequenceanalysis/" + getProjectName() + "/getSequencePipelineEnabled.view");
         Boolean sequencePipelineEnabled;
         try
         {
@@ -126,8 +125,7 @@ public class SequenceTest extends BaseWebDriverTest
 
         if (_createdGenomeId == null)
         {
-            _createdGenomeId = createReferenceGenome(this, _startedPipelineJobs);
-            _startedPipelineJobs++;
+            _createdGenomeId = createReferenceGenome(this);
         }
 
         importReadsetMetadata();
@@ -142,7 +140,7 @@ public class SequenceTest extends BaseWebDriverTest
         readsetImportTest();
 
         //will also verify UI + pipeline jobs
-        _startedPipelineJobs = addReferenceGenomeTracks(this, getProjectName(), TEST_GENOME_NAME, _createdGenomeId, _startedPipelineJobs);
+        addReferenceGenomeTracks(this, getProjectName(), TEST_GENOME_NAME, _createdGenomeId, 0);
 
         basicOutputFilesTest(sequencePipelineEnabled);
     }
@@ -155,7 +153,7 @@ public class SequenceTest extends BaseWebDriverTest
         // NOTE: it should work to create all these sequences in the current folder, rather than shared
         // it wont exercise the UserSchema, but will make cleanup easier
         // _containerHelper.enableModule("Shared", "SequenceAnalysis");
-        beginAt(getBaseURL() + "/sequenceanalysis/" + getProjectName() + "/populateSequences.view");
+        beginAt(WebTestHelper.getBaseURL() + "/sequenceanalysis/" + getProjectName() + "/populateSequences.view");
 
         waitAndClick(Ext4Helper.Locators.ext4Button("Populate Viral Sequences"));
         waitForElement(Locator.tagContainingText("div", "Populate Complete"), 200000);
@@ -336,6 +334,7 @@ public class SequenceTest extends BaseWebDriverTest
             FileUtils.copyFile(source, target);
         }
 
+        int existingPipelineJobs = SequenceTest.getTotalPipelineJobs(this);
         _helper.initiatePipelineJob("Import Illumina data", Arrays.asList(ILLUMINA_CSV), getProjectName());
 
         setFormElement(Locator.name("jobName"), "TestIlluminaRun" + _helper.getRandomInt());
@@ -346,9 +345,8 @@ public class SequenceTest extends BaseWebDriverTest
         waitAndClickAndWait(Ext4Helper.Locators.ext4Button("OK"));
 
         waitAndClickAndWait(Locator.linkWithText("All"));
-        _startedPipelineJobs++;
         waitForElement(Locator.tagContainingText("span", "Data Pipeline"));
-        waitForPipelineJobsToComplete(_startedPipelineJobs, "Import Illumina", false);
+        waitForPipelineJobsToComplete(existingPipelineJobs + 1, "Import Illumina", false);
         assertTextPresent("COMPLETE");
     }
 
@@ -630,7 +628,7 @@ public class SequenceTest extends BaseWebDriverTest
 
         //verify virus_strains query
         SelectRowsCommand  sr = new SelectRowsCommand("sequenceanalysis", "virus_strains");
-        sr.addFilter(new Filter("name", "SIVmac239_Test", Filter.Operator.EQUAL));
+        sr.addFilter(new Filter("name", GENOME_SEQ_NAME, Filter.Operator.EQUAL));
         SelectRowsResponse resp = sr.execute(WebTestHelper.getRemoteApiConnection(), getContainerId());
         assertTrue(resp.getRowCount().intValue() > 0);
         log("total viral sequences: " + resp.getRowCount() + " in container: " + getCurrentContainerPath());
@@ -827,7 +825,7 @@ public class SequenceTest extends BaseWebDriverTest
         Map<String, Object> fieldsJson = (Map) panel.getEval("getJsonParams()");
         String container = (String) executeScript("return LABKEY.Security.currentContainer.id");
         assertEquals("Incorrect param for containerId", container, fieldsJson.get("containerId"));
-        assertEquals("Incorrect param for baseURL", getBaseURL() + "/", fieldsJson.get("baseUrl"));
+        assertEquals("Incorrect param for baseURL", WebTestHelper.getBaseURL() + "/", fieldsJson.get("baseUrl"));
 
         Long id1 = (Long) executeScript("return LABKEY.Security.currentUser.id");
         Long id2 = (Long) fieldsJson.get("userId");
@@ -849,14 +847,15 @@ public class SequenceTest extends BaseWebDriverTest
         else
         {
             //now submit
+            int existingPipelineJobs = SequenceTest.getTotalPipelineJobs(this);
+
             waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Import Data"));
             waitAndClickAndWait(Ext4Helper.Locators.ext4Button("OK"));
 
             waitAndClickAndWait(Locator.linkWithText("All"));
-            _startedPipelineJobs++;
             waitForElement(Locator.tagContainingText("span", "Data Pipeline"));
 
-            waitForPipelineJobsToComplete(_startedPipelineJobs, getDescriptionOfLastPipelineJob(), false);
+            waitForPipelineJobsToComplete(existingPipelineJobs + 1, getDescriptionOfLastPipelineJob(), false);
             assertTextPresent("COMPLETE");
         }
 
@@ -1036,7 +1035,7 @@ public class SequenceTest extends BaseWebDriverTest
 
         String container = (String) executeScript("return LABKEY.Security.currentContainer.id");
         assertEquals("Incorrect param for containerId", container, fieldsJson.get("containerId"));
-        assertEquals("Incorrect param for baseURL", getBaseURL() + "/", fieldsJson.get("baseUrl"));
+        assertEquals("Incorrect param for baseURL", WebTestHelper.getBaseURL() + "/", fieldsJson.get("baseUrl"));
 
         Long id1 = (Long) executeScript("return LABKEY.Security.currentUser.id");
         Long id2 = (Long) fieldsJson.get("userId");
@@ -1238,13 +1237,14 @@ public class SequenceTest extends BaseWebDriverTest
         readsetGrid.setGridCell(3, "concentration", "0.2");
         readsetGrid.setGridCell(3, "fragmentSize", "410");
 
+        int existingPipelineJobs = SequenceTest.getTotalPipelineJobs(this);
+
         waitAndClick(Ext4Helper.Locators.ext4Button("Import Data"));
         waitAndClickAndWait(Ext4Helper.Locators.ext4Button("OK"));
 
         waitAndClickAndWait(Locator.linkWithText("All"));
-        _startedPipelineJobs += 3;
         waitForElement(Locator.tagContainingText("span", "Data Pipeline"));
-        waitForPipelineJobsToComplete(_startedPipelineJobs, "Import Readsets", false);
+        waitForPipelineJobsToComplete(existingPipelineJobs + 3, "Import Readsets", false);
         assertTextPresent("COMPLETE");
 
         log("verify readsets created");
@@ -1325,9 +1325,6 @@ public class SequenceTest extends BaseWebDriverTest
         importedFiles.forEach(x -> {
             Assert.assertTrue("File was deleted: " + x.getPath(), x.exists());
         });
-
-        //Readset delete should delete these jobs
-        _startedPipelineJobs -= 3;
     }
 
     @Override
@@ -1371,16 +1368,16 @@ public class SequenceTest extends BaseWebDriverTest
 
     private static void ensureSIVmac239exists(BaseWebDriverTest test) throws Exception
     {
-        Connection cn = new Connection(test.getBaseURL(), PasswordUtil.getUsername(), PasswordUtil.getPassword());
+        Connection cn = new Connection(WebTestHelper.getBaseURL(), PasswordUtil.getUsername(), PasswordUtil.getPassword());
         SelectRowsCommand sr = new SelectRowsCommand("sequenceanalysis", "ref_nt_sequences");
-        sr.addFilter(new Filter("name", "SIVmac239_Test", Filter.Operator.EQUAL));
+        sr.addFilter(new Filter("name", GENOME_SEQ_NAME, Filter.Operator.EQUAL));
         SelectRowsResponse resp = sr.execute(cn, test.getContainerId());
         if (resp.getRowCount().intValue() == 0)
         {
             test.log("creating SIVMac239_Test sequence in container: " + test.getCurrentContainerPath());
             Map<String, Object> row = new HashMap<>();
-            row.put("name", "SIVmac239_Test");
-            row.put("subset", "SIVmac239_Test");
+            row.put("name", GENOME_SEQ_NAME);
+            row.put("subset", GENOME_SEQ_NAME);
             String sequence = read239FromFile();
             row.put("sequence", sequence);
             row.put("category", "Virus");
@@ -1398,7 +1395,7 @@ public class SequenceTest extends BaseWebDriverTest
 
         //verify virus_strains query
         sr = new SelectRowsCommand("sequenceanalysis", "virus_strains");
-        sr.addFilter(new Filter("name", "SIVmac239_Test", Filter.Operator.EQUAL));
+        sr.addFilter(new Filter("name", GENOME_SEQ_NAME, Filter.Operator.EQUAL));
         resp = sr.execute(cn, test.getContainerId());
         assertTrue(resp.getRowCount().intValue() > 0);
         test.log("total viral sequences: " + resp.getRowCount() + " in container: " + test.getCurrentContainerPath());
@@ -1425,7 +1422,23 @@ public class SequenceTest extends BaseWebDriverTest
         }
     }
 
-    public static Integer createReferenceGenome(BaseWebDriverTest test, int previouslyStartedPipelineJobs) throws Exception
+    public static int getTotalPipelineJobs(BaseWebDriverTest test) throws CommandException, IOException
+    {
+        Connection cn = new Connection(WebTestHelper.getBaseURL(), PasswordUtil.getUsername(), PasswordUtil.getPassword());
+        SelectRowsCommand sr = new SelectRowsCommand("pipeline", "job");
+        SelectRowsResponse resp = sr.execute(cn, test.getContainerId());
+
+        return resp.getRowCount().intValue();
+    }
+
+    public static Integer createReferenceGenome(BaseWebDriverTest test) throws Exception
+    {
+        return createReferenceGenome(test, 0);
+    }
+
+    public static final String GENOME_SEQ_NAME = "SIVmac239_Test";
+
+    public static Integer createReferenceGenome(BaseWebDriverTest test, int expectedChildJobs) throws Exception
     {
         test.log("creating SIVmac239 reference genome");
         test.beginAt("/sequenceanalysis/" + test.getContainerId() + "/begin.view");
@@ -1433,9 +1446,11 @@ public class SequenceTest extends BaseWebDriverTest
         //verify SIVmac239_Test NT sequence exists:
         ensureSIVmac239exists(test);
 
+        int existingPipelineJobs = SequenceTest.getTotalPipelineJobs(test);
+
         test.waitAndClickAndWait(Locator.linkContainingText("Reference Sequences"));
         DataRegionTable dr = new DataRegionTable("query", test);
-        dr.setFilter("name", "Equals", "SIVmac239_Test");
+        dr.setFilter("name", "Equals", GENOME_SEQ_NAME);
         dr.checkCheckbox(0);
         dr.clickHeaderMenu("More Actions", false, "Create Reference Genome");
         new Window.WindowFinder(test.getDriver()).withTitle("Create Reference Genome").waitFor();
@@ -1446,10 +1461,10 @@ public class SequenceTest extends BaseWebDriverTest
         test.waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
         new Window.WindowFinder(test.getDriver()).withTitle("Success").waitFor();
         test.waitAndClickAndWait(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
-        test.waitForPipelineJobsToComplete(previouslyStartedPipelineJobs + 1, "Create Reference Genome", false);
+        test.waitForPipelineJobsToComplete(existingPipelineJobs + 1 + expectedChildJobs, "Create Reference Genome", false);
         test.goToProjectHome();
 
-        Connection cn = new Connection(test.getBaseURL(), PasswordUtil.getUsername(), PasswordUtil.getPassword());
+        Connection cn = new Connection(WebTestHelper.getBaseURL(), PasswordUtil.getUsername(), PasswordUtil.getPassword());
         SelectRowsCommand sr = new SelectRowsCommand("sequenceanalysis", "reference_libraries");
         sr.addFilter(new Filter("name", TEST_GENOME_NAME, Filter.Operator.EQUAL));
         sr.addFilter(new Filter("description", description, Filter.Operator.EQUAL));
@@ -1458,7 +1473,7 @@ public class SequenceTest extends BaseWebDriverTest
         return (Integer)resp.getRows().get(0).get("rowid");
     }
 
-    public static int addReferenceGenomeTracks(BaseWebDriverTest test, String projectName, String genomeName, Integer genomeId, int startedPipelineJobs) throws Exception
+    public static void addReferenceGenomeTracks(BaseWebDriverTest test, String projectName, String genomeName, Integer genomeId, int expectedChildJobs) throws Exception
     {
         test.log("adding resources to genome: " + genomeName);
         test.beginAt("/sequenceanalysis/" + test.getContainerId() + "/begin.view");
@@ -1477,7 +1492,7 @@ public class SequenceTest extends BaseWebDriverTest
         File fileRoot = TestFileUtils.getDefaultFileRoot(projectName);
 
         File f = new File(dataDir, "fakeData.bed");
-        f = replaceContigName(f, new File(fileRoot, "fakeData.bed"), genomeName);
+        f = replaceContigName(f, new File(fileRoot, "fakeData.bed"), GENOME_SEQ_NAME);
 
         test.log("adding track: " + f.getName());
         DataRegionTable dr2 = DataRegionTable.findDataRegionWithinWebpart(test, "Annotations/Tracks");
@@ -1488,13 +1503,14 @@ public class SequenceTest extends BaseWebDriverTest
         Ext4FileFieldRef fileField = test._ext4Helper.queryOne("field[fieldLabel=File]", Ext4FileFieldRef.class);
         fileField.setToFile(f);
 
+        int existingJobs = SequenceTest.getTotalPipelineJobs(test);
+
         test.waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
         new Window.WindowFinder(test.getDriver()).withTitle("Success").waitFor();
         test.waitAndClickAndWait(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
         test.waitAndClickAndWait(Locator.tagWithText("a", "All"));
 
-        startedPipelineJobs++;
-        test.waitForPipelineJobsToComplete(startedPipelineJobs, "Import Genome Tracks", false);
+        test.waitForPipelineJobsToComplete(existingJobs + 1 + expectedChildJobs, "Import Genome Tracks", false);
 
         //now test bulk import
         List<String> fileNames = Arrays.asList("fakeData.gff", "fakeData.bed");
@@ -1507,7 +1523,7 @@ public class SequenceTest extends BaseWebDriverTest
                Assert.assertTrue("Unable to delete file: " + target.getPath(), target.delete());
             }
 
-            replaceContigName(new File(dataDir, fn), target, genomeName);
+            replaceContigName(new File(dataDir, fn), target, GENOME_SEQ_NAME);
         }
 
         LabModuleHelper helper = new LabModuleHelper(test);
@@ -1526,25 +1542,24 @@ public class SequenceTest extends BaseWebDriverTest
         grid.setGridCellJS(2, "name", "Track2");
         grid.setGridCellJS(2, "libraryId", genomeId);
 
+        existingJobs = SequenceTest.getTotalPipelineJobs(test);
+
         test.waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
         new Window.WindowFinder(test.getDriver()).withTitle("Success").waitFor();
         test.waitAndClickAndWait(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
         test.waitAndClickAndWait(Locator.tagWithText("a", "All"));
 
-        startedPipelineJobs = startedPipelineJobs + 2;
-        test.waitForPipelineJobsToComplete(startedPipelineJobs, "Import Tracks", false);
-
-        return startedPipelineJobs;
+        test.waitForPipelineJobsToComplete(existingJobs + 2 + (2 * expectedChildJobs), "Import Tracks", false);
     }
 
-    private static File replaceContigName(File input, File output, String genomeName) throws IOException
+    public static File replaceContigName(File input, File output, String contigName) throws IOException
     {
         try (BufferedReader reader = Readers.getReader(input); PrintWriter writer = PrintWriters.getPrintWriter(output))
         {
             String line;
             while ((line = reader.readLine()) != null)
             {
-                writer.println(line.replaceAll("SIVmac239", genomeName));
+                writer.println(line.replaceAll("SIVmac239", contigName));
             }
         }
 
@@ -1627,11 +1642,11 @@ public class SequenceTest extends BaseWebDriverTest
 
         if (sequencePipelineEnabled)
         {
-            waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Submit"));
+            int existingPipelineJobs = SequenceTest.getTotalPipelineJobs(this);
 
-            _startedPipelineJobs++;
+            waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Submit"));
             waitForElement(Locator.tagContainingText("span", "Data Pipeline"));
-            waitForPipelineJobsToComplete(_startedPipelineJobs, "Picard Metrics", false);
+            waitForPipelineJobsToComplete(existingPipelineJobs + 1, "Picard Metrics", false);
             assertTextPresent("COMPLETE");
         }
         else
@@ -1642,7 +1657,7 @@ public class SequenceTest extends BaseWebDriverTest
         //make sure custom delete actions work:
         goToProjectHome();
 
-        Connection cn = new Connection(getBaseURL(), PasswordUtil.getUsername(), PasswordUtil.getPassword());
+        Connection cn = new Connection(WebTestHelper.getBaseURL(), PasswordUtil.getUsername(), PasswordUtil.getPassword());
         SelectRowsCommand sr = new SelectRowsCommand("sequenceanalysis", "outputfiles");
         sr.addFilter(new Filter("category", "BAM File", Filter.Operator.EQUAL));
         sr.setColumns(Arrays.asList("dataid/DataFileUrl", "rowid"));

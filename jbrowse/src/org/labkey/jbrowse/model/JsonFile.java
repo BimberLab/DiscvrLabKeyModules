@@ -1,31 +1,60 @@
 package org.labkey.jbrowse.model;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.simple.JSONArray;
+import org.labkey.api.collections.CaseInsensitiveHashMap;
+import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.Results;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.files.FileContentService;
+import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryService;
+import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
+import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.GUID;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.Path;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.jbrowse.JBrowseManager;
-import org.labkey.sequenceanalysis.util.SequenceUtil;
+import org.labkey.jbrowse.JBrowseSchema;
+import org.labkey.sequenceanalysis.run.util.TabixRunner;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * User: bimber
@@ -34,14 +63,15 @@ import java.util.Arrays;
  */
 public class JsonFile
 {
+    private static final Logger logger = LogManager.getLogger(JsonFile.class);
+
     private Integer _trackId;
     private Integer _sequenceId;
     private Integer _outputFile;
-    private String _relpath;
     private String _objectId;
     private String _container;
     private String _category = null;
-    private String _label = null;
+    protected String _label = null;
     private String _trackJson = null;
 
     public JsonFile()
@@ -52,17 +82,6 @@ public class JsonFile
     public Integer getTrackId()
     {
         return _trackId;
-    }
-
-    public String getTrackName()
-    {
-        if (_trackId == null)
-            return null;
-
-        TableInfo ti = JBrowseManager.get().getSequenceAnalysisTable("reference_library_tracks");
-        TableSelector ts = new TableSelector(ti, PageFlowUtil.set("name"), new SimpleFilter(FieldKey.fromString("rowid"), _trackId), null);
-
-        return ts.getObject(String.class);
     }
 
     public void setTrackId(Integer trackId)
@@ -107,22 +126,6 @@ public class JsonFile
         return d.getFile();
     }
 
-    public ExpData getRefLibraryData()
-    {
-        if (_outputFile == null)
-            return null;
-
-        Integer libraryId = new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("outputfiles"), PageFlowUtil.set("library_id"), new SimpleFilter(FieldKey.fromString("rowid"), _outputFile), null).getObject(Integer.class);
-        if (libraryId == null)
-            return null;
-
-        Integer dataId = new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("reference_libraries"), PageFlowUtil.set("fasta_file"), new SimpleFilter(FieldKey.fromString("rowid"), libraryId), null).getObject(Integer.class);
-        if (dataId == null)
-            return null;
-
-        return ExperimentService.get().getExpData(dataId);
-    }
-
     public String getContainer()
     {
         return _container;
@@ -158,56 +161,11 @@ public class JsonFile
         _sequenceId = sequenceId;
     }
 
-    public String getRelpath()
-    {
-        return _relpath;
-    }
-
-    public void setRelpath(String relpath)
-    {
-        _relpath = relpath;
-    }
-
-    public String getRelativePath()
-    {
-        if (_sequenceId != null)
-        {
-            return new File("references", _sequenceId.toString()).toString();
-        }
-        else if (_trackId != null)
-        {
-            return new File("tracks", "track-" + _trackId.toString()).toString();
-        }
-        else if (_outputFile != null)
-        {
-            return new File("tracks", "data-" + _outputFile.toString()).toString();
-        }
-
-        return null;
-    }
-
     public File getBaseDir()
     {
-        Container c = ContainerManager.getForId(_container);
-        if (c == null)
-        {
-            return null;
-        }
+        File jbrowseDir = new File(JBrowseManager.get().getBaseDir(getContainerObj(), needsProcessing()), "resources");
 
-        FileContentService fileService = FileContentService.get();
-        File fileRoot = fileService == null ? null : fileService.getFileRoot(c, FileContentService.ContentType.files);
-        if (fileRoot == null || !fileRoot.exists())
-        {
-            return null;
-        }
-
-        File jbrowseDir = new File(fileRoot, ".jbrowse");
-        if (!jbrowseDir.exists())
-        {
-            jbrowseDir.mkdirs();
-        }
-
-        return getRelativePath() == null ? null : new File(jbrowseDir, getRelativePath());
+        return needsProcessing() ? new File(jbrowseDir, getObjectId()) : null;
     }
 
     private static final FileType _ft = new FileType(Arrays.asList(".bam", ".vcf"), ".vcf", FileType.gzSupportLevel.SUPPORT_GZ);
@@ -224,44 +182,14 @@ public class JsonFile
         return !_ft.isType(f);
     }
 
-    public File getTrackRootDir()
-    {
-        File ret = getBaseDir();
-        if (ret == null)
-            return null;
-
-        if (expectDataSubdirForTrack())
-        {
-            ret = new File(ret, "data");
-        }
-
-        return ret;
-    }
-
-    public File getTrackListFile()
-    {
-        File ret = new File(getTrackRootDir(), "trackList.json");
-
-        return ret.exists() ? ret : null;
-    }
-
-    public File getRefSeqsFile()
-    {
-        if (getRelativePath() == null)
-            return null;
-
-        File ret = new File(getBaseDir(), "seq/refSeqs.json");
-        return ret.exists() ? ret : null;
-    }
-
     public String getLabel()
     {
         if (_label == null)
         {
             if (_trackId != null)
             {
-                _label = new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("reference_library_tracks"), PageFlowUtil.set("category"), new SimpleFilter(FieldKey.fromString("rowid"), _trackId), null).getObject(String.class);
-                if (_label == null)
+                _label = new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("reference_library_tracks"), PageFlowUtil.set("name"), new SimpleFilter(FieldKey.fromString("rowid"), _trackId), null).getObject(String.class);
+                if (StringUtils.isEmpty(_label))
                 {
                     _label = "Reference Annotation";
                 }
@@ -270,7 +198,7 @@ public class JsonFile
             {
                 TableInfo ti = JBrowseManager.get().getSequenceAnalysisTable("outputfiles");
                 _label = new TableSelector(ti, PageFlowUtil.set("name"), new SimpleFilter(FieldKey.fromString("rowid"), _outputFile), null).getObject(String.class);
-                if (_label == null)
+                if (StringUtils.isEmpty(_label))
                 {
                     ExpData d = getExpData();
                     if (d != null)
@@ -278,10 +206,6 @@ public class JsonFile
                         _label = d.getName();
                     }
                 }
-            }
-            else if (_sequenceId != null)
-            {
-                _label = "Reference sequences";
             }
         }
 
@@ -295,7 +219,7 @@ public class JsonFile
             if (_trackId != null)
             {
                 _category = new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("reference_library_tracks"), PageFlowUtil.set("category"), new SimpleFilter(FieldKey.fromString("rowid"), _trackId), null).getObject(String.class);
-                if (_category == null)
+                if (StringUtils.isEmpty(_category))
                 {
                     _category = "Reference Annotations";
                 }
@@ -303,14 +227,10 @@ public class JsonFile
             else if (_outputFile != null)
             {
                 _category = new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("outputfiles"), PageFlowUtil.set("category"), new SimpleFilter(FieldKey.fromString("rowid"), _outputFile), null).getObject(String.class);
-                if (_category == null)
+                if (StringUtils.isEmpty(_category))
                 {
                     _category = "Data";
                 }
-            }
-            else if (_sequenceId != null)
-            {
-                _category = "Reference sequences";
             }
         }
 
@@ -332,7 +252,7 @@ public class JsonFile
         _trackJson = trackJson;
     }
 
-    public JSONObject getExtraTrackConfig(Logger log)
+    public JSONObject getExtraTrackConfig()
     {
         if (_trackJson != null)
         {
@@ -343,7 +263,7 @@ public class JsonFile
             catch (JSONException e)
             {
                 //ignore?
-                log.error(e.getMessage(), e);
+                logger.error("Invalid JSON for jsonfile: " + getObjectId(), e);
             }
         }
 
@@ -362,59 +282,202 @@ public class JsonFile
         ExpData targetFile = getExpData();
         if (!targetFile.getContainer().hasPermission(u, ReadPermission.class))
         {
-            //TODO: this should never be allowed to get to this point...
+            //Note: this should never be allowed to get to this point...
             throw new UnauthorizedException("The current user does not have read permission for: " + targetFile.getContainer().getPath());
         }
 
         JSONObject ret;
-        if (SequenceUtil.FILETYPE.vcf.getFileType().isType(targetFile.getFile()))
+        if (TRACK_TYPES.vcf.getFileType().isType(targetFile.getFile()))
         {
             ret = getVcfTrack(targetFile, rg);
         }
-        else if (SequenceUtil.FILETYPE.bam.getFileType().isType(targetFile.getFile()))
+        else if (TRACK_TYPES.bam.getFileType().isType(targetFile.getFile()))
         {
             ret = getBamTrack(targetFile, rg);
         }
-        else if (SequenceUtil.FILETYPE.gff.getFileType().isType(targetFile.getFile()))
+        else if (TRACK_TYPES.gff.getFileType().isType(targetFile.getFile()))
         {
-            ret = getGxfTrack(targetFile, rg);
+            ret = getGxfTrack(log, targetFile, rg);
         }
-        else if (SequenceUtil.FILETYPE.gtf.getFileType().isType(targetFile.getFile()))
+        else if (TRACK_TYPES.gtf.getFileType().isType(targetFile.getFile()))
         {
-            ret = getGxfTrack(targetFile, rg);
+            ret = getGxfTrack(log, targetFile, rg);
         }
-        else if (SequenceUtil.FILETYPE.bed.getFileType().isType(targetFile.getFile()))
+        else if (TRACK_TYPES.bed.getFileType().isType(targetFile.getFile()))
         {
-            //TODO
-            return null;
+            ret = getBedTrack(log, targetFile, rg);
         }
         else
         {
-            //TODO:
             log.error("Unsupported track type: " + targetFile.getFile().getName());
             return null;
         }
 
-        //TODO: Search config
+        ret = possiblyAddSearchConfig(ret);
 
-        //TODO: additional properties:
+        //TODO: validate/document additional properties:
         if (getTrackJson() != null)
         {
-            JSONObject json = getExtraTrackConfig(log);
+            JSONObject json = getExtraTrackConfig();
             ret.putAll(json);
         }
 
         return ret;
     }
 
+    //TODO: add this
+    private @NotNull Map<String, Object> getExtraMetadata(User u, Logger log) throws PipelineJobException
+    {
+        Container target = getContainerObj();
+        target = target.isWorkbook() ? target.getParent() : target;
+        UserSchema us = QueryService.get().getUserSchema(u, target, JBrowseManager.SEQUENCE_ANALYSIS);
+        TableInfo ti = us.getTable("outputfiles");
+        if (ti == null)
+        {
+            log.error("unable to find outputfiles table:");
+            log.error("container: " + target.getPath());
+            log.error("user: " + u.getUserId());
+            log.error("userName: " + u.getDisplayName(u));
+            log.error("has read permission: " + target.hasPermission(u, ReadPermission.class));
+            log.error("has home read permission: " + ContainerManager.getHomeContainer().hasPermission(u, ReadPermission.class));
+            log.error("has shared read permission: " + ContainerManager.getSharedContainer().hasPermission(u, ReadPermission.class));
+            log.error("other tables: " + StringUtils.join(us.getTableNames(), ";"));
+
+            throw new PipelineJobException("Unable to find outputfiles table");
+        }
+
+        Set<FieldKey> keys = PageFlowUtil.set(
+                FieldKey.fromString("description"),
+                FieldKey.fromString("analysis_id"),
+                FieldKey.fromString("analysis_id/name"),
+                FieldKey.fromString("readset"),
+                FieldKey.fromString("readset/name"),
+                FieldKey.fromString("readset/subjectid"),
+                FieldKey.fromString("readset/sampletype"),
+                FieldKey.fromString("readset/platform"),
+                FieldKey.fromString("readset/application")
+        );
+
+        Map<FieldKey, ColumnInfo> cols = QueryService.get().getColumns(ti, keys);
+        TableSelector outputFileTs = new TableSelector(ti, cols.values(), new SimpleFilter(FieldKey.fromString("rowid"), getOutputFile()), null);
+        if (!outputFileTs.exists())
+        {
+            log.error("unable to find outputfile: " + getOutputFile() + " in container: " + ti.getUserSchema().getContainer().getPath());
+            return Collections.emptyMap();
+        }
+
+        ExpData d = getExpData();
+        if (d == null || !d.getFile().exists())
+        {
+            log.error("unable to find file for output: " + getOutputFile());
+            return Collections.emptyMap();
+        }
+
+        Map<String, Object> metadata = new HashMap<>();
+        if (outputFileTs.exists())
+        {
+            try (Results results = outputFileTs.getResults())
+            {
+                results.next();
+                metadata.put("Description", results.getString(FieldKey.fromString("description")));
+                metadata.put("Readset", results.getString(FieldKey.fromString("readset/name")));
+                metadata.put("Subject Id", results.getString(FieldKey.fromString("readset/subjectid")));
+                metadata.put("Sample Type", results.getString(FieldKey.fromString("readset/sampletype")));
+                metadata.put("Platform", results.getString(FieldKey.fromString("readset/platform")));
+                metadata.put("Application", results.getString(FieldKey.fromString("readset/application")));
+            }
+            catch (SQLException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+
+        return metadata;
+    }
+
+    public boolean doIndex()
+    {
+        String sourceFilename = getSourceFileName();
+        if (sourceFilename == null)
+        {
+            return false;
+        }
+
+        boolean doIndex = TRACK_TYPES.gtf.getFileType().isType(sourceFilename) || TRACK_TYPES.gff.getFileType().isType(sourceFilename);
+        JSONObject config = getExtraTrackConfig();
+        if (config != null)
+        {
+            if (config.optBoolean("includeInSearch", false))
+            {
+                doIndex = true;
+            }
+
+            if (config.optBoolean("excludeFromSearch", false))
+            {
+                doIndex = false;
+            }
+        }
+
+        return doIndex;
+    }
+
+    private JSONObject possiblyAddSearchConfig(JSONObject json)
+    {
+        if (!doIndex())
+        {
+            return json;
+        }
+
+        JSONObject searchConfig = new JSONObject();
+        //searchConfig.put("indexingAttributes", Arrays.asList("Name", "ID", "type"));
+        //searchConfig.put("indexingFeatureTypesToExclude", Arrays.asList("CDS", "exon"));
+        searchConfig.put("textSearchAdapter", new JSONObject(){{
+            put("type", "TrixTextSearchAdapter");
+            put("textSearchAdapterId", json.get("trackId") + "-index");
+            put("ixFilePath", new JSONObject(){{
+                put("uri", getWebDavURL(getExpectedLocationOfIndexFile(".ix", true)));
+            }});
+
+            put("ixxFilePath", new JSONObject(){{
+                put("uri", getWebDavURL(getExpectedLocationOfIndexFile(".ixx", true)));
+            }});
+
+            put("metaFilePath", new JSONObject(){{
+                put("uri", getWebDavURL(getExpectedLocationOfIndexFile("_meta.json", true)));
+            }});
+        }});
+
+        json.put("textSearching", searchConfig);
+
+        return json;
+    }
+
+    public boolean doExpectedSearchIndexesExist()
+    {
+        if (!doIndex())
+        {
+            return true;
+        }
+
+        for (String ext : Arrays.asList(".ix", ".ixx", "_meta.json"))
+        {
+            if (!getExpectedLocationOfIndexFile(ext, false).exists())
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private JSONObject getVcfTrack(ExpData targetFile, ReferenceGenome rg)
     {
         JSONObject ret = new JSONObject();
-        ret.put("type", "VariantTrack");
+        ret.put("type", getTrackType());
         ret.put("trackId", _objectId);
         ret.put("name", getLabel());
         ret.put("assemblyNames", new JSONArray(){{
-            add(JBrowseSession.getAssemblyName(rg));
+            put(JBrowseSession.getAssemblyName(rg));
         }});
 
         String url = targetFile.getWebDavURL(ExpData.PathType.full);
@@ -438,11 +501,14 @@ public class JsonFile
     private JSONObject getBamTrack(ExpData targetFile, ReferenceGenome rg) throws PipelineJobException
     {
         JSONObject ret = new JSONObject();
-        ret.put("type", "AlignmentsTrack");
+        ret.put("type", getTrackType());
         ret.put("trackId", _objectId);
         ret.put("name", getLabel());
+        ret.put("category", new JSONArray(){{
+            put(getCategory());
+        }});
         ret.put("assemblyNames", new JSONArray(){{
-            add(JBrowseSession.getAssemblyName(rg));
+            put(JBrowseSession.getAssemblyName(rg));
         }});
 
         String url = targetFile.getWebDavURL(ExpData.PathType.full);
@@ -465,28 +531,79 @@ public class JsonFile
         return ret;
     }
 
-    private JSONObject getGxfTrack(ExpData targetFile, ReferenceGenome rg)
+    private JSONObject getBedTrack(Logger log, ExpData targetFile, ReferenceGenome rg) throws PipelineJobException
+    {
+        String adapterType = "BedTabixAdapter";
+        String prefix = "bed";
+
+        return getTabixTrack(log, targetFile, rg, adapterType, prefix);
+    }
+
+    private JSONObject getGxfTrack(Logger log, ExpData targetFile, ReferenceGenome rg) throws PipelineJobException
+    {
+        String adapterType = TRACK_TYPES.gff.getFileType().isType(targetFile.getFile()) ? "Gff3TabixAdapter" : "GtfTabixAdapter";
+        String prefix = TRACK_TYPES.gff.getFileType().isType(targetFile.getFile()) ? "gff" : "gtf";
+
+        return getTabixTrack(log, targetFile, rg, adapterType, prefix);
+    }
+
+    public String getTrackType()
+    {
+        ExpData targetFile = getExpData();
+        if (TRACK_TYPES.vcf.getFileType().isType(targetFile.getFile()))
+        {
+            return "VariantTrack";
+        }
+        else if (TRACK_TYPES.bam.getFileType().isType(targetFile.getFile()))
+        {
+            return "AlignmentsTrack";
+        }
+        else if (TRACK_TYPES.gff.getFileType().isType(targetFile.getFile()))
+        {
+            return "FeatureTrack";
+        }
+        else if (TRACK_TYPES.gtf.getFileType().isType(targetFile.getFile()))
+        {
+            return "FeatureTrack";
+        }
+        else if (TRACK_TYPES.bed.getFileType().isType(targetFile.getFile()))
+        {
+            return "FeatureTrack";
+        }
+        else
+        {
+            throw new IllegalArgumentException("Unsupported track type: " + targetFile.getFile().getName());
+        }
+    }
+
+    private JSONObject getTabixTrack(Logger log, ExpData targetFile, ReferenceGenome rg, String adapterType, String prefix) throws PipelineJobException
     {
         JSONObject ret = new JSONObject();
-        ret.put("type", "FeatureTrack");
+        ret.put("type", getTrackType());
         ret.put("trackId", _objectId);
         ret.put("name", getLabel());
         ret.put("category", new JSONArray(){{
-            add(getCategory());
+            put(getCategory());
         }});
         ret.put("assemblyNames", new JSONArray(){{
-            add(JBrowseSession.getAssemblyName(rg));
+            put(JBrowseSession.getAssemblyName(rg));
         }});
 
-        //TODO: if not gzipped, we need to process it:
+        // if not gzipped, we need to process it:
+        File gzipped = prepareResource(log, true, false);
+        final String url;
+        if (!getExpData().getFile().equals(gzipped))
+        {
+            url = getWebDavURL(gzipped);
+        }
+        else
+        {
+            url = targetFile.getWebDavURL(ExpData.PathType.full);
+        }
 
-        String adapterType = SequenceUtil.FILETYPE.gff.getFileType().isType(targetFile.getFile()) ? "Gff3TabixAdapter" : "GtfTabixAdapter";
-        String prefix = SequenceUtil.FILETYPE.gff.getFileType().isType(targetFile.getFile()) ? "gff" : "gtf";
-
-        String url = targetFile.getWebDavURL(ExpData.PathType.full);
         if (url == null)
         {
-            //TODO:
+            log.info("Unable to create WebDav URL for JBrowse resource with path: " + targetFile.getFile());
             return null;
         }
 
@@ -505,5 +622,375 @@ public class JsonFile
         }});
 
         return ret;
+    }
+
+    public boolean needsProcessing()
+    {
+        return (needsGzip() && !isGzipped()) || doIndex();
+    }
+
+    public boolean isGzipped()
+    {
+        String fn = getSourceFileName();
+        if (fn == null)
+        {
+            throw new IllegalStateException("JsonFile lacks ExpData or lacks file");
+        }
+
+        return fn.toLowerCase().endsWith(".gz");
+    }
+
+    protected boolean needsGzip()
+    {
+        String fn = getSourceFileName();
+        if (fn == null)
+        {
+            return false;
+        }
+
+        return !isGzipped() && (TRACK_TYPES.gff.getFileType().isType(fn) || TRACK_TYPES.gtf.getFileType().isType(fn) || TRACK_TYPES.bed.getFileType().isType(fn));
+    }
+
+    public File prepareResource(Logger log, boolean throwIfNotPrepared, boolean forceReprocess) throws PipelineJobException
+    {
+        ExpData expData = getExpData();
+        File targetFile = expData.getFile();
+        if (needsGzip() && !isGzipped())
+        {
+            //need to gzip and tabix index:
+            File finalLocation = getLocationOfProcessedTrack(true);
+            if (finalLocation.exists() && forceReprocess && !targetFile.equals(finalLocation))
+            {
+                finalLocation.delete();
+                File idx = new File(finalLocation.getPath() + ".tbi");
+                if (idx.exists())
+                {
+                    idx.delete();
+                }
+            }
+
+            if (!finalLocation.exists())
+            {
+                if (throwIfNotPrepared)
+                {
+                    throw new IllegalStateException("This track should have been previously gzipped: " + expData.getFile().getName());
+                }
+
+                File bgZipped = SequenceAnalysisService.get().bgzipFile(targetFile, log);
+                try
+                {
+                    FileUtils.moveFile(bgZipped, finalLocation);
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
+
+            if (SystemUtils.IS_OS_WINDOWS)
+            {
+                //TODO: alternate solution?
+                log.warn("Cannot create tabix index on windows!");
+            }
+            else
+            {
+                TabixRunner tabix = new TabixRunner(log);
+                File idx = new File(finalLocation.getPath() + ".tbi");
+                if (!idx.exists())
+                {
+                    tabix.execute(finalLocation);
+                }
+            }
+
+            targetFile = finalLocation;
+        }
+
+        if (doIndex())
+        {
+            File trixDir = new File(targetFile.getParentFile(), "trix");
+            if (forceReprocess && trixDir.exists())
+            {
+                try
+                {
+                    FileUtils.deleteDirectory(trixDir);
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
+
+            File ixx = getExpectedLocationOfIndexFile(".ixx", false);
+            if (!ixx.exists())
+            {
+                if (throwIfNotPrepared)
+                {
+                    throw new IllegalStateException("This track should have been previously indexed: " + expData.getFile().getName());
+                }
+
+                File exe = JBrowseManager.get().getJbrowseCli();
+                SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
+                wrapper.setWorkingDir(targetFile.getParentFile());
+                wrapper.execute(Arrays.asList(exe.getPath(), "text-index", "--force", "--quiet", "--file", targetFile.getPath()));
+                if (!ixx.exists())
+                {
+                    throw new PipelineJobException("Unable to find expected index file: " + ixx.getPath());
+                }
+            }
+        }
+
+        return targetFile;
+    }
+
+    public File getLocationOfProcessedTrack(boolean createDir)
+    {
+        ExpData expData = getExpData();
+        if (expData == null || expData.getFile() == null)
+        {
+            return null;
+        }
+
+        File trackDir = getBaseDir();
+        if (createDir && !trackDir.exists())
+        {
+            trackDir.mkdirs();
+        }
+
+        return new File(trackDir, getSourceFileName() + (needsGzip() && !isGzipped() ? ".gz" : ""));
+    }
+
+    protected String getSourceFileName()
+    {
+        ExpData expData = getExpData();
+        if (expData == null)
+        {
+            throw new IllegalStateException("expData should not be null");
+        }
+
+        return getObjectId() + expData.getName();
+    }
+
+    public File getExpectedLocationOfIndexFile(String extension, boolean throwIfNotFound)
+    {
+        File basedir = getLocationOfProcessedTrack(false);
+        if (basedir == null)
+        {
+            return null;
+        }
+
+        File ret = new File(basedir.getParentFile(), "trix");
+        ret = new File(ret, basedir.getName() + extension);
+
+        if (throwIfNotFound && !ret.exists())
+        {
+            throw new IllegalStateException("File not found: " + ret.getPath());
+        }
+
+        return ret;
+    }
+
+    private String getWebDavURL(File input)
+    {
+        java.nio.file.Path path = input.toPath();
+        if (getContainerObj() == null)
+        {
+            return null;
+        }
+
+        PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainerObj());
+        if (root == null)
+            return null;
+
+        path = path.toAbsolutePath();
+        if (root.isUnderRoot(path))
+        {
+            String relPath = root.relativePath(path);
+            if (relPath == null)
+                return null;
+
+            if(!FileContentService.get().isCloudRoot(getContainerObj()))
+            {
+                relPath = Path.parse(FilenameUtils.separatorsToUnix(relPath)).encode();
+            }
+            else
+            {
+                // Do not encode path from S3 folder.  It is already encoded.
+                relPath = Path.parse(FilenameUtils.separatorsToUnix(relPath)).toString();
+            }
+
+            return AppProps.getInstance().getBaseServerUrl() + root.getWebdavURL() + relPath;
+        }
+
+        return null;
+    }
+
+    public boolean isVisibleByDefault()
+    {
+        JSONObject json = getExtraTrackConfig();
+        if (json == null || json.get("visibleByDefault") == null)
+            return false;
+
+        return Boolean.parseBoolean(json.get("visibleByDefault").toString());
+    }
+
+    public static JsonFile prepareJsonFileRecordForOutputFile(User u, Integer outputFileId, JSONObject additionalConfig, Logger log)
+    {
+        log.debug("preparing outputfile: " + outputFileId);
+
+        //find existing resource
+        TableInfo jsonFiles = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
+        TableSelector ts1 = new TableSelector(jsonFiles, new SimpleFilter(FieldKey.fromString("outputfile"), outputFileId), null);
+        if (ts1.exists())
+        {
+            return ts1.getObject(JsonFile.class);
+        }
+
+        SequenceOutputFile so = SequenceOutputFile.getForId(outputFileId);
+        if (so == null)
+        {
+            throw new IllegalArgumentException("Unable to find outputfile: " + outputFileId);
+        }
+
+        Container fileContainer = ContainerManager.getForId(so.getContainer());
+        if (fileContainer == null)
+        {
+            throw new IllegalArgumentException("Unable to find container with Id: " + so.getContainer());
+        }
+
+        //else create
+        log.debug("adding new jsonfile record");
+
+        Map<String, Object> jsonRecord = new CaseInsensitiveHashMap<>();
+        jsonRecord.put("outputfile", outputFileId);
+        jsonRecord.put("container", fileContainer.getId());
+        jsonRecord.put("created", new Date());
+        jsonRecord.put("createdby", u.getUserId());
+        jsonRecord.put("modified", new Date());
+        jsonRecord.put("modifiedby", u.getUserId());
+        jsonRecord.put("objectid", new GUID().toString().toUpperCase());
+        if (additionalConfig != null)
+        {
+            jsonRecord.put("trackJson", additionalConfig.toString());
+        }
+
+        Table.insert(u, jsonFiles, jsonRecord);
+
+        return ts1.getObject(JsonFile.class);
+    }
+
+    public static JsonFile prepareJsonFileForGenomeTrack(User u, Integer trackId)
+    {
+        //validate track exists
+        TableInfo ti = JBrowseManager.get().getSequenceAnalysisTable("reference_library_tracks");
+        TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("rowid"), trackId), null);
+        Map<String, Object> trackRowMap = ts.getMap();
+
+        if (trackRowMap.get("fileid") == null)
+        {
+            throw new IllegalArgumentException("Track does not have a file: " + trackId);
+        }
+
+        ExpData data = ExperimentService.get().getExpData((int)trackRowMap.get("fileid"));
+        if (data == null || data.getFile() == null)
+        {
+            throw new IllegalArgumentException("Unable to find ExpData: " + (data == null ? null : data.getFile()));
+        }
+
+        if (!data.getFile().exists())
+        {
+            throw new IllegalArgumentException("File does not exist: " + data.getFile().getPath());
+        }
+
+        //find existing resource
+        TableInfo jsonFiles = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
+        TableSelector ts1 = new TableSelector(jsonFiles, new SimpleFilter(FieldKey.fromString("trackid"), trackId), null);
+        JsonFile jsonFile;
+        if (ts1.exists())
+        {
+            return ts1.getObject(JsonFile.class);
+        }
+
+        //else create
+        Map<String, Object> jsonRecord = new CaseInsensitiveHashMap<>();
+        jsonRecord.put("trackid", trackId);
+        jsonRecord.put("container", data.getContainer().getId());
+        jsonRecord.put("created", new Date());
+        jsonRecord.put("createdby", u.getUserId());
+        jsonRecord.put("modified", new Date());
+        jsonRecord.put("modifiedby", u.getUserId());
+        jsonRecord.put("objectid", new GUID().toString().toUpperCase());
+
+        TableInfo jsonTable = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
+        Table.insert(u, jsonTable, jsonRecord);
+
+        jsonFile = ts1.getObject(JsonFile.class);
+
+        //Map<String, Object> metadata = new HashMap<>();
+        //metadata.put("Description", trackRowMap.get("description"));
+        //jsonRecord.put("metadata", metadata);
+
+        return jsonFile;
+    }
+
+    public String getDisplayType()
+    {
+        ExpData targetFile = getExpData();
+        if (TRACK_TYPES.vcf.getFileType().isType(targetFile.getFile()))
+        {
+            return "ExtendedVariantDisplay";
+        }
+        else if (TRACK_TYPES.bam.getFileType().isType(targetFile.getFile()))
+        {
+            return "LinearAlignmentsDisplay";
+        }
+        else if (TRACK_TYPES.gff.getFileType().isType(targetFile.getFile()))
+        {
+            return "LinearBasicDisplay";
+        }
+        else if (TRACK_TYPES.gtf.getFileType().isType(targetFile.getFile()))
+        {
+            return "LinearBasicDisplay";
+        }
+        else if (TRACK_TYPES.bed.getFileType().isType(targetFile.getFile()))
+        {
+            return "LinearBasicDisplay";
+        }
+        else
+        {
+            throw new IllegalArgumentException("Unsupported track type: " + targetFile.getFile().getName());
+        }
+    }
+
+    public static enum TRACK_TYPES
+    {
+        bam(".bam", false),
+        gtf(".gtf", true),
+        gff(Arrays.asList(".gff", ".gff3"), true),
+        bed(".bed", true),
+        vcf(Arrays.asList(".vcf"), true);
+
+        private List<String> _extensions;
+        private boolean _allowGzip;
+
+        TRACK_TYPES(String extension, boolean allowGzip)
+        {
+            this(Arrays.asList(extension), allowGzip);
+        }
+
+        TRACK_TYPES(List<String> extensions, boolean allowGzip)
+        {
+            _extensions = extensions;
+            _allowGzip = allowGzip;
+        }
+
+        public FileType getFileType()
+        {
+            return new FileType(_extensions, _extensions.get(0), false, _allowGzip ? FileType.gzSupportLevel.SUPPORT_GZ : FileType.gzSupportLevel.NO_GZ);
+        }
+
+        public String getPrimaryExtension()
+        {
+            return _extensions.get(0);
+        }
     }
 }
