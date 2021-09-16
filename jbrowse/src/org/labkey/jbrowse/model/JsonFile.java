@@ -1,5 +1,9 @@
 package org.labkey.jbrowse.model;
 
+import htsjdk.tribble.bed.BEDCodec;
+import htsjdk.tribble.gff.Gff3Codec;
+import htsjdk.tribble.index.Index;
+import htsjdk.tribble.index.IndexFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -687,15 +691,34 @@ public class JsonFile
                 }
             }
 
+            File idx = new File(finalLocation.getPath() + ".tbi");
             if (SystemUtils.IS_OS_WINDOWS)
             {
-                //TODO: alternate solution?
-                log.warn("Cannot create tabix index on windows!");
+                try
+                {
+                    if (TRACK_TYPES.bed.getFileType().isType(finalLocation))
+                    {
+                        Index index = IndexFactory.createIndex(finalLocation.toPath(), new BEDCodec(), IndexFactory.IndexType.TABIX);
+                        index.write(idx);
+                    }
+                    if (TRACK_TYPES.gtf.getFileType().isType(finalLocation) || TRACK_TYPES.gff.getFileType().isType(finalLocation))
+                    {
+                        Index index = IndexFactory.createIndex(finalLocation.toPath(), new Gff3Codec(), IndexFactory.IndexType.TABIX);
+                        index.write(idx);
+                    }
+                    else
+                    {
+                        log.warn("Cannot create tabix index on windows!");
+                    }
+                }
+                catch (IOException e)
+                {
+                    log.error("Error creating tabix index!", e);
+                }
             }
             else
             {
                 TabixRunner tabix = new TabixRunner(log);
-                File idx = new File(finalLocation.getPath() + ".tbi");
                 if (!idx.exists())
                 {
                     tabix.execute(finalLocation);
@@ -728,10 +751,12 @@ public class JsonFile
                     throw new IllegalStateException("This track should have been previously indexed: " + expData.getFile().getName());
                 }
 
+                List<String> attributes = Arrays.asList("Name", "ID", "gene_id", "gene_name");
+
                 File exe = JBrowseManager.get().getJbrowseCli();
                 SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
                 wrapper.setWorkingDir(targetFile.getParentFile());
-                wrapper.execute(Arrays.asList(exe.getPath(), "text-index", "--force", "--quiet", "--file", targetFile.getPath()));
+                wrapper.execute(Arrays.asList(exe.getPath(), "text-index", "--force", "--quiet", "--attributes", StringUtils.join(attributes, ","), "--file", targetFile.getPath()));
                 if (!ixx.exists())
                 {
                     throw new PipelineJobException("Unable to find expected index file: " + ixx.getPath());

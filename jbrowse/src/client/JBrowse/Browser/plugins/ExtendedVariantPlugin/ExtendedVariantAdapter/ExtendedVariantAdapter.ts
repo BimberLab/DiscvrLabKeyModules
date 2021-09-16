@@ -5,7 +5,7 @@ import { Feature } from '@jbrowse/core/util/simpleFeature'
 import ExtendedVcfFeature from './VcfFeature'
 import { default as VcfTabixAdapter } from '@jbrowse/plugin-variants/src/VcfTabixAdapter/VcfTabixAdapter'
 
-export default class extends VcfTabixAdapter{
+export default class extends VcfTabixAdapter {
   public getFeatures(query: NoAssemblyRegion, opts: BaseOptions = {}) {
     return ObservableCreate<Feature>(async observer => {
       const { refName, start, end } = query

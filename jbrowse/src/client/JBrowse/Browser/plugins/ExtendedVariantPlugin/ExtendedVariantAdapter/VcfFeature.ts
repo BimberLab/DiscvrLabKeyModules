@@ -27,11 +27,12 @@ export default class ExtendedVcfFeature extends VcfFeature {
             else if (/MODERATE/g.exec(variant.INFO["ANN"][i])){
                 IMPACTs.add("MODERATE")
             }
-            else if ("MODERATE" && /LOW/g.exec(variant.INFO["ANN"][i])){
+            else if (/LOW/g.exec(variant.INFO["ANN"][i])){
                 IMPACTs.add("LOW")
             }
         }
 
+        variant.INFO["IMPACT"] = null
         if (IMPACTs.has('HIGH')) {
             variant.INFO["IMPACT"] = 'HIGH'
         }
@@ -40,9 +41,6 @@ export default class ExtendedVcfFeature extends VcfFeature {
         }
         else if (IMPACTs.has('LOW')) {
             variant.INFO["IMPACT"] = 'LOW'
-        }
-        else {
-            variant.INFO["IMPACT"] = 'UNKNOWN'
         }
 
         return(variant)
