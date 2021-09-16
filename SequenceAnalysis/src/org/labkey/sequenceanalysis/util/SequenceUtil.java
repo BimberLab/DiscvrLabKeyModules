@@ -250,8 +250,11 @@ public class SequenceUtil
             }
             catch (IOException e)
             {
-                throw new RuntimeException(e);
+                throw new PipelineJobException(e);
             }
+
+            // For consistency with bgzip behavior
+            input.delete();
 
             return output;
         }
