@@ -149,6 +149,12 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
             log.info("processing container: " + c.getPath());
             for (JsonFile json : rows)
             {
+                if (json.getSequenceId() != null)
+                {
+                    //TODO: eventually delete these legacy rows
+                    continue;
+                }
+
                 if (json.getBaseDir() != null)
                 {
                     expectedDirs.add(json.getBaseDir());
