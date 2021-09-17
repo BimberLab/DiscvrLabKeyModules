@@ -1,6 +1,7 @@
 package org.labkey.jbrowse.model;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
@@ -8,29 +9,37 @@ import org.json.JSONObject;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Sort;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
-import org.labkey.api.files.FileContentService;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
+import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.JobRunner;
+import org.labkey.api.util.GUID;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.jbrowse.JBrowseManager;
 import org.labkey.jbrowse.JBrowseSchema;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * User: bimber
@@ -152,7 +161,7 @@ public class JBrowseSession
         return _members;
     }
 
-    public static void onDatabaseDelete(String containerId, final String databaseId, boolean asyncDelete) throws IOException
+    public static void onDatabaseDelete(String containerId, final String databaseId)
     {
         Container c = ContainerManager.getForId(containerId);
         if (c == null)
@@ -162,59 +171,54 @@ public class JBrowseSession
 
         //delete children
         TableInfo ti = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASE_MEMBERS);
-        int deleted = Table.delete(ti, new SimpleFilter(FieldKey.fromString("database"), databaseId, CompareType.EQUAL));
-
-        //then delete files
-        FileContentService fileService = FileContentService.get();
-        File fileRoot = fileService == null ? null : fileService.getFileRoot(c, FileContentService.ContentType.files);
-        if (fileRoot == null || !fileRoot.exists())
-        {
-            return;
-        }
-
-        File jbrowseDir = new File(fileRoot, ".jbrowse");
-        if (!jbrowseDir.exists())
-        {
-            return;
-        }
-
-        File databaseDir = new File(jbrowseDir, "databases");
-        if (!databaseDir.exists())
-        {
-            return;
-        }
-
-        final File databaseDir2 = new File(databaseDir, databaseId);
-        if (databaseDir2.exists())
-        {
-            _log.info("deleting jbrowse database dir: " + databaseDir2.getPath());
-            if (!asyncDelete)
-            {
-                FileUtils.deleteDirectory(databaseDir2);
-            }
-            else
-            {
-                JobRunner.getDefault().execute(new Runnable(){
-                    public void run()
-                    {
-                        try
-                        {
-                            _log.info("deleting jbrowse database dir async: " + databaseDir2.getPath());
-                            FileUtils.deleteDirectory(databaseDir2);
-                        }
-                        catch (IOException e)
-                        {
-                            _log.error("Error background deleting JBrowse database dir for: " + databaseId, e);
-                        }
-                    }
-                });
-            }
-        }
+        Table.delete(ti, new SimpleFilter(FieldKey.fromString("database"), databaseId, CompareType.EQUAL));
     }
 
     public static JBrowseSession getForId(String objectId)
     {
         return new TableSelector(JBrowseSchema.getInstance().getSchema().getTable(JBrowseSchema.TABLE_DATABASES)).getObject(objectId, JBrowseSession.class);
+    }
+
+    public List<JsonFile> getJsonFiles(User u, boolean createDatabaseRecordsIfNeeded)
+    {
+        // Start with all tracks from this genome.
+        List<JsonFile> toAdd = new ArrayList<>(getGenomeTracks(u, createDatabaseRecordsIfNeeded));
+        toAdd.forEach(x -> x.setCategory("Reference Annotations"));
+
+        // Add DB-driven ones:
+        RefAaJsonFile refAa = new RefAaJsonFile(getLibraryId(), createDatabaseRecordsIfNeeded, u);
+        if (refAa.shouldExist())
+        {
+            toAdd.add(refAa);
+        }
+
+        RefNtFeaturesJsonFile refNt = new RefNtFeaturesJsonFile(getLibraryId(), createDatabaseRecordsIfNeeded, u);
+        if (refNt.shouldExist())
+        {
+            toAdd.add(refNt);
+        }
+
+        // Then resources specific to this session:
+        for (DatabaseMember m : getMembers())
+        {
+            JsonFile jsonFile = m.getJson();
+            if (jsonFile == null)
+            {
+                continue;
+            }
+
+            toAdd.add(jsonFile);
+        }
+
+        return toAdd;
+    }
+
+    public void ensureJsonFilesPrepared(User u, Logger log) throws PipelineJobException
+    {
+        for (JsonFile x : getJsonFiles(u, true))
+        {
+            x.prepareResource(log, false, false);
+        }
     }
 
     public JSONObject getConfigJson(User u, Logger log) throws PipelineJobException
@@ -231,24 +235,9 @@ public class JBrowseSession
         ret.put("configuration", new JSONObject());
         ret.put("connections", new JSONArray());
 
-        // Start with all tracks from this genome:
-        List<JsonFile> toAdd = new ArrayList<>(getGenomeTracks());
-        toAdd.forEach(x -> x.setCategory("Reference Annotations"));
-
-        // Then resources specific to this session:
-        for (DatabaseMember m : getMembers())
-        {
-            JsonFile jsonFile = m.getJson();
-            if (jsonFile == null)
-            {
-                continue;
-            }
-
-            toAdd.add(jsonFile);
-        }
-
         JSONArray tracks = new JSONArray();
-        for (JsonFile jsonFile : toAdd)
+        List<JsonFile> jsonFiles = getJsonFiles(u, false);
+        for (JsonFile jsonFile : jsonFiles)
         {
             JSONObject o = jsonFile.toTrackJson(u, rg, log);
             if (o != null)
@@ -258,12 +247,12 @@ public class JBrowseSession
         }
 
         ret.put("tracks", tracks);
-        //ret.put("defaultSession", getDefaultSessionJson(u, tracks));
+        ret.put("defaultSession", getDefaultSessionJson(jsonFiles));
 
         return ret;
     }
 
-    private List<JsonFile> getGenomeTracks()
+    private List<JsonFile> getGenomeTracks(User u, boolean createInDatabaseIfMissing)
     {
         // Find active tracks:
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("library_id"), getLibraryId(), CompareType.IN);
@@ -275,10 +264,31 @@ public class JBrowseSession
             return Collections.emptyList();
         }
 
-        return new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES), new SimpleFilter(FieldKey.fromString("trackid"), trackIds, CompareType.IN), null).getArrayList(JsonFile.class);
+        List<JsonFile> ret = new ArrayList<>();
+        for (int trackId : trackIds)
+        {
+            TableSelector ts = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES), new SimpleFilter(FieldKey.fromString("trackid"), trackId, CompareType.EQUAL), null);
+            if (!ts.exists())
+            {
+                if (createInDatabaseIfMissing)
+                {
+                    ret.add(JsonFile.prepareJsonFileForGenomeTrack(u, trackId));
+                }
+                else
+                {
+                    throw new IllegalStateException("Missing JsonFile for track: " + trackId);
+                }
+            }
+            else
+            {
+                ret.add(ts.getObject(JsonFile.class));
+            }
+        }
+
+        return ret;
     }
 
-    public JSONObject getDefaultSessionJson(User u, JSONArray tracks)
+    public JSONObject getDefaultSessionJson(List<JsonFile> tracks)
     {
         JSONObject ret = new JSONObject();
         ret.put("name", getName());
@@ -288,14 +298,20 @@ public class JBrowseSession
         viewJson.put("type", "LinearGenomeView");
 
         JSONArray defaultTracks = new JSONArray();
-        for (JSONObject o : tracks.toJSONObjectArray())
+        for (JsonFile jf : tracks)
         {
-            if (o.optBoolean("shownByDefault", false)){
+            if (jf.isVisibleByDefault()) {
+                String trackId = jf.getObjectId();
                 defaultTracks.put(new JSONObject(){{
-                    put("type", o.get("type"));
-                    put("configuration", o.get("trackId"));
-
-                    //TODO: displays
+                    put("type", jf.getTrackType());
+                    put("configuration", trackId);
+                    JSONArray displaysArr = new JSONArray();
+                    displaysArr.put(new JSONObject(){{
+                        String displayType = jf.getDisplayType();
+                        put("type", displayType);
+                        put("configuration", trackId + "-" + displayType);
+                    }});
+                    put("displays", displaysArr);
                 }});
             }
         }
@@ -345,5 +361,17 @@ public class JBrowseSession
         }});
 
         return ret;
+    }
+
+    public static JBrowseSession getGenericGenomeSession(int genomeId)
+    {
+        Container genomeContainer = ContainerManager.getForId(new TableSelector(DbSchema.get(JBrowseManager.SEQUENCE_ANALYSIS, DbSchemaType.Module).getTable("reference_libraries"), PageFlowUtil.set("container"), new SimpleFilter(FieldKey.fromString("rowid"), genomeId), null).getObject(String.class));
+
+        JBrowseSession session = new JBrowseSession();
+        session.setContainer(genomeContainer.getId());
+        session.setLibraryId(genomeId);
+        session.setObjectId(new GUID().toString());
+
+        return session;
     }
 }

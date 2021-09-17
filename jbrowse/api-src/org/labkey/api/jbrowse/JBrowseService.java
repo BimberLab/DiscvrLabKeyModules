@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.security.User;
 
@@ -29,7 +30,9 @@ abstract public class JBrowseService
 
     abstract public String prepareOutputFile(User u, Logger log, Integer outputFileId, boolean forceRecreateJson, @Nullable JSONObject additionalConfig) throws IOException;
 
-    abstract public void reprocessDatabase(Container c, User u, String databaseId) throws PipelineValidationException;
+    abstract public void onGenomeChange(Container c, User u, int genomeId, Logger log) throws PipelineJobException;
+
+    abstract public void reprocessDatabase(User u, String databaseGuid) throws PipelineValidationException;
 
     abstract public void registerDemographicsSource(DemographicsSource source);
 }

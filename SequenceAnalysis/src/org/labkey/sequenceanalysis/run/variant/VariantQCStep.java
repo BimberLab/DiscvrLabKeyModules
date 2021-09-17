@@ -80,6 +80,13 @@ public class VariantQCStep extends AbstractPipelineStep implements VariantProces
             });
         }
 
+        Integer maxThreads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
+        if (maxThreads != null)
+        {
+            options.add("--threads");
+            options.add(String.valueOf(maxThreads));
+        }
+
         File outputHtml = new File(outputDirectory, SequencePipelineService.get().getUnzippedBaseName(inputVCF.getName()) + ".variantQC.html");
         VariantQCWrapper wrapper = new VariantQCWrapper(getPipelineCtx().getLogger());
         wrapper.execute(inputVCF, genome.getWorkingFastaFile(), outputHtml, options);
