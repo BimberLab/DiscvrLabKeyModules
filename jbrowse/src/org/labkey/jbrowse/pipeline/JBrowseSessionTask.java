@@ -19,10 +19,6 @@ import org.jetbrains.annotations.NotNull;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
-import org.labkey.api.data.Container;
-import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.DbSchema;
-import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -36,7 +32,6 @@ import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.util.FileType;
-import org.labkey.api.util.GUID;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.jbrowse.JBrowseManager;
 import org.labkey.jbrowse.JBrowseSchema;
@@ -109,8 +104,28 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
         {
             reprocessResources();
         }
+        else if (getPipelineJob().getMode() == JBrowseSessionPipelineJob.Mode.PrepareGenome)
+        {
+            prepareGenome();
+        }
 
         return new RecordedActionSet(Collections.singleton(new RecordedAction("JBrowse")));
+    }
+
+    private void prepareGenome() throws PipelineJobException
+    {
+        if (getPipelineJob().getLibraryId() == null)
+        {
+            throw new PipelineJobException("No genome ID provided, this is likely an upstream problem");
+        }
+
+        JBrowseSession session = JBrowseSession.getGenericGenomeSession(getPipelineJob().getLibraryId());
+        List<JsonFile> jsonFiles = session.getJsonFiles(getJob().getUser(), true);
+        getJob().getLogger().info("total files to reprocess: " + jsonFiles.size());
+        for (JsonFile f : jsonFiles)
+        {
+            f.prepareResource(getJob().getLogger(), false, true);
+        }
     }
 
     private void reprocessResources() throws PipelineJobException

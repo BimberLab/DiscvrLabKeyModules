@@ -68,7 +68,7 @@ public class JBrowseSessionPipelineJob extends PipelineJob
             throw new IllegalArgumentException("Need to provide a list of JsonFiles to reprocess");
         }
 
-        return new JBrowseSessionPipelineJob(c, user, pipeRoot, jsonFiles, null, Mode.ReprocessResources);
+        return new JBrowseSessionPipelineJob(c, user, pipeRoot, jsonFiles, null, null, Mode.ReprocessResources);
     }
 
     public static JBrowseSessionPipelineJob createNewDatabase(Container c, User user, PipeRoot pipeRoot, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> outputFileIds, boolean isTemporarySession)
@@ -76,11 +76,18 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         return new JBrowseSessionPipelineJob(c, user, pipeRoot, name, description, libraryId, trackIds, outputFileIds, null, isTemporarySession);
     }
 
-    private JBrowseSessionPipelineJob(Container c, User user, PipeRoot pipeRoot, List<String> jsonFiles, String databaseGuid, Mode mode)
+    public static JBrowseSessionPipelineJob refreshGenome(Container c, User u, PipeRoot pipeRoot, int genomeId)
+    {
+        return new JBrowseSessionPipelineJob(c, u, pipeRoot, null, genomeId, null, Mode.PrepareGenome);
+
+    }
+
+    private JBrowseSessionPipelineJob(Container c, User user, PipeRoot pipeRoot, List<String> jsonFiles, Integer libraryId, String databaseGuid, Mode mode)
     {
         super(JBrowseSessionPipelineProvider.NAME, new ViewBackgroundInfo(c, user, null), pipeRoot);
         _jsonFiles = jsonFiles;
         _databaseGuid = databaseGuid;
+        _libraryId = libraryId;
         _sourceContainerId = databaseGuid == null ? getContainerId() : getSourceContainerId(databaseGuid);
         _mode = mode;
 
@@ -184,6 +191,7 @@ public class JBrowseSessionPipelineJob extends PipelineJob
     {
         CreateNew("Create New Session"),
         AddToExisting("Add To Existing Session"),
+        PrepareGenome("Prepare Genome"),
         ReprocessResources("Recreating Resources");
 
         private String _description;
