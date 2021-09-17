@@ -1542,7 +1542,7 @@ public class SequenceTest extends BaseWebDriverTest
         test.waitForPipelineJobsToComplete(existingJobs + 2 + (2 * expectedChildJobs), "Import Tracks", false);
     }
 
-    public static File replaceContigName(File input, String contigName)
+    public static File replaceContigName(File input, String contigName) throws IOException
     {
         String contents = TestFileUtils.getFileContents(input);
         contents = contents.replaceAll("SIVmac239", contigName);
