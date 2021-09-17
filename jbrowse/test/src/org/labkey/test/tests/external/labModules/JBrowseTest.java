@@ -279,13 +279,7 @@ public class JBrowseTest extends BaseWebDriverTest
         File fileRoot = TestFileUtils.getDefaultFileRoot(getProjectName());
         for (File f : dataDir.listFiles())
         {
-            File target = new File(fileRoot, f.getName().replaceAll("fakeData", "fakeData2"));
-            if (target.exists())
-            {
-                Assert.assertTrue("Unable to delete file: " + target.getPath(), target.delete());
-            }
-
-            SequenceTest.replaceContigName(f, target, SequenceTest.GENOME_SEQ_NAME);
+            File target = SequenceTest.replaceContigName(f, SequenceTest.GENOME_SEQ_NAME);
             SequenceTest.addOutputFile(this, target, SequenceTest.TEST_GENOME_NAME, target.getName(), "Gene Annotations", "This is an output file", false);
         }
 
