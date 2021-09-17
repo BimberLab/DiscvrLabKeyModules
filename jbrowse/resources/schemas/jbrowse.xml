@@ -221,6 +221,7 @@
                     <fkDbSchema>jbrowse</fkDbSchema>
                     <fkTable>jsonfiles</fkTable>
                     <fkColumnName>objectid</fkColumnName>
+                    <fkDisplayColumnName useRawValue="true"/>
                 </fk>
             </column>
             <column columnName="category">

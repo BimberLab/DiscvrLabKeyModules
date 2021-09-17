@@ -331,10 +331,10 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
         Long unmapped = 0L;
         if (unmappedOutput != null && unmappedOutput.exists())
         {
-            String unmappedStr = ProcessVariantsHandler.getVCFLineCount(output, job.getLogger(), false);
+            String unmappedStr = ProcessVariantsHandler.getVCFLineCount(unmappedOutput, job.getLogger(), false);
             unmapped = StringUtils.trimToNull(unmappedStr) == null ? 0L : Long.parseLong(unmappedStr);
             job.getLogger().info("total unmapped variants: " + unmappedStr);
-            job.getLogger().info("passing unmapped variants: " + ProcessVariantsHandler.getVCFLineCount(output, job.getLogger(), true));
+            job.getLogger().info("passing unmapped variants: " + ProcessVariantsHandler.getVCFLineCount(unmappedOutput, job.getLogger(), true));
             SequenceAnalysisService.get().ensureVcfIndex(unmappedOutput, job.getLogger());
         }
 

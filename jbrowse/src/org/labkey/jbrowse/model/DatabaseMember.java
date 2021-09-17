@@ -1,17 +1,11 @@
 package org.labkey.jbrowse.model;
 
-import org.json.JSONObject;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.security.User;
-import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.jbrowse.JBrowseSchema;
-
-import javax.annotation.Nullable;
 
 public class DatabaseMember
 {

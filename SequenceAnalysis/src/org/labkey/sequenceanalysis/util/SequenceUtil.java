@@ -9,16 +9,22 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.BlockCompressedOutputStream;
+import htsjdk.samtools.util.FileExtensions;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.CloseableTribbleIterator;
+import htsjdk.tribble.Feature;
+import htsjdk.tribble.FeatureCodec;
 import htsjdk.tribble.FeatureReader;
 import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
+import htsjdk.tribble.index.Index;
+import htsjdk.tribble.index.IndexFactory;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
+import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFUtils;
@@ -39,6 +45,7 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.writer.PrintWriters;
+import org.labkey.sequenceanalysis.run.util.BgzipRunner;
 import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 
 import java.io.BufferedReader;
@@ -232,16 +239,28 @@ public class SequenceUtil
         }
     }
 
-    @Deprecated
-    private static void bgzip(File input, File output)
+    public static File bgzip(File input, Logger log) throws PipelineJobException
     {
-        try (FileInputStream i = new FileInputStream(input); BlockCompressedOutputStream o = new BlockCompressedOutputStream(new FileOutputStream(output), output))
+        if (SystemUtils.IS_OS_WINDOWS)
         {
-            FileUtil.copyData(i, o);
+            File output = new File(input.getPath() + ".gz");
+            try (FileInputStream i = new FileInputStream(input); BlockCompressedOutputStream o = new BlockCompressedOutputStream(new FileOutputStream(output), output))
+            {
+                FileUtil.copyData(i, o);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            // For consistency with bgzip behavior
+            input.delete();
+
+            return output;
         }
-        catch (IOException e)
+        else
         {
-            throw new RuntimeException(e);
+            return new BgzipRunner(log).execute(input);
         }
     }
 
@@ -443,7 +462,11 @@ public class SequenceUtil
         input.delete();
         if (isCompressed)
         {
-            SequenceUtil.bgzip(sorted, input);
+            File compressed = SequenceUtil.bgzip(sorted, log);
+            if (!compressed.equals(input))
+            {
+                FileUtils.moveFile(compressed, input);
+            }
         }
         else
         {
