@@ -126,6 +126,7 @@ abstract public class DbBackedJsonFile extends JsonFile
                 if (forceRecreate)
                 {
                     FileUtils.deleteDirectory(parent);
+                    parent.mkdirs();
                 }
             }
             else
