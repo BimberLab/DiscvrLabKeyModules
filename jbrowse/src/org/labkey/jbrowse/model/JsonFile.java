@@ -741,7 +741,7 @@ public class JsonFile
             else
             {
                 TabixRunner tabix = new TabixRunner(log);
-                if (!idx.exists())
+                if (forceReprocess || !idx.exists())
                 {
                     tabix.execute(finalLocation);
                 }

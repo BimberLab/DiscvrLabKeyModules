@@ -237,8 +237,8 @@ public class JBrowseTest extends BaseWebDriverTest
         _containerHelper.createProject(getProjectName(), "Sequence Analysis");
         _containerHelper.enableModule("JBrowse");
 
-        //create genome and add resources
-        Integer genomeId = SequenceTest.createReferenceGenome(this, 1);
+        //create genome and add resources. there are no tracks, so no child pipeline job will be triggered.
+        Integer genomeId = SequenceTest.createReferenceGenome(this, 0);
         createGenomeFeatures(genomeId);
 
         SequenceTest.addReferenceGenomeTracks(this, getProjectName(), SequenceTest.TEST_GENOME_NAME, genomeId, 1);
