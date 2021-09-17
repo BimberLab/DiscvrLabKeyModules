@@ -141,20 +141,17 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
         //find jsonfiles we expect to exist
         TableInfo tableJsonFiles = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
         final Set<File> expectedDirs = new HashSet<>();
-        TableSelector ts = new TableSelector(tableJsonFiles, new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
-        List<JsonFile> rows = ts.getArrayList(JsonFile.class);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("container"), c.getId());
+        //TODO: eventually delete these legacy rows
+        filter.addCondition(FieldKey.fromString("sequenceid"), null, CompareType.ISBLANK);
 
+        TableSelector ts = new TableSelector(tableJsonFiles, filter, null);
+        List<JsonFile> rows = ts.getArrayList(JsonFile.class);
         if (jbrowseRoot != null && jbrowseRoot.exists())
         {
             log.info("processing container: " + c.getPath());
             for (JsonFile json : rows)
             {
-                if (json.getSequenceId() != null)
-                {
-                    //TODO: eventually delete these legacy rows
-                    continue;
-                }
-
                 if (json.getBaseDir() != null)
                 {
                     expectedDirs.add(json.getBaseDir());
