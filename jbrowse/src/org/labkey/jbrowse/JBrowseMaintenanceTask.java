@@ -2,6 +2,7 @@ package org.labkey.jbrowse;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Logger;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SQLFragment;
@@ -141,7 +142,10 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
         //find jsonfiles we expect to exist
         TableInfo tableJsonFiles = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
         final Set<File> expectedDirs = new HashSet<>();
-        TableSelector ts = new TableSelector(tableJsonFiles, new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("container"), c.getId());
+        filter.addCondition(FieldKey.fromString("sequenceid"), null, CompareType.ISBLANK);
+
+        TableSelector ts = new TableSelector(tableJsonFiles, filter, null);
         List<JsonFile> rows = ts.getArrayList(JsonFile.class);
 
         if (jbrowseRoot != null && jbrowseRoot.exists())

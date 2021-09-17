@@ -384,8 +384,8 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClickAndWait(Locator.tagWithText("a", "View In JBrowse"));
         waitForElement(Locator.tagWithText("div", "TestGenome1"));
         waitAndClick(Locator.tagContainingText("span", "Show all regions in assembly").withClass("MuiButton-label"));
-        waitForElement(Locator.tagWithText("span", "fakeData2.gff").withClass("MuiTypography-root"));
-        waitForElement(Locator.tagWithText("span", "fakeData2.bed").withClass("MuiTypography-root"));
+        waitForElement(Locator.tagWithText("span", "fakeData.gff").withClass("MuiTypography-root"));
+        waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));
     }
 
     public static <T> Collector<T, ?, T> toSingleton() {
