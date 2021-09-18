@@ -408,7 +408,8 @@ public class JsonFile
             return false;
         }
 
-        boolean doIndex = TRACK_TYPES.gtf.getFileType().isType(sourceFilename) || TRACK_TYPES.gff.getFileType().isType(sourceFilename);
+        //TODO: restore this once JB2 support GTF indexing: TRACK_TYPES.gtf.getFileType().isType(sourceFilename)
+        boolean doIndex = TRACK_TYPES.gff.getFileType().isType(sourceFilename);
         JSONObject config = getExtraTrackConfig();
         if (config != null)
         {
