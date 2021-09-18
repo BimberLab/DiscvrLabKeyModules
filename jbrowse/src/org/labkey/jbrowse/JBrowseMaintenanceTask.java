@@ -143,11 +143,11 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
         TableInfo tableJsonFiles = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
         final Set<File> expectedDirs = new HashSet<>();
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("container"), c.getId());
-        //TODO: eventually delete these legacy rows
         filter.addCondition(FieldKey.fromString("sequenceid"), null, CompareType.ISBLANK);
 
         TableSelector ts = new TableSelector(tableJsonFiles, filter, null);
         List<JsonFile> rows = ts.getArrayList(JsonFile.class);
+
         if (jbrowseRoot != null && jbrowseRoot.exists())
         {
             log.info("processing container: " + c.getPath());
@@ -209,7 +209,14 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
 
                 if (error)
                 {
-                    j.prepareResource(log, false, true);
+                    try
+                    {
+                        j.prepareResource(log, false, true);
+                    }
+                    catch (Exception e)
+                    {
+                        log.error("Unable to process JsonFile: " + j.getObjectId(), e);
+                    }
                 }
             }
         }
