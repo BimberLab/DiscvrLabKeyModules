@@ -5,6 +5,8 @@ import org.apache.logging.log4j.Logger;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
@@ -12,14 +14,18 @@ import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.ldk.LDKService;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.security.User;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance.MaintenanceTask;
 import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -146,8 +152,35 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
         filter.addCondition(FieldKey.fromString("sequenceid"), null, CompareType.ISBLANK);
 
         TableSelector ts = new TableSelector(tableJsonFiles, filter, null);
-        List<JsonFile> rows = ts.getArrayList(JsonFile.class);
+        List<JsonFile> rows = new ArrayList<>(ts.getArrayList(JsonFile.class));
 
+        // Also check for genomes from this container, and any additional JsonFiles they may have:
+        TableInfo tableGenomes = DbSchema.get(JBrowseManager.SEQUENCE_ANALYSIS, DbSchemaType.Module).getTable("reference_libraries");
+        TableSelector ts2 = new TableSelector(tableGenomes, PageFlowUtil.set("rowid"), new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
+        if (ts2.exists())
+        {
+            User u = LDKService.get().getBackgroundAdminUser();
+            if (u == null)
+            {
+                log.error("In order to ensure genomes are prepared for JBrowse, the LDK module property BackgroundAdminUser must be set");
+            }
+            else
+            {
+                for (Integer genomeId : ts2.getArrayList(Integer.class))
+                {
+                    JBrowseSession session = JBrowseSession.getGenericGenomeSession(genomeId);
+                    for (JsonFile json : session.getJsonFiles(u, true))
+                    {
+                        expectedDirs.add(json.getBaseDir());
+                        if (!json.getBaseDir().exists())
+                        {
+                            log.error("expected jbrowse folder does not exist: " + json.getBaseDir().getPath());
+                        }
+                    }
+                }
+            }
+        }
+        
         if (jbrowseRoot != null && jbrowseRoot.exists())
         {
             log.info("processing container: " + c.getPath());
@@ -170,7 +203,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                 if (childDir.exists())
                 {
                     //TODO: eventually delete these?
-                    log.info("deleting legacy jbrowse " + dir + " dir: " + childDir.getPath());
+                    //log.info("deleting legacy jbrowse " + dir + " dir: " + childDir.getPath());
                     //FileUtils.deleteDirectory(childDir);
                 }
             }
