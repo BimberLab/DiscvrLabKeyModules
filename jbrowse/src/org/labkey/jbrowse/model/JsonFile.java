@@ -37,6 +37,7 @@ import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.FileType;
@@ -740,6 +741,23 @@ public class JsonFile
             }
             else
             {
+                //Ensure sorted:
+                if (TRACK_TYPES.bed.getFileType().isType(finalLocation))
+                {
+                    try
+                    {
+                        SequencePipelineService.get().sortROD(finalLocation, log, 2);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
+                }
+                else if (TRACK_TYPES.gff.getFileType().isType(finalLocation) || TRACK_TYPES.gtf.getFileType().isType(finalLocation))
+                {
+                    SequenceAnalysisService.get().sortGxf(log, finalLocation, null);
+                }
+
                 TabixRunner tabix = new TabixRunner(log);
                 if (forceReprocess || !idx.exists())
                 {
@@ -811,7 +829,7 @@ public class JsonFile
         ExpData expData = getExpData();
         if (expData == null)
         {
-            throw new IllegalStateException("expData should not be null");
+            throw new IllegalStateException("expData should not be null: " + getObjectId());
         }
 
         return getObjectId() + expData.getName();
