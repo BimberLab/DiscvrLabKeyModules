@@ -9,29 +9,22 @@ import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.util.BlockCompressedOutputStream;
-import htsjdk.samtools.util.FileExtensions;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.CloseableTribbleIterator;
-import htsjdk.tribble.Feature;
-import htsjdk.tribble.FeatureCodec;
 import htsjdk.tribble.FeatureReader;
 import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.bed.BEDFeature;
-import htsjdk.tribble.index.Index;
-import htsjdk.tribble.index.IndexFactory;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
 import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
-import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -59,6 +52,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -88,10 +82,10 @@ public class SequenceUtil
         fasta(Arrays.asList(".fasta", ".fa", ".fna"), true),
         bam(".bam"),
         sff(".sff"),
-        gtf(".gtf"),
-        gff(Arrays.asList(".gff", ".gff3"), false),
+        gtf(Collections.singletonList(".gtf"), true),
+        gff(Arrays.asList(".gff", ".gff3"), true),
         gbk(".gbk"),
-        bed(".bed"),
+        bed(Collections.singletonList(".bed"), true),
         vcf(Arrays.asList(".vcf"), true),
         gvcf(Arrays.asList(".g.vcf"), true);
 
@@ -355,7 +349,7 @@ public class SequenceUtil
                 while (i.hasNext())
                 {
                     BEDFeature f = i.next();
-                    ret.add(new Interval(f.getChr(), f.getStart(), f.getEnd()));
+                    ret.add(new Interval(f.getContig(), f.getStart(), f.getEnd()));
                 }
             }
         }
@@ -456,7 +450,8 @@ public class SequenceUtil
 
         //then sort/append the records
         CommandWrapper wrapper = SequencePipelineService.get().getCommandWrapper(log);
-        wrapper.execute(Arrays.asList("/bin/sh", "-c", "cat '" + input.getPath() + "' | grep -v '^#' | sort -s -V -k1,1f" + (startColumnIdx == null ? "" : " -k" + startColumnIdx + "," + startColumnIdx + "n")), ProcessBuilder.Redirect.appendTo(sorted));
+        String cat = isCompressed ? "zcat" : "cat";
+        wrapper.execute(Arrays.asList("/bin/sh", "-c", cat + " '" + input.getPath() + "' | grep -v '^#' | sort -s -V -k1,1f" + (startColumnIdx == null ? "" : " -k" + startColumnIdx + "," + startColumnIdx + "n") + (isCompressed ? " | bgzip -f " : "")), ProcessBuilder.Redirect.appendTo(sorted));
 
         //replace the non-sorted output
         input.delete();

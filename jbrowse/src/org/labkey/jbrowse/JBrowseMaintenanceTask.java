@@ -209,7 +209,14 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
 
                 if (error)
                 {
-                    j.prepareResource(log, false, true);
+                    try
+                    {
+                        j.prepareResource(log, false, true);
+                    }
+                    catch (Exception e)
+                    {
+                        log.error("Unable to process JsonFile: " + j.getObjectId(), e);
+                    }
                 }
             }
         }
