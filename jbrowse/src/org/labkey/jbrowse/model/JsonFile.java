@@ -829,7 +829,7 @@ public class JsonFile
         ExpData expData = getExpData();
         if (expData == null)
         {
-            throw new IllegalStateException("expData should not be null");
+            throw new IllegalStateException("expData should not be null: " + getObjectId());
         }
 
         return getObjectId() + expData.getName();
