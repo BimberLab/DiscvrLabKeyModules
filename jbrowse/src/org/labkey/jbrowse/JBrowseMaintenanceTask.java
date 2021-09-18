@@ -170,7 +170,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                 if (childDir.exists())
                 {
                     //TODO: eventually delete these?
-                    log.info("deleting legacy jbrowse " + dir + " dir: " + childDir.getPath());
+                    //log.info("deleting legacy jbrowse " + dir + " dir: " + childDir.getPath());
                     //FileUtils.deleteDirectory(childDir);
                 }
             }

@@ -363,8 +363,8 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("span", "Tracks Provided By This Session"));
         dr = DataRegionTable.findDataRegionWithinWebpart(this, "Tracks Provided By This Session");
         Assert.assertEquals("Incorrect row count", 3, dr.getDataRowCount());
-        dr.checkCheckbox(1);
-        dr.checkCheckbox(2);
+        dr.checkCheckbox(dr.getRowIndex("File Id", "fakeData.gff"));
+        dr.checkCheckbox(dr.getRowIndex("File Id", "fakeData.bed"));
         dr.clickHeaderMenu("More Actions", false, "Modify Track Config");
         new Window.WindowFinder(getDriver()).withTitle("Modify Track Config").waitFor();
         waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Add"));
