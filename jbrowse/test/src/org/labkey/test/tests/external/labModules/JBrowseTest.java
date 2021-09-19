@@ -15,7 +15,6 @@
  */
 package org.labkey.test.tests.external.labModules;
 
-import org.apache.velocity.util.ArrayListWrapper;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -44,7 +43,6 @@ import org.openqa.selenium.interactions.Actions;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -121,6 +119,11 @@ public class JBrowseTest extends BaseWebDriverTest
     {
         trackId = "trackRenderingContainer-linearGenomeView-" + trackId;
         Locator.XPathLocator l = Locator.tagWithAttributeContaining("div", "data-testid", trackId);
+        if (waitFor)
+        {
+            waitForElement(l);
+        }
+
         l = l.append(Locator.xpath("//*[name()='text' and contains(text(), '" + variantText + "')]/..")).notHidden();
 
         if (waitFor)
@@ -145,8 +148,8 @@ public class JBrowseTest extends BaseWebDriverTest
     private void waitForJBrowseToLoad()
     {
         waitForElementToDisappear(Locator.tagWithText("p", "Loading..."));
-        waitForElement(Locator.tagWithClass("span", "MuiIconButton-label")); //this is the top-left icon
-        waitForElement(Locator.tagWithClassContaining("span", "MuiTypography-root"), WAIT_FOR_PAGE); //this is the icon from the track label
+        waitForElement(Locator.tagWithClass("span", "MuiIconButton-label").notHidden()); //this is the top-left icon
+        waitForElement(Locator.tagWithClassContaining("span", "MuiTypography-root").notHidden(), WAIT_FOR_PAGE); //this is the icon from the track label
 
         waitForElementToDisappear(Locator.tagWithText("div", "Loading...")); //track data
     }
