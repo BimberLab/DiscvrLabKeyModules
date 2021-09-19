@@ -455,18 +455,7 @@ public class SequenceUtil
 
         //replace the non-sorted output
         input.delete();
-        if (isCompressed)
-        {
-            File compressed = SequenceUtil.bgzip(sorted, log);
-            if (!compressed.equals(input))
-            {
-                FileUtils.moveFile(compressed, input);
-            }
-        }
-        else
-        {
-            FileUtils.moveFile(sorted, input);
-        }
+        FileUtils.moveFile(sorted, input);
         sorted.delete();
     }
 
