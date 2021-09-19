@@ -396,8 +396,8 @@ public class JsonFile
             return false;
         }
 
+        // The intent of this is to index GFF/GTF files that are part of the primary genome, not ad hoc resources. These files can opt-in to indexing using
         //TODO: restore this once JB2 support GTF indexing: TRACK_TYPES.gtf.getFileType().isType(sourceFilename)
-        //
         boolean doIndex = TRACK_TYPES.gff.getFileType().isType(sourceFilename) && getTrackId() != null;
         JSONObject config = getExtraTrackConfig();
         if (config != null)
