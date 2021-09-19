@@ -408,7 +408,8 @@ public class JsonFile
             return false;
         }
 
-        boolean doIndex = TRACK_TYPES.gtf.getFileType().isType(sourceFilename) || TRACK_TYPES.gff.getFileType().isType(sourceFilename);
+        //TODO: restore this once JB2 support GTF indexing: TRACK_TYPES.gtf.getFileType().isType(sourceFilename)
+        boolean doIndex = TRACK_TYPES.gff.getFileType().isType(sourceFilename);
         JSONObject config = getExtraTrackConfig();
         if (config != null)
         {
@@ -668,6 +669,12 @@ public class JsonFile
         {
             //need to gzip and tabix index:
             File finalLocation = getLocationOfProcessedTrack(true);
+            if (finalLocation.exists() && !SequencePipelineService.get().hasMinLineCount(finalLocation, 1))
+            {
+                log.info("File exists but is zero-length, deleting and re-processing:");
+                forceReprocess = true;
+            }
+
             if (finalLocation.exists() && forceReprocess && !targetFile.equals(finalLocation))
             {
                 finalLocation.delete();
@@ -784,6 +791,12 @@ public class JsonFile
             }
 
             File ixx = getExpectedLocationOfIndexFile(".ixx", false);
+            if (ixx.exists() && !SequencePipelineService.get().hasMinLineCount(ixx, 1))
+            {
+                log.info("ixx exists but is zero-length, deleting and re-processing: " + ixx.getPath());
+                ixx.delete();
+            }
+
             if (!ixx.exists())
             {
                 if (throwIfNotPrepared)
