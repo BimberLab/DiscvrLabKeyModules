@@ -175,18 +175,6 @@ public class JsonFile
 
     private static final FileType _ft = new FileType(Arrays.asList(".bam", ".vcf"), ".vcf", FileType.gzSupportLevel.SUPPORT_GZ);
 
-    //NOTE: if the track file isnt parsed to JSON (VCF or BAM), then the file will be in getBaseDir()
-    public boolean expectDataSubdirForTrack()
-    {
-        File f = getTrackFile();
-        if (f == null)
-        {
-            throw new IllegalArgumentException("Unable to find file for JSONFile: " + _objectId);
-        }
-
-        return !_ft.isType(f);
-    }
-
     public String getLabel()
     {
         if (_label == null)
