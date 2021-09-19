@@ -175,18 +175,6 @@ public class JsonFile
 
     private static final FileType _ft = new FileType(Arrays.asList(".bam", ".vcf"), ".vcf", FileType.gzSupportLevel.SUPPORT_GZ);
 
-    //NOTE: if the track file isnt parsed to JSON (VCF or BAM), then the file will be in getBaseDir()
-    public boolean expectDataSubdirForTrack()
-    {
-        File f = getTrackFile();
-        if (f == null)
-        {
-            throw new IllegalArgumentException("Unable to find file for JSONFile: " + _objectId);
-        }
-
-        return !_ft.isType(f);
-    }
-
     public String getLabel()
     {
         if (_label == null)
@@ -408,8 +396,9 @@ public class JsonFile
             return false;
         }
 
+        // The intent of this is to index GFF/GTF files that are part of the primary genome, not ad hoc resources. These files can opt-in to indexing using
         //TODO: restore this once JB2 support GTF indexing: TRACK_TYPES.gtf.getFileType().isType(sourceFilename)
-        boolean doIndex = TRACK_TYPES.gff.getFileType().isType(sourceFilename);
+        boolean doIndex = TRACK_TYPES.gff.getFileType().isType(sourceFilename) && getTrackId() != null;
         JSONObject config = getExtraTrackConfig();
         if (config != null)
         {

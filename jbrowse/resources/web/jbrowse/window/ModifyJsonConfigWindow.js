@@ -84,6 +84,18 @@ Ext4.define('JBrowse.window.ModifyJsonConfigWindow', {
                             this.addAttribute('omitTrack', true, 'BOOLEAN');
                         }
                     },{
+                        text: 'Add to Text Search Index?',
+                        scope: this,
+                        handler: function (gridBtn) {
+                            this.addAttribute('includeInSearch', true, 'BOOLEAN');
+                        }
+                    },{
+                        text: 'Exclude from Text Search Index?',
+                        scope: this,
+                        handler: function (gridBtn) {
+                            this.addAttribute('excludeFromSearch', true, 'BOOLEAN');
+                        }
+                    },{
                         text: 'Other',
                         scope: this,
                         handler: function (gridBtn) {

@@ -15,7 +15,6 @@ import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.ldk.LDKService;
-import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.util.PageFlowUtil;
@@ -77,6 +76,24 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
         //delete JSON in output dir not associated with DB record
         try
         {
+            // TODO: ultimately remove this. This is related to the migration from JB1 to JB2
+            TableInfo jsonFiles = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
+            List<String> toDelete = new TableSelector(jsonFiles, PageFlowUtil.set("objectid"), new SimpleFilter(FieldKey.fromString("sequenceid"), null, CompareType.NONBLANK), null).getArrayList(String.class);
+            if (!toDelete.isEmpty())
+            {
+                log.info("deleted " + toDelete.size() + " legacy NT JsonFile records");
+                for (String key : toDelete)
+                {
+                    Table.delete(jsonFiles, key);
+
+                    int d = new SqlExecutor(JBrowseSchema.getInstance().getSchema()).execute(new SQLFragment("DELETE FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_DATABASE_MEMBERS + " WHERE jsonfile = ?", key));
+                    if (d > 0)
+                    {
+                        log.info("also deleted " + d + " orphan database member record(s) for: " + key);
+                    }
+                }
+            }
+
             //delete sessions marked as temporary
             int sessionsDeleted = Table.delete(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("temporary"), true));
             if (sessionsDeleted > 0)
@@ -92,9 +109,6 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                     " WHERE " +
                     //find JSONFiles not associated with a database_member record
                     " (SELECT count(rowid) FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_DATABASE_MEMBERS + " d WHERE d.jsonfile = " + JBrowseSchema.TABLE_JSONFILES + ".objectid) = 0 AND " +
-                    //TODO: ultimately completely remove these
-                    //or library reference sequences
-                    " (SELECT count(rowid) FROM sequenceanalysis.reference_library_members d WHERE d.ref_nt_id = " + JBrowseSchema.TABLE_JSONFILES + ".sequenceid) = 0 AND " +
                     //or library tracks
                     " (SELECT count(rowid) FROM sequenceanalysis.reference_library_tracks d WHERE d.rowid = " + JBrowseSchema.TABLE_JSONFILES + ".trackid) = 0 AND " +
                     //or outputfiles
@@ -105,11 +119,8 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                 log.info("deleted " + deleted2 + " JSON files because they are not used by any sessions");
 
             //second pass at orphan JSONFiles.  Note: these might be referenced by a database_member record still.
-            List<String> toDelete = new SqlSelector(JBrowseSchema.getInstance().getSchema(), new SQLFragment("SELECT objectid FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_JSONFILES +
+            toDelete = new SqlSelector(JBrowseSchema.getInstance().getSchema(), new SQLFragment("SELECT objectid FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_JSONFILES +
                     " WHERE " +
-                    //TODO: ultimately completely remove these
-                    //reference NT sequences
-                    " (" + JBrowseSchema.TABLE_JSONFILES + ".sequenceid IS NOT NULL AND (SELECT count(rowid) FROM sequenceanalysis.ref_nt_sequences d WHERE d.rowid = " + JBrowseSchema.TABLE_JSONFILES + ".sequenceid) = 0) OR " +
                     //library tracks
                     " ( " + JBrowseSchema.TABLE_JSONFILES + ".trackid IS NOT NULL AND (SELECT count(rowid) FROM sequenceanalysis.reference_library_tracks d WHERE d.rowid = " + JBrowseSchema.TABLE_JSONFILES + ".trackid) = 0) OR " +
                     //outputfiles
@@ -119,7 +130,6 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
             if (!toDelete.isEmpty())
             {
                 log.info("deleting " + toDelete.size() + " JSON files because they reference non-existent tracks, sequences or outputfiles");
-                TableInfo jsonFiles = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
                 for (String key : toDelete)
                 {
                     Table.delete(jsonFiles, key);
@@ -141,7 +151,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
         }
     }
 
-    private void processContainer(Container c, Logger log) throws IOException, PipelineJobException
+    private void processContainer(Container c, Logger log) throws IOException
     {
         File jbrowseRoot = JBrowseManager.get().getBaseDir(c, false);
 
@@ -202,9 +212,8 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                 File childDir = new File(jbrowseRoot, dir);
                 if (childDir.exists())
                 {
-                    //TODO: eventually delete these?
-                    //log.info("deleting legacy jbrowse " + dir + " dir: " + childDir.getPath());
-                    //FileUtils.deleteDirectory(childDir);
+                    log.info("deleting legacy jbrowse " + dir + " dir: " + childDir.getPath());
+                    FileUtils.deleteDirectory(childDir);
                 }
             }
 

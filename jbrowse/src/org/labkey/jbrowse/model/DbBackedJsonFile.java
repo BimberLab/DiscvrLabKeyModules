@@ -86,6 +86,12 @@ abstract public class DbBackedJsonFile extends JsonFile
     }
 
     @Override
+    public boolean needsProcessing()
+    {
+        return true;
+    }
+
+    @Override
     public String getLabel()
     {
         return _suffix;
