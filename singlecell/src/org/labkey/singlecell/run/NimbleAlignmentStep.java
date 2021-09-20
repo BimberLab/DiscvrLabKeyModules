@@ -317,6 +317,28 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
                 throw new PipelineJobException("Expected to find file: " + resultsTsv.getPath());
             }
 
+            File log = new File(resultsTsv.getParentFile(), "nimbleDebug.txt");
+            if (!log.exists())
+            {
+                throw new PipelineJobException("Expected to find file: " + log.getPath());
+            }
+
+            ctx.getLogger().info("Nimble alignment stats:");
+            try (BufferedReader reader = Readers.getReader(log))
+            {
+                String line;
+                while ((line = reader.readLine()) != null)
+                {
+                    ctx.getLogger().info(line);
+                }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            log.delete();
+
             return resultsTsv;
         }
 
