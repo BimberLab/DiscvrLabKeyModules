@@ -32,6 +32,7 @@ public class JBrowseUserSchema extends SimpleUserSchema
 
         DefaultSchema.registerProvider(JBrowseSchema.NAME, new DefaultSchema.SchemaProvider(m)
         {
+            @Override
             public QuerySchema createSchema(final DefaultSchema schema, Module module)
             {
                 return new JBrowseUserSchema(schema.getUser(), schema.getContainer(), dbSchema);
@@ -44,7 +45,7 @@ public class JBrowseUserSchema extends SimpleUserSchema
     protected TableInfo createWrappedTable(String name, @NotNull TableInfo sourceTable, ContainerFilter cf)
     {
         if (JBrowseSchema.TABLE_JSONFILES.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable).init();                // TODO: assert cf is null or not default?
+            return new SharedDataTable<>(this, sourceTable).init();
         else
             return super.createWrappedTable(name, sourceTable, cf);
     }

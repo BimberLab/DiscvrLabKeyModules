@@ -21,6 +21,8 @@ import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -37,7 +39,6 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.data.DbScope;
-import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.Results;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
@@ -45,7 +46,9 @@ import org.labkey.api.data.StopIteratingException;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.jbrowse.JBrowseService;
 import org.labkey.api.module.Module;
+import org.labkey.api.module.ModuleHtmlView;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
@@ -56,7 +59,6 @@ import org.labkey.api.query.UserSchema;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.resource.FileResource;
 import org.labkey.api.security.RequiresPermission;
-import org.labkey.api.security.permissions.AdminOperationsPermission;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
@@ -70,7 +72,7 @@ import org.labkey.api.view.NavTree;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.api.view.WebPartView;
 import org.labkey.api.view.template.PageConfig;
-import org.labkey.jbrowse.model.Database;
+import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
 import org.springframework.validation.BindException;
@@ -94,6 +96,8 @@ import java.util.regex.Matcher;
 
 public class JBrowseController extends SpringActionController
 {
+    private static final Logger _log = LogManager.getLogger(JBrowseController.class);
+
     private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(JBrowseController.class);
     public static final String NAME = "jbrowse";
 
@@ -102,68 +106,10 @@ public class JBrowseController extends SpringActionController
         setActionResolver(_actionResolver);
     }
 
-    @RequiresPermission(AdminPermission.class)
-    public class GetSettingsAction extends ReadOnlyApiAction<Object>
-    {
-        public ApiResponse execute(Object form, BindException errors)
-        {
-            Map<String, Object> resultProperties = new HashMap<>();
-            String[] etlConfigKeys = {JBrowseManager.JBROWSE_BIN};
-
-            resultProperties.put("configKeys", etlConfigKeys);
-            resultProperties.put("config", PropertyManager.getProperties(JBrowseManager.CONFIG_PROPERTY_DOMAIN));
-
-            return new ApiSimpleResponse(resultProperties);
-        }
-    }
-
-    @RequiresPermission(AdminOperationsPermission.class)
-    public class SetSettingsAction extends MutatingApiAction<SettingsForm>
-    {
-        public ApiResponse execute(SettingsForm form, BindException errors)
-        {
-            if (!getContainer().isRoot())
-            {
-                errors.reject(ERROR_MSG, "JBrowse settings can only be set at the site level");
-                return null;
-            }
-
-            Map<String, String> configMap = new HashMap<>();
-            if (form.getJbrowseBinDir() != null)
-                configMap.put(JBrowseManager.JBROWSE_BIN, form.getJbrowseBinDir());
-
-            try
-            {
-                JBrowseManager.get().saveSettings(configMap);
-            }
-            catch (IllegalArgumentException e)
-            {
-                errors.reject(ERROR_MSG, e.getMessage());
-                return null;
-            }
-
-            return new ApiSimpleResponse("success", true);
-        }
-    }
-
-    public static class SettingsForm
-    {
-        private String _jbrowseBinDir;
-
-        public String getJbrowseBinDir()
-        {
-            return _jbrowseBinDir;
-        }
-
-        public void setJbrowseBinDir(String jbrowseBinDir)
-        {
-            _jbrowseBinDir = jbrowseBinDir;
-        }
-    }
-
     @RequiresPermission(InsertPermission.class)
-    public class CreateDataBaseAction extends MutatingApiAction<DatabaseForm>
+    public static class CreateDataBaseAction extends MutatingApiAction<DatabaseForm>
     {
+        @Override
         public ApiResponse execute(DatabaseForm form, BindException errors)
         {
             if (form.getName() == null || form.getLibraryId() == null)
@@ -174,7 +120,7 @@ public class JBrowseController extends SpringActionController
 
             try
             {
-                JBrowseManager.get().createDatabase(getContainer(), getUser(), form.getName(), form.getDescription(), form.getLibraryId(), form.getTrackIdList(), form.getOutputFileIdList(), form.getIsPrimaryDb(), form.getShouldCreateOwnIndex(), form.getIsTemporary());
+                JBrowseManager.get().createDatabase(getContainer(), getUser(), form.getName(), form.getDescription(), form.getLibraryId(), form.getTrackIdList(), form.getOutputFileIdList(), form.getIsTemporary());
             }
             catch (IOException e)
             {
@@ -187,8 +133,9 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class AddDatabaseMemberAction extends MutatingApiAction<DatabaseForm>
+    public static class AddDatabaseMemberAction extends MutatingApiAction<DatabaseForm>
     {
+        @Override
         public ApiResponse execute(DatabaseForm form, BindException errors)
         {
             if (form.getDatabaseId() == null)
@@ -205,7 +152,7 @@ public class JBrowseController extends SpringActionController
 
             try
             {
-                JBrowseManager.get().addDatabaseMember(getContainer(), getUser(), form.getDatabaseId(), form.getTrackIdList(), form.getOutputFileIdList());
+                JBrowseManager.get().addDatabaseMember(getUser(), form.getDatabaseId(), form.getTrackIdList(), form.getOutputFileIdList());
             }
             catch (IOException e)
             {
@@ -225,8 +172,6 @@ public class JBrowseController extends SpringActionController
         Integer[] _trackIds;
         Integer _libraryId;
         Integer[] _outputFileIds;
-        Boolean _isPrimaryDb;
-        Boolean _shouldCreateOwnIndex;
         Boolean _isTemporary;
 
         public String getDatabaseId()
@@ -309,26 +254,6 @@ public class JBrowseController extends SpringActionController
             _outputFileIds = outputFileIds;
         }
 
-        public Boolean getIsPrimaryDb()
-        {
-            return _isPrimaryDb == null ? false : _isPrimaryDb;
-        }
-
-        public void setIsPrimaryDb(Boolean isPrimaryDb)
-        {
-            _isPrimaryDb = isPrimaryDb;
-        }
-
-        public Boolean getShouldCreateOwnIndex()
-        {
-            return _shouldCreateOwnIndex == null ? false : _shouldCreateOwnIndex;
-        }
-
-        public void setShouldCreateOwnIndex(Boolean shouldCreateOwnIndex)
-        {
-            _shouldCreateOwnIndex = shouldCreateOwnIndex;
-        }
-
         public Boolean getIsTemporary()
         {
             return _isTemporary == null ? false : _isTemporary;
@@ -341,8 +266,9 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class ReprocessResourcesAction extends MutatingApiAction<ReprocessResourcesForm>
+    public static class ReprocessResourcesAction extends MutatingApiAction<ReprocessResourcesForm>
     {
+        @Override
         public ApiResponse execute(ReprocessResourcesForm form, BindException errors)
         {
             if ((form.getJsonFiles() == null || form.getJsonFiles().length == 0) && (form.getDatabaseIds() == null || form.getDatabaseIds().length == 0))
@@ -363,7 +289,7 @@ public class JBrowseController extends SpringActionController
                 {
                     for (String databaseGuid : form.getDatabaseIds())
                     {
-                        PipelineService.get().queueJob(JBrowseSessionPipelineJob.recreateDatabase(getContainer(), getUser(), root, databaseGuid));
+                        JBrowseService.get().reprocessDatabase(getUser(), databaseGuid);
                     }
                 }
 
@@ -373,6 +299,15 @@ public class JBrowseController extends SpringActionController
             {
                 errors.reject(ERROR_MSG, e.getMessage());
                 return null;
+            }
+        }
+
+        @Override
+        public void validateForm(ReprocessResourcesForm form, Errors errors)
+        {
+            if ((form.getJsonFiles() == null || form.getJsonFiles().length == 0) && (form.getDatabaseIds() == null || form.getDatabaseIds().length == 0))
+            {
+                errors.reject("Must provide a list of sessions or JSON files to re-process");
             }
         }
     }
@@ -411,15 +346,13 @@ public class JBrowseController extends SpringActionController
         @Override
         public ModelAndView getView(BrowserForm form, BindException errors) throws Exception
         {
-            Database db = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), form.getDatabase()), null).getObject(Database.class);
-            _title = db == null ? "Not Found" : db.getName();
+            JBrowseSession db = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), form.getDatabase()), null).getObject(JBrowseSession.class);
+            _title = db == null ? "JBrowse" : db.getName();
             form.setPageTitle(_title);
 
-            JspView<BrowserForm> view = new JspView<>("/org/labkey/jbrowse/view/browser.jsp", form);
-            view.setTitle(_title);
-            view.setHidePageTitle(true);
-            view.setFrame(WebPartView.FrameType.NONE);
-            getPageConfig().setTemplate(PageConfig.Template.None);
+            ModuleHtmlView view = ModuleHtmlView.get(ModuleLoader.getInstance().getModule(JBrowseModule.class), Path.parse("views/gen/jbrowse.html"));
+            assert view != null;
+            getPageConfig().setIncludePostParameters(true);
 
             return view;
         }
@@ -458,8 +391,9 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class ModifyAttributesAction extends MutatingApiAction<SimpleApiJsonForm>
+    public static class ModifyAttributesAction extends MutatingApiAction<SimpleApiJsonForm>
     {
+        @Override
         public ApiResponse execute(SimpleApiJsonForm form, BindException errors)
         {
             JSONArray jsonFiles = form.getJsonObject().getJSONArray("jsonFiles");
@@ -622,6 +556,7 @@ public class JBrowseController extends SpringActionController
             }
         }
 
+        @Override
         public ApiResponse execute(GetGenotypesForm form, BindException errors)
         {
             JSONArray ret = new JSONArray();
@@ -760,8 +695,14 @@ public class JBrowseController extends SpringActionController
             }
             else
             {
-                errors.reject(ERROR_MSG, "Unknown session: " + form.getSession());
-                return null;
+                JBrowseSession db = JBrowseSession.getForId(form.getSession());
+                if (db == null)
+                {
+                    errors.reject(ERROR_MSG, "Unknown session: " + form.getSession());
+                    return null;
+                }
+
+                resp = db.getConfigJson(getUser(), _log);
             }
 
             return new ApiSimpleResponse(resp);

@@ -23,7 +23,7 @@ export default jbrowse => {
         return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
     }
 
-    function makeTable(data, classes){
+    function makeAnnTable(data, classes){
         const geneNames = []
         const tableBodyRows = []
         for (let i in data){
@@ -35,7 +35,7 @@ export default jbrowse => {
             const geneName = line[3] + (line[4] ? " (" + line[4] + ")" : "");
             if (!geneNames.includes(geneName)){
                 tableBodyRows.push(
-                        <TableRow>
+                        <TableRow key={geneName}>
                             <TableCell>{line[1]}</TableCell>
                             <TableCell>{line[2]}</TableCell>
                             <TableCell>{geneName}</TableCell>
@@ -70,32 +70,14 @@ export default jbrowse => {
         for (let display in displays){
             const tempProp = []
             for (let property in displays[display].properties){
-                if (feat["INFO"][displays[display].properties[property]]){
-                    if (feat["INFO"][displays[display].properties[property]].length === 1){
-                        let tempName
-                        if (fields[displays[display].properties[property]]){
-                            tempName = fields[displays[display].properties[property]].title
-                        }
-                        else {
-                            tempName = displays[display].properties[property]
-                        }
-                        tempProp.push(
-                                <div className={classes.field}>
-                                    <div className={classes.fieldName}>
-                                        {tempName}
-                                    </div>
-                                    <div className={classes.fieldValue}>
-                                        {feat["INFO"][displays[display].properties[property]]}
-                                    </div>
-                                </div>
-                        )
-                    }
-                    else if (feat["INFO"][displays[display].properties[property]].length > 1){
+                let value = feat["INFO"][displays[display].properties[property]]
+                if (value){
+                    if (Array.isArray(value)){
                         const children = []
-                        for (let val in feat["INFO"][displays[display].properties[property]]){
+                        for (let val in value){
                             children.push(
                                     <div className={classes.fieldSubValue}>
-                                        {feat["INFO"][displays[display].properties[property]][val]}
+                                        {value[val]}
                                     </div>
                             )
                         }
@@ -105,6 +87,19 @@ export default jbrowse => {
                                         {displays[display].properties[property]}
                                     </div>
                                     {children}
+                                </div>
+                        )
+                    }
+                    else {
+                        let tempName = fields[displays[display].properties[property]] ? fields[displays[display].properties[property]].title : displays[display].properties[property]
+                        tempProp.push(
+                                <div className={classes.field}>
+                                    <div className={classes.fieldName}>
+                                        {tempName}
+                                    </div>
+                                    <div className={classes.fieldValue}>
+                                        {value}
+                                    </div>
                                 </div>
                         )
                     }
@@ -231,7 +226,7 @@ export default jbrowse => {
             let alleleTableRows = []
             for (let allele in alleleCounts){
                 alleleTableRows.push(
-                        <TableRow>
+                        <TableRow key={allele}>
                             <TableCell>{allele}</TableCell>
                             <TableCell>{round(alleleCounts[allele]/alleleTotal, 4)}</TableCell>
                             <TableCell>{alleleCounts[allele]}</TableCell>
@@ -274,10 +269,11 @@ export default jbrowse => {
                                     data={gtBarData}
                                     options={{
                                         title: "Genotypes",
-                                        width: 300,
+                                        width: 400,
                                         height: 200,
-                                        bar: { groupWidth: '95%' },
+                                        bar: { groupWidth: '60%' },
                                         legend: { position: 'none' },
+                                        fontSize: 14
                                     }}
                                     // For tests
                                     rootProps={{ 'data-testid': '6' }}
@@ -290,7 +286,7 @@ export default jbrowse => {
         }, []);
         return state
     }
-    function NewTable(props) {
+    function CreatePanel(props) {
         const classes = styles()
         const { model } = props
         const feat = JSON.parse(JSON.stringify(model.featureData))
@@ -307,7 +303,7 @@ export default jbrowse => {
 
         let annTable;
         if (feat["INFO"]["ANN"]){
-            annTable = makeTable(feat["INFO"]["ANN"], classes);
+            annTable = makeAnnTable(feat["INFO"]["ANN"], classes);
             feat["INFO"]["ANN"] = null;
         }
 
@@ -342,9 +338,9 @@ export default jbrowse => {
         )
     }
 
-    NewTable.propTypes = {
+    CreatePanel.propTypes = {
         model: MobxPropTypes.observableObject.isRequired,
     }
 
-    return observer(NewTable)
+    return observer(CreatePanel)
 }

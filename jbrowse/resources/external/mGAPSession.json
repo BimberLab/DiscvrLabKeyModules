@@ -1,6 +1,6 @@
 {
   "configuration": {},
-  "assemblies": {
+  "assembly": {
     "name": "hg38",
     "aliases": [
       "GRCh38"
@@ -43,7 +43,7 @@
         "Annotation"
       ],
       "adapter": {
-        "type": "VcfTabixAdapter",
+        "type": "ExtendedVariantAdapter",
         "vcfGzLocation": {
           "uri": "<%=contextPath%>/jbrowse/mgap/mGap.v2.1.subset.vcf.gz"
         },
@@ -53,13 +53,23 @@
           }
         }
       },
+      "displays": [
+        {
+          "type": "ExtendedVariantDisplay",
+          "displayId": "mgap_hg38-ExtendedVariantDisplay",
+          "renderer": {
+            "type": "ExtendedVariantRenderer",
+          }
+        }
+      ],
       "metadata": {
         "extendedVariantDisplayConfig": [
           {
             "name": "AC, AF",
             "properties": [
               "AC",
-              "AF"
+              "AF",
+              "IMPACT"
             ]
           },
           {
