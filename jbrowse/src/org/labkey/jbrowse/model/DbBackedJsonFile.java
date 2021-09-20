@@ -40,7 +40,7 @@ abstract public class DbBackedJsonFile extends JsonFile
         setCategory("Reference Annotations");
         setObjectId(genomeId + "." + suffix);
 
-        _data = getOrCreateExpData(createDatabaseRecordsIfNeeded, user);
+        _data = shouldExist() ? getOrCreateExpData(createDatabaseRecordsIfNeeded, user) : null;
     }
 
     @Override
