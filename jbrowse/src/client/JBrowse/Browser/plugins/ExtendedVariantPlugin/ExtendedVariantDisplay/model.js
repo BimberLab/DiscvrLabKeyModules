@@ -1,82 +1,200 @@
-import { ConfigurationReference } from '@jbrowse/core/configuration'
-import { getParentRenderProps } from '@jbrowse/core/util/tracks'
-import { getContainingTrack, getSession } from '@jbrowse/core/util'
+import { ConfigurationReference, getConf } from '@jbrowse/core/configuration'
+import { getParentRenderProps, getRpcSessionId } from '@jbrowse/core/util/tracks'
+import { getContainingTrack, getSession, getContainingView } from '@jbrowse/core/util'
 import FilterListIcon from '@material-ui/icons/FilterList'
 import configSchemaF from './configSchema'
+import { cast, types, addDisposer, getEnv, Instance } from 'mobx-state-tree'
+import { autorun, observable } from 'mobx'
+import PaletteIcon from '@material-ui/icons/Palette'
+import PluginManager from '@jbrowse/core/PluginManager'
+import {getSnapshot} from 'mobx-state-tree'
+
+const attributes = ['SNV', 'Insertion', 'Deletion', 'High', 'Moderate', 'Low', 'Other']
+const colors = ['green', 'red', 'blue', 'gray', 'goldenrod']
 
 export default jbrowse => {
-  const { types } = jbrowse.jbrequire('mobx-state-tree')
+   const configSchema = jbrowse.jbrequire(configSchemaF)
+   const { BaseLinearDisplay } = jbrowse.getPlugin(
+      'LinearGenomeViewPlugin',
+   ).exports
 
-  const configSchema = jbrowse.jbrequire(configSchemaF)
+   return types
+      .compose(
+         'ExtendedVariantDisplay',
+         BaseLinearDisplay,
+         types.model({
+            type: types.literal('ExtendedVariantDisplay'),
+            configuration: ConfigurationReference(configSchema),
+            colorSNV: types.maybe(types.string),
+            colorDeletion: types.maybe(types.string),
+            colorInsertion: types.maybe(types.string),
+            colorOther: types.maybe(types.string),
+            colorModerate: types.maybe(types.string),
+            colorHigh: types.maybe(types.string),
+            colorLow: types.maybe(types.string)
+         }),
+      )
+      .actions(self => ({
+         setReady(flag){
+            self.ready = flag
+         },
+         setColor(attr, color) {
+            if (attr == "SNV"){
+                self.colorSNV = color
+            }
+            else if (attr == "Insertion"){
+                self.colorInsertion = color
+            }
+            else if (attr == "Deletion"){
+                self.colorDeletion = color
+            }
+            else if (attr == "Other"){
+                self.colorOther = color
+            }
+            else if (attr == "High"){
+                self.colorHigh = color
+            }
+            else if (attr == "Moderate"){
+                self.colorModerate = color
+            }
+            else if (attr == "Low"){
+                self.colorLow = color
+            }
+         },
+      }))
+      .actions(self => ({
+         afterAttach() {
+            addDisposer(
+               self,
+               autorun(
+                  async () => {
+                     try {
+                        const { rpcManager } = getSession(self)
+                        const colorSNV = self.colorSNV ?? 'blue'
+                        const colorDeletion = self.colorDeletion ?? 'red'
+                        const colorInsertion = self.colorInsertion ?? 'green'
+                        const colorOther = self.colorOther ?? 'gray'
+                        const colorHigh = self.colorHigh ?? 'red'
+                        const colorModerate = self.colorModerate ?? 'goldenrod'
+                        const colorLow = self.colorLow ?? 'black'
+                        const color = "jexl:get(feature,'INFO').IMPACT=='MODERATE'?'"+colorModerate+"':get(feature,'INFO').IMPACT=='HIGH'?'"+colorHigh+"':get(feature,'INFO').IMPACT=='LOW'?'"+colorLow+"':get(feature,'type')=='SNV'?'"+colorSNV+"':get(feature,'type')=='deletion'?'"+colorDeletion+"':get(feature,'type')=='insertion'?'"+colorInsertion+"':'"+colorOther+"'"
 
-  const { BaseLinearDisplay } = jbrowse.getPlugin(
-    'LinearGenomeViewPlugin',
-  ).exports
+                        if (self.renderProps().config.color1.value !== color){
+                           self.renderProps().config.color1.set(color)
 
-  return types
-    .compose(
-      'WidgetDisplay',
-      BaseLinearDisplay,
-      types.model({
-        type: types.literal('ExtendedVariantDisplay'),
-        configuration: ConfigurationReference(configSchema),
-      }),
-    )
+                           const { centerLineInfo } = getContainingView(self)
+                           const { refName, assemblyName, offset } = centerLineInfo
+                           const centerBp = Math.round(offset) + 1
 
-    .actions(self => ({
-      selectFeature(feature) {
-        var extendedVariantDisplayConfig
-        if(getContainingTrack(self).configuration.metadata.value.extendedVariantDisplayConfig){
-            extendedVariantDisplayConfig = getContainingTrack(self).configuration.metadata.value.extendedVariantDisplayConfig
-        }
-        else{
-            extendedVariantDisplayConfig = []
-        }
+                           const region = {
+                              start: centerBp,
+                              end: (centerBp || 0) + 1,
+                              refName,
+                              assemblyName,
+                           }
 
-        var message
-        if(getContainingTrack(self).configuration.metadata.value.message){
-            message = getContainingTrack(self).configuration.metadata.value.message
-        }
-        else{
-            message = ""
-        }
-        const trackId = getContainingTrack(self).configuration.trackId
-        const session = getSession(self)
-        var widgetId = 'Variant-' + trackId;
+                           await (self.rendererType).renderInClient(rpcManager, {
+                              assemblyName,
+                              regions: [region],
+                              adapterConfig: self.adapterConfig,
+                              rendererType: self.rendererType.name,
+                              sessionId: getRpcSessionId(self),
+                              timeout: 1000000,
+                              ...self.renderProps(),
+                           })
+                           self.setReady(true)
+                        } else {
+                           self.setReady(true)
+                        }
+                     } catch (error) {
+                        console.error(error)
+                        self.setError(error)
+                     }
+                  },
+                  { delay: 1000 },
+               ),
+            )
+         },
+         selectFeature(feature){
+            const track = getContainingTrack(self)
+            const metadata = getConf(track, 'metadata')
+            var extendedVariantDisplayConfig
+            if (metadata.extendedVariantDisplayConfig){
+               extendedVariantDisplayConfig = metadata.extendedVariantDisplayConfig
+            }
+            else {
+               extendedVariantDisplayConfig = []
+            }
 
-        const featureWidget = session.addWidget(
-          'ExtendedVariantWidget',
-          widgetId,
-          { featureData: feature.toJSON(),
-            extendedVariantDisplayConfig: extendedVariantDisplayConfig,
-            message: message }
-        )
-        session.showWidget(featureWidget)
-        session.setSelection(feature)
-      },
-    }))
+            var message
+            if (metadata.message){
+               message = metadata.message
+            }
+            else {
+               message = ""
+            }
+            const trackId = getConf(track, 'trackId')
+            const session = getSession(self)
+            var widgetId = 'Variant-' + trackId;
 
-    .views(self => ({
-      get renderProps() {
-        return {
-          ...self.composedRenderProps,
-          ...getParentRenderProps(self),
-          config: self.configuration.renderer,
-        }
-      },
+            const featureWidget = session.addWidget(
+               'ExtendedVariantWidget',
+               widgetId,
+               { featureData: feature.toJSON(),
+                 extendedVariantDisplayConfig: extendedVariantDisplayConfig,
+                 message: message }
+            )
+            session.showWidget(featureWidget)
+            session.setSelection(feature)
+         },
+      }))
 
-      get rendererTypeName() {
-        return self.configuration.renderer.type
-      },
+      .views(self => {
+         const { renderProps: superRenderProps } = self
+         const { trackMenuItems: superTrackMenuItems } = self
+         return {
+            renderProps() {
+               return {
+                  ...superRenderProps(),
+                  config: self.configuration.renderer,
+               }
+            },
 
-      get trackMenuItems() {
-        return [
-          {
-            label: 'Filter',
-            onClick: self.openFilterConfig,
-            icon: FilterListIcon,
-          },
-        ]
-      },
-    }))
+            get rendererTypeName() {
+               return self.configuration.renderer.type
+            },
+
+            get composedTrackMenuItems() {
+               return [{
+                  label: 'Color',
+                  icon: PaletteIcon,
+                  subMenu: [...attributes.map(option => {
+                     return {
+                       label: option,
+                       subMenu: [...colors.map(color => {
+                          return {
+                            label: color,
+                            onClick: () => {
+                                self.setColor(option, color)
+                                self.ready = false
+                            }
+                          }
+                       })]
+                     }
+                  })]
+               }]
+            },
+
+            trackMenuItems() {
+               return [
+                  ...this.composedTrackMenuItems,
+                  {  label: 'Get Session',
+                     onClick: ()  => {
+                       console.log(getSnapshot(getSession(self)))
+                     },
+                     icon: FilterListIcon, },
+               ]
+            },
+         }
+      })
 }

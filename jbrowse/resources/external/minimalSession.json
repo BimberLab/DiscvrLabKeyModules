@@ -107,9 +107,8 @@
           "displays": [
             {
               "type": "ExtendedVariantDisplay",
-              "configuration":
-              "clinvar_ncbi_hg38-ExtendedVariantDisplay",
-            },
+              "configuration": "clinvar_ncbi_hg38-ExtendedVariantDisplay"
+            }
           ]
         },
         {
@@ -118,12 +117,12 @@
           "displays": [
             {
               "type": "WidgetDisplay",
-              "configuration": "clinvar_ncbi_hg38_2-WidgetDisplay",
-            },
+              "configuration": "clinvar_ncbi_hg38_2-WidgetDisplay"
+            }
           ]
         }
-      ],
+      ]
     }
   },
-  "connections": [],
+  "connections": []
 }

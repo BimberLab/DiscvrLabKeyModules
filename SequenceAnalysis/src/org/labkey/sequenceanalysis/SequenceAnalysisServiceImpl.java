@@ -290,7 +290,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
 
     public File bgzipFile(File input, Logger log) throws PipelineJobException
     {
-        return new BgzipRunner(log).execute(input);
+        return SequenceUtil.bgzip(input, log);
     }
 
     @Override

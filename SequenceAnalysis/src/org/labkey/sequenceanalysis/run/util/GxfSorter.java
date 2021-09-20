@@ -2,7 +2,6 @@ package org.labkey.sequenceanalysis.run.util;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
@@ -42,7 +41,9 @@ public class GxfSorter
     public File sortGff(File input, @Nullable File output) throws PipelineJobException
     {
         File baseDir = output == null ? input.getParentFile() : output.getParentFile();
-        File outputFile = output == null ? new File(input.getParentFile(), "temp.sorted.gff") : output;
+        File outputFile = new File(baseDir, "temp.sorted.gtf");
+        boolean inputIsGzip = input.getPath().toLowerCase().endsWith(".gz");
+        boolean outputIsGzip = output == null ? inputIsGzip : output.getPath().toLowerCase().endsWith(".gz");
 
         File script = new File(baseDir, "sorter.sh");
         try (PrintWriter writer = PrintWriters.getPrintWriter(script))
@@ -53,8 +54,15 @@ public class GxfSorter
             writer.println("GFF=" + input.getPath());
             writer.println("OUT_GFF=" + outputFile.getPath());
 
-            writer.println("awk '{ if ($1 ~ \"^#\" ) print $0; else exit; }' $GFF > $OUT_GFF");
-            writer.println("(grep -v '#' $GFF | grep -v \"Parent=\" | sort -V -k1,1 -k4,4n -k5,5n; grep -v '#' $GFF | grep -e \"Parent=\" | sort -V -k1,1 -k4,4n -k5,5n)| sort -V -k1,1 -k4,4n -s >> $OUT_GFF");
+            String cat = inputIsGzip ? "zcat" : "cat";
+            writer.println(cat + " $GFF | awk '{ if ($1 ~ \"^#\" ) print $0; else exit; }' > $OUT_GFF");
+            writer.println("(" + cat  + " $GFF | grep -v '#' | grep -v \"Parent=\" | sort -V -k1,1 -k4,4n -k5,5n; " + cat + " $GFF | grep -v '#' | grep -e \"Parent=\" | sort -V -k1,1 -k4,4n -k5,5n)| sort -V -k1,1 -k4,4n -s >> $OUT_GFF");
+
+            if (outputIsGzip)
+            {
+                writer.println("bgzip -f $OUT_GFF");
+                outputFile = new File(outputFile.getPath() + ".gz");
+            }
         }
         catch (IOException e)
         {
@@ -67,7 +75,9 @@ public class GxfSorter
     public File sortGtf(File input, @Nullable File output) throws PipelineJobException
     {
         File baseDir = output == null ? input.getParentFile() : output.getParentFile();
-        File outputFile = output == null ? new File(input.getParentFile(), "temp.sorted.gtf") : output;
+        File outputFile = new File(baseDir, "temp.sorted.gtf");
+        boolean inputIsGzip = input.getPath().toLowerCase().endsWith(".gz");
+        boolean outputIsGzip = output == null ? inputIsGzip : output.getPath().toLowerCase().endsWith(".gz");
 
         File script = new File(baseDir, "sorter.sh");
         try (PrintWriter writer = PrintWriters.getPrintWriter(script))
@@ -78,8 +88,9 @@ public class GxfSorter
             writer.println("GTF=" + input.getPath());
             writer.println("OUT_GTF=" + outputFile.getPath());
 
-            writer.println("awk '{ if ($1 ~ \"^#\" ) print $0; else exit; }' $GTF > $OUT_GTF");
-            writer.println("cat $GTF | grep -v '#' | awk -v OFS='\\t' ' {");
+            String cat = inputIsGzip ? "zcat" : "cat";
+            writer.println(cat + " $GTF | awk '{ if ($1 ~ \"^#\" ) print $0; else exit; }' > $OUT_GTF");
+            writer.println(cat + " $GTF | grep -v '#' | awk -v OFS='\\t' ' {");
             writer.println("so = 3");
             writer.println("if (tolower($3) == \"gene\")");
             writer.println("    so = 1");
@@ -90,6 +101,12 @@ public class GxfSorter
             writer.println("else if (tolower($3) == \"cds\")");
             writer.println("    so = 4");
             writer.println("print so, $0 } ' | sort -V -k2,2 -k5,5n -k1,1n | cut -d$'\\t' -f2- >> $OUT_GTF");
+
+            if (outputIsGzip)
+            {
+                writer.println("bgzip -f $OUT_GTF");
+                outputFile = new File(outputFile.getPath() + ".gz");
+            }
         }
         catch (IOException e)
         {
@@ -119,6 +136,22 @@ public class GxfSorter
             {
                 input.delete();
                 FileUtils.moveFile(outputFile, input);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+        else if (!outputFile.equals(output))
+        {
+            try
+            {
+                if (output.exists())
+                {
+                    output.delete();
+                }
+
+                FileUtils.moveFile(outputFile, output);
             }
             catch (IOException e)
             {

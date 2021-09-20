@@ -15,7 +15,6 @@
  */
 package org.labkey.jbrowse.pipeline;
 
-import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.ColumnInfo;
@@ -35,21 +34,16 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.jbrowse.JBrowseManager;
-import org.labkey.jbrowse.JBrowseRoot;
 import org.labkey.jbrowse.JBrowseSchema;
-import org.labkey.jbrowse.model.Database;
+import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * User: bbimber
@@ -110,98 +104,44 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
         {
             reprocessResources();
         }
-        else if (getPipelineJob().getMode() == JBrowseSessionPipelineJob.Mode.RecreateDatabase)
+        else if (getPipelineJob().getMode() == JBrowseSessionPipelineJob.Mode.PrepareGenome)
         {
-            recreateDatabase(getPipelineJob().getDatabaseGuid());
+            prepareGenome();
         }
 
         return new RecordedActionSet(Collections.singleton(new RecordedAction("JBrowse")));
     }
 
-    private void recreateDatabase(String databaseGuid) throws PipelineJobException
+    private void prepareGenome() throws PipelineJobException
     {
-        JBrowseRoot root = new JBrowseRoot(getJob().getLogger());
-
-        try
+        if (getPipelineJob().getLibraryId() == null)
         {
-            getJob().getLogger().info("preparing session JSON files");
-            TableSelector ts = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null);
-            Database db = ts.getObject(Database.class);
-            if (db == null)
-            {
-                throw new IllegalArgumentException("Unknown database: " + databaseGuid);
-            }
-
-            root.prepareDatabase(db, getJob().getUser(), getJob());
+            throw new PipelineJobException("No genome ID provided, this is likely an upstream problem");
         }
-        catch (IOException e)
+
+        JBrowseSession session = JBrowseSession.getGenericGenomeSession(getPipelineJob().getLibraryId());
+        List<JsonFile> jsonFiles = session.getJsonFiles(getJob().getUser(), true);
+        getJob().getLogger().info("total files to reprocess: " + jsonFiles.size());
+        for (JsonFile f : jsonFiles)
         {
-            throw new PipelineJobException(e);
+            f.prepareResource(getJob().getLogger(), false, true);
         }
     }
 
     private void reprocessResources() throws PipelineJobException
     {
+        if (getPipelineJob().getJsonFiles() == null || getPipelineJob().getJsonFiles().isEmpty())
+        {
+            throw new PipelineJobException("No JsonFiles provided, this is likely an upstream problem");
+        }
+
         TableInfo ti = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
         TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("objectid"), getPipelineJob().getJsonFiles(), CompareType.IN), null);
         List<JsonFile> jsonFiles = ts.getArrayList(JsonFile.class);
-        try
+        getJob().getLogger().info("total files to reprocess: " + jsonFiles.size());
+        for (JsonFile f : jsonFiles)
         {
-            JBrowseRoot root = new JBrowseRoot(getJob().getLogger());
-            getJob().getLogger().info("total files to reprocess: " + jsonFiles.size());
-            Set<Integer> sequenceIds = new HashSet<>();
-            Set<Integer> trackIds = new HashSet<>();
-
-            for (JsonFile f : jsonFiles)
-            {
-                if (f.getSequenceId() != null)
-                {
-                    root.prepareRefSeq(getJob().getUser(), f.getSequenceId(), true);
-                    sequenceIds.add(f.getSequenceId());
-                }
-                else if (f.getTrackId() != null)
-                {
-                    root.prepareFeatureTrack(getJob().getUser(), f.getTrackId(), null, true);
-                    trackIds.add(f.getTrackId());
-                }
-                else if (f.getOutputFile() != null)
-                {
-                    root.prepareOutputFile(getJob().getUser(), f.getOutputFile(), true);
-                }
-                else
-                {
-                    getJob().getLogger().info("no need to reprocess jsonfile: " + f.getObjectId());
-                }
-            }
-
-            //next update any DBs using these resources
-            TableInfo databaseMembers = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASE_MEMBERS);
-            TableSelector ts2 = new TableSelector(databaseMembers, PageFlowUtil.set("database"), new SimpleFilter(FieldKey.fromString("jsonfile"), getPipelineJob().getJsonFiles(), CompareType.IN), null);
-            Set<String> databaseGuids = new HashSet<>(ts2.getArrayList(String.class));
-
-            //look for libraries using these resources.  then find any sessions based on these libraries
-            Set<Integer> libraryIds = new HashSet<>();
-            libraryIds.addAll(new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("reference_library_tracks"), PageFlowUtil.set("library_id"), new SimpleFilter(FieldKey.fromString("rowid"), trackIds, CompareType.IN), null).getArrayList(Integer.class));
-            libraryIds.addAll(new TableSelector(JBrowseManager.get().getSequenceAnalysisTable("reference_library_members"), PageFlowUtil.set("library_id"), new SimpleFilter(FieldKey.fromString("ref_nt_id"), sequenceIds, CompareType.IN), null).getArrayList(Integer.class));
-            if (!libraryIds.isEmpty())
-            {
-                List<String> newIds = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), PageFlowUtil.set("objectid"), new SimpleFilter(FieldKey.fromString("libraryId"), libraryIds, CompareType.IN), null).getArrayList(String.class);
-                if (!newIds.isEmpty())
-                {
-                    getJob().getLogger().info("re-processing " + new HashSet<>(newIds).size() + " additional sessions because they use reference genomes that were modified");
-                    databaseGuids.addAll(newIds);
-                }
-            }
-
-            getJob().getLogger().info("recreating " + databaseGuids.size() + " sessions because resources may have changed");
-            for (String databaseGuid : databaseGuids)
-            {
-                recreateDatabase(databaseGuid);
-            }
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
+            f.prepareResource(getJob().getLogger(), false, true);
         }
     }
 
@@ -215,38 +155,45 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
 
         try
         {
-            JBrowseRoot root = new JBrowseRoot(getJob().getLogger());
-
             //first create the database record
             if (getPipelineJob().getMode() == JBrowseSessionPipelineJob.Mode.CreateNew)
             {
-                //TODO: if you restart a failed job, this record might already exist
+                //Note: if you restart a failed job, this record might already exist
+                TableSelector ts = new TableSelector(databases, new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null);
+                if (!ts.exists())
+                {
+                    CaseInsensitiveHashMap<Object> databaseRecord = new CaseInsensitiveHashMap<>();
+                    databaseRecord.put("name", getPipelineJob().getName());
+                    databaseRecord.put("description", getPipelineJob().getDatabaseDescription());
+                    databaseRecord.put("libraryid", getPipelineJob().getLibraryId());
+                    databaseRecord.put("objectid", databaseGuid);
+                    databaseRecord.put("jobid", getJob().getJobGUID());
+                    databaseRecord.put("temporary", getPipelineJob().isTemporarySession());
+                    databaseRecord.put("container", getJob().getContainer().getId());
+                    databaseRecord.put("created", new Date());
+                    databaseRecord.put("createdby", getJob().getUser().getUserId());
+                    databaseRecord.put("modified", new Date());
+                    databaseRecord.put("modifiedby", getJob().getUser().getUserId());
 
-                CaseInsensitiveHashMap<Object> databaseRecord = new CaseInsensitiveHashMap<>();
-                databaseRecord.put("name", getPipelineJob().getName());
-                databaseRecord.put("description", getPipelineJob().getDatabaseDescription());
-                databaseRecord.put("libraryid", getPipelineJob().getLibraryId());
-                databaseRecord.put("objectid", databaseGuid);
-                databaseRecord.put("jobid", getJob().getJobGUID());
-                databaseRecord.put("primarydb", getPipelineJob().isPrimaryDb());
-                databaseRecord.put("createOwnIndex", getPipelineJob().isCreateOwnIndex());
-                databaseRecord.put("temporary", getPipelineJob().isTemporarySession());
-                databaseRecord.put("container", getJob().getContainer().getId());
-                databaseRecord.put("created", new Date());
-                databaseRecord.put("createdby", getJob().getUser().getUserId());
-                databaseRecord.put("modified", new Date());
-                databaseRecord.put("modifiedby", getJob().getUser().getUserId());
-
-                getJob().getLogger().debug("creating database record");
-                Table.insert(getJob().getUser(), databases, databaseRecord);
+                    getJob().getLogger().debug("creating database record");
+                    Table.insert(getJob().getUser(), databases, databaseRecord);
+                }
+                else
+                {
+                    getJob().getLogger().info("Existing session record found for " + databaseGuid + ", re-using");
+                }
             }
 
             TableSelector dbTs = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null);
-            Database db = dbTs.getObject(Database.class);
+            JBrowseSession db = dbTs.getObject(JBrowseSession.class);
             if (db == null)
             {
                 throw new IllegalArgumentException("Unknown database: " + databaseGuid);
             }
+
+            getJob().getLogger().info("Preparing default genome tracks:");
+            JBrowseSession session = JBrowseSession.getGenericGenomeSession(db.getLibraryId());
+            session.ensureJsonFilesPrepared(getJob().getUser(), getJob().getLogger());
 
             List<Integer> trackIdList = new ArrayList<>();
             if (getPipelineJob().getTrackIds() != null)
@@ -269,35 +216,35 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
 
                 for (Integer trackId : trackIdList)
                 {
-                    JsonFile json = root.prepareFeatureTrack(getJob().getUser(), trackId, null, false);
+                    JsonFile json = JsonFile.prepareJsonFileForGenomeTrack(getJob().getUser(), trackId);
                     //this could indicate a non-supported filetype
                     if (json == null)
+                    {
+                        getJob().getLogger().debug("No JsonFile created for track: " + trackId);
                         continue;
-
-
-                    if (!json.getBaseDir().exists() || json.getBaseDir().listFiles().length == 0)
-                    {
-                        getJob().getLogger().error("track did not appear to process correctly, skipping: " + trackId);
                     }
-                    else
-                    {
-                        if (existingTrackIds.contains(trackId))
-                        {
-                            getJob().getLogger().info("track is already a member of this database, skipping");
-                            continue;
-                        }
 
-                        CaseInsensitiveHashMap<Object> trackRecord = new CaseInsensitiveHashMap<>();
-                        trackRecord.put("database", databaseGuid);
-                        trackRecord.put("jsonfile", json.getObjectId());
-                        trackRecord.put("container", getJob().getContainer().getId());
-                        trackRecord.put("created", new Date());
-                        trackRecord.put("createdby", getJob().getUser().getUserId());
-                        trackRecord.put("modified", new Date());
-                        trackRecord.put("modifiedby", getJob().getUser().getUserId());
-                        trackRecord = Table.insert(getJob().getUser(), databaseMembers, trackRecord);
-                        databaseMemberRecordsCreated.add((Integer)trackRecord.get("rowid"));
+                    if (json.getBaseDir() == null)
+                    {
+                        continue;
                     }
+
+                    if (existingTrackIds.contains(trackId))
+                    {
+                        getJob().getLogger().info("track is already a member of this database, skipping");
+                        continue;
+                    }
+
+                    CaseInsensitiveHashMap<Object> trackRecord = new CaseInsensitiveHashMap<>();
+                    trackRecord.put("database", databaseGuid);
+                    trackRecord.put("jsonfile", json.getObjectId());
+                    trackRecord.put("container", getJob().getContainer().getId());
+                    trackRecord.put("created", new Date());
+                    trackRecord.put("createdby", getJob().getUser().getUserId());
+                    trackRecord.put("modified", new Date());
+                    trackRecord.put("modifiedby", getJob().getUser().getUserId());
+                    trackRecord = Table.insert(getJob().getUser(), databaseMembers, trackRecord);
+                    databaseMemberRecordsCreated.add((Integer)trackRecord.get("rowid"));
                 }
             }
             else
@@ -326,7 +273,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
                         continue;
                     }
 
-                    JsonFile json = root.prepareOutputFile(getJob().getUser(), outputFileId, false);
+                    JsonFile json = JsonFile.prepareJsonFileRecordForOutputFile(getJob().getUser(), outputFileId, null, getPipelineJob().getLogger());
                     //this could indicate a non-supported filetype
                     if (json == null)
                         continue;
@@ -350,10 +297,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
                 }
             }
 
-            getJob().getLogger().info("preparing session JSON files");
-            root.prepareDatabase(db, getJob().getUser(), getJob());
-
-            getJob().getLogger().info("complete");
+            getJob().getLogger().info("Processing resources complete");
             success = true;
         }
         catch (Exception e)
@@ -370,21 +314,6 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
                 {
                     Table.delete(databases, databaseGuid);
                     Table.delete(databaseMembers, new SimpleFilter(FieldKey.fromString("database"), databaseGuid));
-
-                    JBrowseRoot root = new JBrowseRoot(getJob().getLogger());
-                    File expectedDir = root.getDatabaseDir(getJob().getContainer());
-                    if (expectedDir.exists())
-                    {
-                        try
-                        {
-                            FileUtils.deleteDirectory(expectedDir);
-                        }
-                        catch (IOException e)
-                        {
-                            //ignore
-                            getJob().getLogger().info("unable to delete directory: " + expectedDir.getPath());
-                        }
-                    }
                 }
                 else
                 {
