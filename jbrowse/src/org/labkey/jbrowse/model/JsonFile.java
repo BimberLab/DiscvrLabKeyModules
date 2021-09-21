@@ -711,53 +711,60 @@ public class JsonFile
             }
 
             File idx = new File(finalLocation.getPath() + ".tbi");
-            if (SystemUtils.IS_OS_WINDOWS)
+            if (forceReprocess || !idx.exists())
             {
-                try
+                if (throwIfNotPrepared)
                 {
-                    if (TRACK_TYPES.bed.getFileType().isType(finalLocation))
+                    throw new IllegalStateException("This track should have been previously indexed: " + finalLocation.getPath());
+                }
+                else
+                {
+                    if (SystemUtils.IS_OS_WINDOWS)
                     {
-                        Index index = IndexFactory.createIndex(finalLocation.toPath(), new BEDCodec(), IndexFactory.IndexType.TABIX);
-                        index.write(idx);
-                    }
-                    else if (TRACK_TYPES.gtf.getFileType().isType(finalLocation) || TRACK_TYPES.gff.getFileType().isType(finalLocation))
-                    {
-                        Index index = IndexFactory.createIndex(finalLocation.toPath(), new Gff3Codec(), IndexFactory.IndexType.TABIX);
-                        index.write(idx);
+                        try
+                        {
+                            if (TRACK_TYPES.bed.getFileType().isType(finalLocation))
+                            {
+                                Index index = IndexFactory.createIndex(finalLocation.toPath(), new BEDCodec(), IndexFactory.IndexType.TABIX);
+                                index.write(idx);
+                            }
+                            else if (TRACK_TYPES.gtf.getFileType().isType(finalLocation) || TRACK_TYPES.gff.getFileType().isType(finalLocation))
+                            {
+                                Index index = IndexFactory.createIndex(finalLocation.toPath(), new Gff3Codec(), IndexFactory.IndexType.TABIX);
+                                index.write(idx);
+                            }
+                            else
+                            {
+                                log.warn("Cannot create tabix index on windows!");
+                            }
+                        }
+                        catch (IOException e)
+                        {
+                            log.error("Error creating tabix index!", e);
+                        }
                     }
                     else
                     {
-                        log.warn("Cannot create tabix index on windows!");
-                    }
-                }
-                catch (IOException e)
-                {
-                    log.error("Error creating tabix index!", e);
-                }
-            }
-            else
-            {
-                //Ensure sorted:
-                if (TRACK_TYPES.bed.getFileType().isType(finalLocation))
-                {
-                    try
-                    {
-                        SequencePipelineService.get().sortROD(finalLocation, log, 2);
-                    }
-                    catch (IOException e)
-                    {
-                        throw new PipelineJobException(e);
-                    }
-                }
-                else if (TRACK_TYPES.gff.getFileType().isType(finalLocation) || TRACK_TYPES.gtf.getFileType().isType(finalLocation))
-                {
-                    SequenceAnalysisService.get().sortGxf(log, finalLocation, null);
-                }
+                        //Ensure sorted:
+                        if (TRACK_TYPES.bed.getFileType().isType(finalLocation))
+                        {
+                            try
+                            {
+                                SequencePipelineService.get().sortROD(finalLocation, log, 2);
+                            }
+                            catch (IOException e)
+                            {
+                                throw new PipelineJobException(e);
+                            }
+                        }
+                        else if (TRACK_TYPES.gff.getFileType().isType(finalLocation) || TRACK_TYPES.gtf.getFileType().isType(finalLocation))
+                        {
+                            SequenceAnalysisService.get().sortGxf(log, finalLocation, null);
+                        }
 
-                TabixRunner tabix = new TabixRunner(log);
-                if (forceReprocess || !idx.exists())
-                {
-                    tabix.execute(finalLocation);
+                        TabixRunner tabix = new TabixRunner(log);
+                        tabix.execute(finalLocation);
+                    }
                 }
             }
 
