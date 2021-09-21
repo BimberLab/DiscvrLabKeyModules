@@ -56,7 +56,7 @@ public class GxfSorter
 
             String cat = inputIsGzip ? "zcat" : "cat";
             writer.println(cat + " $GFF | awk '{ if ($1 ~ \"^#\" ) print $0; else exit; }' > $OUT_GFF");
-            writer.println("(" + cat  + " $GFF | grep -v '#' | grep -v \"Parent=\" | sort -V -k1,1 -k4,4n -k5,5n; " + cat + " $GFF | grep -v '#' | grep -e \"Parent=\" | sort -V -k1,1 -k4,4n -k5,5n)| sort -V -k1,1 -k4,4n -s >> $OUT_GFF");
+            writer.println("(" + cat  + " $GFF | grep -v '#' | grep -v \"Parent=\" | sort -V -t$'\\t' -k1,1 -k4,4n -k5,5n; " + cat + " $GFF | grep -v '#' | grep -e \"Parent=\" | sort -V -t$'\\t' -k1,1 -k4,4n -k5,5n)| sort -V -t$'\\t' -k1,1 -k4,4n -s >> $OUT_GFF");
 
             if (outputIsGzip)
             {
@@ -100,7 +100,7 @@ public class GxfSorter
             writer.println("    so = 3");
             writer.println("else if (tolower($3) == \"cds\")");
             writer.println("    so = 4");
-            writer.println("print so, $0 } ' | sort -V -k2,2 -k5,5n -k1,1n | cut -d$'\\t' -f2- >> $OUT_GTF");
+            writer.println("print so, $0 } ' | sort -V -t$'\\t' -k2,2 -k5,5n -k1,1n | cut -d$'\\t' -f2- >> $OUT_GTF");
 
             if (outputIsGzip)
             {
