@@ -187,10 +187,13 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                     for (JsonFile json : session.getJsonFiles(u, true))
                     {
                         rowMap.put(json.getObjectId(), json);
-                        expectedDirs.add(json.getBaseDir());
-                        if (!json.getBaseDir().exists())
+                        if (json.getBaseDir() != null)
                         {
-                            log.error("expected jbrowse folder does not exist: " + json.getBaseDir().getPath());
+                            expectedDirs.add(json.getBaseDir());
+                            if (!json.getBaseDir().exists())
+                            {
+                                log.error("expected jbrowse folder does not exist: " + json.getBaseDir().getPath());
+                            }
                         }
                     }
                 }
