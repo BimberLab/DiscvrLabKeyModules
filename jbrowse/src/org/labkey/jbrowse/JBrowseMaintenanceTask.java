@@ -27,11 +27,13 @@ import org.labkey.jbrowse.model.JsonFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * User: bimber
@@ -165,7 +167,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
         filter.addCondition(FieldKey.fromString("sequenceid"), null, CompareType.ISBLANK);
 
         TableSelector ts = new TableSelector(tableJsonFiles, filter, null);
-        List<JsonFile> rows = new ArrayList<>(ts.getArrayList(JsonFile.class));
+        Map<String, JsonFile> rowMap = ts.getArrayList(JsonFile.class).stream().collect(Collectors.toMap(JsonFile::getObjectId, Function.identity()));
 
         // Also check for genomes from this container, and any additional JsonFiles they may have:
         TableInfo tableGenomes = DbSchema.get(JBrowseManager.SEQUENCE_ANALYSIS, DbSchemaType.Module).getTable("reference_libraries");
@@ -184,6 +186,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                     JBrowseSession session = JBrowseSession.getGenericGenomeSession(genomeId);
                     for (JsonFile json : session.getJsonFiles(u, true))
                     {
+                        rowMap.put(json.getObjectId(), json);
                         expectedDirs.add(json.getBaseDir());
                         if (!json.getBaseDir().exists())
                         {
@@ -197,7 +200,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
         if (jbrowseRoot != null && jbrowseRoot.exists())
         {
             log.info("processing container: " + c.getPath());
-            for (JsonFile json : rows)
+            for (JsonFile json : rowMap.values())
             {
                 if (json.getBaseDir() != null)
                 {
@@ -248,7 +251,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
             }
         }
 
-        for (JsonFile j : rows)
+        for (JsonFile j : rowMap.values())
         {
             if (j.needsProcessing())
             {

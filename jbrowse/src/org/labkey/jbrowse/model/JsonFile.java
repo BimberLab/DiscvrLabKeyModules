@@ -657,17 +657,17 @@ public class JsonFile
         if (needsGzip() && !isGzipped())
         {
             //need to gzip and tabix index:
-            File finalLocation = getLocationOfProcessedTrack(true);
+            final File finalLocation = getLocationOfProcessedTrack(true);
             if (finalLocation.exists() && !SequencePipelineService.get().hasMinLineCount(finalLocation, 1))
             {
                 log.info("File exists but is zero-length, deleting and re-processing:");
                 forceReprocess = true;
             }
 
+            File idx = new File(finalLocation.getPath() + ".tbi");
             if (finalLocation.exists() && forceReprocess && !targetFile.equals(finalLocation))
             {
                 finalLocation.delete();
-                File idx = new File(finalLocation.getPath() + ".tbi");
                 if (idx.exists())
                 {
                     idx.delete();
@@ -710,7 +710,6 @@ public class JsonFile
                 }
             }
 
-            File idx = new File(finalLocation.getPath() + ".tbi");
             if (forceReprocess || !idx.exists())
             {
                 if (throwIfNotPrepared)
