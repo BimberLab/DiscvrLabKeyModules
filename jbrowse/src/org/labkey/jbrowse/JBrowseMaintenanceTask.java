@@ -1,6 +1,7 @@
 package org.labkey.jbrowse;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -15,8 +16,10 @@ import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.ldk.LDKService;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
+import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance.MaintenanceTask;
 import org.labkey.jbrowse.model.JBrowseSession;
@@ -213,7 +216,21 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                 if (childDir.exists())
                 {
                     log.info("deleting legacy jbrowse " + dir + " dir: " + childDir.getPath());
-                    FileUtils.deleteDirectory(childDir);
+                    if (SystemUtils.IS_OS_WINDOWS)
+                    {
+                        FileUtils.deleteDirectory(childDir);
+                    }
+                    else
+                    {
+                        try
+                        {
+                            new SimpleScriptWrapper(log).execute(Arrays.asList("rm", "-Rf", childDir.getPath()));
+                        }
+                        catch (PipelineJobException e)
+                        {
+                            log.error("Unable to delete directory: " + childDir.getPath(), e);
+                        }
+                    }
                 }
             }
 
