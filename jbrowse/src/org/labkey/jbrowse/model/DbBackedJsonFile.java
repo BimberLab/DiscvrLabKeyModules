@@ -74,6 +74,12 @@ abstract public class DbBackedJsonFile extends JsonFile
     }
 
     @Override
+    public boolean doIndex()
+    {
+        return true;
+    }
+
+    @Override
     public File getLocationOfProcessedTrack(boolean createDir)
     {
         File trackDir = getBaseDir();

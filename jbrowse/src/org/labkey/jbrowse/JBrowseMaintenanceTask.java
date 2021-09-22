@@ -158,6 +158,8 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
 
     private void processContainer(Container c, Logger log) throws IOException
     {
+        log.info("processing container: " + c.getPath());
+
         File jbrowseRoot = JBrowseManager.get().getBaseDir(c, false);
 
         //find jsonfiles we expect to exist
@@ -181,7 +183,9 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
             }
             else
             {
-                for (Integer genomeId : ts2.getArrayList(Integer.class))
+                List<Integer> genomes = ts2.getArrayList(Integer.class);
+                log.info("total genomes in folder: " + genomes.size());
+                for (Integer genomeId : genomes)
                 {
                     JBrowseSession session = JBrowseSession.getGenericGenomeSession(genomeId);
                     for (JsonFile json : session.getJsonFiles(u, true))
@@ -202,7 +206,6 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
         
         if (jbrowseRoot != null && jbrowseRoot.exists())
         {
-            log.info("processing container: " + c.getPath());
             for (JsonFile json : rowMap.values())
             {
                 if (json.getBaseDir() != null)
@@ -215,7 +218,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                 }
             }
 
-            log.info("expected jsonfiles: " + expectedDirs.size());
+            log.info("expected resource folders: " + expectedDirs.size());
             for (String dir : Arrays.asList("tracks", "data", "references", "databases"))
             {
                 File childDir = new File(jbrowseRoot, dir);
@@ -254,13 +257,14 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
             }
         }
 
+        log.info("total JsonFiles in folder: " + rowMap.size());
         for (JsonFile j : rowMap.values())
         {
             if (j.needsProcessing())
             {
                 File expectedFile = j.getLocationOfProcessedTrack(false);
                 boolean error = false;
-                if (!j.isGzipped() && !expectedFile.exists())
+                if (expectedFile != null && !expectedFile.exists())
                 {
                     log.error("Missing expected file: " + expectedFile.getPath());
                     error = true;
