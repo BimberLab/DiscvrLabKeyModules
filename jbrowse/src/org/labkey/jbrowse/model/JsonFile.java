@@ -308,11 +308,11 @@ public class JsonFile
 
         ret = possiblyAddSearchConfig(ret, rg);
 
-        //TODO: validate/document additional properties:
+        //TODO: validate/document additional properties. Note: unknown properties can break client-side parsing
         if (getTrackJson() != null)
         {
-            JSONObject json = getExtraTrackConfig();
-            ret.putAll(json);
+            //JSONObject json = getExtraTrackConfig();
+            //ret.putAll(json);
         }
 
         return ret;
