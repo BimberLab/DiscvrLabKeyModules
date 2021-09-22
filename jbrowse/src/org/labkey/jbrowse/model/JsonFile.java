@@ -294,7 +294,10 @@ public class JsonFile
         }
         else if (TRACK_TYPES.gtf.getFileType().isType(targetFile.getFile()))
         {
-            ret = getGxfTrack(log, targetFile, rg);
+            // NOTE: restore this once JB2 officially supports GtfTabixAdapter
+            log.info("Unsupported track type: " + targetFile.getFile().getName());
+            return null;
+            //ret = getGxfTrack(log, targetFile, rg);
         }
         else if (TRACK_TYPES.bed.getFileType().isType(targetFile.getFile()))
         {
@@ -302,17 +305,17 @@ public class JsonFile
         }
         else
         {
-            log.error("Unsupported track type: " + targetFile.getFile().getName());
+            log.info("Unsupported track type: " + targetFile.getFile().getName());
             return null;
         }
 
         ret = possiblyAddSearchConfig(ret, rg);
 
-        //TODO: validate/document additional properties. Note: unknown properties can break client-side parsing
+        //TODO: validate/document additional properties.
         if (getTrackJson() != null)
         {
-            //JSONObject json = getExtraTrackConfig();
-            //ret.putAll(json);
+            JSONObject json = getExtraTrackConfig();
+            ret.putAll(json);
         }
 
         return ret;
