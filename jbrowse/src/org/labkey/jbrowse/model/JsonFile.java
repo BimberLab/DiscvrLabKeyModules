@@ -495,7 +495,7 @@ public class JsonFile
         }
 
         ret.put("adapter", new JSONObject(){{
-            put("type", "VcfTabixAdapter");
+            put("type", "ExtendedVariantAdapter");
             put("vcfGzLocation", new JSONObject(){{
                 put("uri", url);
             }});
@@ -505,6 +505,17 @@ public class JsonFile
                     put("uri", url + ".tbi");
                 }});
                 put("indexType", "TBI");
+            }});
+        }});
+
+        ret.put("displays", new JSONArray(){{
+            put(new JSONObject(){{
+                put("type", "ExtendedVariantDisplay");
+                put("displayId", getTrackId() + "-ExtendedVariantDisplay");
+                put("renderer", new JSONObject(){{
+                    put("type", "ExtendedVariantRenderer");
+                    put("showLabels", false);
+                }});
             }});
         }});
 
