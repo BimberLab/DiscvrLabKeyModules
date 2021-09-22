@@ -481,7 +481,7 @@ public class JsonFile
     {
         JSONObject ret = new JSONObject();
         ret.put("type", getTrackType());
-        ret.put("trackId", _objectId);
+        ret.put("trackId", getObjectId());
         ret.put("name", getLabel());
         ret.put("assemblyNames", new JSONArray(){{
             put(JBrowseSession.getAssemblyName(rg));
@@ -511,7 +511,7 @@ public class JsonFile
         ret.put("displays", new JSONArray(){{
             put(new JSONObject(){{
                 put("type", "ExtendedVariantDisplay");
-                put("displayId", getTrackId() + "-ExtendedVariantDisplay");
+                put("displayId", getObjectId() + "-ExtendedVariantDisplay");
                 put("renderer", new JSONObject(){{
                     put("type", "ExtendedVariantRenderer");
                     put("showLabels", false);
@@ -526,7 +526,7 @@ public class JsonFile
     {
         JSONObject ret = new JSONObject();
         ret.put("type", getTrackType());
-        ret.put("trackId", _objectId);
+        ret.put("trackId", getObjectId());
         ret.put("name", getLabel());
         ret.put("category", new JSONArray(){{
             put(getCategory());
@@ -610,7 +610,7 @@ public class JsonFile
     {
         JSONObject ret = new JSONObject();
         ret.put("type", getTrackType());
-        ret.put("trackId", _objectId);
+        ret.put("trackId", getObjectId());
         ret.put("name", getLabel());
         ret.put("category", new JSONArray(){{
             put(getCategory());
