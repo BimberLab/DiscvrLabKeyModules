@@ -451,7 +451,12 @@ public class SequenceUtil
         //then sort/append the records
         CommandWrapper wrapper = SequencePipelineService.get().getCommandWrapper(log);
         String cat = isCompressed ? "zcat" : "cat";
-        wrapper.execute(Arrays.asList("/bin/sh", "-c", cat + " '" + input.getPath() + "' | grep -v '^#' | sort -s -V -k1,1f" + (startColumnIdx == null ? "" : " -k" + startColumnIdx + "," + startColumnIdx + "n") + (isCompressed ? " | bgzip -f " : "")), ProcessBuilder.Redirect.appendTo(sorted));
+        wrapper.execute(Arrays.asList("/bin/sh", "-c", cat + " '" + input.getPath() + "' | grep -v '^#' | sort -s -V -k1,1f" + (startColumnIdx == null ? "" : " -k" + startColumnIdx + "," + startColumnIdx + "n")), ProcessBuilder.Redirect.appendTo(sorted));
+
+        if (isCompressed)
+        {
+            sorted = bgzip(sorted, log);
+        }
 
         //replace the non-sorted output
         input.delete();
