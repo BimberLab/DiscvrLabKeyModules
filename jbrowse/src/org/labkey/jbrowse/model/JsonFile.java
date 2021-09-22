@@ -571,7 +571,7 @@ public class JsonFile
         ExpData targetFile = getExpData();
         if (TRACK_TYPES.vcf.getFileType().isType(targetFile.getFile()))
         {
-            return "VariantTrack";
+            return "ExtendedVariantTrack";
         }
         else if (TRACK_TYPES.bam.getFileType().isType(targetFile.getFile()))
         {
