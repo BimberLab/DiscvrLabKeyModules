@@ -282,11 +282,11 @@ public class JsonFile
         JSONObject ret;
         if (TRACK_TYPES.vcf.getFileType().isType(targetFile.getFile()))
         {
-            ret = getVcfTrack(targetFile, rg);
+            ret = getVcfTrack(log, targetFile, rg);
         }
         else if (TRACK_TYPES.bam.getFileType().isType(targetFile.getFile()))
         {
-            ret = getBamTrack(targetFile, rg);
+            ret = getBamTrack(log, targetFile, rg);
         }
         else if (TRACK_TYPES.gff.getFileType().isType(targetFile.getFile()))
         {
@@ -306,6 +306,11 @@ public class JsonFile
         else
         {
             log.info("Unsupported track type: " + targetFile.getFile().getName());
+            return null;
+        }
+
+        if (ret == null)
+        {
             return null;
         }
 
@@ -472,7 +477,7 @@ public class JsonFile
         return true;
     }
 
-    private JSONObject getVcfTrack(ExpData targetFile, ReferenceGenome rg)
+    private JSONObject getVcfTrack(Logger log, ExpData targetFile, ReferenceGenome rg)
     {
         JSONObject ret = new JSONObject();
         ret.put("type", getTrackType());
@@ -483,6 +488,12 @@ public class JsonFile
         }});
 
         String url = targetFile.getWebDavURL(ExpData.PathType.full);
+        if (url == null)
+        {
+            log.info("Unable to create WebDav URL for JBrowse resource with path: " + targetFile.getFile());
+            return null;
+        }
+
         ret.put("adapter", new JSONObject(){{
             put("type", "VcfTabixAdapter");
             put("vcfGzLocation", new JSONObject(){{
@@ -500,7 +511,7 @@ public class JsonFile
         return ret;
     }
 
-    private JSONObject getBamTrack(ExpData targetFile, ReferenceGenome rg) throws PipelineJobException
+    private JSONObject getBamTrack(Logger log, ExpData targetFile, ReferenceGenome rg)
     {
         JSONObject ret = new JSONObject();
         ret.put("type", getTrackType());
@@ -514,6 +525,12 @@ public class JsonFile
         }});
 
         String url = targetFile.getWebDavURL(ExpData.PathType.full);
+        if (url == null)
+        {
+            log.info("Unable to create WebDav URL for JBrowse resource with path: " + targetFile.getFile());
+            return null;
+        }
+
         ret.put("adapter", new JSONObject(){{
             put("type", "BamAdapter");
             put("bamLocation", new JSONObject(){{
