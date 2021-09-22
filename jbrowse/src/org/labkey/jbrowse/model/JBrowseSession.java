@@ -217,7 +217,14 @@ public class JBrowseSession
     {
         for (JsonFile x : getJsonFiles(u, true))
         {
-            x.prepareResource(log, false, false);
+            try
+            {
+                x.prepareResource(log, false, false);
+            }
+            catch (Exception e)
+            {
+                log.error("Unable to process JsonFile: " + getObjectId(), e);
+            }
         }
     }
 

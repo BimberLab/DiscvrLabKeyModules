@@ -162,7 +162,7 @@ public class SequenceUtil
         }
         catch (IOException e)
         {
-            throw new PipelineJobException(e);
+            throw new PipelineJobException("Error processing file: " + f.getPath(), e);
         }
     }
 
