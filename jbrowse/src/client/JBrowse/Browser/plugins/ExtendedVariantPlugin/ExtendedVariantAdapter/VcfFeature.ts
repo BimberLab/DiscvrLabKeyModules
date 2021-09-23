@@ -16,7 +16,7 @@ export default class ExtendedVcfFeature extends VcfFeature {
         ID: string[]
     }) {
         if (!variant.INFO["ANN"]) {
-            return;
+            return(variant);
         }
 
         let IMPACTs = new Set<String>()
