@@ -51,8 +51,8 @@ public class GxfSorter
             writer.println("#!/bin/bash");
             writer.println("set -x");
             writer.println("set -e");
-            writer.println("GFF=" + input.getPath());
-            writer.println("OUT_GFF=" + outputFile.getPath());
+            writer.println("GFF='" + input.getPath() + "'");
+            writer.println("OUT_GFF='" + outputFile.getPath() + "'");
 
             String cat = inputIsGzip ? "zcat" : "cat";
             writer.println(cat + " $GFF | awk '{ if ($1 ~ \"^#\" ) print $0; else exit; }' > $OUT_GFF");
@@ -85,8 +85,8 @@ public class GxfSorter
             writer.println("#!/bin/bash");
             writer.println("set -x");
             writer.println("set -e");
-            writer.println("GTF=" + input.getPath());
-            writer.println("OUT_GTF=" + outputFile.getPath());
+            writer.println("GTF='" + input.getPath() + "'");
+            writer.println("OUT_GTF='" + outputFile.getPath() + "'");
 
             String cat = inputIsGzip ? "zcat" : "cat";
             writer.println(cat + " $GTF | awk '{ if ($1 ~ \"^#\" ) print $0; else exit; }' > $OUT_GTF");
