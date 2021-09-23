@@ -55,12 +55,12 @@ public class GxfSorter
             writer.println("OUT_GFF='" + outputFile.getPath() + "'");
 
             String cat = inputIsGzip ? "zcat" : "cat";
-            writer.println(cat + " '$GFF' | awk '{ if ($1 ~ \"^#\" ) print $0; else exit; }' > '$OUT_GFF'");
-            writer.println("(" + cat  + " '$GFF' | grep -v '#' | grep -v \"Parent=\" | sort -V -t$'\\t' -k1,1 -k4,4n -k5,5n; " + cat + " '$GFF' | grep -v '#' | grep -e \"Parent=\" | sort -V -t$'\\t' -k1,1 -k4,4n -k5,5n)| sort -V -t$'\\t' -k1,1 -k4,4n -s >> '$OUT_GFF'");
+            writer.println(cat + " \"$GFF\" | awk '{ if ($1 ~ \"^#\" ) print $0; else exit; }' > \"$OUT_GFF\"");
+            writer.println("(" + cat  + " \"$GFF\" | grep -v '#' | grep -v \"Parent=\" | sort -V -t$'\\t' -k1,1 -k4,4n -k5,5n; " + cat + " \"$GFF\" | grep -v '#' | grep -e \"Parent=\" | sort -V -t$'\\t' -k1,1 -k4,4n -k5,5n)| sort -V -t$'\\t' -k1,1 -k4,4n -s >> \"$OUT_GFF\"");
 
             if (outputIsGzip)
             {
-                writer.println("bgzip -f '$OUT_GFF'");
+                writer.println("bgzip -f \"$OUT_GFF\"");
                 outputFile = new File(outputFile.getPath() + ".gz");
             }
         }
@@ -89,8 +89,8 @@ public class GxfSorter
             writer.println("OUT_GTF='" + outputFile.getPath() + "'");
 
             String cat = inputIsGzip ? "zcat" : "cat";
-            writer.println(cat + " '$GTF' | awk '{ if ($1 ~ \"^#\" ) print $0; else exit; }' > '$OUT_GTF'");
-            writer.println(cat + " '$GTF' | grep -v '#' | awk -v OFS='\\t' ' {");
+            writer.println(cat + " \"$GTF\" | awk '{ if ($1 ~ \"^#\" ) print $0; else exit; }' > \"$OUT_GTF\"");
+            writer.println(cat + " \"$GTF\" | grep -v '#' | awk -v OFS='\\t' ' {");
             writer.println("so = 3");
             writer.println("if (tolower($3) == \"gene\")");
             writer.println("    so = 1");
@@ -100,11 +100,11 @@ public class GxfSorter
             writer.println("    so = 3");
             writer.println("else if (tolower($3) == \"cds\")");
             writer.println("    so = 4");
-            writer.println("print so, $0 } ' | sort -V -t$'\\t' -k2,2 -k5,5n -k1,1n | cut -d$'\\t' -f2- >> '$OUT_GTF'");
+            writer.println("print so, $0 } ' | sort -V -t$'\\t' -k2,2 -k5,5n -k1,1n | cut -d$'\\t' -f2- >> \"$OUT_GTF\"");
 
             if (outputIsGzip)
             {
-                writer.println("bgzip -f '$OUT_GTF'");
+                writer.println("bgzip -f \"$OUT_GTF\"");
                 outputFile = new File(outputFile.getPath() + ".gz");
             }
         }
