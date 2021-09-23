@@ -41,6 +41,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
@@ -860,7 +861,7 @@ public class JsonFile
             trackDir.mkdirs();
         }
 
-        return new File(trackDir, getSourceFileName() + (needsGzip() && !isGzipped() ? ".gz" : ""));
+        return new File(trackDir, FileUtil.makeLegalName(getSourceFileName()).replaceAll(" ", "_") + (needsGzip() && !isGzipped() ? ".gz" : ""));
     }
 
     protected String getSourceFileName()
