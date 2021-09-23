@@ -89,8 +89,8 @@ public class GxfSorter
             writer.println("OUT_GTF='" + outputFile.getPath() + "'");
 
             String cat = inputIsGzip ? "zcat" : "cat";
-            writer.println(cat + " \"$GTF\" | awk '{ if ($1 ~ \"^#\" ) print $0; else exit; }' > \"$OUT_GTF\"");
-            writer.println(cat + " \"$GTF\" | grep -v '#' | awk -v OFS='\\t' ' {");
+            writer.println(cat + " \"$GTF\" | grep -v -e '^$' | awk '{ if ($1 ~ \"^#\" ) print $0; else exit; }' > \"$OUT_GTF\"");
+            writer.println(cat + " \"$GTF\" | grep -v -e '^$' | grep -v '#' | awk -v OFS='\\t' ' {");
             writer.println("so = 3");
             writer.println("if (tolower($3) == \"gene\")");
             writer.println("    so = 1");
