@@ -217,7 +217,14 @@ public class JBrowseSession
     {
         for (JsonFile x : getJsonFiles(u, true))
         {
-            x.prepareResource(log, false, false);
+            try
+            {
+                x.prepareResource(log, false, false);
+            }
+            catch (Exception e)
+            {
+                log.error("Unable to process JsonFile: " + getObjectId(), e);
+            }
         }
     }
 
@@ -237,17 +244,19 @@ public class JBrowseSession
 
         JSONArray tracks = new JSONArray();
         List<JsonFile> jsonFiles = getJsonFiles(u, false);
+        List<JsonFile> visibleTracks = new ArrayList<>();
         for (JsonFile jsonFile : jsonFiles)
         {
             JSONObject o = jsonFile.toTrackJson(u, rg, log);
             if (o != null)
             {
                 tracks.put(o);
+                visibleTracks.add(jsonFile);
             }
         }
 
         ret.put("tracks", tracks);
-        ret.put("defaultSession", getDefaultSessionJson(jsonFiles));
+        ret.put("defaultSession", getDefaultSessionJson(visibleTracks));
 
         return ret;
     }

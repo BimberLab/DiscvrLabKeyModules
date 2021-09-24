@@ -9,15 +9,16 @@ bindArgs <- function(fun, seuratObj, allowableArgNames = NULL, disallowedArgName
         }
         else if (!is.null(allowableArgNames)) {
             if ((name %in% allowableArgNames) && exists(name)) {
+                print(paste0('Binding argument: ', name, ': ', get(name)))
                 boundArgs[[name]] <- get(name)
             }
         }
         else if (exists(name)) {
+            print(paste0('Binding argument: ', name, ': ', get(name)))
             boundArgs[[name]] <- get(name)
         }
     }
 
-    print(paste0('Binding arguments: ', paste0(names(boundArgs), collapse = ',')))
     formals(fun)[names(boundArgs)] <- boundArgs
 
     fun

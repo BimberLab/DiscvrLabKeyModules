@@ -3,6 +3,7 @@ package org.labkey.singlecell.run;
 import au.com.bytecode.opencsv.CSVWriter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.StringBuilderWriter;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -201,7 +202,7 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
                 File genomeFasta = getGenomeFasta(genomeId, ctx);
 
                 File refJson = prepareReference(ctx, genomeCsv, genomeFasta);
-                File results = doAlignment(ctx, genomeId, refJson, genomeFasta, so);
+                File results = doAlignment(ctx, genomeId, refJson, so);
 
                 ctx.getFileManager().addIntermediateFile(genomeCsv);
                 ctx.getFileManager().addIntermediateFile(genomeFasta);
@@ -231,19 +232,10 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
         private void updateNimbleConfigFile(JobContext ctx, File configFile) throws PipelineJobException
         {
             JSONArray json;
-            try (BufferedReader reader = Readers.getReader(configFile))
+            try (BufferedReader reader = Readers.getReader(configFile);StringBuilderWriter writer = new StringBuilderWriter();)
             {
-                String line;
-                StringBuilder stringBuilder = new StringBuilder();
-                String ls = System.getProperty("line.separator");
-
-                while ((line = reader.readLine()) != null)
-                {
-                    stringBuilder.append(line);
-                    stringBuilder.append(ls);
-                }
-
-                json = new JSONArray(stringBuilder.toString());
+                IOUtils.copy(reader, writer);
+                json = new JSONArray(writer.toString());
             }
             catch (IOException e)
             {
@@ -251,6 +243,8 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
             }
 
             JSONObject config = json.getJSONObject(0);
+            ctx.getLogger().info("Initial config:");
+            ctx.getLogger().info(config.toString(1));
             try (PrintWriter writer = PrintWriters.getPrintWriter(configFile))
             {
                 String alignTemplate = ctx.getParams().optString(ALIGN_TEMPLATE, "lenient");
@@ -258,7 +252,7 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
                 {
                     config.put("num_mismatches", 10);
                     config.put("intersect_level", 0);
-                    config.put("score_threshold", 50);
+                    config.put("score_threshold", 25);
                     config.put("score_filter", 25);
                     //discard_multiple_matches: false
                     //discard_multi_hits: ?
@@ -278,6 +272,9 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
                     config.put("group_on", "lineage");
                 }
 
+                ctx.getLogger().info("Final config:");
+                ctx.getLogger().info(config.toString(1));
+
                 json.put(0, config);
                 IOUtils.write(json.toString(), writer);
             }
@@ -287,7 +284,7 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
             }
         }
 
-        private File doAlignment(JobContext ctx, int genomeId, File refJson, File refFasta, SequenceOutputFile so) throws PipelineJobException
+        private File doAlignment(JobContext ctx, int genomeId, File refJson, SequenceOutputFile so) throws PipelineJobException
         {
             File localBam = ensureLocalCopy(so.getFile(), ctx);
             ensureLocalCopy(new File(so.getFile().getPath() + ".bai"), ctx);
