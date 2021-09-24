@@ -55,8 +55,8 @@ public class GxfSorter
             writer.println("OUT_GFF='" + outputFile.getPath() + "'");
 
             String cat = inputIsGzip ? "zcat" : "cat";
-            writer.println(cat + " \"$GFF\" | awk '{ if ($1 ~ \"^#\" ) print $0; else exit; }' > \"$OUT_GFF\"");
-            writer.println("(" + cat  + " \"$GFF\" | grep -v '#' | grep -v \"Parent=\" | sort -V -t$'\\t' -k1,1 -k4,4n -k5,5n; " + cat + " \"$GFF\" | grep -v '#' | grep -e \"Parent=\" | sort -V -t$'\\t' -k1,1 -k4,4n -k5,5n)| sort -V -t$'\\t' -k1,1 -k4,4n -s >> \"$OUT_GFF\"");
+            writer.println(cat + " \"$GFF\" | grep -v -e '^$' | awk '{ if ($1 ~ \"^#\" ) print $0; else exit; }' > \"$OUT_GFF\"");
+            writer.println("(" + cat  + " \"$GFF\" | grep -v -e '^$' | grep -v '#' | grep -v \"Parent=\" | sort -V -t$'\\t' -k1,1 -k4,4n -k5,5n; " + cat + " \"$GFF\" | grep -v '#' | grep -e \"Parent=\" | sort -V -t$'\\t' -k1,1 -k4,4n -k5,5n)| sort -V -t$'\\t' -k1,1 -k4,4n -s >> \"$OUT_GFF\"");
 
             if (outputIsGzip)
             {
