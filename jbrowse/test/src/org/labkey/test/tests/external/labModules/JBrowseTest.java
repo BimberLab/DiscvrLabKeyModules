@@ -131,6 +131,9 @@ public class JBrowseTest extends BaseWebDriverTest
             waitForElement(l);
         }
 
+        // Not ideal, but this might fix intermittent failures due to loading
+        sleep(100);
+
         return By.xpath(l.toXpath());
     }
 

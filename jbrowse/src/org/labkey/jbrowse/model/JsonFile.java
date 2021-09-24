@@ -41,6 +41,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
@@ -282,11 +283,11 @@ public class JsonFile
         JSONObject ret;
         if (TRACK_TYPES.vcf.getFileType().isType(targetFile.getFile()))
         {
-            ret = getVcfTrack(targetFile, rg);
+            ret = getVcfTrack(log, targetFile, rg);
         }
         else if (TRACK_TYPES.bam.getFileType().isType(targetFile.getFile()))
         {
-            ret = getBamTrack(targetFile, rg);
+            ret = getBamTrack(log, targetFile, rg);
         }
         else if (TRACK_TYPES.gff.getFileType().isType(targetFile.getFile()))
         {
@@ -294,7 +295,10 @@ public class JsonFile
         }
         else if (TRACK_TYPES.gtf.getFileType().isType(targetFile.getFile()))
         {
-            ret = getGxfTrack(log, targetFile, rg);
+            // NOTE: restore this once JB2 officially supports GtfTabixAdapter
+            log.info("Unsupported track type: " + targetFile.getFile().getName());
+            return null;
+            //ret = getGxfTrack(log, targetFile, rg);
         }
         else if (TRACK_TYPES.bed.getFileType().isType(targetFile.getFile()))
         {
@@ -302,13 +306,18 @@ public class JsonFile
         }
         else
         {
-            log.error("Unsupported track type: " + targetFile.getFile().getName());
+            log.info("Unsupported track type: " + targetFile.getFile().getName());
+            return null;
+        }
+
+        if (ret == null)
+        {
             return null;
         }
 
         ret = possiblyAddSearchConfig(ret, rg);
 
-        //TODO: validate/document additional properties:
+        //TODO: validate/document additional properties.
         if (getTrackJson() != null)
         {
             JSONObject json = getExtraTrackConfig();
@@ -469,19 +478,25 @@ public class JsonFile
         return true;
     }
 
-    private JSONObject getVcfTrack(ExpData targetFile, ReferenceGenome rg)
+    private JSONObject getVcfTrack(Logger log, ExpData targetFile, ReferenceGenome rg)
     {
         JSONObject ret = new JSONObject();
         ret.put("type", getTrackType());
-        ret.put("trackId", _objectId);
+        ret.put("trackId", getObjectId());
         ret.put("name", getLabel());
         ret.put("assemblyNames", new JSONArray(){{
             put(JBrowseSession.getAssemblyName(rg));
         }});
 
         String url = targetFile.getWebDavURL(ExpData.PathType.full);
+        if (url == null)
+        {
+            log.info("Unable to create WebDav URL for JBrowse resource with path: " + targetFile.getFile());
+            return null;
+        }
+
         ret.put("adapter", new JSONObject(){{
-            put("type", "VcfTabixAdapter");
+            put("type", "ExtendedVariantAdapter");
             put("vcfGzLocation", new JSONObject(){{
                 put("uri", url);
             }});
@@ -494,14 +509,25 @@ public class JsonFile
             }});
         }});
 
+        ret.put("displays", new JSONArray(){{
+            put(new JSONObject(){{
+                put("type", "ExtendedVariantDisplay");
+                put("displayId", getObjectId() + "-ExtendedVariantDisplay");
+                put("renderer", new JSONObject(){{
+                    put("type", "ExtendedVariantRenderer");
+                    put("showLabels", false);
+                }});
+            }});
+        }});
+
         return ret;
     }
 
-    private JSONObject getBamTrack(ExpData targetFile, ReferenceGenome rg) throws PipelineJobException
+    private JSONObject getBamTrack(Logger log, ExpData targetFile, ReferenceGenome rg)
     {
         JSONObject ret = new JSONObject();
         ret.put("type", getTrackType());
-        ret.put("trackId", _objectId);
+        ret.put("trackId", getObjectId());
         ret.put("name", getLabel());
         ret.put("category", new JSONArray(){{
             put(getCategory());
@@ -511,6 +537,12 @@ public class JsonFile
         }});
 
         String url = targetFile.getWebDavURL(ExpData.PathType.full);
+        if (url == null)
+        {
+            log.info("Unable to create WebDav URL for JBrowse resource with path: " + targetFile.getFile());
+            return null;
+        }
+
         ret.put("adapter", new JSONObject(){{
             put("type", "BamAdapter");
             put("bamLocation", new JSONObject(){{
@@ -551,7 +583,7 @@ public class JsonFile
         ExpData targetFile = getExpData();
         if (TRACK_TYPES.vcf.getFileType().isType(targetFile.getFile()))
         {
-            return "VariantTrack";
+            return "ExtendedVariantTrack";
         }
         else if (TRACK_TYPES.bam.getFileType().isType(targetFile.getFile()))
         {
@@ -579,7 +611,7 @@ public class JsonFile
     {
         JSONObject ret = new JSONObject();
         ret.put("type", getTrackType());
-        ret.put("trackId", _objectId);
+        ret.put("trackId", getObjectId());
         ret.put("name", getLabel());
         ret.put("category", new JSONArray(){{
             put(getCategory());
@@ -657,17 +689,17 @@ public class JsonFile
         if (needsGzip() && !isGzipped())
         {
             //need to gzip and tabix index:
-            File finalLocation = getLocationOfProcessedTrack(true);
+            final File finalLocation = getLocationOfProcessedTrack(true);
             if (finalLocation.exists() && !SequencePipelineService.get().hasMinLineCount(finalLocation, 1))
             {
                 log.info("File exists but is zero-length, deleting and re-processing:");
                 forceReprocess = true;
             }
 
+            File idx = new File(finalLocation.getPath() + ".tbi");
             if (finalLocation.exists() && forceReprocess && !targetFile.equals(finalLocation))
             {
                 finalLocation.delete();
-                File idx = new File(finalLocation.getPath() + ".tbi");
                 if (idx.exists())
                 {
                     idx.delete();
@@ -710,54 +742,60 @@ public class JsonFile
                 }
             }
 
-            File idx = new File(finalLocation.getPath() + ".tbi");
-            if (SystemUtils.IS_OS_WINDOWS)
+            if (forceReprocess || !idx.exists())
             {
-                try
+                if (throwIfNotPrepared)
                 {
-                    if (TRACK_TYPES.bed.getFileType().isType(finalLocation))
+                    throw new IllegalStateException("This track should have been previously indexed: " + finalLocation.getPath());
+                }
+                else
+                {
+                    if (SystemUtils.IS_OS_WINDOWS)
                     {
-                        Index index = IndexFactory.createIndex(finalLocation.toPath(), new BEDCodec(), IndexFactory.IndexType.TABIX);
-                        index.write(idx);
-                    }
-                    else if (TRACK_TYPES.gtf.getFileType().isType(finalLocation) || TRACK_TYPES.gff.getFileType().isType(finalLocation))
-                    {
-                        Index index = IndexFactory.createIndex(finalLocation.toPath(), new Gff3Codec(), IndexFactory.IndexType.TABIX);
-                        index.write(idx);
+                        try
+                        {
+                            if (TRACK_TYPES.bed.getFileType().isType(finalLocation))
+                            {
+                                Index index = IndexFactory.createIndex(finalLocation.toPath(), new BEDCodec(), IndexFactory.IndexType.TABIX);
+                                index.write(idx);
+                            }
+                            else if (TRACK_TYPES.gtf.getFileType().isType(finalLocation) || TRACK_TYPES.gff.getFileType().isType(finalLocation))
+                            {
+                                Index index = IndexFactory.createIndex(finalLocation.toPath(), new Gff3Codec(), IndexFactory.IndexType.TABIX);
+                                index.write(idx);
+                            }
+                            else
+                            {
+                                log.warn("Cannot create tabix index on windows!");
+                            }
+                        }
+                        catch (IOException e)
+                        {
+                            log.error("Error creating tabix index!", e);
+                        }
                     }
                     else
                     {
-                        log.warn("Cannot create tabix index on windows!");
-                    }
-                }
-                catch (IOException e)
-                {
-                    log.error("Error creating tabix index!", e);
-                }
-            }
-            else
-            {
-                //Ensure sorted:
-                if (TRACK_TYPES.bed.getFileType().isType(finalLocation))
-                {
-                    try
-                    {
-                        SequencePipelineService.get().sortROD(finalLocation, log, 2);
-                    }
-                    catch (IOException e)
-                    {
-                        throw new PipelineJobException(e);
-                    }
-                }
-                else if (TRACK_TYPES.gff.getFileType().isType(finalLocation) || TRACK_TYPES.gtf.getFileType().isType(finalLocation))
-                {
-                    SequenceAnalysisService.get().sortGxf(log, finalLocation, null);
-                }
+                        //Ensure sorted:
+                        if (TRACK_TYPES.bed.getFileType().isType(finalLocation))
+                        {
+                            try
+                            {
+                                SequencePipelineService.get().sortROD(finalLocation, log, 2);
+                            }
+                            catch (IOException e)
+                            {
+                                throw new PipelineJobException(e);
+                            }
+                        }
+                        else if (TRACK_TYPES.gff.getFileType().isType(finalLocation) || TRACK_TYPES.gtf.getFileType().isType(finalLocation))
+                        {
+                            SequenceAnalysisService.get().sortGxf(log, finalLocation, null);
+                        }
 
-                TabixRunner tabix = new TabixRunner(log);
-                if (forceReprocess || !idx.exists())
-                {
-                    tabix.execute(finalLocation);
+                        TabixRunner tabix = new TabixRunner(log);
+                        tabix.execute(finalLocation);
+                    }
                 }
             }
 
@@ -798,6 +836,9 @@ public class JsonFile
                 File exe = JBrowseManager.get().getJbrowseCli();
                 SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
                 wrapper.setWorkingDir(targetFile.getParentFile());
+
+                //TODO: eventually remove this. see: https://github.com/GMOD/jbrowse-components/issues/2354#issuecomment-926320747
+                wrapper.addToEnvironment("DEBUG", "*");
                 wrapper.execute(Arrays.asList(exe.getPath(), "text-index", "--force", "--quiet", "--attributes", StringUtils.join(attributes, ","), "--file", targetFile.getPath()));
                 if (!ixx.exists())
                 {
@@ -823,7 +864,7 @@ public class JsonFile
             trackDir.mkdirs();
         }
 
-        return new File(trackDir, getSourceFileName() + (needsGzip() && !isGzipped() ? ".gz" : ""));
+        return new File(trackDir, FileUtil.makeLegalName(getSourceFileName()).replaceAll(" ", "_") + (needsGzip() && !isGzipped() ? ".gz" : ""));
     }
 
     protected String getSourceFileName()

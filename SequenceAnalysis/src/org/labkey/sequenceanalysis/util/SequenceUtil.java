@@ -162,7 +162,7 @@ public class SequenceUtil
         }
         catch (IOException e)
         {
-            throw new PipelineJobException(e);
+            throw new PipelineJobException("Error processing file: " + f.getPath(), e);
         }
     }
 
@@ -451,7 +451,12 @@ public class SequenceUtil
         //then sort/append the records
         CommandWrapper wrapper = SequencePipelineService.get().getCommandWrapper(log);
         String cat = isCompressed ? "zcat" : "cat";
-        wrapper.execute(Arrays.asList("/bin/sh", "-c", cat + " '" + input.getPath() + "' | grep -v '^#' | sort -s -V -k1,1f" + (startColumnIdx == null ? "" : " -k" + startColumnIdx + "," + startColumnIdx + "n") + (isCompressed ? " | bgzip -f " : "")), ProcessBuilder.Redirect.appendTo(sorted));
+        wrapper.execute(Arrays.asList("/bin/sh", "-c", cat + " '" + input.getPath() + "' | grep -v '^#' | sort -s -V -k1,1f" + (startColumnIdx == null ? "" : " -k" + startColumnIdx + "," + startColumnIdx + "n")), ProcessBuilder.Redirect.appendTo(sorted));
+
+        if (isCompressed)
+        {
+            sorted = bgzip(sorted, log);
+        }
 
         //replace the non-sorted output
         input.delete();
@@ -498,7 +503,7 @@ public class SequenceUtil
         for (File vcf : files)
         {
             String cat = vcf.getName().toLowerCase().endsWith(".gz") ? "zcat" : "cat";
-            bashCommands.add(cat + " " + vcf.getPath() + " | grep -v '^#';");
+            bashCommands.add(cat + " '" + vcf.getPath() + "' | grep -v '^#';");
         }
 
         try
@@ -518,7 +523,7 @@ public class SequenceUtil
                     threads = Math.max(1, threads - 1);
                 }
 
-                writer.write("} | bgzip -f" + (compressionLevel == null ? "" : " --compress-level 9") + (threads == null ? "" : " --threads " + threads) + " > " + outputGzip.getPath() + "\n");
+                writer.write("} | bgzip -f" + (compressionLevel == null ? "" : " --compress-level 9") + (threads == null ? "" : " --threads " + threads) + " > '" + outputGzip.getPath() + "'\n");
             }
 
             SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
@@ -555,7 +560,7 @@ public class SequenceUtil
             {
                 writer.println("#!/bin/bash");
                 String cat = vcf.getPath().toLowerCase().endsWith(".gz") ? "zcat" : "cat";
-                writer.println(cat + " " + vcf.getPath() + " | grep -v '#' | awk ' { print $1 } ' | sort | uniq");
+                writer.println(cat + " '" + vcf.getPath() + "' | grep -v '#' | awk ' { print $1 } ' | sort | uniq");
             }
 
             SimpleScriptWrapper wrapper = new SimpleScriptWrapper(null);

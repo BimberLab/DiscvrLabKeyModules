@@ -1,6 +1,7 @@
 package org.labkey.jbrowse;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -15,8 +16,10 @@ import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.ldk.LDKService;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
+import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance.MaintenanceTask;
 import org.labkey.jbrowse.model.JBrowseSession;
@@ -24,11 +27,13 @@ import org.labkey.jbrowse.model.JsonFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * User: bimber
@@ -153,6 +158,8 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
 
     private void processContainer(Container c, Logger log) throws IOException
     {
+        log.info("processing container: " + c.getPath());
+
         File jbrowseRoot = JBrowseManager.get().getBaseDir(c, false);
 
         //find jsonfiles we expect to exist
@@ -162,7 +169,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
         filter.addCondition(FieldKey.fromString("sequenceid"), null, CompareType.ISBLANK);
 
         TableSelector ts = new TableSelector(tableJsonFiles, filter, null);
-        List<JsonFile> rows = new ArrayList<>(ts.getArrayList(JsonFile.class));
+        Map<String, JsonFile> rowMap = ts.getArrayList(JsonFile.class).stream().collect(Collectors.toMap(JsonFile::getObjectId, Function.identity()));
 
         // Also check for genomes from this container, and any additional JsonFiles they may have:
         TableInfo tableGenomes = DbSchema.get(JBrowseManager.SEQUENCE_ANALYSIS, DbSchemaType.Module).getTable("reference_libraries");
@@ -176,15 +183,21 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
             }
             else
             {
-                for (Integer genomeId : ts2.getArrayList(Integer.class))
+                List<Integer> genomes = ts2.getArrayList(Integer.class);
+                log.info("total genomes in folder: " + genomes.size());
+                for (Integer genomeId : genomes)
                 {
                     JBrowseSession session = JBrowseSession.getGenericGenomeSession(genomeId);
                     for (JsonFile json : session.getJsonFiles(u, true))
                     {
-                        expectedDirs.add(json.getBaseDir());
-                        if (!json.getBaseDir().exists())
+                        rowMap.put(json.getObjectId(), json);
+                        if (json.getBaseDir() != null)
                         {
-                            log.error("expected jbrowse folder does not exist: " + json.getBaseDir().getPath());
+                            expectedDirs.add(json.getBaseDir());
+                            if (!json.getBaseDir().exists())
+                            {
+                                log.error("expected jbrowse folder does not exist: " + json.getBaseDir().getPath());
+                            }
                         }
                     }
                 }
@@ -193,8 +206,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
         
         if (jbrowseRoot != null && jbrowseRoot.exists())
         {
-            log.info("processing container: " + c.getPath());
-            for (JsonFile json : rows)
+            for (JsonFile json : rowMap.values())
             {
                 if (json.getBaseDir() != null)
                 {
@@ -206,14 +218,28 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                 }
             }
 
-            log.info("expected jsonfiles: " + expectedDirs.size());
+            log.info("expected resource folders: " + expectedDirs.size());
             for (String dir : Arrays.asList("tracks", "data", "references", "databases"))
             {
                 File childDir = new File(jbrowseRoot, dir);
                 if (childDir.exists())
                 {
                     log.info("deleting legacy jbrowse " + dir + " dir: " + childDir.getPath());
-                    FileUtils.deleteDirectory(childDir);
+                    if (SystemUtils.IS_OS_WINDOWS)
+                    {
+                        FileUtils.deleteDirectory(childDir);
+                    }
+                    else
+                    {
+                        try
+                        {
+                            new SimpleScriptWrapper(log).execute(Arrays.asList("rm", "-Rf", childDir.getPath()));
+                        }
+                        catch (PipelineJobException e)
+                        {
+                            log.error("Unable to delete directory: " + childDir.getPath(), e);
+                        }
+                    }
                 }
             }
 
@@ -231,13 +257,14 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
             }
         }
 
-        for (JsonFile j : rows)
+        log.info("total JsonFiles in folder: " + rowMap.size());
+        for (JsonFile j : rowMap.values())
         {
             if (j.needsProcessing())
             {
                 File expectedFile = j.getLocationOfProcessedTrack(false);
                 boolean error = false;
-                if (!j.isGzipped() && !expectedFile.exists())
+                if (expectedFile != null && !expectedFile.exists())
                 {
                     log.error("Missing expected file: " + expectedFile.getPath());
                     error = true;
