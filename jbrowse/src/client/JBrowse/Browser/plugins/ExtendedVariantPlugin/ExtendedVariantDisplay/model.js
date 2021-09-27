@@ -141,8 +141,6 @@ export default jbrowse => {
             const trackId = getConf(track, 'trackId')
             const session = getSession(self)
             var widgetId = 'Variant-' + trackId;
-
-            console.log(trackId)
             const featureWidget = session.addWidget(
                'ExtendedVariantWidget',
                widgetId,
