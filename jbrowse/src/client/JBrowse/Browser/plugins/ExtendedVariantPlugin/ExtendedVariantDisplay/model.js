@@ -11,6 +11,7 @@ import {getSnapshot} from 'mobx-state-tree'
 
 const attributes = ['SNV', 'Insertion', 'Deletion', 'High', 'Moderate', 'Low', 'Other']
 const colors = ['green', 'red', 'blue', 'gray', 'goldenrod']
+const filterOptions = ['Impact = HIGH', 'AF > 0.2', 'None']
 
 export default jbrowse => {
    const configSchema = jbrowse.jbrequire(configSchemaF)
@@ -37,6 +38,9 @@ export default jbrowse => {
       .actions(self => ({
          setReady(flag){
             self.ready = flag
+         },
+         setFilter(filter){
+            self.renderProps().config.filters.set(filter)
          },
          setColor(attr, color) {
             if (attr == "SNV"){
@@ -79,9 +83,9 @@ export default jbrowse => {
                         const colorLow = self.colorLow ?? 'black'
                         const color = "jexl:get(feature,'INFO').IMPACT=='MODERATE'?'"+colorModerate+"':get(feature,'INFO').IMPACT=='HIGH'?'"+colorHigh+"':get(feature,'INFO').IMPACT=='LOW'?'"+colorLow+"':get(feature,'type')=='SNV'?'"+colorSNV+"':get(feature,'type')=='deletion'?'"+colorDeletion+"':get(feature,'type')=='insertion'?'"+colorInsertion+"':'"+colorOther+"'"
 
-                        if (self.renderProps().config.color1.value != color){
+                        if (self.renderProps().config.color1.value != color || self.ready == false || self.adapterConfig.filters){
                            self.renderProps().config.color1.set(color)
-
+                           self.renderProps().config.filters.set(self.adapterConfig.filters ?? "{}")
                            const { centerLineInfo } = getContainingView(self)
                            const { refName, assemblyName, offset } = centerLineInfo
                            const centerBp = Math.round(offset) + 1
@@ -152,6 +156,22 @@ export default jbrowse => {
       .views(self => {
          const { renderProps: superRenderProps } = self
          const { trackMenuItems: superTrackMenuItems } = self
+         const filterMenu = {
+            label: 'Filter',
+            icon: FilterListIcon,
+            onClick: () => {
+               const session = getSession(self)
+               const track = getContainingTrack(self)
+               const widgetId = 'Variant-' + getConf(track, 'trackId');
+               console.log(getContainingTrack(self))
+               const filterWidget = session.addWidget(
+                  'FilterWidget',
+                  widgetId,
+                  { track: track.configuration }
+               )
+               session.showWidget(filterWidget)
+            }
+         }
          return {
             renderProps() {
                return {
@@ -165,7 +185,7 @@ export default jbrowse => {
             },
 
             get composedTrackMenuItems() {
-               return [{
+               return [filterMenu, {
                   label: 'Color',
                   icon: PaletteIcon,
                   subMenu: [...attributes.map(option => {

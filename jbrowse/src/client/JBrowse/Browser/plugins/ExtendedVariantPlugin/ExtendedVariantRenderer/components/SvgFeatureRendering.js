@@ -124,6 +124,20 @@ function RenderedFeatureGlyph(props) {
   )
 }
 
+function isFiltered(feature, filters){
+   if(filters["af02"]){
+      if(!(feature.variant.INFO.AF[0] > 0.2)){
+         return false
+      }
+   }
+   if(filters["impactHigh"]){
+      if(!(feature.variant.INFO.IMPACT === "HIGH")){
+         return false
+      }
+   }
+   return true
+}
+
 RenderedFeatureGlyph.propTypes = {
   layout: ReactPropTypes.shape({
     addRect: ReactPropTypes.func.isRequired,
@@ -143,10 +157,13 @@ RenderedFeatureGlyph.propTypes = {
 const RenderedFeatures = observer(props => {
   const { features } = props
   const featuresRendered = []
+  const filters = JSON.parse(props.adapterConfig.filters ?? "{}")
   for (const feature of features.values()) {
-    featuresRendered.push(
-      <RenderedFeatureGlyph key={feature.id()} feature={feature} {...props} />,
-    )
+    if(isFiltered(feature, filters)){
+       featuresRendered.push(
+         <RenderedFeatureGlyph key={feature.id()} feature={feature} {...props} />,
+       )
+    }
   }
   return <>{featuresRendered}</>
 })
@@ -320,7 +337,6 @@ function SvgFeatureRendering(props) {
   useEffect(() => {
     setHeight(layout.getTotalHeight())
   }, [layout])
-
   if (exportSVG) {
     return (
       <RenderedFeatures
