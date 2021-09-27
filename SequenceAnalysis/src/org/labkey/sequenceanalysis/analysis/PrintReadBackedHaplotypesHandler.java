@@ -46,7 +46,7 @@ public class PrintReadBackedHaplotypesHandler extends AbstractParameterizedOutpu
                 }}, 10),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-rc"), "requiredCoverageFraction", "Required Coverage Fraction", "A haplotype must have coverage over this fraction of the interval to be reported", "ldk-numberfield", new JSONObject(){{
                     put("minValue", 0);
-                    put("maxValue", 0);
+                    put("maxValue", 1.0);
                     put("decimalPrecision", 2);
                 }}, null)
         ));
