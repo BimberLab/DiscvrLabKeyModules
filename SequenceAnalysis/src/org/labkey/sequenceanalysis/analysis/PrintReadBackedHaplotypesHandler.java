@@ -48,7 +48,15 @@ public class PrintReadBackedHaplotypesHandler extends AbstractParameterizedOutpu
                     put("minValue", 0);
                     put("maxValue", 1.0);
                     put("decimalPrecision", 2);
-                }}, null)
+                }}, null),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-mr"), "minReadsToReport", "Min Reads To Report", "If specified, only haplotypes with at least this many reads will be reported", "ldk-integerfield", new JSONObject(){{
+                    put("minValue", 0);
+                }}, null),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-mrf"), "minReadFractionToReport", "Min Read Fraction To Report", "If specified, only haplotypes representing at least this fraction of total haplotypes will be reported", "ldk-numberfield", new JSONObject(){{
+                    put("minValue", 0);
+                    put("maxValue", 1.0);
+                    put("decimalPrecision", 2);
+                }}, 0.01)
         ));
     }
 
