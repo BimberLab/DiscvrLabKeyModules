@@ -121,9 +121,9 @@ export default jbrowse => {
         return displayJSX
     }
 
-    function makeChart(samples, feat, classes){
+    function makeChart(samples, feat, classes, trackId){
         // Abort if there are no samples
-        if (Object.keys(samples).length === 0) {
+        if (!samples || Object.keys(samples).length === 0) {
             return null;
         }
 
@@ -234,9 +234,6 @@ export default jbrowse => {
                 )
             }
             const gtTitle = "Genotype Frequency (" + gtTotal.toString() + ")"
-
-            // TODO - get variables, prepare genotypeTable link
-            const trackId = 0
             const contig = feat["CHROM"];
             const start = feat["POS"];
             const end = feat["end"];
@@ -290,8 +287,13 @@ export default jbrowse => {
         const classes = styles()
         const { model } = props
         const feat = JSON.parse(JSON.stringify(model.featureData))
-        const samples = model.featureData.samples
+        const { samples } = feat
         feat["samples"] = null
+
+        const trackId = model.trackId
+        if (!trackId) {
+            console.error('Error! No trackId')
+        }
 
         const configDisplays = model.extendedVariantDisplayConfig
         const displays = makeDisplays(feat, configDisplays, classes)
@@ -333,7 +335,7 @@ export default jbrowse => {
                     {infoDisplays}
                     {displays}
                     {annTable}
-                    {makeChart(samples, feat, classes)}
+                    {makeChart(samples, feat, classes, trackId)}
                 </Paper>
         )
     }
