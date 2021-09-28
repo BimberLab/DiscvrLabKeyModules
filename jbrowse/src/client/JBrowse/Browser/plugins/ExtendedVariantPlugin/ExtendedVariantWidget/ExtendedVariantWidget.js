@@ -23,7 +23,7 @@ export default jbrowse => {
         return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
     }
 
-    function makeTable(data, classes){
+    function makeAnnTable(data, classes){
         const geneNames = []
         const tableBodyRows = []
         for (let i in data){
@@ -70,32 +70,14 @@ export default jbrowse => {
         for (let display in displays){
             const tempProp = []
             for (let property in displays[display].properties){
-                if (feat["INFO"][displays[display].properties[property]]){
-                    if (feat["INFO"][displays[display].properties[property]].length === 1){
-                        let tempName
-                        if (fields[displays[display].properties[property]]){
-                            tempName = fields[displays[display].properties[property]].title
-                        }
-                        else {
-                            tempName = displays[display].properties[property]
-                        }
-                        tempProp.push(
-                                <div className={classes.field}>
-                                    <div className={classes.fieldName}>
-                                        {tempName}
-                                    </div>
-                                    <div className={classes.fieldValue}>
-                                        {feat["INFO"][displays[display].properties[property]]}
-                                    </div>
-                                </div>
-                        )
-                    }
-                    else if (feat["INFO"][displays[display].properties[property]].length > 1){
+                let value = feat["INFO"][displays[display].properties[property]]
+                if (value){
+                    if (Array.isArray(value)){
                         const children = []
-                        for (let val in feat["INFO"][displays[display].properties[property]]){
+                        for (let val in value){
                             children.push(
                                     <div className={classes.fieldSubValue}>
-                                        {feat["INFO"][displays[display].properties[property]][val]}
+                                        {value[val]}
                                     </div>
                             )
                         }
@@ -105,6 +87,19 @@ export default jbrowse => {
                                         {displays[display].properties[property]}
                                     </div>
                                     {children}
+                                </div>
+                        )
+                    }
+                    else {
+                        let tempName = fields[displays[display].properties[property]] ? fields[displays[display].properties[property]].title : displays[display].properties[property]
+                        tempProp.push(
+                                <div className={classes.field}>
+                                    <div className={classes.fieldName}>
+                                        {tempName}
+                                    </div>
+                                    <div className={classes.fieldValue}>
+                                        {value}
+                                    </div>
                                 </div>
                         )
                     }
@@ -126,9 +121,9 @@ export default jbrowse => {
         return displayJSX
     }
 
-    function makeChart(samples, feat, classes){
+    function makeChart(samples, feat, classes, trackId){
         // Abort if there are no samples
-        if (Object.keys(samples).length === 0) {
+        if (!samples || Object.keys(samples).length === 0) {
             return null;
         }
 
@@ -239,9 +234,6 @@ export default jbrowse => {
                 )
             }
             const gtTitle = "Genotype Frequency (" + gtTotal.toString() + ")"
-
-            // TODO - get variables, prepare genotypeTable link
-            const trackId = 0
             const contig = feat["CHROM"];
             const start = feat["POS"];
             const end = feat["end"];
@@ -295,8 +287,13 @@ export default jbrowse => {
         const classes = styles()
         const { model } = props
         const feat = JSON.parse(JSON.stringify(model.featureData))
-        const samples = model.featureData.samples
+        const { samples } = feat
         feat["samples"] = null
+
+        const trackId = model.trackId
+        if (!trackId) {
+            console.error('Error! No trackId')
+        }
 
         const configDisplays = model.extendedVariantDisplayConfig
         const displays = makeDisplays(feat, configDisplays, classes)
@@ -308,7 +305,7 @@ export default jbrowse => {
 
         let annTable;
         if (feat["INFO"]["ANN"]){
-            annTable = makeTable(feat["INFO"]["ANN"], classes);
+            annTable = makeAnnTable(feat["INFO"]["ANN"], classes);
             feat["INFO"]["ANN"] = null;
         }
 
@@ -338,7 +335,7 @@ export default jbrowse => {
                     {infoDisplays}
                     {displays}
                     {annTable}
-                    {makeChart(samples, feat, classes)}
+                    {makeChart(samples, feat, classes, trackId)}
                 </Paper>
         )
     }

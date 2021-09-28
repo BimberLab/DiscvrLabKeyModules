@@ -85,13 +85,7 @@ public class JBrowseDataProvider extends AbstractSequenceDataProvider
     @Override
     public List<NavItem> getSettingsItems(Container c, User u)
     {
-        List<NavItem> items = new ArrayList<>();
-        if (ContainerManager.getSharedContainer().equals(c))
-        {
-            items.add(new DetailsUrlWithoutLabelNavItem(this, "JBrowse Settings", DetailsURL.fromString("/jbrowse/settings.view"), LaboratoryService.NavItemCategory.settings, NAME));
-        }
-
-        return items;
+        return Collections.emptyList();
     }
 
     @Override

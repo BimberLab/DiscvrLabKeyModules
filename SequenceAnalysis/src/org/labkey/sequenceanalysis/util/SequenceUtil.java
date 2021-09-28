@@ -23,9 +23,9 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -39,6 +39,7 @@ import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.writer.PrintWriters;
+import org.labkey.sequenceanalysis.run.util.BgzipRunner;
 import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 
 import java.io.BufferedReader;
@@ -52,6 +53,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -81,10 +83,10 @@ public class SequenceUtil
         fasta(Arrays.asList(".fasta", ".fa", ".fna"), true),
         bam(".bam"),
         sff(".sff"),
-        gtf(".gtf"),
-        gff(Arrays.asList(".gff", ".gff3"), false),
+        gtf(Collections.singletonList(".gtf"), true),
+        gff(Arrays.asList(".gff", ".gff3"), true),
         gbk(".gbk"),
-        bed(".bed"),
+        bed(Collections.singletonList(".bed"), true),
         vcf(Arrays.asList(".vcf"), true),
         gvcf(Arrays.asList(".g.vcf"), true);
 
@@ -161,7 +163,7 @@ public class SequenceUtil
         }
         catch (IOException e)
         {
-            throw new PipelineJobException(e);
+            throw new PipelineJobException("Error processing file: " + f.getPath(), e);
         }
     }
 
@@ -232,16 +234,28 @@ public class SequenceUtil
         }
     }
 
-    @Deprecated
-    private static void bgzip(File input, File output)
+    public static File bgzip(File input, Logger log) throws PipelineJobException
     {
-        try (FileInputStream i = new FileInputStream(input); BlockCompressedOutputStream o = new BlockCompressedOutputStream(new FileOutputStream(output), output))
+        if (SystemUtils.IS_OS_WINDOWS)
         {
-            FileUtil.copyData(i, o);
+            File output = new File(input.getPath() + ".gz");
+            try (FileInputStream i = new FileInputStream(input); BlockCompressedOutputStream o = new BlockCompressedOutputStream(new FileOutputStream(output), output))
+            {
+                FileUtil.copyData(i, o);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            // For consistency with bgzip behavior
+            input.delete();
+
+            return output;
         }
-        catch (IOException e)
+        else
         {
-            throw new RuntimeException(e);
+            return new BgzipRunner(log).execute(input);
         }
     }
 
@@ -336,7 +350,7 @@ public class SequenceUtil
                 while (i.hasNext())
                 {
                     BEDFeature f = i.next();
-                    ret.add(new Interval(f.getChr(), f.getStart(), f.getEnd()));
+                    ret.add(new Interval(f.getContig(), f.getStart(), f.getEnd()));
                 }
             }
         }
@@ -437,18 +451,17 @@ public class SequenceUtil
 
         //then sort/append the records
         CommandWrapper wrapper = SequencePipelineService.get().getCommandWrapper(log);
-        wrapper.execute(Arrays.asList("/bin/sh", "-c", "cat '" + input.getPath() + "' | grep -v '^#' | sort -s -V -k1,1f" + (startColumnIdx == null ? "" : " -k" + startColumnIdx + "," + startColumnIdx + "n")), ProcessBuilder.Redirect.appendTo(sorted));
+        String cat = isCompressed ? "zcat" : "cat";
+        wrapper.execute(Arrays.asList("/bin/sh", "-c", cat + " '" + input.getPath() + "' | grep -v '^#' | sort -s -V -k1,1f" + (startColumnIdx == null ? "" : " -k" + startColumnIdx + "," + startColumnIdx + "n")), ProcessBuilder.Redirect.appendTo(sorted));
+
+        if (isCompressed)
+        {
+            sorted = bgzip(sorted, log);
+        }
 
         //replace the non-sorted output
         input.delete();
-        if (isCompressed)
-        {
-            SequenceUtil.bgzip(sorted, input);
-        }
-        else
-        {
-            FileUtils.moveFile(sorted, input);
-        }
+        FileUtils.moveFile(sorted, input);
         sorted.delete();
     }
 
@@ -491,7 +504,7 @@ public class SequenceUtil
         for (File vcf : files)
         {
             String cat = vcf.getName().toLowerCase().endsWith(".gz") ? "zcat" : "cat";
-            bashCommands.add(cat + " " + vcf.getPath() + " | grep -v '^#';");
+            bashCommands.add(cat + " '" + vcf.getPath() + "' | grep -v '^#';");
         }
 
         try
@@ -511,7 +524,7 @@ public class SequenceUtil
                     threads = Math.max(1, threads - 1);
                 }
 
-                writer.write("} | bgzip -f" + (compressionLevel == null ? "" : " --compress-level 9") + (threads == null ? "" : " --threads " + threads) + " > " + outputGzip.getPath() + "\n");
+                writer.write("} | bgzip -f" + (compressionLevel == null ? "" : " --compress-level 9") + (threads == null ? "" : " --threads " + threads) + " > '" + outputGzip.getPath() + "'\n");
             }
 
             SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
@@ -548,7 +561,7 @@ public class SequenceUtil
             {
                 writer.println("#!/bin/bash");
                 String cat = vcf.getPath().toLowerCase().endsWith(".gz") ? "zcat" : "cat";
-                writer.println(cat + " " + vcf.getPath() + " | grep -v '#' | awk ' { print $1 } ' | sort | uniq");
+                writer.println(cat + " '" + vcf.getPath() + "' | grep -v '#' | awk ' { print $1 } ' | sort | uniq");
             }
 
             SimpleScriptWrapper wrapper = new SimpleScriptWrapper(null);
@@ -581,5 +594,32 @@ public class SequenceUtil
         {
             new SimpleScriptWrapper(log).execute(Arrays.asList("rm", "-Rf", directory.getPath()));
         }
+    }
+
+    public static List<Interval> parseAndSortIntervals(String intervalString) throws PipelineJobException
+    {
+        intervalString = StringUtils.trimToNull(intervalString);
+        if (intervalString == null)
+        {
+            return null;
+        }
+
+        intervalString = intervalString.replaceAll("(\\n|\\r|;)+", ";");
+        List<Interval> intervals = new ArrayList<>();
+        for (String i : intervalString.split(";"))
+        {
+            String[] tokens = i.split(":|-");
+            if (tokens.length != 3)
+            {
+                throw new PipelineJobException("Invalid interval: " + i);
+            }
+
+            intervals.add(new Interval(tokens[0], Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2])));
+        }
+
+
+        Collections.sort(intervals);
+
+        return intervals;
     }
 }

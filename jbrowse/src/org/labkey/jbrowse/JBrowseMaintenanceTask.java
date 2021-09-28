@@ -1,10 +1,13 @@
 package org.labkey.jbrowse;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.Logger;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
@@ -12,24 +15,25 @@ import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.jbrowse.JBrowseService;
 import org.labkey.api.ldk.LDKService;
-import org.labkey.api.pipeline.PipelineValidationException;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
-import org.labkey.api.util.JobRunner;
+import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance.MaintenanceTask;
 import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * User: bimber
@@ -70,20 +74,31 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                 JBrowseSession db = JBrowseSession.getForId(objectId);
                 Table.delete(JBrowseSchema.getInstance().getSchema().getTable(JBrowseSchema.TABLE_DATABASES), objectId);
 
-                try
-                {
-                    JBrowseSession.onDatabaseDelete(db.getContainer(), db.getObjectId(), false);
-                }
-                catch (IOException e)
-                {
-                    log.error("error deleting JBrowse session: " + e.getMessage(), e);
-                }
+                JBrowseSession.onDatabaseDelete(db.getContainer(), db.getObjectId());
             }
         }
 
         //delete JSON in output dir not associated with DB record
         try
         {
+            // TODO: ultimately remove this. This is related to the migration from JB1 to JB2
+            TableInfo jsonFiles = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
+            List<String> toDelete = new TableSelector(jsonFiles, PageFlowUtil.set("objectid"), new SimpleFilter(FieldKey.fromString("sequenceid"), null, CompareType.NONBLANK), null).getArrayList(String.class);
+            if (!toDelete.isEmpty())
+            {
+                log.info("deleted " + toDelete.size() + " legacy NT JsonFile records");
+                for (String key : toDelete)
+                {
+                    Table.delete(jsonFiles, key);
+
+                    int d = new SqlExecutor(JBrowseSchema.getInstance().getSchema()).execute(new SQLFragment("DELETE FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_DATABASE_MEMBERS + " WHERE jsonfile = ?", key));
+                    if (d > 0)
+                    {
+                        log.info("also deleted " + d + " orphan database member record(s) for: " + key);
+                    }
+                }
+            }
+
             //delete sessions marked as temporary
             int sessionsDeleted = Table.delete(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("temporary"), true));
             if (sessionsDeleted > 0)
@@ -99,8 +114,6 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                     " WHERE " +
                     //find JSONFiles not associated with a database_member record
                     " (SELECT count(rowid) FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_DATABASE_MEMBERS + " d WHERE d.jsonfile = " + JBrowseSchema.TABLE_JSONFILES + ".objectid) = 0 AND " +
-                    //or library reference sequences
-                    " (SELECT count(rowid) FROM sequenceanalysis.reference_library_members d WHERE d.ref_nt_id = " + JBrowseSchema.TABLE_JSONFILES + ".sequenceid) = 0 AND " +
                     //or library tracks
                     " (SELECT count(rowid) FROM sequenceanalysis.reference_library_tracks d WHERE d.rowid = " + JBrowseSchema.TABLE_JSONFILES + ".trackid) = 0 AND " +
                     //or outputfiles
@@ -111,10 +124,8 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                 log.info("deleted " + deleted2 + " JSON files because they are not used by any sessions");
 
             //second pass at orphan JSONFiles.  Note: these might be referenced by a database_member record still.
-            List<String> toDelete = new SqlSelector(JBrowseSchema.getInstance().getSchema(), new SQLFragment("SELECT objectid FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_JSONFILES +
+            toDelete = new SqlSelector(JBrowseSchema.getInstance().getSchema(), new SQLFragment("SELECT objectid FROM " + JBrowseSchema.NAME + "." + JBrowseSchema.TABLE_JSONFILES +
                     " WHERE " +
-                    //reference NT sequences
-                    " (" + JBrowseSchema.TABLE_JSONFILES + ".sequenceid IS NOT NULL AND (SELECT count(rowid) FROM sequenceanalysis.ref_nt_sequences d WHERE d.rowid = " + JBrowseSchema.TABLE_JSONFILES + ".sequenceid) = 0) OR " +
                     //library tracks
                     " ( " + JBrowseSchema.TABLE_JSONFILES + ".trackid IS NOT NULL AND (SELECT count(rowid) FROM sequenceanalysis.reference_library_tracks d WHERE d.rowid = " + JBrowseSchema.TABLE_JSONFILES + ".trackid) = 0) OR " +
                     //outputfiles
@@ -124,7 +135,6 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
             if (!toDelete.isEmpty())
             {
                 log.info("deleting " + toDelete.size() + " JSON files because they reference non-existent tracks, sequences or outputfiles");
-                TableInfo jsonFiles = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
                 for (String key : toDelete)
                 {
                     Table.delete(jsonFiles, key);
@@ -148,118 +158,133 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
 
     private void processContainer(Container c, Logger log) throws IOException
     {
-        JBrowseRoot root = new JBrowseRoot(log);
-        if (root != null)
+        log.info("processing container: " + c.getPath());
+
+        File jbrowseRoot = JBrowseManager.get().getBaseDir(c, false);
+
+        //find jsonfiles we expect to exist
+        TableInfo tableJsonFiles = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
+        final Set<File> expectedDirs = new HashSet<>();
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("container"), c.getId());
+        filter.addCondition(FieldKey.fromString("sequenceid"), null, CompareType.ISBLANK);
+
+        TableSelector ts = new TableSelector(tableJsonFiles, filter, null);
+        Map<String, JsonFile> rowMap = ts.getArrayList(JsonFile.class).stream().collect(Collectors.toMap(JsonFile::getObjectId, Function.identity()));
+
+        // Also check for genomes from this container, and any additional JsonFiles they may have:
+        TableInfo tableGenomes = DbSchema.get(JBrowseManager.SEQUENCE_ANALYSIS, DbSchemaType.Module).getTable("reference_libraries");
+        TableSelector ts2 = new TableSelector(tableGenomes, PageFlowUtil.set("rowid"), new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
+        if (ts2.exists())
         {
-            File jbrowseRoot = JBrowseRoot.getBaseDir(c, false);
-            if (jbrowseRoot != null && jbrowseRoot.exists())
+            User u = LDKService.get().getBackgroundAdminUser();
+            if (u == null)
             {
-                log.info("processing container: " + c.getPath());
-
-                //find jsonfiles we expect to exist
-                TableInfo tableJsonFiles = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES);
-                final Set<File> expectedDirs = new HashSet<>();
-                TableSelector ts = new TableSelector(tableJsonFiles, new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
-                List<JsonFile> rows = ts.getArrayList(JsonFile.class);
-                for (JsonFile json : rows)
+                log.error("In order to ensure genomes are prepared for JBrowse, the LDK module property BackgroundAdminUser must be set");
+            }
+            else
+            {
+                List<Integer> genomes = ts2.getArrayList(Integer.class);
+                log.info("total genomes in folder: " + genomes.size());
+                for (Integer genomeId : genomes)
                 {
-                    if (json.getBaseDir() != null)
+                    JBrowseSession session = JBrowseSession.getGenericGenomeSession(genomeId);
+                    for (JsonFile json : session.getJsonFiles(u, true))
                     {
-                        expectedDirs.add(json.getBaseDir());
-                        if (!json.getBaseDir().exists())
+                        rowMap.put(json.getObjectId(), json);
+                        if (json.getBaseDir() != null)
                         {
-                            log.error("expected jbrowse folder does not exist: " + json.getBaseDir().getPath());
-                        }
-                    }
-                }
-                log.info("expected jsonfiles: " + expectedDirs.size());
-
-                File trackDir = new File(jbrowseRoot, "tracks");
-                if (trackDir.exists())
-                {
-                    for (File childDir : trackDir.listFiles())
-                    {
-                        if (!expectedDirs.contains(childDir))
-                        {
-                            log.info("deleting track dir: " + childDir.getPath());
-                            FileUtils.deleteDirectory(childDir);
-
-                            //TODO: determine databases that might use this and delete symlinks
-                        }
-                    }
-                }
-
-                File dataDir = new File(jbrowseRoot, "data");
-                if (dataDir.exists())
-                {
-                    log.info("deleting legacy jbrowse data dir: " + dataDir.getPath());
-                    FileUtils.deleteDirectory(dataDir);
-                }
-
-                File referenceDir = new File(jbrowseRoot, "references");
-                if (referenceDir.exists())
-                {
-                    for (File childDir : referenceDir.listFiles())
-                    {
-                        if (!expectedDirs.contains(childDir))
-                        {
-                            log.info("deleting reference sequence dir: " + childDir.getPath());
-                            FileUtils.deleteDirectory(childDir);
-                        }
-                    }
-                }
-
-                //also databases
-                Set<String> toRecreate = new HashSet<>();
-                TableInfo tableJsonDatabases = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES);
-                TableSelector ts2 = new TableSelector(tableJsonDatabases, Collections.singleton("objectid"), new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
-                List<String> expectedDatabases = ts2.getArrayList(String.class);
-                File databaseDir = new File(jbrowseRoot, "databases");
-                if (databaseDir.exists())
-                {
-                    for (File childDir : databaseDir.listFiles())
-                    {
-                        if (!expectedDatabases.contains(childDir.getName()))
-                        {
-                            log.info("deleting jbrowse database dir: " + childDir.getPath());
-                            FileUtils.deleteDirectory(childDir);
-                            continue;
-                        }
-
-                        for (String dirName : Arrays.asList("tracks"))
-                        {
-                            File subdir = new File(childDir, dirName);
-                            if (subdir.exists())
+                            expectedDirs.add(json.getBaseDir());
+                            if (!json.getBaseDir().exists())
                             {
-                                for (File child : subdir.listFiles())
-                                {
-                                    if (detectBrokenSymlink(log, child))
-                                    {
-                                        toRecreate.add(childDir.getName());
-                                    }
-                                }
+                                log.error("expected jbrowse folder does not exist: " + json.getBaseDir().getPath());
                             }
                         }
                     }
                 }
-
-                for (String objectId : expectedDatabases)
+            }
+        }
+        
+        if (jbrowseRoot != null && jbrowseRoot.exists())
+        {
+            for (JsonFile json : rowMap.values())
+            {
+                if (json.getBaseDir() != null)
                 {
-                    File dir = new File(databaseDir, objectId);
-                    if (!dir.exists())
+                    expectedDirs.add(json.getBaseDir());
+                    if (!json.getBaseDir().exists())
                     {
-                        log.error("missing expected DB directory: " + dir.getPath());
-                        toRecreate.add(objectId);
+                        log.error("expected jbrowse folder does not exist: " + json.getBaseDir().getPath());
                     }
                 }
+            }
 
-                if (!toRecreate.isEmpty())
+            log.info("expected resource folders: " + expectedDirs.size());
+            for (String dir : Arrays.asList("tracks", "data", "references", "databases"))
+            {
+                File childDir = new File(jbrowseRoot, dir);
+                if (childDir.exists())
                 {
-                    log.info("re-creating " + toRecreate.size() + " jbrowse sessions");
-                    log.info(StringUtils.join(toRecreate, ";"));
-                    for (String objectId : toRecreate)
+                    log.info("deleting legacy jbrowse " + dir + " dir: " + childDir.getPath());
+                    if (SystemUtils.IS_OS_WINDOWS)
                     {
-                        recreateSession(c, objectId, log);
+                        FileUtils.deleteDirectory(childDir);
+                    }
+                    else
+                    {
+                        try
+                        {
+                            new SimpleScriptWrapper(log).execute(Arrays.asList("rm", "-Rf", childDir.getPath()));
+                        }
+                        catch (PipelineJobException e)
+                        {
+                            log.error("Unable to delete directory: " + childDir.getPath(), e);
+                        }
+                    }
+                }
+            }
+
+            File resourceDir = new File(jbrowseRoot, "resources");
+            if (resourceDir.exists())
+            {
+                for (File childDir : resourceDir.listFiles())
+                {
+                    if (!expectedDirs.contains(childDir))
+                    {
+                        log.info("deleting resource dir: " + childDir.getPath());
+                        FileUtils.deleteDirectory(childDir);
+                    }
+                }
+            }
+        }
+
+        log.info("total JsonFiles in folder: " + rowMap.size());
+        for (JsonFile j : rowMap.values())
+        {
+            if (j.needsProcessing())
+            {
+                File expectedFile = j.getLocationOfProcessedTrack(false);
+                boolean error = false;
+                if (expectedFile != null && !expectedFile.exists())
+                {
+                    log.error("Missing expected file: " + expectedFile.getPath());
+                    error = true;
+                }
+
+                if (!j.doExpectedSearchIndexesExist())
+                {
+                    log.error("Missing search indexes: " + expectedFile.getPath());
+                    error = true;
+                }
+
+                if (error)
+                {
+                    try
+                    {
+                        j.prepareResource(log, false, true);
+                    }
+                    catch (Exception e)
+                    {
+                        log.error("Unable to process JsonFile: " + j.getObjectId(), e);
                     }
                 }
             }
@@ -269,43 +294,5 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
         {
             processContainer(child, log);
         }
-    }
-
-    private boolean detectBrokenSymlink(Logger log, File dir)
-    {
-        if (Files.isSymbolicLink(dir.toPath()) && !dir.exists())
-        {
-            log.error("possible broken symlink: " + dir.getPath());
-            return true;
-        }
-
-        return false;
-    }
-
-    private void recreateSession(final Container c, final String databaseId, final Logger log)
-    {
-        final User adminUser = LDKService.get().getBackgroundAdminUser();
-        if (adminUser == null)
-        {
-            log.error("LDK module BackgroundAdminUser property not set.  If this is set, JBrowseMaintenanceTask could automatically submit repair jobs.");
-            return;
-        }
-
-        JobRunner jr = JobRunner.getDefault();
-        jr.execute(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                try
-                {
-                    JBrowseService.get().reprocessDatabase(c, adminUser, databaseId);
-                }
-                catch (PipelineValidationException e)
-                {
-                    log.error(e.getMessage(), e);
-                }
-            }
-        });
     }
 }

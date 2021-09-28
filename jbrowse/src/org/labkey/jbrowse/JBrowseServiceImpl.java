@@ -1,26 +1,28 @@
 package org.labkey.jbrowse;
 
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.Container;
 import org.labkey.api.jbrowse.DemographicsSource;
 import org.labkey.api.jbrowse.JBrowseService;
 import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.security.User;
+import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Created by bimber on 11/3/2016.
@@ -43,21 +45,31 @@ public class JBrowseServiceImpl extends JBrowseService
     }
 
     @Override
-    public String prepareOutputFile(User u, Logger log, Integer outputFileId, boolean forceRecreateJson, JSONObject additionalConfig) throws IOException
+    public String prepareOutputFile(User u, Logger log, Integer outputFileId, boolean forceRecreateJson, JSONObject additionalConfig)
     {
-        JBrowseRoot root = new JBrowseRoot(log);
-
-        JsonFile ret = root.prepareOutputFile(u, outputFileId, forceRecreateJson, additionalConfig);
+        JsonFile ret = JsonFile.prepareJsonFileRecordForOutputFile(u, outputFileId, additionalConfig, log);
 
         return ret == null ? null : ret.getObjectId();
     }
 
     @Override
-    public void reprocessDatabase(Container c, User u, String databaseGuid) throws PipelineValidationException
+    public void onGenomeChange(Container c, User u, int genomeId, Logger log) throws PipelineJobException
     {
-        PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
+        JBrowseManager.get().ensureGenomePrepared(c, u, genomeId, log);
+    }
 
-        PipelineService.get().queueJob(JBrowseSessionPipelineJob.recreateDatabase(c, u, root, databaseGuid));
+    @Override
+    public void reprocessDatabase(User u, String databaseGuid) throws PipelineValidationException
+    {
+        JBrowseSession session = JBrowseSession.getForId(databaseGuid);
+        if (session == null)
+        {
+            throw new IllegalArgumentException("Unable to find session: " + databaseGuid);
+        }
+
+        List<String> files = session.getJsonFiles(u, true).stream().map(JsonFile::getObjectId).collect(Collectors.toList());
+        PipeRoot root = PipelineService.get().getPipelineRootSetting(session.getContainerObj());
+        PipelineService.get().queueJob(JBrowseSessionPipelineJob.refreshResources(session.getContainerObj(), u, root, files));
     }
 
     @Override

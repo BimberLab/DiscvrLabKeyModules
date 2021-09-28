@@ -48,22 +48,29 @@ public class TabixRunner extends AbstractCommandWrapper
         List<String> params = new ArrayList<>();
         params.add(getExe().getPath());
         params.add("-f");
-        params.add("-p");
-        if (new FileType("gff").isType(input))
+
+        String type = null;
+        if (new FileType(Arrays.asList("gff3", "gff", "gtf"), "gff", FileType.gzSupportLevel.SUPPORT_GZ).isType(input))
         {
-            params.add("gff");
+            type = "gff";
         }
-        else if (new FileType(Arrays.asList("bed", "bedGraph"), "bed").isType(input))
+        else if (new FileType(Arrays.asList("bed", "bedGraph"), "bed", FileType.gzSupportLevel.SUPPORT_GZ).isType(input))
         {
-            params.add("bed");
+            type = "bed";
         }
         else if (new FileType(Arrays.asList("sam", "bam"), "bam").isType(input))
         {
-            params.add("sam");
+            type = "sam";
         }
         else if (new FileType(Arrays.asList("vcf"), "vcf", FileType.gzSupportLevel.SUPPORT_GZ).isType(input))
         {
-            params.add("vcf");
+            type = "vcf";
+        }
+
+        if (type != null)
+        {
+            params.add("-p");
+            params.add(type);
         }
 
         params.add(input.getPath());

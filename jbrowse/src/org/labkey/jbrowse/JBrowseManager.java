@@ -16,20 +16,20 @@
 
 package org.labkey.jbrowse;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbSchemaType;
-import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.files.FileContentService;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
@@ -40,12 +40,15 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.resource.DirectoryResource;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.InsertPermission;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.jbrowse.model.JBrowseSession;
+import org.labkey.jbrowse.model.JsonFile;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
 
 import java.io.File;
@@ -54,14 +57,12 @@ import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class JBrowseManager
 {
     private static final JBrowseManager _instance = new JBrowseManager();
-    public final static String CONFIG_PROPERTY_DOMAIN = "org.labkey.jbrowse.settings";
-    public final static String JBROWSE_BIN = "jbrowseBinDir";
     public final static String SEQUENCE_ANALYSIS = "sequenceanalysis";
 
     public static final List<FileType> ALLOWABLE_TRACK_EXTENSIONS = Arrays.asList(
@@ -86,55 +87,12 @@ public class JBrowseManager
         return _instance;
     }
 
-    public void saveSettings(Map<String, String> props) throws IllegalArgumentException
-    {
-        PropertyManager.PropertyMap configMap = PropertyManager.getWritableProperties(JBrowseManager.CONFIG_PROPERTY_DOMAIN, true);
-
-        //validate bin
-        String binDir = StringUtils.trimToNull(props.get(JBROWSE_BIN));
-        if (binDir == null)
-        {
-            throw new IllegalArgumentException("JBrowse bin folder not provided");
-        }
-
-        File binFolder = new File(binDir);
-        if (!binFolder.exists())
-        {
-            throw new IllegalArgumentException("JBrowse bin dir does not exist or is not accessible: " + binFolder.getPath());
-        }
-
-        if (!binFolder.canRead())
-        {
-            throw new IllegalArgumentException("The user running tomcat must have read access to the JBrowse bin dir: " + binFolder.getPath());
-        }
-        configMap.put(JBROWSE_BIN, binDir);
-
-        configMap.save();
-    }
-
-    public File getJBrowseBinDir()
-    {
-        Map<String, String> props = PropertyManager.getProperties(JBrowseManager.CONFIG_PROPERTY_DOMAIN);
-        if (props.containsKey(JBROWSE_BIN))
-        {
-            return new File(props.get(JBROWSE_BIN));
-        }
-
-        return null;
-    }
-
-    public boolean compressJSON()
-    {
-        //hard coded for now until webdav supports otherwise
-        return true;
-    }
-
-    public void createDatabase(Container c, User u, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> outputFileIds, boolean isPrimaryDb, boolean shouldCreateOwnIndex, boolean isTemporary) throws IOException
+    public void createDatabase(Container c, User u, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> outputFileIds, boolean isTemporary) throws IOException
     {
         try
         {
             PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
-            PipelineService.get().queueJob(JBrowseSessionPipelineJob.createNewDatabase(c, u, root, name, description, libraryId, trackIds, outputFileIds, isPrimaryDb, shouldCreateOwnIndex, isTemporary));
+            PipelineService.get().queueJob(JBrowseSessionPipelineJob.createNewDatabase(c, u, root, name, description, libraryId, trackIds, outputFileIds, isTemporary));
         }
         catch (PipelineValidationException e)
         {
@@ -142,7 +100,27 @@ public class JBrowseManager
         }
     }
 
-    public void addDatabaseMember(Container c, User u, String databaseGuid, List<Integer> trackIds, List<Integer> outputFileIds) throws IOException
+    public void ensureGenomePrepared(Container c, User u, Integer genomeId, Logger log) throws PipelineJobException
+    {
+        try
+        {
+            ReferenceGenome rg = SequenceAnalysisService.get().getReferenceGenome(genomeId, u);
+            if (rg == null)
+            {
+                throw new IllegalArgumentException("Unable to find genome: " + genomeId);
+            }
+
+            PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
+            PipelineService.get().queueJob(JBrowseSessionPipelineJob.refreshGenome(c, u, root, genomeId));
+        }
+        catch (PipelineValidationException e)
+        {
+            log.error("Error preparing genome", e);
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    public void addDatabaseMember(User u, String databaseGuid, List<Integer> trackIds, List<Integer> outputFileIds) throws IOException
     {
         //make sure this is a valid database
         TableSelector ts = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), databaseGuid), null);
@@ -258,5 +236,34 @@ public class JBrowseManager
 
             assertTrue("Malformed output", output.contains("Add an assembly to a JBrowse 2 configuration"));
         }
+    }
+
+    @Nullable
+    public File getBaseDir(Container c, boolean doCreate)
+    {
+        FileContentService fileService = FileContentService.get();
+        File fileRoot = fileService == null ? null : fileService.getFileRoot(c, FileContentService.ContentType.files);
+        if (fileRoot == null || !fileRoot.exists())
+        {
+            return null;
+        }
+
+        if (fileRoot == null || !fileRoot.exists())
+        {
+            return null;
+        }
+
+        File jbrowseDir = new File(fileRoot, ".jbrowse");
+        if (!jbrowseDir.exists())
+        {
+            if (!doCreate)
+            {
+                return null;
+            }
+
+            jbrowseDir.mkdirs();
+        }
+
+        return jbrowseDir;
     }
 }
