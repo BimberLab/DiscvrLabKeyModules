@@ -93,11 +93,12 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--include-sa"), "include-sa", "Include Supplemental Alignments", "If checked, alignments with the SA supplemental alignment tag will be parsed, and these alignments inspected.", "checkbox", new JSONObject(){{
 
                     }}, false),
-                    ToolParameterDescriptor.create(BACKBONE_SEARCH, "Backbone Search Strings", "An optional comma-separated list of search strings to use to mark vector backbone.", "textarea", new JSONObject(){{
+                    ToolParameterDescriptor.create(BACKBONE_SEARCH, "Backbone Search Strings", "An optional comma-separated list of search strings to use to mark vector backbone.", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("height", 100);
                         put("width", 400);
+                        put("delimiter", ",");
                     }}, null)
-            ), null, null);
+            ), PageFlowUtil.set("sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
         @Override
@@ -185,7 +186,7 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
         List<String> extraArgs = new ArrayList<>(getClientCommandArgs());
 
         if (backboneSearch != null) {
-            Arrays.stream(backboneSearch.split(",")).forEach(s -> {
+            Arrays.stream(backboneSearch.split("[\\s,]+")).forEach(s -> {
                 extraArgs.add("-bs");
                 extraArgs.add(s);
             });
