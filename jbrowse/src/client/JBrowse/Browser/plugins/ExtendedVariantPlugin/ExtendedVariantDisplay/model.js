@@ -170,7 +170,6 @@ export default jbrowse => {
                const session = getSession(self)
                const track = getContainingTrack(self)
                const widgetId = 'Variant-' + getConf(track, 'trackId');
-               console.log(getContainingTrack(self))
                const filterWidget = session.addWidget(
                   'FilterWidget',
                   widgetId,
