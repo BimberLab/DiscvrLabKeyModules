@@ -48,6 +48,17 @@ public class JBrowseServiceImpl extends JBrowseService
     public String prepareOutputFile(User u, Logger log, Integer outputFileId, boolean forceRecreateJson, JSONObject additionalConfig)
     {
         JsonFile ret = JsonFile.prepareJsonFileRecordForOutputFile(u, outputFileId, additionalConfig, log);
+        if (ret != null && ret.needsProcessing())
+        {
+            try
+            {
+                ret.prepareResource(log, false, true);
+            }
+            catch (PipelineJobException e)
+            {
+                log.error("Unable to prepare JBrowse resource: " + outputFileId, e);
+            }
+        }
 
         return ret == null ? null : ret.getObjectId();
     }
