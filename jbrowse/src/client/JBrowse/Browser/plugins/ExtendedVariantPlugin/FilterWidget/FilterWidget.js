@@ -1,5 +1,6 @@
 import {ActionURL} from "@labkey/api";
 import {style as styles} from "./style";
+import {filterMap as filters} from "./filters"
 import {
   Dialog,
   DialogTitle,
@@ -40,17 +41,21 @@ export default jbrowse => {
 
    const filterOptions = ['Impact = HIGH', 'AF > 0.2', 'None']
 
+
    function FilterForm(props){
       const { model } = props
       let track = model.track
-      const [state, setState] = React.useState({
-       af02: false,
-       impactHigh: false,
-      });
+
+      let filterState = {}
+      Object.entries(filters).map(([key, val]) => filterState[key] = val.selected)
+
+      const [state, setState] = React.useState(filterState)
       const classes = styles()
       const handleSubmit = (event) => {
          event.preventDefault();
-         track.adapter.filters.set(JSON.stringify(state))
+         let filterSubmit = filters
+         Object.entries(state).map(([key, val]) => filterSubmit[key].selected = val)
+         track.adapter.filters.set(JSON.stringify(filterSubmit))
       }
 
       const handleChange = (event) => {
@@ -60,13 +65,14 @@ export default jbrowse => {
          });
       }
 
-      const { af02, impactHigh } = state;
+      const labels =  Object.entries(state).map(([key, val]) =>
+                       <FormControlLabel className={classes.filterOption} control={<Checkbox checked={val} onChange={handleChange} name={key}/>} label={filters[key].title} />
+                      )
       return(
          <Paper>
             <form className={classes.filterGroup} onSubmit={handleSubmit}>
                <FormGroup >
-                 <FormControlLabel className={classes.filterOption} control={<Checkbox checked={af02} onChange={handleChange} name="af02"/>} label="AF > 0.2" />
-                 <FormControlLabel className={classes.filterOption} control={<Checkbox checked={impactHigh} onChange={handleChange} name="impactHigh"/>} label="Impact = HIGH" />
+                 {labels}
                </FormGroup>
                <input className={classes.button} type="submit" value="Apply" />
             </form>

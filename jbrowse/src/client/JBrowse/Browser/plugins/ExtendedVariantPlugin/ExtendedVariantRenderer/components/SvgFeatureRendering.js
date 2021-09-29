@@ -124,16 +124,16 @@ function RenderedFeatureGlyph(props) {
   )
 }
 
-function isFiltered(feature, filters){
-   if(filters["af02"]){
-      if(!(feature.variant.INFO.AF[0] > 0.2)){
-         return false
-      }
-   }
-   if(filters["impactHigh"]){
-      if(!(feature.variant.INFO.IMPACT === "HIGH")){
-         return false
-      }
+function isDisplayed(feature, filters){
+   for(const key in filters){
+        try {
+            if(filters[key].selected && !eval(filters[key].expression)){
+                return false
+            }
+        } catch (e){
+            console.error("Error in filter execution: "+e)
+            return true
+        }
    }
    return true
 }
@@ -159,7 +159,7 @@ const RenderedFeatures = observer(props => {
   const featuresRendered = []
   const filters = JSON.parse(props.adapterConfig.filters ?? "{}")
   for (const feature of features.values()) {
-    if(isFiltered(feature, filters)){
+    if(isDisplayed(feature, filters)){
        featuresRendered.push(
          <RenderedFeatureGlyph key={feature.id()} feature={feature} {...props} />,
        )
