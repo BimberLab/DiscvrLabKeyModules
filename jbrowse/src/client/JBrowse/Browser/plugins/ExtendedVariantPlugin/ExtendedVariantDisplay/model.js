@@ -40,7 +40,11 @@ export default jbrowse => {
             self.ready = flag
          },
          setFilter(filter){
-            self.renderProps().config.filters.set(filter)
+            try{
+                self.renderProps().config.filters.set(filter)
+            } catch (e){
+                console.error(e)
+            }
          },
          setColor(attr, color) {
             if (attr == "SNV"){

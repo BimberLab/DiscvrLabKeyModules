@@ -55,7 +55,11 @@ export default jbrowse => {
          event.preventDefault();
          let filterSubmit = filters
          Object.entries(state).map(([key, val]) => filterSubmit[key].selected = val)
-         track.adapter.filters.set(JSON.stringify(filterSubmit))
+         try {
+             track.adapter.filters.set(JSON.stringify(filterSubmit))
+         } catch(e){
+             console.error("Error setting adapter filters.")
+         }
       }
 
       const handleChange = (event) => {
