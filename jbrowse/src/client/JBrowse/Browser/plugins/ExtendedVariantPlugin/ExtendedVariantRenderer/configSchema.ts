@@ -12,8 +12,7 @@ export default ConfigurationSchema(
     },
     color2: {
       type: 'color',
-      description:
-        'the secondary color of each feature, used for connecting lines, etc',
+      description: 'the secondary color of each feature, used for connecting lines, etc',
       defaultValue: 'black',
       contextVariable: ['feature'],
     },
@@ -24,10 +23,10 @@ export default ConfigurationSchema(
       defaultValue: '#357089',
       contextVariable: ['feature'],
     },
-   filters: {
-      type: 'string',
-      description: 'the active filter set by the user',
-      defaultValue: '',
+   filterExpr: {
+      type: 'boolean',
+      description: 'test whether this variant should be displayed',
+      defaultValue: true,
       contextVariable: ['feature']
     },
     height: {

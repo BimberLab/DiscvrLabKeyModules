@@ -1,6 +1,7 @@
 import {ActionURL} from "@labkey/api";
 import {style as styles} from "./style";
-import {filterMap as filters} from "./filters"
+import {filterMap as FILTERS } from "./filters"
+
 import {
   Dialog,
   DialogTitle,
@@ -19,7 +20,7 @@ import {
   FormLabel
 } from '@material-ui/core'
 import { getContainingTrack, getSession, getContainingView, getContainingDisplay } from '@jbrowse/core/util'
-import { getConf } from '@jbrowse/core/configuration'
+import { getConf, readConfObject } from '@jbrowse/core/configuration'
 
 
 
@@ -39,50 +40,62 @@ export default jbrowse => {
             '@jbrowse/core/BaseFeatureWidget/BaseFeatureDetail',
     )
 
-   const filterOptions = ['Impact = HIGH', 'AF > 0.2', 'None']
+    function FilterForm(props){
+        const { model } = props
+        const { trackConfig } = model
 
+        //Load the defaults from the track's config. This should let us provide them at load time in the session JSON
+        const existingFilters = readConfObject(trackConfig, ['adapter', 'filters']) || [];
 
-   function FilterForm(props){
-      const { model } = props
-      let track = model.track
+        // TODO: we can leave this alone for now, but once we support filters with user-supplied thresholds, this logic doesnt work anymore
+        // We should instead make this UI has 'Add' and 'Remove' buttons. The user could hit add, and then pick a filter type (based on register types defined in FILTERS).
+        let filterState = {}
+        Object.entries(FILTERS).map(([key, val]) => filterState[key] = existingFilters.indexOf(key) > -1)
 
-      let filterState = {}
-      Object.entries(filters).map(([key, val]) => filterState[key] = val.selected)
+        const [state, setState] = React.useState(filterState)
+        const classes = styles()
+        const handleSubmit = (event) => {
+            event.preventDefault();
+            let activeFilters = []
+            Object.entries(state).map(([key, val]) => {
+                if (val)
+                    activeFilters.push(key)
+            })
 
-      const [state, setState] = React.useState(filterState)
-      const classes = styles()
-      const handleSubmit = (event) => {
-         event.preventDefault();
-         let filterSubmit = filters
-         Object.entries(state).map(([key, val]) => filterSubmit[key].selected = val)
-         try {
-             track.adapter.filters.set(JSON.stringify(filterSubmit))
-         } catch(e){
-             console.error("Error setting adapter filters.")
-         }
-      }
+            //TODO: unsure if this could ever happen since we query it above?
+            if (!trackConfig.adapter || !trackConfig.adapter.filters) {
+                console.error("trackConfig.adapter.filters was null in FilterWidget!")
+            }
 
-      const handleChange = (event) => {
-         setState({
-            ...state,
-            [event.target.name]: event.target.checked,
-         });
-      }
+            // TODO: updating this seems to automatically destroy all the rendered variants
+            // Maybe there should be a check here to change over prior filters?
+            // Maybe this should always trigger re-rendering?
+            trackConfig.adapter.filters.set(activeFilters)
 
-      const labels =  Object.entries(state).map(([key, val]) =>
-                       <FormControlLabel className={classes.filterOption} control={<Checkbox checked={val} onChange={handleChange} name={key}/>} label={filters[key].title} />
-                      )
-      return(
-         <Paper>
-            <form className={classes.filterGroup} onSubmit={handleSubmit}>
-               <FormGroup >
-                 {labels}
-               </FormGroup>
-               <input className={classes.button} type="submit" value="Apply" />
-            </form>
-         </Paper>
-      )
-   }
+            //TODO: should this close the widget?
+        }
+
+        const handleChange = (event) => {
+            setState({
+                ...state,
+                [event.target.name]: event.target.checked,
+            });
+        }
+
+        const labels =  Object.entries(FILTERS).map(([key, val]) =>
+                <FormControlLabel key={key} className={classes.filterOption} control={<Checkbox checked={!!state[key]} onChange={handleChange} name={key}/>} label={FILTERS[key].title} />
+        )
+        return(
+                <Paper>
+                    <form className={classes.filterGroup} onSubmit={handleSubmit}>
+                        <FormGroup >
+                            {labels}
+                        </FormGroup>
+                        <input className={classes.button} type="submit" value="Apply" />
+                    </form>
+                </Paper>
+        )
+    }
 
     return observer(FilterForm)
 }

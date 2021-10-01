@@ -1,17 +1,22 @@
+// NOTE: this should centralize all the logic we need around rendering the filter UI and
+// building the filter functions. This currently hard-coded the filter value and operator, but
+// eventually this should be extended.
 export const filterMap = {
-    af02: {
+    af: {
         selected: false,
-        title: 'AF < 0.2',
+        title: 'Allele Frequency',
         expression: 'feature.variant.INFO.AF[0] < 0.2'
     },
-    ac80: {
+    ac: {
         selected: false,
-        title: 'AC < 80',
-        expression: 'feature.variant.INFO.AC[0] < 80'
+        title: 'Allele Count',
+        //TODO: ultimately configure these strings, maybe like:
+        //expression: 'feature.variant.INFO.AC[0] {OP} {VAL}'
+        expression: 'feature.variant.INFO.AC[0] > 80'
     },
-    impactHigh: {
+    impact: {
         selected: false,
-        title: 'Impact = HIGH',
+        title: 'Predicted Impact',
         expression: 'feature.variant.INFO.IMPACT === "HIGH"'
     }
 }

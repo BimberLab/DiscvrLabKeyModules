@@ -9,16 +9,9 @@ export default jbrowse => {
     .model('FilterWidget', {
       id: ElementId,
       type: types.literal('FilterWidget'),
-      track: types.safeReference(jbrowse.pluggableConfigSchemaType('track')),
+      trackConfig: types.safeReference(jbrowse.pluggableConfigSchemaType('track')),
+      trackId: types.string
     })
-    .actions(self => ({
-      setFeatureData(data) {
-        self.featureData = data
-      },
-      clearFeatureData() {
-        self.featureData = {}
-      }
-    }))
 
   const ReactComponent = jbrowse.jbrequire(FilterWidget)
 
