@@ -54,11 +54,18 @@ export default class ExtendedVariantPlugin extends Plugin {
     )
 
     pluginManager.addTrackType(() => {
+      const config = createBaseTrackConfig(pluginManager)
+      config.jbrowseSchemaDefinition.filters = {
+        type: 'stringArray',
+        defaultValue: [],
+        description: 'Active track filters',
+      }
+
       const configSchema = ConfigurationSchema(
         'ExtendedVariantTrack',
         {},
         {
-          baseConfiguration: createBaseTrackConfig(pluginManager),
+          baseConfiguration: config,
           explicitIdentifier: 'trackId',
         },
       )

@@ -42,6 +42,7 @@
       "category": [
         "Annotation"
       ],
+      "filters": ["af"],
       "adapter": {
         "type": "ExtendedVariantAdapter",
         "vcfGzLocation": {
@@ -51,8 +52,7 @@
           "location": {
             "uri": "<%=contextPath%>/jbrowse/mgap/mGap.v2.1.subset.vcf.gz.tbi"
           }
-        },
-        "filters": ["af"]
+        }
       },
       "displays": [
         {

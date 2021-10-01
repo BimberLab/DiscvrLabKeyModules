@@ -45,7 +45,7 @@ export default jbrowse => {
         const { trackConfig } = model
 
         //Load the defaults from the track's config. This should let us provide them at load time in the session JSON
-        const existingFilters = readConfObject(trackConfig, ['adapter', 'filters']) || [];
+        const existingFilters = readConfObject(trackConfig, 'filters') || [];
 
         // TODO: we can leave this alone for now, but once we support filters with user-supplied thresholds, this logic doesnt work anymore
         // We should instead make this UI has 'Add' and 'Remove' buttons. The user could hit add, and then pick a filter type (based on register types defined in FILTERS).
@@ -63,14 +63,14 @@ export default jbrowse => {
             })
 
             //TODO: unsure if this could ever happen since we query it above?
-            if (!trackConfig.adapter || !trackConfig.adapter.filters) {
-                console.error("trackConfig.adapter.filters was null in FilterWidget!")
+            if (!trackConfig.filters) {
+                console.error("trackConfig.filters was null in FilterWidget!")
             }
 
-            // TODO: updating this seems to automatically destroy all the rendered variants
-            // Maybe there should be a check here to change over prior filters?
-            // Maybe this should always trigger re-rendering?
-            trackConfig.adapter.filters.set(activeFilters)
+            // TODO: by moving the config property from the adapter to the track itself, this
+            // avoids the problem where variants stop rendering. However, this set() isnt triggering
+            // the afterAttach event in model.js.
+            trackConfig.filters.set(activeFilters)
 
             //TODO: should this close the widget?
         }

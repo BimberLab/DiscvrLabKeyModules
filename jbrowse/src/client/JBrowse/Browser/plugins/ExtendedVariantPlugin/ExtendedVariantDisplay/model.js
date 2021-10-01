@@ -94,9 +94,9 @@ export default jbrowse => {
 
                                             //NOTE: one idea is to make a JEXL expression
                                             let filterJexl = null;
-                                            if (self.adapterConfig.filters) {
+                                            if (self.filters) {
                                                 const filterParts = []
-                                                self.adapterConfig.filters.forEach((fn) => {
+                                                self.filters.forEach((fn) => {
                                                     // TODO: eventually we could support a combination of filter + value, like:
                                                     // AF:gt:0.2   or  impact:eq:HIGH
                                                     const f = FILTERS[fn]
