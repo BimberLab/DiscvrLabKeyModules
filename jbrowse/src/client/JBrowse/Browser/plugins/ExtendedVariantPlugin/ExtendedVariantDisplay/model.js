@@ -111,10 +111,12 @@ export default jbrowse => {
                                                 filterJexl = 'jexl:' + filterParts.join(' && ')
                                             }
 
-                                            if (filterJexl !== self.renderProps().config.filterExpr.value) {
-                                                self.renderProps().config.filterExpr.set(colorJexl)
-                                                needsRender = true;
-                                            }
+                                            console.log('filter jexl:')
+                                            console.log(filterJexl)
+                                            //if (filterJexl !== self.renderProps().config.filterExpr.value) {
+                                            //    //self.renderProps().config.filterExpr.set(colorJexl)
+                                            //    needsRender = true;
+                                            //}
 
                                             if (needsRender || !self.ready) {
                                                 const { centerLineInfo } = getContainingView(self)

@@ -3,6 +3,11 @@ import configSchema from '@jbrowse/plugin-variants/src/VcfTabixAdapter/configSch
 import { types } from 'mobx-state-tree'
 
 let EVConfigSchema = configSchema.jbrowseSchemaDefinition
+EVConfigSchema["filters"] = {
+   type: 'string',
+   defaultValue: '{}',
+   description: 'Active track filters',
+}
 
 //TODO: add this eventually
 // EVConfigSchema["colorMap"] = {
