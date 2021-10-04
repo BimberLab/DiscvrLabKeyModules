@@ -73,7 +73,6 @@ export default jbrowse => {
                             autorun(
                                     async () => {
                                         try {
-                                            console.log('called afterAttach!')
                                             const { rpcManager } = getSession(self)
 
                                             // TODO: eventually convert this to use some kind of map, defined in the track config and not a local variable
@@ -94,9 +93,10 @@ export default jbrowse => {
 
                                             //NOTE: one idea is to make a JEXL expression
                                             let filterJexl = null;
-                                            if (self.filters) {
+                                            if (self.adapterConfig.filters) {
                                                 const filterParts = []
-                                                self.filters.forEach((fn) => {
+                                                const filterStrings = self.adapterConfig.filters.split(';')
+                                                filterStrings.forEach((fn) => {
                                                     // TODO: eventually we could support a combination of filter + value, like:
                                                     // AF:gt:0.2   or  impact:eq:HIGH
                                                     const f = FILTERS[fn]
@@ -111,12 +111,12 @@ export default jbrowse => {
                                                 filterJexl = 'jexl:' + filterParts.join(' && ')
                                             }
 
-                                            console.log('filter jexl:')
-                                            console.log(filterJexl)
-                                            //if (filterJexl !== self.renderProps().config.filterExpr.value) {
-                                            //    //self.renderProps().config.filterExpr.set(colorJexl)
-                                            //    needsRender = true;
-                                            //}
+                                            if (filterJexl !== self.renderProps().config.filterExpr.value) {
+                                                console.log('updating jexl:')
+                                                console.log(filterJexl)
+                                                self.renderProps().config.filterExpr.set(filterJexl)
+                                               needsRender = true
+                                            }
 
                                             if (needsRender || !self.ready) {
                                                 const { centerLineInfo } = getContainingView(self)

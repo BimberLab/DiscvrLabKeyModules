@@ -144,11 +144,16 @@ const RenderedFeatures = observer(props => {
     const { features } = props
     const featuresRendered = []
     for (const feature of features.values()) {
-        //TODO: eventually restore this
-        //const isDisplayed = true; //readConfObject(props.config, 'filterExpr', { feature })
-        featuresRendered.push(
-                <RenderedFeatureGlyph key={feature.id()} feature={feature} {...props} />,
-        )
+        const isDisplayed = readConfObject(props.config, 'filterExpr', { feature })
+        if (isDisplayed) {
+            featuresRendered.push(
+                    <RenderedFeatureGlyph key={feature.id()} feature={feature} {...props} />,
+            )
+        }
+        else {
+            //TODO: debugging only. remove this
+            console.log('Filtered!')
+        }
     }
     return <>{featuresRendered}</>
 })
