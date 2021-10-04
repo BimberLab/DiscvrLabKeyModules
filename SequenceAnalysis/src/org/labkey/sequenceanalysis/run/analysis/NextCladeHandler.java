@@ -166,7 +166,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             writer.println("HOME=`echo ~/`");
 
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-            writer.println("sudo $DOCKER pull neherlab/nextclade");
+            writer.println("sudo $DOCKER pull nextstrain/nextclade:latest");
             writer.println("sudo $DOCKER run --rm=true \\");
 
             if (SequencePipelineService.get().getMaxThreads(log) != null)
@@ -185,8 +185,8 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");
             writer.println("\t-w /work \\");
-            writer.println("\tneherlab/nextclade \\");
-            writer.println("\t nextclade --input-fasta '/work/" + consensusFasta.getName() + "' --output-json '/work/" + jsonFile.getName() + "'");
+            writer.println("\tnextstrain/nextclade:latest \\");
+            writer.println("\t/bin/bash -c \"nextclade dataset get --name='sars-cov-2' --output-dir='/data/sars-cov-2';nextclade --input-dataset=/data/sars-cov-2 --input-fasta '/work/" + consensusFasta.getName() + "' --output-json '/work/" + jsonFile.getName() + "'\"");
             writer.println("");
             writer.println("echo 'Bash script complete'");
             writer.println("");
@@ -200,7 +200,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
         rWrapper.setWorkingDir(outputDir);
         rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
 
-        localBashScript.delete();
+        tracker.addIntermediateFile(localBashScript);
 
         if (!jsonFile.exists())
         {
