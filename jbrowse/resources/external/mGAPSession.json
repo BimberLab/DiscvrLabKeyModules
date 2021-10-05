@@ -51,7 +51,12 @@
           "location": {
             "uri": "<%=contextPath%>/jbrowse/mgap/mGap.v2.1.subset.vcf.gz.tbi"
           }
-        }
+        },
+        "filters": [
+          "AF < 0.1:AF:lt:0.1:false",
+          "AC < 80:AC:lt:80:false",
+          "IMPACT = HIGH:IMPACT:eq:'HIGH':false"
+        ]
       },
       "displays": [
         {

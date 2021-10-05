@@ -1,17 +1,15 @@
 export const filterMap = {
-    af02: {
-        selected: false,
-        title: 'AF < 0.2',
-        expression: 'feature.variant.INFO.AF[0] < 0.2'
+    AF: {
+    // TODO - add valid operators for each
+        title: 'Allele Frequency',
+        location: 'feature.variant.INFO.AF[0]'
     },
-    ac80: {
-        selected: false,
-        title: 'AC < 80',
-        expression: 'feature.variant.INFO.AC[0] < 80'
+    AC: {
+        title: 'Allele Count',
+        location: 'feature.variant.INFO.AC[0]'
     },
-    impactHigh: {
-        selected: false,
-        title: 'Impact = HIGH',
-        expression: 'feature.variant.INFO.IMPACT === "HIGH"'
+    IMPACT: {
+        title: 'Predicted Impact',
+        location: 'feature.variant.INFO.IMPACT'
     }
 }

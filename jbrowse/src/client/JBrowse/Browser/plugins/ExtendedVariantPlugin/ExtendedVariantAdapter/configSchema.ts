@@ -4,8 +4,8 @@ import configSchema from '@jbrowse/plugin-variants/src/VcfTabixAdapter/configSch
 let EVConfigSchema = configSchema.jbrowseSchemaDefinition
 EVConfigSchema["filters"] =
 {
-   type: 'string',
-   defaultValue: '{}',
+   type: 'stringArray',
+   defaultValue: [],
    description:
     'Track filters',
 }

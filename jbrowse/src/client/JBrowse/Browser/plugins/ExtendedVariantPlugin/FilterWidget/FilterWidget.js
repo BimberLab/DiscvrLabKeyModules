@@ -1,6 +1,7 @@
 import {ActionURL} from "@labkey/api";
 import {style as styles} from "./style";
 import {filterMap as filters} from "./filters"
+import {expandFilters, expandedFilterListToObj, expandedFilterObjToList} from "./filterUtil"
 import {
   Dialog,
   DialogTitle,
@@ -19,7 +20,7 @@ import {
   FormLabel
 } from '@material-ui/core'
 import { getContainingTrack, getSession, getContainingView, getContainingDisplay } from '@jbrowse/core/util'
-import { getConf } from '@jbrowse/core/configuration'
+import { readConfObject } from '@jbrowse/core/configuration'
 
 
 
@@ -39,7 +40,13 @@ export default jbrowse => {
             '@jbrowse/core/BaseFeatureWidget/BaseFeatureDetail',
     )
 
-   const filterOptions = ['Impact = HIGH', 'AF > 0.2', 'None']
+    function strToBool(str){
+        if(str === "true"){
+            return true
+        } else {
+            return false
+        }
+    }
 
 
    function FilterForm(props){
@@ -47,16 +54,31 @@ export default jbrowse => {
       let track = model.track
 
       let filterState = {}
-      Object.entries(filters).map(([key, val]) => filterState[key] = val.selected)
+
+      const configFilters = readConfObject(track, ['adapter', 'filters'])
+      try {
+          let trackFilters = track.adapter.filters
+          if(trackFilters && (trackFilters != configFilters)){
+            configFilters = trackFilters
+          }
+      } catch {
+
+      }
+      const expandedFilterList = expandFilters(configFilters)
+      const expandedFilters = expandedFilterListToObj(expandedFilterList)
+
+      //Object.entries(filters).map(([key, val]) => filterState[key] = val.selected)
+      Object.entries(expandedFilters).map((key, val) => filterState[key[0]] = strToBool(key[1].selected))
 
       const [state, setState] = React.useState(filterState)
       const classes = styles()
       const handleSubmit = (event) => {
          event.preventDefault();
          let filterSubmit = filters
-         Object.entries(state).map(([key, val]) => filterSubmit[key].selected = val)
+         //Object.entries(state).map(([key, val]) => filterSubmit[key].selected = val)
+         Object.entries(state).map(([key, val]) => expandedFilters[key].selected = val.toString())
          try {
-             track.adapter.filters.set(JSON.stringify(filterSubmit))
+             track.adapter.filters.set(expandedFilterObjToList(expandedFilters)) // pass it back as a list of strings
          } catch(e){
              console.error("Error setting adapter filters.")
          }
@@ -70,7 +92,7 @@ export default jbrowse => {
       }
 
       const labels =  Object.entries(state).map(([key, val]) =>
-                       <FormControlLabel className={classes.filterOption} control={<Checkbox checked={val} onChange={handleChange} name={key}/>} label={filters[key].title} />
+                       <FormControlLabel className={classes.filterOption} control={<Checkbox checked={val} onChange={handleChange} name={key}/>} label={expandedFilters[key].label} />
                       )
       return(
          <Paper>

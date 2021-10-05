@@ -25,9 +25,9 @@ export default ConfigurationSchema(
       contextVariable: ['feature'],
     },
    filters: {
-      type: 'string',
+      type: 'stringArray',
       description: 'the active filter set by the user',
-      defaultValue: '',
+      defaultValue: [],
       contextVariable: ['feature']
     },
     height: {

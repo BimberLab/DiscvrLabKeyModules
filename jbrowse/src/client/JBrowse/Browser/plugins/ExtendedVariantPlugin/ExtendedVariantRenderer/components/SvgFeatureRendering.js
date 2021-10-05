@@ -10,6 +10,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import FeatureGlyph from './FeatureGlyph' // FeatureGlyph copied over. Referencing original produces errors. Compare to line 11
 import SvgOverlay from '@jbrowse/plugin-svg/src/SvgFeatureRenderer/components/SvgOverlay' // NEW: Updated SvgOverlay to reference original file in @jbrowse. No errors produced.
 import { chooseGlyphComponent, layOut } from './util' // NEW: chooseGlyphComponent() in util updated to render SNVs as a diamond
+import { expandFilters, expandedFilterStringToObj } from '../../FilterWidget/filterUtil' // NOTE: Now dependent on FilterWidget plugin
 
 const renderingStyle = {
   position: 'relative',
@@ -125,9 +126,10 @@ function RenderedFeatureGlyph(props) {
 }
 
 function isDisplayed(feature, filters){
-   for(const key in filters){
+   for(const filter in filters){
         try {
-            if(filters[key].selected && !eval(filters[key].expression)){
+            const filterObj = expandedFilterStringToObj(filters[filter])
+            if(filterObj["selected"] === "true" && !eval(filterObj["expression"])){
                 return false
             }
         } catch (e){
@@ -157,7 +159,7 @@ RenderedFeatureGlyph.propTypes = {
 const RenderedFeatures = observer(props => {
   const { features } = props
   const featuresRendered = []
-  const filters = JSON.parse(props.adapterConfig.filters ?? "{}")
+  const filters = expandFilters(props.adapterConfig.filters) //JSON.parse(props.adapterConfig.filters ?? "{}")
   for (const feature of features.values()) {
     if(isDisplayed(feature, filters)){
        featuresRendered.push(
