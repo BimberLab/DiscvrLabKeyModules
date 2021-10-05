@@ -91,9 +91,12 @@ export default jbrowse => {
          });
       }
 
-      const labels =  Object.entries(state).map(([key, val]) =>
+      let labels =  Object.entries(state).map(([key, val]) =>
                        <FormControlLabel className={classes.filterOption} control={<Checkbox checked={val} onChange={handleChange} name={key}/>} label={expandedFilters[key].label} />
                       )
+      if(labels.length == 0){
+         labels = <div className={classes.filterOption}>No filters loaded.</div>
+      }
       return(
          <Paper>
             <form className={classes.filterGroup} onSubmit={handleSubmit}>

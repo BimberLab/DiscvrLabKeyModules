@@ -56,6 +56,9 @@ export function expandFilters(filters) {
 // filters: list of strings with properties "label:field:operator:value:selected"
 // returns a list of strings "label:expression:selected"
     let filterList = []
+    if(!filters){
+        return filterList
+    }
     for(const filter of filters){
         try {
             if(isFilterStringExpanded(filter)){

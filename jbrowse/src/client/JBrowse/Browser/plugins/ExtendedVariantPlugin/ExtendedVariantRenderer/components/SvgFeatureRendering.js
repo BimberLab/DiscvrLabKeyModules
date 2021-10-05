@@ -126,6 +126,9 @@ function RenderedFeatureGlyph(props) {
 }
 
 function isDisplayed(feature, filters){
+   if(!filters){
+        return true
+   }
    for(const filter in filters){
         try {
             const filterObj = expandedFilterStringToObj(filters[filter])
