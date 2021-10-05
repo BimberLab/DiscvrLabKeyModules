@@ -162,7 +162,7 @@ RenderedFeatureGlyph.propTypes = {
 const RenderedFeatures = observer(props => {
   const { features } = props
   const featuresRendered = []
-  const filters = expandFilters(props.adapterConfig.filters) //JSON.parse(props.adapterConfig.filters ?? "{}")
+  const filters = expandFilters(props.adapterConfig.filters)
   for (const feature of features.values()) {
     if(isDisplayed(feature, filters)){
        featuresRendered.push(

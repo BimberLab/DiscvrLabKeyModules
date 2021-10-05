@@ -55,6 +55,9 @@ export function isFilterStringExpanded(filter){
 export function expandFilters(filters) {
 // filters: list of strings with properties "label:field:operator:value:selected"
 // returns a list of strings "label:expression:selected"
+// 'expanded' indicates that the filter's field, operator and values have been combined into their full functioning expression.
+// unexpanded ex: "AF < 0.1:AF:lt:0.1:false"
+// expanded ex:   "AF < 0.1:feature.variant.INFO.AF[0] < 0.1:false"
     let filterList = []
     if(!filters){
         return filterList
@@ -74,7 +77,6 @@ export function expandFilters(filters) {
             const value = filterProps[3]
             const selected = filterProps[4]
             const expression = fieldLocation + " " + operator + " " + value
-            // should be "AF < 0.2: feature.variant.INFO.AF[0] < 0.2"
             const expandedFilter = label + ":" + expression + ":" + selected
             filterList.push(expandedFilter)
         } catch (e){

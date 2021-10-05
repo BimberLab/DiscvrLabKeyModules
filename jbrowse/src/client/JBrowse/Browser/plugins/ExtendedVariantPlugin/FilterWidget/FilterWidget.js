@@ -56,18 +56,9 @@ export default jbrowse => {
       let filterState = {}
 
       const configFilters = readConfObject(track, ['adapter', 'filters'])
-      try {
-          let trackFilters = track.adapter.filters
-          if(trackFilters && (trackFilters != configFilters)){
-            configFilters = trackFilters
-          }
-      } catch {
-
-      }
       const expandedFilterList = expandFilters(configFilters)
       const expandedFilters = expandedFilterListToObj(expandedFilterList)
 
-      //Object.entries(filters).map(([key, val]) => filterState[key] = val.selected)
       Object.entries(expandedFilters).map((key, val) => filterState[key[0]] = strToBool(key[1].selected))
 
       const [state, setState] = React.useState(filterState)
@@ -75,7 +66,6 @@ export default jbrowse => {
       const handleSubmit = (event) => {
          event.preventDefault();
          let filterSubmit = filters
-         //Object.entries(state).map(([key, val]) => filterSubmit[key].selected = val)
          Object.entries(state).map(([key, val]) => expandedFilters[key].selected = val.toString())
          try {
              track.adapter.filters.set(expandedFilterObjToList(expandedFilters)) // pass it back as a list of strings
