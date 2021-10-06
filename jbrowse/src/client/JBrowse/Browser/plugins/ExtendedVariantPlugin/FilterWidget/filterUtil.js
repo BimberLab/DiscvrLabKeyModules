@@ -55,9 +55,9 @@ export function isFilterStringExpanded(filter){
 export function expandFilters(filters) {
 // filters: list of strings with properties "label:field:operator:value:selected"
 // returns a list of strings "label:expression:selected"
-// 'expanded' indicates that the filter's field, operator and values have been combined into their full functioning expression.
+// 'expanded' indicates that the filter's field, operator and values have been combined into their full functioning jexl expression.
 // unexpanded ex: "AF < 0.1:AF:lt:0.1:false"
-// expanded ex:   "AF < 0.1:feature.variant.INFO.AF[0] < 0.1:false"
+// expanded ex:   "AF < 0.1:variant.INFO.AF[0]<0.1:false"
     let filterList = []
     if(!filters){
         return filterList
@@ -72,12 +72,12 @@ export function expandFilters(filters) {
             // TODO type checking, overwriting protection
             const filterProps = filter.split(":") // 0: label  1: field  2: operator  3: value  4: selected
             const label = filterProps[0]
-            const fieldLocation = fields[filterProps[1]].location
+            const fieldLocation = fields[filterProps[1]].baseLocation
             const operator = operators[filterProps[2]]
             const value = filterProps[3]
             const selected = filterProps[4]
-            const expression = fieldLocation + " " + operator + " " + value
-            const expandedFilter = label + ":" + expression + ":" + selected
+            const jexlExpression = "variant.INFO." + fieldLocation + operator + value
+            const expandedFilter = label + ":" + jexlExpression + ":" + selected
             filterList.push(expandedFilter)
         } catch (e){
             console.error("Error parsing filter - " + e)
