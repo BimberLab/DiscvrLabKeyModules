@@ -79,7 +79,7 @@ function Search(){
         return (<p>Error fetching config. See console for more details</p>)
     }
     return (
-        <RefNameAutocompleteWrapper viewState={state} />
+        <RefNameAutocompleteWrapper viewState={state} sessionParam={session}/>
     )
 }
 

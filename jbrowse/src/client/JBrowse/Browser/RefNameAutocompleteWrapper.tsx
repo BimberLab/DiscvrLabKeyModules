@@ -5,9 +5,9 @@ import { RefNameAutocomplete } from '@jbrowse/plugin-linear-genome-view'
 import { ViewModel } from '@jbrowse/react-linear-genome-view'
 import BaseResult, { RefSequenceResult }from '@jbrowse/core/TextSearch/BaseResults'
 
-const RefNameAutocompleteWrapper = observer(({ viewState }: { viewState: ViewModel }) => {
+const RefNameAutocompleteWrapper = observer(({ viewState, sessionParam }: { viewState: ViewModel, sessionParam: any}) => {
   function navigate() {
-    window.location.href = "/home/jbrowse-jbrowse.view?session=" + op.getTrackId() + "&location=" + op.getLocation();
+    window.location.href = "/home/jbrowse-jbrowse.view?session=" + sessionParam + "&location=" + op.getLocation();
   }
 
   const { session } = viewState
