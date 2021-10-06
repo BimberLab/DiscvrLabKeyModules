@@ -6,21 +6,26 @@ import { ViewModel } from '@jbrowse/react-linear-genome-view'
 import BaseResult, { RefSequenceResult }from '@jbrowse/core/TextSearch/BaseResults'
 
 const RefNameAutocompleteWrapper = observer(({ viewState }: { viewState: ViewModel }) => {
-    const { session } = viewState
-    const { view } = session
+  function navigate() {
+    window.location.href = "/home/jbrowse-jbrowse.view?session=" + op.getTrackId() + "&location=" + op.getLocation();
+  }
 
-    const { assemblyNames, assemblyManager } = getSession(view)
+  const { session } = viewState
+  const { view } = session
 
-    const [selectedAsm, setSelectedAsm] = useState(assemblyNames[0])
-    const [op, setOption] = useState<BaseResult | undefined>()
+  const { assemblyNames, assemblyManager } = getSession(view)
 
-    const assembly = assemblyManager.get(selectedAsm)
-    const regions = assembly?.regions || []
+  const [selectedAsm, setSelectedAsm] = useState(assemblyNames[0])
+  const [op, setOption] = useState<BaseResult | undefined>()
 
-    const selectedRegion = op?.getLocation()
-    const message = !assemblyNames.length ? 'No configured assemblies' : ''
+  const assembly = assemblyManager.get(selectedAsm)
+  const regions = assembly?.regions || []
 
-    return (
+  const selectedRegion = op?.getLocation()
+  const message = !assemblyNames.length ? 'No configured assemblies' : ''
+
+  return (
+    <span>
       <RefNameAutocomplete
         model={view}
         assemblyName={message ? undefined : selectedAsm}
@@ -34,7 +39,12 @@ const RefNameAutocompleteWrapper = observer(({ viewState }: { viewState: ViewMod
           helperText: 'Enter a sequence or location',
         }}
       />
-    )
+
+      <button onClick={navigate}>
+          Search
+      </button>
+    </span>
+  )
 })
 
 export default RefNameAutocompleteWrapper
