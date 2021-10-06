@@ -2,20 +2,17 @@ import React, {useState, useEffect} from 'react'
 //import 'fontsource-roboto'
 import {
   createViewState,
-  createJBrowseTheme,
   JBrowseLinearGenomeView,
   loadPlugins,
-  ThemeProvider,
 } from '@jbrowse/react-linear-genome-view'
 
 import { PluginConstructor } from '@jbrowse/core/Plugin'
-import { Ajax, Utils, ActionURL } from '@labkey/api'
+import { Ajax, ActionURL } from '@labkey/api'
 import MyProjectPlugin from "./plugins/MyProjectPlugin/index"
 import LogSession from "./plugins/LogSession/index"
 import ExtendedVariantPlugin from "./plugins/ExtendedVariantPlugin/index"
 import RefNameAutocompleteWrapper from "./RefNameAutocompleteWrapper"
 
-const theme = createJBrowseTheme()
 const nativePlugins = [MyProjectPlugin, ExtendedVariantPlugin, LogSession]
 
 function generateViewState(genome, plugins){
