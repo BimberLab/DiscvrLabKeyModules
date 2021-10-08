@@ -174,12 +174,13 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 getJob().getLogger().info("Starting readset " + r.getName());
 
                 boolean readsetExists = r.getReadsetId() != null && r.getReadsetId() > 0;
-                List<ReadDataImpl> preexistingReadData = readsetExists ? ((SequenceReadsetImpl)SequenceAnalysisService.get().getReadset(r.getReadsetId(), getJob().getUser())).getReadDataImpl() : Collections.emptyList();
+                SequenceReadsetImpl existingReadset = ((SequenceReadsetImpl)SequenceAnalysisService.get().getReadset(r.getReadsetId(), getJob().getUser()));
+                List<ReadDataImpl> preexistingReadData = readsetExists ? existingReadset.getReadDataImpl() : Collections.emptyList();
                 boolean readsetExistsWithData = !preexistingReadData.isEmpty();
                 if (readsetExistsWithData)
                 {
-                    getJob().getLogger().info("Readset has existing data: " + r.getName() + " from: " + r.getContainer());
-                    readsetsToDeactivate.put(r.getReadsetId(), r.getContainer());
+                    getJob().getLogger().info("Readset has existing data: " + r.getName() + ", " + r.getRowId() + " from: " + existingReadset.getContainer());
+                    readsetsToDeactivate.put(r.getReadsetId(), existingReadset.getContainer());
                 }
 
                 SequenceReadsetImpl row;
