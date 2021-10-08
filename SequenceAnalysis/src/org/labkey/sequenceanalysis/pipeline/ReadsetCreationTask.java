@@ -164,7 +164,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         Set<Integer> fileIdsWithExistingMetrics = new HashSet<>();
         try (DbScope.Transaction transaction = schema.getScope().ensureTransaction())
         {
-            Set<Integer> readsetsToDeactivate = new HashSet<>();
+            Map<Integer, String> readsetsToDeactivate = new HashMap<>();
             TableInfo readsetTable = schema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
             TableInfo readDataTable = schema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
 
@@ -177,7 +177,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 List<ReadDataImpl> preexistingReadData;
                 if (readsetExists)
                 {
-                    readsetsToDeactivate.add(r.getReadsetId());
+                    readsetsToDeactivate.put(r.getReadsetId(), r.getContainer());
                     preexistingReadData = ((SequenceReadsetImpl)SequenceAnalysisService.get().getReadset(r.getReadsetId(), getJob().getUser())).getReadDataImpl();
                 }
                 else
@@ -437,14 +437,15 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 getJob().getLogger().info("Setting " + readsetsToDeactivate.size() + " readsets to status=replaced");
                 List<Map<String, Object>> toUpdate = new ArrayList<>();
                 List<Map<String, Object>> toUpdateKeys = new ArrayList<>();
-                readsetsToDeactivate.forEach(rs -> {
+                readsetsToDeactivate.forEach((rowId, container) -> {
                     Map<String, Object> row = new CaseInsensitiveHashMap<>();
-                    row.put("rowid", rs);
+                    row.put("rowid", rowId);
+                    row.put("container", container);
                     row.put("status", "Replaced");
                     toUpdate.add(row);
 
                     row = new CaseInsensitiveHashMap<>();
-                    row.put("rowid", rs);
+                    row.put("rowid", rowId);
                     toUpdateKeys.add(row);
                 });
 
