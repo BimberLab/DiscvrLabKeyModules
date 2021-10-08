@@ -178,8 +178,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 boolean readsetExistsWithData = !preexistingReadData.isEmpty();
                 if (readsetExistsWithData)
                 {
-                    getJob().getLogger().info("Readset has existing data: " + r.getName());
-
+                    getJob().getLogger().info("Readset has existing data: " + r.getName() + " from: " + r.getContainer());
                     readsetsToDeactivate.put(r.getReadsetId(), r.getContainer());
                 }
 
@@ -444,6 +443,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
 
                     row = new CaseInsensitiveHashMap<>();
                     row.put("rowid", rowId);
+                    row.put("container", container);
                     toUpdateKeys.add(row);
                 });
 
