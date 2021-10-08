@@ -361,7 +361,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 row.setReadData(readDatasToCreate);
 
                 SequenceReadsetImpl newRow;
-                if (!readsetWillBeCreated)
+                if (readsetWillBeCreated)
                 {
                     newRow = Table.insert(getJob().getUser(), readsetTable, row);
                     getJob().getLogger().info("Created readset: " + newRow.getReadsetId());
