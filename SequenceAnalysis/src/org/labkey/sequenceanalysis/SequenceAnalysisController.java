@@ -221,7 +221,10 @@ public class SequenceAnalysisController extends SpringActionController
         public ModelAndView getView(FastqcForm form, BindException errors) throws Exception
         {
             if (form.getFilenames() == null && form.getDataIds() == null)
-                errors.reject("Must provide a filename or Exp data Ids");
+            {
+                errors.reject(ERROR_MSG, "Must provide a filename or Exp data Ids");
+                return null;
+            }
 
             //resolve files
             List<File> files = new ArrayList<>();
@@ -597,20 +600,20 @@ public class SequenceAnalysisController extends SpringActionController
         {
             if (form.getSchema() == null)
             {
-                errors.reject("No schema provided");
+                errors.reject(ERROR_MSG, "No schema provided");
                 return;
             }
 
             if (form.getQueryName() == null)
             {
-                errors.reject("No queryName provided");
+                errors.reject(ERROR_MSG, "No queryName provided");
                 return;
             }
 
             _table = SequenceAnalysisSchema.getInstance().getSchema().getTable(form.getQueryName());
             if (_table == null)
             {
-                errors.reject("Unknown table: " + form.getQueryName());
+                errors.reject(ERROR_MSG, "Unknown table: " + form.getQueryName());
                 return;
             }
 
@@ -2220,7 +2223,7 @@ public class SequenceAnalysisController extends SpringActionController
                             String[] coordinates = t.split("-");
                             if (coordinates.length != 2)
                             {
-                                errors.reject("Inproper interval: [" + t + "]");
+                                errors.reject(ERROR_MSG, "Inproper interval: [" + t + "]");
                                 return null;
                             }
 
@@ -3143,7 +3146,7 @@ public class SequenceAnalysisController extends SpringActionController
                             String wholeSequence = model.getSequence();
                             if (wholeSequence == null)
                             {
-                                errors.reject("Unable to find sequence for: " + rowId);
+                                errors.reject(ERROR_MSG, "Unable to find sequence for: " + rowId);
                                 return;
                             }
 
@@ -3152,21 +3155,21 @@ public class SequenceAnalysisController extends SpringActionController
                                 String[] coordinates = t.split("-");
                                 if (coordinates.length != 2)
                                 {
-                                    errors.reject("Inproper interval: [" + t + "]");
+                                    errors.reject(ERROR_MSG, "Inproper interval: [" + t + "]");
                                     return;
                                 }
 
                                 Integer start = StringUtils.trimToNull(coordinates[0]) == null ? null : ConvertHelper.convert(coordinates[0], Integer.class);
                                 if (wholeSequence.length() < start)
                                 {
-                                    errors.reject("Start is beyond the length of the sequence.  Length: " + wholeSequence.length());
+                                    errors.reject(ERROR_MSG, "Start is beyond the length of the sequence.  Length: " + wholeSequence.length());
                                     return;
                                 }
 
                                 Integer stop = StringUtils.trimToNull(coordinates[1]) == null ? null : ConvertHelper.convert(coordinates[1], Integer.class);
                                 if (wholeSequence.length() < stop)
                                 {
-                                    errors.reject("Stop is beyond the length of the sequence.  Length: " + wholeSequence.length());
+                                    errors.reject(ERROR_MSG, "Stop is beyond the length of the sequence.  Length: " + wholeSequence.length());
                                     return;
                                 }
 
@@ -3274,7 +3277,7 @@ public class SequenceAnalysisController extends SpringActionController
         {
             if (form.getLibraryIds() == null || form.getLibraryIds().length == 0)
             {
-                errors.reject("Must provide a list of reference genomes to re-process");
+                errors.reject(ERROR_MSG, "Must provide a list of reference genomes to re-process");
                 return null;
             }
 

@@ -173,20 +173,18 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 SequenceReadsetImpl r = (SequenceReadsetImpl)rs;
                 getJob().getLogger().info("Starting readset " + r.getName());
 
-                boolean readsetExists = r.getReadsetId() != null && r.getReadsetId() > 0;
-                List<ReadDataImpl> preexistingReadData;
-                if (readsetExists)
+                List<ReadDataImpl> preexistingReadData = ((SequenceReadsetImpl)SequenceAnalysisService.get().getReadset(r.getReadsetId(), getJob().getUser())).getReadDataImpl();
+                boolean readsetExistsWithData = !preexistingReadData.isEmpty();
+                if (readsetExistsWithData)
                 {
+                    getJob().getLogger().info("Readset has existing data: " + r.getName());
+
                     readsetsToDeactivate.put(r.getReadsetId(), r.getContainer());
-                    preexistingReadData = ((SequenceReadsetImpl)SequenceAnalysisService.get().getReadset(r.getReadsetId(), getJob().getUser())).getReadDataImpl();
-                }
-                else
-                {
-                    preexistingReadData = Collections.emptyList();
                 }
 
                 SequenceReadsetImpl row;
-                if (!readsetExists)
+                boolean readsetWillBeCreated = true;
+                if (!readsetExistsWithData)
                 {
                     row = new SequenceReadsetImpl();
 
@@ -237,7 +235,10 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                         row.setCreated(new Date());
                         row.setModifiedBy(getJob().getUser().getUserId());
                         row.setModified(new Date());
-                        readsetExists = false;
+                    }
+                    else
+                    {
+                        readsetWillBeCreated = false;
                     }
                 }
 
@@ -360,7 +361,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 row.setReadData(readDatasToCreate);
 
                 SequenceReadsetImpl newRow;
-                if (!readsetExists)
+                if (!readsetWillBeCreated)
                 {
                     newRow = Table.insert(getJob().getUser(), readsetTable, row);
                     getJob().getLogger().info("Created readset: " + newRow.getReadsetId());
