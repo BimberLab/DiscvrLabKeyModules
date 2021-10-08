@@ -173,7 +173,8 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 SequenceReadsetImpl r = (SequenceReadsetImpl)rs;
                 getJob().getLogger().info("Starting readset " + r.getName());
 
-                List<ReadDataImpl> preexistingReadData = ((SequenceReadsetImpl)SequenceAnalysisService.get().getReadset(r.getReadsetId(), getJob().getUser())).getReadDataImpl();
+                boolean readsetExists = r.getReadsetId() != null && r.getReadsetId() > 0;
+                List<ReadDataImpl> preexistingReadData = readsetExists ? ((SequenceReadsetImpl)SequenceAnalysisService.get().getReadset(r.getReadsetId(), getJob().getUser())).getReadDataImpl() : Collections.emptyList();
                 boolean readsetExistsWithData = !preexistingReadData.isEmpty();
                 if (readsetExistsWithData)
                 {
@@ -183,8 +184,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 }
 
                 SequenceReadsetImpl row;
-                boolean readsetWillBeCreated = true;
-                if (!readsetExistsWithData)
+                if (!readsetExists)
                 {
                     row = new SequenceReadsetImpl();
 
@@ -235,10 +235,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                         row.setCreated(new Date());
                         row.setModifiedBy(getJob().getUser().getUserId());
                         row.setModified(new Date());
-                    }
-                    else
-                    {
-                        readsetWillBeCreated = false;
+                        readsetExists = false;
                     }
                 }
 
@@ -361,7 +358,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 row.setReadData(readDatasToCreate);
 
                 SequenceReadsetImpl newRow;
-                if (readsetWillBeCreated)
+                if (!readsetExists)
                 {
                     newRow = Table.insert(getJob().getUser(), readsetTable, row);
                     getJob().getLogger().info("Created readset: " + newRow.getReadsetId());
