@@ -118,6 +118,7 @@ import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
@@ -218,14 +219,17 @@ public class SequenceAnalysisController extends SpringActionController
     public class FastqcReportAction extends SimpleViewAction<FastqcForm>
     {
         @Override
-        public ModelAndView getView(FastqcForm form, BindException errors) throws Exception
+        public void validate(FastqcForm form, BindException errors)
         {
-            if (form.getFilenames() == null && form.getDataIds() == null)
+            if (form.getReadsets() == null && form.getFilenames() == null && form.getDataIds() == null && form.getAnalysisIds() == null)
             {
                 errors.reject(ERROR_MSG, "Must provide a filename or Exp data Ids");
-                return null;
             }
+        }
 
+        @Override
+        public ModelAndView getView(FastqcForm form, BindException errors) throws Exception
+        {
             //resolve files
             List<File> files = new ArrayList<>();
             Map<File, String> labels = new HashMap<>();
@@ -315,7 +319,7 @@ public class SequenceAnalysisController extends SpringActionController
             try
             {
                 String html = runner.execute(files, labels);
-                return new HtmlView("FastQC Report", html);
+                return new HtmlView("FastQC Report", HtmlString.unsafe(html));
             }
             catch (FileNotFoundException e)
             {
