@@ -174,7 +174,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 getJob().getLogger().info("Starting readset " + r.getName());
 
                 boolean readsetExists = r.getReadsetId() != null && r.getReadsetId() > 0;
-                SequenceReadsetImpl existingReadset = ((SequenceReadsetImpl)SequenceAnalysisService.get().getReadset(r.getReadsetId(), getJob().getUser()));
+                SequenceReadsetImpl existingReadset = readsetExists ? ((SequenceReadsetImpl)SequenceAnalysisService.get().getReadset(r.getReadsetId(), getJob().getUser())) : null;
                 List<ReadDataImpl> preexistingReadData = readsetExists ? existingReadset.getReadDataImpl() : Collections.emptyList();
                 boolean readsetExistsWithData = !preexistingReadData.isEmpty();
                 if (readsetExistsWithData)
@@ -436,10 +436,13 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 List<Map<String, Object>> toUpdate = new ArrayList<>();
                 List<Map<String, Object>> toUpdateKeys = new ArrayList<>();
                 readsetsToDeactivate.forEach((rowId, container) -> {
+                    Readset r = SequenceAnalysisService.get().getReadset(rowId, getJob().getUser());
+
                     Map<String, Object> row = new CaseInsensitiveHashMap<>();
                     row.put("rowid", rowId);
                     row.put("container", container);
                     row.put("status", "Replaced");
+                    row.put("name", r.getName() + "-Replaced");
                     toUpdate.add(row);
 
                     row = new CaseInsensitiveHashMap<>();
