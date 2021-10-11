@@ -210,13 +210,18 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
         return jsonFile;
     }
 
-    private static JSONObject parseNextClade(File jsonFile) throws PipelineJobException
+    private static JSONObject parseNextClade(File jsonFile, Logger log) throws PipelineJobException
     {
         try (InputStream is = IOUtil.openFileForReading(jsonFile))
         {
             JSONObject results = new JSONObject(IOUtil.readFully(is));
             JSONArray samples = results.getJSONArray("results");
-            if (samples.length() != 1)
+            if (samples.length() == 0)
+            {
+                log.info("No samples found in NextClade JSON, this probably means no clade was assigned");
+                return null;
+            }
+            else if (samples.length() != 1)
             {
                 throw new PipelineJobException("Expected a single sample, was: " + samples.length());
             }
@@ -231,7 +236,11 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
 
     public static void processAndImportNextCladeAa(PipelineJob job, File jsonFile, int analysisId, int libraryId, int alignmentId, int readsetId, File consensusVCF, boolean dbImport) throws PipelineJobException
     {
-        JSONObject sample = parseNextClade(jsonFile);
+        JSONObject sample = parseNextClade(jsonFile, job.getLogger());
+        if (sample == null)
+        {
+            return;
+        }
 
         ReferenceGenome genome = SequenceAnalysisService.get().getReferenceGenome(libraryId, job.getUser());
         String clade = sample.getString("clade");
