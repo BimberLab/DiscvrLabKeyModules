@@ -274,7 +274,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
 
             String aaName = aa.getString("gene");
 
-            JSONObject range = aa.getJSONObject("nucRange");
+            JSONObject range = aa.getJSONObject("codonNucRange");
             List<Integer> positions = new ArrayList<>();
             //Range is 0-based
             for (int p = range.getInt("begin") + 1;p <= range.getInt("end"); p++)
