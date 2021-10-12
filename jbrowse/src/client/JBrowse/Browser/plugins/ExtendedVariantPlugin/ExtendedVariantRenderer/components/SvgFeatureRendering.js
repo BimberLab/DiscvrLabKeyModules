@@ -11,6 +11,7 @@ import FeatureGlyph from './FeatureGlyph' // FeatureGlyph copied over. Referenci
 import SvgOverlay from '@jbrowse/plugin-svg/src/SvgFeatureRenderer/components/SvgOverlay' // NEW: Updated SvgOverlay to reference original file in @jbrowse. No errors produced.
 import { chooseGlyphComponent, layOut } from './util' // NEW: chooseGlyphComponent() in util updated to render SNVs as a diamond
 import { expandFilters, expandedFilterStringToObj } from '../../FilterWidget/filterUtil' // NOTE: Now dependent on FilterWidget plugin
+import jexl from 'jexl'
 
 const renderingStyle = {
   position: 'relative',
@@ -132,7 +133,7 @@ function isDisplayed(feature, filters){
    for(const filter in filters){
         try {
             const filterObj = expandedFilterStringToObj(filters[filter])
-            if(filterObj["selected"] === "true" && !eval(filterObj["expression"])){
+            if(filterObj["selected"] === "true" && !jexl.evalSync(filterObj["expression"], feature)){
                 return false
             }
         } catch (e){
