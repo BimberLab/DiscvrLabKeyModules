@@ -1,3 +1,17 @@
+import org.labkey.gradle.util.BuildUtils;
+import org.labkey.gradle.util.ExternalDependency
+
 dependencies {
-    external "org.apache.directory.api:api-all:${apacheDirectoryVersion}"
+    BuildUtils.addExternalDependency(
+            project,
+            new ExternalDependency(
+                    "org.apache.directory.api:api-all:${apacheDirectoryVersion}",
+                    'Apache Directory',
+                    'Apache Directory',
+                    'http://directory.apache.org/',
+                    ExternalDependency.APACHE_2_LICENSE_NAME,
+                    ExternalDependency.APACHE_2_LICENSE_URL,
+                    'Used by LDAP Sync'
+            )
+    )
 }

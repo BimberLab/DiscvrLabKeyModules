@@ -1,2 +1,0 @@
-# direct external dependencies for project :server:modules:DiscvrLabKeyModules:OpenLdapSync
-api-all-1.0.3.jar
