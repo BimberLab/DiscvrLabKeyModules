@@ -83,6 +83,11 @@ export default jbrowse => {
                            self.renderProps().config.color1.set(color)
 
                            const { centerLineInfo } = getContainingView(self)
+                           if (!centerLineInfo) {
+                                console.error('error! centerLineInfo is null')
+                                return;
+                           }
+
                            const { refName, assemblyName, offset } = centerLineInfo
                            const centerBp = Math.round(offset) + 1
 
@@ -136,14 +141,14 @@ export default jbrowse => {
             const trackId = getConf(track, 'trackId')
             const session = getSession(self)
             var widgetId = 'Variant-' + trackId;
-
             const featureWidget = session.addWidget(
                'ExtendedVariantWidget',
                widgetId,
-               { featureData: feature.toJSON(),
-                 extendedVariantDisplayConfig: extendedVariantDisplayConfig,
-                 message: message }
-            )
+               { featureData: feature,
+                   trackId: trackId,
+                   extendedVariantDisplayConfig: extendedVariantDisplayConfig,
+                   message: message
+           })
             session.showWidget(featureWidget)
             session.setSelection(feature)
          },

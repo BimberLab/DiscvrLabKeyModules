@@ -128,7 +128,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
         if (waitFor)
         {
-            waitForElement(l);
+            waitForElement(l, WAIT_FOR_JAVASCRIPT * 2);
         }
 
         // Not ideal, but this might fix intermittent failures due to loading

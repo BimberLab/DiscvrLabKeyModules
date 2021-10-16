@@ -1,2 +1,0 @@
-# direct external dependencies for project :server:modules:DiscvrLabKeyModules:singlecell
-htsjdk-2.21.3.jar

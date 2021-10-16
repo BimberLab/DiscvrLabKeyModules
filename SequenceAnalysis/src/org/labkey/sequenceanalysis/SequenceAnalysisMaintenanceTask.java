@@ -398,6 +398,12 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                 ExpData d = ExperimentService.get().getExpData(dataId);
                 if (d != null)
                 {
+                    if (d.getFile() == null)
+                    {
+                        log.error("File was null for ExpData: " + d.getRowId());
+                        continue;
+                    }
+
                     expectedFileNames.add(d.getFile().getName());
                     expectedFileNames.addAll(getAssociatedFiles(d.getFile(), true));
 
