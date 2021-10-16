@@ -22,8 +22,8 @@ dependencies {
                     "OMERO Client",
                     "OMERO Client",
                     "https://docs.openmicroscopy.org/omero/5.6.3/developers/Java.html",
-                    ExternalDependency.GNU_LESSER_GPL_21_NAME,
-                    ExternalDependency.GNU_LESSER_GPL_21_URL,
+                    "GNU General Public License",
+                    "https://www.gnu.org/licenses/gpl-3.0.html",
                     "Used to interact with OMERO Servers"
             ),
             {
