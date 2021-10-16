@@ -1,5 +1,4 @@
 import org.labkey.gradle.util.BuildUtils;
-import org.labkey.gradle.util.ExternalDependency
 
 repositories {
     mavenLocal()
@@ -15,17 +14,7 @@ repositories {
 
 //excludes based on: https://github.com/glencoesoftware/omero-ms-core/blob/master/build.gradle
 dependencies {
-    BuildUtils.addExternalDependency(
-            project,
-            new ExternalDependency(
-                    "org.openmicroscopy:omero-gateway:5.6.3",
-                    "OMERO Client",
-                    "OMERO Client",
-                    "https://docs.openmicroscopy.org/omero/5.6.3/developers/Java.html",
-                    ExternalDependency.GNU_LESSER_GPL_21_NAME,
-                    ExternalDependency.GNU_LESSER_GPL_21_URL,
-                    "Used to interact with OMERO Servers"
-            ),
+    external "org.openmicroscopy:omero-gateway:5.6.3"
             {
                 exclude group: 'OME'
                 exclude group: 'antlr'
@@ -91,7 +80,7 @@ dependencies {
                 exclude group: 'org.springframework', module: 'spring-jdbc'
                 exclude group: 'org.springframework', module: 'spring-tx'
             }
-    )
+
     BuildUtils.addLabKeyDependency(project: project, config: "implementation", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "apiJarFile")
 
     BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "published", depExtension: "module")
