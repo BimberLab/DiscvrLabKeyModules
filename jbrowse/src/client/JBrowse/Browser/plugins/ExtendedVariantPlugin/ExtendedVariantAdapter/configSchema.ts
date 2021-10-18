@@ -5,7 +5,7 @@ let EVConfigSchema = configSchema.jbrowseSchemaDefinition
 EVConfigSchema["filters"] =
 {
    type: 'stringArray',
-   defaultValue: [''],
+   defaultValue: [], // TODO validate this needs to be ['']. Can it be []?
    description:
     'Track filters',
 }

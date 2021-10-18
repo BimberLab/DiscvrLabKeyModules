@@ -87,11 +87,11 @@ export default jbrowse => {
                         const colorLow = self.colorLow ?? 'black'
                         const color = "jexl:get(feature,'INFO').IMPACT=='MODERATE'?'"+colorModerate+"':get(feature,'INFO').IMPACT=='HIGH'?'"+colorHigh+"':get(feature,'INFO').IMPACT=='LOW'?'"+colorLow+"':get(feature,'type')=='SNV'?'"+colorSNV+"':get(feature,'type')=='deletion'?'"+colorDeletion+"':get(feature,'type')=='insertion'?'"+colorInsertion+"':'"+colorOther+"'"
 
-                        if (self.renderProps().config.color1.value != color || self.ready == false || self.adapterConfig.filters){
+                        if (self.renderProps().config.color1.value != color || self.ready == false || self.adapterConfig.filters != self.renderProps().config.filters.value){
                            self.renderProps().config.color1.set(color)
-                           if (self.adapterConfig.filters){
-                              self.setFilter(self.adapterConfig.filters)
-                           }
+                           //if (self.adapterConfig.filters){
+                           self.setFilter(self.adapterConfig.filters)
+                           //}
                            const { centerLineInfo } = getContainingView(self)
                            if (!centerLineInfo) {
                                 console.error('error! centerLineInfo is null')

@@ -12,6 +12,10 @@ export const style = (0, _styles.makeStyles)(function (theme) {
       },
       button: {
          marginLeft: theme.spacing(2.5)
-      }
+      },
+      formControl: {
+       margin: theme.spacing(1),
+       minWidth: 150,
+      },
    };
 });

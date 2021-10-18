@@ -3,6 +3,8 @@ import {style as styles} from "./style";
 import {filterMap as filters} from "./filters"
 import {expandFilters, expandedFilterListToObj, expandedFilterObjToList} from "./filterUtil"
 import {
+  MenuItem,
+  Select,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -17,11 +19,12 @@ import {
   Tooltip,
   IconButton,
   AddIcon,
-  FormLabel
+  FormLabel,
+  FormControl,
 } from '@material-ui/core'
 import { getContainingTrack, getSession, getContainingView, getContainingDisplay } from '@jbrowse/core/util'
 import { readConfObject } from '@jbrowse/core/configuration'
-
+import Filter from './FilterComponent'
 
 
 export default jbrowse => {
@@ -48,56 +51,77 @@ export default jbrowse => {
         }
     }
 
+   /*const useStyles = makeStyles(theme => ({
+     root: {
+       padding: theme.spacing(1, 3, 1, 1),
+       background: theme.palette.background.default,
+       overflowX: 'hidden',
+     },
+     formControl: {
+       margin: theme.spacing(1),
+       minWidth: 150,
+     },
+   }))*/
 
    function FilterForm(props){
+      const classes = styles()
       const { model } = props
       let track = model.track
-
-      let filterState = {}
 
       const configFilters = readConfObject(track, ['adapter', 'filters'])
       const expandedFilterList = expandFilters(configFilters)
       const expandedFilters = expandedFilterListToObj(expandedFilterList)
 
-      Object.entries(expandedFilters).map((key, val) => filterState[key[0]] = strToBool(key[1].selected))
+      const [newField, setNewField] = React.useState('')
 
-      const [state, setState] = React.useState(filterState)
-      const classes = styles()
-      const handleSubmit = (event) => {
-         event.preventDefault();
-         let filterSubmit = filters
-         Object.entries(state).map(([key, val]) => expandedFilters[key].selected = val.toString())
-         try {
-             track.adapter.filters.set(expandedFilterObjToList(expandedFilters)) // pass it back as a list of strings
-         } catch(e){
-             console.error("Error setting adapter filters.")
-         }
+      const handleFieldChange = (event) => {
+         let tempFilters = [...readConfObject(track, ['adapter', 'filters'])]
+         tempFilters.push(event.target.value + "::")
+         track.adapter.filters.set(tempFilters)
       }
 
-      const handleChange = (event) => {
-         setState({
-            ...state,
-            [event.target.name]: event.target.checked,
-         });
-      }
+      const menuItems =
+          Object.entries(filters).map(([key, val]) =>
+              <MenuItem value={key} key={key}>
+                  {key}
+              </MenuItem>
+          )
 
-      let labels =  Object.entries(state).map(([key, val]) =>
-                       <FormControlLabel className={classes.filterOption} control={<Checkbox checked={val} onChange={handleChange} name={key}/>} label={expandedFilters[key].label} />
-                      )
-      if(labels.length == 0){
-         labels = <div className={classes.filterOption}>No filters loaded.</div>
-      }
+      // TODO - ERROR PREVENTION WHEN INVALID FILTER PASSED
+      /*const filterComponents = Object.entries(configFilters).map(([key, val]) =>
+         <Filter filterString={val} track={track} index={Number(key)}/>
+      )*/
       return(
-         <Paper>
+      <>
+         {Object.entries(configFilters).map(([key, val]) =>
+             <Filter filterString={val} track={track} index={Number(key)}/>
+         )}
+         <FormControl className={classes.formControl}>
+             <Select
+               labelId="category-select-label"
+               id="category-select"
+               value={newField}
+               onChange={handleFieldChange}
+               displayEmpty
+             >
+                 <MenuItem disabled value="">
+                     <em>Add New Filter...</em>
+                 </MenuItem>
+                 {menuItems}
+             </Select>
+         </FormControl>
+      </>
+      )
+   }
+
+    return observer(FilterForm)
+}
+
+         /*<Paper>
             <form className={classes.filterGroup} onSubmit={handleSubmit}>
                <FormGroup >
                  {labels}
                </FormGroup>
                <input className={classes.button} type="submit" value="Apply" />
             </form>
-         </Paper>
-      )
-   }
-
-    return observer(FilterForm)
-}
+         </Paper>*/

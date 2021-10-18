@@ -1,24 +1,38 @@
 import {filterMap as fields} from "./filters"
 
-const operators = {
+export const operators = {
     lt: "<",
     gt: ">",
     eq: "=="
 }
+export function unexpandedFilterStringToObj(filter){
+// filter: string in the format 'field:operator:value'
+// returns said string as an object
+   const splitFilter = filter.split(":")
+   return {
+      field: splitFilter[0],
+      operator: splitFilter[1],
+      value: splitFilter[2]
+   }
+}
+
+export function unexpandedFilterObjToString(filter){
+    const filterString = filter.field + ":" + filter.operator + ":" + filter.value
+    return filterString
+}
 
 export function expandedFilterStringToObj(filter){
-// filter: string in the format 'label:expression:selected'
+// filter: string in the format 'field:expression'
 // returns said string as an object
     const splitFilter = filter.split(":")
     return {
-        label: splitFilter[0],
-        expression: splitFilter[1],
-        selected: splitFilter[2]
+        field: splitFilter[0],
+        expression: splitFilter[1]
     }
 }
 
 export function expandedFilterListToObj(filters){
-// filters: list of strings in the format 'label:expression:selected'
+// filters: list of strings in the format 'field:expression'
 // returns list as objects
     let obj = {}
     for(let i = 0; i < filters.length; i++){
@@ -29,10 +43,10 @@ export function expandedFilterListToObj(filters){
 
 export function expandedFilterObjToList(filters){
 // filters: obj of expanded filters
-// returns as list of expanded filter strings in format 'label:expression:selected'
+// returns as list of expanded filter strings in format 'label:expression'
     let filterList = []
     for (const filter in filters){
-        filterList.push(filters[filter].label+":"+filters[filter].expression+":"+filters[filter].selected)
+        filterList.push(filters[filter].label+":"+filters[filter].expression)
     }
     return filterList
 
@@ -43,7 +57,7 @@ export function isFilterStringExpanded(filter){
 // returns true if filter fits in expanded filter format
     try {
         let temp = filter.split(":")
-        if(temp.length == 3){
+        if(temp.length == 2){
             return true
         }
         return false
@@ -53,11 +67,14 @@ export function isFilterStringExpanded(filter){
 }
 
 export function expandFilters(filters) {
-// filters: list of strings with properties "label:field:operator:value:selected"
-// returns a list of strings "label:expression:selected"
+// filters: list of strings with properties "field:operator:value"
+// returns a list of strings "field:expression:"
 // 'expanded' indicates that the filter's field, operator and values have been combined into their full functioning expression.
-// unexpanded ex: "AF < 0.1:AF:lt:0.1:false"
-// expanded ex:   "AF < 0.1:feature.variant.INFO.AF[0] < 0.1:false"
+// unexpanded ex: "AF:lt:0.1"
+// expanded ex:   "AF:feature.variant.INFO.AF[0] < 0.1"
+
+
+// TODO - ERROR CHECKING WHEN INVALID FILTERS PASSED
     let filterList = []
     if(!filters){
         return filterList
@@ -71,13 +88,21 @@ export function expandFilters(filters) {
             }
             // TODO type checking, overwriting protection
             const filterProps = filter.split(":") // 0: label  1: field  2: operator  3: value  4: selected
-            const label = filterProps[0]
-            const fieldLocation = fields[filterProps[1]].location
-            const operator = operators[filterProps[2]]
-            const value = filterProps[3]
-            const selected = filterProps[4]
+            //const label = filterProps[0]
+            const field = filterProps[0]
+            const rawOperator = filterProps[1]
+            const value = filterProps[2]
+            if(!(field && rawOperator && value)){
+               // if any prop is null, do not make filter
+               continue
+            }
+            const fieldLocation = fields[field].location
+            const operator = operators[rawOperator]
+
+            //const selected = filterProps[4]
             const expression = fieldLocation + " " + operator + " " + value
-            const expandedFilter = label + ":" + expression + ":" + selected
+            //const expandedFilter = label + ":" + expression + ":" + selected
+            const expandedFilter = field + ":" + expression
             filterList.push(expandedFilter)
         } catch (e){
             console.error("Error parsing filter - " + e)
@@ -85,3 +110,37 @@ export function expandFilters(filters) {
     }
     return filterList
 }
+
+/*
+export default filterStringsToObjList(filters){
+// filters: list of filter strings in the format "field:operator:value"
+   let filterObj = {}
+   if(!filters){
+      return filterObj
+   }
+   let i = "0" .
+   for(const filter of filters){
+      try {
+         const filterProps = filter.split(":") // 0: field  1: operator 2: value
+         const field = filterProps[0]
+         const fieldLocation = fields[field].location
+         const operator = operators[filterProps[1]]
+         const value = filterProps[2]
+         const expression = fieldLocation + " " + operator + " " + value
+         const expandedFilter = field + ":" + expression
+
+         filterObj[i] = {
+            field: field,
+            rawOperator: filterProps[1],
+            operator: operator,
+            value: value,
+            expression: expression,
+         }
+         i = i + 1
+      } catch(e){
+         console.error("Error parsing filter - " + e)
+      }
+   }
+   return filterObj
+}
+*/
