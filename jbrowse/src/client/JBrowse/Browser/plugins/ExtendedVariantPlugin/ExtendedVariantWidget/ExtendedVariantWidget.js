@@ -74,15 +74,18 @@ export default jbrowse => {
                 if (value){
                     if (Array.isArray(value)){
                         const children = []
+
+                        let idx = 0
                         for (let val in value){
+                            idx++;
                             children.push(
-                                    <div className={classes.fieldSubValue}>
+                                    <div key={property + "-" + idx} className={classes.fieldSubValue}>
                                         {value[val]}
                                     </div>
                             )
                         }
                         tempProp.push(
-                                <div className={classes.field}>
+                                <div key={property} className={classes.field}>
                                     <div className={classes.fieldName}>
                                         {displays[display].properties[property]}
                                     </div>
@@ -93,11 +96,11 @@ export default jbrowse => {
                     else {
                         let tempName = fields[displays[display].properties[property]] ? fields[displays[display].properties[property]].title : displays[display].properties[property]
                         tempProp.push(
-                                <div className={classes.field}>
-                                    <div className={classes.fieldName}>
+                                <div key={property} className={classes.field}>
+                                    <div key={property + "-field"} className={classes.fieldName}>
                                         {tempName}
                                     </div>
-                                    <div className={classes.fieldValue}>
+                                    <div key={property + "-val"} className={classes.fieldValue}>
                                         {value}
                                     </div>
                                 </div>
@@ -113,7 +116,7 @@ export default jbrowse => {
         const displayJSX = []
         for (let i = 0; i < propertyJSX.length; i++){
             displayJSX.push(
-                    <BaseCard title={displays[i].name}>
+                    <BaseCard key={displays[i].name} title={displays[i].name}>
                         {propertyJSX[i]}
                     </BaseCard>
             )
