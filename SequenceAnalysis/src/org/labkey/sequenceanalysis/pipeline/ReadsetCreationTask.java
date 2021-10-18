@@ -164,7 +164,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         Set<Integer> fileIdsWithExistingMetrics = new HashSet<>();
         try (DbScope.Transaction transaction = schema.getScope().ensureTransaction())
         {
-            Set<Integer> readsetsToDeactivate = new HashSet<>();
+            Map<Integer, String> readsetsToDeactivate = new HashMap<>();
             TableInfo readsetTable = schema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
             TableInfo readDataTable = schema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
 
@@ -174,15 +174,13 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 getJob().getLogger().info("Starting readset " + r.getName());
 
                 boolean readsetExists = r.getReadsetId() != null && r.getReadsetId() > 0;
-                List<ReadDataImpl> preexistingReadData;
-                if (readsetExists)
+                SequenceReadsetImpl existingReadset = readsetExists ? ((SequenceReadsetImpl)SequenceAnalysisService.get().getReadset(r.getReadsetId(), getJob().getUser())) : null;
+                List<ReadDataImpl> preexistingReadData = readsetExists ? existingReadset.getReadDataImpl() : Collections.emptyList();
+                boolean readsetExistsWithData = !preexistingReadData.isEmpty();
+                if (readsetExistsWithData)
                 {
-                    readsetsToDeactivate.add(r.getReadsetId());
-                    preexistingReadData = ((SequenceReadsetImpl)SequenceAnalysisService.get().getReadset(r.getReadsetId(), getJob().getUser())).getReadDataImpl();
-                }
-                else
-                {
-                    preexistingReadData = Collections.emptyList();
+                    getJob().getLogger().info("Readset has existing data: " + r.getName() + ", " + r.getRowId() + " from: " + existingReadset.getContainer());
+                    readsetsToDeactivate.put(r.getReadsetId(), existingReadset.getContainer());
                 }
 
                 SequenceReadsetImpl row;
@@ -437,14 +435,19 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 getJob().getLogger().info("Setting " + readsetsToDeactivate.size() + " readsets to status=replaced");
                 List<Map<String, Object>> toUpdate = new ArrayList<>();
                 List<Map<String, Object>> toUpdateKeys = new ArrayList<>();
-                readsetsToDeactivate.forEach(rs -> {
+                readsetsToDeactivate.forEach((rowId, container) -> {
+                    Readset r = SequenceAnalysisService.get().getReadset(rowId, getJob().getUser());
+
                     Map<String, Object> row = new CaseInsensitiveHashMap<>();
-                    row.put("rowid", rs);
+                    row.put("rowid", rowId);
+                    row.put("container", container);
                     row.put("status", "Replaced");
+                    row.put("name", r.getName() + "-Replaced");
                     toUpdate.add(row);
 
                     row = new CaseInsensitiveHashMap<>();
-                    row.put("rowid", rs);
+                    row.put("rowid", rowId);
+                    row.put("container", container);
                     toUpdateKeys.add(row);
                 });
 

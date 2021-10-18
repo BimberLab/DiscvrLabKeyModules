@@ -7,15 +7,26 @@ bindArgs <- function(fun, seuratObj, allowableArgNames = NULL, disallowedArgName
         if (!is.null(disallowedArgNames) && (name %in% disallowedArgNames)) {
             next
         }
-        else if (!is.null(allowableArgNames)) {
-            if ((name %in% allowableArgNames) && exists(name)) {
-                print(paste0('Binding argument: ', name, ': ', get(name)))
-                boundArgs[[name]] <- get(name)
-            }
+        else if (name %in% names(boundArgs)) {
+            next
         }
         else if (exists(name)) {
-            print(paste0('Binding argument: ', name, ': ', get(name)))
-            boundArgs[[name]] <- get(name)
+            if (!is.null(allowableArgNames) && !(name %in% allowableArgNames)) {
+                next
+            }
+
+            val <- get(name)
+            displayVal <- val
+            if (is.null(val)) {
+                displayVal <- 'NULL'
+            } else if (is.na(val)) {
+                displayVal <- 'NA'
+            } else if (is.object(val)) {
+                displayVal <- '[object]'
+            }
+
+            print(paste0('Binding argument: ', name, ': ', displayVal))
+            boundArgs[[name]] <- val
         }
     }
 

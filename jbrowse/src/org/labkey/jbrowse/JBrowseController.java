@@ -477,29 +477,11 @@ public class JBrowseController extends SpringActionController
     {
         private List<JsonFile> getJsonFiles(GetGenotypesForm form)
         {
-            String field;
-            Integer rowId;
-            if (form.getTrackId().startsWith("data"))
-            {
-                field = "outputfile";
-                rowId = ConvertHelper.convert(form.getTrackId().replaceAll("^data(-)?", ""), Integer.class);
-
-            }
-            else if (form.getTrackId().startsWith("track"))
-            {
-                field = "trackid";
-                rowId = ConvertHelper.convert(form.getTrackId().replaceAll("^track(-)?", ""), Integer.class);
-            }
-            else
-            {
-                return null;
-            }
-
             Container targetContainer = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
             UserSchema us = QueryService.get().getUserSchema(getUser(), targetContainer, JBrowseSchema.NAME);
 
             TableInfo ti = us.getTable(JBrowseSchema.TABLE_JSONFILES);
-            TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString(field), rowId, CompareType.EQUAL), null);
+            TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("objectId"), form.getTrackId(), CompareType.EQUAL), null);
 
             return ts.getArrayList(JsonFile.class);
         }
@@ -515,15 +497,9 @@ public class JBrowseController extends SpringActionController
 
 
             List<JsonFile> jsonFiles = getJsonFiles(form);
-            if (jsonFiles == null)
+            if (jsonFiles == null || jsonFiles.isEmpty())
             {
                 errors.reject(ERROR_MSG, "Unknown trackId: " + form.getTrackId());
-                return;
-            }
-
-            if (jsonFiles.isEmpty())
-            {
-                errors.reject(ERROR_MSG, "Unable to find trackId: " + form.getTrackId());
                 return;
             }
             else if (jsonFiles.size() > 1)

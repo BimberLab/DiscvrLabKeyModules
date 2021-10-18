@@ -1,2 +1,0 @@
-# direct external dependencies for project :server:modules:DiscvrLabKeyModules:omerointegration
-omero-gateway-5.6.3.jar

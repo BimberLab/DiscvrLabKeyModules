@@ -52,6 +52,7 @@ import org.labkey.sequenceanalysis.analysis.ListVcfSamplesHandler;
 import org.labkey.sequenceanalysis.analysis.MultiQCBamHandler;
 import org.labkey.sequenceanalysis.analysis.MultiQCHandler;
 import org.labkey.sequenceanalysis.analysis.PicardAlignmentMetricsHandler;
+import org.labkey.sequenceanalysis.analysis.PrintReadBackedHaplotypesHandler;
 import org.labkey.sequenceanalysis.analysis.RecalculateSequenceMetricsHandler;
 import org.labkey.sequenceanalysis.analysis.RnaSeqcHandler;
 import org.labkey.sequenceanalysis.analysis.SbtGeneCountHandler;
@@ -338,6 +339,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new PicardAlignmentMetricsHandler());
         SequenceAnalysisService.get().registerFileHandler(new BamHaplotypeHandler());
         SequenceAnalysisService.get().registerFileHandler(new BamCleanupHandler());
+        SequenceAnalysisService.get().registerFileHandler(new PrintReadBackedHaplotypesHandler());
         SequenceAnalysisService.get().registerFileHandler(new HaplotypeCallerHandler());
         SequenceAnalysisService.get().registerFileHandler(new RnaSeqcHandler());
         SequenceAnalysisService.get().registerFileHandler(new CombineStarGeneCountsHandler());

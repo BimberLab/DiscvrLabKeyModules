@@ -23,6 +23,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -593,5 +594,32 @@ public class SequenceUtil
         {
             new SimpleScriptWrapper(log).execute(Arrays.asList("rm", "-Rf", directory.getPath()));
         }
+    }
+
+    public static List<Interval> parseAndSortIntervals(String intervalString) throws PipelineJobException
+    {
+        intervalString = StringUtils.trimToNull(intervalString);
+        if (intervalString == null)
+        {
+            return null;
+        }
+
+        intervalString = intervalString.replaceAll("(\\n|\\r|;)+", ";");
+        List<Interval> intervals = new ArrayList<>();
+        for (String i : intervalString.split(";"))
+        {
+            String[] tokens = i.split(":|-");
+            if (tokens.length != 3)
+            {
+                throw new PipelineJobException("Invalid interval: " + i);
+            }
+
+            intervals.add(new Interval(tokens[0], Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2])));
+        }
+
+
+        Collections.sort(intervals);
+
+        return intervals;
     }
 }

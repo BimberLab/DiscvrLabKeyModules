@@ -23,6 +23,7 @@ import org.labkey.api.util.Compress;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -142,7 +143,7 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
         }
 
         String intervalText = StringUtils.trimToNull(getProvider().getParameterByName("intervals").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
-        List<Interval> il = parseAndSortIntervals(intervalText);
+        List<Interval> il = SequenceUtil.parseAndSortIntervals(intervalText);
         if (il != null)
         {
             for (Interval i : il)
@@ -222,32 +223,5 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
                 throw new PipelineJobException("Output not found: " + outputFile.getPath());
             }
         }
-    }
-
-    private List<Interval> parseAndSortIntervals(String intervalString) throws PipelineJobException
-    {
-        intervalString = StringUtils.trimToNull(intervalString);
-        if (intervalString == null)
-        {
-            return null;
-        }
-
-        intervalString = intervalString.replaceAll("(\\n|\\r|;)+", ";");
-        List<Interval> intervals = new ArrayList<>();
-        for (String i : intervalString.split(";"))
-        {
-            String[] tokens = i.split(":|-");
-            if (tokens.length != 3)
-            {
-                throw new PipelineJobException("Invalid interval: " + i);
-            }
-
-            intervals.add(new Interval(tokens[0], Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2])));
-        }
-
-
-        Collections.sort(intervals);
-
-        return intervals;
     }
 }

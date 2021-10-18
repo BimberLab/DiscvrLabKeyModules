@@ -166,7 +166,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             writer.println("HOME=`echo ~/`");
 
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-            writer.println("sudo $DOCKER pull neherlab/nextclade");
+            writer.println("sudo $DOCKER pull nextstrain/nextclade:latest");
             writer.println("sudo $DOCKER run --rm=true \\");
 
             if (SequencePipelineService.get().getMaxThreads(log) != null)
@@ -185,8 +185,8 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");
             writer.println("\t-w /work \\");
-            writer.println("\tneherlab/nextclade \\");
-            writer.println("\t nextclade --input-fasta '/work/" + consensusFasta.getName() + "' --output-json '/work/" + jsonFile.getName() + "'");
+            writer.println("\tnextstrain/nextclade:latest \\");
+            writer.println("\t/bin/bash -c \"nextclade dataset get --name='sars-cov-2' --output-dir='/work/data/sars-cov-2';nextclade --input-dataset=/work/data/sars-cov-2 --input-fasta '/work/" + consensusFasta.getName() + "' --output-json '/work/" + jsonFile.getName() + "'\" && rm -Rf /work/data");
             writer.println("");
             writer.println("echo 'Bash script complete'");
             writer.println("");
@@ -200,7 +200,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
         rWrapper.setWorkingDir(outputDir);
         rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
 
-        localBashScript.delete();
+        tracker.addIntermediateFile(localBashScript);
 
         if (!jsonFile.exists())
         {
@@ -210,12 +210,18 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
         return jsonFile;
     }
 
-    private static JSONObject parseNextClade(File jsonFile) throws PipelineJobException
+    private static JSONObject parseNextClade(File jsonFile, Logger log) throws PipelineJobException
     {
         try (InputStream is = IOUtil.openFileForReading(jsonFile))
         {
-            JSONArray samples = new JSONArray(IOUtil.readFully(is));
-            if (samples.length() != 1)
+            JSONObject results = new JSONObject(IOUtil.readFully(is));
+            JSONArray samples = results.getJSONArray("results");
+            if (samples.length() == 0)
+            {
+                log.info("No samples found in NextClade JSON, this probably means no clade was assigned");
+                return null;
+            }
+            else if (samples.length() != 1)
             {
                 throw new PipelineJobException("Expected a single sample, was: " + samples.length());
             }
@@ -230,7 +236,11 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
 
     public static void processAndImportNextCladeAa(PipelineJob job, File jsonFile, int analysisId, int libraryId, int alignmentId, int readsetId, File consensusVCF, boolean dbImport) throws PipelineJobException
     {
-        JSONObject sample = parseNextClade(jsonFile);
+        JSONObject sample = parseNextClade(jsonFile, job.getLogger());
+        if (sample == null)
+        {
+            return;
+        }
 
         ReferenceGenome genome = SequenceAnalysisService.get().getReferenceGenome(libraryId, job.getUser());
         String clade = sample.getString("clade");
@@ -250,7 +260,9 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             return;
         }
 
-        JSONArray aaSubstitutions = sample.getJSONArray("aaSubstitutions");
+        List<JSONObject> aaSubstitutions = new ArrayList<>(Arrays.asList(sample.getJSONArray("aaSubstitutions").toJSONObjectArray()));
+        aaSubstitutions.addAll(Arrays.asList(sample.getJSONArray("aaDeletions").toJSONObjectArray()));
+
         Map<Integer, List<VariantContext>> consensusMap = ViralSnpUtil.readVcfToMap(consensusVCF);
 
         TableInfo aaTable = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON);
@@ -264,15 +276,14 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
 
         int refNtId = ts.getObject(Integer.class);
 
-        for (int i=0;i<aaSubstitutions.length();i++)
+        for (JSONObject aa : aaSubstitutions)
         {
-            JSONObject aa = aaSubstitutions.getJSONObject(i);
             int pos = aa.getInt("codon");
             pos = pos + 1; //make 1-based
 
             String aaName = aa.getString("gene");
 
-            JSONObject range = aa.getJSONObject("nucRange");
+            JSONObject range = aa.getJSONObject("codonNucRange");
             List<Integer> positions = new ArrayList<>();
             //Range is 0-based
             for (int p = range.getInt("begin") + 1;p <= range.getInt("end"); p++)
@@ -342,6 +353,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             Double af;
             Double dp;
 
+            List<String> ntPositions = new ArrayList<>();
             if (vcList.size() == 1)
             {
                 depth = (double)vcList.get(0).getAttributeAsInt("GATK_DP", 0);
@@ -350,6 +362,8 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
                 alleleDepth = (double)depths.get(2) + depths.get(3);
                 dp = (double)vcList.get(0).getAttributeAsInt("DP", 0);
                 af = vcList.get(0).getAttributeAsDouble("AF", 0.0);
+
+                ntPositions.add(String.valueOf(vcList.get(0).getStart()));
             }
             else
             {
@@ -363,6 +377,8 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
 
                 af = vcList.stream().mapToDouble(x -> x.getAttributeAsDouble("AF", 0)).summaryStatistics().getAverage();
                 dp = vcList.stream().mapToDouble(x -> x.getAttributeAsDouble("DP", 0)).summaryStatistics().getAverage();
+
+                vcList.forEach(vc -> ntPositions.add(String.valueOf(vc.getStart())));
             }
 
             int refAaId = ViralSnpUtil.resolveGene(refNtId, aaName);
@@ -376,7 +392,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             aaRow.put("ref_aa", aa.getString("refAA"));
             aaRow.put("q_aa", aa.getString("queryAA"));
             aaRow.put("codon", aa.getString("queryCodon"));
-            aaRow.put("ref_nt_positions", StringUtils.join(positions, ","));
+            aaRow.put("ref_nt_positions", StringUtils.join(ntPositions, ","));
 
             aaRow.put("readcount", alleleDepth);
             aaRow.put("depth", depth);
