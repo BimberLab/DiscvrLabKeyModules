@@ -7,7 +7,9 @@ import BaseResult, { RefSequenceResult }from '@jbrowse/core/TextSearch/BaseResul
 
 const RefNameAutocompleteWrapper = observer(({ viewState, sessionParam }: { viewState: ViewModel, sessionParam: any}) => {
   function navigate() {
-    window.location.href = location.pathname.split('/').slice(0,-1).join('/') + '/jbrowse-jbrowse.view?session=' + sessionParam + '&location=' + op.getLocation()
+    if (op) {
+      window.location.href = location.pathname.split('/').slice(0,-1).join('/') + '/jbrowse-jbrowse.view?session=' + sessionParam + '&location=' + op.getLocation()
+    }
   }
 
   const { session } = viewState
