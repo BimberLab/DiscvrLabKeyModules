@@ -89,6 +89,12 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("p", "Error - no session provided."));
     }
 
+    private void testDemoSearchNoSession()
+    {
+        beginAt("/home/jbrowse-search.view?");
+        waitForElement(Locator.tagWithText("p", "Error - no session provided."));
+    }
+
     private void testDemoUi()
     {
         beginAt("/home/jbrowse-jbrowse.view?session=demo");
