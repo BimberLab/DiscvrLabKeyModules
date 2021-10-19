@@ -174,15 +174,13 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 getJob().getLogger().info("Starting readset " + r.getName());
 
                 boolean readsetExists = r.getReadsetId() != null && r.getReadsetId() > 0;
-                List<ReadDataImpl> preexistingReadData;
-                if (readsetExists)
+                SequenceReadsetImpl existingReadset = readsetExists ? ((SequenceReadsetImpl)SequenceAnalysisService.get().getReadset(r.getReadsetId(), getJob().getUser())) : null;
+                List<ReadDataImpl> preexistingReadData = readsetExists ? existingReadset.getReadDataImpl() : Collections.emptyList();
+                boolean readsetExistsWithData = !preexistingReadData.isEmpty();
+                if (readsetExistsWithData)
                 {
-                    readsetsToDeactivate.put(r.getReadsetId(), r.getContainer());
-                    preexistingReadData = ((SequenceReadsetImpl)SequenceAnalysisService.get().getReadset(r.getReadsetId(), getJob().getUser())).getReadDataImpl();
-                }
-                else
-                {
-                    preexistingReadData = Collections.emptyList();
+                    getJob().getLogger().info("Readset has existing data: " + r.getName() + ", " + r.getRowId() + " from: " + existingReadset.getContainer());
+                    readsetsToDeactivate.put(r.getReadsetId(), existingReadset.getContainer());
                 }
 
                 SequenceReadsetImpl row;
@@ -438,14 +436,18 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 List<Map<String, Object>> toUpdate = new ArrayList<>();
                 List<Map<String, Object>> toUpdateKeys = new ArrayList<>();
                 readsetsToDeactivate.forEach((rowId, container) -> {
+                    Readset r = SequenceAnalysisService.get().getReadset(rowId, getJob().getUser());
+
                     Map<String, Object> row = new CaseInsensitiveHashMap<>();
                     row.put("rowid", rowId);
                     row.put("container", container);
                     row.put("status", "Replaced");
+                    row.put("name", r.getName() + "-Replaced");
                     toUpdate.add(row);
 
                     row = new CaseInsensitiveHashMap<>();
                     row.put("rowid", rowId);
+                    row.put("container", container);
                     toUpdateKeys.add(row);
                 });
 
