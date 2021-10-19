@@ -53,9 +53,9 @@
           }
         },
         "filters": [
-          "AF < 0.1:AF:lt:0.1:false",
-          "AC < 80:AC:lt:80:false",
-          "IMPACT = HIGH:IMPACT:eq:'HIGH':false"
+          "AF:lt:0.001",
+          "AC:lt:6",
+          "IMPACT:eq:'MODERATE'"
         ]
       },
       "displays": [
