@@ -411,7 +411,7 @@ public class JBrowseTest extends BaseWebDriverTest
         searchBox.sendKeys("Ga"); // Test autocomplete
         searchBox.sendKeys(Keys.ARROW_DOWN); // Navigate and select result
         searchBox.sendKeys(Keys.ENTER);
-        waitForElement(searchBox);
+        waitForElement(Locator.tagWithClass("input", "MuiInputBase-input"));
         Assert.assertEquals("Correct ID selected", searchBox.getAttribute("value"), "Gag");
 
         click(Locator.tagWithText("button", "Open"));
