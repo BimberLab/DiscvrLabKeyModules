@@ -70,7 +70,7 @@ public class JBrowseTest extends BaseWebDriverTest
     {
         setUpTest();
 
-       // testOutputFileProcessing();
+        testOutputFileProcessing();
 
         testDemoNoSession();
         testDemoUi();
@@ -108,14 +108,13 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(Locator.xpath("//span[contains(text(), 'Filter')]"));
         waitAndClick(Locator.xpath("//div[em[contains(text(), 'Add New Filter...')]]"));
         waitAndClick(Locator.xpath("//li[@data-value = 'AC']"));
-        assertElementPresent(Locator.xpath("//li[contains(text(), 'AC')]"));
-        waitAndClick(Locator.xpath("//li[contains(text(), 'AC')]/*[2]"));
+        assertElementPresent(Locator.xpath("//td[text()='AC']"));
+        waitAndClick(Locator.xpath("//td[text()='AC']/following-sibling::td/div[contains(@class, 'formControl')]"));
         waitAndClick(Locator.xpath("//li[contains(text(), '<')]"));
         By numInput = Locator.xpath("//input[@type='number']");
         WebElement input = getDriver().findElement(numInput);
         String str = "1";
         input.sendKeys(str);
-        waitAndClick(Locator.xpath("//li[contains(text(), 'AC')]/*[3]"));
         assert(isVariantVisible("mgap_hg38", "SNV G -> A,C", true));
         assert(!isVariantVisible("mgap_hg38", "SNV A -> T", true));
 
@@ -129,10 +128,10 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(Locator.xpath("//span[contains(text(), 'Filter')]"));
         waitAndClick(Locator.xpath("//div[em[contains(text(), 'Add New Filter...')]]"));
         waitAndClick(Locator.xpath("//li[@data-value = 'IMPACT']"));
-        assertElementPresent(Locator.xpath("//li[contains(text(), 'IMPACT')]"));
-        waitAndClick(Locator.xpath("//li[contains(text(), 'IMPACT')]/*[2]"));
-        waitAndClick(Locator.xpath("//li[contains(text(), '==')]"));
-        waitAndClick(Locator.xpath("//li[contains(text(), 'IMPACT')]/*[3]"));
+        assertElementPresent(Locator.xpath("//td[text()='IMPACT']"));
+        waitAndClick(Locator.xpath("//td[text()='IMPACT']/../*[2]/div"));
+        waitAndClick(Locator.xpath("//li[contains(text(), '=')]"));
+        waitAndClick(Locator.xpath("//td[text()='IMPACT']/../*[3]/div"));
         waitAndClick(Locator.xpath("//li[@data-value = 'HIGH']"));
         assert(isVariantVisible("mgap_hg38", "SNV A -> T", true));
         assert(!isVariantVisible("mgap_hg38", "SNV T -> C", true));
@@ -145,9 +144,9 @@ public class JBrowseTest extends BaseWebDriverTest
         assert(isVariantVisible("mgap_hg38", "SNV T -> C", true));
         waitAndClick(Locator.xpath("//button[@data-testid='track_menu_icon']"));
         waitAndClick(Locator.xpath("//span[contains(text(), 'Filter')]"));
-        assertElementPresent(Locator.xpath("//li[contains(text(), 'IMPACT')]"));
-        assertElementPresent(Locator.xpath("//li[contains(text(), 'AC')]"));
-        assertElementPresent(Locator.xpath("//li[contains(text(), 'AF')]"));
+        assertElementPresent(Locator.xpath("//td[text()='IMPACT']"));
+        assertElementPresent(Locator.xpath("//td[text()='AC']"));
+        assertElementPresent(Locator.xpath("//td[text()='AF']"));
 
     }
 
@@ -156,7 +155,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
         waitAndClick(Locator.xpath("//button[@data-testid='track_menu_icon']"));
         waitAndClick(Locator.xpath("//span[contains(text(), 'Filter')]"));
-        waitAndClick(Locator.xpath("//li[contains(text(), 'AF')]//button[@title='Remove filter']"));
+        waitAndClick(Locator.xpath("//td[text()='AF']/..//button[@title='Remove filter']"));
         assert(isVariantVisible("mgap_hg38", "SNV T -> C", true));
         assert(isVariantVisible("mgap_hg38", "SNV C -> T", true));
     }

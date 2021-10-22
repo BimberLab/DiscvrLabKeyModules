@@ -5,6 +5,9 @@ import {
   MenuItem,
   Select,
   FormControl,
+  Table,
+  TableHead,
+  TableBody,
 } from '@material-ui/core'
 import { getContainingTrack, getSession, getContainingView, getContainingDisplay } from '@jbrowse/core/util'
 import { readConfObject } from '@jbrowse/core/configuration'
@@ -39,10 +42,14 @@ export default jbrowse => {
 
       return(
       <>
-         {Object.entries(configFilters).map(([key, val]) =>
-             <Filter filterString={val} track={track} index={Number(key)}/>
-         )}
-         <FormControl className={classes.formControl}>
+         <Table className={classes.table}>
+            <TableBody>
+            {Object.entries(configFilters).map(([key, val]) =>
+                <Filter filterString={val} track={track} index={Number(key)}/>
+            )}
+            </TableBody>
+         </Table>
+         <FormControl className={classes.addNewControl}>
              <Select
                labelId="category-select-label"
                id="category-select"

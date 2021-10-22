@@ -1,45 +1,38 @@
 import AddIcon from '@material-ui/icons/Add'
 import ClearIcon from '@material-ui/icons/Clear'
-
 import { observer } from 'mobx-react'
 import React, { useState } from 'react'
 import {filterMap as fields} from './filters'
 import { readConfObject } from '@jbrowse/core/configuration'
-
-import { unexpandedFilterStringToObj, operators } from './filterUtil'
+import { unexpandedFilterStringToObj, operators as utilOperators} from './filterUtil'
+import {style as styles} from "./style";
 
 import {
   MenuItem,
   FormControl,
-  FormLabel,
   Select,
-  Input,
-  Checkbox,
-  ListItemText,
   IconButton,
   List,
   ListItem,
   Tooltip,
   makeStyles,
-  TextField
+  TextField,
+  TableCell,
+  TableRow
 } from '@material-ui/core'
 
-const useStyles = makeStyles(theme => ({
-  root: {
-    padding: theme.spacing(1, 3, 1, 1),
-    background: theme.palette.background.default,
-    overflowX: 'hidden',
-  },
-  formControl: {
-    margin: theme.spacing(1),
-    minWidth: 50,
-  },
-}))
+function eqConvert(eqString){
+   if(eqString == "=="){
+      eqString = "="
+   }
+   return eqString
+}
 
 const OptionFilterComponent = observer(props => {
-    const classes = useStyles()
+    const classes = styles()
     const { filterObj, track, index } = props
-
+    let operators = JSON.parse(JSON.stringify(utilOperators))
+    operators["eq"] = "="
     const baseOp = operators[filterObj["operator"]] ?? ""
     const baseVal = filterObj["value"].replaceAll("'", "") ?? ""
 
@@ -80,14 +73,11 @@ const OptionFilterComponent = observer(props => {
 
     return (
     <>
-      <List>
-        <ListItem>
-            <Tooltip title="Remove filter" aria-label="remove" placement="bottom">
-              <IconButton aria-label="remove filter" onClick={handleFilterDelete}>
-                <ClearIcon />
-              </IconButton>
-            </Tooltip>
+      <TableRow>
+         <TableCell className={classes.tableCell}>
             {filterObj["field"]}
+         </TableCell>
+         <TableCell className={classes.tableCell}>
             <FormControl className={classes.formControl}>
                 <Select
                   labelId="category-select-label"
@@ -101,13 +91,15 @@ const OptionFilterComponent = observer(props => {
                   </MenuItem>
                   {fields[filterObj["field"]].operators.map(operator => {
                     return (
-                      <MenuItem value={operator} key={operator}>
-                        {operator}
+                      <MenuItem value={eqConvert(operator)} key={eqConvert(operator)}>
+                        {eqConvert(operator)}
                       </MenuItem>
                     )
                   })}
                 </Select>
             </FormControl>
+         </TableCell>
+         <TableCell className={classes.tableCell}>
             <FormControl className={classes.formControl}>
               <div>
                 <Select
@@ -128,16 +120,24 @@ const OptionFilterComponent = observer(props => {
                 </Select>
               </div>
             </FormControl>
-        </ListItem>
-      </List>
+         </TableCell>
+         <TableCell className={classes.tableCell}>
+            <Tooltip title="Remove filter" aria-label="remove" placement="bottom">
+              <IconButton aria-label="remove filter" onClick={handleFilterDelete}>
+                <ClearIcon />
+              </IconButton>
+            </Tooltip>
+         </TableCell>
+       </TableRow>
     </>
    )
 })
 
 const NumericFilterComponent = observer(props => {
+    const classes = styles()
     const { filterObj, track, index } = props
-    const classes = useStyles()
-
+    let operators = JSON.parse(JSON.stringify(utilOperators))
+    operators["eq"] = "="
     const baseOp = operators[filterObj["operator"]] ?? ""
     const baseVal = filterObj["value"] ?? ""
 
@@ -177,14 +177,11 @@ const NumericFilterComponent = observer(props => {
    }
     return (
         <>
-          <List>
-            <ListItem>
-               <Tooltip title="Remove filter" aria-label="remove" placement="bottom">
-                 <IconButton aria-label="remove filter" onClick={handleFilterDelete}>
-                   <ClearIcon />
-                 </IconButton>
-               </Tooltip>
+          <TableRow>
+            <TableCell className={classes.tableCell}>
                {filterObj["field"]}
+            </TableCell>
+            <TableCell className={classes.tableCell}>
                 <FormControl className={classes.formControl}>
                     <Select
                       labelId="category-select-label"
@@ -198,14 +195,16 @@ const NumericFilterComponent = observer(props => {
                       </MenuItem>
                       {fields["AF"].operators.map(operator => {
                         return (
-                          <MenuItem value={operator} key={operator}>
-                            {operator}
+                          <MenuItem value={eqConvert(operator)} key={eqConvert(operator)}>
+                            {eqConvert(operator)}
                           </MenuItem>
                         )
                       })}
                     </Select>
                 </FormControl>
-                <FormControl className={classes.formControl}>
+            </TableCell>
+            <TableCell className={classes.tableCell}>
+                <FormControl className={classes.numValueControl}>
                   <TextField
                     id="standard-number"
                     type="number"
@@ -213,15 +212,21 @@ const NumericFilterComponent = observer(props => {
                     onChange={handleValueChange}
                   />
                 </FormControl>
-            </ListItem>
-          </List>
+            </TableCell>
+            <TableCell className={classes.tableCell}>
+               <Tooltip title="Remove filter" aria-label="remove" placement="bottom">
+                 <IconButton aria-label="remove filter" onClick={handleFilterDelete}>
+                   <ClearIcon />
+                 </IconButton>
+               </Tooltip>
+            </TableCell>
+          </TableRow>
         </>
     )
 
 })
 
 const Filter = observer(props => {
-    //const { filter, attribute } = props // unexpanded filter string, AF
     const { filterString, track, index } = props
     const filterObj = unexpandedFilterStringToObj(filterString)
     const field = filterObj.field
@@ -234,5 +239,4 @@ const Filter = observer(props => {
 })
 
 
-//export FilterList
 export default Filter
