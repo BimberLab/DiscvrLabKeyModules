@@ -102,7 +102,7 @@ public class JBrowseTest extends BaseWebDriverTest
         beginAt("/home/jbrowse-jbrowse.view?session=demo");
         waitForJBrowseToLoad();
 
-        Actions actions = newabortsigna Actions(getDriver());
+        Actions actions = new Actions(getDriver());
         By by = getVariantWithinTrack("clinvar_ncbi_hg38_2", "294665", true);
         WebElement toClick = getDriver().findElements(by).stream().filter(WebElement::isDisplayed).findFirst().orElseThrow();
         actions.click(toClick).perform();
