@@ -647,6 +647,7 @@ public class JBrowseController extends SpringActionController
     {
         private static final String DEMO = "demo";
         private static final String MGAP = "mGAP";
+        private static final String MGAP_FILTERED = "mGAPF";
 
         @Override
         public void validateForm(GetSessionForm form, Errors errors)
@@ -668,6 +669,10 @@ public class JBrowseController extends SpringActionController
             else if (MGAP.equalsIgnoreCase(form.getSession()))
             {
                 resp = getDemoSession("external/mGAPSession.json");
+            }
+            else if (MGAP_FILTERED.equalsIgnoreCase(form.getSession()))
+            {
+                resp = getDemoSession("external/mGAPFilteredSession.json");
             }
             else
             {

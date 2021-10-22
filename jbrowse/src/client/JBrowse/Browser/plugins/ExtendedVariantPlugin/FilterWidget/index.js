@@ -9,8 +9,8 @@ export default jbrowse => {
     .model('FilterWidget', {
       id: ElementId,
       type: types.literal('FilterWidget'),
-      track: types.safeReference(jbrowse.pluggableConfigSchemaType('track')),
-    })
+      track: types.safeReference(jbrowse.pluggableConfigSchemaType('track'))
+     })
     .actions(self => ({
       setFeatureData(data) {
         self.featureData = data

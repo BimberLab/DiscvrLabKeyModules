@@ -12,6 +12,31 @@ export const style = (0, _styles.makeStyles)(function (theme) {
       },
       button: {
          marginLeft: theme.spacing(2.5)
-      }
+      },
+      root: {
+         padding: theme.spacing(1, 3, 1, 1),
+         background: theme.palette.background.default,
+         overflowX: 'hidden',
+      },
+      formControl: {
+         margin: theme.spacing(1),
+         minWidth: 100,
+      },
+      numValueControl: {
+         margin: theme.spacing(1),
+         width: 100,
+      },
+      addNewControl: {
+         margin: theme.spacing(1),
+         minWidth: 150,
+      },
+      table: {
+         padding: 0,
+         display: 'block'
+      },
+      tableCell: {
+         textAlign: 'center',
+         padding: theme.spacing(0.75, 0, 0.75, 1),
+      },
    };
 });

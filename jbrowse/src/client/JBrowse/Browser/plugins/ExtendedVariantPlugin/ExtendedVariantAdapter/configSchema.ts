@@ -5,7 +5,7 @@ let EVConfigSchema = configSchema.jbrowseSchemaDefinition
 EVConfigSchema["filters"] =
 {
    type: 'stringArray',
-   defaultValue: [''],
+   defaultValue: [],
    description:
     'Track filters',
 }
