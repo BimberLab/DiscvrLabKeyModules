@@ -102,7 +102,7 @@ public class JBrowseTest extends BaseWebDriverTest
         beginAt("/home/jbrowse-jbrowse.view?session=demo");
         waitForJBrowseToLoad();
 
-        Actions actions = new Actions(getDriver());
+        Actions actions = newabortsigna Actions(getDriver());
         By by = getVariantWithinTrack("clinvar_ncbi_hg38_2", "294665", true);
         WebElement toClick = getDriver().findElements(by).stream().filter(WebElement::isDisplayed).findFirst().orElseThrow();
         actions.click(toClick).perform();
@@ -407,15 +407,15 @@ public class JBrowseTest extends BaseWebDriverTest
 
         //Now test search:
         beginAt("/jbrowse/" + getContainerId() + "/search.view?session=" + sessionId);
-
-        WebElement searchBox = Locator.tagWithClass("div", "MuiInputBase-root").findElement(getDriver());
-        searchBox.sendKeys("1");
-        waitForElement(Locator.tagWithText("div", "1"));
-        Assert.assertEquals("Incorrect row count", 3, dr.getDataRowCount());
+        WebElement searchBox = Locator.tagWithClass("input", "MuiInputBase-input").findElement(getDriver());
+        searchBox.sendKeys("Ga"); // Test autocomplete
+        searchBox.sendKeys(Keys.ARROW_DOWN); // Navigate and select result
         searchBox.sendKeys(Keys.ENTER);
+        waitForElement(searchBox);
+        Assert.assertEquals("Correct ID selected", searchBox.getAttribute("value"), "Gag");
 
         click(Locator.tagWithText("button", "Open"));
-        waitForElement(Locator.tagWithText("span", "Tracks Provided By This Session"));
+        waitForElement(Locator.tagWithText("div", "Gag").withClass("MuiPaper-root"));
     }
 
     public static <T> Collector<T, ?, T> toSingleton() {
