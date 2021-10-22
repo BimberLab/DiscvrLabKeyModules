@@ -411,11 +411,11 @@ public class JBrowseTest extends BaseWebDriverTest
         WebElement searchBox = Locator.tagWithClass("div", "MuiInputBase-root").findElement(getDriver());
         searchBox.sendKeys("1");
         waitForElement(Locator.tagWithText("div", "1"));
-        //Assert(...expectations...)
-        //searchBox.sendKeys(Keys.ENTER);
+        Assert.assertEquals("Incorrect row count", 3, dr.getDataRowCount());
+        searchBox.sendKeys(Keys.ENTER);
 
-        //waitForElement()
-
+        click(Locator.tagWithText("button", "Open"));
+        waitForElement(Locator.tagWithText("span", "Tracks Provided By This Session"));
     }
 
     public static <T> Collector<T, ?, T> toSingleton() {
