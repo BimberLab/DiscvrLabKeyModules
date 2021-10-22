@@ -1,5 +1,4 @@
 
-// TODO - map operators to data type?
 export const filterMap = {
     AF: {
         title: 'Allele Frequency',

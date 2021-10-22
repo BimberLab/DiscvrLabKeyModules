@@ -73,8 +73,6 @@ export function expandFilters(filters) {
 // unexpanded ex: "AF:lt:0.1"
 // expanded ex:   "AF:feature.variant.INFO.AF[0] < 0.1"
 
-
-// TODO - ERROR CHECKING WHEN INVALID FILTERS PASSED
     let filterList = []
     if(!filters){
         return filterList
@@ -86,9 +84,7 @@ export function expandFilters(filters) {
                 filterList.push(filter)
                 continue
             }
-            // TODO type checking, overwriting protection
             const filterProps = filter.split(":") // 0: label  1: field  2: operator  3: value  4: selected
-            //const label = filterProps[0]
             const field = filterProps[0]
             const rawOperator = filterProps[1]
             const value = filterProps[2]
@@ -98,10 +94,7 @@ export function expandFilters(filters) {
             }
             const fieldLocation = fields[field].location
             const operator = operators[rawOperator]
-
-            //const selected = filterProps[4]
             const expression = fieldLocation + " " + operator + " " + value
-            //const expandedFilter = label + ":" + expression + ":" + selected
             const expandedFilter = field + ":" + expression
             filterList.push(expandedFilter)
         } catch (e){

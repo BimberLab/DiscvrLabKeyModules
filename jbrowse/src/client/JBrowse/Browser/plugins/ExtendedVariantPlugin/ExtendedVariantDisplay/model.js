@@ -89,9 +89,8 @@ export default jbrowse => {
 
                         if (self.renderProps().config.color1.value != color || self.ready == false || self.adapterConfig.filters != self.renderProps().config.filters.value){
                            self.renderProps().config.color1.set(color)
-                           //if (self.adapterConfig.filters){
                            self.setFilter(self.adapterConfig.filters)
-                           //}
+
                            const { centerLineInfo } = getContainingView(self)
                            if (!centerLineInfo) {
                                 console.error('error! centerLineInfo is null')

@@ -129,12 +129,9 @@ function isDisplayed(feature, filters){
    if(!filters){
         return true
    }
-   //let filterObj = filterStringsToObjList(filters)
-   //const keys = Object.keys(filterObj);
    for(const filter in filters){
         try {
             const filterObj = expandedFilterStringToObj(filters[filter])
-            //if(filterObj["selected"] === "true" && !eval(filterObj["expression"])){
             if(!eval(filterObj["expression"])){
                 return false
             }
@@ -166,7 +163,6 @@ const RenderedFeatures = observer(props => {
   const { features } = props
   const featuresRendered = []
   const filters = expandFilters(props.adapterConfig.filters)
-  //const filters = props.adapterConfig.filters
   for (const feature of features.values()) {
     if(isDisplayed(feature, filters)){
        featuresRendered.push(
