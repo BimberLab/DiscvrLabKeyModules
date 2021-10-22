@@ -15,6 +15,7 @@
  */
 package org.labkey.test.tests.external.labModules;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -38,6 +39,7 @@ import org.labkey.test.util.ext4cmp.Ext4ComboRef;
 import org.labkey.test.util.ext4cmp.Ext4FieldRef;
 import org.labkey.test.util.external.labModules.LabModuleHelper;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 
@@ -390,6 +392,10 @@ public class JBrowseTest extends BaseWebDriverTest
         dr = DataRegionTable.findDataRegionWithinWebpart(this, "Additional Tracks Provided By The Base Genome");
         Assert.assertEquals("Incorrect row count", 3, dr.getDataRowCount());
 
+        // Store session ID for later use
+        String sessionId = StringUtils.trimToNull(getUrlParam("databaseId"));
+        Assert.assertNotNull("Missing session ID on URL", sessionId);
+
         // Now ensure default tracks appear:
         beginAt("/project/" + getContainerId() + "/begin.view");
         _helper.clickNavPanelItemAndWait("JBrowse Sessions:", 1);
@@ -398,6 +404,18 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(Locator.tagContainingText("span", "Show all regions in assembly").withClass("MuiButton-label"));
         waitForElement(Locator.tagWithText("span", "fakeData.gff").withClass("MuiTypography-root"));
         waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));
+
+        //Now test search:
+        beginAt("/jbrowse/" + getContainerId() + "/search.view?session=" + sessionId);
+
+        WebElement searchBox = Locator.tagWithClass("div", "MuiInputBase-root").findElement(getDriver());
+        searchBox.sendKeys("1");
+        waitForElement(Locator.tagWithText("div", "1"));
+        //Assert(...expectations...)
+        //searchBox.sendKeys(Keys.ENTER);
+
+        //waitForElement()
+
     }
 
     public static <T> Collector<T, ?, T> toSingleton() {
