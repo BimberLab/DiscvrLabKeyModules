@@ -110,37 +110,3 @@ export function expandFilters(filters) {
     }
     return filterList
 }
-
-/*
-export default filterStringsToObjList(filters){
-// filters: list of filter strings in the format "field:operator:value"
-   let filterObj = {}
-   if(!filters){
-      return filterObj
-   }
-   let i = "0" .
-   for(const filter of filters){
-      try {
-         const filterProps = filter.split(":") // 0: field  1: operator 2: value
-         const field = filterProps[0]
-         const fieldLocation = fields[field].location
-         const operator = operators[filterProps[1]]
-         const value = filterProps[2]
-         const expression = fieldLocation + " " + operator + " " + value
-         const expandedFilter = field + ":" + expression
-
-         filterObj[i] = {
-            field: field,
-            rawOperator: filterProps[1],
-            operator: operator,
-            value: value,
-            expression: expression,
-         }
-         i = i + 1
-      } catch(e){
-         console.error("Error parsing filter - " + e)
-      }
-   }
-   return filterObj
-}
-*/

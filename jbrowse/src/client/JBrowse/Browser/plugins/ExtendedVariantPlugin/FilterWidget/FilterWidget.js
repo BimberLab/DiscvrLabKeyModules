@@ -6,10 +6,8 @@ import {
   Select,
   FormControl,
   Table,
-  TableHead,
   TableBody,
 } from '@material-ui/core'
-import { getContainingTrack, getSession, getContainingView, getContainingDisplay } from '@jbrowse/core/util'
 import { readConfObject } from '@jbrowse/core/configuration'
 import Filter from './FilterComponent'
 
