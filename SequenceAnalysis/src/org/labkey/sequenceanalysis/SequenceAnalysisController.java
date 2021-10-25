@@ -118,6 +118,7 @@ import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
@@ -218,11 +219,17 @@ public class SequenceAnalysisController extends SpringActionController
     public class FastqcReportAction extends SimpleViewAction<FastqcForm>
     {
         @Override
+        public void validate(FastqcForm form, BindException errors)
+        {
+            if (form.getReadsets() == null && form.getFilenames() == null && form.getDataIds() == null && form.getAnalysisIds() == null)
+            {
+                errors.reject(ERROR_MSG, "Must provide a filename or Exp data Ids");
+            }
+        }
+
+        @Override
         public ModelAndView getView(FastqcForm form, BindException errors) throws Exception
         {
-            if (form.getFilenames() == null && form.getDataIds() == null)
-                errors.reject("Must provide a filename or Exp data Ids");
-
             //resolve files
             List<File> files = new ArrayList<>();
             Map<File, String> labels = new HashMap<>();
@@ -312,7 +319,7 @@ public class SequenceAnalysisController extends SpringActionController
             try
             {
                 String html = runner.execute(files, labels);
-                return new HtmlView("FastQC Report", html);
+                return new HtmlView("FastQC Report", HtmlString.unsafe(html));
             }
             catch (FileNotFoundException e)
             {
@@ -597,20 +604,20 @@ public class SequenceAnalysisController extends SpringActionController
         {
             if (form.getSchema() == null)
             {
-                errors.reject("No schema provided");
+                errors.reject(ERROR_MSG, "No schema provided");
                 return;
             }
 
             if (form.getQueryName() == null)
             {
-                errors.reject("No queryName provided");
+                errors.reject(ERROR_MSG, "No queryName provided");
                 return;
             }
 
             _table = SequenceAnalysisSchema.getInstance().getSchema().getTable(form.getQueryName());
             if (_table == null)
             {
-                errors.reject("Unknown table: " + form.getQueryName());
+                errors.reject(ERROR_MSG, "Unknown table: " + form.getQueryName());
                 return;
             }
 
@@ -2220,7 +2227,7 @@ public class SequenceAnalysisController extends SpringActionController
                             String[] coordinates = t.split("-");
                             if (coordinates.length != 2)
                             {
-                                errors.reject("Inproper interval: [" + t + "]");
+                                errors.reject(ERROR_MSG, "Inproper interval: [" + t + "]");
                                 return null;
                             }
 
@@ -3143,7 +3150,7 @@ public class SequenceAnalysisController extends SpringActionController
                             String wholeSequence = model.getSequence();
                             if (wholeSequence == null)
                             {
-                                errors.reject("Unable to find sequence for: " + rowId);
+                                errors.reject(ERROR_MSG, "Unable to find sequence for: " + rowId);
                                 return;
                             }
 
@@ -3152,21 +3159,21 @@ public class SequenceAnalysisController extends SpringActionController
                                 String[] coordinates = t.split("-");
                                 if (coordinates.length != 2)
                                 {
-                                    errors.reject("Inproper interval: [" + t + "]");
+                                    errors.reject(ERROR_MSG, "Inproper interval: [" + t + "]");
                                     return;
                                 }
 
                                 Integer start = StringUtils.trimToNull(coordinates[0]) == null ? null : ConvertHelper.convert(coordinates[0], Integer.class);
                                 if (wholeSequence.length() < start)
                                 {
-                                    errors.reject("Start is beyond the length of the sequence.  Length: " + wholeSequence.length());
+                                    errors.reject(ERROR_MSG, "Start is beyond the length of the sequence.  Length: " + wholeSequence.length());
                                     return;
                                 }
 
                                 Integer stop = StringUtils.trimToNull(coordinates[1]) == null ? null : ConvertHelper.convert(coordinates[1], Integer.class);
                                 if (wholeSequence.length() < stop)
                                 {
-                                    errors.reject("Stop is beyond the length of the sequence.  Length: " + wholeSequence.length());
+                                    errors.reject(ERROR_MSG, "Stop is beyond the length of the sequence.  Length: " + wholeSequence.length());
                                     return;
                                 }
 
@@ -3274,7 +3281,7 @@ public class SequenceAnalysisController extends SpringActionController
         {
             if (form.getLibraryIds() == null || form.getLibraryIds().length == 0)
             {
-                errors.reject("Must provide a list of reference genomes to re-process");
+                errors.reject(ERROR_MSG, "Must provide a list of reference genomes to re-process");
                 return null;
             }
 
