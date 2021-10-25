@@ -23,7 +23,7 @@ export const filterMap = {
         baseLocation: 'IMPACT',
         operators: ["=="],
         dataType: "string",
-        options: ["HIGH", "MODERATE", "LOW"],
+        options: ["HIGH", "MODERATE", "LOW"], // right now if dataType is string, the object must have an options category
         location: 'feature.variant.INFO.IMPACT'
     }
 }

@@ -10,6 +10,7 @@ import {
 } from '@material-ui/core'
 import { readConfObject } from '@jbrowse/core/configuration'
 import Filter from './FilterComponent'
+import { removeInvalidUnexpandedFilters } from './filterUtil'
 
 
 export default jbrowse => {
@@ -21,7 +22,7 @@ export default jbrowse => {
       const { model } = props
       let track = model.track
 
-      const configFilters = readConfObject(track, ['adapter', 'filters'])
+      const configFilters = removeInvalidUnexpandedFilters(readConfObject(track, ['adapter', 'filters']))
 
       const [newField, setNewField] = React.useState('')
 

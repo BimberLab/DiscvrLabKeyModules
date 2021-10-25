@@ -4,7 +4,7 @@ import { observer } from 'mobx-react'
 import React, { useState } from 'react'
 import {filterMap as fields} from './filters'
 import { readConfObject } from '@jbrowse/core/configuration'
-import { unexpandedFilterStringToObj, operators as utilOperators} from './filterUtil'
+import { unexpandedFilterStringToObj, operators as utilOperators, removeInvalidUnexpandedFilters} from './filterUtil'
 import {style as styles} from "./style";
 
 import {
@@ -39,7 +39,7 @@ const OptionFilterComponent = observer(props => {
     const [operator, setOperator] = useState(baseOp)
     const handleOperatorChange = (event) => {
         setOperator(event.target.value);
-        let filters = readConfObject(track, ['adapter', 'filters'])
+        let filters = removeInvalidUnexpandedFilters(readConfObject(track, ['adapter', 'filters']))
         let tempFilters = [...filters]
         filterObj["operator"] = Object.keys(operators).find(key => operators[key] === event.target.value)
         tempFilters[index] = filterObj["field"] + ":" + filterObj["operator"] + ":" + filterObj["value"]
@@ -49,7 +49,7 @@ const OptionFilterComponent = observer(props => {
     const [value, setValue] = useState(baseVal)
     const handleValueChange = (event) => {
         setValue(event.target.value);
-        let filters = readConfObject(track, ['adapter', 'filters'])
+        let filters = removeInvalidUnexpandedFilters(readConfObject(track, ['adapter', 'filters']))
         let tempFilters = [...filters]
         filterObj["value"] = event.target.value
         tempFilters[index] = filterObj["field"] + ":" + filterObj["operator"] + ":'" + filterObj["value"] + "'"
@@ -57,7 +57,7 @@ const OptionFilterComponent = observer(props => {
     }
 
     const handleFilterDelete = (event) => {
-        let filters = readConfObject(track, ['adapter', 'filters'])
+        let filters = removeInvalidUnexpandedFilters(readConfObject(track, ['adapter', 'filters']))
         let tempFilters = [...filters]
         tempFilters.splice(index, 1)
         track.adapter.filters.set(tempFilters)
@@ -144,7 +144,7 @@ const NumericFilterComponent = observer(props => {
     const [operator, setOperator] = React.useState(baseOp)
     const handleOperatorChange = (event) => {
         setOperator(event.target.value);
-        let filters = readConfObject(track, ['adapter', 'filters'])
+        let filters = removeInvalidUnexpandedFilters(readConfObject(track, ['adapter', 'filters']))
         let tempFilters = [...filters]
         filterObj["operator"] = Object.keys(operators).find(key => operators[key] === event.target.value)
         tempFilters[index] = filterObj["field"] + ":" + filterObj["operator"] + ":" + filterObj["value"]
@@ -154,7 +154,7 @@ const NumericFilterComponent = observer(props => {
     const [value, setValue] = React.useState(baseVal)
     const handleValueChange = (event) => {
         setValue(event.target.value);
-        let filters = readConfObject(track, ['adapter', 'filters'])
+        let filters = removeInvalidUnexpandedFilters(readConfObject(track, ['adapter', 'filters']))
         let tempFilters = [...filters]
         filterObj["value"] = event.target.value
         tempFilters[index] = filterObj["field"] + ":" + filterObj["operator"] + ":" + filterObj["value"]
@@ -162,7 +162,7 @@ const NumericFilterComponent = observer(props => {
     };
 
     const handleFilterDelete = (event) => {
-        let filters = readConfObject(track, ['adapter', 'filters'])
+        let filters = removeInvalidUnexpandedFilters(readConfObject(track, ['adapter', 'filters']))
         let tempFilters = [...filters]
         tempFilters.splice(index, 1)
         track.adapter.filters.set(tempFilters)

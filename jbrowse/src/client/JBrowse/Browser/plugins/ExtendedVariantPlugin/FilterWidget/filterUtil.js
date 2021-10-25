@@ -57,7 +57,7 @@ export function isFilterStringExpanded(filter){
 // returns true if filter fits in expanded filter format
     try {
         let temp = filter.split(":")
-        if(temp.length == 2){
+        if(temp.length == 2 || temp[1].includes('variant.INFO.')){
             return true
         }
         return false
@@ -66,21 +66,83 @@ export function isFilterStringExpanded(filter){
     }
 }
 
+export function isFilterFieldValid(filterField){
+   try{
+      if(fields[filterField]){
+         return true
+      }
+   } catch (e){
+      return false
+   }
+   return false
+}
+
+export function isUnexpandedFilterValid(filter){
+   try{
+      const filterProps = filter.split(":")
+      if (filterProps.length != 3){
+         console.error("Invalid filter - " + filter + " does not have a length of 3")
+         return false
+      }
+      let key = filterProps[0] in fields
+      if (!key){
+         console.error("Invalid filter - " + filterProps[0] + " in " + filter + " is not a valid field.")
+         return false
+      }
+      if(filterProps[1] != ""){
+         if (fields[filterProps[0]].operators.indexOf(operators[filterProps[1]]) < 0){
+            console.error("Invalid filter - " + filterProps[1] + " in " + filter + " is not a valid operator.")
+            return false
+         }
+      }
+      if(filterProps[2] != ""){
+         let dataType = fields[filterProps[0]].dataType
+         if(dataType == "number" && isNaN(filterProps[2])){
+            console.error("Invalid filter - " + filterProps[2] + " in " + filter + " is not valid. Expected a number.")
+            return false
+         }
+         if(dataType == "string"){
+            if (fields[filterProps[0]].options.indexOf(filterProps[2].replaceAll("'", "")) < 0){
+               console.error("Invalid filter - " + filterProps[2] + " in " + filter + " is not a valid option for " + filterProps[0] + ". Enter one of the following - " + fields[filterProps[0]].options)
+               return false
+            }
+            if (filterProps[2].replaceAll("'", "") == filterProps[2]){
+               console.error("Invalid filter - " + filterProps[2] + " in " + filter + " is not wrapped in \" ' \".")
+               return false
+            }
+         }
+      }
+      return true
+
+   }catch (e){
+      console.error("Error validating filter " + filter + " - " + e)
+      return false
+   }
+}
+
+export function removeInvalidUnexpandedFilters(filters){
+   let filterList = []
+   if(!filters){
+      return filterList
+   }
+   for(const filter of filters){
+      if(isFilterStringExpanded(filter)){
+         continue
+      }
+      if(isUnexpandedFilterValid(filter)){
+         filterList.push(filter)
+      }
+   }
+   return filterList
+}
+
 export function expandFilters(filters) {
-<<<<<<< HEAD
-// filters: list of strings with properties "label:field:operator:value:selected"
-// returns a list of strings "label:expression:selected"
-// 'expanded' indicates that the filter's field, operator and values have been combined into their full functioning jexl expression.
-// unexpanded ex: "AF < 0.1:AF:lt:0.1:false"
-// expanded ex:   "AF < 0.1:variant.INFO.AF[0]<0.1:false"
-=======
 // filters: list of strings with properties "field:operator:value"
 // returns a list of strings "field:expression:"
 // 'expanded' indicates that the filter's field, operator and values have been combined into their full functioning expression.
 // unexpanded ex: "AF:lt:0.1"
-// expanded ex:   "AF:feature.variant.INFO.AF[0] < 0.1"
+// expanded ex:   "AF:variant.INFO.AF[0] < 0.1"
 
->>>>>>> 21.7_fb_filter-ui
     let filterList = []
     if(!filters){
         return filterList
@@ -92,12 +154,16 @@ export function expandFilters(filters) {
                 filterList.push(filter)
                 continue
             }
-            const filterProps = filter.split(":") // 0: label  1: field  2: operator  3: value  4: selected
+            if(!isUnexpandedFilterValid(filter)){
+               // if invalid filter, skip it
+               continue
+            }
+            const filterProps = filter.split(":")
             const field = filterProps[0]
             const rawOperator = filterProps[1]
             const value = filterProps[2]
-             if(!(field && rawOperator && value)){
-                // if any prop is null, do not make filter
+             if(!(field && rawOperator && value && isFilterFieldValid(field))){
+                // if any prop is null or field is not valid, do not make filter
                 continue
              }
              const fieldLocation = fields[field].baseLocation;
@@ -106,7 +172,8 @@ export function expandFilters(filters) {
              const expandedFilter = field + ":" + jexlExpression
             filterList.push(expandedFilter)
         } catch (e){
-            console.error("Error parsing filter - " + e)
+            console.error("Error parsing filter, skipping. " + e)
+            continue
         }
     }
     return filterList

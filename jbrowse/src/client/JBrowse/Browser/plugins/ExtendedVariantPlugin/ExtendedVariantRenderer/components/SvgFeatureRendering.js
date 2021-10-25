@@ -133,7 +133,7 @@ function isDisplayed(feature, filters){
    for(const filter in filters){
         try {
             const filterObj = expandedFilterStringToObj(filters[filter])
-            if(filterObj["selected"] === "true" && !jexl.evalSync(filterObj["expression"], feature)){
+            if(!jexl.evalSync(filterObj["expression"], feature)){
                 return false
             }
         } catch (e){
