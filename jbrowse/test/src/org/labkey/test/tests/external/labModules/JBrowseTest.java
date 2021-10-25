@@ -86,6 +86,7 @@ public class JBrowseTest extends BaseWebDriverTest
         testAddingOptionFilter();
         testLoadingConfigFilters();
         testRemovingFilters();
+        testInvalidFilterHandling();
     }
 
     private void testFilterWidgetOpens()
@@ -158,6 +159,13 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(Locator.xpath("//td[text()='AF']/..//button[@title='Remove filter']"));
         assert(isVariantVisible("mgap_hg38", "SNV T -> C", true));
         assert(isVariantVisible("mgap_hg38", "SNV C -> T", true));
+    }
+
+    private void testInvalidFilterHandling(){
+        beginAt("/home/jbrowse-jbrowse.view?session=mgapif");
+        waitForJBrowseToLoad();
+        assert(isVariantVisible("mgap_hg38", "SNV A -> T", true));
+        assert(!isVariantVisible("mgap_hg38", "SNV T -> C", true));
     }
 
     private void testDemoNoSession()
