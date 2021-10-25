@@ -26,7 +26,8 @@ public class MergeSeurat extends AbstractCellMembraneStep
             super("MergeSeurat", "Merge Seurat Objects", "CellMembrane/Seurat", "This will merge the incoming seurat objects into a single object, merging all assays. Note: this will discard any normalization or DimRedux data, and performs zero validation to ensure this is compatible with downstream steps.", Arrays.asList(
                     SeuratToolParameter.create("projectName", "New Dataset Name", "The updated baseline for this merged object.", "textfield", new JSONObject(){{
                         put("allowBlank", false);
-                    }}, null)
+                    }}, null),
+                    SeuratToolParameter.create("doDiet", "Run DietSeurat", "If selected, this will run DietSeurat and gc() on the incoming seurat objects prior to merge. This is primarily to help with memory.", "checkbox", null, false, "dietSeurat", true, false)
             ), null, null);
         }
 
