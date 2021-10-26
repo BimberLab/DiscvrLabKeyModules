@@ -407,15 +407,14 @@ public class JBrowseTest extends BaseWebDriverTest
 
         //Now test search:
         beginAt("/jbrowse/" + getContainerId() + "/search.view?session=" + sessionId);
-        WebElement searchBox = Locator.tagWithClass("input", "MuiInputBase-input").findElement(getDriver());
+        Locator searchLocator = Locator.tagWithClass("input", "MuiInputBase-input");
+        waitForElement(searchLocator);
+        WebElement searchBox = searchLocator.findElement(getDriver());
         searchBox.sendKeys("Ga"); // Test autocomplete
         searchBox.sendKeys(Keys.ARROW_DOWN); // Navigate and select result
         searchBox.sendKeys(Keys.ENTER);
         waitForElement(Locator.tagWithClass("input", "MuiInputBase-input"));
         Assert.assertEquals("Correct ID selected", searchBox.getAttribute("value"), "Gag");
-
-        click(Locator.tagWithText("button", "Open"));
-        waitForElement(Locator.tagWithText("div", "Gag").withClass("MuiPaper-root"));
     }
 
     public static <T> Collector<T, ?, T> toSingleton() {
