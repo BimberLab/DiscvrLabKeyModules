@@ -84,10 +84,14 @@ export default jbrowse => {
                                     </div>
                             )
                         }
+                        let title = displays[display].properties[property]
+                        try{
+                           title = fields[title]["title"]
+                        } catch (e) {}
                         tempProp.push(
                                 <div key={property} className={classes.field}>
                                     <div className={classes.fieldName}>
-                                        {displays[display].properties[property]}
+                                        {title}
                                     </div>
                                     {children}
                                 </div>
