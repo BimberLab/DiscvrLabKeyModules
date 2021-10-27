@@ -417,8 +417,14 @@ public class JBrowseTest extends BaseWebDriverTest
 
         Locator optionLocator = Locator.tagWithText("li", expected);
         waitForElement(optionLocator);
+        WebElement locator = optionLocator.findElement(getDriver());
+        int locatorIndex = Integer.parseInt(locator.getAttribute("data-option-index"));
 
-        searchBox.sendKeys(Keys.ARROW_DOWN);
+        for (int i = 0; i <= locatorIndex; i++)
+        {
+            searchBox.sendKeys(Keys.ARROW_DOWN);
+        }
+
         searchBox.sendKeys(Keys.ENTER);
 
         waitForElement(searchLocator);
