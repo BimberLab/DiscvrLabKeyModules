@@ -109,8 +109,12 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(Locator.xpath("//span[contains(text(), 'Filter')]"));
         waitAndClick(Locator.xpath("//div[em[contains(text(), 'Add New Filter...')]]"));
         waitAndClick(Locator.xpath("//li[@data-value = 'AC']"));
-        assertElementPresent(Locator.xpath("//td[text()='AC']"));
-        waitAndClick(Locator.xpath("//td[text()='AC']/following-sibling::td/div[contains(@class, 'formControl')]"));
+        waitForElement(Locator.tagWithText("td", "AC"));
+        waitForElement(Locator.tagWithClassContaining("div", "formControl"));
+
+        waitForElement(Locator.tagWithText("td", "AC").followingSibling("td"));
+        waitForElement(Locator.tagWithText("td", "AC").followingSibling("td").child(Locator.tagWithClassContaining("div", "formControl")));
+        waitAndClick(Locator.tagWithText("td", "AC").followingSibling("td").child(Locator.tagWithClassContaining("div", "formControl")));
         waitAndClick(Locator.xpath("//li[contains(text(), '<')]"));
         By numInput = Locator.xpath("//input[@type='number']");
         WebElement input = getDriver().findElement(numInput);
