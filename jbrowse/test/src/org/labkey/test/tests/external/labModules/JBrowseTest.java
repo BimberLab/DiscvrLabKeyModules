@@ -408,14 +408,15 @@ public class JBrowseTest extends BaseWebDriverTest
         //Now test search:
         beginAt("/jbrowse/" + getContainerId() + "/search.view?session=" + sessionId);
         String search = "Ga";
-        String expected = "Gag";
+        String optionText = "Gag";
+        String expected = "SIVmac239_Test:10373..10493";
 
         Locator searchLocator = Locator.tagWithClass("input", "MuiInputBase-input");
         waitForElement(searchLocator);
         WebElement searchBox = searchLocator.findElement(getDriver());
         searchBox.sendKeys(search);
 
-        Locator optionLocator = Locator.tagWithText("li", expected);
+        Locator optionLocator = Locator.tagWithText("li", optionText);
         waitForElement(optionLocator);
         WebElement locator = optionLocator.findElement(getDriver());
         int locatorIndex = Integer.parseInt(locator.getAttribute("data-option-index"));
