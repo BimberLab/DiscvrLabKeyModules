@@ -19,7 +19,9 @@ for (datasetId in names(newSeuratObjects)) {
     savedFiles <- rbind(savedFiles, data.frame(datasetId = datasetId, datasetName = datasetName, filename = fn, outputFileId = outputFileId))
 
     # Write cell barcodes and metadata:
-    write.table(seuratObj@meta.data, file = metaFile, quote = F, row.names = F, sep = ',', col.names = F)
+    metaDf <- seuratObj@meta.data
+    metaDf$cellbarcode <- colnames(seuratObj)
+    write.table(metaDf, file = metaFile, quote = F, row.names = F, sep = ',', col.names = T)
     write.table(data.frame(CellBarcode = colnames(seuratObj)), file = barcodeFile, quote = F, row.names = F, sep = ',', col.names = F)
 }
 

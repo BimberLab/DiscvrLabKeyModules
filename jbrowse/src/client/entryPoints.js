@@ -10,5 +10,12 @@ module.exports = {
         permission: 'read',
         template: 'app',
         path: './src/client/JBrowse/Browser'
+    },
+    {
+        name: 'search',
+        title: 'JBrowse Search',
+        permission: 'read',
+        template: 'app',
+        path: './src/client/JBrowse/Browser/Search'
     }]
 };
