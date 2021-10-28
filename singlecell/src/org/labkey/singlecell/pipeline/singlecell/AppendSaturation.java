@@ -236,7 +236,7 @@ public class AppendSaturation extends AbstractCellMembraneStep
     private void writeExtraData(int datasetId, int readsetId, PipelineJob job, String category, CSVWriter writer, String assayName) throws PipelineJobException
     {
         Container targetContainer = job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer();
-        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readsetId"), readsetId);
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), readsetId);
         filter.addCondition(FieldKey.fromString("category"), category);
 
         List<Integer> rowIds = new TableSelector(QueryService.get().getUserSchema(job.getUser(), targetContainer, SingleCellSchema.SEQUENCE_SCHEMA_NAME).getTable("outputfiles"), PageFlowUtil.set("rowid"), filter, new Sort("-rowid")).getArrayList(Integer.class);
