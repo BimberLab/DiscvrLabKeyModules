@@ -51,7 +51,7 @@
           "location": {
             "uri": "<%=contextPath%>/jbrowse/mgap/mGap.v2.1.subset.vcf.gz.tbi"
           }
-        },
+        }
       },
       "displays": [
         {
