@@ -15,6 +15,7 @@
  */
 package org.labkey.test.tests.external.labModules;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -38,6 +39,7 @@ import org.labkey.test.util.ext4cmp.Ext4ComboRef;
 import org.labkey.test.util.ext4cmp.Ext4FieldRef;
 import org.labkey.test.util.external.labModules.LabModuleHelper;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 
@@ -86,6 +88,12 @@ public class JBrowseTest extends BaseWebDriverTest
     private void testDemoNoSession()
     {
         beginAt("/home/jbrowse-jbrowse.view?");
+        waitForElement(Locator.tagWithText("p", "Error - no session provided."));
+    }
+
+    private void testDemoSearchNoSession()
+    {
+        beginAt("/home/jbrowse-search.view?");
         waitForElement(Locator.tagWithText("p", "Error - no session provided."));
     }
 
@@ -384,6 +392,10 @@ public class JBrowseTest extends BaseWebDriverTest
         dr = DataRegionTable.findDataRegionWithinWebpart(this, "Additional Tracks Provided By The Base Genome");
         Assert.assertEquals("Incorrect row count", 3, dr.getDataRowCount());
 
+        // Store session ID for later use
+        String sessionId = StringUtils.trimToNull(getUrlParam("databaseId"));
+        Assert.assertNotNull("Missing session ID on URL", sessionId);
+
         // Now ensure default tracks appear:
         beginAt("/project/" + getContainerId() + "/begin.view");
         _helper.clickNavPanelItemAndWait("JBrowse Sessions:", 1);
@@ -392,6 +404,32 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(Locator.tagContainingText("span", "Show all regions in assembly").withClass("MuiButton-label"));
         waitForElement(Locator.tagWithText("span", "fakeData.gff").withClass("MuiTypography-root"));
         waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));
+
+        //Now test search:
+        beginAt("/jbrowse/" + getContainerId() + "/search.view?session=" + sessionId);
+        String search = "Ga";
+        String optionText = "Gag";
+        String expected = "SIVmac239_Test:10373..10493";
+
+        Locator searchLocator = Locator.tagWithClass("input", "MuiInputBase-input");
+        waitForElement(searchLocator);
+        WebElement searchBox = searchLocator.findElement(getDriver());
+        searchBox.sendKeys(search);
+
+        Locator optionLocator = Locator.tagWithText("li", optionText);
+        waitForElement(optionLocator);
+        WebElement locator = optionLocator.findElement(getDriver());
+        int locatorIndex = Integer.parseInt(locator.getAttribute("data-option-index"));
+
+        for (int i = 0; i <= locatorIndex; i++)
+        {
+            searchBox.sendKeys(Keys.ARROW_DOWN);
+        }
+
+        searchBox.sendKeys(Keys.ENTER);
+
+        waitForElement(searchLocator);
+        Assert.assertEquals("Correct ID selected", expected, searchBox.getAttribute("value"));
     }
 
     public static <T> Collector<T, ?, T> toSingleton() {
