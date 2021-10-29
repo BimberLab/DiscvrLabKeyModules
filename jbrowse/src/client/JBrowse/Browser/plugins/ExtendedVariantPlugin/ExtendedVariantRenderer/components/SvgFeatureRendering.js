@@ -10,6 +10,8 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import FeatureGlyph from './FeatureGlyph' // FeatureGlyph copied over. Referencing original produces errors. Compare to line 11
 import SvgOverlay from '@jbrowse/plugin-svg/src/SvgFeatureRenderer/components/SvgOverlay' // NEW: Updated SvgOverlay to reference original file in @jbrowse. No errors produced.
 import { chooseGlyphComponent, layOut } from './util' // NEW: chooseGlyphComponent() in util updated to render SNVs as a diamond
+import { expandFilters, expandedFilterStringToObj } from '../../FilterWidget/filterUtil' // NOTE: Now dependent on FilterWidget plugin
+import jexl from 'jexl'
 
 const renderingStyle = {
   position: 'relative',
@@ -124,6 +126,24 @@ function RenderedFeatureGlyph(props) {
   )
 }
 
+function isDisplayed(feature, filters){
+   if(!filters){
+        return true
+   }
+   for(const filter in filters){
+        try {
+            const filterObj = expandedFilterStringToObj(filters[filter])
+            if(!jexl.evalSync(filterObj["expression"], feature)){
+                return false
+            }
+        } catch (e){
+            console.error("Error in filter execution: "+e)
+            return true
+        }
+   }
+   return true
+}
+
 RenderedFeatureGlyph.propTypes = {
   layout: ReactPropTypes.shape({
     addRect: ReactPropTypes.func.isRequired,
@@ -143,10 +163,13 @@ RenderedFeatureGlyph.propTypes = {
 const RenderedFeatures = observer(props => {
   const { features } = props
   const featuresRendered = []
+  const filters = expandFilters(props.adapterConfig.filters)
   for (const feature of features.values()) {
-    featuresRendered.push(
-      <RenderedFeatureGlyph key={feature.id()} feature={feature} {...props} />,
-    )
+    if(isDisplayed(feature, filters)){
+       featuresRendered.push(
+         <RenderedFeatureGlyph key={feature.id()} feature={feature} {...props} />,
+       )
+    }
   }
   return <>{featuresRendered}</>
 })
@@ -320,7 +343,6 @@ function SvgFeatureRendering(props) {
   useEffect(() => {
     setHeight(layout.getTotalHeight())
   }, [layout])
-
   if (exportSVG) {
     return (
       <RenderedFeatures
