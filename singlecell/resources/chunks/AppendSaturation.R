@@ -6,7 +6,7 @@ for (datasetId in names(seuratObjects)) {
         stop('Seurat object lacks a DatasetId field!')
     }
 
-    seuratObj <- CellMembrane::AppendPerCellSaturationInBulk(seuratObj, molInfoList = molInfoFiles[[datasetId]])
+    seuratObj <- CellMembrane::AppendPerCellSaturationInBulk(seuratObj, molInfoList = molInfoFiles)
     newSeuratObjects[[datasetId]] <- seuratObj
 
     # Cleanup
