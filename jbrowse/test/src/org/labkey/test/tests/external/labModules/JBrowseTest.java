@@ -288,7 +288,7 @@ public class JBrowseTest extends BaseWebDriverTest
         WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C", true)).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,981,406..116,981,406
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:116,981,406..116,981,406"));
-        assertElementPresent(Locator.tagWithText("div", "MismatchedRefAllele"));
+        assertElementPresent(Locator.tagWithText("div", "Minor Allele Frequency"));
     }
 
     private void testPredictedFunction()
