@@ -959,6 +959,11 @@ public class CellHashingServiceImpl extends CellHashingService
         return new File(outputDir, basename + CALL_EXTENSION);
     }
 
+    private File getMolInfoFileFromCounts(File citeSeqCountOutDir)
+    {
+        return new File(citeSeqCountOutDir.getParentFile(), "molecule_info.h5");
+    }
+
     public File generateCellHashingCalls(File citeSeqCountOutDir, File outputDir, String basename, Logger log, File localPipelineDir, CellHashingService.CellHashingParameters parameters) throws PipelineJobException
     {
         log.debug("generating final calls from folder: " + citeSeqCountOutDir.getPath());
@@ -967,6 +972,14 @@ public class CellHashingServiceImpl extends CellHashingService
 
         SimpleScriptWrapper rWrapper = new SimpleScriptWrapper(log);
         rWrapper.setWorkingDir(outputDir);
+
+        File molInfo = getMolInfoFileFromCounts(citeSeqCountOutDir);
+        if (!molInfo.exists())
+        {
+            throw new PipelineJobException("File not found, cannot calculate saturation: " + molInfo.getPath());
+        }
+
+        molInfo = ensureLocalCopy(citeSeqCountOutDir, outputDir, log, toDelete);
 
         citeSeqCountOutDir = ensureLocalCopy(citeSeqCountOutDir, outputDir, log, toDelete);
 
@@ -1015,7 +1028,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
             String skipNormalizationQcString = parameters.skipNormalizationQc ? "TRUE" : "FALSE";
             String keepMarkdown = parameters.keepMarkdown ? "TRUE" : "FALSE";
-            writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', rawCountsExport = '/work/" + countFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', skipNormalizationQc = " + skipNormalizationQcString + ", methods = c('" + StringUtils.join(methodNames, "','") + "'), keepMarkdown = " + keepMarkdown + ")");
+            writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "', molInfoFile = '/work/" + molInfo.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', rawCountsExport = '/work/" + countFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', skipNormalizationQc = " + skipNormalizationQcString + ", methods = c('" + StringUtils.join(methodNames, "','") + "'), keepMarkdown = " + keepMarkdown + ")");
             writer.println("print('Rmarkdown complete')");
 
         }
