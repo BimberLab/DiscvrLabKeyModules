@@ -979,7 +979,7 @@ public class CellHashingServiceImpl extends CellHashingService
             throw new PipelineJobException("File not found, cannot calculate saturation: " + molInfo.getPath());
         }
 
-        molInfo = ensureLocalCopy(citeSeqCountOutDir, outputDir, log, toDelete);
+        molInfo = ensureLocalCopy(molInfo, outputDir, log, toDelete);
 
         citeSeqCountOutDir = ensureLocalCopy(citeSeqCountOutDir, outputDir, log, toDelete);
 
