@@ -772,7 +772,7 @@ public class CellHashingServiceImpl extends CellHashingService
         List<ToolParameterDescriptor> ret = new ArrayList<>(Arrays.asList(
             ToolParameterDescriptor.create("minCountPerCell", "Min Reads/Cell", null, "ldk-integerfield", null, 5),
             ToolParameterDescriptor.create("skipNormalizationQc", "Skip Normalization QC", null, "checkbox", null, true),
-            ToolParameterDescriptor.create("retainRawCountFile", "Retain Raw Counts File", null, "checkbox", null, true)
+            ToolParameterDescriptor.create("retainRawCountFile", "Retain Raw Counts File", null, "checkbox", null, false)
 
         ));
 
