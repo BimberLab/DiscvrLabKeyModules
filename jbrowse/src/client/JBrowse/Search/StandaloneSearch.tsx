@@ -6,9 +6,9 @@ import { createViewState, loadPlugins, ViewModel } from '@jbrowse/react-linear-g
 import BaseResult from '@jbrowse/core/TextSearch/BaseResults'
 import { ActionURL, Ajax } from '@labkey/api';
 
-const RefNameAutocompleteWrapper = observer(({ sessionId, }: { sessionId: any}) => {
-    if (sessionId === null){
-        return(<p>Error - no session ID provided.</p>)
+const StandaloneSearch = observer(({ sessionId, }: { sessionId: any}) => {
+    if (!sessionId){
+        return(<p>No session Id provided. Please have you admin use the customize icon to set the session ID for this webpart.</p>)
     }
 
     const [state, setState] = useState(null);
@@ -81,4 +81,4 @@ const RefNameAutocompleteWrapper = observer(({ sessionId, }: { sessionId: any}) 
     )
 })
 
-export default RefNameAutocompleteWrapper
+export default StandaloneSearch

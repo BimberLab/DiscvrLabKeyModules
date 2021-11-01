@@ -58,9 +58,7 @@ Ext4.define('JBrowse.window.SearchCustomizeWindow', {
             failure : LABKEY.Utils.onError,
             scope : this,
             success: function(){
-                Ext4.Msg.hide();
-                LABKEY.Utils.setWebpartTitle(this.down('#title').getValue(), this.webPartRowId);
-                btn.up('window').close();
+                window.location.reload();
             }
         });
     }

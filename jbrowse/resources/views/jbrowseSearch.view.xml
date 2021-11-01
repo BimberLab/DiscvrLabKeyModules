@@ -1,12 +1,10 @@
-<view xmlns="http://labkey.org/data/xml/view" title="JBrowse Search" frame="portal">
+<view xmlns="http://labkey.org/data/xml/view" title="JBrowse Search">
     <permissions>
         <permission name="read"/>
     </permissions>
     <dependencies>
+        <dependency path="gen/jbrowse2SearchWebpart.lib.xml"/>
         <dependency path="LDK.context"/>
-        <dependency path="jbrowseApp/src/dijit/themes/tundra/tundra.css" />
-        <dependency path="jbrowse/css/search.css" />
-        <dependency path="internal/jQuery"/>
         <dependency path="jbrowse/window/SearchCustomizeWindow.js"/>
     </dependencies>
 </view>

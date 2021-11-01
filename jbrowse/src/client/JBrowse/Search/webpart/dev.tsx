@@ -3,12 +3,12 @@ import ReactDOM from 'react-dom';
 import { AppContainer } from 'react-hot-loader';
 import { App } from '@labkey/api';
 
-import Search from '../Search';
+import StandaloneSearch from '../StandaloneSearch';
 
-App.registerApp<any>('jbrowseSearchWebpart', (target: string) => {
+App.registerApp<any>('jbrowseSearchWebpart', (target: string, sessionId: string) => {
     ReactDOM.render(
         <AppContainer>
-            <Search />
+            <StandaloneSearch sessionId={sessionId} />
         </AppContainer>,
         document.getElementById(target)
     );

@@ -35,6 +35,7 @@ import org.labkey.test.components.ext4.Window;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.PasswordUtil;
+import org.labkey.test.util.PortalHelper;
 import org.labkey.test.util.ext4cmp.Ext4ComboRef;
 import org.labkey.test.util.ext4cmp.Ext4FieldRef;
 import org.labkey.test.util.external.labModules.LabModuleHelper;
@@ -176,12 +177,6 @@ public class JBrowseTest extends BaseWebDriverTest
     private void testDemoNoSession()
     {
         beginAt("/home/jbrowse-jbrowse.view?");
-        waitForElement(Locator.tagWithText("p", "Error - no session provided."));
-    }
-
-    private void testDemoSearchNoSession()
-    {
-        beginAt("/home/jbrowse-search.view?");
         waitForElement(Locator.tagWithText("p", "Error - no session provided."));
     }
 
@@ -508,7 +503,23 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));
 
         //Now test search:
-        beginAt("/jbrowse/" + getContainerId() + "/search.view?session=" + sessionId);
+        testSearch(sessionId);
+    }
+
+    private void testSearch(String sessionId) throws Exception
+    {
+        goToProjectHome();
+
+        PortalHelper portalHelper = new PortalHelper(this);
+        portalHelper.addSideWebPart("JBrowse Search");
+
+        waitForElement(Locator.tagWithText("p", "No session Id provided. Please have you admin use the customize icon to set the session ID for this webpart."));
+        portalHelper.clickWebpartMenuItem("JBrowse Search", "Customize");
+        Window window = new Window.WindowFinder(getDriver()).withTitle("Customize Webpart").waitFor();
+        Ext4FieldRef.waitForField(this, "Target JBrowse DB");
+        Ext4FieldRef.getForLabel(this, "Target JBrowse DB").setValue(sessionId);
+        window.clickButton("Submit", WAIT_FOR_PAGE);
+
         String search = "Ga";
         String optionText = "Gag";
         String expected = "SIVmac239_Test:10373..10493";
