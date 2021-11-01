@@ -81,6 +81,7 @@ public class SubsetSeurat extends AbstractCellMembraneStep
                     String subsetEscaped = subset.replace("'", "\\\'");
 
                     ret.add("\tif (!is.null(seuratObj)) {");
+                    ret.add("\tprint(paste0('Subsetting dataset: ', datasetId, ' with the expression: '" + subsetEscaped + "'))");
                     ret.add("\t\tcells <- c()");
                     ret.add("\t\ttryCatch({");
                     ret.add("\t\t\tcells <- WhichCells(seuratObj, expression = " + subset + ")");
@@ -96,9 +97,9 @@ public class SubsetSeurat extends AbstractCellMembraneStep
                     ret.add("\t\t} else {");
                     ret.add("\t\t\tseuratObj <- subset(seuratObj, cells = cells)");
                     ret.add("\t\t\tprint(paste0('Cells after subset: ', ncol(seuratObj)))");
-                    ret.add("\t\t\tnewSeuratObjects[[datasetId]] <- seuratObj");
                     ret.add("\t\t}");
-                    ret.add("}");
+                    ret.add("\t}");
+                    ret.add("");
                 }
             }
             else

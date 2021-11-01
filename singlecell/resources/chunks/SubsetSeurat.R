@@ -7,7 +7,12 @@ for (datasetId in names(seuratObjects)) {
 		seuratObj$HTO.Classification <- seuratObj$consensuscall.global
 	}
 
+	print(paste0('Initial cells for dataset: ', datasetId, ' ', ncol(seuratObj)))
 	<SUBSET_CODE>
+
+	if (!is.null(seuratObj)) {
+		newSeuratObjects[[datasetId]] <- seuratObj
+	}
 
 	# Cleanup
 	rm(seuratObj)
