@@ -630,6 +630,7 @@ public class JBrowseController extends SpringActionController
     public static class GetSessionForm
     {
         private String session;
+        private boolean forSearch = false;
 
         public String getSession()
         {
@@ -639,6 +640,16 @@ public class JBrowseController extends SpringActionController
         public void setSession(String session)
         {
             this.session = session;
+        }
+
+        public boolean isForSearch()
+        {
+            return forSearch;
+        }
+
+        public void setForSearch(boolean forSearch)
+        {
+            this.forSearch = forSearch;
         }
     }
 
@@ -688,6 +699,25 @@ public class JBrowseController extends SpringActionController
                 }
 
                 resp = db.getConfigJson(getUser(), _log);
+            }
+
+            // To avoid the need to load extra plugins, only include the indexed tracks:
+            if (form.isForSearch())
+            {
+                resp.remove("defaultSession");
+                if (resp.containsKey("tracks")) {
+                    JSONArray tracks = resp.getJSONArray("tracks");
+                    JSONArray searchTracks = new JSONArray();
+                    for (int i = 0; i < tracks.length(); i++)
+                    {
+                        if (tracks.getJSONObject(i).containsKey("textSearchAdapter"))
+                        {
+                            searchTracks.put(tracks.getJSONObject(i));
+                        }
+                    }
+
+                    resp.put("tracks", searchTracks);
+                }
             }
 
             return new ApiSimpleResponse(resp);

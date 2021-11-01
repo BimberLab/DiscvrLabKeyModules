@@ -1,12 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-
-import Search from '../Search'
-import { Ajax, Utils, ActionURL } from '@labkey/api'
-
-const queryParam = new URLSearchParams(window.location.search);
-const session = queryParam.get('session')
-
+import Search from './Search';
 
 // Need to wait for container element to be available in labkey wrapper before render
 window.addEventListener('DOMContentLoaded', (event) => {
