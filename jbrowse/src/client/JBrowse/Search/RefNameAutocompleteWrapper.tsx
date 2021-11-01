@@ -12,11 +12,9 @@ const RefNameAutocompleteWrapper = observer(({ sessionId, }: { sessionId: any}) 
     }
 
     const [state, setState] = useState(null);
-
-    function navigate() {
-        if (op) {
-            window.location.href = ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: op.getLocation()})
-        }
+    const [op, setOption] = useState<BaseResult | undefined>()
+    if (op) {
+        window.location.href = ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: op.getLocation()})
     }
 
     function generateViewState(genome){
@@ -58,17 +56,17 @@ const RefNameAutocompleteWrapper = observer(({ sessionId, }: { sessionId: any}) 
 
     const { session } = state
     const { assemblyNames } = getSession(session)
-    const [selectedAsm, setSelectedAsm] = useState(assemblyNames[0])
-    const [op, setOption] = useState<BaseResult | undefined>()
+    if (!assemblyNames.length){
+        return (<p>No configured assemblies</p>)
+    }
 
     const selectedRegion = op?.getLocation()
-    const message = !assemblyNames.length ? 'No configured assemblies' : ''
 
     return (
         <span>
       <RefNameAutocomplete
           model={session}
-          assemblyName={message ? undefined : selectedAsm}
+          assemblyName={assemblyNames.length ? assemblyNames[0] : undefined}
           value={selectedRegion}
           onSelect={option => {
               setOption(option)
@@ -76,13 +74,9 @@ const RefNameAutocompleteWrapper = observer(({ sessionId, }: { sessionId: any}) 
           TextFieldProps={{
               margin: 'normal',
               variant: 'outlined',
-              helperText: 'Enter a sequence or location',
+              helperText: 'Enter a gene or location',
           }}
       />
-
-      <button onClick={navigate}>
-          Open
-      </button>
     </span>
     )
 })
