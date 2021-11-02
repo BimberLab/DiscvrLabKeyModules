@@ -12,7 +12,7 @@ if (length(seuratObjects) == 1) {
         gc()
     }
 
-    newSeuratObjects[[projectName]] <- CellMembrane::MergeSeuratObjs(seuratObjects, projectName = projectName, doGC = doDiet)
+    newSeuratObjects[[projectName]] <- CellMembrane::MergeSeuratObjs(seuratObjects, projectName = projectName, doGC = doDiet, errorOnBarcodeSuffix = errorOnBarcodeSuffix)
 }
 
 # Cleanup
