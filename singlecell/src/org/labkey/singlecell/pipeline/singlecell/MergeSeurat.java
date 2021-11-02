@@ -32,7 +32,6 @@ public class MergeSeurat extends AbstractCellMembraneStep
             ), null, null);
         }
 
-
         @Override
         public MergeSeurat create(PipelineContext ctx)
         {
