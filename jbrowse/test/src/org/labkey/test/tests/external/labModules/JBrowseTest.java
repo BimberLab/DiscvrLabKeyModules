@@ -544,6 +544,9 @@ public class JBrowseTest extends BaseWebDriverTest
         });
 
         waitForJBrowseToLoad();
+
+        waitForElement(Locator.tagWithText("span", "fakeData.gff").withClass("MuiTypography-root"));
+        waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));
     }
 
     public static <T> Collector<T, ?, T> toSingleton() {
