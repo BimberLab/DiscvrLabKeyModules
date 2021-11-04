@@ -539,10 +539,11 @@ public class JBrowseTest extends BaseWebDriverTest
             searchBox.sendKeys(Keys.ARROW_DOWN);
         }
 
-        searchBox.sendKeys(Keys.ENTER);
+        doAndWaitForPageToLoad(() -> {
+            searchBox.sendKeys(Keys.ENTER);
+        });
 
-        waitForElement(searchLocator);
-        Assert.assertEquals("Correct ID selected", expected, searchBox.getAttribute("value"));
+        waitForJBrowseToLoad();
     }
 
     public static <T> Collector<T, ?, T> toSingleton() {
