@@ -6,6 +6,12 @@ import { createViewState, loadPlugins, ViewModel } from '@jbrowse/react-linear-g
 import BaseResult from '@jbrowse/core/TextSearch/BaseResults'
 import { ActionURL, Ajax } from '@labkey/api';
 
+import MyProjectPlugin from "../Browser/plugins/MyProjectPlugin/index"
+import LogSession from "../Browser/plugins/LogSession/index"
+import ExtendedVariantPlugin from "../Browser/plugins/ExtendedVariantPlugin/index"
+
+const nativePlugins = [MyProjectPlugin, ExtendedVariantPlugin, LogSession]
+
 const StandaloneSearch = observer(({ sessionId, }: { sessionId: any}) => {
     if (!sessionId){
         return(<p>No session Id provided. Please have you admin use the customize icon to set the session ID for this webpart.</p>)
@@ -22,7 +28,7 @@ const StandaloneSearch = observer(({ sessionId, }: { sessionId: any}) => {
             assembly: genome.assembly ?? genome.assemblies,
             tracks: genome.tracks,
             configuration: genome.configuration,
-            plugins: [],
+            plugins: nativePlugins,
             location: genome.location,
             defaultSession: genome.defaultSession,
             onChange: genome.onChange
@@ -42,7 +48,7 @@ const StandaloneSearch = observer(({ sessionId, }: { sessionId: any}) => {
                 setState("invalid");
                 console.log(res);
             },
-            params: {session: sessionId, forSearch: true}
+            params: {session: sessionId}
         });
     }, []);
 
@@ -55,6 +61,7 @@ const StandaloneSearch = observer(({ sessionId, }: { sessionId: any}) => {
     }
 
     const { session } = state
+    const { view } = session
     const { assemblyNames } = getSession(session)
     if (!assemblyNames.length){
         return (<p>No configured assemblies</p>)
@@ -65,7 +72,7 @@ const StandaloneSearch = observer(({ sessionId, }: { sessionId: any}) => {
     return (
         <span>
       <RefNameAutocomplete
-          model={session}
+          model={view}
           assemblyName={assemblyNames.length ? assemblyNames[0] : undefined}
           value={selectedRegion}
           onSelect={option => {
@@ -75,6 +82,13 @@ const StandaloneSearch = observer(({ sessionId, }: { sessionId: any}) => {
               margin: 'normal',
               variant: 'outlined',
               helperText: 'Enter a gene or location',
+              style: { margin: 7, minWidth: '175px' },
+              InputProps: {
+                  style: {
+                      padding: 0,
+                      height: 32
+                  }
+              }
           }}
       />
     </span>
