@@ -52,7 +52,7 @@
       "displays": [{
         "type": "ExtendedVariantDisplay",
         "displayId": "clinvar_ncbi_hg38-ExtendedVariantDisplay",
-        "maxDisplayedBpPerPx": 2000,
+        "maxDisplayedBpPerPx": 20000,
         "renderer": {
           "type": "ExtendedVariantRenderer"
         }
