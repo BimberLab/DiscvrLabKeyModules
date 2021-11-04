@@ -514,7 +514,7 @@ public class JBrowseTest extends BaseWebDriverTest
         portalHelper.addSideWebPart("JBrowse Search");
 
         waitForElement(Locator.tagWithText("p", "No session Id provided. Please have you admin use the customize icon to set the session ID for this webpart."));
-        portalHelper.clickWebpartMenuItem("JBrowse Search", "Customize");
+        portalHelper.clickWebpartMenuItem("JBrowse Search", false, "Customize");
         Window window = new Window.WindowFinder(getDriver()).withTitle("Customize Webpart").waitFor();
         Ext4FieldRef.waitForField(this, "Target JBrowse DB");
         Ext4FieldRef.getForLabel(this, "Target JBrowse DB").setValue(sessionId);
