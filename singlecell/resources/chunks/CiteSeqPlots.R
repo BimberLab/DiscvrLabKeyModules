@@ -1,6 +1,5 @@
 for (datasetId in names(seuratObjects)) {
-    seuratObj <- seuratObjects[[datasetId]]
-    seuratObjects[[datasetId]] <- NULL
+    seuratObj <- readRDS(seuratObjects[[datasetId]])
 
     if (!('ADT' %in% names(seuratObj@assays))) {
         print('ADT assay not present, skipping')
@@ -10,7 +9,7 @@ for (datasetId in names(seuratObjects)) {
         }
     }
 
-    newSeuratObjects[[datasetId]] <- seuratObj
+    saveData(seuratObj, datasetId)
 
     # Cleanup
     rm(seuratObj)

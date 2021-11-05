@@ -1,6 +1,5 @@
 for (datasetId in names(seuratObjects)) {
-    seuratObj <- seuratObjects[[datasetId]]
-    seuratObjects[[datasetId]] <- NULL
+    seuratObj <- readRDS(seuratObjects[[datasetId]])
 
     for (id in unique(seuratObj$DatasetId)) {
         if (!(id %in% names(featureData))) {
@@ -30,7 +29,7 @@ for (datasetId in names(seuratObjects)) {
         }
     }
 
-    newSeuratObjects[[datasetId]] <- seuratObj
+    saveData(seuratObj, datasetId)
 
     # Cleanup
     rm(seuratObj)

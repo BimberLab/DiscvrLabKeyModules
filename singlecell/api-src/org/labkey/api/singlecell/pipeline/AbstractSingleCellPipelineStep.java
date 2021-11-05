@@ -410,7 +410,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 
     protected String printInputFile(SeuratObjectWrapper so)
     {
-        return "readRDS(file = '" + so.getFile().getName() + "')";
+        return "'" + so.getFile().getName() + "'";
     }
 
     protected Chunk createFinalChunk() throws PipelineJobException
