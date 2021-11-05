@@ -134,6 +134,10 @@ export function expandFilters(filters) {
             const field = filterProps[0]
             const rawOperator = filterProps[1]
             const value = filterProps[2]
+            if(rawOperator == "" || value == ""){
+                filterList.push(filter)
+                continue
+            }
             const fieldLocation = fields[field].baseLocation;
             const operator = operators[rawOperator];
             const jexlExpression = "variant.INFO." + fieldLocation + operator + value
