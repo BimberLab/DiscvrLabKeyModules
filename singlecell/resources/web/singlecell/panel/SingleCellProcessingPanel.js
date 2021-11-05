@@ -78,7 +78,7 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
                         useOutputFileContainer.setValue(val !== 'individual');
                     }
                 },
-                value: this.outputFileIds.size === 1 ? 'individual' : null,
+                value: this.outputFileIds.length === 1 ? 'individual' : null,
                 allowBlank: false
             },{
                 xtype: 'checkbox',
