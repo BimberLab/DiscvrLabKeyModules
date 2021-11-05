@@ -49,6 +49,13 @@
           }
         }
       },
+      "displays": [{
+        "type": "ExtendedVariantDisplay",
+        "displayId": "clinvar_ncbi_hg38-ExtendedVariantDisplay",
+        "renderer": {
+          "type": "ExtendedVariantRenderer"
+        }
+      }],
       "metadata": {
         "extendedVariantDisplayConfig" : [
           { "name": "Predicted Function - 1",

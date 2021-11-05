@@ -1,0 +1,3 @@
+fieldset.MuiOutlinedInput-notchedOutline > legend {
+    border-style: none; !important;
+}

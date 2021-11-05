@@ -10,12 +10,12 @@ module.exports = {
         permission: 'read',
         template: 'app',
         path: './src/client/JBrowse/Browser'
-    },
-    {
-        name: 'search',
+    },{
+        name: 'jbrowse2SearchWebpart',
         title: 'JBrowse Search',
         permission: 'read',
         template: 'app',
-        path: './src/client/JBrowse/Browser/Search'
+        generateLib: true,
+        path: './src/client/JBrowse/Search/webpart'
     }]
 };
