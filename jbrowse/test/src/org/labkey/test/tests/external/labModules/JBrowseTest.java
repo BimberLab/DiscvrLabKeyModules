@@ -187,7 +187,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
         Actions actions = new Actions(getDriver());
         By by = getVariantWithinTrack("clinvar_ncbi_hg38_2", "294665", true);
-        WebElement toClick = getDriver().findElements(by).stream().filter(WebElement::isDisplayed).findFirst().orElseThrow();
+        WebElement toClick = getDriver().findElements(by).stream().findFirst().orElseThrow();
         actions.click(toClick).perform();
         assertElementPresent(Locator.tagWithText("th", "Hello"));
     }
@@ -200,7 +200,7 @@ public class JBrowseTest extends BaseWebDriverTest
         // 294665 is a visible element given minimalSession's location
         Actions actions = new Actions(getDriver());
         By by = getVariantWithinTrack("clinvar_ncbi_hg38", "294665", true);
-        WebElement toClick = getDriver().findElements(by).stream().filter(WebElement::isDisplayed).findFirst().orElseThrow();
+        WebElement toClick = getDriver().findElements(by).stream().findFirst().orElseThrow();
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:197,268,209..197,268,209"));
         assertElementPresent(Locator.tagWithText("span", "Predicted Function - 1"));
@@ -248,7 +248,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T", true)).stream().filter(WebElement::isDisplayed).collect(toSingleton());
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T", true)).stream().collect(toSingleton());
         actions.click(toClick).perform();
         waitForElement(Locator.tagContainingText("div", "Aut molestiae temporibus nesciunt."));
     }
@@ -268,7 +268,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T", true)).stream().filter(WebElement::isDisplayed).collect(toSingleton());
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T", true)).stream().collect(toSingleton());
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("span", "AC, AF"));
         waitForElement(Locator.tagWithText("div", "HIGH")); //the IMPACT field calculated in ExtendedVariantAdapter
@@ -280,7 +280,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C", true)).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,981,406..116,981,406
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C", true)).stream().collect(toSingleton()); // 1:116,981,406..116,981,406
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:116,981,406..116,981,406"));
         assertElementPresent(Locator.tagWithText("div", "Minor Allele Frequency"));
@@ -292,7 +292,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C", true)).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,981,406..116,981,406
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C", true)).stream().collect(toSingleton()); // 1:116,981,406..116,981,406
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:116,981,406..116,981,406"));
         assertElementPresent(Locator.tagWithText("th", "Effect"));
@@ -309,7 +309,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV C -> A", true)).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,999,755
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV C -> A", true)).stream().collect(toSingleton()); // 1:116,999,755
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:116,999,755..116,999,755"));
         assertElementPresent(Locator.tagWithText("th", "Sequence"));
@@ -325,7 +325,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV C -> A", true)).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,999,755
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV C -> A", true)).stream().collect(toSingleton()); // 1:116,999,755
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:116,999,755..116,999,755"));
         assertElementPresent(Locator.tagWithText("td", "3041"));
