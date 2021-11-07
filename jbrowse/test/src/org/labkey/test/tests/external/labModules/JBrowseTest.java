@@ -218,9 +218,6 @@ public class JBrowseTest extends BaseWebDriverTest
                 waitForElement(l);
             }
 
-            // Not ideal, but this might fix intermittent failures due to loading and refreshing of variants
-            sleep(250);
-
             l = l.append(Locator.xpath("//*[name()='text' and contains(text(), '" + variantText + "')]/..")).notHidden();
 
             if (waitFor)
@@ -228,11 +225,13 @@ public class JBrowseTest extends BaseWebDriverTest
                 waitForElement(l);
             }
 
-            // Not ideal, but this might fix intermittent failures due to loading
-            sleep(100);
+            waitForElementToDisappear(Locator.tagWithText("p", "Loading"));
+            sleep(250);
 
             return By.xpath(l.toXpath());
-        } catch(Exception e) {
+        }
+        catch(Exception e)
+        {
             return null;
         }
     }
