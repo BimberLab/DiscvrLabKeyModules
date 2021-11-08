@@ -30,7 +30,7 @@
       }
     }
   },
-  "location": "1:116,089,906..117,411,914",
+  "location": "1:1..248,956,422",
   "tracks": [
     {
       "type": "ExtendedVariantTrack",
@@ -51,15 +51,23 @@
           "location": {
             "uri": "<%=contextPath%>/jbrowse/mgap/mGap.v2.1.subset.vcf.gz.tbi"
           }
-        }
+        },
+        "filters": [
+          "INVALID:lt:0.001",
+          "AC:INVALID:6",
+          "AC:lt:HIGH",
+          "IMPACT:eq:INVALID",
+          "IMPACT:gt:'LOW'",
+          "IMPACT:eq:LOW",
+          "IMPACT:eq:'HIGH'"
+        ]
       },
       "displays": [
         {
           "type": "ExtendedVariantDisplay",
           "displayId": "mgap_hg38-ExtendedVariantDisplay",
-          "maxDisplayedBpPerPx": 2000,
           "renderer": {
-            "type": "ExtendedVariantRenderer"
+            "type": "ExtendedVariantRenderer",
           }
         }
       ],

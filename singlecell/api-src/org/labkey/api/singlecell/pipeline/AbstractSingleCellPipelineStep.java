@@ -278,9 +278,11 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             }
 
             writer.println("\t-v \"${WD}:/work\" \\");
+            writer.println("\t-v \"/tmp:/tmp\" \\");
             writer.println("\t-v \"${HOME}:/homeDir\" \\");
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");
+            writer.println("\t-e TMPDIR=/tmp \\");
             writer.println("\t-w /work \\");
             //NOTE: this seems to disrupt packages installed into home
             //writer.println("\t-e HOME=/homeDir \\");
@@ -408,7 +410,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 
     protected String printInputFile(SeuratObjectWrapper so)
     {
-        return "readRDS(file = '" + so.getFile().getName() + "')";
+        return "'" + so.getFile().getName() + "'";
     }
 
     protected Chunk createFinalChunk() throws PipelineJobException

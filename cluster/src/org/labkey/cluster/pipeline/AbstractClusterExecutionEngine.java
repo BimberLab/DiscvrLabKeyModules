@@ -725,7 +725,11 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
                 String output = IOUtils.toString(p.getInputStream(), StringUtilsLabKey.DEFAULT_CHARSET);
                 String errorOutput = IOUtils.toString(p.getErrorStream(), StringUtilsLabKey.DEFAULT_CHARSET);
 
-                p.waitFor();
+                int exitCode = p.waitFor();
+                if (exitCode != 0)
+                {
+                    _log.error("Non-zero exit from command: " + command);
+                }
 
                 if (errorOutput != null)
                 {

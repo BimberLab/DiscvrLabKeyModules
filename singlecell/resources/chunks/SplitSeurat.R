@@ -1,10 +1,9 @@
 for (datasetId in names(seuratObjects)) {
-    seuratObj <- seuratObjects[[datasetId]]
-    seuratObjects[[datasetId]] <- NULL
+    seuratObj <- readRDS(seuratObjects[[datasetId]])
 
     newList <- CellMembrane::SplitSeurat(seuratObj, splitField = splitField, minCellsToKeep = minCellsToKeep)
     for (name in names(newList)) {
-        newSeuratObjects[[paste0(datasetId, '-', name)]] <- newList[[name]]
+        saveData(newList[[name]], paste0(datasetId, '-', name))
     }
 
     # Cleanup
