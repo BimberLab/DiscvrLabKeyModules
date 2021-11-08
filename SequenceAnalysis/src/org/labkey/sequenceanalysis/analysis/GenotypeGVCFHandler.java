@@ -394,6 +394,20 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                     toolParams.add("--genomicsdb-shared-posixfs-optimizations");
                 }
 
+                Integer maxRam = SequencePipelineService.get().getMaxRam();
+                int nativeMemoryBuffer = ctx.getParams().optInt("variantCalling.GenotypeGVCFs.nativeMemoryBuffer", 0);
+                if (maxRam != null && nativeMemoryBuffer > 0)
+                {
+                    ctx.getLogger().info("Adjusting RAM based on memory buffer (" + nativeMemoryBuffer + ")");
+                    maxRam = maxRam - nativeMemoryBuffer;
+
+                    if (maxRam < 1)
+                    {
+                        throw new PipelineJobException("After adjusting for nativeMemoryBuffer, maxRam is less than 1: " + maxRam);
+                    }
+                    wrapper.setMaxRamOverride(maxRam);
+                }
+
                 wrapper.execute(genome.getWorkingFastaFile(), outputVcf, toolParams, inputVcf);
                 try
                 {

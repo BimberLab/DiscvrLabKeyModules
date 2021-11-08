@@ -1,6 +1,5 @@
 for (datasetId in names(seuratObjects)) {
-    seuratObj <- seuratObjects[[datasetId]]
-    seuratObjects[[datasetId]] <- NULL
+    seuratObj <- readRDS(seuratObjects[[datasetId]])
 
     if (!(datasetId %in% names(featureData))) {
         stop(paste0('No CITE-seq information found for datasetId: ', datasetId))
@@ -27,7 +26,7 @@ for (datasetId in names(seuratObjects)) {
         print('matrixDir was NULL, skipping CITE-seq')
     }
 
-    newSeuratObjects[[datasetId]] <- seuratObj
+    saveData(seuratObj, datasetId)
 
     # Cleanup
     rm(seuratObj)

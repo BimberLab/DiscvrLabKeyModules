@@ -15,6 +15,7 @@
  */
 package org.labkey.test.tests.external.labModules;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -34,10 +35,12 @@ import org.labkey.test.components.ext4.Window;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.PasswordUtil;
+import org.labkey.test.util.PortalHelper;
 import org.labkey.test.util.ext4cmp.Ext4ComboRef;
 import org.labkey.test.util.ext4cmp.Ext4FieldRef;
 import org.labkey.test.util.external.labModules.LabModuleHelper;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 
@@ -81,6 +84,94 @@ public class JBrowseTest extends BaseWebDriverTest
         testPredictedFunction();
         testAlleleFrequencies();
         testGenotypeFrequencies();
+        testFilterWidgetOpens();
+        testAddingNumericFilter();
+        testAddingOptionFilter();
+        testLoadingConfigFilters();
+        testRemovingFilters();
+        testInvalidFilterHandling();
+    }
+
+    private void testFilterWidgetOpens()
+    {
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap");
+        waitForJBrowseToLoad();
+
+        Actions actions = new Actions(getDriver());
+        waitAndClick(Locator.xpath("//button[@data-testid='track_menu_icon']"));
+        waitAndClick(Locator.xpath("//span[contains(text(), 'Filter')]"));
+        assertElementPresent(Locator.xpath("//h6[contains(text(), 'Filters')]"));
+
+    }
+
+    private void testAddingNumericFilter(){
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap");
+        waitForJBrowseToLoad();
+        waitAndClick(Locator.xpath("//button[@data-testid='track_menu_icon']"));
+
+        waitAndClick(Locator.xpath("//span[contains(text(), 'Filter')]"));
+        waitAndClick(Locator.xpath("//div[em[contains(text(), 'Add New Filter...')]]"));
+        waitAndClick(Locator.xpath("//li[@data-value = 'AC']"));
+        waitForElement(Locator.tagWithText("td", "AC"));
+        waitForElement(Locator.tagWithClassContaining("div", "formControl"));
+
+        waitForElement(Locator.tagWithText("td", "AC").followingSibling("td"));
+        waitAndClick(Locator.tagWithText("em", "Operator"));
+        waitAndClick(Locator.tagContainingText("li", "<"));
+        By numInput = Locator.xpath("//input[@type='number']");
+        WebElement input = getDriver().findElement(numInput);
+        String str = "1";
+        input.sendKeys(str);
+        assert(isVariantVisible("mgap_hg38", "SNV G -> A,C", true));
+        assert(!isVariantVisible("mgap_hg38", "SNV A -> T", true));
+
+    }
+
+    private void testAddingOptionFilter(){
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap");
+        waitForJBrowseToLoad();
+        waitAndClick(Locator.xpath("//button[@data-testid='track_menu_icon']"));
+
+        waitAndClick(Locator.xpath("//span[contains(text(), 'Filter')]"));
+        waitAndClick(Locator.xpath("//div[em[contains(text(), 'Add New Filter...')]]"));
+        waitAndClick(Locator.xpath("//li[@data-value = 'IMPACT']"));
+        assertElementPresent(Locator.xpath("//td[text()='IMPACT']"));
+        waitAndClick(Locator.xpath("//td[text()='IMPACT']/../*[2]/div"));
+        waitAndClick(Locator.xpath("//li[contains(text(), '=')]"));
+        waitAndClick(Locator.xpath("//td[text()='IMPACT']/../*[3]/div"));
+        waitAndClick(Locator.xpath("//li[@data-value = 'HIGH']"));
+        assert(isVariantVisible("mgap_hg38", "SNV A -> T", true));
+        assert(!isVariantVisible("mgap_hg38", "SNV T -> C", true));
+
+    }
+
+    private void testLoadingConfigFilters(){
+        beginAt("/home/jbrowse-jbrowse.view?session=mgapf");
+        waitForJBrowseToLoad();
+        assert(isVariantVisible("mgap_hg38", "SNV T -> C", true));
+        waitAndClick(Locator.xpath("//button[@data-testid='track_menu_icon']"));
+        waitAndClick(Locator.xpath("//span[contains(text(), 'Filter')]"));
+        assertElementPresent(Locator.xpath("//td[text()='IMPACT']"));
+        assertElementPresent(Locator.xpath("//td[text()='AC']"));
+        assertElementPresent(Locator.xpath("//td[text()='AF']"));
+
+    }
+
+    private void testRemovingFilters(){
+        beginAt("/home/jbrowse-jbrowse.view?session=mgapf");
+        waitForJBrowseToLoad();
+        waitAndClick(Locator.xpath("//button[@data-testid='track_menu_icon']"));
+        waitAndClick(Locator.xpath("//span[contains(text(), 'Filter')]"));
+        waitAndClick(Locator.xpath("//td[text()='AF']/..//button[@title='Remove filter']"));
+        assert(isVariantVisible("mgap_hg38", "SNV T -> C", true));
+        assert(isVariantVisible("mgap_hg38", "SNV C -> T", true));
+    }
+
+    private void testInvalidFilterHandling(){
+        beginAt("/home/jbrowse-jbrowse.view?session=mgapif");
+        waitForJBrowseToLoad();
+        assert(isVariantVisible("mgap_hg38", "SNV A -> T", true));
+        assert(!isVariantVisible("mgap_hg38", "SNV T -> C", true));
     }
 
     private void testDemoNoSession()
@@ -115,26 +206,42 @@ public class JBrowseTest extends BaseWebDriverTest
         assertElementPresent(Locator.tagWithText("span", "Predicted Function - 1"));
     }
 
+
     private By getVariantWithinTrack(String trackId, String variantText, boolean waitFor)
     {
-        trackId = "trackRenderingContainer-linearGenomeView-" + trackId;
-        Locator.XPathLocator l = Locator.tagWithAttributeContaining("div", "data-testid", trackId);
-        if (waitFor)
+        try
         {
-            waitForElement(l);
+            trackId = "trackRenderingContainer-linearGenomeView-" + trackId;
+            Locator.XPathLocator l = Locator.tagWithAttributeContaining("div", "data-testid", trackId);
+            if (waitFor)
+            {
+                waitForElement(l);
+            }
+
+            l = l.append(Locator.xpath("//*[name()='text' and contains(text(), '" + variantText + "')]/..")).notHidden();
+
+            if (waitFor)
+            {
+                waitForElement(l);
+            }
+
+            waitForElementToDisappear(Locator.tagWithText("p", "Loading"));
+            sleep(250);
+
+            return By.xpath(l.toXpath());
         }
-
-        l = l.append(Locator.xpath("//*[name()='text' and contains(text(), '" + variantText + "')]/..")).notHidden();
-
-        if (waitFor)
+        catch(Exception e)
         {
-            waitForElement(l, WAIT_FOR_JAVASCRIPT * 2);
+            return null;
         }
+    }
 
-        // Not ideal, but this might fix intermittent failures due to loading
-        sleep(100);
-
-        return By.xpath(l.toXpath());
+    private boolean isVariantVisible(String trackId, String variantText, boolean waitFor){
+        By var = getVariantWithinTrack(trackId, variantText, waitFor);
+        if(var != null){
+            return true;
+        }
+        return false;
     }
 
     private void testMessageDisplay()
@@ -178,7 +285,7 @@ public class JBrowseTest extends BaseWebDriverTest
         WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C", true)).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,981,406..116,981,406
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:116,981,406..116,981,406"));
-        assertElementPresent(Locator.tagWithText("div", "MismatchedRefAllele"));
+        assertElementPresent(Locator.tagWithText("div", "Minor Allele Frequency"));
     }
 
     private void testPredictedFunction()
@@ -384,12 +491,62 @@ public class JBrowseTest extends BaseWebDriverTest
         dr = DataRegionTable.findDataRegionWithinWebpart(this, "Additional Tracks Provided By The Base Genome");
         Assert.assertEquals("Incorrect row count", 3, dr.getDataRowCount());
 
+        // Store session ID for later use
+        String sessionId = StringUtils.trimToNull(getUrlParam("databaseId"));
+        Assert.assertNotNull("Missing session ID on URL", sessionId);
+
         // Now ensure default tracks appear:
         beginAt("/project/" + getContainerId() + "/begin.view");
         _helper.clickNavPanelItemAndWait("JBrowse Sessions:", 1);
         waitAndClickAndWait(Locator.tagWithText("a", "View In JBrowse"));
         waitForElement(Locator.tagWithText("div", "TestGenome1"));
         waitAndClick(Locator.tagContainingText("span", "Show all regions in assembly").withClass("MuiButton-label"));
+        waitForElement(Locator.tagWithText("span", "fakeData.gff").withClass("MuiTypography-root"));
+        waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));
+
+        //Now test search:
+        testSearch(sessionId);
+    }
+
+    private void testSearch(String sessionId) throws Exception
+    {
+        goToProjectHome();
+
+        PortalHelper portalHelper = new PortalHelper(this);
+        portalHelper.addSideWebPart("JBrowse Search");
+
+        waitForElement(Locator.tagWithText("p", "No session Id provided. Please have you admin use the customize icon to set the session ID for this webpart."));
+        portalHelper.clickWebpartMenuItem("JBrowse Search", false, "Customize");
+        Window window = new Window.WindowFinder(getDriver()).withTitle("Customize Webpart").waitFor();
+        Ext4FieldRef.waitForField(this, "Target JBrowse DB");
+        Ext4FieldRef.getForLabel(this, "Target JBrowse DB").setValue(sessionId);
+        window.clickButton("Submit", WAIT_FOR_PAGE);
+
+        String search = "Ga";
+        String optionText = "Gag";
+        String expected = "SIVmac239_Test:10373..10493";
+
+        Locator searchLocator = Locator.tagWithClass("input", "MuiInputBase-input");
+        waitForElement(searchLocator);
+        WebElement searchBox = searchLocator.findElement(getDriver());
+        searchBox.sendKeys(search);
+
+        Locator optionLocator = Locator.tagWithText("li", optionText);
+        waitForElement(optionLocator);
+        WebElement locator = optionLocator.findElement(getDriver());
+        int locatorIndex = Integer.parseInt(locator.getAttribute("data-option-index"));
+
+        for (int i = 0; i <= locatorIndex; i++)
+        {
+            searchBox.sendKeys(Keys.ARROW_DOWN);
+        }
+
+        doAndWaitForPageToLoad(() -> {
+            searchBox.sendKeys(Keys.ENTER);
+        });
+
+        waitForJBrowseToLoad();
+
         waitForElement(Locator.tagWithText("span", "fakeData.gff").withClass("MuiTypography-root"));
         waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));
     }

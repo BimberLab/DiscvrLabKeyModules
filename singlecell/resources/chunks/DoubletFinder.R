@@ -1,10 +1,9 @@
 for (datasetId in names(seuratObjects)) {
-    seuratObj <- seuratObjects[[datasetId]]
-    seuratObjects[[datasetId]] <- NULL
+    seuratObj <- readRDS(seuratObjects[[datasetId]])
 
     seuratObj <- CellMembrane::FindDoublets(seuratObj, dropDoublets = dropDoublets)
 
-    newSeuratObjects[[datasetId]] <- seuratObj
+    saveData(seuratObj, datasetId)
 
     # Cleanup
     rm(seuratObj)

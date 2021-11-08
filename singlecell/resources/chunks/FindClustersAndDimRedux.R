@@ -1,10 +1,9 @@
 for (datasetId in names(seuratObjects)) {
-    seuratObj <- seuratObjects[[datasetId]]
-    seuratObjects[[datasetId]] <- NULL
+    seuratObj <- readRDS(seuratObjects[[datasetId]])
 
     seuratObj <- CellMembrane::FindClustersAndDimRedux(seuratObj, minDimsToUse = minDimsToUse)
 
-    newSeuratObjects[[datasetId]] <- seuratObj
+    saveData(seuratObj, datasetId)
 
     # Cleanup
     rm(seuratObj)

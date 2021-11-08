@@ -88,6 +88,10 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                 }
             }
         }
+        else
+        {
+            _log.info("No output returned after slurm command: " + command);
+        }
 
         if (j.getClusterId() == null)
         {

@@ -1,6 +1,5 @@
 for (datasetId in names(seuratObjects)) {
-    seuratObj <- seuratObjects[[datasetId]]
-    seuratObjects[[datasetId]] <- NULL
+    seuratObj <- readRDS(seuratObjects[[datasetId]])
 
     if (!is.na(Sys.getenv('SEQUENCEANALYSIS_MAX_THREADS', unset = NA))) {
         nThreads <- Sys.getenv('SEQUENCEANALYSIS_MAX_THREADS')
@@ -8,7 +7,7 @@ for (datasetId in names(seuratObjects)) {
 
     seuratObj <- bindArgs(CellMembrane::RunSingleR, seuratObj, disallowedArgNames = c('assay'))()
 
-    newSeuratObjects[[datasetId]] <- seuratObj
+    saveData(seuratObj, datasetId)
 
     # Cleanup
     rm(seuratObj)
