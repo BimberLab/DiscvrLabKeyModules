@@ -17,15 +17,15 @@ bindArgs <- function(fun, seuratObj, allowableArgNames = NULL, disallowedArgName
 
             val <- get(name)
             displayVal <- val
-            if (is.null(val)) {
+            if (all(is.null(val))) {
                 displayVal <- 'NULL'
-            } else if (is.na(val)) {
+            } else if (all(is.na(val))) {
                 displayVal <- 'NA'
             } else if (is.object(val)) {
                 displayVal <- '[object]'
             }
 
-            print(paste0('Binding argument: ', name, ': ', displayVal))
+            print(paste0('Binding argument: ', name, ': ', displayVal, collapse = ','))
             boundArgs[[name]] <- val
         }
     }
