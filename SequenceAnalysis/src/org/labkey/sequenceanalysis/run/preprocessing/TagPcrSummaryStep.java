@@ -93,6 +93,9 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--include-sa"), "include-sa", "Include Supplemental Alignments", "If checked, alignments with the SA supplemental alignment tag will be parsed, and these alignments inspected.", "checkbox", new JSONObject(){{
 
                     }}, false),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--include-reverse-reads"), "include-reverse-reads", "Include Reverse Reads", "By default, reverse reads are skipped. If true, reverse reads will be included, which might be necessary for some chemistries.", "checkbox", new JSONObject(){{
+
+                    }}, false),
                     ToolParameterDescriptor.create(BACKBONE_SEARCH, "Backbone Search Strings", "An optional comma-separated list of search strings to use to mark vector backbone.", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("height", 100);
                         put("width", 400);
