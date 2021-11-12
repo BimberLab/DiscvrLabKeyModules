@@ -10,7 +10,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import FeatureGlyph from './FeatureGlyph' // FeatureGlyph copied over. Referencing original produces errors. Compare to line 11
 import SvgOverlay from '@jbrowse/plugin-svg/src/SvgFeatureRenderer/components/SvgOverlay' // NEW: Updated SvgOverlay to reference original file in @jbrowse. No errors produced.
 import { chooseGlyphComponent, layOut } from './util' // NEW: chooseGlyphComponent() in util updated to render SNVs as a diamond
-import { expandFilters, expandedFilterStringToObj } from '../../FilterWidget/filterUtil' // NOTE: Now dependent on FilterWidget plugin
+import { expandFilters, expandedFilterStringToObj, isFilterStringExpanded } from '../../FilterWidget/filterUtil' // NOTE: Now dependent on FilterWidget plugin
 import jexl from 'jexl'
 
 const renderingStyle = {
@@ -132,9 +132,13 @@ function isDisplayed(feature, filters){
    }
    for(const filter in filters){
         try {
-            const filterObj = expandedFilterStringToObj(filters[filter])
-            if(!jexl.evalSync(filterObj["expression"], feature)){
-                return false
+            if(isFilterStringExpanded(filters[filter])){
+                const filterObj = expandedFilterStringToObj(filters[filter])
+                if(!jexl.evalSync(filterObj["expression"], feature)){
+                    return false
+                }
+            } else {
+                continue
             }
         } catch (e){
             console.error("Error in filter execution: "+e)

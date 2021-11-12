@@ -35,6 +35,7 @@ import org.labkey.test.components.ext4.Window;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.PasswordUtil;
+import org.labkey.test.util.PortalHelper;
 import org.labkey.test.util.ext4cmp.Ext4ComboRef;
 import org.labkey.test.util.ext4cmp.Ext4FieldRef;
 import org.labkey.test.util.external.labModules.LabModuleHelper;
@@ -179,12 +180,6 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("p", "Error - no session provided."));
     }
 
-    private void testDemoSearchNoSession()
-    {
-        beginAt("/home/jbrowse-search.view?");
-        waitForElement(Locator.tagWithText("p", "Error - no session provided."));
-    }
-
     private void testDemoUi()
     {
         beginAt("/home/jbrowse-jbrowse.view?session=demo");
@@ -230,11 +225,13 @@ public class JBrowseTest extends BaseWebDriverTest
                 waitForElement(l);
             }
 
-            // Not ideal, but this might fix intermittent failures due to loading
-            sleep(100);
+            waitForElementToDisappear(Locator.tagWithText("p", "Loading"));
+            sleep(250);
 
             return By.xpath(l.toXpath());
-        } catch(Exception e) {
+        }
+        catch(Exception e)
+        {
             return null;
         }
     }
@@ -288,7 +285,7 @@ public class JBrowseTest extends BaseWebDriverTest
         WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C", true)).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,981,406..116,981,406
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:116,981,406..116,981,406"));
-        assertElementPresent(Locator.tagWithText("div", "MismatchedRefAllele"));
+        assertElementPresent(Locator.tagWithText("div", "Minor Allele Frequency"));
     }
 
     private void testPredictedFunction()
@@ -508,7 +505,23 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));
 
         //Now test search:
-        beginAt("/jbrowse/" + getContainerId() + "/search.view?session=" + sessionId);
+        testSearch(sessionId);
+    }
+
+    private void testSearch(String sessionId) throws Exception
+    {
+        goToProjectHome();
+
+        PortalHelper portalHelper = new PortalHelper(this);
+        portalHelper.addSideWebPart("JBrowse Search");
+
+        waitForElement(Locator.tagWithText("p", "No session Id provided. Please have you admin use the customize icon to set the session ID for this webpart."));
+        portalHelper.clickWebpartMenuItem("JBrowse Search", false, "Customize");
+        Window window = new Window.WindowFinder(getDriver()).withTitle("Customize Webpart").waitFor();
+        Ext4FieldRef.waitForField(this, "Target JBrowse DB");
+        Ext4FieldRef.getForLabel(this, "Target JBrowse DB").setValue(sessionId);
+        window.clickButton("Submit", WAIT_FOR_PAGE);
+
         String search = "Ga";
         String optionText = "Gag";
         String expected = "SIVmac239_Test:10373..10493";
@@ -528,10 +541,14 @@ public class JBrowseTest extends BaseWebDriverTest
             searchBox.sendKeys(Keys.ARROW_DOWN);
         }
 
-        searchBox.sendKeys(Keys.ENTER);
+        doAndWaitForPageToLoad(() -> {
+            searchBox.sendKeys(Keys.ENTER);
+        });
 
-        waitForElement(searchLocator);
-        Assert.assertEquals("Correct ID selected", expected, searchBox.getAttribute("value"));
+        waitForJBrowseToLoad();
+
+        waitForElement(Locator.tagWithText("span", "fakeData.gff").withClass("MuiTypography-root"));
+        waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));
     }
 
     public static <T> Collector<T, ?, T> toSingleton() {

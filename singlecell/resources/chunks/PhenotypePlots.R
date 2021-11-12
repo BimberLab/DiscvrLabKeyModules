@@ -1,6 +1,5 @@
 for (datasetId in names(seuratObjects)) {
-    seuratObj <- seuratObjects[[datasetId]]
-    seuratObjects[[datasetId]] <- NULL
+    seuratObj <- readRDS(seuratObjects[[datasetId]])
 
     CellMembrane::PlotImmuneMarkers(seuratObj)
 

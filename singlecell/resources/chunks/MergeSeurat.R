@@ -1,18 +1,23 @@
 if (length(seuratObjects) == 1) {
     print('There is only one seurat object, no need to merge')
-    newSeuratObjects <- seuratObjects
+    datasetId <- names(seuratObjects)[[1]]
+    saveData(seuratObjects[[datasetId]], datasetId)
 } else {
-    doDiet <- exists('doDiet') && doDiet
-    if (exists('doDiet') && doDiet) {
-        print('Running DietSeurat on inputs')
-        for (datasetId in seuratObjects) {
-            seuratObjects[[datasetId]] <- Seurat::DietSeurat(seuratObjects[[datasetId]])
+    toMerge <- list()
+    for (datasetId in names(seuratObjects)) {
+        doDiet <- exists('doDiet') && doDiet
+        if (exists('doDiet') && doDiet) {
+            print('Running DietSeurat on inputs')
+            toMerge[[datasetId]] <- Seurat::DietSeurat(readRDS(seuratObjects[[datasetId]]))
+            gc()
+        } else {
+            toMerge[[datasetId]] <- readRDS(seuratObjects[[datasetId]])
         }
-
-        gc()
     }
 
-    newSeuratObjects[[projectName]] <- CellMembrane::MergeSeuratObjs(seuratObjects, projectName = projectName, doGC = doDiet)
+    seuratObj <- CellMembrane::MergeSeuratObjs(toMerge, projectName = projectName, doGC = doDiet, errorOnBarcodeSuffix = errorOnBarcodeSuffix)
+    rm(toMerge)
+    saveData(seuratObj, projectName)
 }
 
 # Cleanup

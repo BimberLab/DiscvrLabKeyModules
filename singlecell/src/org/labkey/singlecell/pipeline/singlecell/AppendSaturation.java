@@ -198,30 +198,15 @@ public class AppendSaturation extends AbstractCellMembraneStep
 
     private void findAdditionalData(SequenceOutputFile loupeFile, CSVWriter writer, PipelineJob job) throws IOException, PipelineJobException
     {
-        Set<Integer> hashingReadsets = new HashSet<>();
         Set<Integer> citeReadsets = new HashSet<>();
         Container targetContainer = job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer();
         TableSelector ts = new TableSelector(QueryService.get().getUserSchema(job.getUser(), targetContainer, SingleCellSchema.NAME).getTable(SingleCellSchema.TABLE_CDNAS), PageFlowUtil.set("hashingReadsetId", "citeseqReadsetId"), new SimpleFilter(FieldKey.fromString("readsetId"), loupeFile.getReadset()), null);
         ts.forEachResults(rs -> {
-            if (rs.getObject(FieldKey.fromString("hashingReadsetId")) != null)
-            {
-                hashingReadsets.add(rs.getInt(FieldKey.fromString("hashingReadsetId")));
-            }
-
             if (rs.getObject(FieldKey.fromString("citeseqReadsetId")) != null)
             {
                 citeReadsets.add(rs.getInt(FieldKey.fromString("citeseqReadsetId")));
             }
         });
-
-        if (hashingReadsets.size() > 1)
-        {
-            throw new PipelineJobException("More than one hashing readset associated with GEX readset: " + loupeFile.getReadset());
-        }
-        else if (hashingReadsets.size() == 1)
-        {
-            writeExtraData(loupeFile.getRowid(), hashingReadsets.iterator().next(), job, "Cell Hashing Counts", writer, "HTO");
-        }
 
         if (citeReadsets.size() > 1)
         {

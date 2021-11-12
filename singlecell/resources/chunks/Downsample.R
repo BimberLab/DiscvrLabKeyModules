@@ -1,10 +1,9 @@
 for (datasetId in names(seuratObjects)) {
-    seuratObj <- seuratObjects[[datasetId]]
-    seuratObjects[[datasetId]] <- NULL
+    seuratObj <- readRDS(seuratObjects[[datasetId]])
 
     seuratObj <- CellMembrane::DownsampleSeurat(seuratObj, targetCells = targetCells, subsetFields = subsetFields, seed = seed)
 
-    newSeuratObjects[[datasetId]] <- seuratObj
+    saveData(seuratObj, datasetId)
 
     # Cleanup
     rm(seuratObj)
