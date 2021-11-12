@@ -23,6 +23,7 @@ class ExtendedVariantRenderer extends BoxRendererType {
   supportsSVG = true
 }
 import FilterWidget from './FilterWidget'
+import ColorWidget from './ColorWidget'
 
 export default class ExtendedVariantPlugin extends Plugin {
   name = 'ExtendedVariantPlugin'
@@ -116,6 +117,22 @@ export default class ExtendedVariantPlugin extends Plugin {
         ReactComponent,
       })
     })
+
+   pluginManager.addWidgetType(() => {
+    const {
+      configSchema,
+      ReactComponent,
+      stateModel,
+    } = pluginManager.load(ColorWidget)
+
+    return new WidgetType({
+      name: 'ColorWidget',
+      heading: 'Color Schemes',
+      configSchema,
+      stateModel,
+      ReactComponent,
+    })
+   })
 
   }
 

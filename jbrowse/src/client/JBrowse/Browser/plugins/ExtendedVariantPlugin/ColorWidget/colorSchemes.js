@@ -1,0 +1,25 @@
+export const colorSchemes = {
+    IMPACT: {
+        title: 'Impact',
+        dataType: "option",
+        options: {
+            HIGH: "red",
+            MODERATE: "goldenrod",
+            LOW: "#049931",
+        },
+        jexlComponent: "get(feature,'INFO').IMPACT",
+    },
+    AF: {
+        title: "Allele Frequency",
+        dataType: "number",
+        options: {
+            minVal: "#0c28f9", // for numbers, this must be a hex code rather than a color string (i.e. "red")
+            maxVal: "#f90c00"
+        },
+        minVal: 0,
+        maxVal: 1,
+        gradientSteps: 50,
+        displaySigFigs: 3,
+        jexlComponent: "get(feature,'INFO').AF[0]",
+    },
+}
