@@ -16,7 +16,6 @@ export function hexToRGB(hexStr){
 export function generateGradient(hex1, hex2, steps, maxVal){
    let rgb1 = hexToRGB(hex1)
    let rgb2 = hexToRGB(hex2)
-   console.log(rgb1, rgb2)
    let gradient = []
    gradient.push({
       percent: 0,

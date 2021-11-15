@@ -1,22 +1,10 @@
-import AddIcon from '@material-ui/icons/Add'
-import ClearIcon from '@material-ui/icons/Clear'
 import { observer } from 'mobx-react'
 import React, { useState } from 'react'
-import { readConfObject } from '@jbrowse/core/configuration'
 import {colorSchemes} from "./colorSchemes"
 import {style as styles} from "./style";
 import { generateGradient } from "./colorUtil"
 
 import {
-  MenuItem,
-  FormControl,
-  Select,
-  IconButton,
-  List,
-  ListItem,
-  Tooltip,
-  makeStyles,
-  TextField,
   TableCell,
   TableRow,
   Table,

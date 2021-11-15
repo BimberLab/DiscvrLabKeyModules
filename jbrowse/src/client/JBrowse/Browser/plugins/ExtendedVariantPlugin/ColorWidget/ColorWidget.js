@@ -23,7 +23,6 @@ export default jbrowse => {
       const [scheme, setScheme] = useState(track.displays[0].renderer.palette.value)
       const handleSchemeChange = (event) => {
          setScheme(event.target.value)
-         console.log(event.target.value)
          let activeColorScheme = colorSchemes[event.target.value]
          track.displays[0].renderer.colorJexl.set(generateSchemeJexl(activeColorScheme))
          track.displays[0].renderer.palette.set(event.target.value)
