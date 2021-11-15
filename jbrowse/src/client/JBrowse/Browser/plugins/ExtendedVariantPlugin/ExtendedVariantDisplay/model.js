@@ -78,21 +78,8 @@ export default jbrowse => {
                   async () => {
                      try {
                         const { rpcManager } = getSession(self)
-                        /*const colorSNV = self.colorSNV ?? 'blue'
-                        const colorDeletion = self.colorDeletion ?? 'red'
-                        const colorInsertion = self.colorInsertion ?? 'green'
-                        const colorOther = self.colorOther ?? 'gray'
-                        const colorHigh = self.colorHigh ?? 'red'
-                        const colorModerate = self.colorModerate ?? 'goldenrod'
-                        const colorLow = self.colorLow ?? 'black'*/
-                        //const color = self.renderProps().config.color1.value
-                        //const color = "jexl:get(feature,'INFO').IMPACT=='MODERATE'?'"+colorModerate+"':get(feature,'INFO').IMPACT=='HIGH'?'"+colorHigh+"':get(feature,'INFO').IMPACT=='LOW'?'"+colorLow+"':get(feature,'type')=='SNV'?'"+colorSNV+"':get(feature,'type')=='deletion'?'"+colorDeletion+"':get(feature,'type')=='insertion'?'"+colorInsertion+"':'"+colorOther+"'"
-                        //const color = "jexl:get(feature,'INFO').IMPACT=='MODERATE'?'goldenrod':get(feature,'INFO').IMPACT=='HIGH'?'red':get(feature,'INFO').IMPACT=='LOW'?'black':get(feature,'type')=='SNV'?'blue':get(feature,'type')=='deletion'?'red':get(feature,'type')=='insertion'?'green':'gray'"
-
-                        console.log("In renderProps in display/model.js - " + self.renderProps().config.colorJexl.value)
-                        //const color = "jexl:get(feature,'INFO').IMPACT=='HIGH'?'red':get(feature,'INFO').IMPACT=='MODERATE'?'goldenrod':get(feature,'INFO').IMPACT=='LOW'?'#049931':'gray'"
-                        //const color = "jexl:get(feature,'INFO').AF[0]<=0?'#898989':(get(feature,'INFO').AF[0]>0.1 && get(feature,'INFO').AF[0]<=0.2)?'#9F706E':(get(feature,'INFO').AF[0]>0.2 && get(feature,'INFO').AF[0]<=0.30000000000000004)?'#AB6460':(get(feature,'INFO').AF[0]>0.30000000000000004 && get(feature,'INFO').AF[0]<=0.4)?'#B65752':(get(feature,'INFO').AF[0]>0.4 && get(feature,'INFO').AF[0]<=0.5)?'#C14B45':(get(feature,'INFO').AF[0]>0.5 && get(feature,'INFO').AF[0]<=0.6000000000000001)?'#CC3E37':(get(feature,'INFO').AF[0]>0.6000000000000001 && get(feature,'INFO').AF[0]<=0.7000000000000001)?'#D73129':(get(feature,'INFO').AF[0]>0.7000000000000001 && get(feature,'INFO').AF[0]<=0.8)?'#E3251B':(get(feature,'INFO').AF[0]>0.8 && get(feature,'INFO').AF[0]<=0.9)?'#EE190E':(get(feature,'INFO').AF[0]>0.9 && get(feature,'INFO').AF[0]<=1)?'#F90C00':get(feature,'INFO').AF[0]>=1?'#F90C00':'gray'"
                         const color = self.renderProps().config.colorJexl.value
+
                         if (self.renderProps().config.color1.value != color || self.ready == false || self.adapterConfig.filters != self.renderProps().config.filters.value){
                            self.renderProps().config.color1.set(color)
                            self.setFilter(self.adapterConfig.filters)
@@ -189,7 +176,7 @@ export default jbrowse => {
          }
          const colorMenu = {
             label: "Color",
-            icon: FilterListIcon,
+            icon: PaletteIcon,
             onClick: () => {
                const session = getSession(self)
                const track = getContainingTrack(self)
