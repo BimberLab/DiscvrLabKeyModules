@@ -18,7 +18,7 @@ export const colorSchemes = {
         },
         minVal: 0,
         maxVal: 1,
-        gradientSteps: 50,
+        gradientSteps: 25,
         displaySigFigs: 3,
         jexlComponent: "get(feature,'INFO').AF[0]",
     },

@@ -215,24 +215,7 @@ export default jbrowse => {
             },
 
             get composedTrackMenuItems() {
-               return [filterMenu, colorMenu, {
-                  label: 'Color',
-                  icon: PaletteIcon,
-                  subMenu: [...attributes.map(option => {
-                     return {
-                       label: option,
-                       subMenu: [...colors.map(color => {
-                          return {
-                            label: color,
-                            onClick: () => {
-                                self.setColor(option, color)
-                                self.ready = false
-                            }
-                          }
-                       })]
-                     }
-                  })]
-               }]
+               return [filterMenu, colorMenu]
             },
 
             trackMenuItems() {

@@ -48,11 +48,12 @@ const SchemeComponent = observer(props => {
                sx={{
                  width: 10,
                  height: 10,
-                 backgroundColor: 'grey',
+                 backgroundColor: 'gray',
                  position: 'relative',
                  left: '50%',
                  right: '50%'
                }}
+               fill='gray'
              />
          </TableCell>
       </TableRow>
@@ -85,6 +86,7 @@ const SchemeComponent = observer(props => {
                        left: '50%',
                        right: '50%'
                      }}
+                     fill={'#'+gradient[i].hex}
                    />
                 </TableCell>
             </TableRow>)
@@ -117,6 +119,7 @@ const SchemeComponent = observer(props => {
                     left: '50%',
                     right: '50%'
                   }}
+                  fill={val}
                 />
             </TableCell>
          </TableRow>
