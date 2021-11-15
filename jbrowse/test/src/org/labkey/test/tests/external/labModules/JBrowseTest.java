@@ -73,9 +73,9 @@ public class JBrowseTest extends BaseWebDriverTest
     {
         setUpTest();
 
-        //testOutputFileProcessing();
+        testOutputFileProcessing();
 
-        /*testDemoNoSession();
+        testDemoNoSession();
         testDemoUi();
         testConfigWidgetUi();
         testMessageDisplay();
@@ -89,7 +89,7 @@ public class JBrowseTest extends BaseWebDriverTest
         testAddingOptionFilter();
         testLoadingConfigFilters();
         testRemovingFilters();
-        testInvalidFilterHandling();*/
+        testInvalidFilterHandling();
         testColorWidgetOpens();
         testDefaultImpactColor();
         testAFColor();
@@ -100,7 +100,6 @@ public class JBrowseTest extends BaseWebDriverTest
         beginAt("/home/jbrowse-jbrowse.view?session=mgap");
         waitForJBrowseToLoad();
 
-        //Actions actions = new Actions(getDriver());
         waitAndClick(Locator.xpath("//button[@data-testid='track_menu_icon']"));
         waitAndClick(Locator.xpath("//span[contains(text(), 'Color')]"));
         assertElementPresent(Locator.xpath("//h6[contains(text(), 'Color Schemes')]"));
