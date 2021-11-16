@@ -9,6 +9,7 @@ import {
   TableRow,
   Table,
   TableBody,
+  TableHead,
   Box
 } from '@material-ui/core'
 
@@ -25,6 +26,7 @@ function makeTitle(key){
 const SchemeComponent = observer(props => {
    const classes = styles()
    let scheme = props.scheme
+   let tableHeader = <></>
    let table = <></>
    const lastRow =
       <TableRow>
@@ -46,9 +48,9 @@ const SchemeComponent = observer(props => {
          </TableCell>
       </TableRow>
 
-   if(scheme.dataType == "number"){
+   if (scheme.dataType === "number"){
       let gradient = generateGradient(scheme.options.minVal, scheme.options.maxVal, scheme.gradientSteps, scheme.maxVal)
-      let tableHeader =
+      tableHeader =
       <TableRow>
          <TableCell className={classes.tableCell}>
             Value
@@ -58,9 +60,9 @@ const SchemeComponent = observer(props => {
          </TableCell>
       </TableRow>
       let tableRows = []
-      for(let i = 0; i < gradient.length; i++){
+      for (let i = 0; i < gradient.length; i++){
          tableRows.push(
-            <TableRow>
+            <TableRow key={'gradient-' + i}>
                <TableCell className={classes.tableCell}>
                   {gradient[i].ub.toFixed(scheme.displaySigFigs)}
                </TableCell>
@@ -80,9 +82,9 @@ const SchemeComponent = observer(props => {
             </TableRow>)
       }
 
-       table = <> {tableHeader} {tableRows} {lastRow} </>
-   } else if (scheme.dataType == "option"){
-      let tableHeader =
+       table = <> {tableRows}{lastRow} </>
+   } else if (scheme.dataType === "option"){
+      tableHeader =
          <TableRow>
             <TableCell className={classes.tableCell}>
                Value
@@ -93,7 +95,7 @@ const SchemeComponent = observer(props => {
          </TableRow>
 
       let tableRows = Object.entries(scheme.options).map(([key, val]) =>
-         <TableRow>
+         <TableRow key={key}>
             <TableCell className={classes.tableCell}>
                {makeTitle(key)}
             </TableCell>
@@ -113,11 +115,14 @@ const SchemeComponent = observer(props => {
          </TableRow>
      )
 
-     table = <> {tableHeader} {tableRows} {lastRow} </>
+     table = <>{tableRows}{lastRow}</>
    }
    return (
        <>
          <Table className={classes.table}>
+             <TableHead>
+               {tableHeader}
+             </TableHead>
             <TableBody>
                {table}
             </TableBody>

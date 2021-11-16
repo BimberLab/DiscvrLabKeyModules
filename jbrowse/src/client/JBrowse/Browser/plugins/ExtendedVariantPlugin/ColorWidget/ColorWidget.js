@@ -31,7 +31,7 @@ export default jbrowse => {
 
       const menuItems = (
        Object.entries(colorSchemes).map(([key, val]) =>
-           <MenuItem value={key}>
+           <MenuItem key={key} value={key}>
             {key}
            </MenuItem>
        ))
