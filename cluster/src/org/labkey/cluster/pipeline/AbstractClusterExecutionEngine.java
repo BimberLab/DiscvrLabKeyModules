@@ -81,6 +81,11 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
     @Override
     public void submitJob(PipelineJob job) throws PipelineJobException
     {
+        if (isDebug())
+        {
+            job.getLogger().debug("Submitting job using " + getType());
+        }
+
         //check to avoid duplicate submissions
         ClusterJob existingSubmission = getMostRecentClusterSubmission(job.getJobGUID(), false);
         if (existingSubmission != null)
@@ -138,10 +143,16 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
             {
                 success = doSubmitJobToCluster(j, job);
             }
+            catch (Exception e)
+            {
+                job.getLogger().error("Error submitting job", e);
+                throw e;
+            }
             finally
             {
                 if (!success)
                 {
+                    job.getLogger().info("cluster submission was not successful");
                     Table.delete(ClusterSchema.getInstance().getSchema().getTable(ClusterSchema.CLUSTER_JOBS), j.getRowId());
                 }
             }
@@ -152,10 +163,10 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
 
     public boolean isDebug()
     {
-        return _debug;
+        return _debug || ClusterManager.get().isClusterDebugMode();
     }
 
-    public void setDebug(boolean debug)
+    protected void setDebug(boolean debug)
     {
         _debug = debug;
     }
