@@ -82,7 +82,7 @@ const SchemeComponent = observer(props => {
             </TableRow>)
       }
 
-       table = <> {tableRows}{lastRow} </>
+       table = <>{tableRows}{lastRow}</>
    } else if (scheme.dataType === "option"){
       tableHeader =
          <TableRow>
