@@ -9,9 +9,6 @@ import PaletteIcon from '@material-ui/icons/Palette'
 import PluginManager from '@jbrowse/core/PluginManager'
 import {getSnapshot} from 'mobx-state-tree'
 
-const attributes = ['SNV', 'Insertion', 'Deletion', 'High', 'Moderate', 'Low', 'Other']
-const colors = ['green', 'red', 'blue', 'gray', 'goldenrod']
-const filterOptions = ['Impact = HIGH', 'AF > 0.2', 'None']
 
 export default jbrowse => {
    const configSchema = jbrowse.jbrequire(configSchemaF)
@@ -26,13 +23,6 @@ export default jbrowse => {
          types.model({
             type: types.literal('ExtendedVariantDisplay'),
             configuration: ConfigurationReference(configSchema),
-            colorSNV: types.maybe(types.string),
-            colorDeletion: types.maybe(types.string),
-            colorInsertion: types.maybe(types.string),
-            colorOther: types.maybe(types.string),
-            colorModerate: types.maybe(types.string),
-            colorHigh: types.maybe(types.string),
-            colorLow: types.maybe(types.string)
          }),
       )
       .actions(self => ({
@@ -45,30 +35,7 @@ export default jbrowse => {
             } catch (e){
                 console.error(e)
             }
-         },
-         setColor(attr, color) {
-            if (attr == "SNV"){
-                self.colorSNV = color
-            }
-            else if (attr == "Insertion"){
-                self.colorInsertion = color
-            }
-            else if (attr == "Deletion"){
-                self.colorDeletion = color
-            }
-            else if (attr == "Other"){
-                self.colorOther = color
-            }
-            else if (attr == "High"){
-                self.colorHigh = color
-            }
-            else if (attr == "Moderate"){
-                self.colorModerate = color
-            }
-            else if (attr == "Low"){
-                self.colorLow = color
-            }
-         },
+         }
       }))
       .actions(self => ({
          afterAttach() {
