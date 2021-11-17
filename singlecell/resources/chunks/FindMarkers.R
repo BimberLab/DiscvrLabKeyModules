@@ -1,9 +1,8 @@
 plotList <- list()
 for (datasetId in names(seuratObjects)) {
-    seuratObj <- seuratObjects[[datasetId]]
-    seuratObjects[[datasetId]] <- NULL
+    seuratObj <- readRDS(seuratObjects[[datasetId]])
 
-    outFile = paste0(outputPrefix, '.', datasetId, '.markers.txt')
+    outFile <- paste0(outputPrefix, '.', datasetId, '.markers.txt')
     datasetName <- datasetIdToName[[datasetId]]
 
     dt <- bindArgs(CellMembrane::Find_Markers, seuratObj)()

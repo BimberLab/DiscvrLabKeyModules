@@ -121,7 +121,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
     {
 //                ToolParameterDescriptor.create("fileBaseName", "Filename", "This is the basename that will be used for the output gzipped VCF", "textfield", null, "CombinedGenotypes"),
 //                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-stand_call_conf"), "stand_call_conf", "Threshold For Calling Variants", "The minimum phred-scaled confidence threshold at which variants should be called", "ldk-numberfield", null, 30),
-//                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--max_alternate_alleles"), "max_alternate_alleles", "Max Alternate Alleles", "Maximum number of alternate alleles to genotype", "ldk-integerfield", null, 12),
+//                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--max_alternate_alleles"), "max_alternate_alleles", "Max Alternate Alleles", "Maximum number of alternate alleles to genotype", "ldk-integerfield", null, null),
 //                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--includeNonVariantSites"), "includeNonVariantSites", "Include Non-Variant Sites", "If checked, all sites will be output into the VCF, instead of just those where variants are detected.  This can dramatically increase the size of the VCF.", "checkbox", null, false)
 //                ToolParameterDescriptor.create("sharedPosixOptimizations", "Use Shared Posix Optimizations", "This enabled optimizations for large shared filesystems, such as lustre.", "checkbox", new JSONObject(){{
 //                    put("checked", true);
@@ -392,6 +392,20 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.sharedPosixOptimizations", false))
                 {
                     toolParams.add("--genomicsdb-shared-posixfs-optimizations");
+                }
+
+                Integer maxRam = SequencePipelineService.get().getMaxRam();
+                int nativeMemoryBuffer = ctx.getParams().optInt("variantCalling.GenotypeGVCFs.nativeMemoryBuffer", 0);
+                if (maxRam != null && nativeMemoryBuffer > 0)
+                {
+                    ctx.getLogger().info("Adjusting RAM based on memory buffer (" + nativeMemoryBuffer + ")");
+                    maxRam = maxRam - nativeMemoryBuffer;
+
+                    if (maxRam < 1)
+                    {
+                        throw new PipelineJobException("After adjusting for nativeMemoryBuffer, maxRam is less than 1: " + maxRam);
+                    }
+                    wrapper.setMaxRamOverride(maxRam);
                 }
 
                 wrapper.execute(genome.getWorkingFastaFile(), outputVcf, toolParams, inputVcf);

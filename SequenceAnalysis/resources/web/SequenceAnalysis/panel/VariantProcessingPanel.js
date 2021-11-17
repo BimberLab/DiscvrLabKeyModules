@@ -216,7 +216,7 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
                 label: 'Max Alternate Alleles',
                 description: 'Maximum number of alternate alleles to genotype',
                 commandLineParam: '--max_alternate_alleles',
-                defaultValue: 12
+                defaultValue: null
             },{
 				fieldXtype: 'checkbox',
 				name: 'sharedPosixOptimizations',

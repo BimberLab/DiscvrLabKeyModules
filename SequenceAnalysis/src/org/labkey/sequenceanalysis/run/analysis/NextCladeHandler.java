@@ -345,6 +345,12 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             if (vcList.isEmpty())
             {
                 job.getLogger().error("Cannot find matching NT SNP: " + aa.toString());
+                if (aa.containsKey("refContext") && aa.getString("refContext").length() > 4)
+                {
+                    // Skip complex indels with just a logged error, but let the job finish
+                    continue;
+                }
+
                 throw new PipelineJobException("Expected variant for AA position: " + aaName + " " + pos);
             }
 

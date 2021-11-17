@@ -4,7 +4,7 @@ for (datasetId in names(seuratObjects)) {
     datasetName <- datasetIdToName[[datasetId]]
     seuratObj <- CellMembrane::ReadAndFilter10xData(dataDir = rawCountDir, datasetId = datasetId, datasetName = datasetName)
 
-    newSeuratObjects[[datasetId]] <- seuratObj
+    saveData(seuratObj, datasetId)
 
     # Cleanup
     rm(seuratObj)

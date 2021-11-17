@@ -179,7 +179,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
             User u = LDKService.get().getBackgroundAdminUser();
             if (u == null)
             {
-                log.error("In order to ensure genomes are prepared for JBrowse, the LDK module property BackgroundAdminUser must be set");
+                log.warn("In order to ensure genomes are prepared for JBrowse, the LDK module property BackgroundAdminUser must be set");
             }
             else
             {
