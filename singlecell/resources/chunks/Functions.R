@@ -17,15 +17,15 @@ bindArgs <- function(fun, seuratObj, allowableArgNames = NULL, disallowedArgName
 
             val <- get(name)
             displayVal <- val
-            if (is.null(val)) {
+            if (all(is.null(val))) {
                 displayVal <- 'NULL'
-            } else if (is.na(val)) {
+            } else if (all(is.na(val))) {
                 displayVal <- 'NA'
             } else if (is.object(val)) {
                 displayVal <- '[object]'
             }
 
-            print(paste0('Binding argument: ', name, ': ', displayVal))
+            print(paste0('Binding argument: ', name, ': ', displayVal, collapse = ','))
             boundArgs[[name]] <- val
         }
     }
@@ -35,11 +35,36 @@ bindArgs <- function(fun, seuratObj, allowableArgNames = NULL, disallowedArgName
     fun
 }
 
+savedFiles <- data.frame(datasetId = character(), datasetName = character(), filename = character(), outputFileId = character())
+write.table(savedFiles, file = 'savedSeuratObjects.txt', quote = FALSE, sep = '\t', row.names = FALSE, col.names = FALSE)
+
+saveData <- function(seuratObj, datasetId) {
+    print(paste0('Saving dataset: ', datasetId))
+    print(seuratObj)
+
+    fn <- paste0(outputPrefix, '.', datasetId, '.seurat.rds')
+    barcodeFile <- paste0(outputPrefix, '.', datasetId, '.cellBarcodes.csv')
+    metaFile <- paste0(outputPrefix, '.', datasetId, '.seurat.meta.txt')
+
+    saveRDS(seuratObj, file = fn)
+
+    datasetName <- ifelse(datasetId %in% names(datasetIdToName), yes = datasetIdToName[[datasetId]], no = datasetId)
+
+    # NOTE: this is the ID of the original loupe file. Needed for operations like appending cell hashing or CITE-seq
+    outputFileId <- ifelse(datasetId %in% names(datasetIdTOutputFileId), yes = datasetIdTOutputFileId[[datasetId]], no = NA)
+
+    toAppend <- data.frame(datasetId = datasetId, datasetName = datasetName, filename = fn, outputFileId = outputFileId)
+    write.table(toAppend, file = 'savedSeuratObjects.txt', quote = FALSE, sep = '\t', row.names = FALSE, col.names = FALSE, append = TRUE)
+
+    # Write cell barcodes and metadata:
+    metaDf <- seuratObj@meta.data
+    metaDf$cellbarcode <- colnames(seuratObj)
+    write.table(metaDf, file = metaFile, quote = F, row.names = F, sep = ',', col.names = T)
+    write.table(data.frame(CellBarcode = colnames(seuratObj)), file = barcodeFile, quote = F, row.names = F, sep = ',', col.names = F)
+}
+
 intermediateFiles <- c()
 addIntermediateFile <- function(f) { intermediateFiles <<- c(intermediateFiles, f) }
-
-# This will store any modified/transformed Seurat objects:
-newSeuratObjects <- list()
 
 print('Updating future.globals.maxSize')
 options(future.globals.maxSize = Inf)

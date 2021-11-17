@@ -22,6 +22,9 @@ import BoxRendererType from '@jbrowse/core/pluggableElementTypes/renderers/BoxRe
 class ExtendedVariantRenderer extends BoxRendererType {
   supportsSVG = true
 }
+import FilterWidget from './FilterWidget'
+import ColorWidget from './ColorWidget'
+
 export default class ExtendedVariantPlugin extends Plugin {
   name = 'ExtendedVariantPlugin'
   version = "0.0.1"
@@ -98,6 +101,39 @@ export default class ExtendedVariantPlugin extends Plugin {
         ReactComponent,
       })
     })
+
+    pluginManager.addWidgetType(() => {
+      const {
+        configSchema,
+        ReactComponent,
+        stateModel,
+      } = pluginManager.load(FilterWidget)
+
+      return new WidgetType({
+        name: 'FilterWidget',
+        heading: 'Filters',
+        configSchema,
+        stateModel,
+        ReactComponent,
+      })
+    })
+
+   pluginManager.addWidgetType(() => {
+    const {
+      configSchema,
+      ReactComponent,
+      stateModel,
+    } = pluginManager.load(ColorWidget)
+
+    return new WidgetType({
+      name: 'ColorWidget',
+      heading: 'Color Schemes',
+      configSchema,
+      stateModel,
+      ReactComponent,
+    })
+   })
+
   }
 
   configure(pluginManager: PluginManager) {

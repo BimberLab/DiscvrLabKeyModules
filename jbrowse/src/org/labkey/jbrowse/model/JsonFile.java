@@ -513,6 +513,7 @@ public class JsonFile
             put(new JSONObject(){{
                 put("type", "ExtendedVariantDisplay");
                 put("displayId", getObjectId() + "-ExtendedVariantDisplay");
+                put("maxDisplayedBpPerPx", 2000);
                 put("renderer", new JSONObject(){{
                     put("type", "ExtendedVariantRenderer");
                     put("showLabels", false);

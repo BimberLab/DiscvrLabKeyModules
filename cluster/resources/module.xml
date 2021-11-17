@@ -16,5 +16,14 @@
                 <permission>ADMIN</permission>
             </editPermissions>
         </propertyDescriptor>
+        <propertyDescriptor name="ClusterDebugMode">
+            <description>If set to 'true', cluster submissions will be extremely verbose to the site log. This is designed for admin troubleshooting</description>
+            <canSetPerContainer>false</canSetPerContainer>
+            <inputType>checkbox</inputType>
+            <defaultValue>false</defaultValue>
+            <editPermissions>
+                <permission>ADMIN</permission>
+            </editPermissions>
+        </propertyDescriptor>
     </properties>
 </module>

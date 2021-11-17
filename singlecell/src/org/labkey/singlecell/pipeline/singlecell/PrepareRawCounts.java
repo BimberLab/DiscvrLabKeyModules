@@ -33,12 +33,6 @@ public class PrepareRawCounts extends AbstractCellMembraneStep
     }
 
     @Override
-    protected String printInputFile(SeuratObjectWrapper so)
-    {
-        return "'" + so.getFile().getName() + "'";
-    }
-
-    @Override
     public String getFileSuffix()
     {
         return "counts";
