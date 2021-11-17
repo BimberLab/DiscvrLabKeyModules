@@ -9,9 +9,6 @@ import PaletteIcon from '@material-ui/icons/Palette'
 import PluginManager from '@jbrowse/core/PluginManager'
 import {getSnapshot} from 'mobx-state-tree'
 
-const attributes = ['SNV', 'Insertion', 'Deletion', 'High', 'Moderate', 'Low', 'Other']
-const colors = ['green', 'red', 'blue', 'gray', 'goldenrod']
-const filterOptions = ['Impact = HIGH', 'AF > 0.2', 'None']
 
 export default jbrowse => {
    const configSchema = jbrowse.jbrequire(configSchemaF)
@@ -26,13 +23,6 @@ export default jbrowse => {
          types.model({
             type: types.literal('ExtendedVariantDisplay'),
             configuration: ConfigurationReference(configSchema),
-            colorSNV: types.maybe(types.string),
-            colorDeletion: types.maybe(types.string),
-            colorInsertion: types.maybe(types.string),
-            colorOther: types.maybe(types.string),
-            colorModerate: types.maybe(types.string),
-            colorHigh: types.maybe(types.string),
-            colorLow: types.maybe(types.string)
          }),
       )
       .actions(self => ({
@@ -45,30 +35,7 @@ export default jbrowse => {
             } catch (e){
                 console.error(e)
             }
-         },
-         setColor(attr, color) {
-            if (attr == "SNV"){
-                self.colorSNV = color
-            }
-            else if (attr == "Insertion"){
-                self.colorInsertion = color
-            }
-            else if (attr == "Deletion"){
-                self.colorDeletion = color
-            }
-            else if (attr == "Other"){
-                self.colorOther = color
-            }
-            else if (attr == "High"){
-                self.colorHigh = color
-            }
-            else if (attr == "Moderate"){
-                self.colorModerate = color
-            }
-            else if (attr == "Low"){
-                self.colorLow = color
-            }
-         },
+         }
       }))
       .actions(self => ({
          afterAttach() {
@@ -78,14 +45,7 @@ export default jbrowse => {
                   async () => {
                      try {
                         const { rpcManager } = getSession(self)
-                        const colorSNV = self.colorSNV ?? 'blue'
-                        const colorDeletion = self.colorDeletion ?? 'red'
-                        const colorInsertion = self.colorInsertion ?? 'green'
-                        const colorOther = self.colorOther ?? 'gray'
-                        const colorHigh = self.colorHigh ?? 'red'
-                        const colorModerate = self.colorModerate ?? 'goldenrod'
-                        const colorLow = self.colorLow ?? 'black'
-                        const color = "jexl:get(feature,'INFO').IMPACT=='MODERATE'?'"+colorModerate+"':get(feature,'INFO').IMPACT=='HIGH'?'"+colorHigh+"':get(feature,'INFO').IMPACT=='LOW'?'"+colorLow+"':get(feature,'type')=='SNV'?'"+colorSNV+"':get(feature,'type')=='deletion'?'"+colorDeletion+"':get(feature,'type')=='insertion'?'"+colorInsertion+"':'"+colorOther+"'"
+                        const color = self.renderProps().config.colorJexl.value
 
                         if (self.renderProps().config.color1.value != color || self.ready == false || self.adapterConfig.filters != self.renderProps().config.filters.value){
                            self.renderProps().config.color1.set(color)
@@ -181,6 +141,21 @@ export default jbrowse => {
                session.showWidget(filterWidget)
             }
          }
+         const colorMenu = {
+            label: "Color",
+            icon: PaletteIcon,
+            onClick: () => {
+               const session = getSession(self)
+               const track = getContainingTrack(self)
+               const widgetId = 'Variant-' + getConf(track, 'trackId');
+               const colorWidget = session.addWidget(
+                  'ColorWidget',
+                  widgetId,
+                  {track: track.configuration}
+               )
+               session.showWidget(colorWidget)
+            }
+         }
          return {
             renderProps() {
                return {
@@ -194,24 +169,7 @@ export default jbrowse => {
             },
 
             get composedTrackMenuItems() {
-               return [filterMenu, {
-                  label: 'Color',
-                  icon: PaletteIcon,
-                  subMenu: [...attributes.map(option => {
-                     return {
-                       label: option,
-                       subMenu: [...colors.map(color => {
-                          return {
-                            label: color,
-                            onClick: () => {
-                                self.setColor(option, color)
-                                self.ready = false
-                            }
-                          }
-                       })]
-                     }
-                  })]
-               }]
+               return [filterMenu, colorMenu]
             },
 
             trackMenuItems() {

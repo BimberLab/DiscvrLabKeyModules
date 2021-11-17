@@ -44,7 +44,7 @@ export default jbrowse => {
          <Table className={classes.table}>
             <TableBody>
             {Object.entries(configFilters).map(([key, val]) =>
-                <Filter filterString={val} track={track} index={Number(key)}/>
+                <Filter key={key} filterString={val} track={track} index={Number(key)}/>
             )}
             </TableBody>
          </Table>

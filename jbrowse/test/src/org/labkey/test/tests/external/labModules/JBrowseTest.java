@@ -90,8 +90,65 @@ public class JBrowseTest extends BaseWebDriverTest
         testLoadingConfigFilters();
         testRemovingFilters();
         testInvalidFilterHandling();
+        testColorWidgetOpens();
+        testDefaultImpactColor();
+        testAFColor();
     }
 
+    private void testColorWidgetOpens()
+    {
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap");
+        waitForJBrowseToLoad();
+
+        waitAndClick(Locator.xpath("//button[@data-testid='track_menu_icon']"));
+        waitAndClick(Locator.xpath("//span[contains(text(), 'Color')]"));
+        assertElementPresent(Locator.xpath("//h6[contains(text(), 'Color Schemes')]"));
+    }
+
+    private void testDefaultImpactColor()
+    {
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap");
+        waitForJBrowseToLoad();
+
+        waitAndClick(Locator.xpath("//button[@data-testid='track_menu_icon']"));
+        waitAndClick(Locator.xpath("//span[contains(text(), 'Color')]"));
+        assertElementPresent(Locator.tagWithText("td", "HIGH"));
+        assertElementPresent(Locator.tagWithAttribute("div", "fill", "red"));
+        assertElementPresent(Locator.tagWithAttribute("polygon", "fill", "red"));
+
+        assertElementPresent(Locator.tagWithText("td", "MODERATE"));
+        assertElementPresent(Locator.tagWithAttribute("div", "fill", "goldenrod"));
+        assertElementPresent(Locator.tagWithAttribute("polygon", "fill", "goldenrod"));
+
+        assertElementPresent(Locator.tagWithText("td", "LOW"));
+        assertElementPresent(Locator.tagWithAttribute("div", "fill", "#049931"));
+        assertElementPresent(Locator.tagWithAttribute("polygon", "fill", "#049931"));
+
+        assertElementPresent(Locator.tagWithText("td", "Other"));
+        assertElementPresent(Locator.tagWithAttribute("div", "fill", "gray"));
+        assertElementPresent(Locator.tagWithAttribute("polygon", "fill", "gray"));
+
+    }
+
+    private void testAFColor()
+    {
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap");
+        waitForJBrowseToLoad();
+
+        waitAndClick(Locator.xpath("//button[@data-testid='track_menu_icon']"));
+        waitAndClick(Locator.xpath("//span[contains(text(), 'Color')]"));
+        waitAndClick(Locator.tagWithId("div", "category-select"));
+        waitAndClick(Locator.xpath("//li[@data-value = 'AF']"));
+        assertElementPresent(Locator.tagWithText("td", "0.000"));
+        assertElementPresent(Locator.tagWithAttribute("div", "fill", "#0C28F9"));
+        assertElementPresent(Locator.tagWithText("td", "1.000"));
+        assertElementPresent(Locator.tagWithAttribute("div", "fill", "#F90C00"));
+        assertElementPresent(Locator.tagWithText("td", "Other"));
+        assertElementPresent(Locator.tagWithAttribute("div", "fill", "gray"));
+
+        waitForElement(Locator.tagWithAttribute("polygon", "fill", "#1527EF"));
+        assertElementPresent(Locator.tagWithAttribute("polygon", "fill", "#1527EF"));
+    }
     private void testFilterWidgetOpens()
     {
         beginAt("/home/jbrowse-jbrowse.view?session=mgap");
