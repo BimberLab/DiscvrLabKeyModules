@@ -42,6 +42,12 @@ export default ConfigurationSchema(
       defaultValue: [],
       contextVariable: ['feature']
     },
+    sampleFilters: {
+      type: 'string',
+      description: 'active sample filters',
+      defaultValue: '',
+      contextVariable: ['feature']
+    },
     height: {
       type: 'number',
       description: 'height in pixels of the main body of each feature',

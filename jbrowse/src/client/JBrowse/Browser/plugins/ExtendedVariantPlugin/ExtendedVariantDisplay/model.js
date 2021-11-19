@@ -35,6 +35,13 @@ export default jbrowse => {
             } catch (e){
                 console.error(e)
             }
+         },
+         setSampleFilter(filterString){
+            try {
+               self.renderProps().config.sampleFilters.set(filterString)
+            } catch (e) {
+               console.error(e)
+            }
          }
       }))
       .actions(self => ({
@@ -47,10 +54,10 @@ export default jbrowse => {
                         const { rpcManager } = getSession(self)
                         const color = self.renderProps().config.colorJexl.value
 
-                        if (self.renderProps().config.color1.value != color || self.ready == false || self.adapterConfig.filters != self.renderProps().config.filters.value){
+                        if (self.renderProps().config.color1.value != color || self.ready == false || self.adapterConfig.filters != self.renderProps().config.filters.value || self.adapterConfig.sampleFilters != self.renderProps().config.sampleFilters.value){
                            self.renderProps().config.color1.set(color)
                            self.setFilter(self.adapterConfig.filters)
-
+                           self.setSampleFilter(self.adapterConfig.sampleFilters)
                            const { centerLineInfo } = getContainingView(self)
                            if (!centerLineInfo) {
                                 console.error('error! centerLineInfo is null')
@@ -156,6 +163,21 @@ export default jbrowse => {
                session.showWidget(colorWidget)
             }
          }
+         const sampleFilterMenu = {
+            label: 'Filter by Sample',
+            icon: FilterListIcon,
+            onClick: () => {
+               const session = getSession(self)
+               const track = getContainingTrack(self)
+               const widgetId = 'Variant-' + getConf(track, 'trackId');
+               const sampleFilterWidget = session.addWidget(
+                  'SampleFilterWidget',
+                  widgetId,
+                  { track: track.configuration }
+               )
+               session.showWidget(sampleFilterWidget)
+            }
+         }
          return {
             renderProps() {
                return {
@@ -169,7 +191,7 @@ export default jbrowse => {
             },
 
             get composedTrackMenuItems() {
-               return [filterMenu, colorMenu]
+               return [filterMenu, sampleFilterMenu, colorMenu]
             },
 
             trackMenuItems() {
