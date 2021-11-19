@@ -24,6 +24,7 @@ class ExtendedVariantRenderer extends BoxRendererType {
 }
 import FilterWidget from './FilterWidget'
 import ColorWidget from './ColorWidget'
+import SampleFilterWidget from './SampleFilterWidget'
 
 export default class ExtendedVariantPlugin extends Plugin {
   name = 'ExtendedVariantPlugin'
@@ -132,6 +133,22 @@ export default class ExtendedVariantPlugin extends Plugin {
       stateModel,
       ReactComponent,
     })
+   })
+
+   pluginManager.addWidgetType(() => {
+      const {
+        configSchema,
+        ReactComponent,
+        stateModel,
+      } = pluginManager.load(SampleFilterWidget)
+
+      return new WidgetType({
+        name: 'SampleFilterWidget',
+        heading: 'Filter by Sample',
+        configSchema,
+        stateModel,
+        ReactComponent,
+      })
    })
 
   }

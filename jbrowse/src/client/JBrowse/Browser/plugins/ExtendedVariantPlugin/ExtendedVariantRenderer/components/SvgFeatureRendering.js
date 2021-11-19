@@ -12,7 +12,7 @@ import SvgOverlay from '@jbrowse/plugin-svg/src/SvgFeatureRenderer/components/Sv
 import { chooseGlyphComponent, layOut } from './util' // NEW: chooseGlyphComponent() in util updated to render SNVs as a diamond
 import { expandFilters, expandedFilterStringToObj, isFilterStringExpanded } from '../../FilterWidget/filterUtil' // NOTE: Now dependent on FilterWidget plugin
 import jexl from 'jexl'
-
+import { parseSampleCSV } from '../../SampleFilterWidget/sampleUtil'
 const renderingStyle = {
   position: 'relative',
 }
@@ -148,6 +148,27 @@ function isDisplayed(feature, filters){
    return true
 }
 
+function containsSampleIDs(feature, sampleIDs){
+   const samples = feature.variant.SAMPLES
+   if (!sampleIDs || sampleIDs.length === 0) {
+      return true
+   }
+   if (!samples || Object.keys(samples).length === 0){
+      return false
+   }
+   for(const ID of sampleIDs){
+      if(samples[ID]){
+         const gt = samples[ID]["GT"][0]
+         if(gt === "./." || gt === ".|." || feature.variant.REF === feature.variant.ALT[0]){
+            return false
+         }
+      } else {
+         return false
+      }
+   }
+   return true
+}
+
 RenderedFeatureGlyph.propTypes = {
   layout: ReactPropTypes.shape({
     addRect: ReactPropTypes.func.isRequired,
@@ -170,9 +191,11 @@ const RenderedFeatures = observer(props => {
   const filters = expandFilters(props.adapterConfig.filters)
   for (const feature of features.values()) {
     if(isDisplayed(feature, filters)){
-       featuresRendered.push(
-         <RenderedFeatureGlyph key={feature.id()} feature={feature} {...props} />,
-       )
+       if(containsSampleIDs(feature, parseSampleCSV(props.adapterConfig.sampleFilters))){
+          featuresRendered.push(
+            <RenderedFeatureGlyph key={feature.id()} feature={feature} {...props} />,
+          )
+       }
     }
   }
   return <>{featuresRendered}</>

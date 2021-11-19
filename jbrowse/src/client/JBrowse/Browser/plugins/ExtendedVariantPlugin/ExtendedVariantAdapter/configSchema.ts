@@ -9,6 +9,13 @@ EVConfigSchema["filters"] =
    description:
     'Track filters',
 }
+EVConfigSchema["sampleFilters"] =
+{
+   type: 'string',
+   defaultValue: '',
+   description:
+      'comma-delineated string of sample IDs to filter by'
+}
 
 export default ConfigurationSchema(
   'ExtendedVariantAdapter',
