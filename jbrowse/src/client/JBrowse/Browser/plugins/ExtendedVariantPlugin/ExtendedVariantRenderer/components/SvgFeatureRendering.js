@@ -149,17 +149,16 @@ function isDisplayed(feature, filters){
 }
 
 function containsSampleIDs(feature, sampleIDs){
-   const samples = feature.variant.SAMPLES
    if (!sampleIDs || sampleIDs.length === 0) {
       return true
    }
-   if (!samples || Object.keys(samples).length === 0){
+   if (!feature.variant.SAMPLES || Object.keys(feature.variant.SAMPLES).length === 0){
       return false
    }
    for(const ID of sampleIDs){
-      if(samples[ID]){
-         const gt = samples[ID]["GT"][0]
-         if(gt === "./." || gt === ".|." || feature.variant.REF === feature.variant.ALT[0]){
+      if(feature.variant.SAMPLES[ID]){
+         const gt = feature.variant.SAMPLES[ID]["GT"][0]
+         if(gt === "./." || gt === ".|." || gt === "0/0"){
             return false
          }
       } else {
