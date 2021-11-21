@@ -16,6 +16,23 @@
                 <permission>ADMIN</permission>
             </editPermissions>
         </propertyDescriptor>
+        <propertyDescriptor name="RecreateSubmitScriptFile">
+            <description>If set to 'true', the submit script file will always be re-created on job submission. Otherwise any existing submit script file will be used as-is.</description>
+            <canSetPerContainer>false</canSetPerContainer>
+            <inputType>checkbox</inputType>
+            <defaultValue>false</defaultValue>
+            <editPermissions>
+                <permission>ADMIN</permission>
+            </editPermissions>
+        </propertyDescriptor>
+        <propertyDescriptor name="DisallowedNodes">
+            <description>A comma-separated list of node names that will be skipped.</description>
+            <canSetPerContainer>false</canSetPerContainer>
+            <inputType>textArea</inputType>
+            <editPermissions>
+                <permission>ADMIN</permission>
+            </editPermissions>
+        </propertyDescriptor>
         <propertyDescriptor name="ClusterDebugMode">
             <description>If set to 'true', cluster submissions will be extremely verbose to the site log. This is designed for admin troubleshooting</description>
             <canSetPerContainer>false</canSetPerContainer>
