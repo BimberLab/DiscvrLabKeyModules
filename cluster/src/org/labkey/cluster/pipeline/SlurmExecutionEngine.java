@@ -12,6 +12,7 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
+import org.labkey.cluster.ClusterManager;
 import org.labkey.cluster.ClusterServiceImpl;
 import org.quartz.JobExecutionException;
 
@@ -355,6 +356,12 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
             File outDir = job.getLogFile().getParentFile();
             String basename = FileUtil.getBaseName(job.getLogFile());
             File submitScript = new File(outDir, basename + (job.getActiveTaskId() == null ? "" : "." + job.getActiveTaskId().getNamespaceClass().getSimpleName()) + ".slurm.sh");
+            if (ClusterManager.get().isRecreateSubmitScriptFile() && submitScript.exists())
+            {
+                job.getLogger().info("Deleting existing submit script");
+                submitScript.delete();
+            }
+
             if (!submitScript.exists())
             {
                 try (FileWriter writer = new FileWriter(submitScript, false))
@@ -371,6 +378,12 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     //NOTE: this is just the output of the java process, so do not put into regular pipeline log
                     writer.write("#SBATCH --output=\"" + getConfig().getClusterPath(new File(outDir, basename + "-%j.java.log")) + "\"\n");
                     writer.write("#SBATCH --error=\"" + getConfig().getClusterPath(new File(outDir, basename + "-%j.java.log")) + "\"\n");
+
+                    if (ClusterManager.get().getDisallowedNodes() != null)
+                    {
+                        writer.write("#SBATCH --exclude=" + StringUtils.join(ClusterManager.get().getDisallowedNodes(), ","));
+
+                    }
 
                     // This allows modules to register code to modify resource usage per task.
                     Integer maxCpus = null;
