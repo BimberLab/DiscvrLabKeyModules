@@ -8,6 +8,7 @@ module.exports = {
         name: 'jbrowse',
         title: 'JBrowse Genome Browser',
         permission: 'read',
+        template: 'app',
         path: './src/client/JBrowse/Browser'
     },{
         name: 'jbrowse2SearchWebpart',
