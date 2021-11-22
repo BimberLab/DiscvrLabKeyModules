@@ -1,4 +1,5 @@
 import {parseSampleCSV} from "./sampleUtil"
+import {style as styles} from "./style";
 import {
   FormControl,
   Select,
@@ -13,7 +14,7 @@ export default jbrowse => {
    const { observer, PropTypes: MobxPropTypes } = jbrowse.jbrequire('mobx-react')
    const React = jbrowse.jbrequire('react')
    function SampleIDForm(props){
-      //const classes = styles()
+      const classes = styles()
       const { model } = props
       let track = model.track
 
@@ -32,7 +33,7 @@ export default jbrowse => {
 
       return(
          <>
-            <FormControl>
+            <FormControl className={classes.formControl}>
               <TextField
                 id="outlined-multiline-static"
                 label="Enter CSV..."
@@ -42,7 +43,7 @@ export default jbrowse => {
                 variant="outlined"
                 onChange={handleSampleFilterChange}
               />
-              <Button onClick={handleSampleFilterSubmit} variant="contained" color="primary">
+              <Button className={classes.applyButton} onClick={handleSampleFilterSubmit} variant="contained" color="primary">
                 Apply
               </Button>
             </FormControl>
