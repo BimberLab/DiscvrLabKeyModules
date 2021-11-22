@@ -1,19 +1,24 @@
 import React, {useState, useEffect} from 'react'
-//import 'fontsource-roboto'
+
 import {
   createViewState,
-  createJBrowseTheme,
   JBrowseLinearGenomeView,
-  loadPlugins,
-  ThemeProvider,
+  loadPlugins
 } from '@jbrowse/react-linear-genome-view'
+import { createTheme } from '@material-ui/core/styles'
 import { PluginConstructor } from '@jbrowse/core/Plugin'
-import { Ajax, Utils, ActionURL } from '@labkey/api'
+import { Ajax, ActionURL } from '@labkey/api'
 import MyProjectPlugin from "./plugins/MyProjectPlugin/index"
 import LogSession from "./plugins/LogSession/index"
 import ExtendedVariantPlugin from "./plugins/ExtendedVariantPlugin/index"
 
-const theme = createJBrowseTheme()
+
+const refTheme = createTheme()
+const blue = '#116596'
+const midnight = '#0D233F'
+const mandarin = '#FFB11D'
+const grey = '#bfbfbf'
+
 const nativePlugins = [MyProjectPlugin, ExtendedVariantPlugin, LogSession]
 
 function generateViewState(genome, plugins){
@@ -56,9 +61,30 @@ function View(){
                 } else {
                     loadedPlugins = []
                 }
+
+                //TODO: make this value match the current LabKey site theme. How to wait until page loaded?
+                const pageHeaderEl = document.querySelector<HTMLInputElement>('div.labkey-page-header')
+                let siteColor = pageHeaderEl ? pageHeaderEl.style.backgroundColor : 'null element!!'
+                console.log(siteColor)
+                if (!siteColor) {
+                    siteColor = blue
+                }
+
+                jsonRes.configuration = {
+                    "theme": {
+                        "palette": {
+                            primary: {main: midnight},
+                            secondary: {main: siteColor},
+                            tertiary: refTheme.palette.augmentColor({main: grey}),
+                            quaternary: refTheme.palette.augmentColor({main: mandarin}),
+                        }
+                    }
+                }
+
                 setState(generateViewState(jsonRes, loadedPlugins));
             },
             failure: function(res){
+                //TODO: better, consistent error handling
                 setState("invalid");
                 console.log(res);
             },
@@ -66,7 +92,7 @@ function View(){
         });
     }, []);
 
-    if(session === null){
+    if (session === null){
         return(<p>Error - no session provided.</p>)
     }
     else if (state === null){
@@ -76,9 +102,7 @@ function View(){
         return (<p>Error fetching config. See console for more details</p>)
     }
     return (
-      <ThemeProvider _theme={theme}>
-          <JBrowseLinearGenomeView viewState={state} />
-      </ThemeProvider>
+      <JBrowseLinearGenomeView viewState={state} />
     )
 }
 
