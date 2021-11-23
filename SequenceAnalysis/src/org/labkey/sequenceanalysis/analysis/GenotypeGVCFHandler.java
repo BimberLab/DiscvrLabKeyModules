@@ -349,6 +349,19 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                     toolParams.add(ctx.getParams().get("variantCalling.GenotypeGVCFs.stand_call_conf").toString());
                 }
 
+                if (ctx.getParams().get("variantCalling.GenotypeGVCFs.exclude_intervals") != null)
+                {
+                    toolParams.add("-XL");
+                    int dataId = Integer.parseInt(ctx.getParams().get("variantCalling.GenotypeGVCFs.exclude_intervals").toString());
+                    File bed = ctx.getSequenceSupport().getCachedData(dataId);
+                    if (bed == null)
+                    {
+                        throw new PipelineJobException("Unable to find ExpData: " + dataId);
+                    }
+
+                    toolParams.add(bed.getPath());
+                }
+
                 if (ctx.getParams().get("variantCalling.GenotypeGVCFs.max_alternate_alleles") != null)
                 {
                     toolParams.add("--max-alternate-alleles");
