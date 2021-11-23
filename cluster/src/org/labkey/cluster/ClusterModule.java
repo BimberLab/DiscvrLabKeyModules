@@ -16,8 +16,8 @@
 
 package org.labkey.cluster;
 
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -34,6 +34,7 @@ import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.view.WebPartFactory;
+import org.labkey.cluster.pipeline.ClusterPipelineJobNotificationProvider;
 import org.labkey.cluster.pipeline.ClusterPipelineProvider;
 import org.labkey.cluster.pipeline.TestCase;
 
@@ -89,6 +90,8 @@ public class ClusterModule extends ExtendedSimpleModule
         AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "cluster admin", details.getActionURL());
 
         PipelineService.get().registerPipelineProvider(new ClusterPipelineProvider(this));
+
+        PipelineService.get().registerPipelineJobNotificationProvider(new ClusterPipelineJobNotificationProvider());
     }
 
     @Override
