@@ -35,7 +35,7 @@ bindArgs <- function(fun, seuratObj, allowableArgNames = NULL, disallowedArgName
     fun
 }
 
-savedFiles <- data.frame(datasetId = character(), datasetName = character(), filename = character(), outputFileId = character())
+savedFiles <- data.frame(datasetId = character(), datasetName = character(), filename = character(), outputFileId = character(), readsetId = character())
 write.table(savedFiles, file = 'savedSeuratObjects.txt', quote = FALSE, sep = '\t', row.names = FALSE, col.names = FALSE)
 
 saveData <- function(seuratObj, datasetId) {
@@ -51,9 +51,11 @@ saveData <- function(seuratObj, datasetId) {
     datasetName <- ifelse(datasetId %in% names(datasetIdToName), yes = datasetIdToName[[datasetId]], no = datasetId)
 
     # NOTE: this is the ID of the original loupe file. Needed for operations like appending cell hashing or CITE-seq
-    outputFileId <- ifelse(datasetId %in% names(datasetIdTOutputFileId), yes = datasetIdTOutputFileId[[datasetId]], no = NA)
+    outputFileId <- ifelse(datasetId %in% names(datasetIdToOutputFileId), yes = datasetIdToOutputFileId[[datasetId]], no = NA)
 
-    toAppend <- data.frame(datasetId = datasetId, datasetName = datasetName, filename = fn, outputFileId = outputFileId)
+    readsetId <- ifelse(datasetId %in% names(datasetIdToReadset), yes = datasetIdToReadset[[datasetId]], no = NA)
+
+    toAppend <- data.frame(datasetId = datasetId, datasetName = datasetName, filename = fn, outputFileId = outputFileId, readsetId = readsetId)
     write.table(toAppend, file = 'savedSeuratObjects.txt', quote = FALSE, sep = '\t', row.names = FALSE, col.names = FALSE, append = TRUE)
 
     # Write cell barcodes and metadata:

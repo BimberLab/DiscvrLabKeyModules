@@ -1,5 +1,6 @@
 package org.labkey.singlecell.analysis;
 
+import au.com.bytecode.opencsv.CSVReader;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -9,11 +10,20 @@ import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
+import org.labkey.api.data.CompareType;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Table;
+import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
+import org.labkey.api.query.FieldKey;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractResumer;
@@ -27,6 +37,7 @@ import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.pipeline.AbstractSingleCellPipelineStep;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.singlecell.CellHashingServiceImpl;
 import org.labkey.singlecell.SingleCellModule;
@@ -183,6 +194,78 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     job.getLogger().info("Adding metrics for output: " + so.getName());
                     CellHashingService.get().processMetrics(so, job, true);
                 }
+
+                if ("Seurat Prototype".equals(so.getCategory()))
+                {
+                    //NOTE: upstream we enforce one dataset per job, so we can safely assume this is the only dataset here:
+                    File metricFile = new File(job.getLogFile().getParentFile(), "seurat.metrics.txt");
+                    if (metricFile.exists())
+                    {
+                        processMetrics(so, job, metricFile);
+                    }
+                    else
+                    {
+                        job.getLogger().info("Metrics file not found, skipping");
+                    }
+                }
+            }
+        }
+
+        private void processMetrics(SequenceOutputFile so, PipelineJob job, File metricsFile) throws PipelineJobException
+        {
+            job.getLogger().info("Loading metrics");
+            int total = 0;
+            TableInfo ti = DbSchema.get("sequenceanalysis", DbSchemaType.Module).getTable("quality_metrics");
+
+            //NOTE: if this job errored and restarted, we may have duplicate records:
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), so.getReadset());
+            filter.addCondition(FieldKey.fromString("analysis_id"), so.getAnalysis_id(), CompareType.EQUAL);
+            filter.addCondition(FieldKey.fromString("dataid"), so.getDataId(), CompareType.EQUAL);
+            filter.addCondition(FieldKey.fromString("category"), "SeuratMetrics", CompareType.EQUAL);
+            filter.addCondition(FieldKey.fromString("container"), job.getContainer().getId(), CompareType.EQUAL);
+            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid"), filter, null);
+            if (ts.exists())
+            {
+                job.getLogger().info("Deleting existing QC metrics (probably from prior restarted job)");
+                ts.getArrayList(Integer.class).forEach(rowid -> {
+                    Table.delete(ti, rowid);
+                });
+            }
+
+            try (CSVReader reader = new CSVReader(Readers.getReader(metricsFile), '\t'))
+            {
+                String[] line;
+                while ((line = reader.readNext()) != null)
+                {
+                    Map<String, Object> r = new HashMap<>();
+                    r.put("category", "SeuratMetrics");
+                    r.put("metricname", line[2]);
+
+                    //NOTE: R saves NaN as NA.  This is fixed in the R code, but add this check here to let existing jobs import
+                    String value = line[3];
+                    if ("NA".equals(value))
+                    {
+                        value = "0";
+                    }
+
+                    String fieldName = NumberUtils.isCreatable(value) ? "metricvalue" : "qualvalue";
+                    r.put(fieldName, value);
+
+                    r.put("analysis_id", so.getAnalysis_id());
+                    r.put("dataid", so.getDataId());
+                    r.put("readset", so.getReadset());
+                    r.put("container", job.getContainer());
+                    r.put("createdby", job.getUser().getUserId());
+
+                    Table.insert(job.getUser(), ti, r);
+                    total++;
+                }
+
+                job.getLogger().info("total metrics: " + total);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
             }
         }
 
