@@ -2,7 +2,7 @@ metricData <- data.frame(dataId = integer(), readsetId = integer(), metricname =
 
 for (datasetId in names(seuratObjects)) {
   seuratObj <- readRDS(seuratObjects[[datasetId]])
-  metricData <- bind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'TotalCells', metricvalue = ncol(seuratObj)))
+  metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'TotalCells', metricvalue = ncol(seuratObj)))
 
   if (length(unique(seuratObj$DatasetId)) > 0) {
     stop(paste0('Seurat data prototypes must be a single dataset. Problem ID: ', datasetId))
