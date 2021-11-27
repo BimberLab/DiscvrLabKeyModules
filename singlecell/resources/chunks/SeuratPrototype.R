@@ -4,7 +4,7 @@ for (datasetId in names(seuratObjects)) {
   seuratObj <- readRDS(seuratObjects[[datasetId]])
   metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'TotalCells', metricvalue = ncol(seuratObj)))
 
-  if (length(unique(seuratObj$DatasetId)) > 0) {
+  if (length(unique(seuratObj$DatasetId)) > 1) {
     stop(paste0('Seurat data prototypes must be a single dataset. Problem ID: ', datasetId))
   }
 
