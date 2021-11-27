@@ -25,7 +25,7 @@ for (datasetId in names(seuratObjects)) {
         stop(paste0('Hashing call rate was: ', hashingCalled, ' for dataset: ', datasetId))
     }
 
-    metricData <- bind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'FractionFailedHashing', metricvalue = hashingCalled))
+    metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'FractionFailedHashing', metricvalue = hashingCalled))
 
     discordantCells <- sum(seuratObj@meta.data$HTO.Classification == 'Discordant')
     discordantCells <- discordantCells / nrow(seuratObj@meta.data)
@@ -35,7 +35,7 @@ for (datasetId in names(seuratObjects)) {
         stop(paste0('Discordant hashing rate was: ', discordantCells, ' for dataset: ', datasetId))
     }
 
-    metricData <- bind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'FractionDiscordantHashing', metricvalue = discordantCells))
+    metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'FractionDiscordantHashing', metricvalue = discordantCells))
   }
 
   if (is.null(usesCiteSeq[[datasetId]])) {
@@ -48,10 +48,10 @@ for (datasetId in names(seuratObjects)) {
     }
 
     fractionADTGT0 <- sum(seuratObj@meta.data$nCount_ADT > 0) / nrow(seuratObj@meta.data)
-    metricData <- bind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'FractionADT_GT0', metricvalue = fractionADTGT0))
+    metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'FractionADT_GT0', metricvalue = fractionADTGT0))
 
     fractionADTGT5 <- sum(seuratObj@meta.data$nCount_ADT > 5) / nrow(seuratObj@meta.data)
-    metricData <- bind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'FractionADT_GT5', metricvalue = fractionADTGT5))
+    metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'FractionADT_GT5', metricvalue = fractionADTGT5))
   }
 
   if (requireSaturation && !'Saturation.RNA' %in% names(seuratObj@meta.data)) {
@@ -70,7 +70,7 @@ for (datasetId in names(seuratObjects)) {
       stop(paste0('Mean RNA saturation was: ', meanSaturation.RNA, ' for dataset: ', datasetId))
     }
 
-    metricData <- bind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'MeanSaturation.RNA', metricvalue = meanSaturation.RNA))
+    metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'MeanSaturation.RNA', metricvalue = meanSaturation.RNA))
   }
 
   if (requireSingleR && !'dice.label' %in% names(seuratObj@meta.data)) {
