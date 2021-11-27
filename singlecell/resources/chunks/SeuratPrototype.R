@@ -17,25 +17,19 @@ for (datasetId in names(seuratObjects)) {
       stop(paste0('Missing cell hashing calls for dataset: ', datasetId))
     }
 
-    hashingCalled <- sum(seuratObj@meta.data$HTO.Classification %in% c('Singlet', 'Doublet'))
-    hashingCalled <- hashingCalled / nrow(seuratObj@meta.data)
-    hashingCalled <- 1 - hashingCalled
-
-    if (!is.null(maxHashingPctFail) && hashingCalled < maxHashingPctFail) {
-        stop(paste0('Hashing call rate was: ', hashingCalled, ' for dataset: ', datasetId))
+    fractionFailedHashing <- 1 - (sum(seuratObj@meta.data$HTO.Classification %in% c('Singlet', 'Doublet')) / nrow(seuratObj@meta.data))
+    if (!is.null(maxHashingPctFail) && fractionFailedHashing > maxHashingPctFail) {
+        stop(paste0('Fraction failing cell hashing was : ', fractionFailedHashing, ' for dataset: ', datasetId, ', above threshold of: ', maxHashingPctFail))
     }
 
-    metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'FractionFailedHashing', metricvalue = hashingCalled))
+    metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'FractionFailedHashing', metricvalue = fractionFailedHashing))
 
-    discordantCells <- sum(seuratObj@meta.data$HTO.Classification == 'Discordant')
-    discordantCells <- discordantCells / nrow(seuratObj@meta.data)
-    discordantCells <- 1 - discordantCells
-
-    if (!is.null(maxHashingPctDiscordant) && discordantCells < maxHashingPctDiscordant) {
-        stop(paste0('Discordant hashing rate was: ', discordantCells, ' for dataset: ', datasetId))
+    fractionDiscordantHashing <- 1 - (sum(seuratObj@meta.data$HTO.Classification == 'Discordant') / nrow(seuratObj@meta.data))
+    if (!is.null(maxHashingPctDiscordant) && fractionDiscordantHashing > maxHashingPctDiscordant) {
+        stop(paste0('Discordant hashing rate was: ', fractionDiscordantHashing, ' for dataset: ', datasetId, ', above threshold of: ', maxHashingPctDiscordant))
     }
 
-    metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'FractionDiscordantHashing', metricvalue = discordantCells))
+    metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'FractionDiscordantHashing', metricvalue = fractionDiscordantHashing))
   }
 
   if (is.null(usesCiteSeq[[datasetId]])) {
@@ -67,7 +61,7 @@ for (datasetId in names(seuratObjects)) {
   if ('Saturation.RNA' %in% names(seuratObj@meta.data)) {
     meanSaturation.RNA <- mean(seuratObj$Saturation.RNA)
     if (!is.null(minSaturation) && meanSaturation.RNA < minSaturation) {
-      stop(paste0('Mean RNA saturation was: ', meanSaturation.RNA, ' for dataset: ', datasetId))
+      stop(paste0('Mean RNA saturation was: ', meanSaturation.RNA, ' for dataset: ', datasetId, ', below threshold of: ', minSaturation))
     }
 
     metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'MeanSaturation.RNA', metricvalue = meanSaturation.RNA))
