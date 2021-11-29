@@ -25,7 +25,11 @@ bindArgs <- function(fun, seuratObj, allowableArgNames = NULL, disallowedArgName
                 displayVal <- '[object]'
             }
 
-            print(paste0('Binding argument: ', name, ': ', displayVal, collapse = ','))
+            if (length(displayVal) > 1) {
+                displayVal <- paste0(displayVal, collapse = ',')
+            }
+
+            print(paste0('Binding argument: ', name, ': ', displayVal))
             boundArgs[[name]] <- val
         }
     }
