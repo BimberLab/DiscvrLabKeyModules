@@ -73,7 +73,7 @@ for (datasetId in names(seuratObjects)) {
 
   if (dietSeurat) {
     print(paste0('Running DietSeurat for: ', datasetId))
-    seuratObj <- DietSeurat(seuratObj)
+    seuratObj <- Seurat::DietSeurat(seuratObj)
   }
 
   saveData(seuratObj, datasetId)
