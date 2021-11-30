@@ -164,6 +164,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new AppendSaturation.Provider());
         SequencePipelineService.get().registerPipelineStep(new SeuratPrototype.Provider());
         SequencePipelineService.get().registerPipelineStep(new DietSeurat.Provider());
+        SequencePipelineService.get().registerPipelineStep(new ClearCommands.Provider());
 
         SequenceAnalysisService.get().registerFileHandler(new NimbleAlignmentStep());
     }
