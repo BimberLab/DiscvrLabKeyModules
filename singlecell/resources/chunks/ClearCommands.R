@@ -1,7 +1,7 @@
 for (datasetId in names(seuratObjects)) {
   seuratObj <- readRDS(seuratObjects[[datasetId]])
 
-  seuratObj@commands <- list()
+  seuratObj <- clearSeuratCommands(seuratObj)
   saveData(seuratObj, datasetId)
 
   # Cleanup
