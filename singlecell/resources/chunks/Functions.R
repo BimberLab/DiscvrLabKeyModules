@@ -39,15 +39,23 @@ bindArgs <- function(fun, seuratObj, allowableArgNames = NULL, disallowedArgName
     fun
 }
 
+clearSeuratCommands <- function(seuratObj, maxSize = 500000) {
+    for (commandName in names(seuratObj@commands)) {
+        val <- object.size(x = slot(seuratObj@commands[[commandName]], 'call.string'))
+        if (val > maxSize) {
+            print(paste0('Clearing call.string for: ', commandName, '. size: ', format(val, units = 'auto')))
+            slot(seuratObj@commands[[commandName]], 'call.string') <- ''
+        }
+    }
+
+    return(seuratObj)
+}
+
 savedFiles <- data.frame(datasetId = character(), datasetName = character(), filename = character(), outputFileId = character(), readsetId = character())
 write.table(savedFiles, file = 'savedSeuratObjects.txt', quote = FALSE, sep = '\t', row.names = FALSE, col.names = FALSE)
 
 saveData <- function(seuratObj, datasetId) {
     print(paste0('Saving dataset: ', datasetId))
-
-    # Note: there were historic issues related to the serialized seurat object getting
-    # logged to commands, due to using do.call, so clear them here
-    seuratObj@commands <- list()
 
     print(seuratObj)
     if ("CellMembrane" %in% rownames(installed.packages())) {
