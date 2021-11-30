@@ -44,7 +44,15 @@ write.table(savedFiles, file = 'savedSeuratObjects.txt', quote = FALSE, sep = '\
 
 saveData <- function(seuratObj, datasetId) {
     print(paste0('Saving dataset: ', datasetId))
+
+    # Note: there were historic issues related to the serialized seurat object getting
+    # logged to commands, due to using do.call, so clear them here
+    seuratObj@commands <- list()
+
     print(seuratObj)
+    if ("CellMembrane" %in% rownames(installed.packages())) {
+        CellMembrane::InspectSeurat(seuratObj)
+    }
 
     fn <- paste0(outputPrefix, '.', datasetId, '.seurat.rds')
     barcodeFile <- paste0(outputPrefix, '.', datasetId, '.cellBarcodes.csv')
