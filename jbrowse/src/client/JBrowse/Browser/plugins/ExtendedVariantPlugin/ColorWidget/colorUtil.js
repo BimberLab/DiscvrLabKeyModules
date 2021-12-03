@@ -1,16 +1,14 @@
-import {colorSchemes} from "./colorUtil"
 import {rgb} from "color-convert"
 
 export function hexToRGB(hexStr){
 // takes a hex string and returns rgb decimals in a list
    let hex = hexStr.replace(/#/g, '')
-   if(hex.length != 6){
+   if(hex.length !== 6){
       console.error("Six-digit hex code required.")
       return
    }
    const hexList = hex.match(/.{1,2}/g)
-   const rgbList = [parseInt(hexList[0], 16), parseInt(hexList[1], 16), parseInt(hexList[2], 16)]
-   return rgbList
+   return [parseInt(hexList[0], 16), parseInt(hexList[1], 16), parseInt(hexList[2], 16)]
 }
 
 export function generateGradient(hex1, hex2, steps, maxVal){
@@ -80,11 +78,10 @@ export function generateSchemeJexl(scheme){
 // scheme: an object from colorSchemes.js
 // returns a jexl string for that object
    let jexl = ""
-   if(scheme.dataType == "option"){
+   if(scheme.dataType === "option"){
       jexl = generateOptJexl(scheme)
-   } else if (scheme.dataType == "number"){
+   } else if (scheme.dataType === "number"){
       jexl = generateNumJexl(scheme)
    }
    return jexl
-
 }

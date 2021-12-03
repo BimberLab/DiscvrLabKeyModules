@@ -1,23 +1,15 @@
-import { observer } from 'mobx-react'
-import React, { useState } from 'react'
-import {colorSchemes} from "./colorSchemes"
+import {observer} from 'mobx-react'
+import React from 'react'
 import {style as styles} from "./style";
-import { generateGradient } from "./colorUtil"
+import {generateGradient} from "./colorUtil"
 
-import {
-  TableCell,
-  TableRow,
-  Table,
-  TableBody,
-  TableHead,
-  Box
-} from '@material-ui/core'
+import {Box, Table, TableBody, TableCell, TableHead, TableRow} from '@material-ui/core'
 
 function makeTitle(key){
-   if (key == "minVal"){
+   if (key === "minVal"){
       return "Lower"
    }
-   if (key == "maxVal"){
+   if (key === "maxVal"){
       return "Upper"
    }
    return key
@@ -60,11 +52,11 @@ const SchemeComponent = observer(props => {
          </TableCell>
       </TableRow>
       let tableRows = []
-      for (let i = 0; i < gradient.length; i++){
+      for (let i = 0; i < gradient.length - 1; i++){
          tableRows.push(
             <TableRow key={'gradient-' + i}>
                <TableCell className={classes.tableCell}>
-                  {gradient[i].ub.toFixed(scheme.displaySigFigs)}
+                  {gradient[i].ub.toFixed(scheme.displaySigFigs) + ' to ' + gradient[i + 1].ub.toFixed(scheme.displaySigFigs) }
                </TableCell>
                <TableCell className={classes.tableCell}>
                   <Box
