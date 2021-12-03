@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { observer } from 'mobx-react'
-import { getSession } from '@jbrowse/core/util'
-import { RefNameAutocomplete } from '@jbrowse/plugin-linear-genome-view'
-import { createViewState, loadPlugins, ViewModel } from '@jbrowse/react-linear-genome-view';
-import BaseResult from '@jbrowse/core/TextSearch/BaseResults'
+import { observer } from 'mobx-react';
+import { getSession } from '@jbrowse/core/util';
+import { RefNameAutocomplete } from '@jbrowse/plugin-linear-genome-view';
+import { createViewState } from '@jbrowse/react-linear-genome-view';
+import BaseResult from '@jbrowse/core/TextSearch/BaseResults';
 import { ActionURL, Ajax } from '@labkey/api';
+import "./search.css"
 
-import MyProjectPlugin from "../Browser/plugins/MyProjectPlugin/index"
-import LogSession from "../Browser/plugins/LogSession/index"
-import ExtendedVariantPlugin from "../Browser/plugins/ExtendedVariantPlugin/index"
+import MyProjectPlugin from '../Browser/plugins/MyProjectPlugin/index';
+import LogSession from '../Browser/plugins/LogSession/index';
+import ExtendedVariantPlugin from '../Browser/plugins/ExtendedVariantPlugin/index';
 
 const nativePlugins = [MyProjectPlugin, ExtendedVariantPlugin, LogSession]
 

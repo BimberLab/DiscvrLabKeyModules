@@ -1,0 +1,13 @@
+fieldset.MuiOutlinedInput-notchedOutline > legend {
+    border-style: none;
+}
+
+/* TODO: this targets the input only. Can we make a broader directive, including the font below the field and the auto-complete text? */
+div.MuiInputBase-root {
+    font-size: 14px;
+}
+
+/* TODO: This does not work. */
+div.MuiAutocomplete-root {
+    font-size: 14px;
+}

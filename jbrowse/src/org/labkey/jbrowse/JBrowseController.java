@@ -37,7 +37,6 @@ import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.Results;
 import org.labkey.api.data.Selector;
@@ -64,14 +63,12 @@ import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.settings.AppProps;
+import org.labkey.api.settings.LookAndFeelProperties;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
-import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.UnauthorizedException;
-import org.labkey.api.view.WebPartView;
-import org.labkey.api.view.template.PageConfig;
 import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
@@ -689,6 +686,27 @@ public class JBrowseController extends SpringActionController
 
                 resp = db.getConfigJson(getUser(), _log);
             }
+
+            // The rationale of this is to take the site theme, and map this to the primary site color.
+            // The client-side JBrowse LinearGenomeView will use this to make a theme. For the time being, three of four JBrowse
+            // theme colors are hard-coded, and we only update the JBrowse secondary color to match the LabKey one
+            LookAndFeelProperties props = LookAndFeelProperties.getInstance(getContainer());
+            String secondaryColor = null;
+            switch (props.getThemeName())
+            {
+                case "Blue" -> secondaryColor = "#21309A";
+                case "Brown" -> secondaryColor = "#682B16";
+                case "Harvest" -> secondaryColor = "#892405";
+                case "Madison" -> secondaryColor = "#990000";
+                case "Sage" -> secondaryColor = "#0F4F0B";
+                case "Seattle" -> secondaryColor = "#226495";
+                default -> {
+                    _log.error("Unexpect theme name: " + props.getThemeName());
+                    secondaryColor = "#226495";
+                }
+            }
+
+            resp.put("siteThemeColor", secondaryColor);
 
             return new ApiSimpleResponse(resp);
         }
