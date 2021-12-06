@@ -691,25 +691,30 @@ public class JBrowseController extends SpringActionController
             // The client-side JBrowse LinearGenomeView will use this to make a theme. For the time being, three of four JBrowse
             // theme colors are hard-coded, and we only update the JBrowse secondary color to match the LabKey one
             LookAndFeelProperties props = LookAndFeelProperties.getInstance(getContainer());
-            String themePrimaryColor;
-            String themeSecondaryColor;
+            String lightColor;
+            String darkColor;
             switch (props.getThemeName())
             {
-                case "Blue" -> {themeSecondaryColor = "#21309A";themePrimaryColor = "#21309A";}
-                case "Brown" -> {themeSecondaryColor = "#682B16";themePrimaryColor = "#682B16";}
-                case "Harvest" -> {themeSecondaryColor = "#e86130";themePrimaryColor = "f7862a";}
-                case "Madison" -> {themeSecondaryColor = "#990000";themePrimaryColor = "#C5050C";}
-                case "Sage" -> {themeSecondaryColor = "#0F4F0B";themePrimaryColor = "#0F4F0B";}
-                case "Seattle" -> {themeSecondaryColor = "#226495";themePrimaryColor = "#226495";}
+                case "Blue" -> {darkColor = "#21309A";lightColor = "#21309A";}
+                case "Brown" -> {darkColor = "#682B16";lightColor = "#682B16";}
+                case "Leaf" -> {darkColor = "#597530";lightColor = "#789E47";}
+                case "Harvest" -> {darkColor = "#e86130";lightColor = "#F7862A";}
+                case "Madison" -> {darkColor = "#990000";lightColor = "#C5050C";}
+                case "Mono" -> {darkColor = "#4c4c4c";lightColor = "#7f7f7f";}
+                case "Ocean" -> {darkColor = "#307272";lightColor = "#208e8b";}
+                case "Overcast" -> {darkColor = "#116596";lightColor = "#3495d2";}
+                case "Sage" -> {darkColor = "#0F4F0B";lightColor = "#0F4F0B";}
+                case "Seattle" -> {darkColor = "#116596";lightColor = "#116596";} //NOTE: Seattle technically uses #73b6e0 as the light color
                 default -> {
-                    _log.error("Unexpect theme name: " + props.getThemeName());
-                    themePrimaryColor = "";
-                    themeSecondaryColor = "#226495";
+                    _log.error("Unexpected theme name: " + props.getThemeName());
+                    // This will result in the client using the JBrowse defaults:
+                    lightColor = null;
+                    darkColor = null;
                 }
             }
 
-            resp.put("themePrimaryColor", themePrimaryColor);
-            resp.put("themeSecondaryColor", themeSecondaryColor);
+            resp.put("themeLightColor", lightColor);
+            resp.put("themeDarkColor", darkColor);
 
             return new ApiSimpleResponse(resp);
         }

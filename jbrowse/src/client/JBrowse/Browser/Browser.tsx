@@ -71,10 +71,10 @@ function View(){
                     loadedPlugins = []
                 }
 
-                const themePrimaryColor = jsonRes.themePrimaryColor || midnight
-                const themeSecondaryColor = jsonRes.themeSecondaryColor || blue
-                delete jsonRes.themePrimaryColor
-                delete jsonRes.themeSecondaryColor
+                const themePrimaryColor = jsonRes.themeLightColor || midnight
+                const themeSecondaryColor = jsonRes.themeDarkColor || blue
+                delete jsonRes.themeLightColor
+                delete jsonRes.themeDarkColor
                 jsonRes.configuration = {
                     "theme": {
                         "palette": {
