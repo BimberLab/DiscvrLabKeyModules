@@ -5,3 +5,7 @@ fieldset.MuiOutlinedInput-notchedOutline > legend {
 div.jbrowse-app {
     font-size: 14px;
 }
+
+.MuiTypography-root {
+    font-size: 14px !important;
+}

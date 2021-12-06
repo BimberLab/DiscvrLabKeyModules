@@ -28,6 +28,7 @@ export const style = (0, _styles.makeStyles)(function (theme) {
       },
       addNewControl: {
          margin: theme.spacing(1),
+         padding: theme.spacing(2),
          minWidth: 150,
       },
       table: {

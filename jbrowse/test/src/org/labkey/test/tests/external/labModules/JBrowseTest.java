@@ -139,9 +139,9 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(Locator.xpath("//span[contains(text(), 'Color')]"));
         waitAndClick(Locator.tagWithId("div", "category-select"));
         waitAndClick(Locator.xpath("//li[@data-value = 'AF']"));
-        assertElementPresent(Locator.tagWithText("td", "0.000"));
+        assertElementPresent(Locator.tagWithText("td", "0.000 to 0.100"));
         assertElementPresent(Locator.tagWithAttribute("div", "fill", "#0C28F9"));
-        assertElementPresent(Locator.tagWithText("td", "1.000"));
+        assertElementPresent(Locator.tagWithText("td", "0.900 to 1.000"));
         assertElementPresent(Locator.tagWithAttribute("div", "fill", "#F90C00"));
         assertElementPresent(Locator.tagWithText("td", "Other"));
         assertElementPresent(Locator.tagWithAttribute("div", "fill", "gray"));

@@ -691,22 +691,25 @@ public class JBrowseController extends SpringActionController
             // The client-side JBrowse LinearGenomeView will use this to make a theme. For the time being, three of four JBrowse
             // theme colors are hard-coded, and we only update the JBrowse secondary color to match the LabKey one
             LookAndFeelProperties props = LookAndFeelProperties.getInstance(getContainer());
-            String secondaryColor = null;
+            String themePrimaryColor;
+            String themeSecondaryColor;
             switch (props.getThemeName())
             {
-                case "Blue" -> secondaryColor = "#21309A";
-                case "Brown" -> secondaryColor = "#682B16";
-                case "Harvest" -> secondaryColor = "#892405";
-                case "Madison" -> secondaryColor = "#990000";
-                case "Sage" -> secondaryColor = "#0F4F0B";
-                case "Seattle" -> secondaryColor = "#226495";
+                case "Blue" -> {themeSecondaryColor = "#21309A";themePrimaryColor = "#21309A";}
+                case "Brown" -> {themeSecondaryColor = "#682B16";themePrimaryColor = "#682B16";}
+                case "Harvest" -> {themeSecondaryColor = "#e86130";themePrimaryColor = "f7862a";}
+                case "Madison" -> {themeSecondaryColor = "#990000";themePrimaryColor = "#C5050C";}
+                case "Sage" -> {themeSecondaryColor = "#0F4F0B";themePrimaryColor = "#0F4F0B";}
+                case "Seattle" -> {themeSecondaryColor = "#226495";themePrimaryColor = "#226495";}
                 default -> {
                     _log.error("Unexpect theme name: " + props.getThemeName());
-                    secondaryColor = "#226495";
+                    themePrimaryColor = "";
+                    themeSecondaryColor = "#226495";
                 }
             }
 
-            resp.put("siteThemeColor", secondaryColor);
+            resp.put("themePrimaryColor", themePrimaryColor);
+            resp.put("themeSecondaryColor", themeSecondaryColor);
 
             return new ApiSimpleResponse(resp);
         }

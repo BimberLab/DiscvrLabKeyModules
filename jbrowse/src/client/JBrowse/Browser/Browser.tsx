@@ -71,13 +71,15 @@ function View(){
                     loadedPlugins = []
                 }
 
-                let siteColor = jsonRes.siteThemeColor || blue
-                delete jsonRes.siteThemeColor
+                const themePrimaryColor = jsonRes.themePrimaryColor || midnight
+                const themeSecondaryColor = jsonRes.themeSecondaryColor || blue
+                delete jsonRes.themePrimaryColor
+                delete jsonRes.themeSecondaryColor
                 jsonRes.configuration = {
                     "theme": {
                         "palette": {
-                            primary: {main: midnight},
-                            secondary: {main: siteColor},
+                            primary: {main: themeSecondaryColor},
+                            secondary: {main: themePrimaryColor},
                             tertiary: refTheme.palette.augmentColor({main: grey}),
                             quaternary: refTheme.palette.augmentColor({main: mandarin}),
                         }

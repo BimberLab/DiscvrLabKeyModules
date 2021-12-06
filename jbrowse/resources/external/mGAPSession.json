@@ -30,7 +30,7 @@
       }
     }
   },
-  "location": "1:116,089,906..117,411,914",
+  "location": "1:116,589,906..117,411,914",
   "tracks": [
     {
       "type": "ExtendedVariantTrack",
@@ -59,7 +59,10 @@
           "displayId": "mgap_hg38-ExtendedVariantDisplay",
           "maxDisplayedBpPerPx": 2000,
           "renderer": {
-            "type": "ExtendedVariantRenderer"
+            "type": "ExtendedVariantRenderer",
+            "activeSamples": "m00004,m00005",
+            "infoFilters": ["AF:gt:0.1"],
+            "palette": "AF"
           }
         }
       ],

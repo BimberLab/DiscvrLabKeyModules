@@ -23,7 +23,7 @@ export function generateGradient(hex1, hex2, steps, maxVal){
       b: rgb1[2],
       hex: rgb.hex(rgb1[0], rgb1[1], rgb1[2]),
    })
-   for(let i = 1; i <= steps; i++){
+   for (let i = 1; i <= (steps-1); i++){
       let percent = (1/steps) * i
       let gradientStep = {}
       let ub = percent * maxVal
@@ -39,11 +39,11 @@ export function generateGradient(hex1, hex2, steps, maxVal){
 }
 
 export function generateNumJexl(scheme){
-// scheme: an object from colorSchemes.js
-// creates a jexl string that returns colors in a gradient based on schema passed
+   // scheme: an object from colorSchemes.js
+   // creates a jexl string that returns colors in a gradient based on schema passed
    let jexl = "jexl"
    let gradientSteps = generateGradient(scheme.options["minVal"], scheme.options["maxVal"], scheme.gradientSteps, scheme.maxVal)
-   for(let i = 0; i < gradientSteps.length; i++){
+   for (let i = 0; i < gradientSteps.length; i++){
       let step = gradientSteps[i]
       if(step === gradientSteps[0]){
          // first entry
@@ -64,24 +64,26 @@ export function generateNumJexl(scheme){
 }
 
 export function generateOptJexl(scheme){
-// scheme: an object from colorSchemes.js
-// creates a jexl string that returns colors based on scheme passed
+   // scheme: an object from colorSchemes.js
+   // creates a jexl string that returns colors based on scheme passed
    let jexl = "jexl"
    Object.entries(scheme.options).map(([key, val]) =>
       jexl = jexl + ":" + scheme.jexlComponent + "=='" + key + "'?'" + val + "'"
    )
    jexl = jexl + ":'gray'"
+
    return jexl
 }
 
 export function generateSchemeJexl(scheme){
-// scheme: an object from colorSchemes.js
-// returns a jexl string for that object
-   let jexl = ""
+   let jexl
    if(scheme.dataType === "option"){
       jexl = generateOptJexl(scheme)
    } else if (scheme.dataType === "number"){
       jexl = generateNumJexl(scheme)
+   } else {
+      console.error("Unknown dataType: " + scheme.dataType)
    }
+
    return jexl
 }

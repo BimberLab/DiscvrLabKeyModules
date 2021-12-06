@@ -11,17 +11,6 @@ export const operators = {
     eq: "=="
 }
 
-export function unexpandedFilterStringToObj(filter){
-// filter: string in the format 'field:operator:value'
-// returns said string as an object
-   const splitFilter = filter.split(":")
-   return {
-      field: splitFilter[0],
-      operator: splitFilter[1],
-      value: splitFilter[2]
-   }
-}
-
 export function expandedFilterStringToObj(filter){
 // filter: string in the format 'field:expression'
 // returns said string as an object
@@ -37,7 +26,7 @@ export function isFilterStringExpanded(filter){
 // returns true if filter fits in expanded filter format
     try {
       let temp = filter.split(":")
-      if(temp.length == 2 || temp[1].includes('variant.INFO.')){
+      if (temp.length === 2 || temp[1].includes('variant.INFO.')){
          return true
       }
       return false
@@ -51,7 +40,7 @@ export function isUnexpandedFilterValid(filter){
 // returns true if filter fits in unexpanded filter format
    try {
       const filterProps = filter.split(":")
-      if (filterProps.length != 3){
+      if (filterProps.length !== 3){
          console.error("Invalid filter - " + filter + " does not have a length of 3")
          return false
       }
@@ -60,24 +49,24 @@ export function isUnexpandedFilterValid(filter){
          console.error("Invalid filter - " + filterProps[0] + " in " + filter + " is not a valid field.")
          return false
       }
-      if(filterProps[1] != ""){
-         if (fields[filterProps[0]].operators.indexOf(operators[filterProps[1]]) < 0){
+      if (filterProps[1] !== ""){
+         if (fields[filterProps[0]].operators.indexOf(filterProps[1]) < 0){
             console.error("Invalid filter - " + filterProps[1] + " in " + filter + " is not a valid operator.")
             return false
          }
       }
-      if(filterProps[2] != ""){
+      if (filterProps[2] !== ""){
          let dataType = fields[filterProps[0]].dataType
-         if(dataType == "number" && isNaN(filterProps[2])){
+         if (dataType === "number" && isNaN(filterProps[2])){
             console.error("Invalid filter - " + filterProps[2] + " in " + filter + " is not valid. Expected a number.")
             return false
          }
-         if(dataType == "string"){
+         if (dataType === "string"){
             if (fields[filterProps[0]].options.indexOf(filterProps[2].replaceAll("'", "")) < 0){
                console.error("Invalid filter - " + filterProps[2] + " in " + filter + " is not a valid option for " + filterProps[0] + ". Enter one of the following - " + fields[filterProps[0]].options)
                return false
             }
-            if (filterProps[2].replaceAll("'", "") == filterProps[2]){
+            if (filterProps[2].replaceAll("'", "") === filterProps[2]){
                console.error("Invalid filter - " + filterProps[2] + " in " + filter + " is not wrapped in \" ' \".")
                return false
             }
@@ -94,14 +83,14 @@ export function removeInvalidUnexpandedFilters(filters){
 // filters: array of strings
 // returns an array of strings filterList with invalid unexpanded strings removed
    let filterList = []
-   if(!filters){
+   if (!filters){
       return filterList
    }
-   for(const filter of filters){
-      if(isFilterStringExpanded(filter)){
+   for (const filter of filters){
+      if (isFilterStringExpanded(filter)){
          continue
       }
-      if(isUnexpandedFilterValid(filter)){
+      if (isUnexpandedFilterValid(filter)){
          filterList.push(filter)
       }
    }
@@ -116,17 +105,17 @@ export function expandFilters(filters) {
 // if a string does not meet formatting requirements, it is removed from the list
 
     let filterList = []
-    if(!filters){
+    if (!filters){
         return filterList
     }
-    for(const filter of filters){
+    for (const filter of filters){
         try {
-            if(isFilterStringExpanded(filter)){
+            if (isFilterStringExpanded(filter)){
                 // if expanded, we use it as-is
                 filterList.push(filter)
                 continue
             }
-            if(!isUnexpandedFilterValid(filter)){
+            if (!isUnexpandedFilterValid(filter)){
                // if invalid filter, skip it entirely
                continue
             }
@@ -134,7 +123,7 @@ export function expandFilters(filters) {
             const field = filterProps[0]
             const rawOperator = filterProps[1]
             const value = filterProps[2]
-            if(rawOperator == "" || value == ""){
+            if (rawOperator === "" || value === ""){
                 filterList.push(filter)
                 continue
             }
@@ -145,7 +134,6 @@ export function expandFilters(filters) {
             filterList.push(expandedFilter)
         } catch (e){
             console.error("Error parsing filter, skipping. " + e)
-            continue
         }
     }
     return filterList

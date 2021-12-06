@@ -1,58 +1,66 @@
 import {colorSchemes} from "./colorSchemes"
-import {generateSchemeJexl} from "./colorUtil"
 import {style as styles} from "./style";
+import {getSession} from '@jbrowse/core/util'
+import {readConfObject} from '@jbrowse/core/configuration'
+import {generateSchemeJexl} from "../ColorWidget/colorUtil";
 
-import {
-  FormControl,
-  Select,
-  MenuItem,
-  InputLabel
-} from '@material-ui/core'
-import { useState } from 'react'
+import {Button, FormControl, InputLabel, MenuItem, Select} from '@material-ui/core'
+import {useState} from 'react'
 import SchemeTable from './SchemeComponent'
+
 export default jbrowse => {
 
-   const { observer, PropTypes: MobxPropTypes } = jbrowse.jbrequire('mobx-react')
-   const React = jbrowse.jbrequire('react')
-   function ColorSchemePicker(props){
-      const classes = styles()
-      const { model } = props
-      let track = model.track
-      const [colorTable, setColorTable] = useState(<SchemeTable colorScheme={colorSchemes[track.displays[0].renderer.palette.value]}/>)
+    const { observer, PropTypes: MobxPropTypes } = jbrowse.jbrequire('mobx-react')
+    const React = jbrowse.jbrequire('react')
+    function ColorSchemePicker(props){
+        const classes = styles()
+        const { model } = props
+        const { track } = model
 
-      const [scheme, setScheme] = useState(track.displays[0].renderer.palette.value)
-      const handleSchemeChange = (event) => {
-         setScheme(event.target.value)
-         let activeColorScheme = colorSchemes[event.target.value]
-         track.displays[0].renderer.colorJexl.set(generateSchemeJexl(activeColorScheme))
-         track.displays[0].renderer.palette.set(event.target.value)
-         setColorTable(<SchemeTable colorScheme={activeColorScheme}/>)
-      }
+        const displays = readConfObject(track, ['displays']) || []
+        let paletteName = displays[0].renderer.palette
+        paletteName = paletteName || 'IMPACT'
 
-      const menuItems = (
-       Object.entries(colorSchemes).map(([key, val]) =>
-           <MenuItem key={key} value={key}>
-            {key}
-           </MenuItem>
-       ))
+        const [palette, setPalette] = useState(paletteName)
 
+        const handleSchemeChange = (event) => {
+            setPalette(event.target.value)
+        }
 
-      return(
-         <>
-            <FormControl className={classes.schemeControl}>
-               <InputLabel id="category-select-label">Color using</InputLabel>
-                <Select
-                  labelId="category-select-label"
-                  id="category-select"
-                  value={scheme}
-                  onChange={handleSchemeChange}
-                >
-                    {menuItems}
-                </Select>
-            </FormControl>
-            {colorTable}
-         </>
-      )
-   }
-   return observer(ColorSchemePicker)
+        const onApply = (event) => {
+            const jexl = generateSchemeJexl(colorSchemes[palette])
+            track.displays[0].renderer.color1.set(jexl)
+            track.displays[0].renderer.palette.set(palette)
+            getSession(model).hideWidget(model)
+        }
+
+        const menuItems = (
+                Object.entries(colorSchemes).map(([key, val]) =>
+                        <MenuItem key={key} value={key}>
+                            {val.title || key}
+                        </MenuItem>
+                ))
+
+        return(
+                <>
+                    <FormControl className={classes.schemeControl}>
+                        <InputLabel id="category-select-label">Color Using</InputLabel>
+                        <Select
+                                labelId="category-select-label"
+                                id="category-select"
+                                value={palette}
+                                onChange={handleSchemeChange}
+                        >
+                            {menuItems}
+                        </Select>
+                    </FormControl>
+                    <SchemeTable colorScheme={colorSchemes[palette]}/>
+                    <p/>
+                    <Button className={classes.applyButton} onClick={onApply} variant="contained" color="primary">
+                        Apply
+                    </Button>
+                </>
+        )
+    }
+    return observer(ColorSchemePicker)
 }

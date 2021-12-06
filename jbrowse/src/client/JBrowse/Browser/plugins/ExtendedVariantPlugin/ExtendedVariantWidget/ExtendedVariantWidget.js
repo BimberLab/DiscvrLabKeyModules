@@ -85,10 +85,11 @@ export default jbrowse => {
                             )
                         }
                         let title = displays[display].properties[property]
-                        if(fields[title]){
-                           if(fields[title]["title"]){
-                              title = fields[title]["title"]
-                           }
+                        //TODO: lookup header??
+                        if (fields[title]){
+                            if (fields[title]["title"]){
+                                title = fields[title]["title"]
+                            }
                         }
 
                         tempProp.push(
@@ -329,6 +330,11 @@ export default jbrowse => {
             properties: []
         }]
         for (let infoEntry in feat["INFO"]){
+            if (infoEntry.startsWith('_')) {
+                print('skipping: ' + infoEntry)
+                continue
+            }
+
             infoConfig[0].properties.push(infoEntry)
         }
 
