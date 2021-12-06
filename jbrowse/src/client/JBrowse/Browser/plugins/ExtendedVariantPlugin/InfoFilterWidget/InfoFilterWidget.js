@@ -33,12 +33,14 @@ export default jbrowse => {
 
         const onRowDelete = (rowIdx) => {
             console.log('row delete: ' + rowIdx)
-            infoFilters.splice(rowIdx, 1);
+            infoFilters.splice(rowIdx, 1)
+            setInfoFilters(infoFilters)
         }
 
         const handleFilterSubmit = (event) => {
             //TODO: user feedback if invalid?
             let infoFiltersToAdd = removeInvalidUnexpandedFilters(infoFilters)
+            console.log('Setting:')
             console.log(infoFiltersToAdd)
 
             track.displays[0].renderer.infoFilters.set(infoFiltersToAdd)
@@ -46,8 +48,9 @@ export default jbrowse => {
         }
 
         const filterChangeHandler = (rowIdx, filterStr) => {
-            console.log('setting: ' + filterStr)
+            console.log('filter change: ' + filterStr)
             infoFilters[rowIdx] = filterStr
+            setInfoFilters(infoFilters)
         }
 
         const menuItems =
@@ -62,7 +65,7 @@ export default jbrowse => {
                     <Table className={classes.table}>
                         <TableBody>
                             {infoFilters.map((filterStr, key) =>
-                                    <InfoFilterRow key={key} infoFilters={infoFilters} filterChangeHandler={filterChangeHandler} deleteHandler={onRowDelete} rowIdx={Number(key)}/>
+                                    <InfoFilterRow key={key} filterStr={filterStr} filterChangeHandler={filterChangeHandler} deleteHandler={onRowDelete} rowIdx={Number(key)}/>
                             )}
                         </TableBody>
                     </Table>

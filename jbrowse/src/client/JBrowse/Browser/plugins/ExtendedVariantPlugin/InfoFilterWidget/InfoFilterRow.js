@@ -28,22 +28,16 @@ function convertFilterObjToString(filter) {
 
 const InfoFilterRow = observer(props => {
     const classes = styles()
-    const { rowIdx, infoFilters, filterChangeHandler, deleteHandler } = props
-
-    console.log('row:')
-    console.log(infoFilters)
-
-    const filterObj = convertFilterStringToObj(infoFilters[rowIdx])
+    const { rowIdx, filterStr, filterChangeHandler, deleteHandler } = props
+    const filterObj = convertFilterStringToObj(filterStr)
 
     const handleOperatorChange = (event) => {
         filterObj.operator = event.target.value
-        console.log(filterObj)
         filterChangeHandler(rowIdx, convertFilterObjToString(filterObj))
     };
 
     const handleValueChange = (event) => {
         filterObj.value = event.target.value
-        console.log(filterObj)
         filterChangeHandler(rowIdx, convertFilterObjToString(filterObj))
     }
 
