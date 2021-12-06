@@ -1,6 +1,5 @@
 import {style as styles} from "./style";
 import {filterMap} from "./filters"
-import React, {useState} from 'react'
 import {readConfObject} from '@jbrowse/core/configuration'
 import {getSession} from '@jbrowse/core/util'
 
@@ -18,23 +17,21 @@ export default jbrowse => {
         const { model } = props
         let track = model.track
 
-        const displays = readConfObject(track, ['displays']) || []
+        const displays = readConfObject(track, ['displays'])
         const initialFilters = displays[0].renderer.infoFilters || []
 
-        console.log('initial filters')
-        console.log(initialFilters)
-        const [infoFilters, setInfoFilters] = useState(initialFilters)
+        const [infoFilters, setInfoFilters] = React.useState(initialFilters)
 
         const addNewFilterRow = (event) => {
             console.log('adding new row: ' + event.target.value)
             infoFilters.push(event.target.value + "::")
-            setInfoFilters(infoFilters)
+            setInfoFilters([...infoFilters])
         }
 
         const onRowDelete = (rowIdx) => {
             console.log('row delete: ' + rowIdx)
             infoFilters.splice(rowIdx, 1)
-            setInfoFilters(infoFilters)
+            setInfoFilters([...infoFilters])
         }
 
         const handleFilterSubmit = (event) => {
@@ -50,7 +47,7 @@ export default jbrowse => {
         const filterChangeHandler = (rowIdx, filterStr) => {
             console.log('filter change: ' + filterStr)
             infoFilters[rowIdx] = filterStr
-            setInfoFilters(infoFilters)
+            setInfoFilters([...infoFilters])
         }
 
         const menuItems =
