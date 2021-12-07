@@ -1,6 +1,26 @@
 import { ConfigurationSchema } from '@jbrowse/core/configuration'
 import {types} from "mobx-state-tree";
 
+export const variantDetailsConfig = ConfigurationSchema('VariantDetailsConfig', {
+    sections: types.array(ConfigurationSchema('VariantDetailsSection', {
+        title: {
+            type: 'string',
+            description: 'The title for this section',
+            defaultValue: ''
+        },
+        properties: {
+            type: 'stringArray',
+            description: 'The list of INFO attributes to display',
+            defaultValue: []
+        },
+    })),
+    message: {
+        type: 'string',
+        description: 'Additional text that will appear at the top of the details view',
+        defaultValue: ''
+    }
+})
+
 export default pluginManager => {
   const { baseLinearDisplayConfigSchema } = pluginManager.getPlugin(
     'LinearGenomeViewPlugin',
@@ -9,25 +29,7 @@ export default pluginManager => {
     'ExtendedVariantDisplay',
     {
       renderer: pluginManager.pluggableConfigSchemaType('renderer'),
-      detailsConfig: ConfigurationSchema('VariantDetailsConfig', {
-        sections: types.array(ConfigurationSchema('VariantDetailsSection', {
-          title: {
-            type: 'string',
-            description: 'The title for this section',
-            defaultValue: ''
-          },
-          properties: {
-            type: 'stringArray',
-            description: 'The list of INFO attributes to display',
-            defaultValue: []
-          },
-        })),
-        message: {
-          type: 'string',
-          description: 'Additional text that will appear at the top of the details view',
-          defaultValue: ''
-        }
-      })
+      detailsConfig: variantDetailsConfig
     },
     { baseConfiguration: baseLinearDisplayConfigSchema, explicitlyTyped: true },
   )

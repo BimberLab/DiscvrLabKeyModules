@@ -22,25 +22,24 @@ export default jbrowse => {
       )
       .actions(self => ({
          selectFeature(feature){
+            const session = getSession(self)
             const track = getContainingTrack(self)
-            //TODO: make proper schema
-            const metadata = getConf(track, 'metadata')
-            const metadata2 = readConfObject(track, 'extendedVariantDisplayConfig')
-            console.log(metadata2)
-            var extendedVariantDisplayConfig = metadata.extendedVariantDisplayConfig || []
-            var message = metadata.message || ""
 
             const trackId = getConf(track, 'trackId')
-            const session = getSession(self)
-            var widgetId = 'Variant-' + trackId;
+            const detailsConfig = getConf(track, ['displays', '0', 'detailsConfig'])
+
+            const widgetId = 'Variant-' + trackId;
             const featureWidget = session.addWidget(
                'ExtendedVariantWidget',
                widgetId,
-               { featureData: feature,
-                   trackId: trackId,
-                   extendedVariantDisplayConfig: extendedVariantDisplayConfig,
-                   message: message
-           })
+               {
+                  featureData: feature,
+                  trackId: trackId,
+                  message: '',
+                  detailsConfig: detailsConfig
+               }
+            )
+
             session.showWidget(featureWidget)
             session.setSelection(feature)
          },
@@ -48,7 +47,6 @@ export default jbrowse => {
 
       .views(self => {
          const { renderProps: superRenderProps } = self
-         const { trackMenuItems: superTrackMenuItems } = self
          const filterMenu = {
             label: 'Filter By Attributes',
             icon: FilterListIcon,
@@ -101,9 +99,7 @@ export default jbrowse => {
                return {
                   ...superRenderProps(),
                   config: self.configuration.renderer,
-                  rendererConfig: self.configuration.renderer,
-                  filterConfig: self.configuration.filters,
-                  palette: self.configuration.palette
+                  rendererConfig: self.configuration.renderer
                }
             },
 
@@ -111,26 +107,10 @@ export default jbrowse => {
                return self.configuration.renderer.type
             },
 
-            get composedTrackMenuItems() {
-               return [filterMenu, sampleFilterMenu, colorMenu]
-            },
-
             trackMenuItems() {
                return [
-                  ...this.composedTrackMenuItems,
-                  {  label: 'Get Session',
-                     onClick: ()  => {
-                       console.log(getSnapshot(getSession(self)))
-                     },
-                     icon: FilterListIcon, },
-               ]
-            },
-
-            get filters() {
-               let filters = []
-               console.log('filters called!!')
-
-               return filters
+                  filterMenu, sampleFilterMenu, colorMenu
+              ]
             }
          }
       })

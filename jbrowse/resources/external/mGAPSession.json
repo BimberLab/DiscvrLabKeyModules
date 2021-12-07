@@ -60,37 +60,37 @@
           "maxDisplayedBpPerPx": 2000,
           "renderer": {
             "type": "ExtendedVariantRenderer"
+          },
+          "detailsConfig": {
+            "sections": [
+              {
+                "title": "Section 1",
+                "properties": [
+                  "AC",
+                  "AF",
+                  "IMPACT"
+                ]
+              },
+              {
+                "title": "Section 2",
+                "properties": [
+                  "LF",
+                  "MAF"
+                ]
+              },
+              {
+                "title": "Section 3",
+                "properties": [
+                  "ERBSEG_NM",
+                  "ERBSEG_CT",
+                  "SX"
+                ]
+              }
+            ],
+            "message": "\n\nAut molestiae temporibus nesciunt. Sed repellendus incidunt et. Inventore vitae tempora consequuntur maiores veritatis blanditiis voluptates explicabo.\n\nSimilique aliquid vel occaecati labore corporis adipisci provident voluptas."
           }
         }
-      ],
-      "metadata": {
-        "extendedVariantDisplayConfig": [
-          {
-            "name": "AC, AF",
-            "properties": [
-              "AC",
-              "AF",
-              "IMPACT"
-            ]
-          },
-          {
-            "name": "LF, MAF",
-            "properties": [
-              "LF",
-              "MAF"
-            ]
-          },
-          {
-            "name": "ERBSEG_NM, ERBSEG_CT, SX",
-            "properties": [
-              "ERBSEG_NM",
-              "ERBSEG_CT",
-              "SX"
-            ]
-          }
-        ],
-        "message": "\n\nAut molestiae temporibus nesciunt. Sed repellendus incidunt et. Inventore vitae tempora consequuntur maiores veritatis blanditiis voluptates explicabo.\n\nSimilique aliquid vel occaecati labore corporis adipisci provident voluptas."
-      }
+      ]
     }
   ],
   "connections": [],

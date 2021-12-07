@@ -8,6 +8,7 @@ import {
     Button,
     ClickAwayListener,
     Dialog,
+    DialogActions,
     DialogContent,
     DialogContentText,
     DialogTitle,
@@ -66,23 +67,8 @@ export default jbrowse => {
             setHasSubmitted(true)
 
             if (hasInvalidFilters(infoFilters)) {
-                console.log('invalid filters!')
-
-                //TODO: why doesnt this show!
-                return (
-                        <Dialog
-                                open={true}
-                                aria-labelledby="alert-dialog-title"
-                                aria-describedby="alert-dialog-description"
-                        >
-                            <DialogTitle id="alert-dialog-title">Invalid Filters</DialogTitle>
-                            <DialogContent>
-                                <DialogContentText id="alert-dialog-description">
-                                    One or more filters is not complete. Either fill out all fields or use the 'x' buttons to remove invalid filters
-                                </DialogContentText>
-                            </DialogContent>
-                        </Dialog>
-                )
+                setAlertOpen(true)
+                return
             }
 
             track.displays[0].renderer.infoFilters.set([...infoFilters])
@@ -94,12 +80,18 @@ export default jbrowse => {
             setInfoFilters([...infoFilters])
         }
 
+        const [alertOpen, setAlertOpen] = React.useState(false);
+
         // Based on: https://mui.com/components/menus/#menulist-composition
         const [open, setOpen] = React.useState(false);
         const anchorRef = React.useRef(null);
 
         const handleToggle = () => {
             setOpen((prevOpen) => !prevOpen);
+        };
+
+        const handleAlertClose = () => {
+            setAlertOpen(false);
         };
 
         const handleMenuChange = (event) => {
@@ -196,6 +188,22 @@ export default jbrowse => {
                         </Box>
                     </FormControl>
                     </div>
+                    <Dialog
+                            open={alertOpen}
+                            onClose={handleAlertClose}
+                            aria-labelledby="alert-dialog-title"
+                            aria-describedby="alert-dialog-description"
+                    >
+                        <DialogTitle id="alert-dialog-title">Invalid Filters</DialogTitle>
+                        <DialogContent>
+                            <DialogContentText id="alert-dialog-description">
+                                One or more filters is not complete. Either fill out all fields or use the 'x' buttons to remove invalid filters
+                            </DialogContentText>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={handleAlertClose}>OK</Button>
+                        </DialogActions>
+                    </Dialog>
                 </>
         )
     }

@@ -17,13 +17,13 @@ export const style = (0, _styles.makeStyles)(function (theme) {
         paperRoot: {
             background: theme.palette.grey[100]
         },
-        field: {
+        fieldRow: {
             display: 'flex',
             flexWrap: 'wrap'
         },
         fieldName: {
             wordBreak: 'break-all',
-            minWidth: '90px',
+            minWidth: '120px',
             borderBottom: '1px solid #0003',
             background: theme.palette.grey[200],
             marginRight: theme.spacing(1),
@@ -31,19 +31,9 @@ export const style = (0, _styles.makeStyles)(function (theme) {
         },
         fieldValue: {
             wordBreak: 'break-word',
-            maxHeight: 300,
+            maxWidth: 500,
             padding: theme.spacing(0.5),
-            overflow: 'auto'
-        },
-        fieldSubValue: {
-            wordBreak: 'break-word',
-            maxHeight: 300,
-            padding: theme.spacing(0.5),
-            background: theme.palette.grey[100],
-            border: "1px solid ".concat(theme.palette.grey[300]),
-            boxSizing: 'border-box',
             overflow: 'auto'
         }
-
     };
 });
