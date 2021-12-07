@@ -28,7 +28,7 @@ function convertFilterObjToString(filter) {
 
 const InfoFilterRow = observer(props => {
     const classes = styles()
-    const { rowIdx, filterStr, filterChangeHandler, deleteHandler } = props
+    const { rowIdx, filterStr, filterChangeHandler, deleteHandler, hasSubmitted } = props
     const filterObj = convertFilterStringToObj(filterStr)
 
     const handleOperatorChange = (event) => {
@@ -53,6 +53,8 @@ const InfoFilterRow = observer(props => {
                                 id="standard-number"
                                 type="number"
                                 value={filterObj.value}
+                                required={true}
+                                error={hasSubmitted && !filterObj.value}
                                 onChange={handleValueChange}
                         />
                     </FormControl>
@@ -65,13 +67,11 @@ const InfoFilterRow = observer(props => {
                                     labelId="category-select-label"
                                     id="category-select"
                                     value={filterObj.value}
+                                    required={true}
+                                    error={hasSubmitted && !filterObj.value}
                                     onChange={handleValueChange}
-                                    displayEmpty
                             >
-                                <MenuItem disabled value="">
-                                    <em>Value</em>
-                                </MenuItem>
-                                {fields[filterObj["field"]].options.map((option) => (
+                                {filterMap[filterObj["field"]].options.map((option) => (
                                         <MenuItem key={option} value={option}>
                                             {option}
                                         </MenuItem>
@@ -94,8 +94,10 @@ const InfoFilterRow = observer(props => {
                             <Select
                                     labelId="category-select-label"
                                     id="category-select"
-                                    value={filterObj["operator"] || ''}
+                                    value={filterObj.operator || ''}
+                                    error={hasSubmitted && !filterObj.operator}
                                     onChange={handleOperatorChange}
+                                    required={true}
                                     displayEmpty
                             >
                                 <MenuItem disabled value="">

@@ -59,10 +59,7 @@
           "displayId": "mgap_hg38-ExtendedVariantDisplay",
           "maxDisplayedBpPerPx": 2000,
           "renderer": {
-            "type": "ExtendedVariantRenderer",
-            "activeSamples": "m00004,m00005",
-            "infoFilters": ["AF:gt:0.1"],
-            "palette": "AF"
+            "type": "ExtendedVariantRenderer"
           }
         }
       ],

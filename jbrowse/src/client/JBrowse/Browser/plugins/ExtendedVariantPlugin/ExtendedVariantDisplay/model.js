@@ -1,4 +1,4 @@
-import {ConfigurationReference, getConf} from '@jbrowse/core/configuration'
+import {ConfigurationReference, getConf, readConfObject} from '@jbrowse/core/configuration'
 import {getContainingTrack, getSession} from '@jbrowse/core/util'
 import FilterListIcon from '@material-ui/icons/FilterList'
 import configSchemaF from './configSchema'
@@ -25,7 +25,7 @@ export default jbrowse => {
             const track = getContainingTrack(self)
             //TODO: make proper schema
             const metadata = getConf(track, 'metadata')
-            const metadata2 = getConf(track, 'extendedVariantDisplayConfig')
+            const metadata2 = readConfObject(track, 'extendedVariantDisplayConfig')
             console.log(metadata2)
             var extendedVariantDisplayConfig = metadata.extendedVariantDisplayConfig || []
             var message = metadata.message || ""

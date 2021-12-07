@@ -3,10 +3,25 @@ import {filterMap} from "./filters"
 import {readConfObject} from '@jbrowse/core/configuration'
 import {getSession} from '@jbrowse/core/util'
 
-import {Button, FormControl, MenuItem, Select, Table, TableBody} from '@material-ui/core'
-import {removeInvalidUnexpandedFilters} from './filterUtil'
-import InfoFilterRow from "./InfoFilterRow";
+import {
+    Box,
+    Button,
+    ClickAwayListener,
+    Dialog,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    FormControl,
+    Grow,
+    MenuItem,
+    MenuList,
+    Paper,
+    Popper,
+    Table,
+    TableBody
+} from '@material-ui/core'
 
+import InfoFilterRow from "./InfoFilterRow";
 
 export default jbrowse => {
     const { observer, PropTypes: MobxPropTypes } = jbrowse.jbrequire('mobx-react')
@@ -21,69 +36,166 @@ export default jbrowse => {
         const initialFilters = displays[0].renderer.infoFilters || []
 
         const [infoFilters, setInfoFilters] = React.useState(initialFilters)
-
-        const addNewFilterRow = (event) => {
-            console.log('adding new row: ' + event.target.value)
-            infoFilters.push(event.target.value + "::")
-            setInfoFilters([...infoFilters])
-        }
+        const [hasSubmitted, setHasSubmitted] = React.useState(false)
 
         const onRowDelete = (rowIdx) => {
-            console.log('row delete: ' + rowIdx)
             infoFilters.splice(rowIdx, 1)
             setInfoFilters([...infoFilters])
         }
 
-        const handleFilterSubmit = (event) => {
-            //TODO: user feedback if invalid?
-            let infoFiltersToAdd = removeInvalidUnexpandedFilters(infoFilters)
-            console.log('Setting:')
-            console.log(infoFiltersToAdd)
+        const hasInvalidFilters = (filters) => {
+            if (!filters){
+                return false
+            }
 
-            track.displays[0].renderer.infoFilters.set(infoFiltersToAdd)
+            for (const filter of filters){
+                const tokens = filter.split(':')
+                if (tokens.length !== 3) {
+                    return true
+                }
+
+                if (!tokens[0] || !tokens[1] || !tokens[2]) {
+                    return true
+                }
+            }
+
+            return false
+        }
+
+        const handleFilterSubmit = (event) => {
+            setHasSubmitted(true)
+
+            if (hasInvalidFilters(infoFilters)) {
+                console.log('invalid filters!')
+
+                //TODO: why doesnt this show??
+                return (
+                        <Dialog
+                                open={true}
+                                aria-labelledby="alert-dialog-title"
+                                aria-describedby="alert-dialog-description"
+                        >
+                            <DialogTitle id="alert-dialog-title">Invalid Filters</DialogTitle>
+                            <DialogContent>
+                                <DialogContentText id="alert-dialog-description">
+                                    One or more filters is not complete. Either fill out all fields or use the 'x' buttons to remove invalid filters
+                                </DialogContentText>
+                            </DialogContent>
+                        </Dialog>
+                )
+            }
+
+            track.displays[0].renderer.infoFilters.set([...infoFilters])
             getSession(model).hideWidget(model)
         }
 
         const filterChangeHandler = (rowIdx, filterStr) => {
-            console.log('filter change: ' + filterStr)
             infoFilters[rowIdx] = filterStr
             setInfoFilters([...infoFilters])
         }
 
-        const menuItems =
-                Object.entries(filterMap).map(([key, val]) =>
-                        <MenuItem value={key} key={key}>
-                            {val.title || key}
-                        </MenuItem>
-                )
+        // Based on: https://mui.com/components/menus/#menulist-composition
+        const [open, setOpen] = React.useState(false);
+        const anchorRef = React.useRef(null);
+
+        const handleToggle = () => {
+            setOpen((prevOpen) => !prevOpen);
+        };
+
+        const handleMenuChange = (event) => {
+            setOpen(false)
+
+            const { fieldName } = event.currentTarget.dataset;
+            const op = (filterMap[fieldName].operators.length === 1 ? filterMap[fieldName].operators[0] : '')
+            infoFilters.push(fieldName + ":" + op + ":")
+            setInfoFilters([...infoFilters])
+        }
+
+        const handleClose = (event) => {
+            if (anchorRef.current && anchorRef.current.contains(event.target)) {
+                return;
+            }
+
+            setOpen(false)
+        };
+
+        // return focus to the button when we transitioned from !open -> open
+        const prevOpen = React.useRef(open);
+        React.useEffect(() => {
+            if (prevOpen.current === true && open === false) {
+                anchorRef.current.focus();
+            }
+
+            prevOpen.current = open;
+        }, [open])
 
         return(
                 <>
+                    <div style={{padding: '5px' }}>
+                    Only show variants where:
                     <Table className={classes.table}>
                         <TableBody>
                             {infoFilters.map((filterStr, key) =>
-                                    <InfoFilterRow key={key} filterStr={filterStr} filterChangeHandler={filterChangeHandler} deleteHandler={onRowDelete} rowIdx={Number(key)}/>
+                                    <InfoFilterRow key={key} filterStr={filterStr} filterChangeHandler={filterChangeHandler} deleteHandler={onRowDelete} rowIdx={Number(key)} hasSubmitted={hasSubmitted}/>
                             )}
                         </TableBody>
                     </Table>
-                    <FormControl className={classes.addNewControl} style={{maxWidth: 400}}>
-                        <Select
-                                labelId="category-select-label"
-                                id="category-select"
-                                onChange={addNewFilterRow}
-                                value=""
-                                displayEmpty
+                    <FormControl className={classes.addNewControl} >
+                        <Box padding={'5px'} mr="5px">
+                        <Button
+                                className={classes.applyButton}
+                                ref={anchorRef}
+                                id="composition-button"
+                                aria-controls={open ? 'composition-menu' : undefined}
+                                aria-expanded={open ? 'true' : undefined}
+                                aria-haspopup="true"
+                                onClick={handleToggle}
+                                variant="contained"
+                                color="primary">
+                            Add Filter
+                        </Button>
+                        <Popper
+                                open={open}
+                                anchorEl={anchorRef.current}
+                                role={undefined}
+                                placement="bottom-start"
+                                transition
+                                disablePortal
                         >
-                            <MenuItem disabled value="">
-                                <em>Add New Filter</em>
-                            </MenuItem>
-                            {menuItems}
-                        </Select>
-                        <p/>
+                            {({ TransitionProps, placement }) => (
+                                    <Grow
+                                            {...TransitionProps}
+                                            style={{
+                                                transformOrigin:
+                                                        placement === 'bottom-start' ? 'left top' : 'left bottom',
+                                            }}
+                                    >
+                                        <Paper>
+                                            <ClickAwayListener onClickAway={handleClose}>
+                                                <MenuList
+                                                        autoFocusItem={open}
+                                                        id="composition-menu"
+                                                        aria-labelledby="composition-button"
+                                                >
+                                                        {
+                                                            Object.entries(filterMap).map(([key, val]) =>
+                                                                    <MenuItem value={key} key={key} onClick={handleMenuChange} data-field-name={key}>
+                                                                        {val.title || key}
+                                                                    </MenuItem>
+                                                            )
+                                                        }
+                                                </MenuList>
+                                            </ClickAwayListener>
+                                        </Paper>
+                                    </Grow>
+                            )}
+                        </Popper>
                         <Button className={classes.applyButton} onClick={handleFilterSubmit} variant="contained" color="primary">
                             Apply
                         </Button>
+                        </Box>
                     </FormControl>
+                    </div>
                 </>
         )
     }

@@ -1,4 +1,5 @@
 import {rgb} from "color-convert"
+import { colorSchemes } from "./colorSchemes"
 
 export function hexToRGB(hexStr){
 // takes a hex string and returns rgb decimals in a list
@@ -75,15 +76,20 @@ export function generateOptJexl(scheme){
    return jexl
 }
 
-export function generateSchemeJexl(scheme){
-   let jexl
-   if(scheme.dataType === "option"){
-      jexl = generateOptJexl(scheme)
-   } else if (scheme.dataType === "number"){
-      jexl = generateNumJexl(scheme)
-   } else {
-      console.error("Unknown dataType: " + scheme.dataType)
+export function generateSchemeJexl(schemeName){
+   const scheme = colorSchemes[schemeName]
+   if (!scheme) {
+      console.error("Unknown color scheme: " + schemeName)
+      return null
    }
 
-   return jexl
+   if (scheme.dataType === "option"){
+      return generateOptJexl(scheme)
+   } else if (scheme.dataType === "number"){
+      return generateNumJexl(scheme)
+   }
+
+   console.error("Unknown dataType: " + scheme.dataType)
+
+   return null
 }

@@ -75,9 +75,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
         testOutputFileProcessing();
 
-        testDemoNoSession();
-        testDemoUi();
-        testConfigWidgetUi();
+        testNoSession();
         testMessageDisplay();
         testSessionCardDisplay();
         testTitleMapping();
@@ -231,38 +229,11 @@ public class JBrowseTest extends BaseWebDriverTest
         assert(!isVariantVisible("mgap_hg38", "SNV T -> C", true));
     }
 
-    private void testDemoNoSession()
+    private void testNoSession()
     {
         beginAt("/home/jbrowse-jbrowse.view?");
         waitForElement(Locator.tagWithText("p", "Error - no session provided."));
     }
-
-    private void testDemoUi()
-    {
-        beginAt("/home/jbrowse-jbrowse.view?session=demo");
-        waitForJBrowseToLoad();
-
-        Actions actions = new Actions(getDriver());
-        By by = getVariantWithinTrack("clinvar_ncbi_hg38_2", "294665", true);
-        WebElement toClick = getDriver().findElements(by).stream().filter(WebElement::isDisplayed).findFirst().orElseThrow();
-        actions.click(toClick).perform();
-        assertElementPresent(Locator.tagWithText("th", "Hello"));
-    }
-
-    private void testConfigWidgetUi()
-    {
-        beginAt("/home/jbrowse-jbrowse.view?session=demo");
-        waitForJBrowseToLoad();
-
-        // 294665 is a visible element given minimalSession's location
-        Actions actions = new Actions(getDriver());
-        By by = getVariantWithinTrack("clinvar_ncbi_hg38", "294665", true);
-        WebElement toClick = getDriver().findElements(by).stream().filter(WebElement::isDisplayed).findFirst().orElseThrow();
-        actions.click(toClick).perform();
-        waitForElement(Locator.tagWithText("div", "1:197,268,209..197,268,209"));
-        assertElementPresent(Locator.tagWithText("span", "Predicted Function - 1"));
-    }
-
 
     private By getVariantWithinTrack(String trackId, String variantText, boolean waitFor)
     {

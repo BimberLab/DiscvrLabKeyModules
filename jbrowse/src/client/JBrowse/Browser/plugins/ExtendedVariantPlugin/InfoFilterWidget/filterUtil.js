@@ -1,4 +1,4 @@
-import {filterMap as fields} from "./filters"
+import {filterMap} from "./filters"
 
 // 'unexpanded' indicates the raw, unconverted format of a filter. Generally generated from the config file or filter UI. Contains a field, an operator and a value, delineated by ':'
 // 'expanded' indicates that the filter's field, operator and values have been combined into their full functioning expression. Contains a field and an an expression, delineated by ':'
@@ -11,130 +11,70 @@ export const operators = {
     eq: "=="
 }
 
-export function expandedFilterStringToObj(filter){
-// filter: string in the format 'field:expression'
-// returns said string as an object
-    const splitFilter = filter.split(":")
-    return {
-        field: splitFilter[0],
-        expression: splitFilter[1]
+export function isSerializedFilterStringValid(filter) {
+    if (!filter) {
+        console.error('Invalid filter string: ' + filter)
+        return false;
     }
-}
 
-export function isFilterStringExpanded(filter){
-// filter: string
-// returns true if filter fits in expanded filter format
-    try {
-      let temp = filter.split(":")
-      if (temp.length === 2 || temp[1].includes('variant.INFO.')){
-         return true
-      }
-      return false
-    } catch {
-      return false
+    const filterProps = filter.split(":")
+    if (filterProps.length !== 3){
+        console.error("Invalid filter, does not have a length of 3: " + filter)
+        return false;
     }
-}
 
-export function isUnexpandedFilterValid(filter){
-// filter: string
-// returns true if filter fits in unexpanded filter format
-   try {
-      const filterProps = filter.split(":")
-      if (filterProps.length !== 3){
-         console.error("Invalid filter - " + filter + " does not have a length of 3")
-         return false
-      }
-      let key = filterProps[0] in fields
-      if (!key){
-         console.error("Invalid filter - " + filterProps[0] + " in " + filter + " is not a valid field.")
-         return false
-      }
-      if (filterProps[1] !== ""){
-         if (fields[filterProps[0]].operators.indexOf(filterProps[1]) < 0){
-            console.error("Invalid filter - " + filterProps[1] + " in " + filter + " is not a valid operator.")
+    const fieldName = filterProps[0]
+    if (!(fieldName in filterMap)){
+        console.error("Invalid filter, field not found: " + filter)
+        return false
+    }
+
+    const op = filterProps[1]
+    if (filterMap[fieldName].operators.indexOf(op) === -1){
+        console.error("Invalid operator for filter: " + filter)
+        return false
+    }
+
+    const value = filterProps[2]
+    let dataType = filterMap[fieldName].dataType
+    if (dataType === "number" && isNaN(value)) {
+        console.error("Invalid filter, expected a number: " + filter)
+        return false
+    }
+    else if (dataType === "string"){
+        if (filterMap[fieldName].options.indexOf(value) === -1) {
+            console.error("Invalid value for filter: " + filter)
             return false
-         }
-      }
-      if (filterProps[2] !== ""){
-         let dataType = fields[filterProps[0]].dataType
-         if (dataType === "number" && isNaN(filterProps[2])){
-            console.error("Invalid filter - " + filterProps[2] + " in " + filter + " is not valid. Expected a number.")
-            return false
-         }
-         if (dataType === "string"){
-            if (fields[filterProps[0]].options.indexOf(filterProps[2].replaceAll("'", "")) < 0){
-               console.error("Invalid filter - " + filterProps[2] + " in " + filter + " is not a valid option for " + filterProps[0] + ". Enter one of the following - " + fields[filterProps[0]].options)
-               return false
-            }
-            if (filterProps[2].replaceAll("'", "") === filterProps[2]){
-               console.error("Invalid filter - " + filterProps[2] + " in " + filter + " is not wrapped in \" ' \".")
-               return false
-            }
-         }
-      }
-      return true
-   } catch (e){
-      console.error("Error validating filter " + filter + " - " + e)
-      return false
-   }
+        }
+    }
+
+    return true;
 }
 
-export function removeInvalidUnexpandedFilters(filters){
-// filters: array of strings
-// returns an array of strings filterList with invalid unexpanded strings removed
-   let filterList = []
-   if (!filters){
-      return filterList
-   }
-   for (const filter of filters){
-      if (isFilterStringExpanded(filter)){
-         continue
-      }
-      if (isUnexpandedFilterValid(filter)){
-         filterList.push(filter)
-      }
-   }
-   return filterList
-}
-
-export function expandFilters(filters) {
-// filters: list of strings
-// returns a list of expanded strings.
-// if a string is already expanded, no processing needed.
-// if a string is unexpanded, it is expanded
-// if a string does not meet formatting requirements, it is removed from the list
-
+export function deserializeFilters(filters) {
     let filterList = []
     if (!filters){
         return filterList
     }
+
     for (const filter of filters){
-        try {
-            if (isFilterStringExpanded(filter)){
-                // if expanded, we use it as-is
-                filterList.push(filter)
-                continue
-            }
-            if (!isUnexpandedFilterValid(filter)){
-               // if invalid filter, skip it entirely
-               continue
-            }
-            const filterProps = filter.split(":")
-            const field = filterProps[0]
-            const rawOperator = filterProps[1]
-            const value = filterProps[2]
-            if (rawOperator === "" || value === ""){
-                filterList.push(filter)
-                continue
-            }
-            const fieldLocation = fields[field].baseLocation;
-            const operator = operators[rawOperator];
-            const jexlExpression = "variant.INFO." + fieldLocation + operator + value
-            const expandedFilter = field + ":" + jexlExpression
-            filterList.push(expandedFilter)
-        } catch (e){
-            console.error("Error parsing filter, skipping. " + e)
+        if (!isSerializedFilterStringValid(filter)) {
+            continue
         }
+
+        const filterProps = filter.split(":")
+        const fieldObj = {
+            field: filterProps[0],
+            operator: filterProps[1],
+            value: filterProps[2]
+        }
+
+        const fieldDef = filterMap[fieldObj.field]
+        const quoteChar = fieldDef.dataType === 'string' ? "'" : ""
+        fieldObj.jexlExpression = fieldDef.location + operators[fieldObj.operator] + quoteChar + fieldObj.value + quoteChar
+
+        filterList.push(fieldObj)
     }
+
     return filterList
 }

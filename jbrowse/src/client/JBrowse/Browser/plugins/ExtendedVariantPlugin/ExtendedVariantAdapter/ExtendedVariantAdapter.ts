@@ -20,11 +20,8 @@ export default class extends VcfTabixAdapter {
             const cacheKey = `${refName}:${start}-${end}`
             let f = this.featureCache.get(cacheKey) as VcfFeature[] | undefined
             if (!f) {
-                console.log('loading: ' + cacheKey)
                 f = await this.getFeaturesAsArray(query, opts)
                 this.featureCache.set(cacheKey, f)
-            } else {
-                console.log('used cache: ' + cacheKey)
             }
 
             f.forEach(function(v){

@@ -645,7 +645,6 @@ public class JBrowseController extends SpringActionController
         private static final String DEMO = "demo";
         private static final String MGAP = "mGAP";
         private static final String MGAP_FILTERED = "mGAPF";
-        private static final String MGAP_INVALID_FILTERS = "mGAPIF";
 
         @Override
         public void validateForm(GetSessionForm form, Errors errors)
@@ -670,10 +669,12 @@ public class JBrowseController extends SpringActionController
             }
             else if (MGAP_FILTERED.equalsIgnoreCase(form.getSession()))
             {
-                resp = getDemoSession("external/mGAPFilteredSession.json");
-            }
-            else if (MGAP_INVALID_FILTERS.equalsIgnoreCase(form.getSession())){
-                resp = getDemoSession("external/mGAPInvalidFilteredSession.json");
+                resp = getDemoSession("external/mGAPSession.json");
+                resp.getJSONArray("tracks").getJSONObject(0).getJSONArray("displays").getJSONObject(0).getJSONObject("renderer").put("activeSamples", "m00004,m00005");
+                resp.getJSONArray("tracks").getJSONObject(0).getJSONArray("displays").getJSONObject(0).getJSONObject("renderer").put("palette", "AF");
+                resp.getJSONArray("tracks").getJSONObject(0).getJSONArray("displays").getJSONObject(0).getJSONObject("renderer").put("infoFilters", new JSONArray(){{
+                    put("AF:gt:0.1");
+                }});
             }
             else
             {

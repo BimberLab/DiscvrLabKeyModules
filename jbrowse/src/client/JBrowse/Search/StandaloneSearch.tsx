@@ -7,11 +7,10 @@ import BaseResult from '@jbrowse/core/TextSearch/BaseResults';
 import { ActionURL, Ajax } from '@labkey/api';
 import "./search.css"
 
-import MyProjectPlugin from '../Browser/plugins/MyProjectPlugin/index';
 import LogSession from '../Browser/plugins/LogSession/index';
 import ExtendedVariantPlugin from '../Browser/plugins/ExtendedVariantPlugin/index';
 
-const nativePlugins = [MyProjectPlugin, ExtendedVariantPlugin, LogSession]
+const nativePlugins = [ExtendedVariantPlugin, LogSession]
 
 const StandaloneSearch = observer(({ sessionId, }: { sessionId: any}) => {
     if (!sessionId){

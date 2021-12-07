@@ -1,17 +1,18 @@
 // File copied and updated from original file in @jbrowse/plugin-svg/src/SvgFeatureRenderer/components
 
-import { readConfObject } from '@jbrowse/core/configuration'
-import { PropTypes as CommonPropTypes } from '@jbrowse/core/util/types/mst'
-import { bpToPx, measureText } from '@jbrowse/core/util'
+import {readConfObject} from '@jbrowse/core/configuration'
+import {PropTypes as CommonPropTypes} from '@jbrowse/core/util/types/mst'
+import {bpToPx, measureText} from '@jbrowse/core/util'
 import SceneGraph from '@jbrowse/core/util/layouts/SceneGraph'
-import { observer } from 'mobx-react'
+import {observer} from 'mobx-react'
 import ReactPropTypes from 'prop-types'
-import React, { useEffect, useRef, useState, useCallback } from 'react'
+import React, {useCallback, useEffect, useRef, useState} from 'react'
 import FeatureGlyph from './FeatureGlyph' // FeatureGlyph copied over. Referencing original produces errors. Compare to line 11
 import SvgOverlay from '@jbrowse/plugin-svg/src/SvgFeatureRenderer/components/SvgOverlay' // NEW: Updated SvgOverlay to reference original file in @jbrowse. No errors produced.
-import { chooseGlyphComponent, layOut } from './util' // NEW: chooseGlyphComponent() in util updated to render SNVs as a diamond
-import { expandFilters, expandedFilterStringToObj, isFilterStringExpanded } from '../../InfoFilterWidget/filterUtil' // NOTE: Now dependent on FilterWidget plugin
+import {chooseGlyphComponent, layOut} from './util' // NEW: chooseGlyphComponent() in util updated to render SNVs as a diamond
+import {deserializeFilters} from '../../InfoFilterWidget/filterUtil' // NOTE: Now dependent on FilterWidget plugin
 import jexl from 'jexl'
+
 const renderingStyle = {
     position: 'relative',
 }
@@ -124,23 +125,21 @@ function RenderedFeatureGlyph(props) {
     )
 }
 
-function isDisplayed(feature, filters){
-    if (!filters){
+function passesInfoFilters(feature, filters){
+    if (!filters || !filters.length){
         return true
     }
-    for (const filter in filters){
+
+    for (const filterObj of filters){
         try {
-            if (isFilterStringExpanded(filters[filter])){
-                const filterObj = expandedFilterStringToObj(filters[filter])
-                if (!jexl.evalSync(filterObj["expression"], feature)){
-                    return false
-                }
+            if (!jexl.evalSync(filterObj.jexlExpression, feature)){
+                return false
             }
         } catch (e){
             console.error("Error in filter execution: " + e)
-            return true
         }
     }
+
     return true
 }
 
@@ -148,7 +147,7 @@ function isVariant(gt) {
     return !(gt === "./." || gt === ".|." || gt === "0/0" || gt === "0|0")
 }
 
-function containsSampleIDs(feature, sampleIDs){
+function passesSampleFilters(feature, sampleIDs){
     if (!sampleIDs || sampleIDs.length === 0) {
         return true
     }
@@ -168,14 +167,13 @@ function containsSampleIDs(feature, sampleIDs){
         return false
     }
 
-    console.log('WARNING: re-computing variant samples')
     for (const sampleId of sampleIDs) {
         if (feature.variant.SAMPLES[sampleId]) {
             const gt = feature.variant.SAMPLES[sampleId]["GT"][0]
 
             // If any sample in the whitelist is non-WT, show this site. Otherwise filter.
             if (!isVariant(gt)) {
-                console.log(sampleId)
+                console.log('passing due to found sample: ' + sampleId)
                 return true
             }
         }
@@ -207,22 +205,15 @@ const RenderedFeatures = observer(props => {
 
     let expandedFilters = []
     if (infoFilters.toJSON()) {
-        expandedFilters = expandFilters(infoFilters.toJSON())
-        console.log(expandedFilters)
+        expandedFilters = deserializeFilters(infoFilters.toJSON())
     }
 
-    //TODO: restore this
-    expandedFilters = []
-
-    //TODO: restore this
-    const sampleFilters = null //activeSamples.value ? activeSamples.value.split(',') : null
+    const sampleFilters = activeSamples.value ? activeSamples.value.split(',') : null
     features.forEach(function(feature) {
-        if (isDisplayed(feature, expandedFilters)){
-            if (containsSampleIDs(feature, sampleFilters)){
-                featuresRendered.push(
-                        <RenderedFeatureGlyph key={feature.id()} feature={feature} {...props} />,
-                )
-            }
+        if (passesInfoFilters(feature, expandedFilters) && passesSampleFilters(feature, sampleFilters)){
+            featuresRendered.push(
+                    <RenderedFeatureGlyph key={feature.id()} feature={feature} {...props} />,
+            )
         }
     })
 

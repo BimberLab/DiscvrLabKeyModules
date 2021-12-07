@@ -29,7 +29,8 @@ export const style = (0, _styles.makeStyles)(function (theme) {
       addNewControl: {
          margin: theme.spacing(1),
          padding: theme.spacing(2),
-         minWidth: 150,
+         minWidth: 400,
+         display: 'flex'
       },
       table: {
          padding: 0,
@@ -38,6 +39,10 @@ export const style = (0, _styles.makeStyles)(function (theme) {
       tableCell: {
          textAlign: 'center',
          padding: theme.spacing(0.75, 0, 0.75, 1),
+      },
+      applyButton: {
+         maxWidth: 150,
+         marginRight: theme.spacing(2)
       },
    };
 });

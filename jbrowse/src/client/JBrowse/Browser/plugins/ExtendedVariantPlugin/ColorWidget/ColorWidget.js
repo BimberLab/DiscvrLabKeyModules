@@ -2,7 +2,6 @@ import {colorSchemes} from "./colorSchemes"
 import {style as styles} from "./style";
 import {getSession} from '@jbrowse/core/util'
 import {readConfObject} from '@jbrowse/core/configuration'
-import {generateSchemeJexl} from "../ColorWidget/colorUtil";
 
 import {Button, FormControl, InputLabel, MenuItem, Select} from '@material-ui/core'
 import {useState} from 'react'
@@ -28,8 +27,7 @@ export default jbrowse => {
         }
 
         const onApply = (event) => {
-            const jexl = generateSchemeJexl(colorSchemes[palette])
-            track.displays[0].renderer.color1.set(jexl)
+            // NOTE: preProcessSnapshot in the renderer schema should set color1
             track.displays[0].renderer.palette.set(palette)
             getSession(model).hideWidget(model)
         }

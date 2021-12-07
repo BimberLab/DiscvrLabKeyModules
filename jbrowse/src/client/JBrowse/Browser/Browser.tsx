@@ -8,7 +8,6 @@ import {
 import { createTheme } from '@material-ui/core/styles'
 import { PluginConstructor } from '@jbrowse/core/Plugin'
 import { Ajax, ActionURL } from '@labkey/api'
-import MyProjectPlugin from "./plugins/MyProjectPlugin/index"
 import LogSession from "./plugins/LogSession/index"
 import ExtendedVariantPlugin from "./plugins/ExtendedVariantPlugin/index"
 import { makeStyles } from "@material-ui/core/styles"
@@ -20,7 +19,7 @@ const midnight = '#0D233F'
 const mandarin = '#FFB11D'
 const grey = '#bfbfbf'
 
-const nativePlugins = [MyProjectPlugin, ExtendedVariantPlugin, LogSession]
+const nativePlugins = [ExtendedVariantPlugin, LogSession]
 
 const useStyles = makeStyles({
     labkeyOverrides: {
@@ -107,9 +106,7 @@ function View(){
         return (<p>Error fetching config. See console for more details</p>)
     }
     return (
-        <div className="jbrowse-app">
-            <JBrowseLinearGenomeView viewState={state} />
-        </div>
+        <JBrowseLinearGenomeView viewState={state} />
     )
 }
 
