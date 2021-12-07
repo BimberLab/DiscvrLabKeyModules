@@ -68,7 +68,7 @@ export default jbrowse => {
             if (hasInvalidFilters(infoFilters)) {
                 console.log('invalid filters!')
 
-                //TODO: why doesnt this show??
+                //TODO: why doesnt this show!
                 return (
                         <Dialog
                                 open={true}

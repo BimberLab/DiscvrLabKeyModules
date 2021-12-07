@@ -173,7 +173,6 @@ function passesSampleFilters(feature, sampleIDs){
 
             // If any sample in the whitelist is non-WT, show this site. Otherwise filter.
             if (!isVariant(gt)) {
-                console.log('passing due to found sample: ' + sampleId)
                 return true
             }
         }
