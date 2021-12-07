@@ -41,6 +41,7 @@ export default jbrowse => {
 
         return(
                 <>
+                    <div style={{padding: '5px' }}>
                     <FormControl className={classes.schemeControl}>
                         <InputLabel id="category-select-label">Color Using</InputLabel>
                         <Select
@@ -57,6 +58,7 @@ export default jbrowse => {
                     <Button className={classes.applyButton} onClick={onApply} variant="contained" color="primary">
                         Apply
                     </Button>
+                    </div>
                 </>
         )
     }
