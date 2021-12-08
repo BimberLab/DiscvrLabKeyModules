@@ -5,7 +5,8 @@ import { RefNameAutocomplete } from '@jbrowse/plugin-linear-genome-view';
 import { createViewState } from '@jbrowse/react-linear-genome-view';
 import BaseResult from '@jbrowse/core/TextSearch/BaseResults';
 import { ActionURL, Ajax } from '@labkey/api';
-import "./search.css"
+import './search.css';
+import { SearchType } from '@jbrowse/core/data_adapters/BaseAdapter';
 
 import LogSession from '../Browser/plugins/LogSession/index';
 import ExtendedVariantPlugin from '../Browser/plugins/ExtendedVariantPlugin/index';
@@ -60,20 +61,66 @@ const StandaloneSearch = observer(({ sessionId, }: { sessionId: any}) => {
         return (<p>Error fetching config. See console for more details</p>)
     }
 
-    const { session } = state
-    const { view } = session
-    const { assemblyNames } = getSession(session)
+    const session = getSession(state)
+    const { textSearchManager, assemblyManager } = session
+    console.log(textSearchManager)
+
+    //const { view } = session
+
+    const { assemblyNames, rankSearchResults } = state
     if (!assemblyNames.length){
         return (<p>No configured assemblies</p>)
     }
+    const assemblyName = assemblyNames[0]
+    console.log(assemblyName)
+
+    const assembly = assemblyManager.get(assemblyName)
+    const searchScope = state.searchScope(assemblyName)
 
     const selectedRegion = op?.getLocation()
+
+    // TODO: can we avoid this duplication?
+    function dedupe(
+        results: BaseResult[] = [],
+        cb: (result: BaseResult) => string,
+    ) {
+        return results.filter(
+            (elt, idx, self) => idx === self.findIndex(t => cb(t) === cb(elt)),
+        )
+    }
+
+    // TODO: can we avoid this duplication?
+    async function fetchResults(query: string, searchType?: SearchType) {
+        if (!textSearchManager) {
+            console.error('No text search manager')
+        }
+
+        const textSearchResults = await textSearchManager?.search(
+            {
+                queryString: query,
+                searchType,
+            },
+            searchScope,
+            rankSearchResults,
+        )
+
+        const refNameResults = assembly?.allRefNames
+            ?.filter(refName => refName.startsWith(query))
+            .map(r => new BaseResult({ label: r }))
+            .slice(0, 10)
+
+        return dedupe(
+            [...(refNameResults || []), ...(textSearchResults || [])],
+            elt => elt.getId(),
+        )
+    }
 
     return (
         <span>
       <RefNameAutocomplete
-          model={view}
+          model={state}
           assemblyName={assemblyNames.length ? assemblyNames[0] : undefined}
+          fetchResults={fetchResults}
           value={selectedRegion}
           onSelect={option => {
               setOption(option)

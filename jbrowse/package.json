@@ -9,13 +9,13 @@
     "build-no-pkg": "npm run clean && cross-env NODE_ENV=development LK_MODULE_CONTAINER=DiscvrLabKeyModules LK_MODULE=jbrowse webpack --config config/dev.config.js --progress --profile",
     "build-dev": "npm run build-no-pkg && npm run jb-pkg",
     "build-prod": "npm run clean && cross-env NODE_ENV=production PROD_SOURCE_MAP=source-map LK_MODULE_CONTAINER=DiscvrLabKeyModules LK_MODULE=jbrowse webpack --config config/prod.config.js --progress --profile && npm run jb-pkg",
-    "clean": "rimraf resources/web/jbrowse/gen && rimraf resources/views/gen && rimraf resources/views/browser*",
+    "clean": "rimraf resources/web/gen && rimraf resources/web/jbrowse/gen && rimraf resources/views/gen && rimraf resources/views/browser*",
     "test": "cross-env NODE_ENV=test jest",
     "jb-pkg": "pkg ./node_modules/@jbrowse/cli --out-path ./resources/external/jb-cli"
   },
   "dependencies": {
-    "@jbrowse/cli": "^1.4.4",
-    "@jbrowse/react-linear-genome-view": "^1.5.0",
+    "@jbrowse/cli": "^1.5.1",
+    "@jbrowse/react-linear-genome-view": "^1.5.1",
     "@labkey/components": "^2.102.0",
     "assert": "^2.0.0",
     "browserify-zlib": "^0.2.0",
