@@ -106,7 +106,10 @@ function View(){
         return (<p>Error fetching config. See console for more details</p>)
     }
     return (
-        <JBrowseLinearGenomeView viewState={state} />
+        //TODO: can we make this expand to full page height?
+        <div style={{height: "100%"}}>
+            <JBrowseLinearGenomeView viewState={state} />
+        </div>
     )
 }
 

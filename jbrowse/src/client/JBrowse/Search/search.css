@@ -4,10 +4,16 @@ fieldset.MuiOutlinedInput-notchedOutline > legend {
 
 /* this updates the search field itself */
 div.MuiInputBase-root {
-    font-size: 16px;
+    font-size: 14px;
 }
 
-/* TODO: This does not work! */
-div.MuiAutocomplete-root {
-    font-size: 16px;
+/* This is the text below the field */
+p.MuiFormHelperText-root {
+    font-size: 12px;
 }
+
+/* This is the search drop-down  */
+p.MuiTypography-root {
+    font-size: 14px;
+}
+
