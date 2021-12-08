@@ -24,7 +24,7 @@ export function generateGradient(hex1, hex2, steps, maxVal){
       b: rgb1[2],
       hex: rgb.hex(rgb1[0], rgb1[1], rgb1[2]),
    })
-   for (let i = 1; i <= (steps-1); i++){
+   for (let i = 1; i <= (steps); i++){
       let percent = (1/steps) * i
       let gradientStep = {}
       let ub = percent * maxVal
