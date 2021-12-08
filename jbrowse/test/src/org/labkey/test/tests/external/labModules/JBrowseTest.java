@@ -318,7 +318,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("h6", "Filter By Sample"));
         Locator textArea = Locator.tagWithClass("textarea", "MuiOutlinedInput-inputMultiline");
         waitForElement(textArea);
-        Assert.assertEquals("Incorrect samples", "m00004\nm00005", Locator.findElements(getDriver(), textArea).get(0).getText());
+        Assert.assertEquals("Incorrect samples", "m00010", Locator.findElements(getDriver(), textArea).get(0).getText());
     }
 
     private void testNoSession()

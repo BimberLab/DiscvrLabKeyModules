@@ -442,22 +442,14 @@ public class JsonFile
                 put("uri", getWebDavURL(getExpectedLocationOfIndexFile(".ix", true)));
             }});
 
-            File iixPath = getExpectedLocationOfIndexFile(".ixx", false);
-            if (iixPath.exists())
-            {
-                put("ixxFilePath", new JSONObject(){{
-                    put("uri", getWebDavURL(iixPath));
-                }});
-            }
+            put("ixxFilePath", new JSONObject(){{
+                put("uri", getWebDavURL(getExpectedLocationOfIndexFile(".ixx", true)));
+            }});
 
-            File metaPath = getExpectedLocationOfIndexFile("_meta.json", false);
-            if (metaPath.exists())
-            {
-                put("metaFilePath", new JSONObject()
-                {{
-                    put("uri", getWebDavURL(metaPath));
-                }});
-            }
+            put("metaFilePath", new JSONObject()
+            {{
+                put("uri", getWebDavURL(getExpectedLocationOfIndexFile("_meta.json", false)));
+            }});
 
             put("assemblyNames", new JSONArray(){{
                 put(JBrowseSession.getAssemblyName(rg));
@@ -827,14 +819,14 @@ public class JsonFile
                 }
             }
 
-            File ix = getExpectedLocationOfIndexFile(".ix", false);
-            if (ix.exists() && !SequencePipelineService.get().hasMinLineCount(ix, 1))
+            File ixx = getExpectedLocationOfIndexFile(".ixx", false);
+            if (ixx.exists() && !SequencePipelineService.get().hasMinLineCount(ixx, 1))
             {
-                log.info("ix exists but is zero-length, deleting and re-processing: " + ix.getPath());
-                ix.delete();
+                log.info("ixx exists but is zero-length, deleting and re-processing: " + ixx.getPath());
+                ixx.delete();
             }
 
-            if (!ix.exists())
+            if (!ixx.exists())
             {
                 if (throwIfNotPrepared)
                 {
@@ -846,13 +838,14 @@ public class JsonFile
                 File exe = JBrowseManager.get().getJbrowseCli();
                 SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
                 wrapper.setWorkingDir(targetFile.getParentFile());
+                wrapper.setThrowNonZeroExits(true);
 
                 //TODO: eventually remove this. see: https://github.com/GMOD/jbrowse-components/issues/2354#issuecomment-926320747
                 wrapper.addToEnvironment("DEBUG", "*");
                 wrapper.execute(Arrays.asList(exe.getPath(), "text-index", "--force", "--quiet", "--attributes", StringUtils.join(attributes, ","), "--file", targetFile.getPath()));
-                if (!ix.exists())
+                if (!ixx.exists())
                 {
-                    throw new PipelineJobException("Unable to find expected index file: " + ix.getPath());
+                    throw new PipelineJobException("Unable to find expected index file: " + ixx.getPath());
                 }
             }
         }
