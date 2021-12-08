@@ -88,7 +88,8 @@ public class JBrowseTest extends BaseWebDriverTest
         testFilterWidget();
 
         testLoadingConfigFilters();
-        tesSampleFilters();
+        testSampleFilters();
+        testSampleFiltersFromUrl();
 
         testOutputFileProcessing();
     }
@@ -266,7 +267,7 @@ public class JBrowseTest extends BaseWebDriverTest
         Assert.assertEquals("Incorrect samples", "m00004\nm00005", Locator.findElements(getDriver(), textArea).get(0).getText());
     }
 
-    private void tesSampleFilters()
+    private void testSampleFilters()
     {
         beginAt("/home/jbrowse-jbrowse.view?session=mgap");
         waitForJBrowseToLoad();
@@ -284,6 +285,23 @@ public class JBrowseTest extends BaseWebDriverTest
         clickDialogButton("Apply");
 
         Assert.assertEquals("Incorrect number of variants", 20, getTotalVariantFeatures());
+    }
+
+    private void testSampleFiltersFromUrl()
+    {
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap&sampleFilters=mgap:m00010");
+        waitForJBrowseToLoad();
+
+        // Wait for variants to load:
+        getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T", true));
+
+        Assert.assertEquals("Incorrect number of variants", 20, getTotalVariantFeatures());
+
+        openTrackMenuItem("Filter By Sample");
+        waitForElement(Locator.tagWithText("h6", "Filter By Sample"));
+        Locator textArea = Locator.tagWithClass("textarea", "MuiOutlinedInput-inputMultiline");
+        waitForElement(textArea);
+        Assert.assertEquals("Incorrect samples", "m00004\nm00005", Locator.findElements(getDriver(), textArea).get(0).getText());
     }
 
     private void testNoSession()

@@ -40,11 +40,50 @@ function generateViewState(genome, plugins){
   })
 }
 
+function applyUrlParams(json, queryParam) {
+    const location = queryParam.get('location')
+    if (location) {
+        json.location = location;
+    }
+
+    const sampleFilters = queryParam.get('sampleFilters')
+    if (sampleFilters) {
+        const filterTokens = sampleFilters.split(':')
+        if (filterTokens.length != 2) {
+            console.error('Invalid sample filters: ' + sampleFilters)
+        } else {
+            const [trackId, sampleIds] = filterTokens
+            const sampleList = sampleIds.split(',')
+            if (sampleList.length == 0) {
+                console.error('No samples in filter: ' + sampleFilters)
+            } else {
+                let found = false
+                for (const track of json.tracks) {
+                    if (track.trackId === trackId || track.name === trackId) {
+                        track.displays[0].renderer.activeSamples = sampleList.join(',')
+                        found = true
+                        break
+                    }
+                }
+
+                if (!found) {
+                    console.error('Unable to find matching track for sample filter: ' + sampleFilters)
+                }
+            }
+        }
+    }
+
+    let activeTracks = queryParam.get('activeTracks')
+    if (activeTracks) {
+        activeTracks = activeTracks.split(',')
+
+        //TODO
+    }
+}
+
 function View(){
     const queryParam = new URLSearchParams(window.location.search);
     const session = queryParam.get('session')
-    const location = queryParam.get('location')
-    const classes = useStyles()
 
     const [state, setState] = useState(null);
     const [plugins, setPlugins] = useState<PluginConstructor[]>();
@@ -54,9 +93,7 @@ function View(){
             method: 'GET',
             success: async function(res){
                 let jsonRes = JSON.parse(res.response);
-                if (location) {
-                    jsonRes.location = location;
-                }
+                applyUrlParams(jsonRes, queryParam)
 
                 var loadedPlugins = null
                 if (jsonRes.plugins != null){
