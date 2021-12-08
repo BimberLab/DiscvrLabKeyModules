@@ -675,6 +675,8 @@ public class JBrowseController extends SpringActionController
                 resp.getJSONArray("tracks").getJSONObject(0).getJSONArray("displays").getJSONObject(0).getJSONObject("renderer").put("infoFilters", new JSONArray(){{
                     put("AF:gt:0.1");
                 }});
+
+                resp.getJSONArray("tracks").getJSONObject(0).getJSONArray("displays").getJSONObject(0).remove("detailsConfig");
             }
             else
             {

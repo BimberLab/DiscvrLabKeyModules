@@ -73,6 +73,8 @@ public class JBrowseTest extends BaseWebDriverTest
     {
         setUpTest();
 
+        testInferredDetails();
+
         //These are passing:
         testNoSession();
         testMessageDisplay();
@@ -285,6 +287,22 @@ public class JBrowseTest extends BaseWebDriverTest
         clickDialogButton("Apply");
 
         Assert.assertEquals("Incorrect number of variants", 20, getTotalVariantFeatures());
+    }
+
+    private void testInferredDetails()
+    {
+        beginAt("/home/jbrowse-jbrowse.view?session=mgapF");
+        waitForJBrowseToLoad();
+
+        Actions actions = new Actions(getDriver());
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV G -> A", true)).stream().filter(WebElement::isDisplayed).collect(toSingleton());
+
+        waitForElement(Locator.tagWithText("div", "1:116,986,951..116,986,951"));
+
+        actions.click(toClick).perform();
+        waitForElement(Locator.tagWithText("span", "Predicted Function"));
+        waitForElement(Locator.tagWithText("span", "Regulatory Data"));
+        waitForElement(Locator.tagWithText("span", "Phenotypic Data"));
     }
 
     private void testSampleFiltersFromUrl()

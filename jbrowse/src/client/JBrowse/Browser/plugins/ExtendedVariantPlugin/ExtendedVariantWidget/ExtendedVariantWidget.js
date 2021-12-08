@@ -1,4 +1,4 @@
-import {fields} from "./fields";
+import {FIELD_NAME_MAP, INFO_FIELD_GROUPS, IGNORED_INFO_FIELDS} from "./fields";
 import {ActionURL} from "@labkey/api";
 import {Chart} from "react-google-charts";
 import {style as styles} from "./style";
@@ -75,14 +75,14 @@ export default jbrowse => {
                 }
 
                 const value = feat["INFO"][propertyName]
-                const fieldTitle = fields[propertyName]?.title || propertyName
+                const fieldTitle = FIELD_NAME_MAP[propertyName]?.title || propertyName
                 const tooltip = infoMap[propertyName] ? infoMap[propertyName].Description : null
                 if (value){
                     tempProp.push(
                             <TableRow key={propertyName + "-field"} className={classes.fieldRow}>
                                 <Tooltip title={tooltip}>
                                     <TableCell className={classes.fieldName}>
-                                            {fieldTitle}
+                                        {fieldTitle}
                                     </TableCell>
                                 </Tooltip>
                                 <TableCell key={propertyName + "-val"} className={classes.fieldValue}>
@@ -103,13 +103,37 @@ export default jbrowse => {
                     <BaseCard key={displays[i].title} title={displays[i].title}>
                         <Table className={classes.table}>
                             <TableBody>
-                            {propertyJSX[i]}
+                                {propertyJSX[i]}
                             </TableBody>
                         </Table>
                     </BaseCard>
             )
         }
         return displayJSX
+    }
+
+    function inferSections(feat) {
+        const sections = []
+
+        for (const [key, sectionConfig] of Object.entries(INFO_FIELD_GROUPS)) {
+            const section = {
+                title: sectionConfig.title,
+                description: sectionConfig.description,
+                properties: []
+            }
+
+            for (const fieldName of sectionConfig.tags) {
+                if (feat["INFO"][fieldName]) {
+                    section.properties.push(fieldName)
+                }
+            }
+
+            if (section.properties.length) {
+                sections.push(section)
+            }
+        }
+
+        return sections
     }
 
     function makeChart(samples, feat, classes, trackId){
@@ -282,18 +306,26 @@ export default jbrowse => {
             console.error('Error! No trackId')
         }
 
-        const sections = detailsConfig.sections || []
+        let annTable;
+        if (feat["INFO"]["ANN"]){
+            annTable = makeAnnTable(feat["INFO"]["ANN"], classes)
+            delete feat["INFO"]["ANN"]
+        }
+
+        const sections = detailsConfig.sections || inferSections(feat)
         const displays = makeDisplays(feat, sections, classes, infoMap)
+
+        // If a given INFO field is used in a specific section, dont include in the catch-all INFO section:
         for (let i in sections){
             for (let j in sections[i].properties){
-                feat["INFO"][sections[i].properties[j]] = null;
+                delete feat["INFO"][sections[i].properties[j]]
             }
         }
 
-        let annTable;
-        if (feat["INFO"]["ANN"]){
-            annTable = makeAnnTable(feat["INFO"]["ANN"], classes);
-            feat["INFO"]["ANN"] = null;
+        for (const fieldName of IGNORED_INFO_FIELDS) {
+            if (feat["INFO"][fieldName]) {
+                delete feat["INFO"][fieldName]
+            }
         }
 
         const message = detailsConfig.message ? <div className={classes.message} >{detailsConfig.message}</div> : null
