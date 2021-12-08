@@ -130,7 +130,7 @@ export default class ExtendedVariantPlugin extends Plugin {
 
             return new WidgetType({
                 name: 'SampleFilterWidget',
-                heading: 'Filter by Sample',
+                heading: 'Filter By Sample',
                 configSchema,
                 stateModel,
                 ReactComponent,

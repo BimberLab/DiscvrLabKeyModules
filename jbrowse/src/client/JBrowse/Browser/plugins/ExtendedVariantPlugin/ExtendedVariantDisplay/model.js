@@ -79,7 +79,7 @@ export default jbrowse => {
          }
 
          const sampleFilterMenu = {
-            label: 'Filter by Sample',
+            label: 'Filter By Sample',
             icon: FilterListIcon,
             onClick: () => {
                const session = getSession(self)
