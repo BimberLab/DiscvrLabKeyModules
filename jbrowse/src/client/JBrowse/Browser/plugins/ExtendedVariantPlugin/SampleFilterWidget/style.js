@@ -5,8 +5,9 @@ export const style = (0, _styles.makeStyles)(function (theme) {
          margin: theme.spacing(1),
          minWidth: 100,
       },
-      applyButton: {
-         maxWidth: 25
-      },
+      button: {
+         maxWidth: 125,
+         marginLeft: theme.spacing(2)
+      }
    };
 });

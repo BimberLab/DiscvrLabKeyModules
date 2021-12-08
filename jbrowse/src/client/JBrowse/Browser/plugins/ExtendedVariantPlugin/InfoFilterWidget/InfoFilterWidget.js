@@ -75,6 +75,11 @@ export default jbrowse => {
             getSession(model).hideWidget(model)
         }
 
+        const clearFilters = (event) => {
+            track.displays[0].renderer.infoFilters.set([])
+            getSession(model).hideWidget(model)
+        }
+
         const filterChangeHandler = (rowIdx, filterStr) => {
             infoFilters[rowIdx] = filterStr
             setInfoFilters([...infoFilters])
@@ -135,7 +140,7 @@ export default jbrowse => {
                     <FormControl className={classes.addNewControl} >
                         <Box padding={'5px'} mr="5px">
                         <Button
-                                className={classes.applyButton}
+                                className={classes.button}
                                 ref={anchorRef}
                                 id="composition-button"
                                 aria-controls={open ? 'composition-menu' : undefined}
@@ -182,8 +187,11 @@ export default jbrowse => {
                                     </Grow>
                             )}
                         </Popper>
-                        <Button className={classes.applyButton} onClick={handleFilterSubmit} variant="contained" color="primary">
+                        <Button className={classes.button} onClick={handleFilterSubmit} variant="contained" color="primary">
                             Apply
+                        </Button>
+                        <Button className={classes.button} onClick={clearFilters} variant="contained" color="primary">
+                            Clear Filters
                         </Button>
                         </Box>
                     </FormControl>

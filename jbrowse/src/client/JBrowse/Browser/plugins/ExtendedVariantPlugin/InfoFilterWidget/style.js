@@ -10,9 +10,6 @@ export const style = (0, _styles.makeStyles)(function (theme) {
          paddingRight: theme.spacing(5),
          paddingBottom: theme.spacing(1)
       },
-      button: {
-         marginLeft: theme.spacing(2.5)
-      },
       root: {
          padding: theme.spacing(1, 3, 1, 1),
          background: theme.palette.background.default,
@@ -40,7 +37,7 @@ export const style = (0, _styles.makeStyles)(function (theme) {
          textAlign: 'center',
          padding: theme.spacing(0.75, 0, 0.75, 1),
       },
-      applyButton: {
+      button: {
          maxWidth: 150,
          marginRight: theme.spacing(2)
       },

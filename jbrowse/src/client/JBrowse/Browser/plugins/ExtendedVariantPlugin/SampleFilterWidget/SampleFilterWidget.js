@@ -1,13 +1,10 @@
 import {style as styles} from "./style";
-import { getSession } from '@jbrowse/core/util'
-import { readConfObject } from '@jbrowse/core/configuration'
+import {getSession} from '@jbrowse/core/util'
+import {readConfObject} from '@jbrowse/core/configuration'
 
-import {
-    FormControl,
-    TextField,
-    Button
-} from '@material-ui/core'
-import { useState } from 'react'
+import {Box, Button, FormControl, TextField} from '@material-ui/core'
+import {useState} from 'react'
+
 export default jbrowse => {
 
     const { observer, PropTypes: MobxPropTypes } = jbrowse.jbrequire('mobx-react')
@@ -15,14 +12,15 @@ export default jbrowse => {
 
     function parseSampleCSV(val) {
         if (!val) {
-            return null;
+            return '';
         }
+
         val = val.trim().replace(/\s+/g, ",")
         val = val.replace(/,+/g, ",")
         val = val.replace(/^,+/g, "")
         val = val.replace(/,+$/g, "")
 
-        return(val)
+        return val || ''
     }
 
     function replaceCommaWithNewline(val) {
@@ -50,6 +48,11 @@ export default jbrowse => {
             getSession(model).hideWidget(model)
         }
 
+        const clearFilters = (event) => {
+            track.displays[0].renderer.activeSamples.set('')
+            getSession(model).hideWidget(model)
+        }
+
         return(
                 <>
                     <FormControl className={classes.formControl} style={{maxWidth: 400}}>
@@ -66,9 +69,14 @@ export default jbrowse => {
                                 onChange={handleSampleFilterChange}
                         />
                         <p/>
-                        <Button className={classes.applyButton} onClick={handleSampleFilterSubmit} variant="contained" color="primary">
+                        <Box padding={'5px'} mr="5px">
+                        <Button className={classes.button} onClick={handleSampleFilterSubmit} variant="contained" color="primary">
                             Apply
                         </Button>
+                        <Button className={classes.button} onClick={clearFilters} variant="contained" color="primary">
+                            Clear Filters
+                        </Button>
+                        </Box>
                     </FormControl>
                 </>
         )
