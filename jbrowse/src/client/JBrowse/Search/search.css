@@ -2,12 +2,18 @@ fieldset.MuiOutlinedInput-notchedOutline > legend {
     border-style: none;
 }
 
-/* TODO: this targets the input only. Can we make a broader directive, including the font below the field and the auto-complete text? */
+/* this updates the search field itself */
 div.MuiInputBase-root {
     font-size: 14px;
 }
 
-/* TODO: This does not work. */
-div.MuiAutocomplete-root {
+/* This is the text below the field */
+p.MuiFormHelperText-root {
+    font-size: 12px;
+}
+
+/* This is the search drop-down  */
+p.MuiTypography-root {
     font-size: 14px;
 }
+

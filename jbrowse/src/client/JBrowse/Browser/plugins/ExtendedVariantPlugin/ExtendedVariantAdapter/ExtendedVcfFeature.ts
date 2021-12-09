@@ -3,8 +3,32 @@ import { VcfFeature } from '@jbrowse/plugin-variants'
 export default class ExtendedVcfFeature extends VcfFeature {
     constructor(args: { variant: any; parser: any; id: string }) {
         args.variant = ExtendedVcfFeature.extractImpact(args.variant)
+        //args.variant = ExtendedVcfFeature.calculateVariableSamples(args.variant)
 
         super(args);
+    }
+
+    static calculateVariableSamples(variant: {
+        REF: string
+        POS: number
+        ALT: string[]
+        CHROM: string
+        INFO: any
+        ID: string[]
+        SAMPLES: object
+    }) {
+        if (variant.SAMPLES) {
+            variant.INFO['_variableSamples'] = [];
+            Object.keys(variant.SAMPLES).forEach(function(sampleId) {
+                // Maintain a cached list of all non-WT samples at this position:
+                const gt = variant.SAMPLES[sampleId]["GT"][0]
+                if (!(gt === "./." || gt === ".|." || gt === "0/0" || gt === "0|0")) {
+                    variant.INFO['_variableSamples'].push(sampleId)
+                }
+            })
+        }
+
+        return(variant)
     }
 
     static extractImpact(variant:  {

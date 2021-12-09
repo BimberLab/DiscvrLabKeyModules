@@ -446,8 +446,9 @@ public class JsonFile
                 put("uri", getWebDavURL(getExpectedLocationOfIndexFile(".ixx", true)));
             }});
 
-            put("metaFilePath", new JSONObject(){{
-                put("uri", getWebDavURL(getExpectedLocationOfIndexFile("_meta.json", true)));
+            put("metaFilePath", new JSONObject()
+            {{
+                put("uri", getWebDavURL(getExpectedLocationOfIndexFile("_meta.json", false)));
             }});
 
             put("assemblyNames", new JSONArray(){{
@@ -837,6 +838,7 @@ public class JsonFile
                 File exe = JBrowseManager.get().getJbrowseCli();
                 SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
                 wrapper.setWorkingDir(targetFile.getParentFile());
+                wrapper.setThrowNonZeroExits(true);
 
                 //TODO: eventually remove this. see: https://github.com/GMOD/jbrowse-components/issues/2354#issuecomment-926320747
                 wrapper.addToEnvironment("DEBUG", "*");
