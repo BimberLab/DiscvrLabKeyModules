@@ -7,7 +7,7 @@ export const filterMap = {
         dataType: "number",
         maxValue: 1,
         minValue: 0,
-        location: 'variant.INFO.AF[0]'
+        location: 'arrayMax(variant.INFO.AF)'
     },
     AC: {
         title: 'Allele Count',
@@ -16,7 +16,7 @@ export const filterMap = {
         dataType: "number",
         maxValue: null,
         minValue: 0,
-        location: 'variant.INFO.AC[0]'
+        location: 'arrayMax(variant.INFO.AC)'
     },
     IMPACT: {
         title: 'Predicted Impact',

@@ -20,6 +20,6 @@ export const colorSchemes = {
         maxVal: 1,
         gradientSteps: 10,
         displaySigFigs: 3,
-        jexlComponent: "get(feature,'INFO').AF[0]",
+        jexlComponent: "arrayMax(get(feature,'INFO').AF)",
     },
 }

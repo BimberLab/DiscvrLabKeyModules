@@ -125,6 +125,11 @@ function RenderedFeatureGlyph(props) {
     )
 }
 
+// TODO: can we access the pluginManager.jexl instance directly??
+jexl.addFunction('arrayMax', (array) => {
+    return Array.isArray(array) ? Math.max(...array) : array
+})
+
 function passesInfoFilters(feature, filters){
     if (!filters || !filters.length){
         return true

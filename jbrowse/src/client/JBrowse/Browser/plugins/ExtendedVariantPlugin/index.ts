@@ -136,6 +136,10 @@ export default class ExtendedVariantPlugin extends Plugin {
                 ReactComponent,
             })
         })
+
+        pluginManager.jexl.addFunction('arrayMax', (array) => {
+            return Array.isArray(array) ? Math.max(...array) : array
+        })
     }
 
     configure(pluginManager: PluginManager) {
