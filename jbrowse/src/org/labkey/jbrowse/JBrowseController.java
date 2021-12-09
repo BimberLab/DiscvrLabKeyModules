@@ -37,7 +37,6 @@ import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.Results;
 import org.labkey.api.data.Selector;
@@ -64,14 +63,12 @@ import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.settings.AppProps;
+import org.labkey.api.settings.LookAndFeelProperties;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
-import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.UnauthorizedException;
-import org.labkey.api.view.WebPartView;
-import org.labkey.api.view.template.PageConfig;
 import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
@@ -648,7 +645,6 @@ public class JBrowseController extends SpringActionController
         private static final String DEMO = "demo";
         private static final String MGAP = "mGAP";
         private static final String MGAP_FILTERED = "mGAPF";
-        private static final String MGAP_INVALID_FILTERS = "mGAPIF";
 
         @Override
         public void validateForm(GetSessionForm form, Errors errors)
@@ -673,10 +669,14 @@ public class JBrowseController extends SpringActionController
             }
             else if (MGAP_FILTERED.equalsIgnoreCase(form.getSession()))
             {
-                resp = getDemoSession("external/mGAPFilteredSession.json");
-            }
-            else if (MGAP_INVALID_FILTERS.equalsIgnoreCase(form.getSession())){
-                resp = getDemoSession("external/mGAPInvalidFilteredSession.json");
+                resp = getDemoSession("external/mGAPSession.json");
+                resp.getJSONArray("tracks").getJSONObject(0).getJSONArray("displays").getJSONObject(0).getJSONObject("renderer").put("activeSamples", "m00004,m00005");
+                resp.getJSONArray("tracks").getJSONObject(0).getJSONArray("displays").getJSONObject(0).getJSONObject("renderer").put("palette", "AF");
+                resp.getJSONArray("tracks").getJSONObject(0).getJSONArray("displays").getJSONObject(0).getJSONObject("renderer").put("infoFilters", new JSONArray(){{
+                    put("AF:gt:0.1");
+                }});
+
+                resp.getJSONArray("tracks").getJSONObject(0).getJSONArray("displays").getJSONObject(0).remove("detailsConfig");
             }
             else
             {
@@ -689,6 +689,35 @@ public class JBrowseController extends SpringActionController
 
                 resp = db.getConfigJson(getUser(), _log);
             }
+
+            // The rationale of this is to take the site theme, and map this to the primary site color.
+            // The client-side JBrowse LinearGenomeView will use this to make a theme. For the time being, three of four JBrowse
+            // theme colors are hard-coded, and we only update the JBrowse secondary color to match the LabKey one
+            LookAndFeelProperties props = LookAndFeelProperties.getInstance(getContainer());
+            String lightColor;
+            String darkColor;
+            switch (props.getThemeName())
+            {
+                case "Blue" -> {darkColor = "#21309A";lightColor = "#21309A";}
+                case "Brown" -> {darkColor = "#682B16";lightColor = "#682B16";}
+                case "Leaf" -> {darkColor = "#597530";lightColor = "#789E47";}
+                case "Harvest" -> {darkColor = "#e86130";lightColor = "#F7862A";}
+                case "Madison" -> {darkColor = "#990000";lightColor = "#C5050C";}
+                case "Mono" -> {darkColor = "#4c4c4c";lightColor = "#7f7f7f";}
+                case "Ocean" -> {darkColor = "#307272";lightColor = "#208e8b";}
+                case "Overcast" -> {darkColor = "#116596";lightColor = "#3495d2";}
+                case "Sage" -> {darkColor = "#0F4F0B";lightColor = "#0F4F0B";}
+                case "Seattle" -> {darkColor = "#116596";lightColor = "#116596";} //NOTE: Seattle technically uses #73b6e0 as the light color
+                default -> {
+                    _log.error("Unexpected theme name: " + props.getThemeName());
+                    // This will result in the client using the JBrowse defaults:
+                    lightColor = null;
+                    darkColor = null;
+                }
+            }
+
+            resp.put("themeLightColor", lightColor);
+            resp.put("themeDarkColor", darkColor);
 
             return new ApiSimpleResponse(resp);
         }

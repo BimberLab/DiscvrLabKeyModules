@@ -1,6 +1,6 @@
 export const colorSchemes = {
     IMPACT: {
-        title: 'Impact',
+        title: 'Predicted Impact',
         dataType: "option",
         options: {
             HIGH: "red",
@@ -18,8 +18,8 @@ export const colorSchemes = {
         },
         minVal: 0,
         maxVal: 1,
-        gradientSteps: 25,
+        gradientSteps: 10,
         displaySigFigs: 3,
-        jexlComponent: "get(feature,'INFO').AF[0]",
+        jexlComponent: "arrayMax(get(feature,'INFO').AF)",
     },
 }

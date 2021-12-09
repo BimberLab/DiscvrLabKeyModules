@@ -55,7 +55,7 @@ public class RefAaJsonFile extends DbBackedJsonFile
                 return;
             }
 
-            writer.write(StringUtils.join(new String[]{refName, "ReferenceAA", "gene", rs.getString("start_location"), lastExon[1], ".", strand, ".", "ID=" + featureId + ";Note="}, '\t') + System.getProperty("line.separator"));
+            writer.write(StringUtils.join(new String[]{refName, "ReferenceAA", "gene", rs.getString("start_location"), lastExon[1], ".", strand, ".", "ID=" + featureId + ";Note="}, '\t') + '\n');
 
             for (String exon : tokens)
             {
@@ -66,7 +66,7 @@ public class RefAaJsonFile extends DbBackedJsonFile
                     return;
                 }
 
-                writer.write(StringUtils.join(new String[]{refName, "ReferenceAA", "CDS", borders[0], borders[1], ".", strand, ".", "Parent=" + featureId}, '\t') + System.getProperty("line.separator"));
+                writer.write(StringUtils.join(new String[]{refName, "ReferenceAA", "CDS", borders[0], borders[1], ".", strand, ".", "Parent=" + featureId}, '\t') + '\n');
             }
         });
     }

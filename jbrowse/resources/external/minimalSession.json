@@ -117,16 +117,6 @@
               "configuration": "clinvar_ncbi_hg38-ExtendedVariantDisplay"
             }
           ]
-        },
-        {
-          "type": "DemoTrack",
-          "configuration": "clinvar_ncbi_hg38_2",
-          "displays": [
-            {
-              "type": "WidgetDisplay",
-              "configuration": "clinvar_ncbi_hg38_2-WidgetDisplay"
-            }
-          ]
         }
       ]
     }

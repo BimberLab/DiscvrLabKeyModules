@@ -539,6 +539,11 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 options.add("--genomicsdb-shared-posixfs-optimizations");
             }
 
+            if (ctx.getParams().optBoolean("bypassFeatureReader", true))
+            {
+                options.add("--bypass-feature-reader");
+            }
+
             if (ctx.getParams().optBoolean("disableFileLocking", false))
             {
                 ctx.getLogger().debug("Disabling file locking for TileDB");

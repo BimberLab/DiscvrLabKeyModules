@@ -328,7 +328,7 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
     @Override
     public void updateStatusForJobs(@NotNull Collection<String> jobIds) throws PipelineJobException
     {
-        _log.info("updating job status for: " + jobIds.size() + " jobs");
+        _log.debug("updating job status for: " + jobIds.size() + " jobs");
         updateStatusForAll(jobIds);
     }
 
@@ -355,7 +355,7 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
         // iterate existing submissions to catch completed tasks and errors
         // regenerate this list in case status has otherwise changed
         jobs = getJobsToCheck(false, extraJobIds);
-        //_log.info("found " + jobs.size() + " additional cluster jobs to check");
+        //_log.debug("found " + jobs.size() + " additional cluster jobs to check");
 
         for (ClusterJob j : jobs)
         {
@@ -373,7 +373,7 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
             Pair<String, String> jobStatus = getStatusForJob(j, ContainerManager.getForId(j.getContainer()));
             if (jobStatus != null)
             {
-                _log.info("updating job status: " + j.getClusterId() + " / " + jobStatus.first);
+                _log.debug("updating job status: " + j.getClusterId() + " / " + jobStatus.first);
                 updateJobStatus(jobStatus.first, j, jobStatus.second);
             }
             else
@@ -723,8 +723,7 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
             throw new IllegalArgumentException("attempting to execute a null command");
         }
 
-        if (isDebug())
-            _log.info("executing cluster command: " + command);
+        _log.debug("executing cluster command: " + command);
 
         List<String> ret = new ArrayList<>();
 
@@ -754,11 +753,8 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
                     ret.addAll(Arrays.asList(output.split("\n")));
                 }
 
-                if (isDebug())
-                {
-                    _log.info("results: ");
-                    _log.info(StringUtils.join(ret, "\n"));
-                }
+                _log.debug("results: ");
+                _log.debug(StringUtils.join(ret, "\n"));
 
                 return ret;
             }
