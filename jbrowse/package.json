@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@jbrowse/cli": "~1.4.4",
+    "ixixx": "1.0.15",
     "@jbrowse/react-linear-genome-view": "^1.5.1",
     "@labkey/components": "^2.102.0",
     "assert": "^2.0.0",

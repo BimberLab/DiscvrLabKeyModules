@@ -62,15 +62,18 @@ const StandaloneSearch = observer(({ sessionId, }: { sessionId: any}) => {
     }
 
     const { session } = state
-    const { textSearchManager, assemblyManager, view } = session
-    const { assemblyNames, rankSearchResults } = view
+    const { view } = session
+    const { textSearchManager, assemblyManager } = session
+    const { rankSearchResults } = view
+
+    const { assemblyNames } = getSession(session)
     if (!assemblyNames.length){
         return (<p>No configured assemblies</p>)
     }
 
     const assemblyName = assemblyNames[0]
     const assembly = assemblyManager.get(assemblyName)
-    const searchScope = state.searchScope(assemblyName)
+    const searchScope = view.searchScope(assemblyName)
     const selectedRegion = op?.getLocation()
 
     // TODO: can we avoid this duplication?
@@ -113,7 +116,7 @@ const StandaloneSearch = observer(({ sessionId, }: { sessionId: any}) => {
         <span>
       <RefNameAutocomplete
           model={view}
-          assemblyName={assemblyNames.length ? assemblyNames[0] : undefined}
+          assemblyName={assemblyName ?? undefined}
           fetchResults={fetchResults}
           value={selectedRegion}
           onSelect={option => {
