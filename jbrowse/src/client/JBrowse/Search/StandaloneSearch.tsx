@@ -61,22 +61,16 @@ const StandaloneSearch = observer(({ sessionId, }: { sessionId: any}) => {
         return (<p>Error fetching config. See console for more details</p>)
     }
 
-    const session = getSession(state)
-    const { textSearchManager, assemblyManager } = session
-    console.log(textSearchManager)
-
-    //const { view } = session
-
-    const { assemblyNames, rankSearchResults } = state
+    const { session } = state
+    const { textSearchManager, assemblyManager, view } = session
+    const { assemblyNames, rankSearchResults } = view
     if (!assemblyNames.length){
         return (<p>No configured assemblies</p>)
     }
-    const assemblyName = assemblyNames[0]
-    console.log(assemblyName)
 
+    const assemblyName = assemblyNames[0]
     const assembly = assemblyManager.get(assemblyName)
     const searchScope = state.searchScope(assemblyName)
-
     const selectedRegion = op?.getLocation()
 
     // TODO: can we avoid this duplication?
@@ -118,7 +112,7 @@ const StandaloneSearch = observer(({ sessionId, }: { sessionId: any}) => {
     return (
         <span>
       <RefNameAutocomplete
-          model={state}
+          model={view}
           assemblyName={assemblyNames.length ? assemblyNames[0] : undefined}
           fetchResults={fetchResults}
           value={selectedRegion}
