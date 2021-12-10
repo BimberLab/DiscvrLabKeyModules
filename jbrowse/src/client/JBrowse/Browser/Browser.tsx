@@ -1,17 +1,13 @@
-import React, {useState, useEffect} from 'react'
+import React, { useEffect, useState } from 'react';
 
-import {
-  createViewState,
-  JBrowseLinearGenomeView,
-  loadPlugins
-} from '@jbrowse/react-linear-genome-view'
-import { createTheme } from '@material-ui/core/styles'
-import { PluginConstructor } from '@jbrowse/core/Plugin'
-import { Ajax, ActionURL } from '@labkey/api'
-import LogSession from "./plugins/LogSession/index"
-import ExtendedVariantPlugin from "./plugins/ExtendedVariantPlugin/index"
-import { makeStyles } from "@material-ui/core/styles"
-import "./jbrowse.css"
+import { createViewState, JBrowseLinearGenomeView, loadPlugins } from '@jbrowse/react-linear-genome-view';
+import { createTheme, makeStyles } from '@material-ui/core/styles';
+import { PluginConstructor } from '@jbrowse/core/Plugin';
+import { ActionURL, Ajax } from '@labkey/api';
+import LogSession from './plugins/LogSession/index';
+import ExtendedVariantPlugin from './plugins/ExtendedVariantPlugin/index';
+import './jbrowse.css';
+import JBrowseFooter from './components/JBrowseFooter';
 
 const refTheme = createTheme()
 const blue = '#116596'
@@ -146,6 +142,7 @@ function View(){
         //TODO: can we make this expand to full page height?
         <div style={{height: "100%"}}>
             <JBrowseLinearGenomeView viewState={state} />
+            <JBrowseFooter viewState={state} />
         </div>
     )
 }
