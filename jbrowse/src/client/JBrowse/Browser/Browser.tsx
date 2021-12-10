@@ -8,6 +8,7 @@ import LogSession from './plugins/LogSession/index';
 import ExtendedVariantPlugin from './plugins/ExtendedVariantPlugin/index';
 import './jbrowse.css';
 import JBrowseFooter from './components/JBrowseFooter';
+import { ErrorBoundary } from '@labkey/components';
 
 const refTheme = createTheme()
 const blue = '#116596'
@@ -144,8 +145,10 @@ function View(){
     return (
         //TODO: can we make this expand to full page height?
         <div style={{height: "100%"}}>
-            <JBrowseLinearGenomeView viewState={state} />
-            <JBrowseFooter viewState={state} bgColor={bgColor}/>
+            <ErrorBoundary>
+                <JBrowseLinearGenomeView viewState={state} />
+                <JBrowseFooter viewState={state} bgColor={bgColor}/>
+            </ErrorBoundary>
         </div>
     )
 }
