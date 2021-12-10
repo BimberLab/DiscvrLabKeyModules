@@ -82,6 +82,7 @@ function View(){
     const session = queryParam.get('session')
 
     const [state, setState] = useState(null);
+    let bgColor = null
     const [plugins, setPlugins] = useState<PluginConstructor[]>();
     useEffect(() => {
         Ajax.request({
@@ -107,6 +108,7 @@ function View(){
                 const themeSecondaryColor = jsonRes.themeDarkColor || blue
                 delete jsonRes.themeLightColor
                 delete jsonRes.themeDarkColor
+                bgColor = themePrimaryColor
                 jsonRes.configuration = {
                     "theme": {
                         "palette": {
@@ -142,7 +144,7 @@ function View(){
         //TODO: can we make this expand to full page height?
         <div style={{height: "100%"}}>
             <JBrowseLinearGenomeView viewState={state} />
-            <JBrowseFooter viewState={state} />
+            <JBrowseFooter viewState={state} bgColor={bgColor}/>
         </div>
     )
 }

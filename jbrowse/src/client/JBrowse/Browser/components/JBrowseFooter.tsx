@@ -12,7 +12,7 @@ const useStyles = makeStyles({
 })
 
 const JBrowseFooter = observer(props => {
-    const {viewState} = props
+    const {viewState, bgColor} = props
     const styles = useStyles()
 
     const [dialogOpen, setDialogOpen] = React.useState(false);
@@ -30,7 +30,7 @@ const JBrowseFooter = observer(props => {
             <Button className={styles.button} onClick={openTrackSelector} variant="contained" color="primary">Open Track Selector</Button>
             <Button className={styles.button} onClick={showHelpDialog} variant="contained" color="primary">View Help</Button>
         </Box>
-        <HelpDialog isOpen={dialogOpen} />
+        <HelpDialog isOpen={dialogOpen} setDialogOpen={setDialogOpen} bgColor={bgColor} />
         </>
     )
 })
