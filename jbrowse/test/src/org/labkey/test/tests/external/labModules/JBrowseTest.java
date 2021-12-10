@@ -341,34 +341,23 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private By getVariantWithinTrack(String trackId, String variantText, boolean waitFor)
     {
-        try
+        Locator.XPathLocator l = getTrackLocator(trackId, waitFor);
+
+        l = l.append(Locator.xpath("//*[name()='text' and contains(text(), '" + variantText + "')]/..")).notHidden();
+
+        if (waitFor)
         {
-            Locator.XPathLocator l = getTrackLocator(trackId, waitFor);
-
-            l = l.append(Locator.xpath("//*[name()='text' and contains(text(), '" + variantText + "')]/..")).notHidden();
-
-            if (waitFor)
-            {
-                waitForElement(l);
-            }
-
-            waitForElementToDisappear(Locator.tagWithText("p", "Loading"));
-            sleep(250);
-
-            return By.xpath(l.toXpath());
+            waitForElement(l);
         }
-        catch(Exception e)
+
+        waitForElementToDisappear(Locator.tagWithText("p", "Loading"));
+        sleep(250);
+        if (waitFor)
         {
-            return null;
+            waitForElement(l);
         }
-    }
 
-    private boolean isVariantVisible(String trackId, String variantText, boolean waitFor){
-        By var = getVariantWithinTrack(trackId, variantText, waitFor);
-        if(var != null){
-            return true;
-        }
-        return false;
+        return By.xpath(l.toXpath());
     }
 
     private void testMessageDisplay()
@@ -384,8 +373,9 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void waitForJBrowseToLoad()
     {
-        waitForElementToDisappear(Locator.tagWithText("p", "Loading..."));
+        waitForElementToDisappear(Locator.tagWithText("p", "Loading...")); //the initial message before getSession
         waitForElement(Locator.tagWithClass("span", "MuiIconButton-label").notHidden()); //this is the top-left icon
+        waitForElement(Locator.tagWithAttribute("button", "title", "close this track").notHidden());
         waitForElement(Locator.tagWithClassContaining("span", "MuiTypography-root").notHidden(), WAIT_FOR_PAGE); //this is the icon from the track label
 
         waitForElementToDisappear(Locator.tagWithText("div", "Loading...")); //track data
