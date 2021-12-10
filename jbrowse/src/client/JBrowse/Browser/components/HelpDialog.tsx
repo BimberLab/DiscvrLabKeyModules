@@ -1,11 +1,11 @@
 import { observer } from 'mobx-react';
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@material-ui/core';
 import React, { useState } from 'react';
-import { getServerContext } from "@labkey/api";
+import { getServerContext } from '@labkey/api';
 
 const HelpDialog = observer(props => {
     const setDialogOpen = props.setDialogOpen
-    const { isOpen, bgColor}  = props
+    const { isOpen, bgColor }  = props
 
     const handleClose = () => {
         setDialogOpen(false)
@@ -23,7 +23,7 @@ const HelpDialog = observer(props => {
         }
     }
 
-    const images = ['JB-1.png', 'JB-2.png', 'JB-3.png', 'JB-4.png', 'JB-5.png']
+    const images = ['JB-1.jpg', 'JB-2.jpg', 'JB-3.jpg', 'JB-4.jpg', 'JB-5.jpg']
     const [activeImage, setActiveImage] = useState(0);
 
     return (
@@ -32,8 +32,9 @@ const HelpDialog = observer(props => {
             onClose={handleClose}
             aria-labelledby="alert-dialog-title"
             aria-describedby="alert-dialog-description"
+            maxWidth={false}
         >
-            <DialogTitle style={{backgroundColor: bgColor}} id="alert-dialog-title">Genome Browser Tutorial</DialogTitle>
+            <DialogTitle style={{background: bgColor, color: 'white'}} id="alert-dialog-title">Genome Browser Tutorial</DialogTitle>
             <DialogContent>
                 <img alt="Genome Browser Help" src={getServerContext().contextPath + '/jbrowse/img/' + images[activeImage]} />
             </DialogContent>

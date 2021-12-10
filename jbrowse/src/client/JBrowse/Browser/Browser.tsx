@@ -82,7 +82,7 @@ function View(){
     const session = queryParam.get('session')
 
     const [state, setState] = useState(null);
-    let bgColor = null
+    const [bgColor, setBgColor] = useState(null)
     const [plugins, setPlugins] = useState<PluginConstructor[]>();
     useEffect(() => {
         Ajax.request({
@@ -108,7 +108,8 @@ function View(){
                 const themeSecondaryColor = jsonRes.themeDarkColor || blue
                 delete jsonRes.themeLightColor
                 delete jsonRes.themeDarkColor
-                bgColor = themePrimaryColor
+                setBgColor(themeSecondaryColor)
+
                 jsonRes.configuration = {
                     "theme": {
                         "palette": {
