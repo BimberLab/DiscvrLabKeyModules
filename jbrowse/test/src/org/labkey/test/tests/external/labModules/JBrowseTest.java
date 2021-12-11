@@ -251,7 +251,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         // Wait for variants to load:
-        getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> G", true));
+        getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> G"));
 
         Assert.assertEquals("Incorrect number of variants", 17, getTotalVariantFeatures());
 
@@ -275,7 +275,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         // Wait for variants to load:
-        getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T", true));
+        getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T"));
 
         Assert.assertEquals("Incorrect number of variants", 22, getTotalVariantFeatures());
 
@@ -295,7 +295,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV G -> A", true)).stream().filter(WebElement::isDisplayed).findFirst().get();
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV G -> A")).stream().filter(WebElement::isDisplayed).findFirst().get();
 
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:116,986,951..116,986,951"));
@@ -310,7 +310,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         // Wait for variants to load:
-        getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T", true));
+        getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T"));
 
         Assert.assertEquals("Incorrect number of variants", 20, getTotalVariantFeatures());
 
@@ -339,23 +339,19 @@ public class JBrowseTest extends BaseWebDriverTest
         return l;
     }
 
-    private By getVariantWithinTrack(String trackId, String variantText, boolean waitFor)
+    private By getVariantWithinTrack(String trackId, String variantText)
     {
-        Locator.XPathLocator l = getTrackLocator(trackId, waitFor);
+        Locator.XPathLocator l = getTrackLocator(trackId, true);
 
         l = l.append(Locator.xpath("//*[name()='text' and contains(text(), '" + variantText + "')]/..")).notHidden();
 
-        if (waitFor)
-        {
-            waitForElement(l);
-        }
+        waitForElementToDisappear(Locator.tagWithText("p", "Loading"));
+        sleep(250);
+        waitForElement(l);
 
         waitForElementToDisappear(Locator.tagWithText("p", "Loading"));
         sleep(250);
-        if (waitFor)
-        {
-            waitForElement(l);
-        }
+        waitForElement(l);
 
         return By.xpath(l.toXpath());
     }
@@ -366,7 +362,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T", true)).stream().filter(WebElement::isDisplayed).collect(toSingleton());
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T")).stream().filter(WebElement::isDisplayed).collect(toSingleton());
         actions.click(toClick).perform();
         waitForElement(Locator.tagContainingText("div", "Aut molestiae temporibus nesciunt."));
     }
@@ -387,7 +383,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T", true)).stream().filter(WebElement::isDisplayed).collect(toSingleton());
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T")).stream().filter(WebElement::isDisplayed).collect(toSingleton());
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("span", "Section 1"));
 
@@ -400,7 +396,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C", true)).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,981,406..116,981,406
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,981,406..116,981,406
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:116,981,406..116,981,406"));
         assertElementPresent(Locator.tagWithText("td", "Minor Allele Frequency"));
@@ -412,7 +408,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C", true)).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,981,406..116,981,406
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,981,406..116,981,406
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:116,981,406..116,981,406"));
         assertElementPresent(Locator.tagWithText("th", "Effect"));
@@ -429,7 +425,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV C -> A", true)).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,999,755
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV C -> A")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,999,755
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:116,999,755..116,999,755"));
         assertElementPresent(Locator.tagWithText("th", "Sequence"));
@@ -445,7 +441,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV C -> A", true)).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,999,755
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV C -> A")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,999,755
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:116,999,755..116,999,755"));
         assertElementPresent(Locator.tagWithText("td", "3041"));
