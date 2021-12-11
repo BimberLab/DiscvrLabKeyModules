@@ -309,6 +309,9 @@ public class JBrowseTest extends BaseWebDriverTest
         beginAt("/home/jbrowse-jbrowse.view?session=mgap&sampleFilters=mgap:m00010");
         waitForJBrowseToLoad();
 
+        // NOTE: this should be replaced with something more specific
+        sleep(5000);
+
         // Wait for variants to load:
         getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T"));
 
