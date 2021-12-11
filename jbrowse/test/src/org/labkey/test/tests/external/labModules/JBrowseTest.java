@@ -346,11 +346,6 @@ public class JBrowseTest extends BaseWebDriverTest
         l = l.append(Locator.xpath("//*[name()='text' and contains(text(), '" + variantText + "')]/..")).notHidden();
 
         waitForElementToDisappear(Locator.tagWithText("p", "Loading"));
-        sleep(250);
-        waitForElement(l);
-
-        waitForElementToDisappear(Locator.tagWithText("p", "Loading"));
-        sleep(250);
         waitForElement(l);
 
         return By.xpath(l.toXpath());
