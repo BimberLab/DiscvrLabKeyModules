@@ -21,6 +21,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.action.ConfirmAction;
 import org.labkey.api.action.SpringActionController;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
+import org.labkey.api.data.Table;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
@@ -43,7 +47,9 @@ import org.springframework.web.servlet.ModelAndView;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ClusterController extends SpringActionController
 {
@@ -162,6 +168,95 @@ public class ClusterController extends SpringActionController
         }
     }
 
+
+    public static class ResetPipelineJobLogFileForm
+    {
+        private int _jobId;
+        private String _filePath;
+
+        public int getJobId()
+        {
+            return _jobId;
+        }
+
+        public void setJobId(int jobId)
+        {
+            _jobId = jobId;
+        }
+
+        public String getFilePath()
+        {
+            return _filePath;
+        }
+
+        public void setFilePath(String filePath)
+        {
+            _filePath = filePath;
+        }
+    }
+
+    @RequiresSiteAdmin
+    public class ResetPipelineJobLogFileAction extends ConfirmAction<ResetPipelineJobLogFileForm>
+    {
+        public void validateCommand(ResetPipelineJobLogFileForm form, Errors errors)
+        {
+
+        }
+
+        public URLHelper getSuccessURL(ResetPipelineJobLogFileForm form)
+        {
+            return PageFlowUtil.urlProvider(PipelineStatusUrls.class).urlBegin(getContainer());
+        }
+
+        public ModelAndView getConfirmView(ResetPipelineJobLogFileForm form, BindException errors) throws Exception
+        {
+            return new HtmlView(HtmlString.unsafe("This will change the PipelineJob log file path for the selected job to the path below." +
+                    "<br><br>" +
+                    "<label>Enter Job ID(s): </label><input name=\"jobId\"><br>" +
+                    "<label>New Filepath: </label><input name=\"filePath\"><br>"));
+        }
+
+        @Override
+        public boolean handlePost(ResetPipelineJobLogFileForm form, BindException errors) throws Exception
+        {
+            if (form.getJobId() == 0)
+            {
+                errors.reject(ERROR_MSG, "No JobId provided");
+                return false;
+            }
+
+            PipelineStatusFile sf = PipelineService.get().getStatusFile(form.getJobId());
+            if (sf == null)
+            {
+                errors.reject(ERROR_MSG, "Unable to find job: " + form.getJobId());
+                return false;
+            }
+
+            String path = StringUtils.trimToNull(form.getFilePath());
+            if (path == null)
+            {
+                errors.reject(ERROR_MSG, "Missing filepath: " + form.getFilePath());
+                return false;
+            }
+
+            File logFile = new File(path);
+            if (!logFile.exists())
+            {
+                errors.reject(ERROR_MSG, "File doesnt exist: " + form.getFilePath());
+                return false;
+            }
+
+            Map<String, Object> toUpdate = new HashMap<>();
+            toUpdate.put("RowId", form.getJobId());
+            toUpdate.put("FilePath", path);
+
+            TableInfo ti = DbSchema.get("pipeline", DbSchemaType.Module).getTable("StatusFiles");
+            Table.update(getUser(), ti, toUpdate, form.getJobId());
+
+            return false;
+        }
+    }
+
     @RequiresSiteAdmin
     public class RecoverCompletedJobsAction extends ConfirmAction<JobIdsForm>
     {
@@ -212,7 +307,6 @@ public class ClusterController extends SpringActionController
             }
 
             sfs.forEach(sf -> {
-
                 File log = new File(sf.getFilePath());
                 File json = AbstractClusterExecutionEngine.getSerializedJobFile(log);
                 if (!json.exists())

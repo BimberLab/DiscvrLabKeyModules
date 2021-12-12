@@ -309,6 +309,9 @@ public class JBrowseTest extends BaseWebDriverTest
         beginAt("/home/jbrowse-jbrowse.view?session=mgap&sampleFilters=mgap:m00010");
         waitForJBrowseToLoad();
 
+        // NOTE: this should be replaced with something more specific
+        sleep(5000);
+
         // Wait for variants to load:
         getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T"));
 
@@ -346,11 +349,6 @@ public class JBrowseTest extends BaseWebDriverTest
         l = l.append(Locator.xpath("//*[name()='text' and contains(text(), '" + variantText + "')]/..")).notHidden();
 
         waitForElementToDisappear(Locator.tagWithText("p", "Loading"));
-        sleep(250);
-        waitForElement(l);
-
-        waitForElementToDisappear(Locator.tagWithText("p", "Loading"));
-        sleep(250);
         waitForElement(l);
 
         return By.xpath(l.toXpath());
