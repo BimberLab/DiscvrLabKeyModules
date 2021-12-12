@@ -307,6 +307,11 @@ public class JBrowseTest extends BaseWebDriverTest
     private void testSampleFiltersFromUrl()
     {
         beginAt("/home/jbrowse-jbrowse.view?session=mgap&sampleFilters=mgap:m00010");
+
+        // For some reason this is causing the entire page to crash on the sqlserver TeamCity runs, specifically
+        // TODO: replace this with something more specific.
+        sleep(5000);
+
         waitForJBrowseToLoad();
 
         // Wait for variants to load:
