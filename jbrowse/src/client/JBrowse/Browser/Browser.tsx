@@ -69,13 +69,6 @@ function applyUrlParams(json, queryParam) {
             }
         }
     }
-
-    let activeTracks = queryParam.get('activeTracks')
-    if (activeTracks) {
-        activeTracks = activeTracks.split(',')
-
-        //TODO
-    }
 }
 
 function View(){
@@ -86,6 +79,15 @@ function View(){
     const [bgColor, setBgColor] = useState(null)
     const [plugins, setPlugins] = useState<PluginConstructor[]>();
     useEffect(() => {
+        let activeTracks = []
+        if (queryParam.get('activeTracks')) {
+            activeTracks = activeTracks.concat(queryParam.get('activeTracks').split(','))
+        }
+
+        if (queryParam.get('tracks')) {
+            activeTracks = activeTracks.concat(queryParam.get('tracks').split(','))
+        }
+
         Ajax.request({
             url: ActionURL.buildURL('jbrowse', 'getSession.api'),
             method: 'GET',
@@ -129,7 +131,7 @@ function View(){
                 setState("invalid");
                 console.log(res);
             },
-            params: {session: session}
+            params: {session: session, activeTracks: activeTracks.join(',')}
         });
     }, []);
 

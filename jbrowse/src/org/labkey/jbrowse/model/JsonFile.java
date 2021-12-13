@@ -525,6 +525,16 @@ public class JsonFile
         return ret;
     }
 
+    public boolean matchesTrackSelector(List<String> toTest)
+    {
+        if (toTest == null)
+        {
+            return false;
+        }
+
+        return toTest.contains(getObjectId()) || toTest.contains(getLabel());
+    }
+
     private JSONObject getBamTrack(Logger log, ExpData targetFile, ReferenceGenome rg)
     {
         JSONObject ret = new JSONObject();

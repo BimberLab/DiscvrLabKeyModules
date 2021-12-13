@@ -2,6 +2,7 @@ package org.labkey.jbrowse.model;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.data.CompareType;
@@ -217,7 +218,7 @@ public class JBrowseSession
         }
     }
 
-    public JSONObject getConfigJson(User u, Logger log) throws PipelineJobException
+    public JSONObject getConfigJson(User u, Logger log, @Nullable List<String> additionalActiveTracks) throws PipelineJobException
     {
         JSONObject ret = new JSONObject();
 
@@ -245,7 +246,7 @@ public class JBrowseSession
         }
 
         ret.put("tracks", tracks);
-        ret.put("defaultSession", getDefaultSessionJson(visibleTracks));
+        ret.put("defaultSession", getDefaultSessionJson(visibleTracks, additionalActiveTracks));
 
         if (getJsonConfig() != null)
         {
@@ -295,7 +296,7 @@ public class JBrowseSession
         return ret;
     }
 
-    public JSONObject getDefaultSessionJson(List<JsonFile> tracks)
+    public JSONObject getDefaultSessionJson(List<JsonFile> tracks, @Nullable List<String> additionalActiveTracks)
     {
         JSONObject ret = new JSONObject();
         ret.put("name", getName());
@@ -307,7 +308,8 @@ public class JBrowseSession
         JSONArray defaultTracks = new JSONArray();
         for (JsonFile jf : tracks)
         {
-            if (jf.isVisibleByDefault()) {
+            boolean visibleByDefault = jf.isVisibleByDefault() || jf.matchesTrackSelector(additionalActiveTracks);
+            if (visibleByDefault) {
                 String trackId = jf.getObjectId();
                 defaultTracks.put(new JSONObject(){{
                     put("type", jf.getTrackType());

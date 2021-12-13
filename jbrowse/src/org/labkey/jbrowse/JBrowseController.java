@@ -626,16 +626,27 @@ public class JBrowseController extends SpringActionController
 
     public static class GetSessionForm
     {
-        private String session;
+        private String _session;
+        private String _activeTracks;
 
         public String getSession()
         {
-            return session;
+            return _session;
         }
 
         public void setSession(String session)
         {
-            this.session = session;
+            _session = session;
+        }
+
+        public String getActiveTracks()
+        {
+            return _activeTracks;
+        }
+
+        public void setActiveTracks(String activeTracks)
+        {
+            _activeTracks = activeTracks;
         }
     }
 
@@ -687,7 +698,17 @@ public class JBrowseController extends SpringActionController
                     return null;
                 }
 
-                resp = db.getConfigJson(getUser(), _log);
+                List<String> additionalActiveTracks = null;
+                if (form.getActiveTracks() != null)
+                {
+                    String val = StringUtils.trimToNull(form.getActiveTracks());
+                    if (val != null)
+                    {
+                        additionalActiveTracks.addAll(Arrays.asList(val.split(",")));
+                    }
+                }
+
+                resp = db.getConfigJson(getUser(), _log, additionalActiveTracks);
             }
 
             // The rationale of this is to take the site theme, and map this to the primary site color.
