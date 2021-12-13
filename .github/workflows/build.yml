@@ -40,7 +40,7 @@ jobs:
 
   publish-release:
     # github.base_ref is non-null for
-    if: github.repository == 'BimberLab/DiscvrLabKeyModules' && github.ref == '/refs/heads/${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}' && github.event_name == 'push' && github.base_ref == ''
+    if: github.repository == 'BimberLab/DiscvrLabKeyModules' && github.ref == $default-branch && github.event_name == 'push' && github.base_ref == ''
     runs-on: ubuntu-latest
     steps:
       - name: "Find default branch"
@@ -61,6 +61,8 @@ jobs:
           echo '${{ github.event_name }}'
           echo "github.base_ref : "
           echo '${{ github.base_ref  }}'
+          echo '$default-branch'
+
         id: default-branch
       - name: Publish Release
         uses: "marvinpinto/action-automatic-releases@latest"
