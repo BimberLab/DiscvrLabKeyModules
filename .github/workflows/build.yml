@@ -50,8 +50,12 @@ jobs:
           # Only generate the distribution if this is the default branch
           GENERATE_DIST: ${{ steps.default-branch.branch == steps.extract-branch.branch && '1' || '0' }}
 
+  publish-release:
+    # github.base_ref is non-null for
+    if: github.repository == 'BimberLab/DiscvrLabKeyModules' && github.ref == '/refs/heads/${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}' && github.event_name == 'push' && github.base_ref == ''
+    runs-on: ubuntu-latest
+    steps:
       - name: Publish Release
-        if: github.ref == '/refs/heads/${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}' && github.event_name == 'push'
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.PAT }}"
