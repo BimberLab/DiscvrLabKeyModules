@@ -73,7 +73,7 @@ function applyUrlParams(json, queryParam) {
 
 function View(){
     const queryParam = new URLSearchParams(window.location.search);
-    const session = queryParam.get('session')
+    const session = queryParam.get('session') || queryParam.get('database')
 
     const [state, setState] = useState(null);
     const [bgColor, setBgColor] = useState(null)
