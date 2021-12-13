@@ -26,6 +26,12 @@ jobs:
         run: |
           echo 'Default branch: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
           echo "##[set-output name=branch;]$(echo '${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}')"
+          echo "github.ref: "
+          echo '${{ github.ref }}'
+          echo "github.event_name: "
+          echo '${{ github.event_name }}'
+          echo "github.base_ref : "
+          echo '${{ github.base_ref  }}'
         id: default-branch
 
       - name: Extract branch name
