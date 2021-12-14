@@ -25,15 +25,27 @@ jobs:
       - name: "Print default branch"
         run: |
           DEFAULT_BRANCH='${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
-          echo 'Default branch: $DEFAULT_BRANCH'
+          echo 'Default branch: '$DEFAULT_BRANCH
           echo "Default branch: $DEFAULT_BRANCH"
           echo '::set-output name=branch::$DEFAULT_BRANCH'
         id: default-branch
 
       - name: Extract branch name
         shell: bash
-        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        run: |
+          BRANCH="${GITHUB_REF#refs/heads/}"
+          echo 'Current branch: '$BRANCH
+          echo '::set-output name=branch::$BRANCH'
         id: extract-branch
+
+      - name: "Debug"
+        run: |
+          echo 'github.ref: ${{ github.ref }}'
+          echo 'event_name: ${{ github.event_name }}'
+          echo 'base_ref: ${{ github.base_ref }}'
+          echo 'extract-branch: ${{ steps.extract-branch.branch }}'
+          echo 'default-branch: ${{ steps.default-branch.branch }}'
+        id: debug
 
       - name: "Build DISCVR"
         uses: bimberlabinternal/DevOps/githubActions/discvr-build@master
@@ -45,15 +57,6 @@ jobs:
         env:
           # Only generate the distribution if this is the default branch
           GENERATE_DIST: ${{ steps.default-branch.branch == steps.extract-branch.branch && '1' || '0' }}
-
-      - name: "Debug"
-        run: |
-          echo 'github.ref: ${{ github.ref }}'
-          echo 'event_name: ${{ github.event_name }}'
-          echo 'base_ref: ${{ github.base_ref }}'
-          echo 'extract-branch: ${{ steps.extract-branch.branch }}'
-          echo 'default-branch: ${{ steps.default-branch.branch }}'
-        id: debug
 
       - name: Publish Release
         if: ${{ steps.default-branch.branch == steps.extract-branch.branch && github.event_name == 'push' && github.base_ref == '' }}
