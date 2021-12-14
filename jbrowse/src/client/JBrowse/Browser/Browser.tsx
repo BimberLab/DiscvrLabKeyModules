@@ -56,7 +56,7 @@ function applyUrlParams(json, queryParam) {
             } else {
                 let found = false
                 for (const track of json.tracks) {
-                    if (track.trackId === trackId || track.name === trackId) {
+                    if (track.trackId?.toLowerCase() === trackId?.toLowerCase() || track.name?.toLowerCase() === trackId?.toLowerCase()) {
                         track.displays[0].renderer.activeSamples = sampleList.join(',')
                         found = true
                         break
