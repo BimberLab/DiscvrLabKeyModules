@@ -26,16 +26,9 @@ jobs:
         run: |
           DEFAULT_BRANCH='${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
           echo 'Default branch: '$DEFAULT_BRANCH
-          echo ::set-output name=branch::"$DEFAULT_BRANCH"
+          echo ::set-output name=branch::${DEFAULT_BRANCH}
+          echo "DEFAULT_BRANCH=${DEFAULT_BRANCH}" >> $GITHUB_ENV
         id: default-branch
-
-      - name: Extract branch name
-        shell: bash
-        run: |
-          BRANCH="${GITHUB_REF#refs/heads/}"
-          echo 'Current branch: '$BRANCH
-          echo ::set-output name=branch::"$BRANCH"
-        id: extract-branch
 
       - name: "Debug"
         run: |
@@ -43,8 +36,8 @@ jobs:
           echo 'github.ref: ${{ github.ref }}'
           echo 'event_name: ${{ github.event_name }}'
           echo 'base_ref: ${{ github.base_ref }}'
-          echo 'extract-branch: ${{ steps.extract-branch.branch }}'
           echo 'default-branch: ${{ steps.default-branch.branch }}'
+          echo 'DEFAULT_BRANCH: ${{ env.DEFAULT_BRANCH }}'
         id: debug
 
       - name: "Build DISCVR"
