@@ -317,10 +317,22 @@ public class JsonFile
 
         ret = possiblyAddSearchConfig(ret, rg);
 
-        //TODO: validate/document additional properties.
+        //Note: currently only support limited properties since a blind merge would make it easy to break the UI
         if (getTrackJson() != null)
         {
             JSONObject json = getExtraTrackConfig();
+            if (json.containsKey("metadata"))
+            {
+                ret.put("metadata", json.getJSONObject("metadata"));
+            }
+
+            if (json.containsKey("category"))
+            {
+                ret.put("category", new JSONArray(){{
+                    put(json.getString("category"));
+                }});
+            }
+
             ret.putAll(json);
         }
 
@@ -519,6 +531,12 @@ public class JsonFile
                     put("type", "ExtendedVariantRenderer");
                     put("showLabels", false);
                 }});
+
+                JSONObject json = getExtraTrackConfig();
+                if (json != null && json.containsKey("additionalFeatureMsg"))
+                {
+                    getJSONObject("renderer").put("message", json.getString("message"));
+                }
             }});
         }});
 
