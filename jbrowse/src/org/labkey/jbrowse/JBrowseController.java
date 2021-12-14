@@ -90,6 +90,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class JBrowseController extends SpringActionController
 {
@@ -335,15 +336,29 @@ public class JBrowseController extends SpringActionController
         }
     }
 
+    // Based on: https://www.code4copy.com/java/validate-uuid-string-java/
+    private final static Pattern UUID_REGEX_PATTERN = Pattern.compile("^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$");
+
+    private static boolean isValidUUID(String str)
+    {
+        if (str == null)
+        {
+            return false;
+        }
+
+        return UUID_REGEX_PATTERN.matcher(str).matches();
+    }
+
     @RequiresPermission(ReadPermission.class)
-    public class BrowserAction extends SimpleViewAction<BrowserForm>
+    public class JBrowseAction extends SimpleViewAction<BrowserForm>
     {
         private String _title;
 
         @Override
         public ModelAndView getView(BrowserForm form, BindException errors) throws Exception
         {
-            JBrowseSession db = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), form.getDatabase()), null).getObject(JBrowseSession.class);
+            String guid = form.getEffectiveSessionId();
+            JBrowseSession db = isValidUUID(guid) ? new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), form.getEffectiveSessionId()), null).getObject(JBrowseSession.class) : null;
             _title = db == null ? "JBrowse" : db.getName();
             form.setPageTitle(_title);
 
@@ -361,9 +376,16 @@ public class JBrowseController extends SpringActionController
         }
     }
 
+    @RequiresPermission(ReadPermission.class)
+    public class BrowserAction extends JBrowseAction
+    {
+
+    }
+
     public static class BrowserForm
     {
         private String _database;
+        private String _session;
         private String _pageTitle;
 
         public String getDatabase()
@@ -374,6 +396,21 @@ public class JBrowseController extends SpringActionController
         public void setDatabase(String database)
         {
             _database = database;
+        }
+
+        public String getSession()
+        {
+            return _session;
+        }
+
+        public String getEffectiveSessionId()
+        {
+            return _session == null ? _database : _session;
+        }
+
+        public void setSession(String session)
+        {
+            _session = session;
         }
 
         public String getPageTitle()

@@ -348,9 +348,9 @@ export default jbrowse => {
                             feature={feat}
                             {...props}
                     />
+                    {annTable}
                     {displays}
                     {infoDisplays}
-                    {annTable}
                     {makeChart(samples, feat, classes, trackId)}
                 </Paper>
         )
