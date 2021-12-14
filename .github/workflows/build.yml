@@ -26,7 +26,7 @@ jobs:
         run: |
           DEFAULT_BRANCH='${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
           echo 'Default branch: '$DEFAULT_BRANCH
-          echo "::set-output name=branch::$DEFAULT_BRANCH"
+          echo ::set-output name=branch::"$DEFAULT_BRANCH"
         id: default-branch
 
       - name: Extract branch name
@@ -34,7 +34,7 @@ jobs:
         run: |
           BRANCH="${GITHUB_REF#refs/heads/}"
           echo 'Current branch: '$BRANCH
-          echo "::set-output name=branch::$BRANCH"
+          echo ::set-output name=branch::"$BRANCH"
         id: extract-branch
 
       - name: "Debug"
