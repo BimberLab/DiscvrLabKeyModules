@@ -51,8 +51,7 @@ jobs:
           echo '${{ github.base_ref }}'
           echo '${{ steps.extract-branch.branch }}'
           echo '${{ steps.default-branch.branch }}'
-
-        id: default-branch
+        id: debug
 
       - name: Publish Release
         if: ${{ steps.default-branch.branch == steps.extract-branch.branch && github.event_name == 'push' && github.base_ref == '' }}
