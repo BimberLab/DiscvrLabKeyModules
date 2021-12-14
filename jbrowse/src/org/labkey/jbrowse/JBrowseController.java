@@ -270,7 +270,7 @@ public class JBrowseController extends SpringActionController
         {
             if ((form.getJsonFiles() == null || form.getJsonFiles().length == 0) && (form.getDatabaseIds() == null || form.getDatabaseIds().length == 0))
             {
-                errors.reject("Must provide a list of sessions or JSON files to re-process");
+                errors.reject(ERROR_MSG, "Must provide a list of sessions or JSON files to re-process");
                 return null;
             }
 
