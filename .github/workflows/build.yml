@@ -44,8 +44,18 @@ jobs:
           # Only generate the distribution if this is the default branch
           GENERATE_DIST: ${{ steps.default-branch.branch == steps.extract-branch.branch && '1' || '0' }}
 
+      - name: "Debug"
+        run: |
+          echo '${{ github.ref }}'
+          echo '${{ github.event_name }}'
+          echo '${{ github.base_ref }}'
+          echo '${{ steps.extract-branch.branch }}'
+          echo '${{ steps.default-branch.branch }}'
+
+        id: default-branch
+
       - name: Publish Release
-        if: github.ref == '/refs/heads/${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}' && github.event_name == 'push' && github.base_ref == ''
+        if: ${{ steps.default-branch.branch == steps.extract-branch.branch && github.event_name == 'push' && github.base_ref == '' }}
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.PAT }}"
