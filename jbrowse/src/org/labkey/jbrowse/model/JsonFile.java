@@ -332,8 +332,6 @@ public class JsonFile
                     put(json.getString("category"));
                 }});
             }
-
-            ret.putAll(json);
         }
 
         return ret;
