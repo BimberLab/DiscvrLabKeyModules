@@ -24,8 +24,10 @@ jobs:
 
       - name: "Print default branch"
         run: |
-          echo 'Default branch: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
-          echo "##[set-output name=branch;]$(echo '${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}')"
+          DEFAULT_BRANCH='${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
+          echo 'Default branch: $DEFAULT_BRANCH'
+          echo "Default branch: $DEFAULT_BRANCH"
+          echo '::set-output name=branch::$DEFAULT_BRANCH'
         id: default-branch
 
       - name: Extract branch name
@@ -46,11 +48,11 @@ jobs:
 
       - name: "Debug"
         run: |
-          echo '${{ github.ref }}'
-          echo '${{ github.event_name }}'
-          echo '${{ github.base_ref }}'
-          echo '${{ steps.extract-branch.branch }}'
-          echo '${{ steps.default-branch.branch }}'
+          echo 'github.ref: ${{ github.ref }}'
+          echo 'event_name: ${{ github.event_name }}'
+          echo 'base_ref: ${{ github.base_ref }}'
+          echo 'extract-branch: ${{ steps.extract-branch.branch }}'
+          echo 'default-branch: ${{ steps.default-branch.branch }}'
         id: debug
 
       - name: Publish Release
