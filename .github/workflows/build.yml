@@ -26,17 +26,11 @@ jobs:
         run: |
           DEFAULT_BRANCH='${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
           echo 'Default branch: '$DEFAULT_BRANCH
-          echo ::set-output name=branch::${DEFAULT_BRANCH}
           echo "DEFAULT_BRANCH=${DEFAULT_BRANCH}" >> $GITHUB_ENV
         id: default-branch
 
       - name: "Debug"
         run: |
-          echo 'github.ref_name: ${{ github.ref_name }}'
-          echo 'github.ref: ${{ github.ref }}'
-          echo 'event_name: ${{ github.event_name }}'
-          echo 'base_ref: ${{ github.base_ref }}'
-          echo 'default-branch: ${{ steps.default-branch.branch }}'
           echo 'DEFAULT_BRANCH: ${{ env.DEFAULT_BRANCH }}'
         id: debug
 
@@ -49,14 +43,14 @@ jobs:
           github_token: ${{ secrets.PAT }}
         env:
           # Only generate the distribution if this is the default branch
-          GENERATE_DIST: ${{ steps.default-branch.branch == github.ref_name && '1' || '0' }}
+          GENERATE_DIST: ${{ env.DEFAULT_BRANCH == github.ref_name && '1' || '0' }}
 
       - name: Publish Release
-        if: ${{ steps.default-branch.branch == github.ref_name && github.event_name == 'push' && github.base_ref == '' }}
+        if: ${{ env.DEFAULT_BRANCH == github.ref_name && github.event_name == 'push' && github.base_ref == '' }}
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.PAT }}"
           automatic_release_tag: "latest"
           prerelease: true
-          title: "Development Build: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}"
+          title: "Development Build: ${{ env.DEFAULT_BRANCH }}"
           files: /home/runner/work/_temp/_github_home/lkDist/discvr/DISCVR-*
