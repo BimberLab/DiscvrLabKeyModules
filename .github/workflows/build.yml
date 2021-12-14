@@ -29,11 +29,6 @@ jobs:
           echo "DEFAULT_BRANCH=${DEFAULT_BRANCH}" >> $GITHUB_ENV
         id: default-branch
 
-      - name: "Debug"
-        run: |
-          echo 'DEFAULT_BRANCH: ${{ env.DEFAULT_BRANCH }}'
-        id: debug
-
       - name: "Build DISCVR"
         uses: bimberlabinternal/DevOps/githubActions/discvr-build@master
         with:
