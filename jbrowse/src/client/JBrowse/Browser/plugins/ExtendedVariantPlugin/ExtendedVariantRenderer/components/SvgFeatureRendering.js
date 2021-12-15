@@ -177,7 +177,7 @@ function passesSampleFilters(feature, sampleIDs){
             const gt = feature.variant.SAMPLES[sampleId]["GT"][0]
 
             // If any sample in the whitelist is non-WT, show this site. Otherwise filter.
-            if (!isVariant(gt)) {
+            if (isVariant(gt)) {
                 return true
             }
         }
