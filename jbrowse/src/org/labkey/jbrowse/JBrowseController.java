@@ -528,7 +528,14 @@ public class JBrowseController extends SpringActionController
                 errors.reject(ERROR_MSG, "Must provide the trackId");
                 return;
             }
-
+            else
+            {
+                if (!isValidUUID(form.getTrackId()))
+                {
+                    errors.reject(ERROR_MSG, "Invalid track ID: " + form.getTrackId());
+                    return;
+                }
+            }
 
             List<JsonFile> jsonFiles = getJsonFiles(form);
             if (jsonFiles == null || jsonFiles.isEmpty())
