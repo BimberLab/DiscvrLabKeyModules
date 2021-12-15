@@ -741,7 +741,7 @@ public class JBrowseController extends SpringActionController
                     String val = StringUtils.trimToNull(form.getActiveTracks());
                     if (val != null)
                     {
-                        additionalActiveTracks.addAll(Arrays.asList(val.split(",")));
+                        additionalActiveTracks = Arrays.asList(val.split(","));
                     }
                 }
 
