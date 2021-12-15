@@ -151,7 +151,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         // Indicates AF scheme applied:
-        waitForElement(Locator.tagWithAttribute("polygon", "fill", "#831A7D"));
+        waitForElement(Locator.tagWithAttribute("polygon", "fill", "#9A1764"));
 
         openTrackMenuItem("Color Selection");
         waitForElement(Locator.tagWithText("h6", "Color Schemes"));
@@ -238,6 +238,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(Locator.tagContainingText("li", "<"));
 
         clickDialogButton("Apply");
+        sleep(1000);
 
         Assert.assertEquals("Incorrect number of variants", 21, getTotalVariantFeatures());
     }
@@ -298,7 +299,7 @@ public class JBrowseTest extends BaseWebDriverTest
         Locator.findElements(getDriver(), textArea).get(0).sendKeys("m00010");
         clickDialogButton("Apply");
 
-        Assert.assertEquals("Incorrect number of variants", 20, getTotalVariantFeatures());
+        Assert.assertEquals("Incorrect number of variants", 18, getTotalVariantFeatures());
     }
 
     private void testInferredDetails()
@@ -307,10 +308,10 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV G -> A")).stream().filter(WebElement::isDisplayed).findFirst().get();
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> C")).stream().filter(WebElement::isDisplayed).findFirst().get();
 
         actions.click(toClick).perform();
-        waitForElement(Locator.tagWithText("div", "1:116,986,951..116,986,951"));
+        waitForElement(Locator.tagWithText("div", "1:116,992,079..116,992,079"));
         waitForElement(Locator.tagWithText("span", "Predicted Function"));
         waitForElement(Locator.tagWithText("span", "Regulatory Data"));
         waitForElement(Locator.tagWithText("span", "Phenotypic Data"));
@@ -329,9 +330,9 @@ public class JBrowseTest extends BaseWebDriverTest
         checker().takeScreenShot("Jbrowse3_OnLoad");
 
         // Wait for variants to load:
-        getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T"));
+        getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> G"));
 
-        Assert.assertEquals("Incorrect number of variants", 20, getTotalVariantFeatures());
+        Assert.assertEquals("Incorrect number of variants", 18, getTotalVariantFeatures());
 
         openTrackMenuItem("Filter By Sample");
         waitForElement(Locator.tagWithText("h6", "Filter By Sample"));
