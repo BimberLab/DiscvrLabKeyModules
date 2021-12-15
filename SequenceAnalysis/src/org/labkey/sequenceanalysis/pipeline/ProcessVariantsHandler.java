@@ -471,7 +471,9 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
     private static String countUsingBcfTools(File vcf, Logger log) throws PipelineJobException
     {
-        return new BcftoolsRunner(log).executeWithOutput(Arrays.asList("index", "-n", vcf.getPath()));
+        BcftoolsRunner wrapper = new BcftoolsRunner(log);
+
+        return wrapper.executeWithOutput(Arrays.asList(wrapper.getBcfToolsPath().getPath(), "index", "-n", vcf.getPath()));
     }
 
     public static String getVCFLineCount(File vcf, Logger log, boolean passOnly, boolean useBcfTools) throws PipelineJobException

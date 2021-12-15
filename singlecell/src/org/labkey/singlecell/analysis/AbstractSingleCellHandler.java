@@ -145,6 +145,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
         {
             boolean requiresHashing = false;
             boolean requiresCite = false;
+            boolean doH5Caching = false;
             List<PipelineStepCtx<SingleCellStep>> steps = SequencePipelineService.get().getSteps(ctx.getJob(), SingleCellStep.class);
             for (PipelineStepCtx<SingleCellStep> stepCtx : steps)
             {
@@ -158,6 +159,12 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
 
                 if (step.requiresHashing())
                 {
+                    String methods = step.getProvider().getParameterByName("methods").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), String.class);
+                    if (methods != null && methods.contains(CellHashingService.CALLING_METHOD.demuxem.name()))
+                    {
+                        doH5Caching = true;
+                    }
+
                     requiresHashing = true;
                 }
 
@@ -174,7 +181,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
 
             if (requiresCite || requiresHashing)
             {
-                CellHashingServiceImpl.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getSourceDirectory(), ctx.getJob(), ctx.getSequenceSupport(), "readsetId", false, false, true, requiresHashing, requiresCite);
+                CellHashingServiceImpl.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getSourceDirectory(), ctx.getJob(), ctx.getSequenceSupport(), "readsetId", false, false, true, requiresHashing, requiresCite, doH5Caching);
             }
         }
 

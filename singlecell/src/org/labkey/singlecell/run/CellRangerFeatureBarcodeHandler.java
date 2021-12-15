@@ -132,7 +132,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
                 throw new PipelineJobException("Unexpected application: " + rs.getApplication());
             }
 
-            CellHashingServiceImpl.get().prepareHashingAndCiteSeqFilesIfNeeded(outputDir, job, support, field, failIfNoHashing, failIfNoCiteseq, false, failIfNoHashing, failIfNoCiteseq);
+            CellHashingServiceImpl.get().prepareHashingAndCiteSeqFilesForFeatureCountsIfNeeded(outputDir, job, support, field, failIfNoHashing, failIfNoCiteseq);
 
             boolean useGEX = params.optBoolean("useGEX", false);
             if (useGEX)

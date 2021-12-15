@@ -42,7 +42,7 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
     {
         public Provider()
         {
-            super("RunCellHashing", "Possibly Run/Store Cell Hashing", "cellhashR", "If available, this will run cellhashR to score cells by sample.", CellHashingService.get().getHashingCallingParams(), null, null);
+            super("RunCellHashing", "Possibly Run/Store Cell Hashing", "cellhashR", "If available, this will run cellhashR to score cells by sample.", CellHashingService.get().getHashingCallingParams(true), null, null);
         }
 
         @Override
@@ -107,6 +107,25 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
                 File existingCountMatrixUmiDir = CellHashingService.get().getExistingFeatureBarcodeCountDir(parentReadset, CellHashingService.BARCODE_TYPE.hashing, ctx.getSequenceSupport());
                 params.allowableHtoBarcodes = htosPerReadset;
                 params.keepMarkdown = true;
+                if (params.methods.contains(CellHashingService.CALLING_METHOD.demuxem))
+                {
+                    Integer genomeId = wrapper.getSequenceOutputFile() == null ? null : wrapper.getSequenceOutputFile().getLibrary_id();
+                    if (genomeId == null)
+                    {
+                        genomeId = ctx.getSequenceSupport().getCachedGenomes().iterator().next().getGenomeId();
+                        ctx.getLogger().debug("Unable to infer genome ID from output, defaulting to the first cached genome: " + genomeId);
+                    }
+
+                    params.h5File = CellHashingService.get().getH5FileForGexReadset(ctx.getSequenceSupport(), parentReadset.getReadsetId(), genomeId);
+                    if (params.h5File == null)
+                    {
+                        throw new PipelineJobException("Unable to find h5 file for: " + parentReadset.getRowId());
+                    }
+                    else if (!params.h5File.exists())
+                    {
+                        throw new PipelineJobException("h5 file does not exist: " + params.h5File.getPath());
+                    }
+                }
 
                 hashingCalls = CellHashingService.get().generateHashingCallsForRawMatrix(parentReadset, output, ctx, params, existingCountMatrixUmiDir);
             }

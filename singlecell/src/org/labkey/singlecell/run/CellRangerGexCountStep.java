@@ -53,6 +53,8 @@ import java.util.Map;
 
 public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRangerWrapper> implements AlignmentStep
 {
+    public static final String LOUPE_CATEGORY = "10x Loupe File";
+
     public CellRangerGexCountStep(AlignmentStepProvider provider, PipelineContext ctx, CellRangerWrapper wrapper)
     {
         super(provider, ctx, wrapper);
@@ -377,7 +379,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
                     loupeRename.delete();
                 }
                 FileUtils.moveFile(loupe, loupeRename);
-                output.addSequenceOutput(loupeRename, rs.getName() + " 10x Loupe File", "10x Loupe File", rs.getRowId(), null, referenceGenome.getGenomeId(), description);
+                output.addSequenceOutput(loupeRename, rs.getName() + " 10x Loupe File", LOUPE_CATEGORY, rs.getRowId(), null, referenceGenome.getGenomeId(), description);
             }
             else
             {
