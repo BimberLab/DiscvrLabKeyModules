@@ -22,11 +22,9 @@ clientConfig.resolve.fallback =
     "fs": false
 }
 
-clientConfig.plugins =
-    [new NodePolyfillPlugin()].concat(constants.processPlugins(entryPoints))
+clientConfig.plugins = [new NodePolyfillPlugin()].concat(constants.processPlugins(entryPoints))
 
-clientConfig.module.rules = clientConfig.module.rules.concat(
-{
+clientConfig.module.rules = clientConfig.module.rules.concat({
     test: /\.m?js$/,
     exclude: /node_modules/,
     use: {
