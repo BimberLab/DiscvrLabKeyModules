@@ -41,6 +41,7 @@ import org.labkey.test.util.ext4cmp.Ext4FieldRef;
 import org.labkey.test.util.external.labModules.LabModuleHelper;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 
@@ -243,7 +244,18 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private long getTotalVariantFeatures()
     {
-        return Locator.findElements(getDriver(), Locator.tagWithClass("svg", "SvgFeatureRendering").append(Locator.tag("polygon"))).stream().filter(WebElement::isDisplayed).count();
+        Locator l = Locator.tagWithClass("svg", "SvgFeatureRendering").append(Locator.tag("polygon"));
+        try
+        {
+            return Locator.findElements(getDriver(), l).stream().filter(WebElement::isDisplayed).count();
+        }
+        catch (StaleElementReferenceException e)
+        {
+            log("Stale elements, retrying");
+            sleep(5000);
+
+            return Locator.findElements(getDriver(), l).stream().filter(WebElement::isDisplayed).count();
+        }
     }
 
     private void testLoadingConfigFilters(){
@@ -349,10 +361,8 @@ public class JBrowseTest extends BaseWebDriverTest
     private By getVariantWithinTrack(String trackId, String variantText)
     {
         Locator.XPathLocator l = getTrackLocator(trackId, true);
-
-        l = l.append(Locator.xpath("//*[name()='text' and contains(text(), '" + variantText + "')]/..")).notHidden();
-
         waitForElementToDisappear(Locator.tagWithText("p", "Loading"));
+        l = l.append(Locator.xpath("//*[name()='text' and contains(text(), '" + variantText + "')]")).notHidden().append("/..");
         waitForElement(l);
 
         return By.xpath(l.toXpath());
