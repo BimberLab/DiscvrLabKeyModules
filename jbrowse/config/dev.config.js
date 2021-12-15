@@ -23,8 +23,9 @@ clientConfig.resolve.fallback =
     "fs": false
 }
 
+//new webpack.ProvidePlugin({regeneratorRuntime: 'regenerator-runtime'}),
 clientConfig.plugins =
-    [new webpack.ProvidePlugin({regeneratorRuntime: 'regenerator-runtime'}),
+    [
      new NodePolyfillPlugin()].concat(constants.processPlugins(entryPoints))
 
 clientConfig.module.rules = clientConfig.module.rules.concat(
