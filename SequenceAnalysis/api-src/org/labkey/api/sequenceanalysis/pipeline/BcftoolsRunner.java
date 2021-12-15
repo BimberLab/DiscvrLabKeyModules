@@ -18,8 +18,8 @@ public class BcftoolsRunner extends AbstractCommandWrapper
         super(logger);
     }
 
-    public File getSamtoolsPath()
+    public File getBcfToolsPath()
     {
-        return SequencePipelineService.get().getExeForPackage("SAMTOOLSPATH", "samtools");
+        return SequencePipelineService.get().getExeForPackage("BCFTOOLSPATH", "bcftools");
     }
 }
