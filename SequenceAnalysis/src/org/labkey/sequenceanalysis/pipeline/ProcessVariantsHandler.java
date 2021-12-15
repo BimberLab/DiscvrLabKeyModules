@@ -27,6 +27,7 @@ import org.labkey.api.sequenceanalysis.PedigreeRecord;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractResumer;
+import org.labkey.api.sequenceanalysis.pipeline.BcftoolsRunner;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -430,8 +431,8 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             {
                 currentVCF = output.getVCF();
 
-                ctx.getJob().getLogger().info("total variants: " + getVCFLineCount(currentVCF, ctx.getJob().getLogger(), false));
-                ctx.getJob().getLogger().info("passing variants: " + getVCFLineCount(currentVCF, ctx.getJob().getLogger(), true));
+                ctx.getJob().getLogger().info("total variants: " + getVCFLineCount(currentVCF, ctx.getJob().getLogger(), false, true));
+                ctx.getJob().getLogger().info("passing variants: " + getVCFLineCount(currentVCF, ctx.getJob().getLogger(), true, false));
                 ctx.getJob().getLogger().debug("index exists: " + (new File(currentVCF.getPath() + ".tbi")).exists());
 
                 try
@@ -468,8 +469,23 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         return null;
     }
 
-    public static String getVCFLineCount(File vcf, Logger log, boolean passOnly) throws PipelineJobException
+    private static String countUsingBcfTools(File vcf, Logger log) throws PipelineJobException
     {
+        return new BcftoolsRunner(log).executeWithOutput(Arrays.asList("index", "-n", vcf.getPath()));
+    }
+
+    public static String getVCFLineCount(File vcf, Logger log, boolean passOnly, boolean useBcfTools) throws PipelineJobException
+    {
+        if (useBcfTools)
+        {
+            if (passOnly)
+            {
+                throw new PipelineJobException("bcftools VCF count cannot be used with passOnly");
+            }
+
+            return countUsingBcfTools(vcf, log);
+        }
+
         String cat = vcf.getName().endsWith(".gz") ? "zcat" : "cat";
         SimpleScriptWrapper wrapper = new SimpleScriptWrapper(null);
 
