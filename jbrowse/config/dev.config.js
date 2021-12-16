@@ -8,7 +8,6 @@ const devConfig = require('../node_modules/@labkey/build/webpack/dev.config')
 
 const entryPoints = require('../src/client/entryPoints');
 const constants = require('../node_modules/@labkey/build/webpack/constants');
-const webpack = require('webpack');
 const NodePolyfillPlugin = require("node-polyfill-webpack-plugin")
 
 const clientConfig = devConfig
@@ -23,9 +22,7 @@ clientConfig.resolve.fallback =
     "fs": false
 }
 
-clientConfig.plugins =
-    [new webpack.ProvidePlugin({regeneratorRuntime: 'regenerator-runtime'}),
-     new NodePolyfillPlugin()].concat(constants.processPlugins(entryPoints))
+clientConfig.plugins = [new NodePolyfillPlugin()].concat(constants.processPlugins(entryPoints))
 
 clientConfig.module.rules = clientConfig.module.rules.concat(
 {
