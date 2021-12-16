@@ -62,6 +62,7 @@ public interface SingleCellStep extends PipelineStep
         private transient SequenceOutputFile _sequenceOutputFile;
 
         private Integer _sequenceOutputFileId;
+        private Integer _readsetId;
 
         private File _file;
         private String _datasetId;
@@ -80,16 +81,18 @@ public interface SingleCellStep extends PipelineStep
             _file = file;
             _sequenceOutputFileId = sequenceOutputFile.getRowid();
             _sequenceOutputFile = sequenceOutputFile;
+            _readsetId = sequenceOutputFile.getReadset();
 
         }
 
-        public SeuratObjectWrapper(String datasetId, String datasetName, File file, @Nullable Integer sequenceOutputFileId)
+        public SeuratObjectWrapper(String datasetId, String datasetName, File file, @Nullable Integer sequenceOutputFileId, @Nullable Integer readsetId)
         {
             _datasetId = datasetId;
             _datasetName = datasetName;
             _file = file;
             _sequenceOutputFileId = sequenceOutputFileId;
             _sequenceOutputFile = null;
+            _readsetId = readsetId;
         }
 
         public File getFile()
@@ -120,6 +123,16 @@ public interface SingleCellStep extends PipelineStep
         public void setDatasetName(String datasetName)
         {
             _datasetName = datasetName;
+        }
+
+        public Integer getReadsetId()
+        {
+            return _readsetId;
+        }
+
+        public void setReadsetId(Integer readsetId)
+        {
+            _readsetId = readsetId;
         }
 
         public Integer getSequenceOutputFileId()

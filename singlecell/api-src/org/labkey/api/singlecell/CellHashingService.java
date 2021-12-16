@@ -2,7 +2,6 @@ package org.labkey.api.singlecell;
 
 import au.com.bytecode.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -45,11 +44,11 @@ abstract public class CellHashingService
         _instance = instance;
     }
 
-    abstract public void prepareHashingIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing) throws PipelineJobException;
-
-    abstract public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, boolean failIfNoHashing, boolean failIfNoCiteSeq) throws PipelineJobException;
+    abstract public void prepareHashingForVdjIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing) throws PipelineJobException;
 
     abstract public File generateHashingCallsForRawMatrix(Readset parentReadset, PipelineOutputTracker output, SequenceOutputHandler.JobContext ctx, CellHashingParameters parameters, File rawCountMatrixDir) throws PipelineJobException;
+
+    abstract public File getH5FileForGexReadset(SequenceAnalysisJobSupport support, int readsetId, int genomeId) throws PipelineJobException;
 
     abstract public File getCDNAInfoFile(File sourceDir);
 
@@ -69,7 +68,7 @@ abstract public class CellHashingService
 
     abstract public boolean usesCiteSeq(SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles) throws PipelineJobException;
 
-    abstract public List<ToolParameterDescriptor> getHashingCallingParams();
+    abstract public List<ToolParameterDescriptor> getHashingCallingParams(boolean allowDemuxEm);
 
     abstract public Set<String> getHtosForParentReadset(Integer parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support) throws PipelineJobException;
 
@@ -94,10 +93,12 @@ abstract public class CellHashingService
         public @Nullable Integer genomeId;
         public boolean skipNormalizationQc = false;
         public Integer minCountPerCell = 5;
-        public List<CALLING_METHOD> methods = CALLING_METHOD.getDefaultMethods();
+        public List<CALLING_METHOD> methods = CALLING_METHOD.getDefaultConsensusMethods(); //Default to just executing the set used for default consensus calls, rather than additional ones
+        public List<CALLING_METHOD> consensusMethods = null;
         public String basename = null;
         public Integer cells = 0;
         public boolean keepMarkdown = false;
+        public File h5File = null;
 
         private CellHashingParameters()
         {
@@ -127,6 +128,14 @@ abstract public class CellHashingService
                 {
                     throw new IllegalArgumentException("Must provide at least one calling method");
                 }
+
+                String methodStr2 = StringUtils.trimToNull(step.getProvider().getParameterByName("consensusMethods").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), String.class));
+                if (methodStr2 != null)
+                {
+                    ret.consensusMethods = extractMethods(methodStr2);
+
+                    throw new PipelineJobException("All consensusMethods must be present in methods: " + methodStr2);
+                }
             }
 
             return ret;
@@ -143,10 +152,19 @@ abstract public class CellHashingService
             ret.parentReadset = parentReadset;
             ret.htoBarcodesFile = new File(webserverDir, type.getAllBarcodeFileName());
             ret.methods = extractMethods(params.optString("methods"));
+            ret.consensusMethods = extractMethods(params.optString("consensusMethods"));
 
             if (type == BARCODE_TYPE.hashing && ret.methods.isEmpty())
             {
                 throw new IllegalArgumentException("Must provide at least one calling method");
+            }
+
+            if (ret.consensusMethods != null && !ret.consensusMethods.isEmpty())
+            {
+                if (!ret.methods.containsAll(ret.consensusMethods))
+                {
+                    throw new PipelineJobException("All consensusMethods must be present in methods: " + ret.consensusMethods.stream().map(CALLING_METHOD::name).collect(Collectors.joining(",")));
+                }
             }
 
             return ret;
@@ -278,33 +296,51 @@ abstract public class CellHashingService
 
     public enum CALLING_METHOD
     {
-        multiseq(false),
-        htodemux(false),
-        dropletutils(true),
-        gmm_demux(true),
-        bff_cluster(true),
-        bff_raw(false);
+        multiseq(true, false),
+        htodemux(false, false),
+        dropletutils(true, true),
+        gmm_demux(true, true),
+        demuxem(true, false),
+        bff_cluster(true, true),
+        bff_raw(true, false);
 
-        boolean isDefault;
+        boolean isDefaultRun;
+        boolean isDefaultConsensus;
 
-        CALLING_METHOD(boolean isDefault)
+        CALLING_METHOD(boolean isDefaultRun, boolean isDefaultConsensus)
         {
-            this.isDefault = isDefault;
+            this.isDefaultRun = isDefaultRun;
+            this.isDefaultConsensus = isDefaultConsensus;
         }
 
-        public boolean isDefault()
+        public boolean isDefaultRun()
         {
-            return isDefault;
+            return isDefaultRun;
         }
 
-        public static List<CALLING_METHOD> getDefaultMethods()
+        public boolean isDefaultConsensus()
         {
-            return Arrays.stream(values()).filter(CALLING_METHOD::isDefault).collect(Collectors.toList());
+            return isDefaultConsensus;
         }
 
-        public static List<String> getDefaultMethodNames()
+        private static List<CALLING_METHOD> getDefaultRunMethods()
         {
-            return getDefaultMethods().stream().map(Enum::name).collect(Collectors.toList());
+            return Arrays.stream(values()).filter(CALLING_METHOD::isDefaultRun).collect(Collectors.toList());
+        }
+
+        private static List<CALLING_METHOD> getDefaultConsensusMethods()
+        {
+            return Arrays.stream(values()).filter(CALLING_METHOD::isDefaultConsensus).collect(Collectors.toList());
+        }
+
+        public static List<String> getDefaultRunMethodNames()
+        {
+            return getDefaultRunMethods().stream().map(Enum::name).collect(Collectors.toList());
+        }
+
+        public static List<String> getDefaultConsensusMethodNames()
+        {
+            return getDefaultConsensusMethods().stream().map(Enum::name).collect(Collectors.toList());
         }
     }
 

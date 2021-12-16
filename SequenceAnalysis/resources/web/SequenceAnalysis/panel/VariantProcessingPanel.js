@@ -216,7 +216,7 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
                 label: 'Max Alternate Alleles',
                 description: 'Maximum number of alternate alleles to genotype',
                 commandLineParam: '--max_alternate_alleles',
-                defaultValue: 12
+                defaultValue: null
             },{
 				fieldXtype: 'checkbox',
 				name: 'sharedPosixOptimizations',
@@ -249,6 +249,12 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 				label: 'Disable File Locking',
 				description: 'This applies to GenomicsDB inputs only. Certain filesystems do not support file locking, including NFS and Lustre.  If your data will be processed on a filesystem that does not support locking, check this.',
 				defaultValue: true
+			},{
+				fieldXtype: 'ldk-expdatafield',
+				name: 'exclude_intervals',
+				label: 'Intervals to Exclude',
+				description: 'A BED or similar file with intervals to skip',
+				defaultValue: null
 			},{
 				fieldXtype: 'checkbox',
 				name: 'doCopyInputs',

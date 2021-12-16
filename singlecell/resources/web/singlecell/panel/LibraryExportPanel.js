@@ -318,6 +318,9 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                 labelAlign: 'top',
                 width: 1000,
                 height: 400
+            },{
+                xtype: 'displayfield',
+                itemId: 'runReads'
             }],
             buttonAlign: 'left',
             buttons: [{
@@ -773,6 +776,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                     //we make the default assumption that we're using 10x primers, which are listed in the sample-sheet orientation
                     var doRC = false;
                     var rows = [];
+                    var runMap = {};
                     var barcodes = '10x Chromium Single Cell v2';
 
                     if (instrument === '10x Sample Sheet') {
@@ -780,7 +784,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                     }
 
                     //only include readsets without existing data
-                    var processType = function(readsetIds, rows, r, fieldName, suffix, size, phiX, samplePrefix, comment, doRC) {
+                    var processType = function(readsetIds, rows, r, fieldName, suffix, size, phiX, samplePrefix, comment, doRC, totalData, runMap) {
                         if (!readsetIds[r[fieldName]] && r[fieldName] && (includeWithData || r[fieldName + '/totalFiles'] === 0) && isMatchingApplication(application, r[fieldName + '/librarytype'], r[fieldName + '/application'], r.targetApplication)) {
                             //allow for shared readsets across cDNAs (hashing, etc.)
                             readsetIds[r[fieldName]] = true;
@@ -844,7 +848,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                     data.push(''); //P5
                                     data.push(size);
                                     data.push('Others'); //Library Status
-                                    data.push(200); //Total data
+                                    data.push(totalData); //Total data
                                     data.push('M raw reads');
                                     data.push(r[fieldName + '/concentration'] || '');
                                     data.push(defaultVolume);
@@ -854,16 +858,18 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                                 }
                                 rows.push(data.join(delim));
+
+                                runMap[r.laneAssignment || 'Not Assigned'] = (runMap[r.laneAssignment || 'Not Assigned'] || 0) + (totalData || 0);
                             }, this);
                         }
                     };
 
                     var delim = instrument.startsWith('Novogene') ? '\t' : ',';
                     Ext4.Array.forEach(sortedRows, function (r) {
-                        processType(readsetIds, rows, r, 'readsetId', 'GEX', 500, 0.01, 'G', null, false);
-                        processType(readsetIds, rows, r, 'tcrReadsetId', 'TCR', 700, 0.01, 'T', null, false);
-                        processType(readsetIds, rows, r, 'hashingReadsetId', 'HTO', 182, 0.05, 'H', 'Cell hashing, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', true);
-                        processType(readsetIds, rows, r, 'citeseqReadsetId', 'CITE', 182, 0.05, 'C', 'CITE-Seq, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', false);
+                        processType(readsetIds, rows, r, 'readsetId', 'GEX', 500, 0.01, 'G', null, false, 225, runMap);
+                        processType(readsetIds, rows, r, 'tcrReadsetId', 'TCR', 700, 0.01, 'T', null, false, 150, runMap);
+                        processType(readsetIds, rows, r, 'hashingReadsetId', 'HTO', 182, 0.05, 'H', 'Cell hashing, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', true, 75, runMap);
+                        processType(readsetIds, rows, r, 'citeseqReadsetId', 'CITE', 182, 0.05, 'C', 'CITE-Seq, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', false, 75, runMap);
                     }, this);
 
                     //add missing barcodes:
@@ -900,6 +906,15 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                 else {
                     btn.up('singlecell-libraryexportpanel').down('#outputArea').setValue(rows.join('\n'));
                     btn.up('singlecell-libraryexportpanel').down('#downloadData').setDisabled(false);
+
+                    var runVal = 'Summary of data per lane:<br><br><table>';
+                    runVal += '<tr></tr><th>Lane</th><th>Amount (M Bases)</th></tr>';
+                    Ext4.Array.forEach(Ext4.Object.getKeys(runMap), function(x){
+                        console.log(x);
+                        runVal += '<tr><td style="padding: 5px;border: 1px solid black;border-collapse: collapse;">' + x + '</td><td style="padding: 5px;border: 1px solid black;border-collapse: collapse;">' + runMap[x] + '</td></tr>'
+                    }, this);
+                    runVal += '</table>';
+                    btn.up('singlecell-libraryexportpanel').down('#runReads').setValue(runVal);
 
                     var rsBtn = btn.up('singlecell-libraryexportpanel').down('#readsetBatch');
                     rsBtn.readsetIds = Ext4.Object.getKeys(readsetIds);

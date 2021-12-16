@@ -80,7 +80,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                     throw new PipelineJobException("File not found: " + f.getPath());
                 }
 
-                getPipelineCtx().getLogger().debug("Output seurat: " + line[0] + " / " + line[1] + " / "+ f.getName() + " / " + line[3]);
+                getPipelineCtx().getLogger().debug("Output seurat: " + line[0] + " / " + line[1] + " / "+ f.getName() + " / " + line[3] + " / " + line[4]);
 
                 String outputIdVal = "NA".equals(line[3]) ? null : StringUtils.trimToNull(line[3]);
                 if (outputIdVal != null && !NumberUtils.isCreatable(outputIdVal))
@@ -88,7 +88,13 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                     throw new PipelineJobException("Unable to parse outputFileId: " + outputIdVal);
                 }
 
-                outputs.add(new SeuratObjectWrapper(line[0], line[1], f, outputIdVal == null ? null : Integer.parseInt(outputIdVal)));
+                String readsetIdVal = "NA".equals(line[4]) ? null : StringUtils.trimToNull(line[4]);
+                if (readsetIdVal != null && !NumberUtils.isCreatable(readsetIdVal))
+                {
+                    throw new PipelineJobException("Unable to parse readsetId: " + readsetIdVal);
+                }
+
+                outputs.add(new SeuratObjectWrapper(line[0], line[1], f, outputIdVal == null ? null : Integer.parseInt(outputIdVal), readsetIdVal == null ? null : Integer.parseInt(readsetIdVal)));
             }
         }
         catch (IOException e)
@@ -147,7 +153,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             markdown.headerYml = markdown.getDefaultHeader();
             markdown.setup = new SetupChunk(getRLibraries());
             markdown.chunks = new ArrayList<>();
-            markdown.chunks.add(createParamChunk(inputObjects, outputPrefix));
+            markdown.chunks.add(createParamChunk(ctx, inputObjects, outputPrefix));
             markdown.chunks.addAll(getChunks(ctx));
             markdown.chunks.add(createFinalChunk());
 
@@ -369,7 +375,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         return ret;
     }
 
-    protected Chunk createParamChunk(List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException
+    protected Chunk createParamChunk(SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException
     {
         List<String> body = new ArrayList<>();
 
@@ -391,7 +397,8 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         body.add("");
         body.add("seuratObjects <- list()");
         body.add("datasetIdToName <- list()");
-        body.add("datasetIdTOutputFileId<- list()");
+        body.add("datasetIdToOutputFileId<- list()");
+        body.add("datasetIdToReadset<- list()");
         for (SeuratObjectWrapper so : inputObjects)
         {
             body.add("seuratObjects[['" + so.getDatasetId() + "']] <- " + printInputFile(so));
@@ -399,7 +406,12 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 
             if (so.getSequenceOutputFileId() != null)
             {
-                body.add("datasetIdTOutputFileId[['" + so.getDatasetId() + "']] <- " + so.getSequenceOutputFileId());
+                body.add("datasetIdToOutputFileId[['" + so.getDatasetId() + "']] <- " + so.getSequenceOutputFileId());
+            }
+
+            if (so.getReadsetId() != null)
+            {
+                body.add("datasetIdToReadset[['" + so.getDatasetId() + "']] <- " + so.getReadsetId());
             }
         }
 

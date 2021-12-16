@@ -114,7 +114,7 @@ public class VariantFiltrationStep extends AbstractCommandPipelineStep<VariantFi
             File maskData = getPipelineCtx().getSequenceSupport().getCachedData(mask.getInt("fileId"));
             if (maskData == null || !maskData.exists())
             {
-                throw new PipelineJobException("file not found for dataId: " + mask.opt("fileId"));
+                throw new PipelineJobException("file not found for dataId: " + mask.opt("fileId") + (maskData == null ? ". file was null" : ". path: " + maskData.getPath()));
             }
 
             SequenceAnalysisService.get().ensureFeatureFileIndex(maskData, getPipelineCtx().getLogger());

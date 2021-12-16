@@ -39,7 +39,7 @@ public class RefNtFeaturesJsonFile extends DbBackedJsonFile
             String refName = ref.getName();
 
             String featureId = refName + "_" + name;
-            writer.write(StringUtils.join(new String[]{refName, "ReferenceNTFeatures", rs.getString("category"), rs.getString("nt_start"), rs.getString("nt_stop"), ".", "+", ".", "ID=" + featureId + ";Note="}, '\t') + System.getProperty("line.separator"));
+            writer.write(StringUtils.join(new String[]{refName, "ReferenceNTFeatures", rs.getString("category"), rs.getString("nt_start"), rs.getString("nt_stop"), ".", "+", ".", "ID=" + featureId + ";Note="}, '\t') + '\n');
         });
     }
 }

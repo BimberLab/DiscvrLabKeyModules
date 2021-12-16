@@ -1,4 +1,4 @@
-import {fields} from "./fields";
+import {FIELD_NAME_MAP, INFO_FIELD_GROUPS, IGNORED_INFO_FIELDS} from "./fields";
 import {ActionURL} from "@labkey/api";
 import {Chart} from "react-google-charts";
 import {style as styles} from "./style";
@@ -10,14 +10,13 @@ export default jbrowse => {
         TableBody,
         TableCell,
         TableHead,
-        TableRow
+        TableRow,
+        Tooltip
     } = jbrowse.jbrequire('@material-ui/core')
     const { observer, PropTypes: MobxPropTypes } = jbrowse.jbrequire('mobx-react')
     const React = jbrowse.jbrequire('react')
     const { useState, useEffect } = React
-    const { FeatureDetails, BaseCard } = jbrowse.jbrequire(
-            '@jbrowse/core/BaseFeatureWidget/BaseFeatureDetail',
-    )
+    const { FeatureDetails, BaseCard } = jbrowse.jbrequire('@jbrowse/core/BaseFeatureWidget/BaseFeatureDetail')
 
     function round(value, decimals) {
         return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
@@ -65,54 +64,32 @@ export default jbrowse => {
         )
     }
 
-    function makeDisplays(feat, displays, classes){
+    function makeDisplays(feat, displays, classes, infoMap){
         const propertyJSX = []
         for (let display in displays){
             const tempProp = []
-            for (let property in displays[display].properties){
-                let value = feat["INFO"][displays[display].properties[property]]
+            for (let propertyName of displays[display].properties){
+                // This value is not in the header, and is probably injected programmatically, so skip:
+                if (!infoMap[propertyName]) {
+                    continue
+                }
+
+                const value = feat["INFO"][propertyName]
+                const fieldTitle = FIELD_NAME_MAP[propertyName]?.title || propertyName
+                const tooltip = infoMap[propertyName] ? infoMap[propertyName].Description : null
                 if (value){
-                    if (Array.isArray(value)){
-                        const children = []
-
-                        let idx = 0
-                        for (let val in value){
-                            idx++;
-                            children.push(
-                                    <div key={property + "-" + idx} className={classes.fieldSubValue}>
-                                        {value[val]}
-                                    </div>
-                            )
-                        }
-                        let title = displays[display].properties[property]
-                        if(fields[title]){
-                           if(fields[title]["title"]){
-                              title = fields[title]["title"]
-                           }
-                        }
-
-                        tempProp.push(
-                                <div key={property} className={classes.field}>
-                                    <div className={classes.fieldName}>
-                                        {title}
-                                    </div>
-                                    {children}
-                                </div>
-                        )
-                    }
-                    else {
-                        let tempName = fields[displays[display].properties[property]] ? fields[displays[display].properties[property]].title : displays[display].properties[property]
-                        tempProp.push(
-                                <div key={property} className={classes.field}>
-                                    <div key={property + "-field"} className={classes.fieldName}>
-                                        {tempName}
-                                    </div>
-                                    <div key={property + "-val"} className={classes.fieldValue}>
-                                        {value}
-                                    </div>
-                                </div>
-                        )
-                    }
+                    tempProp.push(
+                            <TableRow key={propertyName + "-field"} className={classes.fieldRow}>
+                                <Tooltip title={tooltip}>
+                                    <TableCell className={classes.fieldName}>
+                                        {fieldTitle}
+                                    </TableCell>
+                                </Tooltip>
+                                <TableCell key={propertyName + "-val"} className={classes.fieldValue}>
+                                    {Array.isArray(value) ? value.join(', ') :  value}
+                                </TableCell>
+                            </TableRow>
+                    )
                 }
             }
 
@@ -123,12 +100,40 @@ export default jbrowse => {
         const displayJSX = []
         for (let i = 0; i < propertyJSX.length; i++){
             displayJSX.push(
-                    <BaseCard key={displays[i].name} title={displays[i].name}>
-                        {propertyJSX[i]}
+                    <BaseCard key={displays[i].title} title={displays[i].title}>
+                        <Table className={classes.table}>
+                            <TableBody>
+                                {propertyJSX[i]}
+                            </TableBody>
+                        </Table>
                     </BaseCard>
             )
         }
         return displayJSX
+    }
+
+    function inferSections(feat) {
+        const sections = []
+
+        for (const [key, sectionConfig] of Object.entries(INFO_FIELD_GROUPS)) {
+            const section = {
+                title: sectionConfig.title,
+                description: sectionConfig.description,
+                properties: []
+            }
+
+            for (const fieldName of sectionConfig.tags) {
+                if (feat["INFO"][fieldName]) {
+                    section.properties.push(fieldName)
+                }
+            }
+
+            if (section.properties.length) {
+                sections.push(section)
+            }
+        }
+
+        return sections
     }
 
     function makeChart(samples, feat, classes, trackId){
@@ -157,47 +162,40 @@ export default jbrowse => {
             }
             const gtCounts = {}
             let gtTotal = 0
+
+            // unphased gts split on /, phased on |
+            const regex = /\/|\|/
             for (let sample in samples){
                 const gt = samples[sample]["GT"]
                 for (let entry in gt){
-                    // CASES
-                    // ./. -- no call
                     const nc = "No Call"
-                    if (gt[entry] === "./."){
-                        if (gtCounts[nc]){                          // if gtCounts entry is not null, or we have a preexisting entry for it
-                            gtCounts[nc] = gtCounts[nc] + 1 // increment count for that gt
-                            gtTotal = gtTotal + 1                         // increment our total count
-                        }
-                        else {                                   // else if gtCounts entry is null, or we don't have an entry, set to 1
-                            gtCounts[nc] = 1
-                            gtTotal = gtTotal + 1                // increment our total count
-                        }
+                    if (gt[entry] === "./." || gt[entry] === ".|."){
+                        gtCounts[nc] = gtCounts[nc] ? gtCounts[nc] + 1 : 1
+                        gtTotal = gtTotal + 1
                     }
-                    // int / int
-                    else if (gt[entry]){
-                        let gtKey
-                        let regex = /\/|\|/                     // unphased gts split on /, phased on |
-                        if (regex.exec(gt[entry])){
-                            gtKey = gt[entry].split(regex)
-                        }
-                        let alleles = [ref].concat(alt)
+                    else {
+                        const gtKey = gt[entry].split(regex)
+                        const alleles = [ref].concat(alt)
+
+                        // Calculate per-base values:
                         for (let gtVal in gtKey){
                             gtKey[gtVal] = alleles[gtKey[gtVal]]
+                            if (!gtKey[gtVal]) {
+                                console.error('Unable to parse genotype: ' + gt[0])
+                            }
+
                             alleleCounts[gtKey[gtVal]] = alleleCounts[gtKey[gtVal]] + 1 // tick up allele count
                             alleleTotal = alleleTotal + 1
                         }
-                        gtKey = gtKey[0] + "/" + gtKey[1]         // for the purposes of the chart, phased/unphased can be counted as the same
-                        if (gtCounts[gtKey]){                       // if gtCounts entry is not null, or we have a preexisting entry for it
-                            gtCounts[gtKey] = gtCounts[gtKey] + 1 // increment count for that gt
-                            gtTotal = gtTotal + 1                 // increment our total count
-                        }
-                        else {                                    // else if gtCounts entry is null, or we don't have an entry, set to 1
-                            gtCounts[gtKey] = 1
-                            gtTotal = gtTotal + 1                 // increment our total count
-                        }
+
+                        // Then by genotype:
+                        const genotypeString = gtKey.join("/")
+                        gtCounts[genotypeString] = gtCounts[genotypeString] ? gtCounts[genotypeString] + 1 : 1
+                        gtTotal = gtTotal + 1
                     }
                 }
             }
+
             const gtBarData = [[
                 'Genotype',
                 'Total Count',
@@ -228,12 +226,11 @@ export default jbrowse => {
                 if (rounds !== 100){
                     rounded = "~" + rounded
                 }
-                gtBarData.push(
-                        [entry, gtCounts[entry], "#0088FF", rounded+"%"]
-                )
+
+                gtBarData.push([entry, gtCounts[entry], "#0088FF", rounded+"%"])
             }
 
-            let alleleTableRows = []
+            const alleleTableRows = []
             for (let allele in alleleCounts){
                 alleleTableRows.push(
                         <TableRow key={allele}>
@@ -296,7 +293,11 @@ export default jbrowse => {
     function CreatePanel(props) {
         const classes = styles()
         const { model } = props
-        const feat = JSON.parse(JSON.stringify(model.featureData))
+        const detailsConfig = JSON.parse(JSON.stringify(model.detailsConfig || {}))
+        const feature = model.featureData
+        const infoMap = feature.parser.metadata.INFO
+
+        const feat = JSON.parse(JSON.stringify(feature))
         const { samples } = feat
         feat["samples"] = null
 
@@ -305,34 +306,39 @@ export default jbrowse => {
             console.error('Error! No trackId')
         }
 
-        const configDisplays = model.extendedVariantDisplayConfig
-        const displays = makeDisplays(feat, configDisplays, classes)
-        for (let i in configDisplays){
-            for (let j in configDisplays[i].properties){
-                feat["INFO"][configDisplays[i].properties[j]] = null;
+        let annTable;
+        if (feat["INFO"]["ANN"]){
+            annTable = makeAnnTable(feat["INFO"]["ANN"], classes)
+            delete feat["INFO"]["ANN"]
+        }
+
+        const sections = detailsConfig.sections || inferSections(feat)
+        const displays = makeDisplays(feat, sections, classes, infoMap)
+
+        // If a given INFO field is used in a specific section, dont include in the catch-all INFO section:
+        for (let i in sections){
+            for (let j in sections[i].properties){
+                delete feat["INFO"][sections[i].properties[j]]
             }
         }
 
-        let annTable;
-        if (feat["INFO"]["ANN"]){
-            annTable = makeAnnTable(feat["INFO"]["ANN"], classes);
-            feat["INFO"]["ANN"] = null;
+        for (const fieldName of IGNORED_INFO_FIELDS) {
+            if (feat["INFO"][fieldName]) {
+                delete feat["INFO"][fieldName]
+            }
         }
 
-        let message;
-        if (model.message){
-            message = <div className={classes.message} >{model.message}</div>
-        }
-
+        const message = detailsConfig.message ? <div className={classes.message} >{detailsConfig.message}</div> : null
         const infoConfig = [{
-            name: "Info",
+            title: "Info",
             properties: []
         }]
+
         for (let infoEntry in feat["INFO"]){
             infoConfig[0].properties.push(infoEntry)
         }
 
-        const infoDisplays = makeDisplays(feat, infoConfig, classes)
+        const infoDisplays = makeDisplays(feat, infoConfig, classes, infoMap)
         feat["INFO"] = null
 
         return (
@@ -342,9 +348,9 @@ export default jbrowse => {
                             feature={feat}
                             {...props}
                     />
-                    {infoDisplays}
-                    {displays}
                     {annTable}
+                    {displays}
+                    {infoDisplays}
                     {makeChart(samples, feat, classes, trackId)}
                 </Paper>
         )

@@ -19,10 +19,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PAT }}
 
       - name: "Print default branch"
-        run: "echo 'Default branch: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'"
+        run: |
+          DEFAULT_BRANCH='${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
+          echo 'Default branch: '$DEFAULT_BRANCH
+          echo "DEFAULT_BRANCH=${DEFAULT_BRANCH}" >> $GITHUB_ENV
+        id: default-branch
 
       - name: "Build DISCVR"
-        if: github.ref == '/refs/heads/${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
+        if: ${{ env.DEFAULT_BRANCH == github.ref_name }}
         uses: bimberlabinternal/DevOps/githubActions/discvr-build@master
         with:
           artifactory_user: ${{secrets.artifactory_user}}
@@ -34,7 +38,7 @@ jobs:
 
       # See: https://github.com/marketplace/actions/automatic-releases
       - name: Deploy Build
-        if: github.ref == '/refs/heads/${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
+        if: ${{ env.DEFAULT_BRANCH == github.ref_name }}
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.PAT }}"
