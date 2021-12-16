@@ -633,15 +633,46 @@ then
     rm -Rf $LKTOOLS_DIR/samtools
     rm -Rf $LKTOOLS_DIR/bcftools
 
-    wget $WGET_OPTS https://github.com/samtools/samtools/releases/download/1.10/samtools-1.10.tar.bz2
-    bunzip2 samtools-1.10.tar.bz2
-    tar -xf samtools-1.10.tar
+    wget $WGET_OPTS https://github.com/samtools/samtools/releases/download/1.14/samtools-1.14.tar.bz2
+    bunzip2 samtools-1.14.tar.bz2
+    tar -xf samtools-1.14.tar
     echo "Compressing TAR"
-    bzip2 samtools-1.10.tar
-    cd samtools-1.10
+    bzip2 samtools-1.14.tar
+    cd samtools-1.14
     ./configure
     make
     install ./samtools ${LKTOOLS_DIR}/samtools
+else
+    echo "Already installed"
+fi
+
+#
+#bcftools
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install bcftools"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/bcftools || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf bcftools*
+    rm -Rf $LKTOOLS_DIR/bcftools
+
+    wget $WGET_OPTS https://github.com/samtools/bcftools/releases/download/1.14/bcftools-1.14.tar.bz2
+    bunzip2 bcftools-1.14.tar.bz2
+    tar -xf bcftools-1.14.tar
+    echo "Compressing TAR"
+    bzip2 bcftools-1.14.tar
+    chmod 755 bcftools-1.14
+    cd bcftools-1.14
+    ./configure
+    make
+
+    install ./bcftools $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
@@ -663,13 +694,13 @@ then
     rm -Rf $LKTOOLS_DIR/tabix
     rm -Rf $LKTOOLS_DIR/bgzip
 
-    wget $WGET_OPTS https://github.com/samtools/htslib/releases/download/1.10.2/htslib-1.10.2.tar.bz2
-    bunzip2 htslib-1.10.2.tar.bz2
-    tar -xf htslib-1.10.2.tar
+    wget $WGET_OPTS https://github.com/samtools/htslib/releases/download/1.14/htslib-1.14.tar.bz2
+    bunzip2 htslib-1.14.tar.bz2
+    tar -xf htslib-1.14.tar
     echo "Compressing TAR"
-    bzip2 htslib-1.10.2.tar
-    chmod 755 htslib-1.10.2
-    cd htslib-1.10.2
+    bzip2 htslib-1.14.tar
+    chmod 755 htslib-1.14
+    cd htslib-1.14
     ./configure
     make
 
