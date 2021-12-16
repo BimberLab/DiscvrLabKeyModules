@@ -433,7 +433,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     @Override
     public String getVCFLineCount(File vcf, Logger log, boolean passOnly) throws PipelineJobException
     {
-        return ProcessVariantsHandler.getVCFLineCount(vcf, log, passOnly);
+        return passOnly ? ProcessVariantsHandler.getVCFLineCount(vcf, log, passOnly, false) : ProcessVariantsHandler.getVCFLineCount(vcf, log, passOnly, true);
     }
 
     @Override

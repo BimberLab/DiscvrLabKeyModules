@@ -317,11 +317,21 @@ public class JsonFile
 
         ret = possiblyAddSearchConfig(ret, rg);
 
-        //TODO: validate/document additional properties.
+        //Note: currently only support limited properties since a blind merge would make it easy to break the UI
         if (getTrackJson() != null)
         {
             JSONObject json = getExtraTrackConfig();
-            ret.putAll(json);
+            if (json.containsKey("metadata"))
+            {
+                ret.put("metadata", json.getJSONObject("metadata"));
+            }
+
+            if (json.containsKey("category"))
+            {
+                ret.put("category", new JSONArray(){{
+                    put(json.getString("category"));
+                }});
+            }
         }
 
         return ret;
@@ -446,8 +456,9 @@ public class JsonFile
                 put("uri", getWebDavURL(getExpectedLocationOfIndexFile(".ixx", true)));
             }});
 
-            put("metaFilePath", new JSONObject(){{
-                put("uri", getWebDavURL(getExpectedLocationOfIndexFile("_meta.json", true)));
+            put("metaFilePath", new JSONObject()
+            {{
+                put("uri", getWebDavURL(getExpectedLocationOfIndexFile("_meta.json", false)));
             }});
 
             put("assemblyNames", new JSONArray(){{
@@ -516,12 +527,31 @@ public class JsonFile
                 put("maxDisplayedBpPerPx", 2000);
                 put("renderer", new JSONObject(){{
                     put("type", "ExtendedVariantRenderer");
-                    put("showLabels", false);
+                    //put("showLabels", false);
+                    //put("labels", new JSONObject(){{
+                    //    put("description", "jexl:get(feature,'POS')");
+                    //}});
                 }});
+
+                JSONObject json = getExtraTrackConfig();
+                if (json != null && json.containsKey("additionalFeatureMsg"))
+                {
+                    getJSONObject("renderer").put("message", json.getString("message"));
+                }
             }});
         }});
 
         return ret;
+    }
+
+    public boolean matchesTrackSelector(List<String> toTest)
+    {
+        if (toTest == null)
+        {
+            return false;
+        }
+
+        return toTest.contains(getObjectId()) || toTest.contains(getLabel());
     }
 
     private JSONObject getBamTrack(Logger log, ExpData targetFile, ReferenceGenome rg)
@@ -837,6 +867,7 @@ public class JsonFile
                 File exe = JBrowseManager.get().getJbrowseCli();
                 SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
                 wrapper.setWorkingDir(targetFile.getParentFile());
+                wrapper.setThrowNonZeroExits(true);
 
                 //TODO: eventually remove this. see: https://github.com/GMOD/jbrowse-components/issues/2354#issuecomment-926320747
                 wrapper.addToEnvironment("DEBUG", "*");

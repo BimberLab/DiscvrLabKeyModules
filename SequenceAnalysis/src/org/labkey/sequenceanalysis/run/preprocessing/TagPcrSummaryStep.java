@@ -85,12 +85,16 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
                     }}, null),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-mf"), "minFraction", "Min Fraction To Output", "Only sites with at least this fraction of reads will be output.", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
+                        put("maxValue", 1);
                         put("decimalPrecision", 5);
                     }}, 0),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-ma"), "minAlignment", "Min Alignments To Output", "Only sites with at least this many alignments will be output.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, 3),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--include-sa"), "include-sa", "Include Supplemental Alignments", "If checked, alignments with the SA supplemental alignment tag will be parsed, and these alignments inspected.", "checkbox", new JSONObject(){{
+
+                    }}, false),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--include-reverse-reads"), "include-reverse-reads", "Include Reverse Reads", "By default, reverse reads are skipped. If true, reverse reads will be included, which might be necessary for some chemistries.", "checkbox", new JSONObject(){{
 
                     }}, false),
                     ToolParameterDescriptor.create(BACKBONE_SEARCH, "Backbone Search Strings", "An optional comma-separated list of search strings to use to mark vector backbone.", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
@@ -111,34 +115,48 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
     @Override
     public void init(SequenceAnalysisJobSupport support) throws PipelineJobException
     {
-        //find/cache BLAST DB
-        UserSchema us = QueryService.get().getUserSchema(getPipelineCtx().getJob().getUser(), getPipelineCtx().getJob().getContainer(), "blast");
-        TableInfo ti = us.getTable("databases", null);
-
-        HashMap<Integer, File> blastDbMap = new HashMap<>();
-
-        for (ReferenceGenome rg : support.getCachedGenomes()) {
-            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("libraryid"), rg.getGenomeId());
-            filter.addCondition(FieldKey.fromString("datedisabled"), null, CompareType.ISBLANK);
-
-            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("objectid", "container"), filter, null);
-            if (ts.exists())
+        boolean needsBlast = getProvider().getParameterByName(DESIGN_PRIMERS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+        if (needsBlast)
+        {
+            //find/cache BLAST DB
+            UserSchema us = QueryService.get().getUserSchema(getPipelineCtx().getJob().getUser(), getPipelineCtx().getJob().getContainer(), "blast");
+            if (us == null)
             {
-                ts.forEachResults(rs -> {
-                    Container c = ContainerManager.getForId(rs.getString(FieldKey.fromString("container")));
-                    File fileRoot = FileContentService.get().getFileRoot(c, FileContentService.ContentType.files);
-                    File ret = new File(fileRoot, ".blastDB");
-                    ret = new File(ret.getPath() + "/" + rs.getString(FieldKey.fromString("objectid")));
-
-                    blastDbMap.put(rg.getGenomeId(), ret);
-                });
-            }
-            else
-            {
-                throw new PipelineJobException("Unable to find BLAST database for: " + rg.getName());
+                throw new PipelineJobException("The BLAST module must be enabled in this container");
             }
 
-            support.cacheObject(CACHE_KEY, blastDbMap);
+            TableInfo ti = us.getTable("databases", null);
+
+            HashMap<Integer, File> blastDbMap = new HashMap<>();
+
+            for (ReferenceGenome rg : support.getCachedGenomes())
+            {
+                SimpleFilter filter = new SimpleFilter(FieldKey.fromString("libraryid"), rg.getGenomeId());
+                filter.addCondition(FieldKey.fromString("datedisabled"), null, CompareType.ISBLANK);
+
+                TableSelector ts = new TableSelector(ti, PageFlowUtil.set("objectid", "container"), filter, null);
+                if (ts.exists())
+                {
+                    ts.forEachResults(rs -> {
+                        Container c = ContainerManager.getForId(rs.getString(FieldKey.fromString("container")));
+                        File fileRoot = FileContentService.get().getFileRoot(c, FileContentService.ContentType.files);
+                        File ret = new File(fileRoot, ".blastDB");
+                        ret = new File(ret.getPath() + "/" + rs.getString(FieldKey.fromString("objectid")));
+
+                        blastDbMap.put(rg.getGenomeId(), ret);
+                    });
+                }
+                else
+                {
+                    throw new PipelineJobException("Unable to find BLAST database for: " + rg.getName());
+                }
+
+                support.cacheObject(CACHE_KEY, blastDbMap);
+            }
+        }
+        else
+        {
+            getPipelineCtx().getLogger().debug("Primer design not selected, will not cache BLAST DB information");
         }
     }
 
@@ -192,7 +210,7 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
             });
         }
 
-        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), siteTable, primerTable, genbank, metrics, blastDbs.get(referenceGenome.getGenomeId()), extraArgs);
+        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), siteTable, primerTable, genbank, metrics, blastDbs == null ? null : blastDbs.get(referenceGenome.getGenomeId()), extraArgs);
 
         if (siteTable.exists())
         {
@@ -391,8 +409,11 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
             args.add("--blastn-path");
             args.add(SequencePipelineService.get().getExeForPackage("BLASTPATH", "blastn").getPath());
 
-            args.add("--blast-db-path");
-            args.add(blastDbBase.getPath());
+            if (blastDbBase != null)
+            {
+                args.add("--blast-db-path");
+                args.add(blastDbBase.getPath());
+            }
 
             Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
             if (maxThreads != null)

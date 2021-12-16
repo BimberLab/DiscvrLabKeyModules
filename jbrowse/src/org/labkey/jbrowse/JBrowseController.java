@@ -37,7 +37,6 @@ import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.Results;
 import org.labkey.api.data.Selector;
@@ -64,14 +63,12 @@ import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.settings.AppProps;
+import org.labkey.api.settings.LookAndFeelProperties;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
-import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.UnauthorizedException;
-import org.labkey.api.view.WebPartView;
-import org.labkey.api.view.template.PageConfig;
 import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
@@ -93,6 +90,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class JBrowseController extends SpringActionController
 {
@@ -273,7 +271,7 @@ public class JBrowseController extends SpringActionController
         {
             if ((form.getJsonFiles() == null || form.getJsonFiles().length == 0) && (form.getDatabaseIds() == null || form.getDatabaseIds().length == 0))
             {
-                errors.reject("Must provide a list of sessions or JSON files to re-process");
+                errors.reject(ERROR_MSG, "Must provide a list of sessions or JSON files to re-process");
                 return null;
             }
 
@@ -338,15 +336,29 @@ public class JBrowseController extends SpringActionController
         }
     }
 
+    // Based on: https://www.code4copy.com/java/validate-uuid-string-java/
+    private final static Pattern UUID_REGEX_PATTERN = Pattern.compile("^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$");
+
+    private static boolean isValidUUID(String str)
+    {
+        if (str == null)
+        {
+            return false;
+        }
+
+        return UUID_REGEX_PATTERN.matcher(str).matches();
+    }
+
     @RequiresPermission(ReadPermission.class)
-    public class BrowserAction extends SimpleViewAction<BrowserForm>
+    public class JBrowseAction extends SimpleViewAction<BrowserForm>
     {
         private String _title;
 
         @Override
         public ModelAndView getView(BrowserForm form, BindException errors) throws Exception
         {
-            JBrowseSession db = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), form.getDatabase()), null).getObject(JBrowseSession.class);
+            String guid = form.getEffectiveSessionId();
+            JBrowseSession db = isValidUUID(guid) ? new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), form.getEffectiveSessionId()), null).getObject(JBrowseSession.class) : null;
             _title = db == null ? "JBrowse" : db.getName();
             form.setPageTitle(_title);
 
@@ -364,9 +376,16 @@ public class JBrowseController extends SpringActionController
         }
     }
 
+    @RequiresPermission(ReadPermission.class)
+    public class BrowserAction extends JBrowseAction
+    {
+
+    }
+
     public static class BrowserForm
     {
         private String _database;
+        private String _session;
         private String _pageTitle;
 
         public String getDatabase()
@@ -377,6 +396,21 @@ public class JBrowseController extends SpringActionController
         public void setDatabase(String database)
         {
             _database = database;
+        }
+
+        public String getSession()
+        {
+            return _session;
+        }
+
+        public String getEffectiveSessionId()
+        {
+            return _session == null ? _database : _session;
+        }
+
+        public void setSession(String session)
+        {
+            _session = session;
         }
 
         public String getPageTitle()
@@ -494,7 +528,14 @@ public class JBrowseController extends SpringActionController
                 errors.reject(ERROR_MSG, "Must provide the trackId");
                 return;
             }
-
+            else
+            {
+                if (!isValidUUID(form.getTrackId()))
+                {
+                    errors.reject(ERROR_MSG, "Invalid track ID: " + form.getTrackId());
+                    return;
+                }
+            }
 
             List<JsonFile> jsonFiles = getJsonFiles(form);
             if (jsonFiles == null || jsonFiles.isEmpty())
@@ -629,16 +670,27 @@ public class JBrowseController extends SpringActionController
 
     public static class GetSessionForm
     {
-        private String session;
+        private String _session;
+        private String _activeTracks;
 
         public String getSession()
         {
-            return session;
+            return _session;
         }
 
         public void setSession(String session)
         {
-            this.session = session;
+            _session = session;
+        }
+
+        public String getActiveTracks()
+        {
+            return _activeTracks;
+        }
+
+        public void setActiveTracks(String activeTracks)
+        {
+            _activeTracks = activeTracks;
         }
     }
 
@@ -648,7 +700,6 @@ public class JBrowseController extends SpringActionController
         private static final String DEMO = "demo";
         private static final String MGAP = "mGAP";
         private static final String MGAP_FILTERED = "mGAPF";
-        private static final String MGAP_INVALID_FILTERS = "mGAPIF";
 
         @Override
         public void validateForm(GetSessionForm form, Errors errors)
@@ -673,10 +724,14 @@ public class JBrowseController extends SpringActionController
             }
             else if (MGAP_FILTERED.equalsIgnoreCase(form.getSession()))
             {
-                resp = getDemoSession("external/mGAPFilteredSession.json");
-            }
-            else if (MGAP_INVALID_FILTERS.equalsIgnoreCase(form.getSession())){
-                resp = getDemoSession("external/mGAPInvalidFilteredSession.json");
+                resp = getDemoSession("external/mGAPSession.json");
+                resp.getJSONArray("tracks").getJSONObject(0).getJSONArray("displays").getJSONObject(0).getJSONObject("renderer").put("activeSamples", "m00004,m00005");
+                resp.getJSONArray("tracks").getJSONObject(0).getJSONArray("displays").getJSONObject(0).getJSONObject("renderer").put("palette", "AF");
+                resp.getJSONArray("tracks").getJSONObject(0).getJSONArray("displays").getJSONObject(0).getJSONObject("renderer").put("infoFilters", new JSONArray(){{
+                    put("AF:gt:0.1");
+                }});
+
+                resp.getJSONArray("tracks").getJSONObject(0).getJSONArray("displays").getJSONObject(0).remove("detailsConfig");
             }
             else
             {
@@ -687,8 +742,47 @@ public class JBrowseController extends SpringActionController
                     return null;
                 }
 
-                resp = db.getConfigJson(getUser(), _log);
+                List<String> additionalActiveTracks = null;
+                if (form.getActiveTracks() != null)
+                {
+                    String val = StringUtils.trimToNull(form.getActiveTracks());
+                    if (val != null)
+                    {
+                        additionalActiveTracks = Arrays.asList(val.split(","));
+                    }
+                }
+
+                resp = db.getConfigJson(getUser(), _log, additionalActiveTracks);
             }
+
+            // The rationale of this is to take the site theme, and map this to the primary site color.
+            // The client-side JBrowse LinearGenomeView will use this to make a theme. For the time being, three of four JBrowse
+            // theme colors are hard-coded, and we only update the JBrowse secondary color to match the LabKey one
+            LookAndFeelProperties props = LookAndFeelProperties.getInstance(getContainer());
+            String lightColor;
+            String darkColor;
+            switch (props.getThemeName())
+            {
+                case "Blue" -> {darkColor = "#21309A";lightColor = "#21309A";}
+                case "Brown" -> {darkColor = "#682B16";lightColor = "#682B16";}
+                case "Leaf" -> {darkColor = "#597530";lightColor = "#789E47";}
+                case "Harvest" -> {darkColor = "#e86130";lightColor = "#F7862A";}
+                case "Madison" -> {darkColor = "#990000";lightColor = "#C5050C";}
+                case "Mono" -> {darkColor = "#4c4c4c";lightColor = "#7f7f7f";}
+                case "Ocean" -> {darkColor = "#307272";lightColor = "#208e8b";}
+                case "Overcast" -> {darkColor = "#116596";lightColor = "#3495d2";}
+                case "Sage" -> {darkColor = "#0F4F0B";lightColor = "#0F4F0B";}
+                case "Seattle" -> {darkColor = "#116596";lightColor = "#116596";} //NOTE: Seattle technically uses #73b6e0 as the light color
+                default -> {
+                    _log.error("Unexpected theme name: " + props.getThemeName());
+                    // This will result in the client using the JBrowse defaults:
+                    lightColor = null;
+                    darkColor = null;
+                }
+            }
+
+            resp.put("themeLightColor", lightColor);
+            resp.put("themeDarkColor", darkColor);
 
             return new ApiSimpleResponse(resp);
         }

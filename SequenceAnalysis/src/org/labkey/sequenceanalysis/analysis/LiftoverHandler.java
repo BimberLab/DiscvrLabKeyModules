@@ -321,20 +321,20 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
         Long mapped = null;
         if (output.exists())
         {
-            String mappedStr = ProcessVariantsHandler.getVCFLineCount(output, job.getLogger(), false);
+            String mappedStr = ProcessVariantsHandler.getVCFLineCount(output, job.getLogger(), false, true);
             mapped = StringUtils.trimToNull(mappedStr) == null ? 0L : Long.parseLong(mappedStr);
             job.getLogger().info("total variants mapped: " + mappedStr);
-            job.getLogger().info("passing variants mapped: " + ProcessVariantsHandler.getVCFLineCount(output, job.getLogger(), true));
+            job.getLogger().info("passing variants mapped: " + ProcessVariantsHandler.getVCFLineCount(output, job.getLogger(), true, false));
             SequenceAnalysisService.get().ensureVcfIndex(output, job.getLogger());
         }
 
         Long unmapped = 0L;
         if (unmappedOutput != null && unmappedOutput.exists())
         {
-            String unmappedStr = ProcessVariantsHandler.getVCFLineCount(unmappedOutput, job.getLogger(), false);
+            String unmappedStr = ProcessVariantsHandler.getVCFLineCount(unmappedOutput, job.getLogger(), false, true);
             unmapped = StringUtils.trimToNull(unmappedStr) == null ? 0L : Long.parseLong(unmappedStr);
             job.getLogger().info("total unmapped variants: " + unmappedStr);
-            job.getLogger().info("passing unmapped variants: " + ProcessVariantsHandler.getVCFLineCount(unmappedOutput, job.getLogger(), true));
+            job.getLogger().info("passing unmapped variants: " + ProcessVariantsHandler.getVCFLineCount(unmappedOutput, job.getLogger(), true, false));
             SequenceAnalysisService.get().ensureVcfIndex(unmappedOutput, job.getLogger());
         }
 

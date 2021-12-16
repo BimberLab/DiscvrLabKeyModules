@@ -1,5 +1,7 @@
 import { ConfigurationSchema } from '@jbrowse/core/configuration'
 import { ElementId } from '@jbrowse/core/util/types/mst'
+import  { variantDetailsConfig } from '../ExtendedVariantDisplay/configSchema'
+
 import ExtendedVariantWidget from './ExtendedVariantWidget'
 
 export default jbrowse => {
@@ -11,7 +13,7 @@ export default jbrowse => {
       type: types.literal('ExtendedVariantWidget'),
       featureData: types.frozen({}),
       trackId: types.string,
-      extendedVariantDisplayConfig: types.frozen([]),
+      detailsConfig: variantDetailsConfig,
       message: types.string
     })
     .actions(self => ({

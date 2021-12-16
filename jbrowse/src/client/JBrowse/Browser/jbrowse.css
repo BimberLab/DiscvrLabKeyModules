@@ -1,0 +1,8 @@
+/* This corrects a border that placed a small vertical line to the top-left of the search field */
+fieldset.MuiOutlinedInput-notchedOutline > legend {
+    border-style: none;
+}
+
+html {
+    font-size: 16px !important;
+}

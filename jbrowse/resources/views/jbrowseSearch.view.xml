@@ -6,6 +6,5 @@
         <dependency path="gen/jbrowse2SearchWebpart.lib.xml"/>
         <dependency path="LDK.context"/>
         <dependency path="jbrowse/window/SearchCustomizeWindow.js"/>
-        <dependency path="jbrowse/search.css"/>
     </dependencies>
 </view>

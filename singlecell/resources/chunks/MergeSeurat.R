@@ -4,7 +4,7 @@ if (length(seuratObjects) == 1) {
     saveData(seuratObjects[[datasetId]], datasetId)
 } else {
     toMerge <- list()
-    for (datasetId in seuratObjects) {
+    for (datasetId in names(seuratObjects)) {
         doDiet <- exists('doDiet') && doDiet
         if (exists('doDiet') && doDiet) {
             print('Running DietSeurat on inputs')

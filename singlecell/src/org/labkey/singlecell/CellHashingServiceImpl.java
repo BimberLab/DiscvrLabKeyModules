@@ -20,6 +20,8 @@ import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
@@ -30,6 +32,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineOutputTracker;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -62,10 +65,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static org.labkey.singlecell.run.CellRangerGexCountStep.LOUPE_CATEGORY;
+
 public class CellHashingServiceImpl extends CellHashingService
 {
     private static CellHashingServiceImpl _instance = new CellHashingServiceImpl();
 
+    public static final String READSET_AND_GENOME_TO_H5_MAP = "readsetAndGenomeToH5Map";
     public static final String READSET_TO_HASHING_MAP = "readsetToHashingMap";
     public static final String READSET_TO_CITESEQ_MAP = "readsetToCiteSeqMap";
     public static final String READSET_TO_COUNTS_MAP = "readsetToCountsMap";
@@ -83,18 +89,17 @@ public class CellHashingServiceImpl extends CellHashingService
     }
 
     @Override
-    public void prepareHashingIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing) throws PipelineJobException
+    public void prepareHashingForVdjIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing) throws PipelineJobException
     {
-        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashing, false, true, true, false);
+        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashing, false, true, true, false, false);
     }
 
-    @Override
-    public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing, final boolean failIfNoCiteSeq) throws PipelineJobException
+    public void prepareHashingAndCiteSeqFilesForFeatureCountsIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing, final boolean failIfNoCiteSeq) throws PipelineJobException
     {
-        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashing, failIfNoCiteSeq, true, true, true);
+        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashing, failIfNoCiteSeq, true, true, true, false);
     }
 
-    public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing, final boolean failIfNoCiteSeq, final boolean cacheCountMatrixFiles, boolean requireValidHashingIfPresent, boolean requireValidCiteSeqIfPresent) throws PipelineJobException
+    public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing, final boolean failIfNoCiteSeq, final boolean cacheCountMatrixFiles, boolean requireValidHashingIfPresent, boolean requireValidCiteSeqIfPresent, boolean doH5Caching) throws PipelineJobException
     {
         Container target = job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer();
         UserSchema sequenceAnalysis = QueryService.get().getUserSchema(job.getUser(), target, SingleCellSchema.SEQUENCE_SCHEMA_NAME);
@@ -116,11 +121,14 @@ public class CellHashingServiceImpl extends CellHashingService
                 FieldKey.fromString("citeseqReadsetId"),
                 FieldKey.fromString("citeseqReadsetId/totalFiles"),
                 FieldKey.fromString("citeseqPanel"),
-                FieldKey.fromString("status"))
+                FieldKey.fromString("status"),
+                FieldKey.fromString("readsetId"))
         );
 
+        Set<Integer> uniqueGex = new HashSet<>();
         File output = getCDNAInfoFile(sourceDir);
         File barcodeOutput = getValidHashingBarcodeFile(sourceDir);
+        HashMap<String, Integer> gexReadsetToH5Map = new HashMap<>();
         HashMap<Integer, Integer> readsetToHashingMap = new HashMap<>();
         HashMap<Integer, Integer> readsetToCiteSeqMap = new HashMap<>();
         HashMap<Integer, Set<String>> gexToPanels = new HashMap<>();
@@ -159,6 +167,11 @@ public class CellHashingServiceImpl extends CellHashingService
                             results.getString(FieldKey.fromString("citeseqPanel"))
                     });
                     totalWritten.getAndIncrement();
+
+                    if (results.getObject(FieldKey.fromString("readsetId")) != null)
+                    {
+                        uniqueGex.add(results.getInt(FieldKey.fromString("readsetId")));
+                    }
 
                     boolean useCellHashing = results.getObject(FieldKey.fromString("sortId/hto")) != null;
                     hashingStatus.add(useCellHashing);
@@ -218,6 +231,46 @@ public class CellHashingServiceImpl extends CellHashingService
                 }
 
                 //NOTE: hashingStatus.isEmpty() indicates there are no cDNA records associated with the data
+            }
+
+            if (doH5Caching)
+            {
+                job.getLogger().debug("Caching H5 Files");
+                TableInfo ti = QueryService.get().getUserSchema(job.getUser(), job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer(), SingleCellSchema.SEQUENCE_SCHEMA_NAME).getTable("outputfiles");
+                Set<Integer> cachedGenomes = support.getCachedGenomes().stream().map(ReferenceGenome::getGenomeId).collect(Collectors.toSet());
+                for (int readsetId : uniqueGex)
+                {
+                    for (int genomeId : cachedGenomes)
+                    {
+                        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), readsetId, CompareType.EQUAL);
+                        filter.addCondition(FieldKey.fromString("library_id"), genomeId, CompareType.EQUAL);
+                        filter.addCondition(FieldKey.fromString("category"), LOUPE_CATEGORY, CompareType.EQUAL);
+
+                        TableSelector ts = new TableSelector(ti, PageFlowUtil.set("dataid"), filter, new org.labkey.api.data.Sort("-rowid"));
+                        if (ts.exists())
+                        {
+                            List<Integer> dataIds = ts.getArrayList(Integer.class);
+                            int dataId = dataIds.get(0);
+                            if (dataIds.size() > 1)
+                            {
+                                job.getLogger().info("More than one loupe file found for readset " + readsetId + " with genome: "+ genomeId + ". Using the most recent: " + dataId);
+                            }
+
+                            ExpData d = ExperimentService.get().getExpData(dataId);
+                            if (d == null)
+                            {
+                                throw new PipelineJobException("Unable to find exp data: " + dataId);
+                            }
+
+                            support.cacheExpData(d);
+                            gexReadsetToH5Map.put(readsetId + "-" + genomeId, dataId);
+                        }
+                        else
+                        {
+                            job.getLogger().warn("Unable to find loupe file for readset: " + readsetId + " with genome: " + genomeId);
+                        }
+                    }
+                }
             }
 
             // if distinct HTOs is 1, no point in running hashing.  note: presence of hashing readsets is a trigger downstream
@@ -320,6 +373,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
             citeToRemove.forEach(readsetToCiteSeqMap::remove);
 
+            support.cacheObject(READSET_AND_GENOME_TO_H5_MAP, gexReadsetToH5Map);
             support.cacheObject(READSET_TO_HASHING_MAP, readsetToHashingMap);
             support.cacheObject(READSET_TO_CITESEQ_MAP, readsetToCiteSeqMap);
             support.cacheObject(READSET_TO_COUNTS_MAP, readsetToCountMap);
@@ -541,6 +595,12 @@ public class CellHashingServiceImpl extends CellHashingService
         StringBuilder description = new StringBuilder();
         String methods = parameters.methods.stream().map(CALLING_METHOD::name).collect(Collectors.joining(","));
         description.append(String.format("Min Reads/Cell: %,d\nTotal Singlet: %,d\nDoublet: %,d\nDiscordant: %,d\nNegative: %,d\nUnique HTOs: %s\nMethods: %s", parameters.minCountPerCell, callMap.get("singlet"), callMap.get("doublet"), callMap.get("discordant"), callMap.get("negative"), callMap.get("UniqueHtos"), methods));
+        if (parameters.consensusMethods != null && !parameters.consensusMethods.isEmpty())
+        {
+            String consensusMethods = parameters.consensusMethods.stream().map(CALLING_METHOD::name).collect(Collectors.joining(","));
+            description.append(",\n").append("Consensus Methods: ").append(consensusMethods);
+        }
+
         for (CALLING_METHOD x : CALLING_METHOD.values())
         {
             String value = "singlet." + x.name();
@@ -600,6 +660,37 @@ public class CellHashingServiceImpl extends CellHashingService
         }
 
         return false;
+    }
+
+    @Override
+    public File getH5FileForGexReadset(SequenceAnalysisJobSupport support, int readsetId, int genomeId) throws PipelineJobException
+    {
+        Map<String, Integer> map = support.getCachedObject(READSET_AND_GENOME_TO_H5_MAP, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, String.class, Integer.class));
+        String key = readsetId + "-" + genomeId;
+        Integer dataId = map.get(key);
+        if (dataId == null)
+        {
+            throw new PipelineJobException("Unable to find cached h5 file for readset/genome: " + key);
+        }
+
+        File loupe = support.getCachedData(dataId);
+        if (loupe == null)
+        {
+            throw new PipelineJobException("Unable to find loupe file for dataId: " + dataId);
+        }
+
+        if (!loupe.exists())
+        {
+            throw new PipelineJobException("Unable to find loupe file: " + loupe.getPath());
+        }
+
+        File h5 = new File(loupe.getParentFile(), "raw_feature_bc_matrix.h5");
+        if (!h5.exists())
+        {
+            throw new PipelineJobException("Unable to find h5 file: " + h5.getPath());
+        }
+
+        return h5;
     }
 
     @Override
@@ -767,7 +858,7 @@ public class CellHashingServiceImpl extends CellHashingService
     }
 
     @Override
-    public List<ToolParameterDescriptor> getHashingCallingParams()
+    public List<ToolParameterDescriptor> getHashingCallingParams(boolean allowDemuxEm)
     {
         List<ToolParameterDescriptor> ret = new ArrayList<>(Arrays.asList(
             ToolParameterDescriptor.create("minCountPerCell", "Min Reads/Cell", null, "ldk-integerfield", null, 5),
@@ -776,12 +867,23 @@ public class CellHashingServiceImpl extends CellHashingService
 
         ));
 
+        final List<String> allMethods = Arrays.stream(CALLING_METHOD.values()).filter(x -> allowDemuxEm || x != CALLING_METHOD.demuxem).map(Enum::name).collect(Collectors.toList());
         ret.add(ToolParameterDescriptor.create("methods", "Calling Methods", "The set of methods to use in calling.", "ldk-simplecombo", new JSONObject()
         {{
             put("multiSelect", true);
             put("allowBlank", false);
-            put("storeValues", StringUtils.join(Arrays.stream(CALLING_METHOD.values()).map(Enum::name).collect(Collectors.toList()), ";"));
-            put("initialValues", StringUtils.join(CALLING_METHOD.getDefaultMethodNames(), ";"));
+            put("storeValues", StringUtils.join(allMethods, ";"));
+            put("initialValues", StringUtils.join(CALLING_METHOD.getDefaultRunMethodNames(), ";"));
+            put("delimiter", ";");
+            put("joinReturnValue", true);
+        }}, null));
+
+        ret.add(ToolParameterDescriptor.create("consensusMethods", "Consensus Calling Methods", "The set of methods to use for scoring the consensus.", "ldk-simplecombo", new JSONObject()
+        {{
+            put("multiSelect", true);
+            put("allowBlank", false);
+            put("storeValues", StringUtils.join(allMethods, ";"));
+            put("initialValues", StringUtils.join(CALLING_METHOD.getDefaultConsensusMethodNames(), ";"));
             put("delimiter", ";");
             put("joinReturnValue", true);
         }}, null));
@@ -981,6 +1083,18 @@ public class CellHashingServiceImpl extends CellHashingService
 
         molInfo = ensureLocalCopy(molInfo, outputDir, log, toDelete);
 
+        // h5 file used by demuxEM:
+        File h5 = null;
+        if (parameters.h5File != null)
+        {
+            h5 = ensureLocalCopy(parameters.h5File, outputDir, log, toDelete);
+        }
+
+        if (parameters.methods.contains(CALLING_METHOD.demuxem) && h5 == null)
+        {
+            throw new PipelineJobException("No h5 file provided, but demuxEM was specified");
+        }
+
         citeSeqCountOutDir = ensureLocalCopy(citeSeqCountOutDir, outputDir, log, toDelete);
 
         File cellBarcodeWhitelistFile = parameters.cellBarcodeWhitelistFile;
@@ -1021,6 +1135,7 @@ public class CellHashingServiceImpl extends CellHashingService
         try (PrintWriter writer = PrintWriters.getPrintWriter(localRScript))
         {
             List<String> methodNames = parameters.methods.stream().map(Enum::name).collect(Collectors.toList());
+            List<String> consensusMethodNames = parameters.consensusMethods == null ? Collections.emptyList() : parameters.consensusMethods.stream().map(Enum::name).collect(Collectors.toList());
             String cellbarcodeWhitelist = cellBarcodeWhitelistFile != null ? "'/work/" + cellBarcodeWhitelistFile.getName() + "'" : "NULL";
 
             Set<String> allowableBarcodes = parameters.getAllowableBarcodeNames();
@@ -1028,7 +1143,9 @@ public class CellHashingServiceImpl extends CellHashingService
 
             String skipNormalizationQcString = parameters.skipNormalizationQc ? "TRUE" : "FALSE";
             String keepMarkdown = parameters.keepMarkdown ? "TRUE" : "FALSE";
-            writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "', molInfoFile = '/work/" + molInfo.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', rawCountsExport = '/work/" + countFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', skipNormalizationQc = " + skipNormalizationQcString + ", methods = c('" + StringUtils.join(methodNames, "','") + "'), keepMarkdown = " + keepMarkdown + ")");
+            String h5String = h5 == null ? "" : ", h5File = '/work/'" + h5.getName();
+            String consensusMethodString = consensusMethodNames.isEmpty() ? "" : ", consensusMethods = c('" + StringUtils.join(methodNames, "','") + "')";
+            writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "'" + h5String + ", molInfoFile = '/work/" + molInfo.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', rawCountsExport = '/work/" + countFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', skipNormalizationQc = " + skipNormalizationQcString + ", methods = c('" + StringUtils.join(methodNames, "','") + "')" + consensusMethodString + ", keepMarkdown = " + keepMarkdown + ")");
             writer.println("print('Rmarkdown complete')");
 
         }

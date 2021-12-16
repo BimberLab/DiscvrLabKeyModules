@@ -11,6 +11,7 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
+import org.labkey.cluster.ClusterManager;
 import org.labkey.cluster.ClusterServiceImpl;
 import org.quartz.JobExecutionException;
 
@@ -167,6 +168,12 @@ public class HTCondorExecutionEngine extends AbstractClusterExecutionEngine<HTCo
             File outDir = job.getLogFile().getParentFile();
             String basename = FileUtil.getBaseName(job.getLogFile());
             File submitScript = new File(outDir, basename + (job.getActiveTaskId() == null ? "" : "." + job.getActiveTaskId().getNamespaceClass().getSimpleName()) + ".submit");
+            if (ClusterManager.get().isRecreateSubmitScriptFile() && submitScript.exists())
+            {
+                job.getLogger().info("Deleting existing submit script");
+                submitScript.delete();
+            }
+
             if (!submitScript.exists())
             {
                 try (FileWriter writer = new FileWriter(submitScript, false))

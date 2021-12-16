@@ -35,6 +35,9 @@ public class GenomicsDBAppendHandler extends AbstractGenomicsDBImportHandler
                 ToolParameterDescriptor.create("sharedPosixOptimizations", "Use Shared Posix Optimizations", "This enabled optimizations for large shared filesystems, such as lustre.", "checkbox", new JSONObject(){{
                     put("checked", true);
                 }}, true),
+                ToolParameterDescriptor.create("bypassFeatureReader", "Bypass Feature Reader", "If checked, rather than use the HTSJDK/Java reader, it will use a C-based implementation.", "checkbox", new JSONObject(){{
+                    put("checked", true);
+                }}, true),
                 ToolParameterDescriptor.create("nativeMemoryBuffer", "C++ Memory Buffer", "By default, the pipeline java processes are allocated nearly all of the requested RAM.  GenomicsDB requires memory for the C++ layer - this value (in GB) will be reserved for this.  We recommend about 15-25% of the total job RAM", "ldk-integerfield", new JSONObject(){{
                     put("minValue", 0);
                 }}, 36),

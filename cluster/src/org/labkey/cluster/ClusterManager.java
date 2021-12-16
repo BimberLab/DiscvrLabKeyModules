@@ -36,6 +36,10 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
 
+import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.List;
+
 public class ClusterManager
 {
     private static final ClusterManager _instance = new ClusterManager();
@@ -43,7 +47,10 @@ public class ClusterManager
     private JobDetail _job = null;
 
     public final static String PREVENT_CLUSTER_INTERACTION = "PreventClusterInteraction";
+    public final static String CLUSTER_DEBUG_MODE = "ClusterDebugMode";
     public final static String CLUSTER_USER = "ClusterUser";
+    public final static String RECREATE_SUBMIT_SCRIPT_FILE = "RecreateSubmitScriptFile";
+    public final static String DISALLOWED_NODES = "DisallowedNodes";
 
     private ClusterManager()
     {
@@ -151,6 +158,30 @@ public class ClusterManager
     {
         Module m = ModuleLoader.getInstance().getModule(ClusterModule.NAME);
         ModuleProperty mp = m.getModuleProperties().get(PREVENT_CLUSTER_INTERACTION);
+        String val = StringUtils.trimToNull(mp.getValueContainerSpecific(ContainerManager.getRoot()));
+        return ("true".equalsIgnoreCase(val));
+    }
+
+    public boolean isRecreateSubmitScriptFile()
+    {
+        Module m = ModuleLoader.getInstance().getModule(ClusterModule.NAME);
+        ModuleProperty mp = m.getModuleProperties().get(RECREATE_SUBMIT_SCRIPT_FILE);
+        String val = StringUtils.trimToNull(mp.getValueContainerSpecific(ContainerManager.getRoot()));
+        return ("true".equalsIgnoreCase(val));
+    }
+
+    public @Nullable List<String> getDisallowedNodes()
+    {
+        Module m = ModuleLoader.getInstance().getModule(ClusterModule.NAME);
+        ModuleProperty mp = m.getModuleProperties().get(DISALLOWED_NODES);
+        String val = StringUtils.trimToNull(mp.getValueContainerSpecific(ContainerManager.getRoot()));
+        return val == null ? null : Arrays.asList(val.split(","));
+    }
+
+    public boolean isClusterDebugMode()
+    {
+        Module m = ModuleLoader.getInstance().getModule(ClusterModule.NAME);
+        ModuleProperty mp = m.getModuleProperties().get(CLUSTER_DEBUG_MODE);
         String val = StringUtils.trimToNull(mp.getValueContainerSpecific(ContainerManager.getRoot()));
         return ("true".equalsIgnoreCase(val));
     }
