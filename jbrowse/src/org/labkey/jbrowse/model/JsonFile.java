@@ -527,7 +527,10 @@ public class JsonFile
                 put("maxDisplayedBpPerPx", 2000);
                 put("renderer", new JSONObject(){{
                     put("type", "ExtendedVariantRenderer");
-                    put("showLabels", false);
+                    //put("showLabels", false);
+                    //put("labels", new JSONObject(){{
+                    //    put("description", "jexl:get(feature,'POS')");
+                    //}});
                 }});
 
                 JSONObject json = getExtraTrackConfig();

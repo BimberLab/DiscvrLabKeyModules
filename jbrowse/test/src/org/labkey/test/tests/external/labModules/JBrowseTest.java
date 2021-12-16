@@ -308,10 +308,10 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> C")).stream().filter(WebElement::isDisplayed).findFirst().get();
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C")).stream().filter(WebElement::isDisplayed).findFirst().get();
 
         actions.click(toClick).perform();
-        waitForElement(Locator.tagWithText("div", "1:116,992,079..116,992,079"));
+        waitForElement(Locator.tagWithText("div", "1:116,982,183..116,982,183"));
         waitForElement(Locator.tagWithText("span", "Predicted Function"));
         waitForElement(Locator.tagWithText("span", "Regulatory Data"));
         waitForElement(Locator.tagWithText("span", "Phenotypic Data"));
