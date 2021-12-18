@@ -525,6 +525,7 @@ public class JsonFile
                 put("type", "ExtendedVariantDisplay");
                 put("displayId", getObjectId() + "-ExtendedVariantDisplay");
                 put("maxDisplayedBpPerPx", 2000);
+                put("mouseover", "jexl:'Position: ' + formatWithCommas(get(feature,'POS'))");
                 put("renderer", new JSONObject(){{
                     put("type", "ExtendedVariantRenderer");
                     //put("showLabels", false);
