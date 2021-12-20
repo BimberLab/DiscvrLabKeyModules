@@ -319,28 +319,17 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testSampleFiltersFromUrl()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap&sampleFilters=mgap:m00010");
+        // Note: this can be taxing on the browser, so load a more targeted region
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap&sampleFilters=mgap:m00010&location=1:116,980,271..116,983,486");
         checker().takeScreenShot("Jbrowse1_OnLoad");
 
-        // NOTE: this crashes on TeamCity on the SqlServer agents alone, but not Postgres.
-        // After the initial load, which seems to load the app, the app crashes.
-        sleep(7500);
-
-        waitForElementToDisappear(Locator.tagWithText("p", "Loading...")); //the initial message before getSession
-        waitForElement(Locator.tagWithClass("span", "MuiIconButton-label").notHidden()); //this is the top-left icon
-        waitForElement(Locator.tagWithAttribute("button", "title", "close this track"));
-
+        waitForJBrowseToLoad();
         checker().takeScreenShot("Jbrowse2_OnLoad");
-
-        // NOTE: this should be replaced with something more specific
-        sleep(7500);
-
-        checker().takeScreenShot("Jbrowse3_OnLoad");
 
         // Wait for variants to load:
         getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> G"));
 
-        Assert.assertEquals("Incorrect number of variants", 18, getTotalVariantFeatures());
+        Assert.assertEquals("Incorrect number of variants", 3, getTotalVariantFeatures());
 
         openTrackMenuItem("Filter By Sample");
         waitForElement(Locator.tagWithText("h6", "Filter By Sample"));
