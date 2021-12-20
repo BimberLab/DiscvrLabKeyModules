@@ -322,11 +322,19 @@ public class JBrowseTest extends BaseWebDriverTest
         beginAt("/home/jbrowse-jbrowse.view?session=mgap&sampleFilters=mgap:m00010");
         checker().takeScreenShot("Jbrowse1_OnLoad");
 
-        waitForJBrowseToLoad();
+        // NOTE: this crashes on TeamCity on the SqlServer agents alone, but not Postgres.
+        // After the initial load, which seems to load the app, the app crashes.
+        sleep(7500);
+
+        waitForElementToDisappear(Locator.tagWithText("p", "Loading...")); //the initial message before getSession
+        waitForElement(Locator.tagWithClass("span", "MuiIconButton-label").notHidden()); //this is the top-left icon
+        waitForElement(Locator.tagWithAttribute("button", "title", "close this track"));
+
         checker().takeScreenShot("Jbrowse2_OnLoad");
 
         // NOTE: this should be replaced with something more specific
-        sleep(5000);
+        sleep(7500);
+
         checker().takeScreenShot("Jbrowse3_OnLoad");
 
         // Wait for variants to load:
