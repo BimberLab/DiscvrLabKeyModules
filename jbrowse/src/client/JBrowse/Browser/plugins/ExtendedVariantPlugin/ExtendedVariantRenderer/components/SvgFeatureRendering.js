@@ -12,6 +12,7 @@ import SvgOverlay from '@jbrowse/plugin-svg/src/SvgFeatureRenderer/components/Sv
 import {chooseGlyphComponent, layOut} from './util' // NEW: chooseGlyphComponent() in util updated to render SNVs as a diamond
 import {deserializeFilters} from '../../InfoFilterWidget/filterUtil' // NOTE: Now dependent on FilterWidget plugin
 import jexl from 'jexl'
+import { isEmptyObject } from 'jquery';
 
 const renderingStyle = {
     position: 'relative',
@@ -157,7 +158,7 @@ function passesSampleFilters(feature, sampleIDs){
         return true
     }
 
-    if (!feature.variant.SAMPLES || Object.keys(feature.variant.SAMPLES).length === 0) {
+    if (!feature.variant.SAMPLES || isEmptyObject(feature.variant.SAMPLES)) {
         return false
     }
 
