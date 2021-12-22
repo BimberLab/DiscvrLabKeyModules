@@ -1151,7 +1151,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
             String skipNormalizationQcString = parameters.skipNormalizationQc ? "TRUE" : "FALSE";
             String keepMarkdown = parameters.keepMarkdown ? "TRUE" : "FALSE";
-            String h5String = h5 == null ? "" : ", h5File = '/work/'" + h5.getName();
+            String h5String = h5 == null ? "" : ", h5File = '/work/" + h5.getName() + "'";
             String consensusMethodString = consensusMethodNames.isEmpty() ? "" : ", consensusMethods = c('" + StringUtils.join(methodNames, "','") + "')";
             writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "'" + h5String + ", molInfoFile = '/work/" + molInfo.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', rawCountsExport = '/work/" + countFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', skipNormalizationQc = " + skipNormalizationQcString + ", methods = c('" + StringUtils.join(methodNames, "','") + "')" + consensusMethodString + ", keepMarkdown = " + keepMarkdown + ")");
             writer.println("print('Rmarkdown complete')");
