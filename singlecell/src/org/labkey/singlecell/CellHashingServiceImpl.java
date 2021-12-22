@@ -96,7 +96,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
     public void prepareHashingAndCiteSeqFilesForFeatureCountsIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashingReadset, final boolean failIfNoCiteSeqReadset) throws PipelineJobException
     {
-        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashingReadset, failIfNoCiteSeqReadset, true, false, false, false);
+        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashingReadset, failIfNoCiteSeqReadset, false, false, false, false);
     }
 
     public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashingReadset, final boolean failIfNoCiteSeqReadset, final boolean cacheCountMatrixFiles, boolean requireExistingHashingCountsIfUsed, boolean requireExistingCiteSeqCountIfUsed, boolean doH5Caching) throws PipelineJobException
