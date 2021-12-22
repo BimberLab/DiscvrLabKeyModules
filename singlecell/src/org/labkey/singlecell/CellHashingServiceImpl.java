@@ -140,6 +140,7 @@ public class CellHashingServiceImpl extends CellHashingService
             Set<String> distinctHTOs = new HashSet<>();
             Set<Boolean> hashingStatus = new HashSet<>();
             AtomicInteger totalWritten = new AtomicInteger(0);
+            job.getLogger().debug("total cached readsets: " + cachedReadsets.size());
             for (Readset rs : cachedReadsets)
             {
                 AtomicBoolean hasError = new AtomicBoolean(false);
@@ -219,6 +220,9 @@ public class CellHashingServiceImpl extends CellHashingService
                         }
                     }
                 });
+
+                job.getLogger().debug("total readset to hashing pairs: " + readsetToHashingMap.size());
+                job.getLogger().debug("total readset to cite-seq pairs: " + readsetToCiteSeqMap.size());
 
                 if (hasError.get())
                 {
@@ -314,7 +318,11 @@ public class CellHashingServiceImpl extends CellHashingService
 
                 });
 
-                hashingToRemove.forEach(readsetToHashingMap::remove);
+                if (!hashingToRemove.isEmpty())
+                {
+                    job.getLogger().debug("removing " + hashingToRemove.size() + " hashing readsets");
+                    hashingToRemove.forEach(readsetToHashingMap::remove);
+                }
             }
             else if (distinctHTOs.size() == 1)
             {
