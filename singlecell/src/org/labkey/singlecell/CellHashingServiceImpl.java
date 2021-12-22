@@ -89,17 +89,17 @@ public class CellHashingServiceImpl extends CellHashingService
     }
 
     @Override
-    public void prepareHashingForVdjIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing) throws PipelineJobException
+    public void prepareHashingForVdjIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashingReadset) throws PipelineJobException
     {
-        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashing, false, true, true, false, false);
+        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashingReadset, false, true, true, false, false);
     }
 
-    public void prepareHashingAndCiteSeqFilesForFeatureCountsIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing, final boolean failIfNoCiteSeq) throws PipelineJobException
+    public void prepareHashingAndCiteSeqFilesForFeatureCountsIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashingReadset, final boolean failIfNoCiteSeqReadset) throws PipelineJobException
     {
-        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashing, failIfNoCiteSeq, true, true, true, false);
+        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashingReadset, failIfNoCiteSeqReadset, true, false, false, false);
     }
 
-    public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing, final boolean failIfNoCiteSeq, final boolean cacheCountMatrixFiles, boolean requireValidHashingIfPresent, boolean requireValidCiteSeqIfPresent, boolean doH5Caching) throws PipelineJobException
+    public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashingReadset, final boolean failIfNoCiteSeqReadset, final boolean cacheCountMatrixFiles, boolean requireExistingHashingCountsIfUsed, boolean requireExistingCiteSeqCountIfUsed, boolean doH5Caching) throws PipelineJobException
     {
         Container target = job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer();
         UserSchema sequenceAnalysis = QueryService.get().getUserSchema(job.getUser(), target, SingleCellSchema.SEQUENCE_SCHEMA_NAME);
@@ -287,7 +287,7 @@ public class CellHashingServiceImpl extends CellHashingService
                         TableSelector ts = new TableSelector(sequenceOutputs, filter, new org.labkey.api.data.Sort("-rowid"));
                         if (!ts.exists())
                         {
-                            if (requireValidHashingIfPresent)
+                            if (requireExistingHashingCountsIfUsed)
                             {
                                 throw new IllegalArgumentException("Unable to find existing count matrix for hashing readset: " + hashingReadsetId);
                             }
@@ -346,7 +346,7 @@ public class CellHashingServiceImpl extends CellHashingService
                     TableSelector ts = new TableSelector(sequenceOutputs, filter, new org.labkey.api.data.Sort("-rowid"));
                     if (!ts.exists())
                     {
-                        if (requireValidCiteSeqIfPresent)
+                        if (requireExistingCiteSeqCountIfUsed)
                         {
                             throw new IllegalArgumentException("Unable to find existing count matrix for CITE-seq readset: " + citeseqReadsetId);
                         }
@@ -416,12 +416,12 @@ public class CellHashingServiceImpl extends CellHashingService
 
         writeCiteSeqBarcodes(job, gexToPanels, sourceDir);
 
-        if (failIfNoHashing && readsetToHashingMap.isEmpty())
+        if (failIfNoHashingReadset && readsetToHashingMap.isEmpty())
         {
             throw new PipelineJobException("Readsets do not use cell hashing");
         }
 
-        if (failIfNoCiteSeq && readsetToCiteSeqMap.isEmpty())
+        if (failIfNoCiteSeqReadset && readsetToCiteSeqMap.isEmpty())
         {
             throw new PipelineJobException("Readsets do not use CITE-seq");
         }

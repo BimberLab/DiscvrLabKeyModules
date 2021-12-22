@@ -115,24 +115,24 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
             }
 
             String field;
-            boolean failIfNoHashing = false;
-            boolean failIfNoCiteseq = false;
+            boolean failIfNoHashingReadset = false;
+            boolean failIfNoCiteseqReadset = false;
             if (rs.getApplication().equals("Cell Hashing"))
             {
                 field = "hashingReadsetId";
-                failIfNoHashing = true;
+                failIfNoHashingReadset = true;
             }
             else if (rs.getApplication().equals("CITE-Seq"))
             {
                 field = "citeseqReadsetId";
-                failIfNoCiteseq = true;
+                failIfNoCiteseqReadset = true;
             }
             else
             {
                 throw new PipelineJobException("Unexpected application: " + rs.getApplication());
             }
 
-            CellHashingServiceImpl.get().prepareHashingAndCiteSeqFilesForFeatureCountsIfNeeded(outputDir, job, support, field, failIfNoHashing, failIfNoCiteseq);
+            CellHashingServiceImpl.get().prepareHashingAndCiteSeqFilesForFeatureCountsIfNeeded(outputDir, job, support, field, failIfNoHashingReadset, failIfNoCiteseqReadset);
 
             boolean useGEX = params.optBoolean("useGEX", false);
             if (useGEX)
