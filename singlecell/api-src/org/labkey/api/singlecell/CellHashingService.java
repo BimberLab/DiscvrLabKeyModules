@@ -133,8 +133,10 @@ abstract public class CellHashingService
                 if (methodStr2 != null)
                 {
                     ret.consensusMethods = extractMethods(methodStr2);
-
-                    throw new PipelineJobException("All consensusMethods must be present in methods: " + methodStr2);
+                    if (!ret.methods.containsAll(ret.consensusMethods))
+                    {
+                        throw new PipelineJobException("All consensusMethods must be present in methods: " + methodStr2);
+                    }
                 }
             }
 
