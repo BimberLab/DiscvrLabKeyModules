@@ -379,6 +379,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
 
                 //Example: TotalSeq-C-161,CD11b,R2,5PNNNNNNNNNN(BC),GACAAGTGATCTGCA,Antibody Capture
                 String[] line;
+                int total = 0;
                 while ((line = reader.readNext()) != null)
                 {
                     if ("tagname".equals(line[0]))
@@ -386,7 +387,13 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
                         continue;
                     }
 
+                    total++;
                     writer.writeNext(new String[]{line[0], line[2].replaceAll("_", "-"), "R2", line[4], line[1], "Antibody Capture"});
+                }
+
+                if (total == 0)
+                {
+                    throw new PipelineJobException("There were no ADT features!");
                 }
             }
             catch (IOException e)

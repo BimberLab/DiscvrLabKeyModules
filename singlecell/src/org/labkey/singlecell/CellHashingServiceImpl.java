@@ -488,6 +488,11 @@ public class CellHashingServiceImpl extends CellHashingService
                     metaWriter.writeNext(new String[]{results.getString(FieldKey.fromString("antibody")), results.getString(FieldKey.fromString("antibody/adaptersequence")), name, label, results.getString(FieldKey.fromString("antibody/barcodePattern"))});
                 });
 
+                if (barcodeCount.get() == 0)
+                {
+                    throw new PipelineJobException("No barcodes found for readset: " + gexReadsetId + " with ADT panel: " + StringUtils.join(gexToPanels.get(gexReadsetId), ", "));
+                }
+
                 job.getLogger().info("Total CITE-seq barcodes written: " + barcodeCount.get());
             }
             catch (IOException e)
