@@ -19,8 +19,8 @@ import htsjdk.samtools.util.StringUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
 import org.junit.Test;
@@ -243,11 +243,11 @@ public class SequenceAnalysisManager
             throw new IllegalArgumentException("Unable to find sequenceanalysis user schema");
         }
 
+        TableInfo analysesTable = us.getTable(SequenceAnalysisSchema.TABLE_ANALYSES, null);
         try (DbScope.Transaction transaction = s.getSchema().getScope().ensureTransaction())
         {
             for (int rowId : rowIds)
             {
-
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY_JUNCTION + " WHERE analysis_id = ?", rowId));
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY + " WHERE analysis_id = ?", rowId));
                 cascadeDeleteWithQUS(us, SequenceAnalysisSchema.TABLE_OUTPUTFILES, new SimpleFilter(FieldKey.fromString("analysis_id"), rowId), "rowid");
@@ -258,11 +258,11 @@ public class SequenceAnalysisManager
                 new SqlExecutor(s.getSchema()).execute(new SQLFragment("DELETE FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_QUALITY_METRICS + " WHERE analysis_id = ?", rowId));
 
                 List<Map<String, Object>> keysToDelete = new ArrayList<>();
-                keysToDelete.add(new CaseInsensitiveHashMap<Object>(){{put("rowId", rowId);}});
+                keysToDelete.add(new CaseInsensitiveHashMap<>(){{put("rowId", rowId);}});
 
                 Map<String, Object> scriptContext = new HashMap<>();
                 scriptContext.put("deleteFromServer", true);  //a flag to make the trigger script accept this
-                us.getTable(SequenceAnalysisSchema.TABLE_ANALYSES, null).getUpdateService().deleteRows(user, container, keysToDelete, null, scriptContext);
+                analysesTable.getUpdateService().deleteRows(user, container, keysToDelete, null, scriptContext);
             }
             transaction.commit();
         }
