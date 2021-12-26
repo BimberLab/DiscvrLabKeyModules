@@ -400,32 +400,13 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x VDJ Summary", "10x Run Summary", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
 
                 File outputVloupe = new File(outdir, "vloupe.vloupe");
+                File csv = new File(outdir, "all_contig_annotations.csv");
                 if (!outputVloupe.exists())
                 {
                     //NOTE: if there were no A/B hits, the vLoupe isnt created, but all other outputs exist
-                    File csv = new File(outdir, "all_contig_annotations.csv");
                     if (!csv.exists())
                     {
                         throw new PipelineJobException("Unable to find file: " + outputVloupe.getPath());
-                    }
-
-                    if (doGDParsing())
-                    {
-                        getPipelineCtx().getLogger().info("Removing g/d prefixes from all_contig_annotations.csv file");
-                        File csv2 = new File(outdir, "all_contig_annotations2.csv");
-                        try (PrintWriter writer = PrintWriters.getPrintWriter(csv2); BufferedReader reader = Readers.getReader(csv))
-                        {
-                            String line;
-                            while ((line = reader.readLine()) != null)
-                            {
-                                line = line.replaceAll("TRATRG", "TRG");
-                                line = line.replaceAll("TRBTRD", "TRD");
-                                writer.println(line);
-                            }
-                        }
-
-                        csv.delete();
-                        FileUtils.moveFile(csv2, csv);
                     }
                 }
                 else
@@ -437,6 +418,25 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                     }
                     FileUtils.moveFile(outputVloupe, outputVloupeRename);
                     output.addSequenceOutput(outputVloupeRename, rs.getName() + " 10x VLoupe", "10x VLoupe", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
+                }
+
+                if (doGDParsing())
+                {
+                    getPipelineCtx().getLogger().info("Removing g/d prefixes from all_contig_annotations.csv file");
+                    File csv2 = new File(outdir, "all_contig_annotations2.csv");
+                    try (PrintWriter writer = PrintWriters.getPrintWriter(csv2); BufferedReader reader = Readers.getReader(csv))
+                    {
+                        String line;
+                        while ((line = reader.readLine()) != null)
+                        {
+                            line = line.replaceAll("TRATRG", "TRG");
+                            line = line.replaceAll("TRBTRD", "TRD");
+                            writer.println(line);
+                        }
+                    }
+
+                    csv.delete();
+                    FileUtils.moveFile(csv2, csv);
                 }
             }
             catch (IOException e)
