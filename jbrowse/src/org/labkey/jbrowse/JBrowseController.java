@@ -350,7 +350,7 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class JBrowseAction extends SimpleViewAction<BrowserForm>
+    public static class JBrowseAction extends SimpleViewAction<BrowserForm>
     {
         private String _title;
 
@@ -362,7 +362,7 @@ public class JBrowseController extends SpringActionController
             _title = db == null ? "JBrowse" : db.getName();
             form.setPageTitle(_title);
 
-            ModuleHtmlView view = ModuleHtmlView.get(ModuleLoader.getInstance().getModule(JBrowseModule.class), Path.parse("views/gen/jbrowse.html"));
+            ModuleHtmlView view = ModuleHtmlView.get(ModuleLoader.getInstance().getModule(JBrowseModule.class), Path.parse("views/gen/jbrowseBrowser.html"));
             assert view != null;
             getPageConfig().setIncludePostParameters(true);
 
@@ -377,7 +377,7 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class BrowserAction extends JBrowseAction
+    public static class BrowserAction extends JBrowseAction
     {
 
     }

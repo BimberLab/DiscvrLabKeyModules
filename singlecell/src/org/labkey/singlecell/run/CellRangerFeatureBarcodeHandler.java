@@ -115,24 +115,24 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
             }
 
             String field;
-            boolean failIfNoHashing = false;
-            boolean failIfNoCiteseq = false;
+            boolean failIfNoHashingReadset = false;
+            boolean failIfNoCiteseqReadset = false;
             if (rs.getApplication().equals("Cell Hashing"))
             {
                 field = "hashingReadsetId";
-                failIfNoHashing = true;
+                failIfNoHashingReadset = true;
             }
             else if (rs.getApplication().equals("CITE-Seq"))
             {
                 field = "citeseqReadsetId";
-                failIfNoCiteseq = true;
+                failIfNoCiteseqReadset = true;
             }
             else
             {
                 throw new PipelineJobException("Unexpected application: " + rs.getApplication());
             }
 
-            CellHashingServiceImpl.get().prepareHashingAndCiteSeqFilesForFeatureCountsIfNeeded(outputDir, job, support, field, failIfNoHashing, failIfNoCiteseq);
+            CellHashingServiceImpl.get().prepareHashingAndCiteSeqFilesForFeatureCountsIfNeeded(outputDir, job, support, field, failIfNoHashingReadset, failIfNoCiteseqReadset);
 
             boolean useGEX = params.optBoolean("useGEX", false);
             if (useGEX)
@@ -379,6 +379,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
 
                 //Example: TotalSeq-C-161,CD11b,R2,5PNNNNNNNNNN(BC),GACAAGTGATCTGCA,Antibody Capture
                 String[] line;
+                int total = 0;
                 while ((line = reader.readNext()) != null)
                 {
                     if ("tagname".equals(line[0]))
@@ -386,7 +387,13 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
                         continue;
                     }
 
+                    total++;
                     writer.writeNext(new String[]{line[0], line[2].replaceAll("_", "-"), "R2", line[4], line[1], "Antibody Capture"});
+                }
+
+                if (total == 0)
+                {
+                    throw new PipelineJobException("There were no ADT features!");
                 }
             }
             catch (IOException e)

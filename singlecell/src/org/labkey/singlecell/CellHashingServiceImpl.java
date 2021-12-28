@@ -89,17 +89,17 @@ public class CellHashingServiceImpl extends CellHashingService
     }
 
     @Override
-    public void prepareHashingForVdjIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing) throws PipelineJobException
+    public void prepareHashingForVdjIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashingReadset) throws PipelineJobException
     {
-        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashing, false, true, true, false, false);
+        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashingReadset, false, true, true, false, false);
     }
 
-    public void prepareHashingAndCiteSeqFilesForFeatureCountsIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing, final boolean failIfNoCiteSeq) throws PipelineJobException
+    public void prepareHashingAndCiteSeqFilesForFeatureCountsIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashingReadset, final boolean failIfNoCiteSeqReadset) throws PipelineJobException
     {
-        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashing, failIfNoCiteSeq, true, true, true, false);
+        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashingReadset, failIfNoCiteSeqReadset, false, false, false, false);
     }
 
-    public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashing, final boolean failIfNoCiteSeq, final boolean cacheCountMatrixFiles, boolean requireValidHashingIfPresent, boolean requireValidCiteSeqIfPresent, boolean doH5Caching) throws PipelineJobException
+    public void prepareHashingAndCiteSeqFilesIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashingReadset, final boolean failIfNoCiteSeqReadset, final boolean cacheCountMatrixFiles, boolean requireExistingHashingCountsIfUsed, boolean requireExistingCiteSeqCountIfUsed, boolean doH5Caching) throws PipelineJobException
     {
         Container target = job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer();
         UserSchema sequenceAnalysis = QueryService.get().getUserSchema(job.getUser(), target, SingleCellSchema.SEQUENCE_SCHEMA_NAME);
@@ -140,6 +140,7 @@ public class CellHashingServiceImpl extends CellHashingService
             Set<String> distinctHTOs = new HashSet<>();
             Set<Boolean> hashingStatus = new HashSet<>();
             AtomicInteger totalWritten = new AtomicInteger(0);
+            job.getLogger().debug("total cached readsets: " + cachedReadsets.size());
             for (Readset rs : cachedReadsets)
             {
                 AtomicBoolean hasError = new AtomicBoolean(false);
@@ -220,6 +221,9 @@ public class CellHashingServiceImpl extends CellHashingService
                     }
                 });
 
+                job.getLogger().debug("total readset to hashing pairs: " + readsetToHashingMap.size());
+                job.getLogger().debug("total readset to cite-seq pairs: " + readsetToCiteSeqMap.size());
+
                 if (hasError.get())
                 {
                     throw new PipelineJobException("There is a problem with either cell hashing or CITE-seq. See the file: " + output.getName());
@@ -287,7 +291,7 @@ public class CellHashingServiceImpl extends CellHashingService
                         TableSelector ts = new TableSelector(sequenceOutputs, filter, new org.labkey.api.data.Sort("-rowid"));
                         if (!ts.exists())
                         {
-                            if (requireValidHashingIfPresent)
+                            if (requireExistingHashingCountsIfUsed)
                             {
                                 throw new IllegalArgumentException("Unable to find existing count matrix for hashing readset: " + hashingReadsetId);
                             }
@@ -314,7 +318,11 @@ public class CellHashingServiceImpl extends CellHashingService
 
                 });
 
-                hashingToRemove.forEach(readsetToHashingMap::remove);
+                if (!hashingToRemove.isEmpty())
+                {
+                    job.getLogger().debug("removing " + hashingToRemove.size() + " hashing readsets");
+                    hashingToRemove.forEach(readsetToHashingMap::remove);
+                }
             }
             else if (distinctHTOs.size() == 1)
             {
@@ -346,7 +354,7 @@ public class CellHashingServiceImpl extends CellHashingService
                     TableSelector ts = new TableSelector(sequenceOutputs, filter, new org.labkey.api.data.Sort("-rowid"));
                     if (!ts.exists())
                     {
-                        if (requireValidCiteSeqIfPresent)
+                        if (requireExistingCiteSeqCountIfUsed)
                         {
                             throw new IllegalArgumentException("Unable to find existing count matrix for CITE-seq readset: " + citeseqReadsetId);
                         }
@@ -416,12 +424,12 @@ public class CellHashingServiceImpl extends CellHashingService
 
         writeCiteSeqBarcodes(job, gexToPanels, sourceDir);
 
-        if (failIfNoHashing && readsetToHashingMap.isEmpty())
+        if (failIfNoHashingReadset && readsetToHashingMap.isEmpty())
         {
             throw new PipelineJobException("Readsets do not use cell hashing");
         }
 
-        if (failIfNoCiteSeq && readsetToCiteSeqMap.isEmpty())
+        if (failIfNoCiteSeqReadset && readsetToCiteSeqMap.isEmpty())
         {
             throw new PipelineJobException("Readsets do not use CITE-seq");
         }
@@ -479,6 +487,11 @@ public class CellHashingServiceImpl extends CellHashingService
                             StringUtils.trimToNull(results.getString(FieldKey.fromString("antibody/markerName"))) != null ? results.getString(FieldKey.fromString("antibody/markerName")) : results.getString(FieldKey.fromString("antibody"));
                     metaWriter.writeNext(new String[]{results.getString(FieldKey.fromString("antibody")), results.getString(FieldKey.fromString("antibody/adaptersequence")), name, label, results.getString(FieldKey.fromString("antibody/barcodePattern"))});
                 });
+
+                if (barcodeCount.get() == 0)
+                {
+                    throw new PipelineJobException("No barcodes found for readset: " + gexReadsetId + " with ADT panel: " + StringUtils.join(gexToPanels.get(gexReadsetId), ", "));
+                }
 
                 job.getLogger().info("Total CITE-seq barcodes written: " + barcodeCount.get());
             }
@@ -1143,8 +1156,8 @@ public class CellHashingServiceImpl extends CellHashingService
 
             String skipNormalizationQcString = parameters.skipNormalizationQc ? "TRUE" : "FALSE";
             String keepMarkdown = parameters.keepMarkdown ? "TRUE" : "FALSE";
-            String h5String = h5 == null ? "" : ", h5File = '/work/'" + h5.getName();
-            String consensusMethodString = consensusMethodNames.isEmpty() ? "" : ", consensusMethods = c('" + StringUtils.join(methodNames, "','") + "')";
+            String h5String = h5 == null ? "" : ", h5File = '/work/" + h5.getName() + "'";
+            String consensusMethodString = consensusMethodNames.isEmpty() ? "" : ", methodsForConsensus = c('" + StringUtils.join(consensusMethodNames, "','") + "')";
             writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "'" + h5String + ", molInfoFile = '/work/" + molInfo.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', rawCountsExport = '/work/" + countFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', skipNormalizationQc = " + skipNormalizationQcString + ", methods = c('" + StringUtils.join(methodNames, "','") + "')" + consensusMethodString + ", keepMarkdown = " + keepMarkdown + ")");
             writer.println("print('Rmarkdown complete')");
 

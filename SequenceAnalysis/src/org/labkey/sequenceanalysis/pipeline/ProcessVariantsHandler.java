@@ -485,7 +485,16 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 throw new PipelineJobException("bcftools VCF count cannot be used with passOnly");
             }
 
-            return countUsingBcfTools(vcf, log);
+            try
+            {
+                return countUsingBcfTools(vcf, log);
+            }
+            catch (PipelineJobException e)
+            {
+                // ignore and continue:
+                log.error("Cannot count variants using bcftools, this index might have been created using another tool");
+            }
+
         }
 
         String cat = vcf.getName().endsWith(".gz") ? "zcat" : "cat";

@@ -37,11 +37,15 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -331,7 +335,19 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 dest.delete();
             }
 
+            Set<PosixFilePermission> expected = PosixFilePermissions.fromString("rw-rw----");
+            if (!Files.getPosixFilePermissions(source.toPath()).containsAll(expected))
+            {
+                job.getLogger().debug("Setting POSIX permissions on file: " + source.getPath());
+                Files.setPosixFilePermissions(source.toPath(), expected);
+            }
+
             FileUtils.copyFile(source, dest);
+            if (!Files.getPosixFilePermissions(dest.toPath()).containsAll(expected))
+            {
+                job.getLogger().debug("Setting POSIX permissions on file: " + dest.getPath());
+                Files.setPosixFilePermissions(dest.toPath(), expected);
+            }
         }
 
         File metaDir = new File(sourceWorkspace, "genomicsdb_meta_dir");
