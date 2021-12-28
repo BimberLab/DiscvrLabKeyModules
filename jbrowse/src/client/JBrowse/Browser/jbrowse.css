@@ -6,3 +6,8 @@ fieldset.MuiOutlinedInput-notchedOutline > legend {
 html {
     font-size: 16px !important;
 }
+
+/* Increase font size for tooltips: */
+div[class^="makeStyles-tooltip-"] {
+    font-size: 12px;
+}

@@ -44,6 +44,7 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -67,6 +68,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
     }
 
     public static final String INNER_ENRICHMENT_PRIMERS = "innerEnrichmentPrimers";
+    public static final String INCLUDE_GD = "includeGD";
 
     public static class VDJProvider extends AbstractAlignmentStepProvider<AlignmentStep>
     {
@@ -87,8 +89,11 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                     ToolParameterDescriptor.create(INNER_ENRICHMENT_PRIMERS, "Inner Enrichment Primers", "An option comma-separated list of the inner primers used for TCR enrichment. These will be used for trimming.", "textarea", new JSONObject(){{
                         put("height", 100);
                         put("width", 400);
-                    }}, null)
-            ), null, "https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger", true, false, false, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
+                    }}, null),
+                    ToolParameterDescriptor.create(INCLUDE_GD, "Include G/D", "As a hack to get CellRanger 6 to include g/d (which it does not normally allow), they can be included in the reference, but marked as TRA/TRB. Alignment is performed with these values, and the result is converted in the final text file.", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, true)
+                    ), null, "https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger", true, false, false, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
         }
 
         @Override
@@ -126,6 +131,11 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             return false;
         }
 
+        private boolean doGDParsing()
+        {
+            return getProvider().getParameterByName(INCLUDE_GD).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true);
+        }
+
         @Override
         public void init(SequenceAnalysisJobSupport support) throws PipelineJobException
         {
@@ -156,8 +166,21 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                             String seq = nt.getSequence();
 
                             //example: >1|TRAV41*01 TRAV41|TRAV41|L-REGION+V-REGION|TR|TRA|None|None
+                            //Note: for g/d recovery, add any gamma segments as TRA and delta as TRB. Also prefix their gene names with TRA/B, but keep the true name (i.e. TRDV1 -> TRBTRDV1)
+                            String prefix = "";
+                            if (doGDParsing() && "TRD".equalsIgnoreCase(locus))
+                            {
+                                prefix = "TRB";
+                                locus = "TRB";
+                            }
+                            else if (doGDParsing() && "TRG".equalsIgnoreCase(locus))
+                            {
+                                prefix = "TRA";
+                                locus = "TRA";
+                            }
+
                             StringBuilder header = new StringBuilder();
-                            header.append(">").append(i.get()).append("|").append(nt.getName()).append(" ").append(nt.getLineage()).append("|").append(nt.getLineage()).append("|");
+                            header.append(">").append(i.get()).append("|").append(prefix).append(nt.getName()).append(" ").append(prefix).append(nt.getLineage()).append("|").append(prefix).append(nt.getLineage()).append("|");
                             //translate into V_Region
                             String type;
                             if (nt.getLineage().contains("J"))
@@ -212,7 +235,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         @Override
         public String getIndexCachedDirName(PipelineJob job)
         {
-            return getProvider().getName();
+            return getProvider().getName() + (doGDParsing() ? "-GD" : "");
         }
 
         @Override
@@ -244,7 +267,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 output.addInput(getGenomeFasta(), "Input FASTA");
 
                 List<String> args = new ArrayList<>();
-                args.add(getWrapper().getExe().getPath());
+                args.add(getWrapper().getExe(doGDParsing()).getPath());
                 args.add("mkvdjref");
                 args.add("--seqs=" + getGenomeFasta().getPath());
                 args.add("--genome=" + indexDir.getName());
@@ -273,7 +296,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             AlignmentOutputImpl output = new AlignmentOutputImpl();
 
             List<String> args = new ArrayList<>();
-            args.add(getWrapper().getExe().getPath());
+            args.add(getWrapper().getExe(doGDParsing()).getPath());
             args.add("vdj");
 
             String idParam = StringUtils.trimToNull(getProvider().getParameterByName("id").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
@@ -377,10 +400,10 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x VDJ Summary", "10x Run Summary", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
 
                 File outputVloupe = new File(outdir, "vloupe.vloupe");
+                File csv = new File(outdir, "all_contig_annotations.csv");
                 if (!outputVloupe.exists())
                 {
                     //NOTE: if there were no A/B hits, the vLoupe isnt created, but all other outputs exist
-                    File csv = new File(outdir, "all_contig_annotations.csv");
                     if (!csv.exists())
                     {
                         throw new PipelineJobException("Unable to find file: " + outputVloupe.getPath());
@@ -395,6 +418,77 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                     }
                     FileUtils.moveFile(outputVloupe, outputVloupeRename);
                     output.addSequenceOutput(outputVloupeRename, rs.getName() + " 10x VLoupe", "10x VLoupe", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
+                }
+
+                if (doGDParsing())
+                {
+                    getPipelineCtx().getLogger().info("Removing g/d prefixes from all_contig_annotations.csv file");
+                    File csv2 = new File(outdir, "all_contig_annotations2.csv");
+                    try (PrintWriter writer = PrintWriters.getPrintWriter(csv2); BufferedReader reader = Readers.getReader(csv))
+                    {
+                        String line;
+                        int totalD = 0;
+                        int totalG = 0;
+                        while ((line = reader.readLine()) != null)
+                        {
+                            if (line.contains("TRATRG") || line.contains("TRBTRD"))
+                            {
+                                //Infer correct chain from the V, J and C genes
+                                String[] tokens = line.split(",");
+                                List<String> chains = new ArrayList<>();
+                                for (int idx : new Integer[]{6,8,9}) {
+                                    String val = StringUtils.trimToNull(tokens[idx]) == null ? null : tokens[idx].substring(0,3);
+                                    if (val != null)
+                                    {
+                                        chains.add(val);
+                                    }
+                                }
+
+                                Set<String> uniqueChains = new HashSet<>(chains);
+                                String originalChain = StringUtils.trimToNull(tokens[5]);
+                                if (uniqueChains.size() == 1)
+                                {
+                                    String chain = uniqueChains.iterator().next();
+                                    if (chain.equals("TRG"))
+                                    {
+                                        if (!originalChain.equals("TRA"))
+                                        {
+                                            getPipelineCtx().getLogger().error("Unexpected chain: from " + originalChain + " to " + chain);
+                                        }
+
+                                        totalG++;
+                                    }
+                                    else if (chain.equals("TRD"))
+                                    {
+                                        if (!originalChain.equals("TRB"))
+                                        {
+                                            getPipelineCtx().getLogger().error("Unexpected chain: from " + originalChain + " to " + chain);
+                                        }
+
+                                        totalD++;
+                                    }
+
+                                    tokens[5] = chain;
+                                }
+                                else
+                                {
+                                    getPipelineCtx().getLogger().warn("Multiple chains detected, leaving original call alone: " + originalChain);
+                                }
+
+                                line = StringUtils.join(tokens, ",");
+                                line = line.replaceAll("TRATRG", "TRG");
+                                line = line.replaceAll("TRBTRD", "TRD");
+                            }
+
+                            writer.println(line);
+                        }
+
+                        getPipelineCtx().getLogger().info("\tTotal TRA->TRG changes: " + totalG);
+                        getPipelineCtx().getLogger().info("\tTotal TRB->TRD changes: " + totalD);
+                    }
+
+                    csv.delete();
+                    FileUtils.moveFile(csv2, csv);
                 }
             }
             catch (IOException e)
@@ -683,9 +777,9 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         }
     }
 
-    protected File getExe()
+    protected File getExe(boolean includeGD)
     {
         //NOTE: cellranger 4 doesnt work w/ custom libraries currently. update to CR4 when fixed
-        return SequencePipelineService.get().getExeForPackage("CELLRANGERPATH", "cellranger-31");
+        return SequencePipelineService.get().getExeForPackage("CELLRANGERPATH", includeGD ? "cellranger" : "cellranger-31");
     }
 }

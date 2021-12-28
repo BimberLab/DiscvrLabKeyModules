@@ -58,6 +58,7 @@
           "type": "ExtendedVariantDisplay",
           "displayId": "mgap_hg38-ExtendedVariantDisplay",
           "maxDisplayedBpPerPx": 2000,
+          "mouseover": "jexl:'Position: ' + formatWithCommas(get(feature,'POS'))",
           "renderer": {
             "type": "ExtendedVariantRenderer"
           },

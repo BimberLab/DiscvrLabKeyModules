@@ -28,6 +28,13 @@ export default pluginManager => {
   return ConfigurationSchema(
     'ExtendedVariantDisplay',
     {
+      mouseover: {
+          type: 'string',
+          description: 'what to display in a given mouseover',
+          defaultValue: `jexl:get(feature,'name')`,
+
+          contextVariable: ['feature'],
+      },
       renderer: pluginManager.pluggableConfigSchemaType('renderer'),
       detailsConfig: variantDetailsConfig
     },

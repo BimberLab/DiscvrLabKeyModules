@@ -24,6 +24,11 @@ const JBrowseFooter = observer(props => {
         viewState.session.view.activateTrackSelector()
     }
 
+    if (!viewState) {
+        return (
+            <></>
+        )
+    }
     return (
         <>
         <Box padding={'5px'}>

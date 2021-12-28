@@ -140,6 +140,10 @@ export default class ExtendedVariantPlugin extends Plugin {
         pluginManager.jexl.addFunction('arrayMax', (array) => {
             return Array.isArray(array) ? Math.max(...array) : array
         })
+
+        pluginManager.jexl.addFunction('formatWithCommas', (val) => {
+            return val ? Number(val).toLocaleString() : val
+        })
     }
 
     configure(pluginManager: PluginManager) {
