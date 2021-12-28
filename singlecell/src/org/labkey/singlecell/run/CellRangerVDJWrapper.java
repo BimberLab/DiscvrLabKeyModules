@@ -427,12 +427,64 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                     try (PrintWriter writer = PrintWriters.getPrintWriter(csv2); BufferedReader reader = Readers.getReader(csv))
                     {
                         String line;
+                        int totalD = 0;
+                        int totalG = 0;
                         while ((line = reader.readLine()) != null)
                         {
-                            line = line.replaceAll("TRATRG", "TRG");
-                            line = line.replaceAll("TRBTRD", "TRD");
+                            if (line.contains("TRATRG") || line.contains("TRBTRD"))
+                            {
+                                //Infer correct chain from the V, J and C genes
+                                String[] tokens = line.split(",");
+                                List<String> chains = new ArrayList<>();
+                                for (int idx : new Integer[]{6,8,9}) {
+                                    String val = StringUtils.trimToNull(tokens[idx]) == null ? null : tokens[idx].substring(0,3);
+                                    if (val != null)
+                                    {
+                                        chains.add(val);
+                                    }
+                                }
+
+                                Set<String> uniqueChains = new HashSet<>(chains);
+                                String originalChain = StringUtils.trimToNull(tokens[5]);
+                                if (uniqueChains.size() == 1)
+                                {
+                                    String chain = uniqueChains.iterator().next();
+                                    if (chain.equals("TRG"))
+                                    {
+                                        if (!originalChain.equals("TRA"))
+                                        {
+                                            getPipelineCtx().getLogger().error("Unexpected chain: from " + originalChain + " to " + chain);
+                                        }
+
+                                        totalG++;
+                                    }
+                                    else if (chain.equals("TRD"))
+                                    {
+                                        if (!originalChain.equals("TRB"))
+                                        {
+                                            getPipelineCtx().getLogger().error("Unexpected chain: from " + originalChain + " to " + chain);
+                                        }
+
+                                        totalD++;
+                                    }
+
+                                    tokens[5] = chain;
+                                }
+                                else
+                                {
+                                    getPipelineCtx().getLogger().warn("Multiple chains detected, leaving original call alone: " + originalChain);
+                                }
+
+                                line = StringUtils.join(tokens, ",");
+                                line = line.replaceAll("TRATRG", "TRG");
+                                line = line.replaceAll("TRBTRD", "TRD");
+                            }
+
                             writer.println(line);
                         }
+
+                        getPipelineCtx().getLogger().info("\tTotal TRA->TRG changes: " + totalG);
+                        getPipelineCtx().getLogger().info("\tTotal TRB->TRD changes: " + totalD);
                     }
 
                     csv.delete();
