@@ -472,7 +472,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                 }
                                 else
                                 {
-                                    getPipelineCtx().getLogger().warn("Multiple chains detected, leaving original call alone: " + originalChain);
+                                    getPipelineCtx().getLogger().warn("Multiple chains detected [" + StringUtils.join(chains, ",")+ "], leaving original call alone: " + originalChain);
                                 }
 
                                 line = StringUtils.join(tokens, ",");
