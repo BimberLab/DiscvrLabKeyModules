@@ -437,9 +437,22 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                 String[] tokens = line.split(",");
                                 List<String> chains = new ArrayList<>();
                                 for (int idx : new Integer[]{6,8,9}) {
-                                    String val = StringUtils.trimToNull(tokens[idx]) == null ? null : tokens[idx].substring(0,3);
+                                    String val = StringUtils.trimToNull(tokens[idx]);
                                     if (val != null)
                                     {
+                                        if (val.contains("TRATRG"))
+                                        {
+                                            val = "TRG";
+                                        }
+                                        else if (val.contains("TRBTRD"))
+                                        {
+                                            val = "TRD";
+                                        }
+                                        else
+                                        {
+                                            val = val.substring(0, 3);
+                                        }
+
                                         chains.add(val);
                                     }
                                 }
