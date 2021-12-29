@@ -487,7 +487,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                         getPipelineCtx().getLogger().info("\tTotal TRB->TRD changes: " + totalD);
                     }
 
-                    csv.delete();
+                    //TODO: ultimately remove this and delete file
+                    FileUtils.moveFile(csv, new File(csv.getPath() + ".orig"));
                     FileUtils.moveFile(csv2, csv);
                 }
             }
