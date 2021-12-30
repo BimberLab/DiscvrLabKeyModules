@@ -15,12 +15,12 @@
  */
 package org.labkey.sequenceanalysis.run.util;
 
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.biojava3.core.sequence.DNASequence;
-import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
-import org.biojava3.core.sequence.compound.AmbiguityRNACompoundSet;
-import org.biojava3.core.sequence.transcription.TranscriptionEngine;
+import org.apache.logging.log4j.Logger;
+import org.biojava.nbio.core.sequence.DNASequence;
+import org.biojava.nbio.core.sequence.compound.AmbiguityDNACompoundSet;
+import org.biojava.nbio.core.sequence.compound.AmbiguityRNACompoundSet;
+import org.biojava.nbio.core.sequence.transcription.TranscriptionEngine;
 import org.labkey.sequenceanalysis.model.SequenceModel;
 
 import java.util.List;
@@ -87,9 +87,9 @@ public class AASnp
             }
             else
             {
-                DNASequence dna = new DNASequence(_codon, AmbiguityDNACompoundSet.getDNACompoundSet());
                 try
                 {
+                    DNASequence dna = new DNASequence(_codon, AmbiguityDNACompoundSet.getDNACompoundSet());
                     _residueString = _engine.getRnaAminoAcidTranslator().createSequence(_engine.getDnaRnaTranslator().createSequence(dna)).getSequenceAsString();
                 }
                 catch (Exception e)

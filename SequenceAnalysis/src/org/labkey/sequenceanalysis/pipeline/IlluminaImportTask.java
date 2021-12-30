@@ -17,7 +17,8 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import au.com.bytecode.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
-import org.biojava3.core.sequence.DNASequence;
+import org.biojava.nbio.core.exceptions.CompoundNotFoundException;
+import org.biojava.nbio.core.sequence.DNASequence;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SimpleFilter;
@@ -377,7 +378,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                     sampleMap.put(indexesRC, readsetId);
                     sampleMap.put("S" + sampleIdx, readsetId);
                 }
-                catch (PipelineValidationException e)
+                catch (PipelineValidationException | CompoundNotFoundException e)
                 {
                     throw new PipelineJobException(e);
                 }
