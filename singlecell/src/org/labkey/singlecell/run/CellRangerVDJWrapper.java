@@ -436,6 +436,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                 //Infer correct chain from the V, J and C genes
                                 String[] tokens = line.split(",");
                                 List<String> chains = new ArrayList<>();
+                                String cGeneChain = null;
                                 for (int idx : new Integer[]{6,8,9}) {
                                     String val = StringUtils.trimToNull(tokens[idx]);
                                     if (val != null)
@@ -454,43 +455,55 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                         }
 
                                         chains.add(val);
+                                        if (idx == 9)
+                                        {
+                                            cGeneChain = val;
+                                        }
                                     }
                                 }
 
                                 Set<String> uniqueChains = new HashSet<>(chains);
                                 String originalChain = StringUtils.trimToNull(tokens[5]);
+
+                                // Recover TRDV/TRAJ/TRAC:
+                                if (uniqueChains.size() > 1 && cGeneChain != null)
+                                {
+                                    uniqueChains.clear();
+                                    uniqueChains.add(cGeneChain);
+                                }
+
                                 if (uniqueChains.size() == 1)
                                 {
                                     String chain = uniqueChains.iterator().next();
                                     if (chain.equals("TRG"))
                                     {
-                                        if (!originalChain.equals("TRA"))
+                                        if (!originalChain.equals("TRA") && !"None".equals(originalChain))
                                         {
-                                            getPipelineCtx().getLogger().error("Unexpected chain: from " + originalChain + " to " + chain);
+                                            getPipelineCtx().getLogger().error("Unexpected chain: was " + originalChain + ", to " + chain);
                                         }
 
                                         totalG++;
                                     }
                                     else if (chain.equals("TRD"))
                                     {
-                                        if (!originalChain.equals("TRB"))
+                                        if (!originalChain.equals("TRB") && !"None".equals(originalChain))
                                         {
-                                            getPipelineCtx().getLogger().error("Unexpected chain: from " + originalChain + " to " + chain);
+                                            getPipelineCtx().getLogger().error("Unexpected chain: was " + originalChain + ", to " + chain);
                                         }
 
                                         totalD++;
                                     }
 
                                     tokens[5] = chain;
+
+                                    line = StringUtils.join(tokens, ",");
+                                    line = line.replaceAll("TRATRG", "TRG");
+                                    line = line.replaceAll("TRBTRD", "TRD");
                                 }
                                 else
                                 {
                                     getPipelineCtx().getLogger().warn("Multiple chains detected [" + StringUtils.join(chains, ",")+ "], leaving original call alone: " + originalChain);
                                 }
-
-                                line = StringUtils.join(tokens, ",");
-                                line = line.replaceAll("TRATRG", "TRG");
-                                line = line.replaceAll("TRBTRD", "TRD");
                             }
 
                             writer.println(line);
