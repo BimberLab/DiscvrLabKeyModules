@@ -81,6 +81,7 @@ import org.labkey.sequenceanalysis.pipeline.SequencePipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 import org.labkey.sequenceanalysis.query.SequenceAnalysisUserSchema;
+import org.labkey.sequenceanalysis.query.SequenceTriggerHelper;
 import org.labkey.sequenceanalysis.run.alignment.BWAMemWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWASWWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWAWrapper;
@@ -464,7 +465,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
             SequenceIntegrationTests.SequenceAnalysisPipelineTestCase1.class,
             SequenceIntegrationTests.SequenceAnalysisPipelineTestCase2.class,
             OutputIntegrationTests.VariantProcessingTest.class,
-            SequenceRemoteIntegrationTests.class
+            SequenceRemoteIntegrationTests.class,
+            SequenceTriggerHelper.TestCase.class
         ));
 
         return testClasses;

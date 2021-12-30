@@ -10,8 +10,9 @@ import htsjdk.samtools.fastq.FastqWriterFactory;
 import htsjdk.samtools.util.CloserUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
-import org.biojava3.core.sequence.DNASequence;
+import org.biojava.nbio.core.exceptions.CompoundNotFoundException;
+import org.biojava.nbio.core.sequence.DNASequence;
+import org.biojava.nbio.core.sequence.compound.DNACompoundSet;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
@@ -211,10 +212,17 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
 
         if (read.getReadNegativeStrandFlag())
         {
-            DNASequence seq = new DNASequence(bases);
-            bases = seq.getReverseComplement().getSequenceAsString();
+            try
+            {
+                DNASequence seq = new DNASequence(bases, DNACompoundSet.getDNACompoundSet());
+                bases = seq.getReverseComplement().getSequenceAsString();
 
-            qualities = StringUtils.reverse(qualities);
+                qualities = StringUtils.reverse(qualities);
+            }
+            catch (CompoundNotFoundException e)
+            {
+                throw new IllegalStateException("Illegal DNA compound", e);
+            }
         }
 
         String readName = read.getReadName();

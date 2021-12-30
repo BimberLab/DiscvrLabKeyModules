@@ -10,8 +10,8 @@ import htsjdk.samtools.fastq.FastqWriterFactory;
 import htsjdk.samtools.util.CloserUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
-import org.biojava3.core.sequence.DNASequence;
+import org.biojava.nbio.core.exceptions.CompoundNotFoundException;
+import org.biojava.nbio.core.sequence.DNASequence;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.module.ModuleLoader;
@@ -285,10 +285,18 @@ public class UnmappedReadExportHandler extends AbstractParameterizedOutputHandle
 
             if (read.getReadNegativeStrandFlag())
             {
-                DNASequence seq = new DNASequence(bases);
-                bases = seq.getReverseComplement().getSequenceAsString();
+                try
+                {
+                    DNASequence seq = new DNASequence(bases);
+                    bases = seq.getReverseComplement().getSequenceAsString();
 
-                qualities = StringUtils.reverse(qualities);
+                    qualities = StringUtils.reverse(qualities);
+                }
+                catch (CompoundNotFoundException e)
+                {
+                    throw new IllegalArgumentException("Improper DNA string: " + bases, e);
+                }
+
             }
 
             String readName = read.getReadName();
