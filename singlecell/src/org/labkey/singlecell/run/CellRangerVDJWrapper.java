@@ -479,7 +479,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                     {
                                         if (!originalChain.equals("TRA") && !"None".equals(originalChain))
                                         {
-                                            getPipelineCtx().getLogger().error("Unexpected chain: was " + originalChain + ", to " + chain);
+                                            getPipelineCtx().getLogger().error("Unexpected chain: was " + originalChain + ", updated to " + chain + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
                                         }
 
                                         totalG++;
@@ -488,7 +488,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                     {
                                         if (!originalChain.equals("TRB") && !"None".equals(originalChain))
                                         {
-                                            getPipelineCtx().getLogger().error("Unexpected chain: was " + originalChain + ", to " + chain);
+                                            getPipelineCtx().getLogger().error("Unexpected chain: was " + originalChain + ", updated to " + chain + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
                                         }
 
                                         totalD++;
@@ -502,7 +502,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                 }
                                 else
                                 {
-                                    getPipelineCtx().getLogger().warn("Multiple chains detected [" + StringUtils.join(chains, ",")+ "], leaving original call alone: " + originalChain);
+                                    getPipelineCtx().getLogger().warn("Multiple chains detected [" + StringUtils.join(chains, ",")+ "], leaving original call alone: " + originalChain  + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
                                 }
                             }
 
