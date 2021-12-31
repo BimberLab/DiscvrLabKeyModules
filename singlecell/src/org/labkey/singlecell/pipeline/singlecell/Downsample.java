@@ -23,13 +23,13 @@ public class Downsample extends AbstractCellMembraneStep
                     SeuratToolParameter.create("targetCells", "Target Cells Per Unit of Data", "Each unit of data will be downsampled to this level", "ldk-integerfield", new JSONObject(){{
                         put("allowBlank", false);
                     }}, null),
-                    SeuratToolParameter.create("subsetFields", "Additional Grouping Fields", "A comma-separated list of fields that will be used to subset data within each seurat object. For example, if 'BarcodePrefix' is provided and 500 target cells is selected, each incoming seurat object will be subset to no more than 500 cells per unique value of BarcodePrefix. If blank, each object will be treated as one unit of data.", "textfield", new JSONObject(){{
-
-                    }}, null),
+                    SeuratToolParameter.create("subsetFields", "Additional Grouping Fields", "A comma-separated list of fields that will be used to subset data within each seurat object. For example, if 'BarcodePrefix' is provided and 500 target cells is selected, each incoming seurat object will be subset to no more than 500 cells per unique value of BarcodePrefix. If blank, each object will be treated as one unit of data.", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
+                        put("delimiter", ";");
+                    }}, null, "subsetFields", true, true),
                     SeuratToolParameter.create("seed", "Random Seed", "This random seed, used for downsampling", "ldk-integerfield", new JSONObject(){{
 
                     }}, 1234)
-            ), null, null);
+            ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
 
