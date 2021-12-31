@@ -436,6 +436,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                 //Infer correct chain from the V, J and C genes
                                 String[] tokens = line.split(",");
                                 List<String> chains = new ArrayList<>();
+                                String vGeneChain = null;
+                                String jGeneChain = null;
                                 String cGeneChain = null;
                                 for (int idx : new Integer[]{6,8,9}) {
                                     String val = StringUtils.trimToNull(tokens[idx]);
@@ -455,7 +457,15 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                         }
 
                                         chains.add(val);
-                                        if (idx == 9)
+                                        if (idx == 6)
+                                        {
+                                            vGeneChain = val;
+                                        }
+                                        if (idx == 8)
+                                        {
+                                            jGeneChain = val;
+                                        }
+                                        else if (idx == 9)
                                         {
                                             cGeneChain = val;
                                         }
@@ -466,10 +476,26 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                 String originalChain = StringUtils.trimToNull(tokens[5]);
 
                                 // Recover TRDV/TRAJ/TRAC:
-                                if (uniqueChains.size() > 1 && cGeneChain != null)
+                                if (uniqueChains.size() > 1)
                                 {
-                                    uniqueChains.clear();
-                                    uniqueChains.add(cGeneChain);
+                                    if (cGeneChain != null)
+                                    {
+                                        uniqueChains.clear();
+                                        uniqueChains.add(cGeneChain);
+                                    }
+                                    else if (uniqueChains.size() == 2)
+                                    {
+                                        if ("TRD".equals(vGeneChain) && "TRA".equals(jGeneChain))
+                                        {
+                                            uniqueChains.clear();
+                                            uniqueChains.add(vGeneChain);
+                                        }
+                                        if ("TRA".equals(vGeneChain) && "TRD".equals(jGeneChain))
+                                        {
+                                            uniqueChains.clear();
+                                            uniqueChains.add(vGeneChain);
+                                        }
+                                    }
                                 }
 
                                 if (uniqueChains.size() == 1)
@@ -479,7 +505,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                     {
                                         if (!originalChain.equals("TRA") && !"None".equals(originalChain))
                                         {
-                                            getPipelineCtx().getLogger().error("Unexpected chain: was " + originalChain + ", updated to " + chain + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
+                                            getPipelineCtx().getLogger().info("Unexpected chain: original was " + originalChain + ", updated to " + chain + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
                                         }
 
                                         totalG++;
@@ -488,7 +514,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                     {
                                         if (!originalChain.equals("TRB") && !"None".equals(originalChain))
                                         {
-                                            getPipelineCtx().getLogger().error("Unexpected chain: was " + originalChain + ", updated to " + chain + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
+                                            getPipelineCtx().getLogger().info("Unexpected chain: original was " + originalChain + ", updated to " + chain + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
                                         }
 
                                         totalD++;
