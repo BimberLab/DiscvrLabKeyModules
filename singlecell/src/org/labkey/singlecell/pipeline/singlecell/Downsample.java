@@ -24,14 +24,14 @@ public class Downsample extends AbstractCellMembraneStep
                         put("allowBlank", false);
                     }}, null),
                     SeuratToolParameter.create("subsetFields", "Additional Grouping Fields", "A comma-separated list of fields that will be used to subset data within each seurat object. For example, if 'BarcodePrefix' is provided and 500 target cells is selected, each incoming seurat object will be subset to no more than 500 cells per unique value of BarcodePrefix. If blank, each object will be treated as one unit of data.", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
-                        put("delimiter", ";");
+                        put("height", 150);
+                        put("delimiter", ",");
                     }}, null, "subsetFields", true, true),
                     SeuratToolParameter.create("seed", "Random Seed", "This random seed, used for downsampling", "ldk-integerfield", new JSONObject(){{
 
                     }}, 1234)
             ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
-
 
         @Override
         public Downsample create(PipelineContext ctx)
