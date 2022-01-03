@@ -16,15 +16,18 @@
 
 package org.labkey.cluster;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.action.ConfirmAction;
+import org.labkey.api.action.SimpleRedirectAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
@@ -35,6 +38,9 @@ import org.labkey.api.pipeline.RemoteExecutionEngine;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.permissions.AdminPermission;
+import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.settings.AppProps;
+import org.labkey.api.settings.ResourceURL;
 import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.URLHelper;
@@ -110,9 +116,10 @@ public class ClusterController extends SpringActionController
 
         public ModelAndView getConfirmView(JobIdsForm form, BindException errors) throws Exception
         {
+
             return new HtmlView(HtmlString.unsafe("This will change the status of the pipeline job with the provided ID to Cancelled.  It is intended to help the situation when the normal UI leave a job in a perpetual 'Cancelling' state." +
                     "To continue, enter a comma-delimited list of Job IDs and hit submit:<br><br>" +
-                    "<label>Enter Job ID(s): </label><input name=\"jobIds\"><br>"));
+                    "<label>Enter Job ID(s): </label><input name=\"jobIds\" value = \"" + form.getJobIds() + "\"><br>"));
         }
 
         public boolean handlePost(JobIdsForm form, BindException errors) throws Exception
@@ -274,7 +281,7 @@ public class ClusterController extends SpringActionController
         {
             return new HtmlView(HtmlString.unsafe("This will attempt to re-queue existing pipeline jobs using their serialized JSON text files.  It is intended as a workaround for the situation where a job has been marked complete." +
                     "To continue, enter a comma-delimited list of Job IDs and hit submit:<br><br>" +
-                    "<label>Enter Job ID(s): </label><input name=\"jobIds\"><br>"));
+                    "<label>Enter Job ID(s): </label><input name=\"jobIds\" value=\"" + form.getJobIds() + "\"><br>"));
         }
 
         public boolean handlePost(JobIdsForm form, BindException errors) throws Exception
@@ -328,6 +335,98 @@ public class ClusterController extends SpringActionController
             });
 
             return true;
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public static class ViewJavaLogAction extends SimpleRedirectAction<ViewJavaLogForm>
+    {
+        @Override
+        public void validate(ViewJavaLogForm viewJavaLogForm, BindException errors)
+        {
+            super.validate(viewJavaLogForm, errors);
+
+            if (viewJavaLogForm.getJobId() == null)
+            {
+                errors.reject(ERROR_MSG, "Must provide JobId");
+            }
+
+            PipelineStatusFile sf = PipelineService.get().getStatusFile(viewJavaLogForm.getJobId());
+            if (sf == null)
+            {
+                errors.reject(ERROR_MSG, "Unknown job: " + viewJavaLogForm.getJobId());
+            }
+            else if (!sf.lookupContainer().hasPermission(getUser(), ReadPermission.class))
+            {
+                errors.reject(ERROR_MSG, "The current user does not have permission to view the folder: " + sf.lookupContainer().getPath());
+            }
+        }
+
+        @Override
+        public URLHelper getRedirectURL(ViewJavaLogForm viewJavaLogForm) throws Exception
+        {
+            PipelineStatusFile sf = PipelineService.get().getStatusFile(viewJavaLogForm.getJobId());
+            File parentDir = new File(sf.getFilePath()).getParentFile();
+            if (!parentDir.exists())
+            {
+                throw new IllegalArgumentException("Log directory doesnt exist: " + parentDir.getPath());
+            }
+
+            File[] javaLogs = parentDir.listFiles((dir, name) -> {
+                return name.endsWith(".java.log");
+            });
+
+            if (javaLogs == null || javaLogs.length == 0)
+            {
+                throw new IllegalArgumentException("No files ending with java.log found: " + parentDir.getPath());
+            }
+
+            long lastModifiedTime = Long.MIN_VALUE;
+            File chosenFile = null;
+            for (File file : javaLogs)
+            {
+                if (file.lastModified() > lastModifiedTime)
+                {
+                    chosenFile = file;
+                    lastModifiedTime = file.lastModified();
+                }
+            }
+
+            PipeRoot root = PipelineService.get().getPipelineRootSetting(sf.lookupContainer());
+            if (root == null)
+            {
+                throw new IllegalArgumentException("Unable to find pipeline root for folder: " + sf.lookupContainer().getPath());
+            }
+
+            if (!root.isUnderRoot(chosenFile))
+            {
+                throw new IllegalArgumentException("Log file is not under the pipeline root for folder: " + sf.lookupContainer().getPath());
+            }
+
+            String relPath = root.relativePath(chosenFile);
+            if (relPath == null)
+            {
+                throw new IllegalArgumentException("Unable to find log file path for folder: " + sf.lookupContainer().getPath());
+            }
+
+            relPath = org.labkey.api.util.Path.parse(FilenameUtils.separatorsToUnix(relPath)).encode();
+
+            return new ResourceURL(AppProps.getInstance().getBaseServerUrl() + root.getWebdavURL() + relPath);
+        }
+    }
+
+    public static class ViewJavaLogForm
+    {
+        private Integer _jobId;
+
+        public Integer getJobId()
+        {
+            return _jobId;
+        }
+
+        public void setJobId(Integer jobId)
+        {
+            _jobId = jobId;
         }
     }
 }
