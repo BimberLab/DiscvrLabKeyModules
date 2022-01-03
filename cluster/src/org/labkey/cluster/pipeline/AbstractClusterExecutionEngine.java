@@ -501,6 +501,11 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
             {
                 statusChanged = true;
             }
+
+            if (!statusChanged && !sf.getStatus().equalsIgnoreCase(j.getStatus()))
+            {
+                _log.error("ClusterExecutionEngine reports status not changed, but was: " + sf.getStatus() + " / " + j.getStatus());
+            }
         }
 
         //no need to redundantly update PipelineJob

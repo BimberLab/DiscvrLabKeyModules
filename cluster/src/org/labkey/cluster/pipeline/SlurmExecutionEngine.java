@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.cluster.ClusterResourceAllocator;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.Container;
@@ -207,6 +208,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         }
 
         String command = getConfig().getHistoryCommandExpr().eval(ctx);
+        String info = null;
         List<String> ret = execute(command);
         if (ret != null)
         {
@@ -214,7 +216,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
             boolean headerFound = false;
             boolean foundJobLine = false;
             LinkedHashSet<String> statuses = new LinkedHashSet<>();
-            List<String> header = null;
+            List<String> header;
             int jobIdx = -1;
             int stateIdx = -1;
             int hostnameIdx = -1;
@@ -290,7 +292,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     _log.error("more than one status returned for job " + job.getClusterId() + ": " + StringUtils.join(statuses, ";") + ", using: " + status);
                 }
 
-                return translateSlurmStatusToTaskStatus(status);
+                return translateSlurmStatusToTaskStatus(status, info);
             }
         }
 
@@ -497,20 +499,25 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
 
     private Pair<String, String> translateSlurmStatusToTaskStatus(String status)
     {
+        return translateSlurmStatusToTaskStatus(status, null);
+    }
+
+    private Pair<String, String> translateSlurmStatusToTaskStatus(String status, @Nullable String info)
+    {
         if (status == null)
             return null;
 
         try
         {
             StatusType st = StatusType.parseValue(status);
-            return Pair.of(st.getLabkeyStatus().toUpperCase(), st.getInfo());
+            return Pair.of(st.getLabkeyStatus().toUpperCase(), st.getInfo(info));
         }
         catch (IllegalArgumentException e)
         {
             _log.error("Unknown status type: [" + status + "]");
         }
 
-        return Pair.of(status, null);
+        return Pair.of(status, info);
     }
 
     public static enum StatusType
@@ -562,9 +569,9 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
             return _taskStatus == null ? _labkeyStatus : _taskStatus.name();
         }
 
-        public String getInfo()
+        public String getInfo(@Nullable String info)
         {
-            return _info;
+            return _info == null ? info : _info + (info == null ? "" : " / " + info);
         }
 
         public static StatusType parseValue(String value)
