@@ -411,7 +411,7 @@ public class ClusterController extends SpringActionController
 
             relPath = org.labkey.api.util.Path.parse(FilenameUtils.separatorsToUnix(relPath)).encode();
 
-            return new ResourceURL(AppProps.getInstance().getBaseServerUrl() + root.getWebdavURL() + relPath);
+            return new ResourceURL(root.getWebdavURL() + relPath);
         }
     }
 
