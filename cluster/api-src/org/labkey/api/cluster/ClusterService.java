@@ -36,6 +36,8 @@ abstract public class ClusterService
      */
     abstract public PipelineJob createClusterRemotePipelineJob(Container c, User u, String jobName, RemoteExecutionEngine engine, ClusterRemoteTask task, File logFile) throws PipelineValidationException;
 
+    abstract public File getSerializedJobFile(File jobLogFile);
+
     public interface ClusterRemoteTask extends Serializable
     {
         public void run(Logger log);

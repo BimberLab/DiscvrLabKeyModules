@@ -1,5 +1,7 @@
 package org.labkey.cluster.query;
 
+import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.ldk.table.SimpleButtonConfigFactory;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.security.permissions.AdminPermission;
@@ -18,5 +20,11 @@ public class ForceCancelJobsButton extends SimpleButtonConfigFactory
         ));
 
         setPermission(AdminPermission.class);
+    }
+
+    @Override
+    public boolean isAvailable(TableInfo ti)
+    {
+        return super.isAvailable(ti) || ContainerManager.getRoot().equals(ti.getUserSchema().getContainer());
     }
 }

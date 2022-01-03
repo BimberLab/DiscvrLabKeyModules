@@ -29,7 +29,6 @@ import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
-import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineStatusFile;
@@ -39,7 +38,6 @@ import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.ReadPermission;
-import org.labkey.api.settings.AppProps;
 import org.labkey.api.settings.ResourceURL;
 import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.PageFlowUtil;
@@ -51,7 +49,6 @@ import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -313,26 +310,39 @@ public class ClusterController extends SpringActionController
                 sfs.add(sf);
             }
 
-            sfs.forEach(sf -> {
+            for (PipelineStatusFile sf : sfs)
+            {
                 File log = new File(sf.getFilePath());
                 File json = AbstractClusterExecutionEngine.getSerializedJobFile(log);
                 if (!json.exists())
                 {
-                    return;
+                    errors.reject(ERROR_MSG, "Unable to find pipeline JSON, expected: " + json.getPath());
+                    return false;
                 }
 
+                PipelineJob job = null;
                 try
                 {
-                    PipelineJob job = PipelineJob.readFromFile(json);
+                    job = PipelineJob.readFromFile(json);
 
-                    _log.info("Submitting job: " + job.getJobGUID() + ": " + job.getActiveTaskStatus());
+                    job.getLogger().info("Submitting job from JSON: " + job.getJobGUID() + ": " + job.getActiveTaskStatus());
                     PipelineService.get().setPipelineJobStatus(job, job.getActiveTaskStatus());
                 }
-                catch (PipelineJobException | IOException e)
+                catch (Exception e)
                 {
-                    _log.error(e);
+                    if (job != null)
+                    {
+                        job.getLogger().error("Unable to requeue job", e);
+                    }
+                    else
+                    {
+                        _log.error("Unable to requeue pipeline job", e);
+                    }
+
+                    errors.reject(ERROR_MSG, "Unable to requeue pipeline job: " + e.getMessage());
+                    return false;
                 }
-            });
+            }
 
             return true;
         }

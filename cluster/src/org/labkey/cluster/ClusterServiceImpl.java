@@ -8,6 +8,7 @@ import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.pipeline.RemoteExecutionEngine;
 import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.security.User;
+import org.labkey.cluster.pipeline.AbstractClusterExecutionEngine;
 import org.labkey.cluster.pipeline.ClusterPipelineJob;
 
 import java.io.File;
@@ -72,6 +73,12 @@ public class ClusterServiceImpl extends ClusterService
     public String getClusterUser(Container c)
     {
         return ClusterManager.get().getClusterUser(c);
+    }
+
+    @Override
+    public File getSerializedJobFile(File jobLogFile)
+    {
+        return AbstractClusterExecutionEngine.getSerializedJobFile(jobLogFile);
     }
 
     @Override
