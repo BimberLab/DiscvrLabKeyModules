@@ -333,7 +333,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         else if ("sequenceanalysis-trimmingtextarea".equals(pd.getFieldXtype()))
         {
             val = val.replace("'", "\\\'");
-            String[] vals = val.split(",");
+            String[] vals = val.split(pd.getDelimiter());
             return "c('" + StringUtils.join(vals, "','") + "')";
         }
         else if (pd.isMultiValue())

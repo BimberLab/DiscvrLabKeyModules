@@ -26,7 +26,7 @@ public class FeaturePlots extends AbstractCellMembraneStep
                         put("allowBlank", false);
                         put("height", 150);
                         put("delimiter", ",");
-                    }}, null)
+                    }}, null).delimiter(",")
             ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 

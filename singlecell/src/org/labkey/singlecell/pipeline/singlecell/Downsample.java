@@ -26,7 +26,7 @@ public class Downsample extends AbstractCellMembraneStep
                     SeuratToolParameter.create("subsetFields", "Additional Grouping Fields", "A comma-separated list of fields that will be used to subset data within each seurat object. For example, if 'BarcodePrefix' is provided and 500 target cells is selected, each incoming seurat object will be subset to no more than 500 cells per unique value of BarcodePrefix. If blank, each object will be treated as one unit of data.", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("height", 150);
                         put("delimiter", ",");
-                    }}, null, "subsetFields", true, true),
+                    }}, null, "subsetFields", true, true).delimiter(","),
                     SeuratToolParameter.create("seed", "Random Seed", "This random seed, used for downsampling", "ldk-integerfield", new JSONObject(){{
 
                     }}, 1234)
