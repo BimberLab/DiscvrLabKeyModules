@@ -42,6 +42,7 @@ import org.labkey.api.settings.ResourceURL;
 import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.URLHelper;
+import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HtmlView;
 import org.labkey.cluster.pipeline.AbstractClusterExecutionEngine;
 import org.springframework.validation.BindException;
@@ -421,7 +422,7 @@ public class ClusterController extends SpringActionController
 
             relPath = org.labkey.api.util.Path.parse(FilenameUtils.separatorsToUnix(relPath)).encode();
 
-            return new ResourceURL(root.getWebdavURL() + relPath);
+            return new URLHelper(root.getWebdavURL() + relPath);
         }
     }
 
