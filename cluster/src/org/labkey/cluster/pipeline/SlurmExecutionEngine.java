@@ -220,6 +220,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
             int jobIdx = -1;
             int stateIdx = -1;
             int hostnameIdx = -1;
+            int maxRssIdx = -1;
             for (String line : ret)
             {
                 line = StringUtils.trimToNull(line);
@@ -235,6 +236,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     jobIdx = header.indexOf("JOBID");
                     stateIdx = header.indexOf("STATE");
                     hostnameIdx = header.indexOf("NODELIST");
+                    maxRssIdx = header.indexOf("MAXRSS");
 
                     if (stateIdx == -1)
                     {
@@ -272,6 +274,16 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                                 {
                                     job.setHostname(hostname);
                                 }
+                            }
+                        }
+
+                        if (maxRssIdx > -1)
+                        {
+                            long bytes = FileSizeFormatter.convertStringRepresentationToBytes(tokens[maxRssIdx]);
+                            long requestInBytes = FileSizeFormatter.convertBytesToUnit(getConfig().getRequestMemory(), 'G');
+                            if (bytes > requestInBytes)
+                            {
+                                info = "Job exceeded memory: " + FileSizeFormatter.convertBytesToUnit(bytes, 'G');
                             }
                         }
                     }
@@ -535,7 +547,8 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         SE("Error", PipelineJob.TaskStatus.error, Arrays.asList("SPECIAL_EXIT")),
         ST("Stopped", PipelineJob.TaskStatus.error),
         S("Suspended", PipelineJob.TaskStatus.waiting, null, "Job suspended"),
-        TO("Timeout", PipelineJob.TaskStatus.error, null, "Job timeout");
+        TO("Timeout", PipelineJob.TaskStatus.error, null, "Job timeout"),
+        OOM("Out of Memory", PipelineJob.TaskStatus.error, Arrays.asList("OUT_OF_MEMORY"), "Out of Memory");
 
         private Set<String> _aliases = new CaseInsensitiveHashSet();
         private String _labkeyStatus;
@@ -686,5 +699,49 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         }
 
         return null;
+    }
+
+    // Based on: https://stackoverflow.com/questions/3758606/how-can-i-convert-byte-size-into-a-human-readable-format-in-java
+    private static class FileSizeFormatter
+    {
+        public static long convertStringRepresentationToBytes(final String value)
+        {
+            try
+            {
+                char unit = value.toUpperCase().charAt(value.length() - 1);
+                long sizeFactor = getSizeFactor(unit);
+                long size = Long.parseLong(value.substring(0, value.length() - 1));
+
+                return size * sizeFactor;
+            }
+            catch (Exception e)
+            {
+                throw new IllegalArgumentException("Improper size string: " + value, e);
+            }
+        }
+
+        public static long convertBytesToUnit(final long bytes, final char unit)
+        {
+            long sizeFactor = getSizeFactor(unit);
+
+            return bytes / sizeFactor;
+        }
+
+        private static long getSizeFactor(char unit)
+        {
+            final long K = 1024;
+            final long M = K * K;
+            final long G = M * K;
+            final long T = G * K;
+
+            return switch (unit)
+                    {
+                        case 'K' -> K;
+                        case 'M' -> M;
+                        case 'G' -> G;
+                        case 'T' -> T;
+                        default -> 1;
+                    };
+        }
     }
 }
