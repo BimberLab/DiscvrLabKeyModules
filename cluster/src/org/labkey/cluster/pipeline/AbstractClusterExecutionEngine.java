@@ -504,7 +504,7 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
 
             if (!statusChanged && !sf.getStatus().equalsIgnoreCase(j.getStatus()))
             {
-                _log.error("ClusterExecutionEngine reports status not changed, but was: " + sf.getStatus() + " / " + j.getStatus());
+                _log.error("ClusterExecutionEngine reports status not changed, but was: " + status + " / statusfile: " + sf.getStatus() + " / cluster job: " + j.getStatus());
             }
         }
 
