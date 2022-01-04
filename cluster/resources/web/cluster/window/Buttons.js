@@ -13,7 +13,7 @@ Cluster.Utils = new function() {
                 return;
             }
 
-            window.location = LABKEY.ActionURL.buildURL('cluster', 'viewJavaLog', null, {jobId: checked[0]});
+            window.open(LABKEY.ActionURL.buildURL('cluster', 'viewJavaLog', null, {jobId: checked[0]}), '_blank');
         },
 
         recoverCompletedJobs: function (dataRegionName) {
