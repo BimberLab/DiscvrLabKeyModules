@@ -5,6 +5,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.junit.Assert;
+import org.junit.Test;
 import org.labkey.api.cluster.ClusterResourceAllocator;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.Container;
@@ -281,10 +283,10 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                         if (maxRssIdx > -1 && maxRssIdx < tokens.length)
                         {
                             long bytes = FileSizeFormatter.convertStringRepresentationToBytes(tokens[maxRssIdx]);
-                            long requestInBytes = FileSizeFormatter.convertBytesToUnit(getConfig().getRequestMemory(), 'G');
+                            long requestInBytes = FileSizeFormatter.convertStringRepresentationToBytes(getConfig().getRequestMemory() + "G"); //request is always GB
                             if (bytes > requestInBytes)
                             {
-                                info = "Job exceeded memory: " + FileSizeFormatter.convertBytesToUnit(bytes, 'G');
+                                info = "Job exceeded memory, max was: " + FileSizeFormatter.convertBytesToUnit(bytes, 'G') + "G";
                             }
                         }
                     }
@@ -361,6 +363,12 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         return success;
     }
 
+    public static File getExpectedSubmitScript(PipelineJob job)
+    {
+        String basename = FileUtil.getBaseName(job.getLogFile());
+        return new File(job.getLogFile().getParentFile(), basename + (job.getActiveTaskId() == null ? "" : "." + job.getActiveTaskId().getNamespaceClass().getSimpleName()) + ".slurm.sh");
+    }
+
     private File createSubmitScript(PipelineJob job) throws PipelineJobException
     {
         try
@@ -370,7 +378,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
             //we want this unique for each task, but reused if submitted multiple times
             File outDir = job.getLogFile().getParentFile();
             String basename = FileUtil.getBaseName(job.getLogFile());
-            File submitScript = new File(outDir, basename + (job.getActiveTaskId() == null ? "" : "." + job.getActiveTaskId().getNamespaceClass().getSimpleName()) + ".slurm.sh");
+            File submitScript = getExpectedSubmitScript(job);
             if (ClusterManager.get().isRecreateSubmitScriptFile() && submitScript.exists())
             {
                 job.getLogger().info("Deleting existing submit script");
@@ -743,6 +751,19 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                         case 'T' -> T;
                         default -> 1;
                     };
+        }
+    }
+
+    public static class TestCase
+    {
+        @Test
+        public void testFileSizeFormatter()
+        {
+            long bytes = FileSizeFormatter.convertStringRepresentationToBytes("1362624K");
+            Assert.assertEquals("Incorrect byte value", 1395326976, bytes);
+
+            long val2 = FileSizeFormatter.convertBytesToUnit(bytes, 'K');
+            Assert.assertEquals("Incorrect string value", 1362624, val2);
         }
     }
 }

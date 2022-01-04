@@ -34,9 +34,11 @@ abstract public class ClusterService
      * This creates a barebones PipelineJob configured to run on the selected RemoteExecutionEngine.
      * You may wish to further configure this job.  This method does not submit the job, which you can do using PipelineService.queueJob()
      */
-    abstract public PipelineJob createClusterRemotePipelineJob(Container c, User u, String jobName, RemoteExecutionEngine engine, ClusterRemoteTask task, File logFile) throws PipelineValidationException;
+    abstract public PipelineJob createClusterRemotePipelineJob(Container c, User u, String jobName, RemoteExecutionEngine<?> engine, ClusterRemoteTask task, File logFile) throws PipelineValidationException;
 
     abstract public File getSerializedJobFile(File jobLogFile);
+
+    abstract public File getExpectedSubmitScript(PipelineJob job);
 
     public interface ClusterRemoteTask extends Serializable
     {

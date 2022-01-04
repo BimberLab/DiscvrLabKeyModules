@@ -37,6 +37,7 @@ import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.cluster.pipeline.ClusterPipelineJobNotificationProvider;
 import org.labkey.cluster.pipeline.ClusterPipelineProvider;
+import org.labkey.cluster.pipeline.SlurmExecutionEngine;
 import org.labkey.cluster.pipeline.TestCase;
 import org.labkey.cluster.query.ForceCancelJobsButton;
 import org.labkey.cluster.query.RecoverCompletedJobsButton;
@@ -126,6 +127,14 @@ public class ClusterModule extends ExtendedSimpleModule
         ));
 
         return testClasses;
+    }
+
+    @Override
+    public @NotNull Set<Class> getUnitTests()
+    {
+        return new HashSet<>(Arrays.asList(
+                SlurmExecutionEngine.TestCase.class
+        ));
     }
 
     @Override

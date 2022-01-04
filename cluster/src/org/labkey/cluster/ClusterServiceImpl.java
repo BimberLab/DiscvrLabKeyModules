@@ -10,6 +10,8 @@ import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.security.User;
 import org.labkey.cluster.pipeline.AbstractClusterExecutionEngine;
 import org.labkey.cluster.pipeline.ClusterPipelineJob;
+import org.labkey.cluster.pipeline.HTCondorExecutionEngine;
+import org.labkey.cluster.pipeline.SlurmExecutionEngine;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -82,7 +84,28 @@ public class ClusterServiceImpl extends ClusterService
     }
 
     @Override
-    public PipelineJob createClusterRemotePipelineJob(Container c, User u, String jobName, RemoteExecutionEngine engine, ClusterRemoteTask task, File logFile) throws PipelineValidationException
+    public File getExpectedSubmitScript(PipelineJob job)
+    {
+        if (job.getActiveTaskFactory() != null)
+        {
+            String location = job.getActiveTaskFactory().getExecutionLocation();
+            if (SlurmExecutionEngine.TYPE.equals(location))
+            {
+                return SlurmExecutionEngine.getExpectedSubmitScript(job);
+            }
+            else if (HTCondorExecutionEngine.TYPE.equals(location))
+            {
+                return HTCondorExecutionEngine.getExpectedSubmitScript(job);
+            }
+        }
+
+        job.getLogger().error("Unable to find appropriate remote execution engine for job: " + job.getJobGUID() + ", with active task factory: " + (job.getActiveTaskFactory() != null ? job.getActiveTaskFactory().getId() : " null"));
+
+        return null;
+    }
+
+    @Override
+    public PipelineJob createClusterRemotePipelineJob(Container c, User u, String jobName, RemoteExecutionEngine<?> engine, ClusterRemoteTask task, File logFile) throws PipelineValidationException
     {
         return ClusterPipelineJob.createJob(c, u, jobName, task, engine, logFile);
     }
