@@ -167,20 +167,23 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
 
                             //example: >1|TRAV41*01 TRAV41|TRAV41|L-REGION+V-REGION|TR|TRA|None|None
                             //Note: for g/d recovery, add any gamma segments as TRA and delta as TRB. Also prefix their gene names with TRA/B, but keep the true name (i.e. TRDV1 -> TRBTRDV1)
-                            String prefix = "";
+                            String suffix = "";
+                            String lineage = nt.getLineage();
                             if (doGDParsing() && "TRD".equalsIgnoreCase(locus))
                             {
-                                prefix = "TRB";
+                                suffix = "d";
+                                lineage = lineage.replaceAll("TRD", "TRB");
                                 locus = "TRB";
                             }
                             else if (doGDParsing() && "TRG".equalsIgnoreCase(locus))
                             {
-                                prefix = "TRA";
+                                suffix = "g";
+                                lineage = lineage.replaceAll("TRG", "TRA");
                                 locus = "TRA";
                             }
 
                             StringBuilder header = new StringBuilder();
-                            header.append(">").append(i.get()).append("|").append(prefix).append(nt.getName()).append(" ").append(prefix).append(nt.getLineage()).append("|").append(prefix).append(nt.getLineage()).append("|");
+                            header.append(">").append(i.get()).append("|").append(nt.getName()).append(suffix).append(" ").append(lineage).append("|").append(lineage).append("|");
                             //translate into V_Region
                             String type;
                             if (nt.getLineage().contains("J"))
@@ -235,7 +238,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         @Override
         public String getIndexCachedDirName(PipelineJob job)
         {
-            return getProvider().getName() + (doGDParsing() ? "-GD" : "");
+            return getProvider().getName() + (doGDParsing() ? "-GammaDelta" : "");
         }
 
         @Override
@@ -431,7 +434,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                         int totalG = 0;
                         while ((line = reader.readLine()) != null)
                         {
-                            if (line.contains("TRATRG") || line.contains("TRBTRD"))
+                            if (line.contains("g,") || line.contains("d,"))
                             {
                                 //Infer correct chain from the V, J and C genes
                                 String[] tokens = line.split(",");
@@ -443,11 +446,11 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                     String val = StringUtils.trimToNull(tokens[idx]);
                                     if (val != null)
                                     {
-                                        if (val.contains("TRATRG"))
+                                        if (val.endsWith("g"))
                                         {
                                             val = "TRG";
                                         }
-                                        else if (val.contains("TRBTRD"))
+                                        else if (val.endsWith("d"))
                                         {
                                             val = "TRD";
                                         }
@@ -523,8 +526,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                     tokens[5] = chain;
 
                                     line = StringUtils.join(tokens, ",");
-                                    line = line.replaceAll("TRATRG", "TRG");
-                                    line = line.replaceAll("TRBTRD", "TRD");
+                                    line = line.replaceAll("g,", ",");
+                                    line = line.replaceAll("d,", ",");
                                 }
                                 else
                                 {

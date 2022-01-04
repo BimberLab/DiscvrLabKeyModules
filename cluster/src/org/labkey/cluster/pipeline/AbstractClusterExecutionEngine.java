@@ -502,9 +502,9 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
                 statusChanged = true;
             }
 
-            if (!statusChanged && !sf.getStatus().equalsIgnoreCase(j.getStatus()))
+            if (status != null && !statusChanged && !sf.getStatus().equalsIgnoreCase(j.getStatus()))
             {
-                _log.error("ClusterExecutionEngine reports status not changed, but was: " + status + " / statusfile: " + sf.getStatus() + " / cluster job: " + j.getStatus());
+                _log.error("ClusterExecutionEngine reports status not changed for job: " + sf.getRowId() + ", but was: " + status + " / statusfile: " + sf.getStatus() + " / cluster job: " + j.getStatus());
             }
         }
 
