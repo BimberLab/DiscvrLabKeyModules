@@ -4,6 +4,7 @@ import org.labkey.api.cluster.ClusterResourceAllocator;
 import org.labkey.api.cluster.ClusterService;
 import org.labkey.api.data.Container;
 import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.pipeline.RemoteExecutionEngine;
 import org.labkey.api.pipeline.TaskId;
@@ -86,22 +87,40 @@ public class ClusterServiceImpl extends ClusterService
     @Override
     public File getExpectedSubmitScript(PipelineJob job)
     {
-        if (job.getActiveTaskFactory() != null)
+        if (job.isActiveTaskLocal())
+        {
+            //nothing to do:
+            return null;
+        }
+        else if (job.getActiveTaskFactory() != null)
         {
             String location = job.getActiveTaskFactory().getExecutionLocation();
-            if (SlurmExecutionEngine.TYPE.equals(location))
+            for (RemoteExecutionEngine<?> engine : PipelineJobService.get().getRemoteExecutionEngines())
             {
-                return SlurmExecutionEngine.getExpectedSubmitScript(job);
+                if (location.equals(engine.getConfig().getLocation()))
+                {
+                    if (SlurmExecutionEngine.TYPE.equals(engine.getType()))
+                    {
+                        return SlurmExecutionEngine.getExpectedSubmitScript(job);
+                    }
+                    else if (HTCondorExecutionEngine.TYPE.equals(engine.getType()))
+                    {
+                        return HTCondorExecutionEngine.getExpectedSubmitScript(job);
+                    }
+
+                    job.getLogger().error("Unknown execution engine type: " + engine.getType());
+                    return null;
+                }
             }
-            else if (HTCondorExecutionEngine.TYPE.equals(location))
-            {
-                return HTCondorExecutionEngine.getExpectedSubmitScript(job);
-            }
+
+            job.getLogger().error("Unable to find remote execution engine for location: " + location);
+            return null;
         }
-
-        job.getLogger().error("Unable to find appropriate remote execution engine for job: " + job.getJobGUID() + ", with active task factory: " + (job.getActiveTaskFactory() != null ? job.getActiveTaskFactory().getId() : " null"));
-
-        return null;
+        else
+        {
+            job.getLogger().error("TaskFactory is null, cannot identify submit script");
+            return null;
+        }
     }
 
     @Override
