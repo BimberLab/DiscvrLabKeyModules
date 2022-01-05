@@ -46,7 +46,11 @@ dependencies {
                     ExternalDependency.GNU_LESSER_GPL_21_NAME,
                     ExternalDependency.GNU_LESSER_GPL_21_URL,
                     'Java framework for processing biological data'
-            )
+            ),
+            {
+                exclude group: 'jakarta.activation', module: 'jakarta.activation-api'
+                exclude group: 'com.sun.activation', module: 'jakarta.activation'
+            }
     )
 
     BuildUtils.addExternalDependency(
@@ -59,7 +63,11 @@ dependencies {
                     ExternalDependency.GNU_LESSER_GPL_21_NAME,
                     ExternalDependency.GNU_LESSER_GPL_21_URL,
                     'Java framework for processing biological data'
-            )
+            ),
+            {
+                exclude group: 'jakarta.activation', module: 'jakarta.activation-api'
+                exclude group: 'com.sun.activation', module: 'jakarta.activation'
+            }
     )
 
     BuildUtils.addExternalDependency(
