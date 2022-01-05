@@ -487,6 +487,10 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
         j.setLastStatusCheck(new Date());
         j.setStatus(status);
 
+
+        ClusterJob mostRecent = getMostRecentClusterSubmission(j.getJobId(), true);
+        boolean hasNewerSubmission = mostRecent != null && j.getClusterId() != null && !j.getClusterId().equals(mostRecent.getClusterId());
+
         PipelineStatusFile sf = PipelineService.get().getStatusFile(j.getStatusFileId());
         if (sf != null)
         {
@@ -502,11 +506,18 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
                 statusChanged = true;
             }
 
-            if (status != null && !statusChanged && !sf.getStatus().equalsIgnoreCase(j.getStatus()))
+            if (!hasNewerSubmission && status != null && !statusChanged && !sf.getStatus().equalsIgnoreCase(j.getStatus()))
             {
                 _log.info("ClusterExecutionEngine reports status not changed for job: " + sf.getRowId() + ", but was: " + status + " / statusfile: " + sf.getStatus() + " / cluster job: " + j.getStatus());
                 statusChanged = true;
             }
+        }
+
+        // Because it is possible for a prior submission to report a status, only update the PipelineJob itself if this is the latest submission.
+        if (hasNewerSubmission)
+        {
+            _log.error("There is a newer submission for job: " + sf.getRowId() + ". Skipping update for cluster ID: " + j.getClusterId() + " in favor of " + mostRecent.getClusterId());
+            statusChanged = false;
         }
 
         //no need to redundantly update PipelineJob
