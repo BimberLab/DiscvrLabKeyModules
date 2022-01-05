@@ -19,6 +19,14 @@ repositories {
     }
 }
 
+configurations.all {
+    resolutionStrategy {
+        force "com.sun.activation:jakarta.activation:${activationVersion}"
+        force "javax.xml.bind:jaxb-api:${jaxbVersion}"
+        force "jakarta.xml.bind:jakarta.xml.bind-api:2.3.3"
+    }
+}
+
 dependencies {
     apiImplementation "com.github.samtools:htsjdk:${htsjdkVersion}"
     BuildUtils.addExternalDependency(
