@@ -1,6 +1,7 @@
 package org.labkey.cluster.pipeline;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -282,11 +283,21 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                         // NOTE: if the line has blank ending columns, trimmed lines might lack that value
                         if (maxRssIdx > -1 && maxRssIdx < tokens.length)
                         {
-                            long bytes = FileSizeFormatter.convertStringRepresentationToBytes(tokens[maxRssIdx]);
-                            long requestInBytes = FileSizeFormatter.convertStringRepresentationToBytes(getConfig().getRequestMemory() + "G"); //request is always GB
-                            if (bytes > requestInBytes)
+                            try
                             {
-                                info = "Job exceeded memory, max was: " + FileSizeFormatter.convertBytesToUnit(bytes, 'G') + "G";
+                                if (NumberUtils.isCreatable(tokens[maxRssIdx]))
+                                {
+                                    long bytes = FileSizeFormatter.convertStringRepresentationToBytes(tokens[maxRssIdx]);
+                                    long requestInBytes = FileSizeFormatter.convertStringRepresentationToBytes(getConfig().getRequestMemory() + "G"); //request is always GB
+                                    if (bytes > requestInBytes)
+                                    {
+                                        info = "Job exceeded memory, max was: " + FileSizeFormatter.convertBytesToUnit(bytes, 'G') + "G";
+                                    }
+                                }
+                            }
+                            catch (IllegalArgumentException e)
+                            {
+                                _log.error("Unable to parse MaxRSS for job: " + job.getClusterId() + ", with line: [" + line + "]", e);
                             }
                         }
                     }
