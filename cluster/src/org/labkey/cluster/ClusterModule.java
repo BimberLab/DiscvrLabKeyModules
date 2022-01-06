@@ -24,6 +24,7 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.ldk.ExtendedSimpleModule;
+import org.labkey.api.ldk.LDKService;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.module.ModuleLoader;
@@ -36,7 +37,11 @@ import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.cluster.pipeline.ClusterPipelineJobNotificationProvider;
 import org.labkey.cluster.pipeline.ClusterPipelineProvider;
+import org.labkey.cluster.pipeline.SlurmExecutionEngine;
 import org.labkey.cluster.pipeline.TestCase;
+import org.labkey.cluster.query.ForceCancelJobsButton;
+import org.labkey.cluster.query.RecoverCompletedJobsButton;
+import org.labkey.cluster.query.ViewJavaLogButton;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -92,6 +97,10 @@ public class ClusterModule extends ExtendedSimpleModule
         PipelineService.get().registerPipelineProvider(new ClusterPipelineProvider(this));
 
         PipelineService.get().registerPipelineJobNotificationProvider(new ClusterPipelineJobNotificationProvider());
+
+        LDKService.get().registerQueryButton(new ViewJavaLogButton(), "pipeline", "job");
+        LDKService.get().registerQueryButton(new RecoverCompletedJobsButton(), "pipeline", "job");
+        LDKService.get().registerQueryButton(new ForceCancelJobsButton(), "pipeline", "job");
     }
 
     @Override
@@ -118,6 +127,14 @@ public class ClusterModule extends ExtendedSimpleModule
         ));
 
         return testClasses;
+    }
+
+    @Override
+    public @NotNull Set<Class> getUnitTests()
+    {
+        return new HashSet<>(Arrays.asList(
+                SlurmExecutionEngine.TestCase.class
+        ));
     }
 
     @Override

@@ -167,7 +167,7 @@ public class HTCondorExecutionEngine extends AbstractClusterExecutionEngine<HTCo
             //we want this unique for each task, but reused if submitted multiple times
             File outDir = job.getLogFile().getParentFile();
             String basename = FileUtil.getBaseName(job.getLogFile());
-            File submitScript = new File(outDir, basename + (job.getActiveTaskId() == null ? "" : "." + job.getActiveTaskId().getNamespaceClass().getSimpleName()) + ".submit");
+            File submitScript = getExpectedSubmitScript(job);
             if (ClusterManager.get().isRecreateSubmitScriptFile() && submitScript.exists())
             {
                 job.getLogger().info("Deleting existing submit script");
@@ -527,5 +527,11 @@ public class HTCondorExecutionEngine extends AbstractClusterExecutionEngine<HTCo
         }
 
         return success;
+    }
+
+    public static File getExpectedSubmitScript(PipelineJob job)
+    {
+        String basename = FileUtil.getBaseName(job.getLogFile());
+        return new File(job.getLogFile().getParentFile(), basename + (job.getActiveTaskId() == null ? "" : "." + job.getActiveTaskId().getNamespaceClass().getSimpleName()) + ".submit");
     }
 }

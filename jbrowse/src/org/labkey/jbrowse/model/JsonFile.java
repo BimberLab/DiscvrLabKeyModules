@@ -717,6 +717,11 @@ public class JsonFile
     public File prepareResource(Logger log, boolean throwIfNotPrepared, boolean forceReprocess) throws PipelineJobException
     {
         ExpData expData = getExpData();
+        if (expData == null)
+        {
+            throw new PipelineJobException("No ExpData for JsonFile: " + getObjectId());
+        }
+
         File targetFile = expData.getFile();
         if (needsGzip() && !isGzipped())
         {

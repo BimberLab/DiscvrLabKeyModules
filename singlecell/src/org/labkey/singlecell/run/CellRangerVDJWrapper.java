@@ -167,20 +167,23 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
 
                             //example: >1|TRAV41*01 TRAV41|TRAV41|L-REGION+V-REGION|TR|TRA|None|None
                             //Note: for g/d recovery, add any gamma segments as TRA and delta as TRB. Also prefix their gene names with TRA/B, but keep the true name (i.e. TRDV1 -> TRBTRDV1)
-                            String prefix = "";
+                            String suffix = "";
+                            String lineage = nt.getLineage();
                             if (doGDParsing() && "TRD".equalsIgnoreCase(locus))
                             {
-                                prefix = "TRB";
+                                suffix = "d";
+                                lineage = lineage.replaceAll("TRD", "TRB");
                                 locus = "TRB";
                             }
                             else if (doGDParsing() && "TRG".equalsIgnoreCase(locus))
                             {
-                                prefix = "TRA";
+                                suffix = "g";
+                                lineage = lineage.replaceAll("TRG", "TRA");
                                 locus = "TRA";
                             }
 
                             StringBuilder header = new StringBuilder();
-                            header.append(">").append(i.get()).append("|").append(prefix).append(nt.getName()).append(" ").append(prefix).append(nt.getLineage()).append("|").append(prefix).append(nt.getLineage()).append("|");
+                            header.append(">").append(i.get()).append("|").append(nt.getName()).append(suffix).append(" ").append(lineage).append("|").append(lineage).append("|");
                             //translate into V_Region
                             String type;
                             if (nt.getLineage().contains("J"))
@@ -235,7 +238,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         @Override
         public String getIndexCachedDirName(PipelineJob job)
         {
-            return getProvider().getName() + (doGDParsing() ? "-GD" : "");
+            return getProvider().getName() + (doGDParsing() ? "-GammaDelta" : "");
         }
 
         @Override
@@ -431,53 +434,105 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                         int totalG = 0;
                         while ((line = reader.readLine()) != null)
                         {
-                            if (line.contains("TRATRG") || line.contains("TRBTRD"))
+                            if (line.contains("g,") || line.contains("d,"))
                             {
                                 //Infer correct chain from the V, J and C genes
                                 String[] tokens = line.split(",");
                                 List<String> chains = new ArrayList<>();
+                                String vGeneChain = null;
+                                String jGeneChain = null;
+                                String cGeneChain = null;
                                 for (int idx : new Integer[]{6,8,9}) {
-                                    String val = StringUtils.trimToNull(tokens[idx]) == null ? null : tokens[idx].substring(0,3);
+                                    String val = StringUtils.trimToNull(tokens[idx]);
                                     if (val != null)
                                     {
+                                        if (val.endsWith("g"))
+                                        {
+                                            val = "TRG";
+                                        }
+                                        else if (val.endsWith("d"))
+                                        {
+                                            val = "TRD";
+                                        }
+                                        else
+                                        {
+                                            val = val.substring(0, 3);
+                                        }
+
                                         chains.add(val);
+                                        if (idx == 6)
+                                        {
+                                            vGeneChain = val;
+                                        }
+                                        if (idx == 8)
+                                        {
+                                            jGeneChain = val;
+                                        }
+                                        else if (idx == 9)
+                                        {
+                                            cGeneChain = val;
+                                        }
                                     }
                                 }
 
                                 Set<String> uniqueChains = new HashSet<>(chains);
                                 String originalChain = StringUtils.trimToNull(tokens[5]);
+
+                                // Recover TRDV/TRAJ/TRAC:
+                                if (uniqueChains.size() > 1)
+                                {
+                                    if (cGeneChain != null)
+                                    {
+                                        uniqueChains.clear();
+                                        uniqueChains.add(cGeneChain);
+                                    }
+                                    else if (uniqueChains.size() == 2)
+                                    {
+                                        if ("TRD".equals(vGeneChain) && "TRA".equals(jGeneChain))
+                                        {
+                                            uniqueChains.clear();
+                                            uniqueChains.add(vGeneChain);
+                                        }
+                                        if ("TRA".equals(vGeneChain) && "TRD".equals(jGeneChain))
+                                        {
+                                            uniqueChains.clear();
+                                            uniqueChains.add(vGeneChain);
+                                        }
+                                    }
+                                }
+
                                 if (uniqueChains.size() == 1)
                                 {
                                     String chain = uniqueChains.iterator().next();
                                     if (chain.equals("TRG"))
                                     {
-                                        if (!originalChain.equals("TRA"))
+                                        if (!originalChain.equals("TRA") && !"None".equals(originalChain))
                                         {
-                                            getPipelineCtx().getLogger().error("Unexpected chain: from " + originalChain + " to " + chain);
+                                            getPipelineCtx().getLogger().info("Unexpected chain: original was " + originalChain + ", updated to " + chain + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
                                         }
 
                                         totalG++;
                                     }
                                     else if (chain.equals("TRD"))
                                     {
-                                        if (!originalChain.equals("TRB"))
+                                        if (!originalChain.equals("TRB") && !"None".equals(originalChain))
                                         {
-                                            getPipelineCtx().getLogger().error("Unexpected chain: from " + originalChain + " to " + chain);
+                                            getPipelineCtx().getLogger().info("Unexpected chain: original was " + originalChain + ", updated to " + chain + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
                                         }
 
                                         totalD++;
                                     }
 
                                     tokens[5] = chain;
+
+                                    line = StringUtils.join(tokens, ",");
+                                    line = line.replaceAll("g,", ",");
+                                    line = line.replaceAll("d,", ",");
                                 }
                                 else
                                 {
-                                    getPipelineCtx().getLogger().warn("Multiple chains detected, leaving original call alone: " + originalChain);
+                                    getPipelineCtx().getLogger().warn("Multiple chains detected [" + StringUtils.join(chains, ",")+ "], leaving original call alone: " + originalChain  + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
                                 }
-
-                                line = StringUtils.join(tokens, ",");
-                                line = line.replaceAll("TRATRG", "TRG");
-                                line = line.replaceAll("TRBTRD", "TRD");
                             }
 
                             writer.println(line);
@@ -487,7 +542,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                         getPipelineCtx().getLogger().info("\tTotal TRB->TRD changes: " + totalD);
                     }
 
-                    csv.delete();
+                    //TODO: ultimately remove this and delete file
+                    FileUtils.moveFile(csv, new File(csv.getPath() + ".orig"));
                     FileUtils.moveFile(csv2, csv);
                 }
             }

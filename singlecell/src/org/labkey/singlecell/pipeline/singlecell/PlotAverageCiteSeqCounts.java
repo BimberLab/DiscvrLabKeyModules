@@ -26,7 +26,7 @@ public class PlotAverageCiteSeqCounts extends AbstractCellMembraneStep
                         put("allowBlank", false);
                         put("height", 150);
                         put("delimiter", ",");
-                    }}, "ClusterNames_0.2,ClusterNames_0.4,ClusterNames_0.6")
+                    }}, "ClusterNames_0.2,ClusterNames_0.4,ClusterNames_0.6").delimiter(",")
             ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
