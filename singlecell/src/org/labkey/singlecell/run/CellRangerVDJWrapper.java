@@ -166,24 +166,21 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                             String seq = nt.getSequence();
 
                             //example: >1|TRAV41*01 TRAV41|TRAV41|L-REGION+V-REGION|TR|TRA|None|None
-                            //Note: for g/d recovery, add any gamma segments as TRA and delta as TRB. Also prefix their gene names with TRA/B, but keep the true name (i.e. TRDV1 -> TRBTRDV1)
-                            String suffix = "";
+                            //Note: for g/d recovery, add any gamma segments as TRA and delta as TRB. Also inject 99 into the segment number (i.e. TRDV1 -> TRBV991)
                             String lineage = nt.getLineage();
                             if (doGDParsing() && "TRD".equalsIgnoreCase(locus))
                             {
-                                suffix = "d";
-                                lineage = lineage.replaceAll("TRD", "TRB");
+                                lineage = lineage.replaceAll("TRD([VDJC])", "TRB$199");
                                 locus = "TRB";
                             }
                             else if (doGDParsing() && "TRG".equalsIgnoreCase(locus))
                             {
-                                suffix = "g";
-                                lineage = lineage.replaceAll("TRG", "TRA");
+                                lineage = lineage.replaceAll("TRG([VDJC])", "TRA$199");
                                 locus = "TRA";
                             }
 
                             StringBuilder header = new StringBuilder();
-                            header.append(">").append(i.get()).append("|").append(nt.getName()).append(suffix).append(" ").append(lineage).append("|").append(lineage).append("|");
+                            header.append(">").append(i.get()).append("|").append(nt.getName()).append(" ").append(lineage).append("|").append(lineage).append("|");
                             //translate into V_Region
                             String type;
                             if (nt.getLineage().contains("J"))
@@ -238,7 +235,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         @Override
         public String getIndexCachedDirName(PipelineJob job)
         {
-            return getProvider().getName() + (doGDParsing() ? "-GammaDelta" : "");
+            return getProvider().getName() + (doGDParsing() ? "-GD" : "");
         }
 
         @Override
@@ -434,7 +431,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                         int totalG = 0;
                         while ((line = reader.readLine()) != null)
                         {
-                            if (line.contains("g,") || line.contains("d,"))
+                            if (line.matches("(.*)[VDJC]99(.*)"))
                             {
                                 //Infer correct chain from the V, J and C genes
                                 String[] tokens = line.split(",");
@@ -446,11 +443,11 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                     String val = StringUtils.trimToNull(tokens[idx]);
                                     if (val != null)
                                     {
-                                        if (val.endsWith("g"))
+                                        if (val.matches("TRA[VDJC]99(.*)"))
                                         {
                                             val = "TRG";
                                         }
-                                        else if (val.endsWith("d"))
+                                        else if (val.matches("TRB[VDJC]99(.*)"))
                                         {
                                             val = "TRD";
                                         }
@@ -526,8 +523,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                     tokens[5] = chain;
 
                                     line = StringUtils.join(tokens, ",");
-                                    line = line.replaceAll("g,", ",");
-                                    line = line.replaceAll("d,", ",");
+                                    line = line.replaceAll("(TR[AB][VDJC])99", "$1");
                                 }
                                 else
                                 {

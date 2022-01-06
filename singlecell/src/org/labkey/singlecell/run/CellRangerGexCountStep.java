@@ -98,16 +98,19 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
             ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger", true, false, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
         }
 
+        @Override
         public String getName()
         {
             return "CellRanger";
         }
 
+        @Override
         public String getDescription()
         {
             return null;
         }
 
+        @Override
         public AlignmentStep create(PipelineContext context)
         {
             return new CellRangerGexCountStep(this, context, new CellRangerWrapper(context.getLogger()));
