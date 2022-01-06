@@ -23,6 +23,13 @@ public class SeuratToolParameter extends ToolParameterDescriptor
         _isMultiValue = isMultiValue;
     }
 
+    public SeuratToolParameter delimiter(String delim)
+    {
+        _delimiter = delim;
+
+        return this;
+    }
+
     public static SeuratToolParameter create(String name, String label, String description, String fieldXtype, @Nullable JSONObject additionalExtConfig, @Nullable Object defaultValue)
     {
         return new SeuratToolParameter(name, label, description, fieldXtype, defaultValue, additionalExtConfig, null, true, false);

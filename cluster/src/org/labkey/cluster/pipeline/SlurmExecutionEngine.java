@@ -1,9 +1,13 @@
 package org.labkey.cluster.pipeline;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.junit.Assert;
+import org.junit.Test;
 import org.labkey.api.cluster.ClusterResourceAllocator;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.Container;
@@ -207,6 +211,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         }
 
         String command = getConfig().getHistoryCommandExpr().eval(ctx);
+        String info = null;
         List<String> ret = execute(command);
         if (ret != null)
         {
@@ -214,10 +219,11 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
             boolean headerFound = false;
             boolean foundJobLine = false;
             LinkedHashSet<String> statuses = new LinkedHashSet<>();
-            List<String> header = null;
+            List<String> header;
             int jobIdx = -1;
             int stateIdx = -1;
             int hostnameIdx = -1;
+            int maxRssIdx = -1;
             for (String line : ret)
             {
                 line = StringUtils.trimToNull(line);
@@ -233,6 +239,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     jobIdx = header.indexOf("JOBID");
                     stateIdx = header.indexOf("STATE");
                     hostnameIdx = header.indexOf("NODELIST");
+                    maxRssIdx = header.indexOf("MAXRSS");
 
                     if (stateIdx == -1)
                     {
@@ -272,6 +279,27 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                                 }
                             }
                         }
+
+                        // NOTE: if the line has blank ending columns, trimmed lines might lack that value
+                        if (maxRssIdx > -1 && maxRssIdx < tokens.length)
+                        {
+                            try
+                            {
+                                if (NumberUtils.isCreatable(tokens[maxRssIdx]))
+                                {
+                                    long bytes = FileSizeFormatter.convertStringRepresentationToBytes(tokens[maxRssIdx]);
+                                    long requestInBytes = FileSizeFormatter.convertStringRepresentationToBytes(getConfig().getRequestMemory() + "G"); //request is always GB
+                                    if (bytes > requestInBytes)
+                                    {
+                                        info = "Job exceeded memory, max was: " + FileSizeFormatter.convertBytesToUnit(bytes, 'G') + "G";
+                                    }
+                                }
+                            }
+                            catch (IllegalArgumentException e)
+                            {
+                                _log.error("Unable to parse MaxRSS for job: " + job.getClusterId() + ", with line: [" + line + "]", e);
+                            }
+                        }
                     }
                     catch (Exception e)
                     {
@@ -290,7 +318,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     _log.error("more than one status returned for job " + job.getClusterId() + ": " + StringUtils.join(statuses, ";") + ", using: " + status);
                 }
 
-                return translateSlurmStatusToTaskStatus(status);
+                return translateSlurmStatusToTaskStatus(status, info);
             }
         }
 
@@ -346,6 +374,12 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         return success;
     }
 
+    public static File getExpectedSubmitScript(PipelineJob job)
+    {
+        String basename = FileUtil.getBaseName(job.getLogFile());
+        return new File(job.getLogFile().getParentFile(), basename + (job.getActiveTaskId() == null ? "" : "." + job.getActiveTaskId().getNamespaceClass().getSimpleName()) + ".slurm.sh");
+    }
+
     private File createSubmitScript(PipelineJob job) throws PipelineJobException
     {
         try
@@ -355,7 +389,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
             //we want this unique for each task, but reused if submitted multiple times
             File outDir = job.getLogFile().getParentFile();
             String basename = FileUtil.getBaseName(job.getLogFile());
-            File submitScript = new File(outDir, basename + (job.getActiveTaskId() == null ? "" : "." + job.getActiveTaskId().getNamespaceClass().getSimpleName()) + ".slurm.sh");
+            File submitScript = getExpectedSubmitScript(job);
             if (ClusterManager.get().isRecreateSubmitScriptFile() && submitScript.exists())
             {
                 job.getLogger().info("Deleting existing submit script");
@@ -497,20 +531,25 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
 
     private Pair<String, String> translateSlurmStatusToTaskStatus(String status)
     {
+        return translateSlurmStatusToTaskStatus(status, null);
+    }
+
+    private Pair<String, String> translateSlurmStatusToTaskStatus(String status, @Nullable String info)
+    {
         if (status == null)
             return null;
 
         try
         {
             StatusType st = StatusType.parseValue(status);
-            return Pair.of(st.getLabkeyStatus().toUpperCase(), st.getInfo());
+            return Pair.of(st.getLabkeyStatus().toUpperCase(), st.getInfo(info));
         }
         catch (IllegalArgumentException e)
         {
             _log.error("Unknown status type: [" + status + "]");
         }
 
-        return Pair.of(status, null);
+        return Pair.of(status, info);
     }
 
     public static enum StatusType
@@ -528,7 +567,8 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         SE("Error", PipelineJob.TaskStatus.error, Arrays.asList("SPECIAL_EXIT")),
         ST("Stopped", PipelineJob.TaskStatus.error),
         S("Suspended", PipelineJob.TaskStatus.waiting, null, "Job suspended"),
-        TO("Timeout", PipelineJob.TaskStatus.error, null, "Job timeout");
+        TO("Timeout", PipelineJob.TaskStatus.error, null, "Job timeout"),
+        OOM("Out of Memory", PipelineJob.TaskStatus.error, Arrays.asList("OUT_OF_MEMORY"), "Out of Memory");
 
         private Set<String> _aliases = new CaseInsensitiveHashSet();
         private String _labkeyStatus;
@@ -562,9 +602,9 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
             return _taskStatus == null ? _labkeyStatus : _taskStatus.name();
         }
 
-        public String getInfo()
+        public String getInfo(@Nullable String info)
         {
-            return _info;
+            return _info == null ? info : _info + (info == null ? "" : " / " + info);
         }
 
         public static StatusType parseValue(String value)
@@ -679,5 +719,62 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         }
 
         return null;
+    }
+
+    // Based on: https://stackoverflow.com/questions/3758606/how-can-i-convert-byte-size-into-a-human-readable-format-in-java
+    private static class FileSizeFormatter
+    {
+        public static long convertStringRepresentationToBytes(final String value)
+        {
+            try
+            {
+                char unit = value.toUpperCase().charAt(value.length() - 1);
+                long sizeFactor = getSizeFactor(unit);
+                long size = Long.parseLong(value.substring(0, value.length() - 1));
+
+                return size * sizeFactor;
+            }
+            catch (Exception e)
+            {
+                throw new IllegalArgumentException("Improper size string: " + value, e);
+            }
+        }
+
+        public static long convertBytesToUnit(final long bytes, final char unit)
+        {
+            long sizeFactor = getSizeFactor(unit);
+
+            return bytes / sizeFactor;
+        }
+
+        private static long getSizeFactor(char unit)
+        {
+            final long K = 1024;
+            final long M = K * K;
+            final long G = M * K;
+            final long T = G * K;
+
+            return switch (unit)
+                    {
+                        case 'K' -> K;
+                        case 'M' -> M;
+                        case 'G' -> G;
+                        case 'T' -> T;
+                        default -> 1;
+                    };
+        }
+    }
+
+    public static class TestCase
+    {
+        @Test
+        public void testFileSizeFormatter()
+        {
+            long bytes = FileSizeFormatter.convertStringRepresentationToBytes("1362624K");
+            Assert.assertEquals("Incorrect byte value", 1395326976, bytes);
+
+            long val2 = FileSizeFormatter.convertBytesToUnit(bytes, 'K');
+            Assert.assertEquals("Incorrect string value", 1362624, val2);
+        }
     }
 }
