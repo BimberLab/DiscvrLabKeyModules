@@ -39,6 +39,7 @@ import org.labkey.singlecell.pipeline.singlecell.*;
 import org.labkey.singlecell.run.CellRangerFeatureBarcodeHandler;
 import org.labkey.singlecell.run.CellRangerGexCountStep;
 import org.labkey.singlecell.run.CellRangerVDJWrapper;
+import org.labkey.singlecell.run.NimbleAligner;
 import org.labkey.singlecell.run.NimbleAlignmentStep;
 
 import java.util.Collection;
@@ -126,6 +127,7 @@ public class SingleCellModule extends ExtendedSimpleModule
 
         SequencePipelineService.get().registerPipelineStep(new CellRangerGexCountStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new CellRangerVDJWrapper.VDJProvider());
+        SequencePipelineService.get().registerPipelineStep(new NimbleAligner.Provider());
 
         SequenceAnalysisService.get().registerReadsetHandler(new CellRangerFeatureBarcodeHandler());
 
