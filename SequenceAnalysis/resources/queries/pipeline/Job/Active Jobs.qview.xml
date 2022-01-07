@@ -1,4 +1,4 @@
-<customView xmlns="http://labkey.org/data/xml/queryCustomView" containerFilter="CurrentAndSubfolders">
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" canOverride="true">
    <sorts>
        <sort column="Created" descending="true"/>
    </sorts>
