@@ -38,11 +38,9 @@ import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.ReadPermission;
-import org.labkey.api.settings.ResourceURL;
 import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.URLHelper;
-import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HtmlView;
 import org.labkey.cluster.pipeline.AbstractClusterExecutionEngine;
 import org.springframework.validation.BindException;
@@ -262,7 +260,7 @@ public class ClusterController extends SpringActionController
         }
     }
 
-    @RequiresSiteAdmin
+    @RequiresPermission(AdminPermission.class)
     public class RecoverCompletedJobsAction extends ConfirmAction<JobIdsForm>
     {
         public void validateCommand(JobIdsForm form, Errors errors)
