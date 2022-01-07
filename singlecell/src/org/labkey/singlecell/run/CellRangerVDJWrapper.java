@@ -118,6 +118,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         }
     }
 
+    private static final String LINEAGE_NUMBER_ADDITION = "999";
+
     public static class CellRangerVDJAlignmentStep extends AbstractAlignmentPipelineStep<CellRangerVDJWrapper> implements AlignmentStep
     {
         public CellRangerVDJAlignmentStep(AlignmentStepProvider provider, PipelineContext ctx, CellRangerVDJWrapper wrapper)
@@ -166,21 +168,44 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                             String seq = nt.getSequence();
 
                             //example: >1|TRAV41*01 TRAV41|TRAV41|L-REGION+V-REGION|TR|TRA|None|None
-                            //Note: for g/d recovery, add any gamma segments as TRA and delta as TRB. Also inject 99 into the segment number (i.e. TRDV1 -> TRBV991)
+                            //Note: for g/d recovery, add any gamma segments as TRA and delta as TRB. Also inject 99 into the segment number (i.e. TRDV1 -> TRBV1d and TRGJ2 -> TRAJ2g)
+                            String name = nt.getName();
                             String lineage = nt.getLineage();
                             if (doGDParsing() && "TRD".equalsIgnoreCase(locus))
                             {
-                                lineage = lineage.replaceAll("TRD([VDJC])", "TRB$199");
                                 locus = "TRB";
+                                lineage = nt.getLineage().replaceAll("TRD", locus);
+
+                                //In the situation where there is no gene number, inject one:
+                                if (!lineage.matches(".*[0-9]+$"))
+                                {
+                                    getPipelineCtx().getLogger().info("Adding gene number: " + nt.getLineage());
+                                    lineage = lineage + LINEAGE_NUMBER_ADDITION;
+                                }
+
+                                String suffix = "d";
+                                lineage = lineage + suffix;
+                                name = name.replaceAll("TRD", locus) + suffix;
                             }
                             else if (doGDParsing() && "TRG".equalsIgnoreCase(locus))
                             {
-                                lineage = lineage.replaceAll("TRG([VDJC])", "TRA$199");
                                 locus = "TRA";
+                                lineage = nt.getLineage().replaceAll("TRG", locus);
+
+                                //In the situation where there is no gene number, inject one:
+                                if (!lineage.matches(".*[0-9]+$"))
+                                {
+                                    getPipelineCtx().getLogger().info("Adding gene number: " + nt.getLineage());
+                                    lineage = lineage + LINEAGE_NUMBER_ADDITION;
+                                }
+
+                                String suffix = "g";
+                                lineage = lineage + suffix;
+                                name = name.replaceAll("TRG", locus) + suffix;
                             }
 
                             StringBuilder header = new StringBuilder();
-                            header.append(">").append(i.get()).append("|").append(nt.getName()).append(" ").append(lineage).append("|").append(lineage).append("|");
+                            header.append(">").append(i.get()).append("|").append(name).append(" ").append(lineage).append("|").append(lineage).append("|");
                             //translate into V_Region
                             String type;
                             if (nt.getLineage().contains("J"))
@@ -235,7 +260,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         @Override
         public String getIndexCachedDirName(PipelineJob job)
         {
-            return getProvider().getName() + (doGDParsing() ? "-GD" : "");
+            return getProvider().getName() + (doGDParsing() ? "-GammaDelta" : "");
         }
 
         @Override
@@ -431,7 +456,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                         int totalG = 0;
                         while ((line = reader.readLine()) != null)
                         {
-                            if (line.matches("(.*)[VDJC]99(.*)"))
+                            if (line.contains("g,") || line.contains("d,"))
                             {
                                 //Infer correct chain from the V, J and C genes
                                 String[] tokens = line.split(",");
@@ -443,11 +468,11 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                     String val = StringUtils.trimToNull(tokens[idx]);
                                     if (val != null)
                                     {
-                                        if (val.matches("TRA[VDJC]99(.*)"))
+                                        if (val.endsWith("g"))
                                         {
                                             val = "TRG";
                                         }
-                                        else if (val.matches("TRB[VDJC]99(.*)"))
+                                        else if (val.endsWith("d"))
                                         {
                                             val = "TRD";
                                         }
@@ -521,14 +546,33 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                     }
 
                                     tokens[5] = chain;
-
-                                    line = StringUtils.join(tokens, ",");
-                                    line = line.replaceAll("(TR[AB][VDJC])99", "$1");
                                 }
                                 else
                                 {
                                     getPipelineCtx().getLogger().warn("Multiple chains detected [" + StringUtils.join(chains, ",")+ "], leaving original call alone: " + originalChain  + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
                                 }
+
+                                // Now correct all the segments:
+                                for (int i = 0; i < tokens.length; i++)
+                                {
+                                    String token = tokens[i];
+                                    if (token.endsWith("g"))
+                                    {
+                                        token = token.replaceAll("^TRA", "TRG");
+                                        token = token.replaceAll("([VDJC])" + LINEAGE_NUMBER_ADDITION + "[dg]$", "$1");
+                                        token = token.replaceAll("g$", "");
+                                    }
+                                    else if (token.endsWith("d"))
+                                    {
+                                        token = token.replaceAll("^TRB", "TRD");
+                                        token = token.replaceAll("([VDJC])" + LINEAGE_NUMBER_ADDITION + "[dg]$", "$1");
+                                        token = token.replaceAll("d$", "");
+                                    }
+
+                                    tokens[i] = token;
+                                }
+
+                                line = StringUtils.join(tokens, ",");
                             }
 
                             writer.println(line);
