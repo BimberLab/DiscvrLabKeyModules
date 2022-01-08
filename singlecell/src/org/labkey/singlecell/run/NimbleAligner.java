@@ -79,20 +79,20 @@ public class NimbleAligner extends CellRangerGexCountStep
     {
         File localBam = new File(outputDirectory, basename + ".cellranger.bam");
         File localBamIdx = new File(localBam.getPath() + ".bai");
-        AlignmentOutput output;
+        AlignmentOutputImpl output = new AlignmentOutputImpl();;
 
         if (localBam.exists() && localBamIdx.exists())
         {
             getPipelineCtx().getLogger().info("Existing BAM found, re-using: " + localBam.getPath());
-            output = new AlignmentOutputImpl();
         }
         else
         {
             getPipelineCtx().getLogger().info("Running cellranger");
-            output = super.performAlignment(rs, inputFastqs1, inputFastqs2, outputDirectory, referenceGenome, basename, readGroupId, platformUnit);
+            AlignmentOutput crOutput = super.performAlignment(rs, inputFastqs1, inputFastqs2, outputDirectory, referenceGenome, basename, readGroupId, platformUnit);
 
             // Remove all the normal 10x outputs:
-            output.getSequenceOutputs().clear();
+            output.addCommandsExecuted(crOutput.getCommandsExecuted());
+            output.addIntermediateFiles(crOutput.getIntermediateFiles());
 
             // Remove the whole 10x folder:
             output.addIntermediateFile(output.getBAM().getParentFile().getParentFile());
