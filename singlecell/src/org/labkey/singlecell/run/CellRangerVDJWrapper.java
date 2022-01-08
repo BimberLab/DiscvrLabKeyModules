@@ -454,9 +454,11 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                         String line;
                         int totalD = 0;
                         int totalG = 0;
+                        int lineIdx = 0;
                         while ((line = reader.readLine()) != null)
                         {
-                            if (line.contains("g,") || line.contains("d,"))
+                            lineIdx++;
+                            if (lineIdx > 1 && (line.contains("g,") || line.contains("d,")))
                             {
                                 //Infer correct chain from the V, J and C genes
                                 String[] tokens = line.split(",");
