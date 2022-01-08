@@ -938,8 +938,9 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             LDK.Assert.assertNotEmpty('Expected non-null workbook', workbook);
             readsetRows.push({
                 name: poolName + '-' + type,
-                barcode5: isDualIndex ? idxValues[0] + '_F' : idxValues[0],
-                barcode3: isDualIndex ? idxValues[0] + '_R' : null,
+                // SI- is a proxy for being 10x (i.e. not multiseq)
+                barcode5: isDualIndex && idxValues[0].startsWith('SI-') ? idxValues[0] + '_F' : idxValues[0],
+                barcode3: isDualIndex && idxValues[0].startsWith('SI-') ? idxValues[0] + '_R' : null,
                 concentration: conc[0],
                 fragmentSize: fragment[0],
                 platform: 'ILLUMINA',
