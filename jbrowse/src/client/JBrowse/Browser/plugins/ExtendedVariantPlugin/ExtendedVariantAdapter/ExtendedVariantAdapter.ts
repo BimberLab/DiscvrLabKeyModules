@@ -6,8 +6,6 @@ import { Feature } from '@jbrowse/core/util/simpleFeature';
 import ExtendedVcfFeature from './ExtendedVcfFeature';
 import { default as VcfTabixAdapter } from '@jbrowse/plugin-variants/src/VcfTabixAdapter/VcfTabixAdapter';
 import { VcfFeature } from '@jbrowse/plugin-variants';
-import { Instance } from 'mobx-state-tree';
-import MyConfigSchema from './configSchema';
 
 export default class extends VcfTabixAdapter {
     protected featureCache = new QuickLRU({ maxSize: 20 })
@@ -33,7 +31,7 @@ export default class extends VcfTabixAdapter {
 
     private async getFeaturesAsArray(query: NoAssemblyRegion, opts: BaseOptions = {}) {
         const { refName, start, end } = query
-        const { vcf, parser } = await this.configure()
+        const {vcf, parser} = await this.configure()
         const features : VcfFeature[] = []
 
         await vcf.getLines(refName, start, end, {
