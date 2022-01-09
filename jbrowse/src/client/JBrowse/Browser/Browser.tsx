@@ -32,8 +32,7 @@ function generateViewState(genome, plugins){
       configuration: genome.configuration,
       plugins: plugins.concat(nativePlugins),
       location: genome.location,
-      defaultSession: genome.defaultSession,
-      onChange: genome.onChange
+      defaultSession: genome.defaultSession
   })
 }
 

@@ -1,16 +1,22 @@
-// NEW: Diamond glyph for SNV rendering. Based off Chevron.js
-
 import { readConfObject } from '@jbrowse/core/configuration'
 import { PropTypes as CommonPropTypes } from '@jbrowse/core/util/types/mst'
 import { emphasize } from '@jbrowse/core/util/color'
 import { observer } from 'mobx-react'
 import ReactPropTypes from 'prop-types'
 import React from 'react'
-import { isUTR } from './util'
+import { Feature } from '@jbrowse/core/util/simpleFeature';
+
+// Note: including the following is giving npm build errors, probably due to JB having typescript in js files, so for now duplicate the function:
+// import { isUTR } from '@jbrowse/plugin-svg/src/SvgFeatureRenderer/components/util'
+function isUTR(feature: Feature): boolean {
+  return /(\bUTR|_UTR|untranslated[_\s]region)\b/.test(
+      feature.get('type') || '',
+  )
+}
 
 const utrHeightFraction = 0.65
 
-
+// NEW: Diamond glyph for SNV rendering. Based off Chevron.js
 function Diamond(props) {
   const {
     feature,
@@ -57,11 +63,11 @@ function Diamond(props) {
           stroke={selected ? color2 : undefined}
           fill={selected ? emphasizedColor : color}
           points={[
-            [left + (width)/2, top],
-            [left + (width)/2 + (height/2), top + height / 2],
-            [left + (width)/2, top + height],
-            [left + (width)/2 - (height/2), top + height / 2],
-          ]}
+            [left + (width)/2, top].join(","),
+            [left + (width)/2 + (height/2), top + height / 2].join(","),
+            [left + (width)/2, top + height].join(","),
+            [left + (width)/2 - (height/2), top + height / 2].join(","),
+          ].join(" ")}
         />
     </>
   )

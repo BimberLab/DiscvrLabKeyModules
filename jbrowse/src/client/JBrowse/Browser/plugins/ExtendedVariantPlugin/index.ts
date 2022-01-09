@@ -8,16 +8,12 @@ import { createBaseTrackModel } from '@jbrowse/core/pluggableElementTypes/models
 import AdapterType from '@jbrowse/core/pluggableElementTypes/AdapterType';
 import { configSchema as EVAdapterConfigSchema, EVAdapterClass } from './ExtendedVariantAdapter';
 
-import {
-    configSchema as EVRendererConfigSchema,
-    ExtendedVariantRenderer,
-    ReactComponent as EVRendererReactComponent
-} from './ExtendedVariantRenderer';
-
+import { ReactComponent as EVRendererReactComponent, configSchema as EVRendererConfigSchema, ExtendedVariantRenderer } from './ExtendedVariantRenderer';
 import { default as createExtendedVariantTrackConfig } from './configSchema';
 import InfoFilterWidget from './InfoFilterWidget';
 import ColorWidget from './ColorWidget';
 import SampleFilterWidget from './SampleFilterWidget';
+import { BaseLinearDisplayComponent } from '@jbrowse/plugin-linear-genome-view'
 
 export default class ExtendedVariantPlugin extends Plugin {
     name = 'ExtendedVariantPlugin'
@@ -27,8 +23,10 @@ export default class ExtendedVariantPlugin extends Plugin {
         const { jbrequire } = pluginManager
         const WidgetType = jbrequire('@jbrowse/core/pluggableElementTypes/WidgetType')
         const TrackType = jbrequire('@jbrowse/core/pluggableElementTypes/TrackType')
-        const LGVPlugin = pluginManager.getPlugin('LinearGenomeViewPlugin',) as import('@jbrowse/plugin-linear-genome-view').default
-        const { BaseLinearDisplayComponent } = LGVPlugin.exports
+
+        //TODO: the example uses getPlugin(), but cant we just import it above?
+        //const LGVPlugin = pluginManager.getPlugin('LinearGenomeViewPlugin') as import('@jbrowse/plugin-linear-genome-view').default
+        //const { BaseLinearDisplayComponent } = LGVPlugin.exports
 
         pluginManager.addRendererType(
             () =>
