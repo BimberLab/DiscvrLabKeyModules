@@ -95,7 +95,7 @@ public class NimbleAligner extends CellRangerGexCountStep
             output.addIntermediateFiles(crOutput.getIntermediateFiles());
 
             // Remove the whole 10x folder:
-            output.addIntermediateFile(output.getBAM().getParentFile().getParentFile());
+            output.addIntermediateFile(crOutput.getBAM().getParentFile().getParentFile());
 
             try
             {
@@ -103,13 +103,13 @@ public class NimbleAligner extends CellRangerGexCountStep
                 {
                     localBam.delete();
                 }
-                FileUtils.copyFile(output.getBAM(), localBam);
+                FileUtils.copyFile(crOutput.getBAM(), localBam);
 
                 if (localBamIdx.exists())
                 {
                     localBamIdx.delete();
                 }
-                FileUtils.copyFile(new File(output.getBAM().getPath() + ".bai"), localBamIdx);
+                FileUtils.copyFile(new File(crOutput.getBAM().getPath() + ".bai"), localBamIdx);
             }
             catch (IOException e)
             {
