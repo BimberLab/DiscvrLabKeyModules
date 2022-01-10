@@ -69,6 +69,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
 
     public static final String INNER_ENRICHMENT_PRIMERS = "innerEnrichmentPrimers";
     public static final String INCLUDE_GD = "includeGD";
+    public static final String CHAIN = "chain";
 
     public static class VDJProvider extends AbstractAlignmentStepProvider<AlignmentStep>
     {
@@ -90,6 +91,9 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                         put("height", 100);
                         put("width", 400);
                     }}, null),
+                    ToolParameterDescriptor.create(CHAIN, "Chain", "Force the analysis to be carried out for a particular chain type", "ldk-simplecombo", new JSONObject(){{
+                        put("storeValues", "TR;IG;auto");
+                    }}, "TR"),
                     ToolParameterDescriptor.create(INCLUDE_GD, "Include G/D", "As a hack to get CellRanger 6 to include g/d (which it does not normally allow), they can be included in the reference, but marked as TRA/TRB. Alignment is performed with these values, and the result is converted in the final text file.", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true)
@@ -296,6 +300,12 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 args.add("mkvdjref");
                 args.add("--seqs=" + getGenomeFasta().getPath());
                 args.add("--genome=" + indexDir.getName());
+
+                String chain = getProvider().getParameterByName(CHAIN).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
+                if (StringUtils.trimToNull(chain) != null)
+                {
+                    args.add("--chain=" + chain);
+                }
 
                 getWrapper().setWorkingDir(indexDir.getParentFile());
                 getWrapper().execute(args);
