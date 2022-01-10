@@ -301,12 +301,6 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 args.add("--seqs=" + getGenomeFasta().getPath());
                 args.add("--genome=" + indexDir.getName());
 
-                String chain = getProvider().getParameterByName(CHAIN).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
-                if (StringUtils.trimToNull(chain) != null)
-                {
-                    args.add("--chain=" + chain);
-                }
-
                 getWrapper().setWorkingDir(indexDir.getParentFile());
                 getWrapper().execute(args);
 
@@ -341,6 +335,12 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
 
             File indexDir = AlignerIndexUtil.getIndexDir(referenceGenome, getIndexCachedDirName(getPipelineCtx().getJob()));
             args.add("--reference=" + indexDir.getPath());
+
+            String chainArg = getProvider().getParameterByName(CHAIN).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
+            if (StringUtils.trimToNull(chainArg) != null)
+            {
+                args.add("--chain=" + chainArg);
+            }
 
             String primers = StringUtils.trimToNull(getProvider().getParameterByName(INNER_ENRICHMENT_PRIMERS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null));
             if (primers != null)
