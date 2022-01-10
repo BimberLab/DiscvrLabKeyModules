@@ -81,21 +81,33 @@ public class NimbleAligner extends CellRangerGexCountStep
         File localBamIdx = new File(localBam.getPath() + ".bai");
         AlignmentOutputImpl output = new AlignmentOutputImpl();;
 
+        String idParam = StringUtils.trimToNull(getProvider().getParameterByName("id").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
+        File cellrangerOutdir = new File(outputDirectory, CellRangerWrapper.getId(idParam, rs));
+
         if (localBam.exists() && localBamIdx.exists())
         {
             getPipelineCtx().getLogger().info("Existing BAM found, re-using: " + localBam.getPath());
         }
         else
         {
-            getPipelineCtx().getLogger().info("Running cellranger");
-            AlignmentOutput crOutput = super.performAlignment(rs, inputFastqs1, inputFastqs2, outputDirectory, referenceGenome, basename, readGroupId, platformUnit);
+            File crBam = new File(cellrangerOutdir, "outs/possorted_genome_bam.bam");
+            if (crBam.exists())
+            {
+                getPipelineCtx().getLogger().info("Using previous cellranger count run");
+            }
+            else
+            {
+                getPipelineCtx().getLogger().info("Running cellranger");
+                AlignmentOutput crOutput = super.performAlignment(rs, inputFastqs1, inputFastqs2, outputDirectory, referenceGenome, basename, readGroupId, platformUnit);
+                crBam = crOutput.getBAM();
 
-            // Remove all the normal 10x outputs:
-            output.addCommandsExecuted(crOutput.getCommandsExecuted());
-            output.addIntermediateFiles(crOutput.getIntermediateFiles());
+                // Remove all the normal 10x outputs:
+                output.addCommandsExecuted(crOutput.getCommandsExecuted());
+                output.addIntermediateFiles(crOutput.getIntermediateFiles());
+            }
 
             // Remove the whole 10x folder:
-            output.addIntermediateFile(crOutput.getBAM().getParentFile().getParentFile());
+            output.addIntermediateFile(cellrangerOutdir);
 
             try
             {
@@ -103,13 +115,13 @@ public class NimbleAligner extends CellRangerGexCountStep
                 {
                     localBam.delete();
                 }
-                FileUtils.copyFile(crOutput.getBAM(), localBam);
+                FileUtils.moveFile(crBam, localBam);
 
                 if (localBamIdx.exists())
                 {
                     localBamIdx.delete();
                 }
-                FileUtils.copyFile(new File(crOutput.getBAM().getPath() + ".bai"), localBamIdx);
+                FileUtils.moveFile(new File(crBam.getPath() + ".bai"), localBamIdx);
             }
             catch (IOException e)
             {
@@ -119,6 +131,7 @@ public class NimbleAligner extends CellRangerGexCountStep
 
         // Now run nimble itself:
         doNimbleAlign(localBam, output, rs, basename);
+        output.setBAM(localBam);
 
         return output;
     }
