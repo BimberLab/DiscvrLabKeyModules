@@ -478,7 +478,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                             if (lineIdx > 1 && (line.contains("g,") || line.contains("d,")))
                             {
                                 //Infer correct chain from the V, J and C genes
-                                String[] tokens = line.split(",");
+                                String[] tokens = line.split(",", -1);  // -1 used to preserve trailing empty strings
                                 List<String> chains = new ArrayList<>();
                                 String vGeneChain = null;
                                 String jGeneChain = null;

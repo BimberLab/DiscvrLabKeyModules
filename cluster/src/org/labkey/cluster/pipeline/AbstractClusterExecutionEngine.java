@@ -516,7 +516,7 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
         // Because it is possible for a prior submission to report a status, only update the PipelineJob itself if this is the latest submission.
         if (hasNewerSubmission)
         {
-            //_log.info("There is a newer submission for job: " + sf.getRowId() + ". Skipping update for cluster ID: " + j.getClusterId() + " in favor of " + mostRecent.getClusterId());
+            //_log.info("There is a newer submission for job: " + (sf == null ? null : sf.getRowId()) + ". Skipping update for cluster ID: " + j.getClusterId() + " in favor of " + mostRecent.getClusterId());
             statusChanged = false;
         }
 
