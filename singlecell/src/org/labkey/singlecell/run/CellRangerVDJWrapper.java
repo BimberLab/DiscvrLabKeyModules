@@ -177,8 +177,15 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                             String lineage = nt.getLineage();
                             if (doGDParsing() && "TRD".equalsIgnoreCase(locus))
                             {
+                                // Dont duplicate sequences like TRAV14/DV4, since they will be covered by the TRA:
+                                if (lineage.contains("TRA") && Arrays.asList(loci).contains("TRA"))
+                                {
+                                    getPipelineCtx().getLogger().debug("skipping redundant sequence: " + nt.getName() + " / " + nt.getLocus());
+                                    continue;
+                                }
+
                                 locus = "TRB";
-                                lineage = nt.getLineage().replaceAll("TRD", locus);
+                                lineage = lineage.replaceAll("TRD", locus);
 
                                 //In the situation where there is no gene number, inject one:
                                 if (!lineage.matches(".*[0-9]+$"))
@@ -194,7 +201,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                             else if (doGDParsing() && "TRG".equalsIgnoreCase(locus))
                             {
                                 locus = "TRA";
-                                lineage = nt.getLineage().replaceAll("TRG", locus);
+                                lineage = lineage.replaceAll("TRG", locus);
 
                                 //In the situation where there is no gene number, inject one:
                                 if (!lineage.matches(".*[0-9]+$"))
@@ -220,8 +227,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                             {
                                 if (seq.length() < 300)
                                 {
-                                    getPipelineCtx().getLogger().info("Using V-REGION due to short length: " + nt.getName() + " / " + nt.getSeqLength());
-                                    type = "V-REGION";
+                                    getPipelineCtx().getLogger().info("V-segment too short, skipping: " + nt.getName() + " / " + nt.getSeqLength());
+                                    continue;
                                 }
                                 else
                                 {
