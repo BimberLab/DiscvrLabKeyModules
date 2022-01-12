@@ -824,7 +824,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                             Ext4.Array.forEach(barcode5s, function (bc, idx) {
                                 bc = doRC ? doReverseComplement(bc) : bc;
-                                const bc3 = barcode3s.length ? bc3[idx] : '';
+                                const bc3 = barcode3s.length ? barcode3s[idx] : '';
 
                                 var data = [sampleName, (instrument.startsWith('Novogene') ? '' : cleanedName), bc, ''];
                                 if (instrument === 'Novogene') {
