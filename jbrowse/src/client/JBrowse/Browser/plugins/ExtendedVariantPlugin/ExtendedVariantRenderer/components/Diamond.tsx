@@ -4,7 +4,15 @@ import { emphasize } from '@jbrowse/core/util/color'
 import { observer } from 'mobx-react'
 import ReactPropTypes from 'prop-types'
 import React from 'react'
-import { isUTR } from '@jbrowse/plugin-svg/src/SvgFeatureRenderer/components/util'
+import { Feature } from '@jbrowse/core/util/simpleFeature';
+
+// Note: including the following is giving npm build errors, probably due to JB having typescript in js files, so for now duplicate the function:
+// import { isUTR } from '@jbrowse/plugin-svg/src/SvgFeatureRenderer/components/util'
+function isUTR(feature: Feature): boolean {
+  return /(\bUTR|_UTR|untranslated[_\s]region)\b/.test(
+      feature.get('type') || '',
+  )
+}
 
 const utrHeightFraction = 0.65
 
