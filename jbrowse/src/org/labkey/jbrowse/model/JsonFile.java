@@ -488,7 +488,7 @@ public class JsonFile
             put(JBrowseSession.getAssemblyName(rg));
         }});
 
-        String url = targetFile.getWebDavURL(ExpData.PathType.full);
+        String url = targetFile.getWebDavURL(FileContentService.PathType.full);
         if (url == null)
         {
             log.info("Unable to create WebDav URL for JBrowse resource with path: " + targetFile.getFile());
@@ -536,7 +536,7 @@ public class JsonFile
             put(JBrowseSession.getAssemblyName(rg));
         }});
 
-        String url = targetFile.getWebDavURL(ExpData.PathType.full);
+        String url = targetFile.getWebDavURL(FileContentService.PathType.full);
         if (url == null)
         {
             log.info("Unable to create WebDav URL for JBrowse resource with path: " + targetFile.getFile());
@@ -629,7 +629,7 @@ public class JsonFile
         }
         else
         {
-            url = targetFile.getWebDavURL(ExpData.PathType.full);
+            url = targetFile.getWebDavURL(FileContentService.PathType.full);
         }
 
         if (url == null)

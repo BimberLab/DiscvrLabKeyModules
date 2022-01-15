@@ -19,6 +19,7 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.files.FileContentService;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
@@ -358,7 +359,7 @@ public class JBrowseSession
     public static JSONObject getIndexedFastaAdapter(ReferenceGenome rg)
     {
         ExpData d = ExperimentService.get().getExpData(rg.getFastaExpDataId());
-        String url = d.getWebDavURL(ExpData.PathType.full);
+        String url = d.getWebDavURL(FileContentService.PathType.full);
 
         JSONObject ret = new JSONObject();
         ret.put("type", "IndexedFastaAdapter");
