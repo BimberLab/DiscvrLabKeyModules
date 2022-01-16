@@ -794,6 +794,12 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                     renamedPath = renamedPath.replaceAll("_2.fastq", "_R2.fastq");
                     File renamed = new File(f.getParentFile(), renamedPath);
                     getJob().getLogger().debug("\trenaming to: " + renamed.getName());
+                    if (renamed.exists())
+                    {
+                        getJob().getLogger().debug("\tdeleting pre-existing file");
+                        renamed.delete();
+                    }
+
                     FileUtils.moveFile(f, renamed);
                     getHelper().getFileManager().addOutput(action, "Extracted Read Group FASTQ", renamed);
                     getHelper().getFileManager().addIntermediateFile(renamed);
