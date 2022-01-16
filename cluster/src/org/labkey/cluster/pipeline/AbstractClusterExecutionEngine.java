@@ -588,7 +588,14 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
                     else if (pj.getActiveTaskStatus() == PipelineJob.TaskStatus.complete)
                     {
                         //NOTE: this can occur when the cluster job has a non-zero exit after the java process terminates.
-                        pj.getLogger().info("Pipeline job JSON marked complete, but the cluster status was: " + taskStatus);
+                        //Note: if cluster status is error, go with completed anyway
+                        pj.getLogger().info("Pipeline job JSON marked complete, but the cluster status was: " + taskStatus + ", status file was: " + (sf == null ? null : sf.getStatus()) + ", cluster job: " + mostRecent.getStatus(), new Exception());
+                        if (taskStatus == PipelineJob.TaskStatus.error && PipelineJob.TaskStatus.running.matches(sf.getStatus()))
+                        {
+                            // TODO: consider updating this?
+                            //pj.getLogger().info("Ignoring ERROR status and deferring to pipeline JSON status of " + pj.getActiveTaskStatus());
+                            //taskStatus = PipelineJob.TaskStatus.complete;
+                        }
                     }
 
                     pj.getLogger().debug("setting active task status for job: " + j.getClusterId() + " to: " + taskStatus.name() + ". status was: " + pj.getActiveTaskStatus() + " (JSON) /" + sf.getStatus() + " (StatusFile) / " + status + " (Cluster), activeTaskId: " + (pj.getActiveTaskId() != null ? pj.getActiveTaskId().toString() : "no active task") + ", hostname: " + sf.getActiveHostName() + ", rowid: " + j.getRowId());
