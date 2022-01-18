@@ -40,7 +40,7 @@ public class MarkDuplicatesStep extends AbstractCommandPipelineStep<MarkDuplicat
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("MAX_RECORDS_IN_RAM"), "maxRecordsInRam", "Max Records in RAM", "When writing files that need to be sorted, this will specify the number of records stored in RAM before spilling to disk. Increasing this number reduces the number of file handles needed to sort the file, and increases the amount of RAM needed.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, null),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("SORTING_COLLECTION_SIZE_RATIO "), "sortingCollectionSizeRatio", "Sorting Collection Size Ratio", "This number, plus the maximum RAM available to the JVM, determine the memory footprint used by some of the sorting collections. If you are running out of memory, try reducing this number. Default is 0.25", "ldk-numberfield", new JSONObject(){{
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("SORTING_COLLECTION_SIZE_RATIO"), "sortingCollectionSizeRatio", "Sorting Collection Size Ratio", "This number, plus the maximum RAM available to the JVM, determine the memory footprint used by some of the sorting collections. If you are running out of memory, try reducing this number. Default is 0.25", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                         put("maxValue", 1);
                         put("decimalPrecision", 2);
