@@ -90,7 +90,7 @@ dependencies {
    BuildUtils.addExternalDependency(
            project,
            new ExternalDependency(
-                   "com.github.broadinstitute:picard:2.22.4",
+                   "com.github.broadinstitute:picard:2.26.10",
                    "Picard Tools Lib",
                    "PicardTools",
                    "https://github.com/broadinstitute/picard",
