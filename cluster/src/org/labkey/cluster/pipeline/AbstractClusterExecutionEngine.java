@@ -480,7 +480,7 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
     /**
      * this expects the status normalized from cluster codes to LK TaskStatus
      */
-    protected void updateJobStatus(@Nullable String status, ClusterJob j, @Nullable String info) throws PipelineJobException
+    protected synchronized void updateJobStatus(@Nullable String status, ClusterJob j, @Nullable String info) throws PipelineJobException
     {
         //update DB
         boolean statusChanged = (status != null && !status.equals(j.getStatus()));
@@ -592,9 +592,8 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
                         pj.getLogger().info("Pipeline job JSON marked complete, but the cluster status was: " + taskStatus + ", status file was: " + (sf == null ? null : sf.getStatus()) + ", cluster job: " + mostRecent.getStatus(), new Exception());
                         if (taskStatus == PipelineJob.TaskStatus.error && PipelineJob.TaskStatus.running.matches(sf.getStatus()))
                         {
-                            // TODO: consider updating this?
-                            //pj.getLogger().info("Ignoring ERROR status and deferring to pipeline JSON status of " + pj.getActiveTaskStatus());
-                            //taskStatus = PipelineJob.TaskStatus.complete;
+                            pj.getLogger().info("Ignoring ERROR status and deferring to pipeline JSON status of " + pj.getActiveTaskStatus());
+                            taskStatus = PipelineJob.TaskStatus.complete;
                         }
                     }
 
