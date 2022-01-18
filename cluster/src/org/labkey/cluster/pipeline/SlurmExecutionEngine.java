@@ -31,6 +31,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Created by bimber on 5/25/2017.
@@ -481,6 +482,23 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
 
                     if (ram != null)
                     {
+                        // Adjust based on the java process -Xmx:
+                        List<String> javaOpts = getConfig().getFinalJavaOpts(job, this);
+                        if (javaOpts != null)
+                        {
+                            List<Integer> javaOptXms = javaOpts.stream().filter(x -> x.startsWith("-Xmx")).map(x -> x.replaceAll("-Xmx", "").replaceAll("g", "")).map(x -> Integer.parseInt(x)).collect(Collectors.toList());
+                            if (!javaOptXms.isEmpty())
+                            {
+                                if (javaOptXms.size() > 1)
+                                {
+                                    job.getLogger().error("More than one java -Xmx found: " + StringUtils.join(javaOpts, " "));
+                                }
+
+                                job.getLogger().debug("Adjusting request RAM based on java process -Xmx from " + ram + ", reducing by : " + javaOptXms.get(0));
+                                ram = ram - javaOptXms.get(0);
+                            }
+                        }
+
                         environment.add("SEQUENCEANALYSIS_MAX_RAM=" + ram);
                     }
 
