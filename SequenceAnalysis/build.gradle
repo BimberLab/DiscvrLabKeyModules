@@ -47,7 +47,7 @@ dependencies {
     BuildUtils.addExternalDependency(
             project,
             new ExternalDependency(
-                    'org.biojava:biojava-core:6.0.3',
+                    'org.biojava:biojava-core:6.0.4',
                     'biojava-core',
                     'biojava',
                     'http://biojava.org/wiki/Main_Page',
@@ -64,7 +64,7 @@ dependencies {
     BuildUtils.addExternalDependency(
             project,
             new ExternalDependency(
-                    'org.biojava:biojava-genome:6.0.3',
+                    'org.biojava:biojava-genome:6.0.4',
                     'biojava-genome',
                     'biojava',
                     'http://biojava.org/wiki/Main_Page',
