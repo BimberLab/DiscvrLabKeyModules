@@ -212,7 +212,7 @@ public class SequenceTriggerHelper
                         throw new IllegalArgumentException("Unable to create AA from: RNA" + rnaNts.toString() + " / DNA: " + dna.toString());
                     }
 
-                    assertEquals("R", aas.getSequenceAsString());
+                    assertEquals("X", aas.getSequenceAsString());
                 }
             }
             catch (CompoundNotFoundException e)
