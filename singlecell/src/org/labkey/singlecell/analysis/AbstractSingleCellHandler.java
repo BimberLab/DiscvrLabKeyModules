@@ -181,6 +181,53 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
 
             if (requiresCite || requiresHashing)
             {
+                for (SequenceOutputFile f : inputFiles)
+                {
+                    if (f.getReadset() == null && f.getFile() != null && f.getFile().getPath().toLowerCase().endsWith(".rds"))
+                    {
+                        ctx.getLogger().info("Seurat object lacks a readset, so attempting to infer from cellbarcodes");
+
+                        //NOTE: for a multi-dataset object, readset might be null, but the component loupe files might map to multiple readsets. For ease, try to lookup and recover the component readsets:
+                        File barcodeFile = CellHashingServiceImpl.get().getCellBarcodesFromSeurat(f.getFile());
+                        if (barcodeFile.exists())
+                        {
+                            Set<Integer> uniquePrefixes = new HashSet<>();
+                            try (CSVReader reader = new CSVReader(Readers.getReader(barcodeFile), '\t'))
+                            {
+                                String[] line;
+                                while ((line = reader.readNext()) != null)
+                                {
+                                    String[] tokens = line[0].split("_");
+                                    if (tokens.length > 1)
+                                    {
+                                        uniquePrefixes.add(Integer.parseInt(tokens[0]));
+                                    }
+                                }
+                            }
+                            catch (IOException e)
+                            {
+                                throw new PipelineJobException(e);
+                            }
+
+                            ctx.getLogger().info("Total dataset Ids: " + uniquePrefixes.size());
+                            for (int loupeId : uniquePrefixes)
+                            {
+                                SequenceOutputFile so = SequenceOutputFile.getForId(loupeId);
+                                if (so == null)
+                                {
+                                    throw new PipelineJobException("Unable to find loupe file for: " + loupeId);
+                                }
+                                else if (so.getReadset() == null)
+                                {
+                                    throw new PipelineJobException("Readset is blank for loupe file: " + loupeId);
+                                }
+
+                                ctx.getSequenceSupport().cacheReadset(so.getReadset(), ctx.getJob().getUser());
+                            }
+                        }
+                    }
+                }
+
                 CellHashingServiceImpl.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getSourceDirectory(), ctx.getJob(), ctx.getSequenceSupport(), "readsetId", false, false, true, requiresHashing, requiresCite, doH5Caching);
             }
         }

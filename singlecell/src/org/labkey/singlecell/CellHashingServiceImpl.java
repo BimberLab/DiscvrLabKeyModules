@@ -133,14 +133,19 @@ public class CellHashingServiceImpl extends CellHashingService
         HashMap<Integer, Integer> readsetToCiteSeqMap = new HashMap<>();
         HashMap<Integer, Set<String>> gexToPanels = new HashMap<>();
 
+        List<Readset> cachedReadsets = support.getCachedReadsets();
+        job.getLogger().debug("Total cached readsets: " + cachedReadsets.size());
+        if (cachedReadsets.isEmpty())
+        {
+            throw new PipelineJobException("There are no cached readsets. This might indicate hashing or CITE-seq is being selected for an input not associated with readsets, like a multi-dataset object");
+        }
+
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(output), '\t', CSVWriter.NO_QUOTE_CHARACTER); CSVWriter bcWriter = new CSVWriter(PrintWriters.getPrintWriter(barcodeOutput), ',', CSVWriter.NO_QUOTE_CHARACTER))
         {
             writer.writeNext(new String[]{"ReadsetId", "CDNA_ID", "SubjectId", "Stim", "Population", "HashingReadsetId", "HasHashingReads", "HTO_Name", "HTO_Seq", "CiteSeqReadsetId", "HasCiteSeqReads", "CiteSeqPanel"});
-            List<Readset> cachedReadsets = support.getCachedReadsets();
             Set<String> distinctHTOs = new HashSet<>();
             Set<Boolean> hashingStatus = new HashSet<>();
             AtomicInteger totalWritten = new AtomicInteger(0);
-            job.getLogger().debug("total cached readsets: " + cachedReadsets.size());
             for (Readset rs : cachedReadsets)
             {
                 AtomicBoolean hasError = new AtomicBoolean(false);
