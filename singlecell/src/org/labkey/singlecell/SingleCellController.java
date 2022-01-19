@@ -325,6 +325,10 @@ public class SingleCellController extends SpringActionController
             if (rs.get("barcode5") != null) {
                 uniqueBarcodeNames.add((String.valueOf(rs.get("barcode5"))));
             }
+
+            if (rs.get("barcode3") != null) {
+                uniqueBarcodeNames.add((String.valueOf(rs.get("barcode3"))));
+            }
         });
 
         if (!uniqueBarcodeNames.isEmpty())

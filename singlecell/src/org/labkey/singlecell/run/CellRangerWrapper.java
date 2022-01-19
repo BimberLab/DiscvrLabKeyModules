@@ -167,7 +167,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
 
     public String makeLegalSampleName(String sampleName)
     {
-        return FileUtil.makeLegalName(sampleName.replaceAll("_", "-")).replaceAll(" ", "-").replaceAll("\\.", "-");
+        return FileUtil.makeLegalName(sampleName.replaceAll("_", "-")).replaceAll(" ", "-").replaceAll("\\.", "-").replaceAll("\\+", "");
     }
 
     private String getSymlinkFileName(String fileName, boolean doRename, String sampleName, int idx, boolean isReversed)

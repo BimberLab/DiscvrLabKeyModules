@@ -800,7 +800,14 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                 return;
                             }
 
-                            barcodeCombosUsed.push([r[fieldName + '/barcode5'], '', r.laneAssignment || ''].join('/'));
+                            var barcode3s = r[fieldName + '/barcode3/sequence'] ? r[fieldName + '/barcode3/sequence'].split(',') : [];
+                            if (barcode3s.length && barcode3s.length !== barcode5s.length) {
+                                var msg = 'Unequal i7/i5 barcodes: ' + sampleName;
+                                Ext4.Msg.alert('Error', msg);
+                                return;
+                            }
+
+                            barcodeCombosUsed.push([r[fieldName + '/barcode5'], r[fieldName + '/barcode3'], r.laneAssignment || ''].join('/'));
 
                             //The new format requires one/line
                             if (instrument === 'Novogene-New') {
@@ -817,6 +824,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                             Ext4.Array.forEach(barcode5s, function (bc, idx) {
                                 bc = doRC ? doReverseComplement(bc) : bc;
+                                const bc3 = barcode3s.length ? barcode3s[idx] : '';
 
                                 var data = [sampleName, (instrument.startsWith('Novogene') ? '' : cleanedName), bc, ''];
                                 if (instrument === 'Novogene') {
@@ -830,7 +838,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                                     data.push('Macaca mulatta');
                                     data.push(bc);
-                                    data.push('');
+                                    data.push(bc3);
                                     data.push(r[fieldName + '/concentration'] || '');
                                     data.push(defaultVolume);
                                     data.push('');
@@ -845,7 +853,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                     data.push(sampleName);
                                     data.push(suffix === 'HTO' ? 'Lane sequencing-With Demultiplexing' : 'Partial lane sequencing-With Demultiplexing');
                                     data.push(bc);
-                                    data.push(''); //P5
+                                    data.push(bc3); //P5
                                     data.push(size);
                                     data.push('Others'); //Library Status
                                     data.push(totalData); //Total data

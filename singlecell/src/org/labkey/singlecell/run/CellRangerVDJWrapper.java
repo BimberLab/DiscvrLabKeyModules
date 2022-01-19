@@ -69,6 +69,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
 
     public static final String INNER_ENRICHMENT_PRIMERS = "innerEnrichmentPrimers";
     public static final String INCLUDE_GD = "includeGD";
+    public static final String CHAIN = "chain";
 
     public static class VDJProvider extends AbstractAlignmentStepProvider<AlignmentStep>
     {
@@ -90,6 +91,9 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                         put("height", 100);
                         put("width", 400);
                     }}, null),
+                    ToolParameterDescriptor.create(CHAIN, "Chain", "Force the analysis to be carried out for a particular chain type", "ldk-simplecombo", new JSONObject(){{
+                        put("storeValues", "TR;IG;auto");
+                    }}, "TR"),
                     ToolParameterDescriptor.create(INCLUDE_GD, "Include G/D", "As a hack to get CellRanger 6 to include g/d (which it does not normally allow), they can be included in the reference, but marked as TRA/TRB. Alignment is performed with these values, and the result is converted in the final text file.", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true)
@@ -117,6 +121,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             return new CellRangerVDJAlignmentStep(this, context, new CellRangerVDJWrapper(context.getLogger()));
         }
     }
+
+    private static final String LINEAGE_NUMBER_ADDITION = "999";
 
     public static class CellRangerVDJAlignmentStep extends AbstractAlignmentPipelineStep<CellRangerVDJWrapper> implements AlignmentStep
     {
@@ -166,24 +172,51 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                             String seq = nt.getSequence();
 
                             //example: >1|TRAV41*01 TRAV41|TRAV41|L-REGION+V-REGION|TR|TRA|None|None
-                            //Note: for g/d recovery, add any gamma segments as TRA and delta as TRB. Also prefix their gene names with TRA/B, but keep the true name (i.e. TRDV1 -> TRBTRDV1)
-                            String suffix = "";
+                            //Note: for g/d recovery, add any gamma segments as TRA and delta as TRB. Also inject 99 into the segment number (i.e. TRDV1 -> TRBV1d and TRGJ2 -> TRAJ2g)
+                            String name = nt.getName();
                             String lineage = nt.getLineage();
                             if (doGDParsing() && "TRD".equalsIgnoreCase(locus))
                             {
-                                suffix = "d";
-                                lineage = lineage.replaceAll("TRD", "TRB");
+                                // Dont duplicate sequences like TRAV14/DV4, since they will be covered by the TRA:
+                                if (lineage.contains("TRA") && Arrays.asList(loci).contains("TRA"))
+                                {
+                                    getPipelineCtx().getLogger().debug("skipping redundant sequence: " + nt.getName() + " / " + nt.getLocus());
+                                    continue;
+                                }
+
                                 locus = "TRB";
+                                lineage = lineage.replaceAll("TRD", locus);
+
+                                //In the situation where there is no gene number, inject one:
+                                if (!lineage.matches(".*[0-9]+$"))
+                                {
+                                    getPipelineCtx().getLogger().info("Adding gene number: " + nt.getLineage());
+                                    lineage = lineage + LINEAGE_NUMBER_ADDITION;
+                                }
+
+                                String suffix = "d";
+                                lineage = lineage + suffix;
+                                name = name.replaceAll("TRD", locus) + suffix;
                             }
                             else if (doGDParsing() && "TRG".equalsIgnoreCase(locus))
                             {
-                                suffix = "g";
-                                lineage = lineage.replaceAll("TRG", "TRA");
                                 locus = "TRA";
+                                lineage = lineage.replaceAll("TRG", locus);
+
+                                //In the situation where there is no gene number, inject one:
+                                if (!lineage.matches(".*[0-9]+$"))
+                                {
+                                    getPipelineCtx().getLogger().info("Adding gene number: " + nt.getLineage());
+                                    lineage = lineage + LINEAGE_NUMBER_ADDITION;
+                                }
+
+                                String suffix = "g";
+                                lineage = lineage + suffix;
+                                name = name.replaceAll("TRG", locus) + suffix;
                             }
 
                             StringBuilder header = new StringBuilder();
-                            header.append(">").append(i.get()).append("|").append(nt.getName()).append(suffix).append(" ").append(lineage).append("|").append(lineage).append("|");
+                            header.append(">").append(i.get()).append("|").append(name).append(" ").append(lineage).append("|").append(lineage).append("|");
                             //translate into V_Region
                             String type;
                             if (nt.getLineage().contains("J"))
@@ -194,8 +227,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                             {
                                 if (seq.length() < 300)
                                 {
-                                    getPipelineCtx().getLogger().info("Using V-REGION due to short length: " + nt.getName() + " / " + nt.getSeqLength());
-                                    type = "V-REGION";
+                                    getPipelineCtx().getLogger().info("V-segment too short, skipping: " + nt.getName() + " / " + nt.getSeqLength());
+                                    continue;
                                 }
                                 else
                                 {
@@ -309,6 +342,12 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
 
             File indexDir = AlignerIndexUtil.getIndexDir(referenceGenome, getIndexCachedDirName(getPipelineCtx().getJob()));
             args.add("--reference=" + indexDir.getPath());
+
+            String chainArg = getProvider().getParameterByName(CHAIN).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
+            if (StringUtils.trimToNull(chainArg) != null)
+            {
+                args.add("--chain=" + chainArg);
+            }
 
             String primers = StringUtils.trimToNull(getProvider().getParameterByName(INNER_ENRICHMENT_PRIMERS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null));
             if (primers != null)
@@ -432,12 +471,14 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                         String line;
                         int totalD = 0;
                         int totalG = 0;
+                        int lineIdx = 0;
                         while ((line = reader.readLine()) != null)
                         {
-                            if (line.contains("g,") || line.contains("d,"))
+                            lineIdx++;
+                            if (lineIdx > 1 && (line.contains("g,") || line.contains("d,")))
                             {
                                 //Infer correct chain from the V, J and C genes
-                                String[] tokens = line.split(",");
+                                String[] tokens = line.split(",", -1);  // -1 used to preserve trailing empty strings
                                 List<String> chains = new ArrayList<>();
                                 String vGeneChain = null;
                                 String jGeneChain = null;
@@ -524,15 +565,33 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                     }
 
                                     tokens[5] = chain;
-
-                                    line = StringUtils.join(tokens, ",");
-                                    line = line.replaceAll("g,", ",");
-                                    line = line.replaceAll("d,", ",");
                                 }
                                 else
                                 {
                                     getPipelineCtx().getLogger().warn("Multiple chains detected [" + StringUtils.join(chains, ",")+ "], leaving original call alone: " + originalChain  + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
                                 }
+
+                                // Now correct all the segments:
+                                for (int i = 0; i < tokens.length; i++)
+                                {
+                                    String token = tokens[i];
+                                    if (token.endsWith("g"))
+                                    {
+                                        token = token.replaceAll("^TRA", "TRG");
+                                        token = token.replaceAll("([VDJC])" + LINEAGE_NUMBER_ADDITION + "[dg]$", "$1");
+                                        token = token.replaceAll("g$", "");
+                                    }
+                                    else if (token.endsWith("d"))
+                                    {
+                                        token = token.replaceAll("^TRB", "TRD");
+                                        token = token.replaceAll("([VDJC])" + LINEAGE_NUMBER_ADDITION + "[dg]$", "$1");
+                                        token = token.replaceAll("d$", "");
+                                    }
+
+                                    tokens[i] = token;
+                                }
+
+                                line = StringUtils.join(tokens, ",");
                             }
 
                             writer.println(line);

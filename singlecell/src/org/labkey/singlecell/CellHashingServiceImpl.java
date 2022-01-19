@@ -1317,11 +1317,6 @@ public class CellHashingServiceImpl extends CellHashingService
     }
 
     @Override
-    public Set<String> getHtosForParentReadset(Integer parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support) throws PipelineJobException
-    {
-        return getHtosForParentReadset(parentReadsetId, webserverJobDir, support, true);
-    }
-
     public Set<String> getHtosForParentReadset(Integer parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support, boolean throwIfNotFound) throws PipelineJobException
     {
         Integer htoReadset = getCachedHashingReadsetMap(support).get(parentReadsetId);

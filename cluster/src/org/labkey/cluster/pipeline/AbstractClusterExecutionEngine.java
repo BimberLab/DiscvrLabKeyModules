@@ -480,7 +480,7 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
     /**
      * this expects the status normalized from cluster codes to LK TaskStatus
      */
-    protected void updateJobStatus(@Nullable String status, ClusterJob j, @Nullable String info) throws PipelineJobException
+    protected synchronized void updateJobStatus(@Nullable String status, ClusterJob j, @Nullable String info) throws PipelineJobException
     {
         //update DB
         boolean statusChanged = (status != null && !status.equals(j.getStatus()));
@@ -516,7 +516,7 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
         // Because it is possible for a prior submission to report a status, only update the PipelineJob itself if this is the latest submission.
         if (hasNewerSubmission)
         {
-            _log.error("There is a newer submission for job: " + sf.getRowId() + ". Skipping update for cluster ID: " + j.getClusterId() + " in favor of " + mostRecent.getClusterId());
+            //_log.info("There is a newer submission for job: " + (sf == null ? null : sf.getRowId()) + ". Skipping update for cluster ID: " + j.getClusterId() + " in favor of " + mostRecent.getClusterId());
             statusChanged = false;
         }
 
@@ -588,7 +588,13 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
                     else if (pj.getActiveTaskStatus() == PipelineJob.TaskStatus.complete)
                     {
                         //NOTE: this can occur when the cluster job has a non-zero exit after the java process terminates.
-                        pj.getLogger().info("Pipeline job JSON marked complete, but the cluster status was: " + taskStatus);
+                        //Note: if cluster status is error, go with completed anyway
+                        pj.getLogger().info("Pipeline job JSON marked complete, but the cluster status was: " + taskStatus + ", status file was: " + (sf == null ? null : sf.getStatus()) + ", cluster job: " + mostRecent.getStatus(), new Exception());
+                        if (taskStatus == PipelineJob.TaskStatus.error && PipelineJob.TaskStatus.running.matches(sf.getStatus()))
+                        {
+                            pj.getLogger().info("Ignoring ERROR status and deferring to pipeline JSON status of " + pj.getActiveTaskStatus());
+                            taskStatus = PipelineJob.TaskStatus.complete;
+                        }
                     }
 
                     pj.getLogger().debug("setting active task status for job: " + j.getClusterId() + " to: " + taskStatus.name() + ". status was: " + pj.getActiveTaskStatus() + " (JSON) /" + sf.getStatus() + " (StatusFile) / " + status + " (Cluster), activeTaskId: " + (pj.getActiveTaskId() != null ? pj.getActiveTaskId().toString() : "no active task") + ", hostname: " + sf.getActiveHostName() + ", rowid: " + j.getRowId());

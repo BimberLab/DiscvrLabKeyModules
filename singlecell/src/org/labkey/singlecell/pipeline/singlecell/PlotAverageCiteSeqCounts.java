@@ -21,7 +21,7 @@ public class PlotAverageCiteSeqCounts extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("PlotAverageCiteSeqCounts", "PlotAverageCiteSeqCounts", "CellMembrane", "This will generate a heatmap with average ADT counts, grouped using the fields below.", Arrays.asList(
+            super("PlotAverageCiteSeqCounts", "Plot Average Cite-Seq Counts", "CellMembrane", "This will generate a heatmap with average ADT counts, grouped using the fields below.", Arrays.asList(
                     SeuratToolParameter.create("fieldNames", "Fields To Plot", "Enter one field name per line", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("allowBlank", false);
                         put("height", 150);

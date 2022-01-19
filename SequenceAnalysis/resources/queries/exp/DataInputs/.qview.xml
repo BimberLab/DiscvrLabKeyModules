@@ -1,4 +1,4 @@
-<customView xmlns="http://labkey.org/data/xml/queryCustomView" containerFilter="CurrentAndSubfolders" canOverride="true">
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" canOverride="true">
    <columns>
        <column name="Data" >
            <properties>

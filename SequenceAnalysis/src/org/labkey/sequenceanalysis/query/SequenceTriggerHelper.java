@@ -1,15 +1,18 @@
 package org.labkey.sequenceanalysis.query;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.biojava3.core.sequence.DNASequence;
-import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
-import org.biojava3.core.sequence.compound.AmbiguityRNACompoundSet;
-import org.biojava3.core.sequence.compound.AminoAcidCompound;
-import org.biojava3.core.sequence.compound.NucleotideCompound;
-import org.biojava3.core.sequence.template.Sequence;
-import org.biojava3.core.sequence.transcription.TranscriptionEngine;
+import org.apache.logging.log4j.Logger;
+import org.biojava.nbio.core.exceptions.CompoundNotFoundException;
+import org.biojava.nbio.core.sequence.DNASequence;
+import org.biojava.nbio.core.sequence.compound.AmbiguityDNACompoundSet;
+import org.biojava.nbio.core.sequence.compound.AmbiguityRNACompoundSet;
+import org.biojava.nbio.core.sequence.compound.AminoAcidCompound;
+import org.biojava.nbio.core.sequence.compound.NucleotideCompound;
+import org.biojava.nbio.core.sequence.template.Sequence;
+import org.biojava.nbio.core.sequence.transcription.TranscriptionEngine;
+import org.junit.Assert;
+import org.junit.Test;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
@@ -24,6 +27,7 @@ import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -133,9 +137,19 @@ public class SequenceTriggerHelper
         Sequence<AminoAcidCompound> aas = null;
         try
         {
-            dna = new DNASequence(toTranslate, AmbiguityDNACompoundSet.getDNACompoundSet());
+            try
+            {
+                dna = new DNASequence(toTranslate, AmbiguityDNACompoundSet.getDNACompoundSet());
+            }
+            catch (CompoundNotFoundException e)
+            {
+                throw new IllegalArgumentException("Improper exon: " + toTranslate, e);
+            }
+
             Sequence<NucleotideCompound> nts = isComplement ? dna.getReverseComplement() : dna;
 
+            //TODO: why NPE??
+            //seq:
             rnaNts = _engine.getDnaRnaTranslator().createSequence(nts);
             if (rnaNts == null)
             {
@@ -169,6 +183,42 @@ public class SequenceTriggerHelper
             }
 
             throw e;
+        }
+    }
+
+    public static class TestCase extends Assert
+    {
+        @Test
+        public void testTranslation() {
+            TranscriptionEngine _engine = new TranscriptionEngine.Builder().dnaCompounds(AmbiguityDNACompoundSet.getDNACompoundSet()).rnaCompounds(AmbiguityRNACompoundSet.getRNACompoundSet()).initMet(false).trimStop(false).build();
+
+            try
+            {
+                List<String> codons = Arrays.asList("RTA", "RGA");
+                for (String toTranslate : codons)
+                {
+                    DNASequence dna = new DNASequence(toTranslate, AmbiguityDNACompoundSet.getDNACompoundSet());
+                    Sequence<NucleotideCompound> nts = dna;
+
+                    Sequence<NucleotideCompound> rnaNts = _engine.getDnaRnaTranslator().createSequence(nts);
+                    if (rnaNts == null)
+                    {
+                        throw new IllegalArgumentException("Unable to create RNA from: " + dna.toString());
+                    }
+
+                    Sequence<AminoAcidCompound> aas = _engine.getRnaAminoAcidTranslator().createSequence(rnaNts);
+                    if (aas == null)
+                    {
+                        throw new IllegalArgumentException("Unable to create AA from: RNA" + rnaNts.toString() + " / DNA: " + dna.toString());
+                    }
+
+                    assertEquals("X", aas.getSequenceAsString());
+                }
+            }
+            catch (CompoundNotFoundException e)
+            {
+                _log.error(e.getMessage(), e);
+            }
         }
     }
 }
