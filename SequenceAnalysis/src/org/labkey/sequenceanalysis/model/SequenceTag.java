@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.model;
 
-import org.biojava3.core.sequence.DNASequence;
+import org.biojava.nbio.core.exceptions.CompoundNotFoundException;
+import org.biojava.nbio.core.sequence.DNASequence;
 
 /**
  * User: bimber
@@ -15,7 +16,14 @@ abstract public class SequenceTag
 
     public String getReverseComplement()
     {
-        DNASequence seq = new DNASequence(getSequence());
-        return seq.getReverseComplement().getSequenceAsString();
+        try
+        {
+            DNASequence seq = new DNASequence(getSequence());
+            return seq.getReverseComplement().getSequenceAsString();
+        }
+        catch (CompoundNotFoundException e)
+        {
+            throw new IllegalArgumentException(e);
+        }
     }
 }

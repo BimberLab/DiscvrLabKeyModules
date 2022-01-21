@@ -25,12 +25,12 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.biojava3.core.sequence.DNASequence;
-import org.biojava3.core.sequence.compound.AmbiguityDNACompoundSet;
-import org.biojava3.core.sequence.compound.NucleotideCompound;
-import org.biojava3.core.sequence.io.DNASequenceCreator;
-import org.biojava3.core.sequence.io.FastaReader;
-import org.biojava3.core.sequence.io.GenericFastaHeaderParser;
+import org.biojava.nbio.core.sequence.DNASequence;
+import org.biojava.nbio.core.sequence.compound.AmbiguityDNACompoundSet;
+import org.biojava.nbio.core.sequence.compound.NucleotideCompound;
+import org.biojava.nbio.core.sequence.io.DNASequenceCreator;
+import org.biojava.nbio.core.sequence.io.FastaReader;
+import org.biojava.nbio.core.sequence.io.GenericFastaHeaderParser;
 import org.jetbrains.annotations.NotNull;
 import org.jfree.chart.JFreeChart;
 import org.json.JSONArray;
@@ -4558,9 +4558,9 @@ public class SequenceAnalysisController extends SpringActionController
                 allowedReferences = new TableSelector(ti, filter, null).getArrayList(RefNtSequenceModel.class);
             }
 
-            try (InputStream is = IOUtils.toInputStream(form.getFasta()))
+            try (InputStream is = IOUtils.toInputStream(form.getFasta(), StringUtilsLabKey.DEFAULT_CHARSET))
             {
-                FastaReader<DNASequence, NucleotideCompound> fastaReader = new FastaReader<>(is, new GenericFastaHeaderParser<DNASequence, NucleotideCompound>(), new DNASequenceCreator(AmbiguityDNACompoundSet.getDNACompoundSet()));
+                FastaReader<DNASequence, NucleotideCompound> fastaReader = new FastaReader<>(is, new GenericFastaHeaderParser<>(), new DNASequenceCreator(AmbiguityDNACompoundSet.getDNACompoundSet()));
                 LinkedHashMap<String, DNASequence> fastaData = fastaReader.process();
 
                 for (String fastaHeader : fastaData.keySet())

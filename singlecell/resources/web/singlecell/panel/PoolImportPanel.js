@@ -497,18 +497,28 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                 }
             }
         },{
+            xtype: 'checkbox',
+            fieldLabel: 'Use 10x V2/HT (Dual Index)',
+            itemId: 'useDualIndex',
+            listeners: {
+                change: function(field, val){
+                    field.up('panel').down('#barcodeSeries').setValue(field.getValue() ? 'SI-TT' : 'SI-GA');
+                    field.up('panel').down('#citeseqBarcodeSeries').setValue(field.getValue() ? 'SI-TN' : 'SI-NA');
+                }
+            }
+        },{
             xtype: 'ldk-simplecombo',
             fieldLabel: '10x GEX/TCR Barcode Series',
             itemId: 'barcodeSeries',
             forceSelection: true,
-            storeValues: ['SI-GA'],
+            storeValues: ['SI-GA', 'SI-TT'],
             value: 'SI-GA'
         },{
             xtype: 'ldk-simplecombo',
             fieldLabel: '10x Cite-Seq Barcode Series',
             itemId: 'citeseqBarcodeSeries',
             forceSelection: true,
-            storeValues: ['SI-NA'],
+            storeValues: ['SI-NA', 'SI-TN'],
             value: 'SI-NA'
         },{
             xtype: 'ldk-simplelabkeycombo',
@@ -913,10 +923,11 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         }
         workbook = workbook.length === 1 ? workbook[0] : null;
 
-        var subjectid = this.getUniqueValues(rowArr, 'subjectId');
+        let subjectid = this.getUniqueValues(rowArr, 'subjectId');
         subjectid = subjectid.length === 1 ? subjectid[0] : null;
 
-        var requireConc = this.down('#requireConc').getValue();
+        const requireConc = this.down('#requireConc').getValue();
+        const isDualIndex = this.down('#useDualIndex').getValue();
 
         if (idxValues.length === 1){
             if (requireConc && !conc[0]) {
@@ -927,7 +938,9 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             LDK.Assert.assertNotEmpty('Expected non-null workbook', workbook);
             readsetRows.push({
                 name: poolName + '-' + type,
-                barcode5: idxValues[0],
+                // SI- is a proxy for being 10x (i.e. not multiseq)
+                barcode5: isDualIndex && idxValues[0].startsWith('SI-') ? idxValues[0] + '_F' : idxValues[0],
+                barcode3: isDualIndex && idxValues[0].startsWith('SI-') ? idxValues[0] + '_R' : null,
                 concentration: conc[0],
                 fragmentSize: fragment[0],
                 platform: 'ILLUMINA',

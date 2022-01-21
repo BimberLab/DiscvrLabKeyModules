@@ -2,10 +2,10 @@ package org.labkey.sequenceanalysis.visualization;
 
 import org.apache.batik.dom.GenericDOMImplementation;
 import org.apache.batik.svggen.SVGGraphics2D;
-import org.biojava3.genome.parsers.gff.FeatureI;
-import org.biojava3.genome.parsers.gff.FeatureList;
-import org.biojava3.genome.parsers.gff.GFF3Reader;
-import org.biojava3.genome.parsers.gff.Location;
+import org.biojava.nbio.genome.parsers.gff.FeatureI;
+import org.biojava.nbio.genome.parsers.gff.FeatureList;
+import org.biojava.nbio.genome.parsers.gff.GFF3Reader;
+import org.biojava.nbio.genome.parsers.gff.Location;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.annotations.XYShapeAnnotation;
 import org.jfree.chart.annotations.XYTextAnnotation;
@@ -23,6 +23,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.TextAnchor;
 import org.json.JSONObject;
+import org.labkey.api.writer.PrintWriters;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 
@@ -33,6 +34,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -194,7 +196,7 @@ public class VariationChart
             return Integer.compare(o1.location().plus().bioStart(), o2.location().plus().bioStart());
         });
 
-        Iterator < FeatureI > i = features.iterator();
+        Iterator <FeatureI> i = features.iterator();
         Map<Integer, Set<Integer>> occupied = new HashMap<>();
         int maxTrackNumber = 0;
 
@@ -310,16 +312,15 @@ public class VariationChart
             return new FeatureList();
 
         File f = File.createTempFile("variationChart", ".gff");
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(f)))
+        try (PrintWriter writer = PrintWriters.getPrintWriter(f))
         {
             writer.write(gff);
-            writer.close();
-
-            FeatureList ret = GFF3Reader.read(f.getPath());
-            f.delete();
-
-            return ret;
         }
+
+        FeatureList ret = GFF3Reader.read(f.getPath());
+        f.delete();
+
+        return ret;
     }
 
     public Map<String, Object> toSVG(List<JFreeChart> charts, int width, int height) throws IOException

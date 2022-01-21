@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.model;
 
-import org.biojava3.core.sequence.DNASequence;
+import org.biojava.nbio.core.exceptions.CompoundNotFoundException;
+import org.biojava.nbio.core.sequence.DNASequence;
 import org.json.JSONArray;
 
 /**
@@ -70,8 +71,15 @@ public class AdapterModel extends SequenceTag
         if (_trim3)
         {
             sb.append(">").append(name + "-RC").append(System.getProperty( "line.separator" ));
-            DNASequence seq = new DNASequence(getSequence());
-            sb.append(seq.getReverseComplement().getSequenceAsString()).append(System.getProperty( "line.separator" ));
+            try
+            {
+                DNASequence seq = new DNASequence(getSequence());
+                sb.append(seq.getReverseComplement().getSequenceAsString()).append(System.getProperty("line.separator"));
+            }
+            catch (CompoundNotFoundException e)
+            {
+                throw new IllegalArgumentException(e);
+            }
         }
     }
 

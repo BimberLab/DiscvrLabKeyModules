@@ -38,11 +38,9 @@ import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.ReadPermission;
-import org.labkey.api.settings.ResourceURL;
 import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.URLHelper;
-import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HtmlView;
 import org.labkey.cluster.pipeline.AbstractClusterExecutionEngine;
 import org.springframework.validation.BindException;
@@ -51,9 +49,12 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ClusterController extends SpringActionController
 {
@@ -129,8 +130,9 @@ public class ClusterController extends SpringActionController
                 return false;
             }
 
+            Set<String> jobs = new HashSet<>(Arrays.asList(jobIDs.split(",")));
             List<PipelineStatusFile> sfs = new ArrayList<>();
-            for (String id : jobIDs.split(","))
+            for (String id : jobs)
             {
                 int jobId = Integer.parseInt(StringUtils.trimToNull(id));
                 PipelineStatusFile sf = PipelineService.get().getStatusFile(jobId);
@@ -262,7 +264,7 @@ public class ClusterController extends SpringActionController
         }
     }
 
-    @RequiresSiteAdmin
+    @RequiresPermission(AdminPermission.class)
     public class RecoverCompletedJobsAction extends ConfirmAction<JobIdsForm>
     {
         public void validateCommand(JobIdsForm form, Errors errors)
@@ -279,7 +281,7 @@ public class ClusterController extends SpringActionController
         {
             return new HtmlView(HtmlString.unsafe("This will attempt to re-queue existing pipeline jobs using their serialized JSON text files.  It is intended as a workaround for the situation where a job has been marked complete." +
                     "To continue, enter a comma-delimited list of Job IDs and hit submit:<br><br>" +
-                    "<label>Enter Job ID(s): </label><input name=\"jobIds\" value=\"" + form.getJobIds() + "\"><br>"));
+                    "<label>Enter Job ID(s): </label><input name=\"jobIds\" value=\"" + HtmlString.of(form.getJobIds()) + "\"><br>"));
         }
 
         public boolean handlePost(JobIdsForm form, BindException errors) throws Exception
@@ -291,8 +293,9 @@ public class ClusterController extends SpringActionController
                 return false;
             }
 
+            Set<String> jobs = new HashSet<>(Arrays.asList(jobIDs.split(",")));
             List<PipelineStatusFile> sfs = new ArrayList<>();
-            for (String id : jobIDs.split(","))
+            for (String id : jobs)
             {
                 int jobId = Integer.parseInt(StringUtils.trimToNull(id));
                 PipelineStatusFile sf = PipelineService.get().getStatusFile(jobId);

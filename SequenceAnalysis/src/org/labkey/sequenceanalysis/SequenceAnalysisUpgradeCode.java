@@ -4,8 +4,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.biojava3.core.exceptions.CompoundNotFoundError;
-import org.biojava3.core.sequence.DNASequence;
+import org.biojava.nbio.core.exceptions.CompoundNotFoundException;
+import org.biojava.nbio.core.sequence.DNASequence;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -218,7 +218,7 @@ public class SequenceAnalysisUpgradeCode implements UpgradeCode
                     r.put("reverse_complement", StringUtils.join(rcs, ","));
                     toUpdate.add(r);
                 }
-                catch (CompoundNotFoundError e)
+                catch (CompoundNotFoundException e)
                 {
                     _log.error("Unable to reverse complement barcode: " + rs.getString(FieldKey.fromString("sequence")), e);
                 }

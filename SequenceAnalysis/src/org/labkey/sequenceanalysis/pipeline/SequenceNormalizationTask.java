@@ -341,7 +341,10 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                             fp.file1 = p.first;
                             fp.file2 = p.second;
                             getHelper().getFileManager().addIntermediateFile(fp.file1);
-                            getHelper().getFileManager().addIntermediateFile(fp.file2);
+                            if (fp.file2 != null)
+                            {
+                                getHelper().getFileManager().addIntermediateFile(fp.file2);
+                            }
                         }
 
                         //NOTE: continue to normalize sequence, in case the BAM-derived data has non-standard encoding
@@ -794,6 +797,12 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                     renamedPath = renamedPath.replaceAll("_2.fastq", "_R2.fastq");
                     File renamed = new File(f.getParentFile(), renamedPath);
                     getJob().getLogger().debug("\trenaming to: " + renamed.getName());
+                    if (renamed.exists())
+                    {
+                        getJob().getLogger().debug("\tdeleting pre-existing file");
+                        renamed.delete();
+                    }
+
                     FileUtils.moveFile(f, renamed);
                     getHelper().getFileManager().addOutput(action, "Extracted Read Group FASTQ", renamed);
                     getHelper().getFileManager().addIntermediateFile(renamed);

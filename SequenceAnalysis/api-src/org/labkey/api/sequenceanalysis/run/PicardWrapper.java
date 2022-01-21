@@ -96,7 +96,6 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
 
         //note: having issues, probably due to OS versions
         params.add("USE_JDK_DEFLATER=true");
-        params.add("USE_JDK_INFLATER=true");
 
         return params;
     }
