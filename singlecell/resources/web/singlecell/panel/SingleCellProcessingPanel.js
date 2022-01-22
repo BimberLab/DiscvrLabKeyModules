@@ -253,6 +253,7 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
         var json = {
             handlerClass: 'org.labkey.singlecell.analysis.' + this.handlerClass,
             outputFileIds: this.outputFileIds,
+            useOutputFileContainer: !!values.useOutputFileContainer,
             params: Ext4.encode(values)
         };
 
