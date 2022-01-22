@@ -247,7 +247,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 
     public static void executeR(SequenceOutputHandler.JobContext ctx, String dockerContainerName, String outputPrefix, List<String> lines) throws PipelineJobException
     {
-        File localRScript = new File(ctx.getOutputDir(), outputPrefix + ".R");
+        File localRScript = new File(ctx.getOutputDir(), FileUtil.makeLegalName(outputPrefix + ".R").replaceAll(" ", "_"));
         try (PrintWriter writer = PrintWriters.getPrintWriter(localRScript))
         {
             lines.forEach(writer::println);

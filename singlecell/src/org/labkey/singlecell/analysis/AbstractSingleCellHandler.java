@@ -337,7 +337,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             {
                 Integer readsetId = inputFiles.get(0).getReadset();
                 Readset rs = ctx.getSequenceSupport().getCachedReadset(readsetId);
-                basename = FileUtil.makeLegalName(rs.getName());
+                basename = FileUtil.makeLegalName(rs.getName()).replaceAll(" ", "_");
             }
             else
             {
@@ -428,6 +428,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 ctx.getFileManager().addIntermediateFiles(currentFiles.stream().map(SingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toList()));
 
                 outputPrefix = outputPrefix + "." + step.getFileSuffix() + (step.getStepIdx() == 0 ? "" : "-" + step.getStepIdx());
+                outputPrefix = outputPrefix.replaceAll(" ", "_");
                 SingleCellStep.Output output = step.execute(ctx, currentFiles, outputPrefix);
 
                 _resumer.getFileManager().addStepOutputs(action, output);
