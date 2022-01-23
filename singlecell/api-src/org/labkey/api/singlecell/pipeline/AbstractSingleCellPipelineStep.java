@@ -293,7 +293,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             //NOTE: this seems to disrupt packages installed into home
             //writer.println("\t-e HOME=/homeDir \\");
             writer.println("\t" + dockerContainerName + " \\");
-            writer.println("\tRscript --vanilla " + localRScript.getName());
+            writer.println("\tRscript --vanilla '" + localRScript.getName() + "'");
             writer.println("");
             writer.println("echo 'Bash script complete'");
             writer.println("");

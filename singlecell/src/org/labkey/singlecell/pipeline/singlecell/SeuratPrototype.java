@@ -1,7 +1,10 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
@@ -12,6 +15,10 @@ import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.singlecell.CellHashingServiceImpl;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -108,6 +115,28 @@ public class SeuratPrototype extends AbstractCellMembraneStep
     public Output execute(SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException
     {
         Output output = super.execute(ctx, inputObjects, outputPrefix);
+        File errorFile = new File(ctx.getOutputDir(), "prototypeErrors.txt");
+        if (errorFile.exists())
+        {
+            try
+            {
+                List<String> errors = IOUtils.readLines(Readers.getReader(errorFile));
+                for (File f : ctx.getOutputDir().listFiles())
+                {
+                    if (f.getName().endsWith(".hashing.html"))
+                    {
+                        ctx.getLogger().info("Copying hashing HTML locally for debugging: " + f.getName());
+                        Files.copy(f.toPath(), new File(ctx.getSourceDirectory(), f.getName()).toPath());
+                    }
+                }
+
+                throw new PipelineJobException("Seurat Prototype Errors: " + StringUtils.join(errors, ";"));
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
 
         for (SeuratObjectWrapper wrapper : output.getSeuratObjects())
         {
