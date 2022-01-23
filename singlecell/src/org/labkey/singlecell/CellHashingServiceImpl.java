@@ -42,6 +42,7 @@ import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.model.CDNA_Library;
 import org.labkey.api.singlecell.model.Sample;
 import org.labkey.api.singlecell.model.Sort;
+import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.singlecell.run.CellRangerFeatureBarcodeHandler;
@@ -882,7 +883,6 @@ public class CellHashingServiceImpl extends CellHashingService
             ToolParameterDescriptor.create("minCountPerCell", "Min Reads/Cell", null, "ldk-integerfield", null, 5),
             ToolParameterDescriptor.create("skipNormalizationQc", "Skip Normalization QC", null, "checkbox", null, true),
             ToolParameterDescriptor.create("retainRawCountFile", "Retain Raw Counts File", null, "checkbox", null, false)
-
         ));
 
         final List<String> allMethods = Arrays.stream(CALLING_METHOD.values()).filter(x -> allowDemuxEm || x != CALLING_METHOD.demuxem).map(Enum::name).collect(Collectors.toList());
@@ -905,6 +905,18 @@ public class CellHashingServiceImpl extends CellHashingService
             put("delimiter", ";");
             put("joinReturnValue", true);
         }}, null));
+
+        ret.add(SeuratToolParameter.create("maxHashingPctFail", "Hashing Max Fraction Failed", "The maximum fraction of cells that can have no call (i.e. not singlet or doublet). Otherwise it will fail the job. This is a number 0-1.", "ldk-numberfield", new JSONObject(){{
+            put("minValue", 0);
+            put("maxValue", 1);
+            put("decimalPrecision", 2);
+        }}, null));
+
+        ret.add(SeuratToolParameter.create("maxHashingPctDiscordant", "Hashing Max Fraction Discordant", "The maximum fraction of cells that can have discordant calls. High discordance is usually an indication of either poor quality data, or one caller performing badly.This is a number 0-1.", "ldk-numberfield", new JSONObject(){{
+            put("minValue", 0);
+            put("maxValue", 1);
+            put("decimalPrecision", 2);
+        }}, 0.2));
 
         return ret;
     }

@@ -9,6 +9,17 @@ for (datasetId in names(seuratObjects)) {
         callFile <- featureData[[id]]
         if (!is.null(callFile)) {
             seuratObj <- cellhashR::AppendCellHashing(seuratObj, barcodeCallFile = callFile, barcodePrefix = id)
+
+            fractionFailedHashing <- 1 - (sum(seuratObj@meta.data$HTO.Classification %in% c('Singlet', 'Doublet')) / nrow(seuratObj@meta.data))
+            if (!is.null(maxHashingPctFail) && fractionFailedHashing > maxHashingPctFail) {
+                stop(paste0('Fraction failing cell hashing was : ', fractionFailedHashing, ' for dataset: ', datasetId, ', above threshold of: ', maxHashingPctFail))
+            }
+
+            fractionDiscordantHashing <- 1 - (sum(seuratObj@meta.data$HTO.Classification == 'Discordant') / nrow(seuratObj@meta.data))
+            if (!is.null(maxHashingPctDiscordant) && fractionDiscordantHashing > maxHashingPctDiscordant) {
+                stop(paste0('Discordant hashing rate was: ', fractionDiscordantHashing, ' for dataset: ', datasetId, ', above threshold of: ', maxHashingPctDiscordant))
+            }
+
         } else {
             # Add empty columns to keep objects consistent
             if (!'HTO' %in% names(seuratObj@meta.data)) {
