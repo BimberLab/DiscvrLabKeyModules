@@ -112,31 +112,15 @@ public class SeuratPrototype extends AbstractCellMembraneStep
     }
 
     @Override
+    protected void onFailure(SequenceOutputHandler.JobContext ctx) throws PipelineJobException
+    {
+        RunCellHashing.copyHtmlLocally(ctx);
+    }
+
+    @Override
     public Output execute(SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException
     {
         Output output = super.execute(ctx, inputObjects, outputPrefix);
-        File errorFile = new File(ctx.getOutputDir(), "prototypeErrors.txt");
-        if (errorFile.exists())
-        {
-            try
-            {
-                List<String> errors = IOUtils.readLines(Readers.getReader(errorFile));
-                for (File f : ctx.getOutputDir().listFiles())
-                {
-                    if (f.getName().endsWith(".hashing.html"))
-                    {
-                        ctx.getLogger().info("Copying hashing HTML locally for debugging: " + f.getName());
-                        Files.copy(f.toPath(), new File(ctx.getSourceDirectory(), f.getName()).toPath());
-                    }
-                }
-
-                throw new PipelineJobException("Seurat Prototype Errors: " + StringUtils.join(errors, ";"));
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-        }
 
         for (SeuratObjectWrapper wrapper : output.getSeuratObjects())
         {

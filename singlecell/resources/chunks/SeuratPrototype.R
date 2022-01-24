@@ -96,7 +96,7 @@ if (length(errors) > 0) {
     print(msg)
   }
 
-  write(errors, file = 'prototypeErrors.txt')
+  write(errors, file = 'seuratErrors.txt')
 }
 
 if (nrow(metricData) > 0) {

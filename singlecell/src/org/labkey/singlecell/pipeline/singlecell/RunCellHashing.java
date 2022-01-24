@@ -21,6 +21,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -68,6 +69,37 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
     public String getDockerContainerName()
     {
         return "ghcr.io/bimberlab/cellhashr:latest";
+    }
+
+    @Override
+    protected void onFailure(SequenceOutputHandler.JobContext ctx) throws PipelineJobException
+    {
+        copyHtmlLocally(ctx);
+    }
+
+    public static void copyHtmlLocally(SequenceOutputHandler.JobContext ctx) throws PipelineJobException
+    {
+        try
+        {
+            for (File f : ctx.getOutputDir().listFiles())
+            {
+                if (f.getName().endsWith(".hashing.html"))
+                {
+                    ctx.getLogger().info("Copying hashing HTML locally for debugging: " + f.getName());
+                    File target = new File(ctx.getSourceDirectory(), f.getName());
+                    if (target.exists())
+                    {
+                        target.delete();
+                    }
+
+                    Files.copy(f.toPath(), target.toPath());
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
     }
 
     @Override

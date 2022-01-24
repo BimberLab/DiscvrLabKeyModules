@@ -1,6 +1,7 @@
 package org.labkey.api.singlecell.pipeline;
 
 import au.com.bytecode.opencsv.CSVReader;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.jetbrains.annotations.Nullable;
@@ -242,7 +243,15 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         lines.add("print('Rmarkdown complete')");
         lines.add("");
 
+        File errorFile = getSeuratErrorFile(ctx);
+        if (errorFile.exists())
+        {
+            errorFile.delete();
+        }
+
         executeR(ctx, getDockerContainerName(), outputPrefix, lines);
+
+        handlePossibleFailure(ctx);
     }
 
     public static void executeR(SequenceOutputHandler.JobContext ctx, String dockerContainerName, String outputPrefix, List<String> lines) throws PipelineJobException
@@ -505,5 +514,36 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
     public boolean isIncluded(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputs) throws PipelineJobException
     {
         return true;
+    }
+
+    protected static File getSeuratErrorFile(SequenceOutputHandler.JobContext ctx)
+    {
+        return new File(ctx.getOutputDir(), "seuratErrors.txt");
+    }
+
+    protected void onFailure(SequenceOutputHandler.JobContext ctx) throws PipelineJobException
+    {
+        // This allows subclasses to implement tool-specific failure handling
+    }
+
+    private void handlePossibleFailure(SequenceOutputHandler.JobContext ctx) throws PipelineJobException
+    {
+        File errorFile = getSeuratErrorFile(ctx);
+        if (errorFile.exists())
+        {
+            try
+            {
+                List<String> errors = IOUtils.readLines(Readers.getReader(errorFile));
+                errorFile.delete();
+
+                onFailure(ctx);
+
+                throw new PipelineJobException(getProvider().getName() + " Errors: " + StringUtils.join(errors, ";"));
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
     }
 }

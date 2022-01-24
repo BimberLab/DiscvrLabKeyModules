@@ -1,3 +1,4 @@
+errors <- c()
 for (datasetId in names(seuratObjects)) {
     seuratObj <- readRDS(seuratObjects[[datasetId]])
 
@@ -12,14 +13,13 @@ for (datasetId in names(seuratObjects)) {
 
             fractionFailedHashing <- 1 - (sum(seuratObj@meta.data$HTO.Classification %in% c('Singlet', 'Doublet')) / nrow(seuratObj@meta.data))
             if (!is.null(maxHashingPctFail) && fractionFailedHashing > maxHashingPctFail) {
-                stop(paste0('Fraction failing cell hashing was : ', fractionFailedHashing, ' for dataset: ', datasetId, ', above threshold of: ', maxHashingPctFail))
+                errors <- c(errors, paste0('Fraction failing cell hashing was : ', fractionFailedHashing, ' for dataset: ', datasetId, ', above threshold of: ', maxHashingPctFail))
             }
 
             fractionDiscordantHashing <- 1 - (sum(seuratObj@meta.data$HTO.Classification == 'Discordant') / nrow(seuratObj@meta.data))
             if (!is.null(maxHashingPctDiscordant) && fractionDiscordantHashing > maxHashingPctDiscordant) {
-                stop(paste0('Discordant hashing rate was: ', fractionDiscordantHashing, ' for dataset: ', datasetId, ', above threshold of: ', maxHashingPctDiscordant))
+                errors <- c(errors, paste0('Discordant hashing rate was: ', fractionDiscordantHashing, ' for dataset: ', datasetId, ', above threshold of: ', maxHashingPctDiscordant))
             }
-
         } else {
             # Add empty columns to keep objects consistent
             if (!'HTO' %in% names(seuratObj@meta.data)) {
@@ -45,4 +45,13 @@ for (datasetId in names(seuratObjects)) {
     # Cleanup
     rm(seuratObj)
     gc()
+}
+
+if (length(errors) > 0) {
+    print('There were errors:')
+    for (msg in errors) {
+        print(msg)
+    }
+
+    write(errors, file = 'seuratErrors.txt')
 }
