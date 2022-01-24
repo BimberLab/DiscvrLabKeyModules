@@ -881,6 +881,11 @@ public class CellHashingServiceImpl extends CellHashingService
     {
         List<ToolParameterDescriptor> ret = new ArrayList<>(Arrays.asList(
             ToolParameterDescriptor.create("minCountPerCell", "Min Reads/Cell", null, "ldk-integerfield", null, 5),
+            ToolParameterDescriptor.create("majorityConsensusThreshold", "Majority Consensus Threshold", "This applies to calculating a consensus call when multiple algorithms are used. If NULL, then all non-negative calls must agree or that cell is marked discordant. If non-NULL, then the number of algorithms returning the top call is divided by the total number of non-negative calls. If this ratio is above the majorityConsensusThreshold, that value is selected. For example, when majorityConsensusThreshold=0.6 and the calls are: HTO-1,HTO-1,Negative,HTO-2, then 2/3 calls are for HTO-1, giving 0.66. This is greater than the majorityConsensusThreshold of 0.6, so HTO-1 is returned. This can be useful for situations where most algorithms agree, but a single caller fails.", "ldk-numberfield", new JSONObject(){{
+                put("minValue", 0);
+                put("maxValue", 0);
+                put("decimalPrecision", 2);
+            }}, 0.6),
             ToolParameterDescriptor.create("skipNormalizationQc", "Skip Normalization QC", null, "checkbox", null, true),
             ToolParameterDescriptor.create("retainRawCountFile", "Retain Raw Counts File", null, "checkbox", null, false)
         ));
@@ -1175,7 +1180,7 @@ public class CellHashingServiceImpl extends CellHashingService
             String keepMarkdown = parameters.keepMarkdown ? "TRUE" : "FALSE";
             String h5String = h5 == null ? "" : ", h5File = '/work/" + h5.getName() + "'";
             String consensusMethodString = consensusMethodNames.isEmpty() ? "" : ", methodsForConsensus = c('" + StringUtils.join(consensusMethodNames, "','") + "')";
-            writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "'" + h5String + ", molInfoFile = '/work/" + molInfo.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', rawCountsExport = '/work/" + countFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', skipNormalizationQc = " + skipNormalizationQcString + ", methods = c('" + StringUtils.join(methodNames, "','") + "')" + consensusMethodString + ", keepMarkdown = " + keepMarkdown + ")");
+            writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "'" + h5String + ", molInfoFile = '/work/" + molInfo.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', rawCountsExport = '/work/" + countFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', skipNormalizationQc = " + skipNormalizationQcString + ", methods = c('" + StringUtils.join(methodNames, "','") + "')" + consensusMethodString + ", keepMarkdown = " + keepMarkdown + ", minCountPerCell = " + (parameters.minCountPerCell == null ? "NULL" : parameters.minCountPerCell) + ", majorityConsensusThreshold = " + (parameters.majorityConsensusThreshold == null ? "NULL" : parameters.majorityConsensusThreshold) + ")");
             writer.println("print('Rmarkdown complete')");
 
         }
