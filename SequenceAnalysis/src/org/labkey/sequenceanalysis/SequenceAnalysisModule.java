@@ -82,6 +82,7 @@ import org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerPipelineProvid
 import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 import org.labkey.sequenceanalysis.query.SequenceAnalysisUserSchema;
 import org.labkey.sequenceanalysis.query.SequenceTriggerHelper;
+import org.labkey.sequenceanalysis.run.RestoreSraDataHandler;
 import org.labkey.sequenceanalysis.run.alignment.BWAMemWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWASWWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWAWrapper;
@@ -361,6 +362,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new NextCladeHandler());
 
         SequenceAnalysisService.get().registerReadsetHandler(new MultiQCHandler());
+        SequenceAnalysisService.get().registerReadsetHandler(new RestoreSraDataHandler());
 
         //ObjectFactory.Registry.register(AnalysisModelImpl.class, new UnderscoreBeanObjectFactory(AnalysisModelImpl.class));
         //ObjectFactory.Registry.register(SequenceReadsetImpl.class, new UnderscoreBeanObjectFactory(SequenceReadsetImpl.class));
