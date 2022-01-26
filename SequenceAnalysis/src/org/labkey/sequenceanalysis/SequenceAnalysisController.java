@@ -4067,7 +4067,7 @@ public class SequenceAnalysisController extends SpringActionController
             }
         }
 
-        protected PipelineJob createOutputJob(RunSequenceHandlerForm form, Container targetContainer, String jobName, PipeRoot pr1, SequenceOutputHandler handler, List<SequenceOutputFile> inputs, JSONObject json) throws IOException, PipelineJobException
+        protected PipelineJob createOutputJob(RunSequenceHandlerForm form, Container targetContainer, String jobName, PipeRoot pr1, SequenceOutputHandler<?> handler, List<SequenceOutputFile> inputs, JSONObject json) throws IOException, PipelineJobException
         {
             validateGenomes(inputs, handler);
             return new SequenceOutputHandlerJob(targetContainer, getUser(), jobName, pr1, handler, inputs, json);
@@ -4110,7 +4110,7 @@ public class SequenceAnalysisController extends SpringActionController
     public class RunVariantProcessingAction extends RunSequenceHandlerAction
     {
         @Override
-        protected PipelineJob createOutputJob(RunSequenceHandlerForm form, Container targetContainer, String jobName, PipeRoot pr1, SequenceOutputHandler handler, List<SequenceOutputFile> inputs, JSONObject json) throws PipelineJobException, IOException
+        protected PipelineJob createOutputJob(RunSequenceHandlerForm form, Container targetContainer, String jobName, PipeRoot pr1, SequenceOutputHandler<?> handler, List<SequenceOutputFile> inputs, JSONObject json) throws PipelineJobException, IOException
         {
             String method = json.getString("scatterGatherMethod");
             try
@@ -4122,7 +4122,7 @@ public class SequenceAnalysisController extends SpringActionController
             }
             catch (IllegalArgumentException e)
             {
-                throw new IllegalArgumentException("Unknown scatter method: " + method);
+                throw new IllegalArgumentException("Unknown scatter method: [" + method + "]", e);
             }
         }
     }
