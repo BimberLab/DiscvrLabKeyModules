@@ -85,6 +85,11 @@ public interface SequenceOutputHandler<T>
 
     public boolean canProcess(SequenceOutputFile o);
 
+    default boolean supportsSraArchivedData()
+    {
+        return false;
+    }
+
     /**
      * If false, this handler will not be returned with the list of available handlers for a given set of files.
      * This allows the developer to register handlers that feed into the pipeline, but can only be called through specific code/UI

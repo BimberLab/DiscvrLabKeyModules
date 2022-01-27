@@ -3546,7 +3546,7 @@ public class SequenceAnalysisController extends SpringActionController
             o.put("totalReadData", rs.getReadData().size());
             for (ReadData rd : rs.getReadData())
             {
-                if (rd.isArchived())
+                if (rd.isArchived() && !handler.supportsSraArchivedData())
                 {
                     o.put("fileExists", false);
                     o.put("isArchived", true);
@@ -3557,9 +3557,12 @@ public class SequenceAnalysisController extends SpringActionController
                 ExpData d = rd.getFileId1() == 0 ? null : ExperimentService.get().getExpData(rd.getFileId1());
                 if (d == null || d.getFile() == null || !d.getFile().exists())
                 {
-                    o.put("fileExists", false);
-                    o.put("error", true);
-                    return o;
+                    if (!handler.supportsSraArchivedData())
+                    {
+                        o.put("fileExists", false);
+                        o.put("error", true);
+                        return o;
+                    }
                 }
 
                 if (rd.getFileId2() != null)
@@ -3567,9 +3570,12 @@ public class SequenceAnalysisController extends SpringActionController
                     d = rd.getFileId2() == 0 ? null : ExperimentService.get().getExpData(rd.getFileId2());
                     if (d == null || d.getFile() == null || !d.getFile().exists())
                     {
-                        o.put("fileExists", false);
-                        o.put("error", true);
-                        return o;
+                        if (!handler.supportsSraArchivedData())
+                        {
+                            o.put("fileExists", false);
+                            o.put("error", true);
+                            return o;
+                        }
                     }
                 }
             }

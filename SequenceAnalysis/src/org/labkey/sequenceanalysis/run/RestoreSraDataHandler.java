@@ -67,6 +67,12 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
     }
 
     @Override
+    public boolean supportsSraArchivedData()
+    {
+        return true;
+    }
+
+    @Override
     public boolean doRunRemote()
     {
         return true;
