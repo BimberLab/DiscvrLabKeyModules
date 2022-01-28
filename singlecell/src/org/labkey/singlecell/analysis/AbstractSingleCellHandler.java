@@ -543,7 +543,15 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     }
                 }
 
-                _resumer.getFileManager().addSequenceOutput(so);
+                //This indicates the job processed an input file, but did not create a new object (like running FindMarkers)
+                if (output.getSequenceOutputFileId() != null)
+                {
+                    ctx.getLogger().info("Sequence output already exists, will not re-create output for seurat object: " + output.getSequenceOutputFileId());
+                }
+                else
+                {
+                    _resumer.getFileManager().addSequenceOutput(so);
+                }
 
                 // This could be a little confusing, but add one record out seurat output, even though there is one HTML file::
                 SequenceOutputFile o = new SequenceOutputFile();

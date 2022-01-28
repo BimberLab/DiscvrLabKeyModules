@@ -256,6 +256,9 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
 
             args.add(dataset);
 
+            //NOTE: sratoolkit requires this to be set:
+            addToEnvironment("HOME", System.getProperty("user.home"));
+
             execute(args);
 
             List<File> files = new ArrayList<>(Arrays.asList(Objects.requireNonNull(outDir.listFiles((dir, name) -> name.startsWith(dataset)))));
