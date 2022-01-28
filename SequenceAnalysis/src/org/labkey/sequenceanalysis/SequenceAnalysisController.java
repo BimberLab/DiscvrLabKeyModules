@@ -4069,6 +4069,7 @@ public class SequenceAnalysisController extends SpringActionController
             catch (IllegalArgumentException e)
             {
                 errors.reject(ERROR_MSG, e.getMessage());
+                _log.error("Unable to submit sequence handler", e);
                 return null;
             }
         }
