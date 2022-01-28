@@ -44,7 +44,7 @@ public class SequenceReadsetHandlerJob extends SequenceJob implements HasJobPara
         _readsetIds = new ArrayList<>();
         for (SequenceReadsetImpl rs : readsets)
         {
-            getSequenceSupport().cacheReadset(rs);
+            getSequenceSupport().cacheReadset(rs, getHandler().supportsSraArchivedData());
             _readsetIds.add(rs.getReadsetId());
         }
     }
