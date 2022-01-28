@@ -6,6 +6,8 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
     jobType: 'singleCell',
 
     initComponent: function(){
+        this.showPrepareRawData = this.handlerClass === 'ProcessSingleCellHandler';
+
         Ext4.apply(this, {
             itemId: 'sequenceAnalysisPanel',
             buttonAlign: 'left',
@@ -198,6 +200,28 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
     },
 
     onDataLoad: function(results){
+        results.prepareRawData = [{
+            description: 'Options related to processing the 10x matrix into a seurat object',
+            label: 'Prepare Raw Counts',
+            name: 'PrepareRawCounts',
+            parameters: [{
+                fieldXtype: 'ldk-integerfield',
+                    name: 'emptyDropsLower',
+                label: 'EmptyDrops Lower',
+                description: 'Passed to DropletUtils::emptyDrops lower argument',
+                defaultValue: 200,
+                minValue: 0
+            },{
+                fieldXtype: 'ldk-numberfield',
+                name: 'emptyDropsFdrThreshold',
+                label: 'EmptyDrops FDR Threshold',
+                description: 'The FDR limit used to filter the results of DropletUtils::emptyDrops',
+                defaultValue: 0.001,
+                minValue: 0,
+                decimalPrecision: 4
+            }]
+        }];
+
         this.add([this.getFilePanelCfg(), this.getProtocolPanelCfg(),{
             xtype: 'panel',
             title: 'Analysis Options',
@@ -212,6 +236,17 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
         var panel = this.down('#analysisOptions');
 
         var items = [];
+        if (this.showPrepareRawData){
+            items.push({
+                xtype: 'sequenceanalysis-analysissectionpanel',
+                title: 'Prepare Raw Data',
+                stepType: 'prepareRawData',
+                singleTool: true,
+                sectionDescription: 'This section allows you to control the parsing of the raw 10x count data',
+                toolConfig: results
+            });
+        }
+
         items.push({
             xtype: 'sequenceanalysis-analysissectionpanel',
             title: 'Seurat Processing',
