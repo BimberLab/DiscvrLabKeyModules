@@ -4120,17 +4120,19 @@ public class SequenceAnalysisController extends SpringActionController
         protected PipelineJob createOutputJob(RunSequenceHandlerForm form, Container targetContainer, String jobName, PipeRoot pr1, SequenceOutputHandler<?> handler, List<SequenceOutputFile> inputs, JSONObject json) throws PipelineJobException, IOException
         {
             String method = json.getString("scatterGatherMethod");
+            validateGenomes(inputs, handler);
+
+            VariantProcessingStep.ScatterGatherMethod scatterMethod;
             try
             {
-                validateGenomes(inputs, handler);
-                VariantProcessingStep.ScatterGatherMethod scatterMethod = VariantProcessingStep.ScatterGatherMethod.valueOf(method);
-
-                return new VariantProcessingJob(targetContainer, getUser(), jobName, pr1, handler, inputs, json, scatterMethod);
+                scatterMethod = VariantProcessingStep.ScatterGatherMethod.valueOf(method);
             }
             catch (IllegalArgumentException e)
             {
                 throw new IllegalArgumentException("Unknown scatter method: [" + method + "]", e);
             }
+
+            return new VariantProcessingJob(targetContainer, getUser(), jobName, pr1, handler, inputs, json, scatterMethod);
         }
     }
 
