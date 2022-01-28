@@ -263,11 +263,14 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
                             checked: false,
                             inputValue: true
                         }, {
-                            fieldXtype: 'checkbox',
+                            fieldXtype: 'ldk-integerfield',
                             name: 'nExpectedCells',
                             label: '# Expected Cells',
                             description: 'Only applied if emptyDropsCellRanger is selected. Passed to n.expected.cells argument',
-                            defaultValue: 8000
+                            defaultValue: 8000,
+                            additionalExtConfig: {
+                                minValue: 0
+                            }
                         }]
                     }]
                 }
