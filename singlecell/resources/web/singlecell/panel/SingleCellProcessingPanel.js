@@ -220,10 +220,10 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
                 title: 'Prepare Raw Data',
                 stepType: 'singleCell',
                 singleTool: true,
-                comboValue: 'prepareRawData',
+                comboValue: 'PrepareRawCounts',
                 sectionDescription: 'This section allows you to control the parsing of the raw 10x count data',
                 toolConfig: {
-                    prepareRawData: [{
+                    singleCell: [{
                         description: 'Options related to processing the 10x matrix into a seurat object',
                         label: 'Prepare Raw Counts',
                         name: 'PrepareRawCounts',
@@ -233,22 +233,28 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
                             label: 'EmptyDrops Lower',
                             description: 'Passed to DropletUtils::emptyDrops lower argument',
                             defaultValue: 200,
-                            minValue: 0
+                            additionalExtConfig: {
+                                minValue: 0
+                            }
                         }, {
                             fieldXtype: 'ldk-numberfield',
                             name: 'emptyDropsFdrThreshold',
                             label: 'EmptyDrops FDR Threshold',
                             description: 'The FDR limit used to filter the results of DropletUtils::emptyDrops',
                             defaultValue: 0.001,
-                            minValue: 0,
-                            decimalPrecision: 4
+                            additionalExtConfig: {
+                                minValue: 0,
+                                decimalPrecision: 4
+                            }
                         }, {
                             fieldXtype: 'ldk-integerfield',
                             name: 'maxAllowableCells',
                             label: 'Max Cells Allowed',
                             description: 'If more than this many cells are predicted by EmptyDrops, the job will fail',
                             defaultValue: 20000,
-                            minValue: 0
+                            additionalExtConfig: {
+                                minValue: 0
+                            }
                         }, {
                             fieldXtype: 'checkbox',
                             name: 'useEmptyDropsCellRanger',
@@ -261,7 +267,7 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
                             name: 'nExpectedCells',
                             label: '# Expected Cells',
                             description: 'Only applied if emptyDropsCellRanger is selected. Passed to n.expected.cells argument',
-                            value: 8000
+                            defaultValue: 8000
                         }]
                     }]
                 }
