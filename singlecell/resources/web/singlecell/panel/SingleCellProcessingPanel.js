@@ -219,6 +219,13 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
                 defaultValue: 0.001,
                 minValue: 0,
                 decimalPrecision: 4
+            },{
+                fieldXtype: 'ldk-integerfield',
+                name: 'maxAllowableCells',
+                label: 'Max Cells Allowed',
+                description: 'If more than this many cells are predicted by EmptyDrops, the job will fail',
+                defaultValue: 20000,
+                minValue: 0
             }]
         }];
 

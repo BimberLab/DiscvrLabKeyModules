@@ -4,6 +4,10 @@ for (datasetId in names(seuratObjects)) {
     datasetName <- datasetIdToName[[datasetId]]
     seuratObj <- CellMembrane::ReadAndFilter10xData(dataDir = rawCountDir, datasetId = datasetId, datasetName = datasetName, emptyDropsLower = emptyDropsLower, emptyDropsFdrThreshold = emptyDropsFdrThreshold)
 
+    if (!is.null(maxAllowableCells) && ncol(seuratObj) > maxAllowableCells) {
+        stop(paste0('The seurat object has more than the max allowable cells. Please review emptyDrops results'))
+    }
+
     saveData(seuratObj, datasetId)
 
     # Cleanup

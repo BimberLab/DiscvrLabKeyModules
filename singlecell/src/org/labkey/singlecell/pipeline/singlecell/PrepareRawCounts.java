@@ -25,7 +25,8 @@ public class PrepareRawCounts extends AbstractCellMembraneStep
         {
             super("PrepareRawCounts", LABEL, "CellMembrane/Seurat", "This step reads the raw count matrix/matrices, and runs EmptyDrops to provide an unfiltered count matrix.", Arrays.asList(
                     SeuratToolParameter.create("emptyDropsLower", "Lower", "Passed to DropletUtils::emptyDrops lower argument", "ldk-integerfield", null, 200),
-                    SeuratToolParameter.create("emptyDropsFdrThreshold", "FDR Threshold", "The FDR limit used to filter the results of DropletUtils::emptyDrops", "ldk-numberfield", null, 0.001)
+                    SeuratToolParameter.create("emptyDropsFdrThreshold", "FDR Threshold", "The FDR limit used to filter the results of DropletUtils::emptyDrops", "ldk-numberfield", null, 0.001),
+                    SeuratToolParameter.create("maxAllowableCells", "Max Cells Allowed", "If more than this many cells are predicted by EmptyDrops, the job will fail", "ldk-integerfield", null, 20000)
             ), null, null);
         }
 
