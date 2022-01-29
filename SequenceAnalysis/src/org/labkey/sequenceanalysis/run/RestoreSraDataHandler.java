@@ -249,7 +249,6 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
             args.add(SequencePipelineService.get().getJavaTempDir());
 
             args.add("-f"); //force-overwrite
-            args.add("--quiet");
 
             args.add("-O");
             args.add(outDir.getPath());
