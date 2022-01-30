@@ -1,14 +1,11 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
-import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
-import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
-import org.labkey.api.singlecell.pipeline.SingleCellStep;
+import org.labkey.api.singlecell.pipeline.SingleCellRawDataStep;
 
 import java.util.Arrays;
-import java.util.List;
 
 public class PrepareRawCounts extends AbstractCellMembraneStep
 {
@@ -19,7 +16,7 @@ public class PrepareRawCounts extends AbstractCellMembraneStep
         super(provider, ctx);
     }
 
-    public static class Provider extends AbstractPipelineStepProvider<SingleCellStep>
+    public static class Provider extends AbstractPipelineStepProvider<SingleCellRawDataStep>
     {
         public Provider()
         {

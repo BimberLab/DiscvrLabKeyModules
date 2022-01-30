@@ -218,12 +218,12 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
             items.push({
                 xtype: 'sequenceanalysis-analysissectionpanel',
                 title: 'Prepare Raw Data',
-                stepType: 'singleCell',
+                stepType: 'singleCellRawData',
                 singleTool: true,
                 comboValue: 'PrepareRawCounts',
                 sectionDescription: 'This section allows you to control the parsing of the raw 10x count data',
                 toolConfig: {
-                    singleCell: [{
+                    singleCellRawData: [{
                         description: 'Options related to processing the 10x matrix into a seurat object',
                         label: 'Prepare Raw Counts',
                         name: 'PrepareRawCounts',

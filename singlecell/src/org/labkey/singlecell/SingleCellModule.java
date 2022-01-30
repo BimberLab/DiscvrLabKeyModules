@@ -27,6 +27,7 @@ import org.labkey.api.module.ModuleContext;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.singlecell.CellHashingService;
+import org.labkey.api.singlecell.pipeline.SingleCellRawDataStep;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.WebPartFactory;
@@ -123,6 +124,7 @@ public class SingleCellModule extends ExtendedSimpleModule
     public static void registerPipelineSteps()
     {
         SequencePipelineService.get().registerPipelineStepType(SingleCellStep.class, SingleCellStep.STEP_TYPE);
+        SequencePipelineService.get().registerPipelineStepType(SingleCellRawDataStep.class, SingleCellRawDataStep.STEP_TYPE);
         CellHashingService.setInstance(CellHashingServiceImpl.get());
 
         SequencePipelineService.get().registerPipelineStep(new CellRangerGexCountStep.Provider());

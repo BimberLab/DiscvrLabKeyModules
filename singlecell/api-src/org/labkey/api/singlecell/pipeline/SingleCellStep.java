@@ -16,7 +16,6 @@ import java.util.List;
 public interface SingleCellStep extends PipelineStep
 {
     public static final String STEP_TYPE = "singleCell";
-    public static final String SEURAT_PROCESSING = "seuratProcessing";
 
     public Collection<String> getRLibraries();
 

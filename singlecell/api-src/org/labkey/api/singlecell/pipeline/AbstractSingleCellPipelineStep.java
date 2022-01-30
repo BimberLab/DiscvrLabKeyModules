@@ -23,6 +23,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -251,7 +252,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 
         executeR(ctx, getDockerContainerName(), outputPrefix, lines);
 
-        handlePossibleFailure(ctx);
+        handlePossibleFailure(ctx, outputPrefix);
     }
 
     public static void executeR(SequenceOutputHandler.JobContext ctx, String dockerContainerName, String outputPrefix, List<String> lines) throws PipelineJobException
@@ -526,7 +527,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         // This allows subclasses to implement tool-specific failure handling
     }
 
-    private void handlePossibleFailure(SequenceOutputHandler.JobContext ctx) throws PipelineJobException
+    private void handlePossibleFailure(SequenceOutputHandler.JobContext ctx, String outputPrefix) throws PipelineJobException
     {
         File errorFile = getSeuratErrorFile(ctx);
         if (errorFile.exists())
@@ -537,6 +538,19 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                 errorFile.delete();
 
                 onFailure(ctx);
+
+                File html = getExpectedHtmlFile(ctx, outputPrefix);
+                if (html.exists())
+                {
+                    ctx.getLogger().info("Copying HTML locally for debugging: ", html.getName());
+                    File target = new File(ctx.getSourceDirectory(), html.getName());
+                    if (target.exists())
+                    {
+                        target.delete();
+                    }
+
+                    Files.copy(html.toPath(), target.toPath());
+                }
 
                 throw new PipelineJobException(getProvider().getName() + " Errors: " + StringUtils.join(errors, ";"));
             }

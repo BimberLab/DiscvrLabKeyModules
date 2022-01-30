@@ -86,7 +86,10 @@ saveData <- function(seuratObj, datasetId) {
 }
 
 intermediateFiles <- c()
-addIntermediateFile <- function(f) { intermediateFiles <<- c(intermediateFiles, f) }
+addIntermediateFile <- function(f) { intermediateFiles <- c(intermediateFiles, f) }
+
+errorMessages <- c()
+addErrorMessage <- function(f) { errorMessages <- c(errorMessages, f) }
 
 print('Updating future.globals.maxSize')
 options(future.globals.maxSize = Inf)
