@@ -179,7 +179,8 @@ public class SingleCellModule extends ExtendedSimpleModule
     public Set<Class> getUnitTests()
     {
         return PageFlowUtil.set(
-                AbstractSingleCellHandler.TestCase.class
+                AbstractSingleCellHandler.TestCase.class,
+                PrepareRawCounts.TestCase.class
         );
     }
 }

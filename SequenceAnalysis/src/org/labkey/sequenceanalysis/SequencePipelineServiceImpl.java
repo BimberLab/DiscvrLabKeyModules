@@ -105,8 +105,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         {
             ParameterizedType parameterizedType = (ParameterizedType)provider.getClass().getGenericSuperclass();
             Class clazz = (Class)parameterizedType.getActualTypeArguments()[0];
-
-            if (stepType.isAssignableFrom(clazz))
+            if (stepType.equals(clazz))
             {
                 ret.add(provider);
             }
@@ -139,7 +138,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     {
         for (Class<? extends PipelineStep> step : _pipelineStepTypeMap.keySet())
         {
-            if (step.isAssignableFrom(stepType))
+            if (step.equals(stepType))
             {
                 return _pipelineStepTypeMap.get(step);
             }
