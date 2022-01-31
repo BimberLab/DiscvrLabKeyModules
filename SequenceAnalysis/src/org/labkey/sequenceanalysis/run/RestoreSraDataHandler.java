@@ -1,5 +1,7 @@
 package org.labkey.sequenceanalysis.run;
 
+import htsjdk.samtools.util.IOUtil;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -27,12 +29,15 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.Compress;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -183,6 +188,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
         public void processFilesRemote(List<Readset> readsets, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
             Readset rs = readsets.get(0);
+            final String timestamp = FileUtil.getTimestamp();
             for (ReadData rd : rs.getReadData())
             {
                 if (rd.isArchived())
@@ -199,11 +205,14 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                     FastqDumpWrapper wrapper = new FastqDumpWrapper(ctx.getLogger());
                     Pair<File, File> files = wrapper.downloadSra(accession, ctx.getOutputDir());
 
-                    try
+                    File sraLog = new File(expectedFile1.getParentFile(), FileUtil.makeLegalName("sraDownload_" + timestamp + ".txt"));
+                    try (PrintWriter writer = PrintWriters.getPrintWriter(IOUtil.openFileForWriting(sraLog, true)))
                     {
                         ctx.getLogger().info("Copying file to: " + expectedFile1.getPath());
                         Files.copy(files.first.toPath(), expectedFile1.toPath());
                         ctx.getFileManager().addIntermediateFile(files.first);
+                        writer.println("Downloaded " + expectedFile1.getName() + " from " + accession + " on " + timestamp + ", size: " + FileUtils.byteCountToDisplaySize(FileUtils.sizeOf(expectedFile1)));
+
                         if (expectedFile2 != null)
                         {
                             if (files.second == null)
@@ -214,6 +223,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                             ctx.getLogger().info("Copying file to: " + expectedFile2.getPath());
                             Files.copy(files.second.toPath(), expectedFile2.toPath());
                             ctx.getFileManager().addIntermediateFile(files.second);
+                            writer.println("Downloaded " + expectedFile2.getName() + " from SRA " + accession + " on " + timestamp + ", size: " + FileUtils.byteCountToDisplaySize(FileUtils.sizeOf(expectedFile2)));
                         }
                     }
                     catch (IOException e)
