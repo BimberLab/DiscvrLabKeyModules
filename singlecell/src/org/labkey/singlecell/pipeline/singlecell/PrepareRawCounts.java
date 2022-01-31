@@ -1,10 +1,18 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
+import org.apache.logging.log4j.Logger;
+import org.junit.Assert;
+import org.junit.Test;
+import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellRawDataStep;
 
+import java.io.File;
 import java.util.Arrays;
 
 public class PrepareRawCounts extends AbstractCellMembraneStep
@@ -40,5 +48,15 @@ public class PrepareRawCounts extends AbstractCellMembraneStep
     public String getFileSuffix()
     {
         return "counts";
+    }
+
+    public static class TestCase extends Assert
+    {
+        @Test
+        public void testStepClass()
+        {
+            assertEquals(SingleCellRawDataStep.STEP_TYPE, SequencePipelineService.get().getParamNameForStepType(SingleCellRawDataStep.class));
+            assertEquals(SingleCellRawDataStep.class, new Provider().getStepClass());
+        }
     }
 }
