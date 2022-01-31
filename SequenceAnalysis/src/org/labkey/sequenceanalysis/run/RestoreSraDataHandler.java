@@ -203,6 +203,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                     {
                         ctx.getLogger().info("Copying file to: " + expectedFile1.getPath());
                         Files.copy(files.first.toPath(), expectedFile1.toPath());
+                        ctx.getFileManager().addIntermediateFile(files.first);
                         if (expectedFile2 != null)
                         {
                             if (files.second == null)
@@ -212,6 +213,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
 
                             ctx.getLogger().info("Copying file to: " + expectedFile2.getPath());
                             Files.copy(files.second.toPath(), expectedFile2.toPath());
+                            ctx.getFileManager().addIntermediateFile(files.second);
                         }
                     }
                     catch (IOException e)

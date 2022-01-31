@@ -110,11 +110,6 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
 
         if (!_environment.isEmpty())
         {
-            for (String var : _environment.keySet())
-            {
-                getLogger().debug("adding to env: " + var + " = " + _environment.get(var));
-            }
-
             pb.environment().putAll(_environment);
         }
 
