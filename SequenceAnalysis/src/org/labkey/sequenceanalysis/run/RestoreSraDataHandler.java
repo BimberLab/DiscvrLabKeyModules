@@ -5,7 +5,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
-import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
@@ -101,6 +100,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
             }
 
             Readset rs = readsets.get(0);
+            job.getLogger().info("Restoring readset: " + rs.getName());
             int totalArchivedPairs = 0;
             for (ReadData rd : rs.getReadData())
             {
