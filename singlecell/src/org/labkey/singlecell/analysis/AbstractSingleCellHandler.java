@@ -35,6 +35,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.pipeline.AbstractSingleCellPipelineStep;
+import org.labkey.api.singlecell.pipeline.AbstractSingleCellStep;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
@@ -377,6 +378,8 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 }
             }
 
+            Set<File> originalInputs = currentFiles.stream().map(AbstractSingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toSet());
+
             // Step 2: iterate seurat processing:
             String outputPrefix = basename;
             int stepIdx = 0;
@@ -544,9 +547,9 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 }
 
                 //This indicates the job processed an input file, but did not create a new object (like running FindMarkers)
-                if (output.getSequenceOutputFileId() != null)
+                if (originalInputs.contains(output.getFile()))
                 {
-                    ctx.getLogger().info("Sequence output already exists, will not re-create output for seurat object: " + output.getSequenceOutputFileId());
+                    ctx.getLogger().info("Sequence output is the same as an input, will not re-create output for seurat object: " + output.getFile().getPath());
                 }
                 else
                 {
