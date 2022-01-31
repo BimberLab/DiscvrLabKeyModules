@@ -1,10 +1,7 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
@@ -15,10 +12,6 @@ import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.singlecell.CellHashingServiceImpl;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -83,6 +76,11 @@ public class SeuratPrototype extends AbstractCellMembraneStep
         {
             throw new PipelineJobException("Seurat prototype step expects all inputs to have a readset ID.");
         }
+
+        if (ctx.getSequenceSupport().getCachedGenomes().size() > 1)
+        {
+            throw new PipelineJobException("Expected seurat prototype step to use a single genome");
+        }
     }
 
     @Override
@@ -122,6 +120,11 @@ public class SeuratPrototype extends AbstractCellMembraneStep
     {
         Output output = super.execute(ctx, inputObjects, outputPrefix);
 
+        if (ctx.getSequenceSupport().getCachedGenomes().size() > 1)
+        {
+            throw new PipelineJobException("Expected seurat prototype step to use a single genome");
+        }
+
         for (SeuratObjectWrapper wrapper : output.getSeuratObjects())
         {
             if (wrapper.getReadsetId() == null)
@@ -132,6 +135,7 @@ public class SeuratPrototype extends AbstractCellMembraneStep
             SequenceOutputFile so = new SequenceOutputFile();
             so.setFile(wrapper.getFile());
             so.setCategory("Seurat Object Prototype");
+            so.setLibrary_id(ctx.getSequenceSupport().getCachedGenomes().iterator().next().getGenomeId());
 
             String readsetName = ctx.getSequenceSupport().getCachedReadset(wrapper.getReadsetId()).getName();
             so.setReadset(wrapper.getReadsetId());
