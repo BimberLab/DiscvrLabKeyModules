@@ -563,7 +563,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                 File html = getExpectedHtmlFile(ctx, outputPrefix);
                 if (html.exists())
                 {
-                    ctx.getLogger().info("Copying HTML locally for debugging: ", html.getName());
+                    ctx.getLogger().info("Copying HTML locally for debugging: " + html.getName());
                     File target = new File(ctx.getSourceDirectory(), html.getName());
                     if (target.exists())
                     {
@@ -571,6 +571,10 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                     }
 
                     Files.copy(html.toPath(), target.toPath());
+                }
+                else
+                {
+                    ctx.getLogger().info("HTML not found: " + html.getPath());
                 }
 
                 throw new PipelineJobException(getProvider().getName() + " Errors: " + StringUtils.join(errors, ";"));
