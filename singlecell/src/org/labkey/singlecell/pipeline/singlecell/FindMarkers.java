@@ -44,7 +44,8 @@ public class FindMarkers extends AbstractCellMembraneStep
                     }}, 0.001),
                     SeuratToolParameter.create("foldChangeThreshold", "Log2 Fold-Change Threshold", "Only genes with log2-foldchange above this will be reported", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, 0.25)
+                    }}, 0.25),
+                    getSeuratThreadsParam()
                 ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 

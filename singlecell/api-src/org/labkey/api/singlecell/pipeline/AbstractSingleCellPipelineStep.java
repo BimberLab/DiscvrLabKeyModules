@@ -5,6 +5,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
@@ -32,6 +33,8 @@ import java.util.stream.Collectors;
 
 abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineStep implements SingleCellStep
 {
+    public static final String SEURAT_THREADS = "seuratMaxThreads";
+
     public AbstractSingleCellPipelineStep(PipelineStepProvider provider, PipelineContext ctx)
     {
         super(provider, ctx);
@@ -250,12 +253,25 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             errorFile.delete();
         }
 
-        executeR(ctx, getDockerContainerName(), outputPrefix, lines);
+        Integer seuratThreads = null;
+        if (getProvider().getParameterByName(SEURAT_THREADS) != null)
+        {
+            seuratThreads = getProvider().getParameterByName(SEURAT_THREADS).extractValue(ctx.getJob(), getProvider(), getStepIdx(), Integer.class, null);
+        }
+
+        executeR(ctx, getDockerContainerName(), outputPrefix, lines, seuratThreads);
 
         handlePossibleFailure(ctx, outputPrefix);
     }
 
-    public static void executeR(SequenceOutputHandler.JobContext ctx, String dockerContainerName, String outputPrefix, List<String> lines) throws PipelineJobException
+    protected static SeuratToolParameter getSeuratThreadsParam()
+    {
+        return SeuratToolParameter.create(SEURAT_THREADS, "Max Threads", "If provided, the docker session will set future::plan(strategy='multisession', workers=XXX), which is supported by certain Seurat functions.", "ldk-integerfield", new JSONObject(){{
+            put("minValue", 0);
+        }}, null);
+    }
+
+    public static void executeR(SequenceOutputHandler.JobContext ctx, String dockerContainerName, String outputPrefix, List<String> lines, @Nullable Integer seuratThreads) throws PipelineJobException
     {
         File localRScript = new File(ctx.getOutputDir(), FileUtil.makeLegalName(outputPrefix + ".R").replaceAll(" ", "_"));
         try (PrintWriter writer = PrintWriters.getPrintWriter(localRScript))
@@ -283,6 +299,11 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             if (maxThreads != null)
             {
                 writer.println("\t-e SEQUENCEANALYSIS_MAX_THREADS=" + maxThreads + " \\");
+            }
+
+            if (seuratThreads != null)
+            {
+                writer.println("\t-e SEURAT_MAX_THREADS=" + seuratThreads + " \\");
             }
 
             Integer maxRam = SequencePipelineService.get().getMaxRam();
