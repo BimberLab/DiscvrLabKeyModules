@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
@@ -577,6 +578,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                     ctx.getLogger().info("HTML not found: " + html.getPath());
                 }
 
+                ctx.getJob().setStatus(PipelineJob.TaskStatus.error, " Errors: " + StringUtils.join(errors, ";"));
                 throw new PipelineJobException(getProvider().getName() + " Errors: " + StringUtils.join(errors, ";"));
             }
             catch (IOException e)
