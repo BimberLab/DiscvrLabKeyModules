@@ -31,17 +31,6 @@ public class SeuratPrototype extends AbstractCellMembraneStep
             super("SeuratPrototype", "Create Seurat Prototype", "CellMembrane", "This will tag the output of this job as a seurat prototype, which is designed to be a building block for subsequent analyses.", Arrays.asList(
                     SeuratToolParameter.create("requireHashing", "Require Hashing, If Used", "If this dataset uses cell hashing, hashing calls are required", "checkbox", null, true),
                     //Reject based on hashing criteria:
-                    SeuratToolParameter.create("maxHashingPctFail", "Hashing Max Fraction Failed", "The maximum fraction of cells that can have no call (i.e. not singlet or doublet). Otherwise it will fail the job. This is a number 0-1.", "ldk-numberfield", new JSONObject(){{
-                        put("minValue", 0);
-                        put("maxValue", 1);
-                        put("decimalPrecision", 2);
-                    }}, null),
-                    SeuratToolParameter.create("maxHashingPctDiscordant", "Hashing Max Fraction Discordant", "The maximum fraction of cells that can have discordant calls. High discordance is usually an indication of either poor quality data, or one caller performing badly.This is a number 0-1.", "ldk-numberfield", new JSONObject(){{
-                        put("minValue", 0);
-                        put("maxValue", 1);
-                        put("decimalPrecision", 2);
-                    }}, 0.1),
-
                     SeuratToolParameter.create("requireCiteSeq", "Require Cite-Seq, If Used", "If this dataset uses CITE-seq, cite-seq data are required", "checkbox", null, true),
 
                     SeuratToolParameter.create("requireSaturation", "Require Per-Cell Saturation", "If this dataset uses TCR sequencing, these data are required", "checkbox", null, true),
@@ -107,12 +96,6 @@ public class SeuratPrototype extends AbstractCellMembraneStep
         }
 
         return ret;
-    }
-
-    @Override
-    protected void onFailure(SequenceOutputHandler.JobContext ctx) throws PipelineJobException
-    {
-        RunCellHashing.copyHtmlLocally(ctx);
     }
 
     @Override

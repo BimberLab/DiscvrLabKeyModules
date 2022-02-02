@@ -19,17 +19,9 @@ for (datasetId in names(seuratObjects)) {
     }
 
     fractionFailedHashing <- 1 - (sum(seuratObj@meta.data$HTO.Classification %in% c('Singlet', 'Doublet')) / nrow(seuratObj@meta.data))
-    if (!is.null(maxHashingPctFail) && fractionFailedHashing > maxHashingPctFail) {
-      addErrorMessage(paste0('Fraction failing cell hashing was : ', fractionFailedHashing, ' for dataset: ', datasetId, ', above threshold of: ', maxHashingPctFail))
-    }
-
     metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'FractionFailedHashing', metricvalue = fractionFailedHashing))
 
     fractionDiscordantHashing <- 1 - (sum(seuratObj@meta.data$HTO.Classification == 'Discordant') / nrow(seuratObj@meta.data))
-    if (!is.null(maxHashingPctDiscordant) && fractionDiscordantHashing > maxHashingPctDiscordant) {
-      addErrorMessage(paste0('Discordant hashing rate was: ', fractionDiscordantHashing, ' for dataset: ', datasetId, ', above threshold of: ', maxHashingPctDiscordant))
-    }
-
     metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'FractionDiscordantHashing', metricvalue = fractionDiscordantHashing))
   }
 

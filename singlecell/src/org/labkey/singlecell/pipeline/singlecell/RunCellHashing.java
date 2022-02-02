@@ -77,7 +77,7 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
         copyHtmlLocally(ctx);
     }
 
-    public static void copyHtmlLocally(SequenceOutputHandler.JobContext ctx) throws PipelineJobException
+    private void copyHtmlLocally(SequenceOutputHandler.JobContext ctx) throws PipelineJobException
     {
         try
         {
