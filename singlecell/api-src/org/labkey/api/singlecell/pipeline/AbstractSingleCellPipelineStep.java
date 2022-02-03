@@ -544,7 +544,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         return new File(ctx.getOutputDir(), "seuratErrors.txt");
     }
 
-    protected void onFailure(SequenceOutputHandler.JobContext ctx) throws PipelineJobException
+    protected void onFailure(SequenceOutputHandler.JobContext ctx, String outputPrefix) throws PipelineJobException
     {
         // This allows subclasses to implement tool-specific failure handling
     }
@@ -559,7 +559,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                 List<String> errors = IOUtils.readLines(Readers.getReader(errorFile));
                 errorFile.delete();
 
-                onFailure(ctx);
+                onFailure(ctx, outputPrefix);
 
                 File html = getExpectedHtmlFile(ctx, outputPrefix);
                 if (html.exists())
