@@ -15,7 +15,7 @@ for (datasetId in names(seuratObjects)) {
                 addErrorMessage(paste0('Fraction failing cell hashing was : ', fractionFailedHashing, ' for dataset: ', datasetId, ', above threshold of: ', maxHashingPctFail))
             }
 
-            fractionDiscordantHashing <- 1 - (sum(seuratObj@meta.data$HTO.Classification == 'Discordant') / nrow(seuratObj@meta.data))
+            fractionDiscordantHashing <- sum(seuratObj@meta.data$HTO.Classification == 'Discordant') / nrow(seuratObj@meta.data)
             if (!is.null(maxHashingPctDiscordant) && fractionDiscordantHashing > maxHashingPctDiscordant) {
                 addErrorMessage(paste0('Discordant hashing rate was: ', fractionDiscordantHashing, ' for dataset: ', datasetId, ', above threshold of: ', maxHashingPctDiscordant))
             }
