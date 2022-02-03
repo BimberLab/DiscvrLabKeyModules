@@ -21,7 +21,7 @@ for (datasetId in names(seuratObjects)) {
     fractionFailedHashing <- 1 - (sum(seuratObj@meta.data$HTO.Classification %in% c('Singlet', 'Doublet')) / nrow(seuratObj@meta.data))
     metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'FractionFailedHashing', metricvalue = fractionFailedHashing))
 
-    fractionDiscordantHashing <- 1 - (sum(seuratObj@meta.data$HTO.Classification == 'Discordant') / nrow(seuratObj@meta.data))
+    fractionDiscordantHashing <- sum(seuratObj@meta.data$HTO.Classification == 'Discordant') / nrow(seuratObj@meta.data)
     metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'FractionDiscordantHashing', metricvalue = fractionDiscordantHashing))
   }
 
