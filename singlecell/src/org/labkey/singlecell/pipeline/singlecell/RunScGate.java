@@ -24,8 +24,8 @@ public class RunScGate extends AbstractRiraStep
                     {{
                         put("multiSelect", true);
                         put("allowBlank", false);
-                        put("storeValues", "Bcell;Tcell;NK;Myeloid;Stromal;pDC;Erythrocyte;Epithelial;Platelet-MK");
-                        put("initialValues", "Bcell;Tcell;NK;Myeloid;Stromal;pDC;Erythrocyte;Epithelial;Platelet-MK");
+                        put("storeValues", "Bcell;Tcell;NK;Myeloid;Stromal;pDC;Erythrocyte;Epithelial;Platelet_MK");
+                        put("initialValues", "Bcell;Tcell;NK;Myeloid;Stromal;pDC;Erythrocyte;Epithelial;Platelet_MK");
                         put("delimiter", ";");
                         put("joinReturnValue", true);
                     }}, null, null, true, true)
