@@ -1,7 +1,9 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
+import org.json.JSONObject;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
@@ -18,7 +20,15 @@ public class RunScGate extends AbstractRiraStep
         public Provider()
         {
             super("RunScGate", "Run scGate", "scGate", "This will run scGate with the default built-in models and create a consensus call.", Arrays.asList(
-
+                    SeuratToolParameter.create("modelNames", "Model(s)", "The set of scGate modules to test.", "ldk-simplecombo", new JSONObject()
+                    {{
+                        put("multiSelect", true);
+                        put("allowBlank", false);
+                        put("storeValues", "Bcell;Tcell;NK;Myeloid;Stromal;pDC;Erythrocyte;Epithelial");
+                        put("initialValues", "Bcell;Tcell;NK;Myeloid;Stromal;pDC;Erythrocyte;Epithelial");
+                        put("delimiter", ";");
+                        put("joinReturnValue", true);
+                    }}, null, null, true, true)
             ), null, null);
         }
 
