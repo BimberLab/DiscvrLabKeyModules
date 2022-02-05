@@ -61,8 +61,12 @@ for (datasetId in names(seuratObjects)) {
     metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'MeanSaturation.RNA', metricvalue = meanSaturation.RNA))
   }
 
-  if (requireSingleR && !'dice.label' %in% names(seuratObj@meta.data)) {
-    addErrorMessage(paste0('Missing SingleR DICE labels for dataset: ', datasetId))
+  if (requireSingleR && !'SingleRConsensus' %in% names(seuratObj@meta.data)) {
+    addErrorMessage(paste0('Missing SingleRConsensus label for dataset: ', datasetId))
+  }
+
+  if (requireScGate && !'scGateConsensus' %in% names(seuratObj@meta.data)) {
+    addErrorMessage(paste0('Missing scGateConsensus label for dataset: ', datasetId))
   }
 
   if (length(errorMessages) > 0) {
