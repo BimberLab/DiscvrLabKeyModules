@@ -355,10 +355,26 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             {
                 try
                 {
+                    Set<String> distinctIds = new HashSet<>();
+                    Set<String> copiedFiles = new HashSet<>();
+
                     currentFiles = new ArrayList<>();
                     for (SequenceOutputFile so : inputFiles)
                     {
+                        String datasetId = FileUtil.makeLegalName(so.getReadset() != null ? ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName() : so.getName());
+                        if (distinctIds.contains(datasetId))
+                        {
+                            throw new PipelineJobException("Duplicate dataset Ids in input data: " + datasetId);
+                        }
+                        distinctIds.add(datasetId);
+
                         //ensure local copy:
+                        if (copiedFiles.contains(so.getFile().getName()))
+                        {
+                            throw new PipelineJobException("Duplicate files names in input data: " + so.getFile().getName());
+                        }
+                        copiedFiles.add(so.getFile().getName());
+
                         File local = new File(ctx.getOutputDir(), so.getFile().getName());
                         if (local.exists())
                         {
@@ -368,7 +384,6 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                         FileUtils.copyFile(so.getFile(), local);
                         _resumer.getFileManager().addIntermediateFile(local);
 
-                        String datasetId = so.getName();
                         currentFiles.add(new SingleCellStep.SeuratObjectWrapper(datasetId, datasetId, so.getFile(), so));
                     }
                 }
