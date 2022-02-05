@@ -1,7 +1,7 @@
 for (datasetId in names(seuratObjects)) {
     seuratObj <- readRDS(seuratObjects[[datasetId]])
 
-    seuratObj <- RIRA::RunScGateForModels(seuratObj, modelNames = modelNames, labelRename = list(Tcell = 'T_NK', NK = 'T_NK'))
+    seuratObj <- RIRA::RunScGateForModels(seuratObj, modelNames = modelNames, labelRename = list(Tcell = 'T_NK', NK = 'T_NK'), dropAmbiguousConsensusValues = dropAmbiguousConsensusValues)
 
     saveData(seuratObj, datasetId)
 }

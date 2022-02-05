@@ -28,8 +28,11 @@ public class RunScGate extends AbstractRiraStep
                         put("initialValues", "Bcell;Tcell;NK;Myeloid;Stromal;pDC;Erythrocyte;Epithelial;Platelet_MK");
                         put("delimiter", ";");
                         put("joinReturnValue", true);
-                    }}, null, null, true, true)
-            ), null, null);
+                    }}, null, null, true, true),
+                    SeuratToolParameter.create("dropAmbiguousConsensusValues", "Drop Ambiguous Consensus Values", "If checked, any consensus calls that are ambiguous will be set to NA", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, true)
+                    ), null, null);
         }
 
         @Override
