@@ -113,7 +113,7 @@ public class SingleCellController extends SpringActionController
 
                     String name = FileUtil.makeLegalName(so.getName());
                     Set<File> toAdd = toExport.getOrDefault(name, new HashSet<>());
-                    toAdd.addAll(CellRangerWrapper.getRawDataDirs(loupe.getParentFile(), false));
+                    toAdd.addAll(CellRangerWrapper.getRawDataDirs(loupe.getParentFile(), false, true));
 
                     toExport.put(name, toAdd);
                 }
