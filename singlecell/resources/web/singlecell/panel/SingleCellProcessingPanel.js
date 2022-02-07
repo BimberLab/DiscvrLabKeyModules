@@ -222,58 +222,7 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
                 singleTool: true,
                 comboValue: 'PrepareRawCounts',
                 sectionDescription: 'This section allows you to control the parsing of the raw 10x count data',
-                toolConfig: {
-                    singleCellRawData: [{
-                        description: 'Options related to processing the 10x matrix into a seurat object',
-                        label: 'Prepare Raw Counts',
-                        name: 'PrepareRawCounts',
-                        parameters: [{
-                            fieldXtype: 'ldk-integerfield',
-                            name: 'emptyDropsLower',
-                            label: 'EmptyDrops Lower',
-                            description: 'Passed to DropletUtils::emptyDrops lower argument',
-                            defaultValue: 200,
-                            additionalExtConfig: {
-                                minValue: 0
-                            }
-                        }, {
-                            fieldXtype: 'ldk-numberfield',
-                            name: 'emptyDropsFdrThreshold',
-                            label: 'EmptyDrops FDR Threshold',
-                            description: 'The FDR limit used to filter the results of DropletUtils::emptyDrops',
-                            defaultValue: 0.001,
-                            additionalExtConfig: {
-                                minValue: 0,
-                                decimalPrecision: 4
-                            }
-                        }, {
-                            fieldXtype: 'ldk-integerfield',
-                            name: 'maxAllowableCells',
-                            label: 'Max Cells Allowed',
-                            description: 'If more than this many cells are predicted by EmptyDrops, the job will fail',
-                            defaultValue: 20000,
-                            additionalExtConfig: {
-                                minValue: 0
-                            }
-                        }, {
-                            fieldXtype: 'checkbox',
-                            name: 'useEmptyDropsCellRanger',
-                            label: 'Use emptyDropsCellRanger',
-                            description: 'If checked, this will run emptyDropsCellRanger instead of emptyDrops',
-                            checked: false,
-                            inputValue: true
-                        }, {
-                            fieldXtype: 'ldk-integerfield',
-                            name: 'nExpectedCells',
-                            label: '# Expected Cells',
-                            description: 'Only applied if emptyDropsCellRanger is selected. Passed to n.expected.cells argument',
-                            defaultValue: 8000,
-                            additionalExtConfig: {
-                                minValue: 0
-                            }
-                        }]
-                    }]
-                }
+                toolConfig: results
             });
         }
 

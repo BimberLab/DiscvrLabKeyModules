@@ -50,9 +50,13 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
     {
         List<ToolParameterDescriptor> ret = new ArrayList<>();
         ret.add(SeuratToolParameter.create("normalizeMethod", "Normalization Method", "", "ldk-simplecombo", new JSONObject(){{
-            put("storeValues", "dsb");
+            put("storeValues", "dsb;clr");
             put("initialValues", "dsb");
         }}, "dsb"));
+
+        ret.add(SeuratToolParameter.create("runCellBender", "Run CellBender", "If checked, cellbender will be run on the raw count matrix to remove background/ambient RNA signal", "checkbox", new JSONObject(){{
+
+        }}, false));
 
         return ret;
     }

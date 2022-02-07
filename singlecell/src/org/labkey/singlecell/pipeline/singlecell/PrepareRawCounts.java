@@ -1,6 +1,7 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
 import org.apache.logging.log4j.Logger;
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.pipeline.PipelineJob;
@@ -33,7 +34,10 @@ public class PrepareRawCounts extends AbstractCellMembraneStep
                     SeuratToolParameter.create("emptyDropsFdrThreshold", "FDR Threshold", "The FDR limit used to filter the results of DropletUtils::emptyDrops", "ldk-numberfield", null, 0.001),
                     SeuratToolParameter.create("maxAllowableCells", "Max Cells Allowed", "If more than this many cells are predicted by EmptyDrops, the job will fail", "ldk-integerfield", null, 20000),
                     SeuratToolParameter.create("useEmptyDropsCellRanger", "Use emptyDropsCellRanger", "If checked, this will run emptyDropsCellRanger instead of emptyDrops", "checkbox", null, false),
-                    SeuratToolParameter.create("nExpectedCells", "# Expected Cells", "Only applied if emptyDropsCellRanger is selected. Passed to n.expected.cells argument", "ldk-integerfield", null, false)
+                    SeuratToolParameter.create("nExpectedCells", "# Expected Cells", "Only applied if emptyDropsCellRanger is selected. Passed to n.expected.cells argument", "ldk-integerfield", null, false),
+                    SeuratToolParameter.create("runCellBender", "Run CellBender", "If checked, cellbender will be run on the raw count matrix (instead of emptyDrops) to remove background/ambient RNA signal", "checkbox", new JSONObject(){{
+
+                    }}, false)
             ), null, null);
         }
 

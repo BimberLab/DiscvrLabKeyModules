@@ -16,7 +16,7 @@ for (datasetId in names(seuratObjects)) {
     matrixDir <- featureData[[datasetId]]
     if (!is.null(matrixDir)) {
         tryCatch({
-            seuratObj <- CellMembrane::AppendCiteSeq(seuratObj, unfilteredMatrixDir = matrixDir, normalizeMethod = normalizeMethod, datasetId = datasetId, featureMetadata = featureMetadata, adtWhitelist = adtWhitelist)
+            seuratObj <- CellMembrane::AppendCiteSeq(seuratObj, unfilteredMatrixDir = matrixDir, normalizeMethod = normalizeMethod, datasetId = datasetId, featureMetadata = featureMetadata, adtWhitelist = adtWhitelist, runCellBender = runCellBender)
         }, error = function(e){
             print(paste0('Error running AppendCiteSeq for: ', datasetId))
             print(conditionMessage(e))
