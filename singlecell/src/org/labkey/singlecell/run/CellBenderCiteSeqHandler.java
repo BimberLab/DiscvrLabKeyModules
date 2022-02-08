@@ -109,7 +109,8 @@ public class CellBenderCiteSeqHandler extends AbstractParameterizedOutputHandler
 
             String exe = SequencePipelineService.get().getExeForPackage("CELLBENDERPATH", "cellbender").getPath();
             List<String> args = new ArrayList<>(Arrays.asList(
-                    exe, "--input", inputH5.getPath(),
+                    exe, "remove-background",
+                    "--input", inputH5.getPath(),
                     "--output", outputH5.getPath()
             ));
             args.addAll(getClientCommandArgs(ctx.getParams()));
