@@ -23,7 +23,7 @@ public class CellBenderLoupeHandler extends AbstractParameterizedOutputHandler<S
 {
     public CellBenderLoupeHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Run CellBender (RNA-seq)", "This will run cellbender on the input cellranger folder and create a subset matrix with background/ambient noise removed.", null, CellBenderCiteSeqHandler.getParams());
+        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Run CellBender (RNA-seq)", "This will run cellbender on the input cellranger folder and create a subset matrix with background/ambient noise removed.", null, CellBenderCiteSeqHandler.getParams(0.01));
     }
 
     @Override

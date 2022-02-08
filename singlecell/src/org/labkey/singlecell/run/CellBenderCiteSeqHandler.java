@@ -27,17 +27,17 @@ public class CellBenderCiteSeqHandler extends AbstractParameterizedOutputHandler
 {
     public CellBenderCiteSeqHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Run CellBender (CITE-seq)", "This will run cellbender on the input cellranger folder and create a subset matrix with background/ambient noise removed.", null, getParams());
+        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Run CellBender (CITE-seq)", "This will run cellbender on the input cellranger folder and create a subset matrix with background/ambient noise removed.", null, getParams(0.05));
     }
 
-    protected static List<ToolParameterDescriptor> getParams()
+    protected static List<ToolParameterDescriptor> getParams(double fpr)
     {
         return Arrays.asList(
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--expected-cells"), "expectedCells", "Expected Cells", "Passed to CellBender --expected-cells", "ldk-integerfield", null, 5000),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--total-droplets-included"), "totalDropletsIncluded", "Total Droplets Included", "Passed to CellBender --total-droplets-included", "ldk-integerfield", null, 20000),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--fpr"), "fpr", "fpr Cells", "Passed to CellBender --fpr", "ldk-numberfield", new JSONObject(){{
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--fpr"), "fpr", "FPR", "Passed to CellBender --fpr", "ldk-numberfield", new JSONObject(){{
                     put("decimalPrecision", 3);
-                }}, 0.05),
+                }}, fpr),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--epochs"), "epochs", "Epochs", "Passed to CellBender --epochs", "ldk-integerfield", null, 150),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--cuda"), "useGpus", "Use GPUs", "If checked, the --cuda argument will be set on cellbender", "checkbox", null, false)
         );
