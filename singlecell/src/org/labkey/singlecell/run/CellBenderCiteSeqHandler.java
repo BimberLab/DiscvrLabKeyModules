@@ -27,10 +27,10 @@ public class CellBenderCiteSeqHandler extends AbstractParameterizedOutputHandler
 {
     public CellBenderCiteSeqHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Run CellBender (CITE-seq)", "This will run cellbender on the input cellranger folder and create a subset matrix with background/ambient noise removed.", null, getParams(0.05));
+        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Run CellBender (CITE-seq)", "This will run cellbender on the input cellranger folder and create a subset matrix with background/ambient noise removed.", null, getParams(0.05, false));
     }
 
-    protected static List<ToolParameterDescriptor> getParams(double fpr)
+    protected static List<ToolParameterDescriptor> getParams(double fpr, boolean useGPU)
     {
         return Arrays.asList(
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--expected-cells"), "expectedCells", "Expected Cells", "Passed to CellBender --expected-cells", "ldk-integerfield", null, 5000),
@@ -39,7 +39,9 @@ public class CellBenderCiteSeqHandler extends AbstractParameterizedOutputHandler
                     put("decimalPrecision", 3);
                 }}, fpr),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--epochs"), "epochs", "Epochs", "Passed to CellBender --epochs", "ldk-integerfield", null, 150),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--cuda"), "useGpus", "Use GPUs", "If checked, the --cuda argument will be set on cellbender", "checkbox", null, false)
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--cuda"), "useGpus", "Use GPUs", "If checked, the --cuda argument will be set on cellbender", "checkbox", new JSONObject(){{
+                    put("checked", useGPU);
+                }}, useGPU)
         );
     }
 
