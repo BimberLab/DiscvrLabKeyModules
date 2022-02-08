@@ -37,7 +37,7 @@ public class CellBenderCiteSeqHandler extends AbstractParameterizedOutputHandler
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--total-droplets-included"), "totalDropletsIncluded", "Total Droplets Included", "Passed to CellBender --total-droplets-included", "ldk-integerfield", null, 20000),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--fpr"), "fpr", "fpr Cells", "Passed to CellBender --fpr", "ldk-numberfield", new JSONObject(){{
                     put("decimalPrecision", 3);
-                }}, 0.01),
+                }}, 0.05),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--epochs"), "epochs", "Epochs", "Passed to CellBender --epochs", "ldk-integerfield", null, 150),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--cuda"), "useGpus", "Use GPUs", "If checked, the --cuda argument will be set on cellbender", "checkbox", null, false)
         );
