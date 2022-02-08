@@ -37,6 +37,8 @@ import org.labkey.singlecell.analysis.ProcessSeuratObjectHandler;
 import org.labkey.singlecell.analysis.ProcessSingleCellHandler;
 import org.labkey.singlecell.button.FeatureBarcodeButton;
 import org.labkey.singlecell.pipeline.singlecell.*;
+import org.labkey.singlecell.run.CellBenderCiteSeqHandler;
+import org.labkey.singlecell.run.CellBenderLoupeHandler;
 import org.labkey.singlecell.run.CellRangerFeatureBarcodeHandler;
 import org.labkey.singlecell.run.CellRangerGexCountStep;
 import org.labkey.singlecell.run.CellRangerVDJWrapper;
@@ -136,6 +138,8 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new CellRangerRawDataHandler());
         SequenceAnalysisService.get().registerFileHandler(new ProcessSingleCellHandler());
         SequenceAnalysisService.get().registerFileHandler(new ProcessSeuratObjectHandler());
+        SequenceAnalysisService.get().registerFileHandler(new CellBenderCiteSeqHandler());
+        SequenceAnalysisService.get().registerFileHandler(new CellBenderLoupeHandler());
 
         //Single-cell:
         SequencePipelineService.get().registerPipelineStep(new AppendCiteSeq.Provider());
