@@ -607,11 +607,14 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             List<SingleCellStep.SeuratObjectWrapper> inputMatrices = new ArrayList<>();
             inputFiles.forEach(x -> {
                 String datasetName = ctx.getSequenceSupport().getCachedReadset(x.getReadset()).getName();
-                File source = new File(x.getFile().getParentFile(), "raw_feature_bc_matrix");
-                if (!source.exists())
+                File countsDir = new File(x.getFile().getParentFile(), "raw_feature_bc_matrix");
+                if (!countsDir.exists())
                 {
-                    throw new IllegalArgumentException("Unable to find file: " + source.getPath());
+                    throw new IllegalArgumentException("Unable to find file: " + countsDir.getPath());
                 }
+
+                // The outs directory:
+                File source = x.getFile().getParentFile();
 
                 try
                 {

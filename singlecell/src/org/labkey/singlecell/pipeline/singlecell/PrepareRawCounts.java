@@ -35,7 +35,10 @@ public class PrepareRawCounts extends AbstractCellMembraneStep
                     SeuratToolParameter.create("maxAllowableCells", "Max Cells Allowed", "If more than this many cells are predicted by EmptyDrops, the job will fail", "ldk-integerfield", null, 20000),
                     SeuratToolParameter.create("useEmptyDropsCellRanger", "Use emptyDropsCellRanger", "If checked, this will run emptyDropsCellRanger instead of emptyDrops", "checkbox", null, false),
                     SeuratToolParameter.create("nExpectedCells", "# Expected Cells", "Only applied if emptyDropsCellRanger is selected. Passed to n.expected.cells argument", "ldk-integerfield", null, false),
-                    SeuratToolParameter.create("runCellBender", "Run CellBender", "If checked, cellbender will be run on the raw count matrix (instead of emptyDrops) to remove background/ambient RNA signal", "checkbox", new JSONObject(){{
+                    SeuratToolParameter.create("useCellBender", "Run CellBender", "If checked, cellbender will be run on the raw count matrix (instead of emptyDrops) to remove background/ambient RNA signal", "checkbox", new JSONObject(){{
+
+                    }}, false),
+                    SeuratToolParameter.create("useSoupX", "Run SoupX", "If checked, SoupX will be run on the raw count matrix (instead of emptyDrops) to remove background/ambient RNA signal", "checkbox", new JSONObject(){{
 
                     }}, false)
             ), null, null);
