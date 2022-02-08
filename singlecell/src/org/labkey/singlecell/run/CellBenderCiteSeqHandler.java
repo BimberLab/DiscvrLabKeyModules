@@ -50,6 +50,18 @@ public class CellBenderCiteSeqHandler extends AbstractParameterizedOutputHandler
     }
 
     @Override
+    public boolean requiresGenome()
+    {
+        return false;
+    }
+
+    @Override
+    public boolean requiresSingleGenome()
+    {
+        return false;
+    }
+
+    @Override
     public boolean canProcess(SequenceOutputFile o)
     {
         return "CITE-seq Counts".equals(o.getCategory()) & "matrix.mtx.gz".equals(o.getFile().getName());
