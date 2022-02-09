@@ -7,7 +7,7 @@ for (datasetId in names(seuratObjects)) {
     if (useCellBender) {
         # This is the 10x project:
         print('Will use cellbender-adjusted counts instead of raw counts:')
-        previouslyFilteredMatrix <- paste0(rawCountDir, 'raw_feature_bc_matrix.cellbender_filtered.h5')
+        previouslyFilteredMatrix <- paste0(rawCountDir, '/raw_feature_bc_matrix.cellbender_filtered.h5')
         if (!file.exists(previouslyFilteredMatrix)) {
             stop(paste0('Unable to find file: ', previouslyFilteredMatrix, '. You can re-run cellbender to fix this.'))
         }
