@@ -16,7 +16,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
-public class PrepareRawCounts extends AbstractCellMembraneStep
+public class PrepareRawCounts extends AbstractCellMembraneStep implements SingleCellRawDataStep
 {
     public static final String LABEL = "Load Raw Counts";
 
