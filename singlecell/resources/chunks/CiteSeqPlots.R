@@ -5,7 +5,7 @@ for (datasetId in names(seuratObjects)) {
         print('ADT assay not present, skipping')
     } else {
         for (adt in rownames(seuratObj[['ADT']])) {
-            CellMembrane::FeaturePlotAcrossReductions(seuratObj, features = c(adt))
+            CellMembrane::FeaturePlotAcrossReductions(seuratObj, features = paste0('adt_', adt))
         }
     }
 

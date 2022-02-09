@@ -1,5 +1,6 @@
 package org.labkey.singlecell.run;
 
+import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -15,6 +16,7 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.singlecell.SingleCellModule;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,7 +25,7 @@ public class CellBenderLoupeHandler extends AbstractParameterizedOutputHandler<S
 {
     public CellBenderLoupeHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Run CellBender (RNA-seq)", "This will run cellbender on the input cellranger folder and create a subset matrix with background/ambient noise removed.", null, CellBenderCiteSeqHandler.getParams(0.01, true));
+        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Run CellBender (RNA-seq)", "This will run cellbender on the input cellranger folder and create a subset matrix with background/ambient noise removed.", null, CellBenderCiteSeqHandler.getParams(0.01, true, true));
     }
 
     @Override
@@ -88,6 +90,36 @@ public class CellBenderLoupeHandler extends AbstractParameterizedOutputHandler<S
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
             File filteredH5 = runCellBender(inputFiles.get(0).getFile(), ctx);
+            if (ctx.getParams().optBoolean("copyH5", false))
+            {
+                ctx.getLogger().info("Copying h5 file to cellranger dir");
+                List<File> toMove = Arrays.asList(
+                        filteredH5,
+                        new File(filteredH5.getParentFile(), filteredH5.getName().replaceAll("_filtered.h5", ".pdf")),
+                        new File(filteredH5.getParentFile(), filteredH5.getName().replaceAll("_filtered.h5", "_cell_barcodes.csv")),
+                        new File(filteredH5.getParentFile(), filteredH5.getName().replaceAll("_filtered.h5", ".log"))
+                );
+
+                try
+                {
+                    File destDir = getH5(inputFiles.get(0).getFile()).getParentFile();
+                    for (File f : toMove)
+                    {
+                        File dest = new File(destDir, f.getName());
+                        if (dest.exists())
+                        {
+                            dest.delete();
+                        }
+
+                        ctx.getLogger().debug("Copying file to: " + dest.getPath());
+                        FileUtils.copyFile(f, dest);
+                    }
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
 
             SequenceOutputFile so = new SequenceOutputFile();
             so.setReadset(inputFiles.get(0).getReadset());
@@ -95,11 +127,11 @@ public class CellBenderLoupeHandler extends AbstractParameterizedOutputHandler<S
             so.setFile(filteredH5);
             if (so.getReadset() != null)
             {
-                so.setName(ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName() + ": CellBender Filtered");
+                so.setName(ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName() + ": CellBender Filtered RNA");
             }
             else
             {
-                so.setName(inputFiles.get(0).getName() + ": CellBender Filtered");
+                so.setName(inputFiles.get(0).getName() + ": CellBender Filtered RNA");
             }
             so.setCategory("CellBender Filtered RNA-Seq Counts");
             ctx.addSequenceOutput(so);

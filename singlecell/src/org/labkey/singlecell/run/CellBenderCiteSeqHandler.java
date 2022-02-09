@@ -27,12 +27,12 @@ public class CellBenderCiteSeqHandler extends AbstractParameterizedOutputHandler
 {
     public CellBenderCiteSeqHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Run CellBender (CITE-seq)", "This will run cellbender on the input cellranger folder and create a subset matrix with background/ambient noise removed.", null, getParams(0.05, false));
+        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Run CellBender (CITE-seq)", "This will run cellbender on the input cellranger folder and create a subset matrix with background/ambient noise removed.", null, getParams(0.05, false, false));
     }
 
-    protected static List<ToolParameterDescriptor> getParams(double fpr, boolean useGPU)
+    protected static List<ToolParameterDescriptor> getParams(double fpr, boolean useGPU, boolean copyH5)
     {
-        return Arrays.asList(
+        List<ToolParameterDescriptor> ret = new ArrayList<>(Arrays.asList(
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--expected-cells"), "expectedCells", "Expected Cells", "Passed to CellBender --expected-cells", "ldk-integerfield", null, 5000),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--total-droplets-included"), "totalDropletsIncluded", "Total Droplets Included", "Passed to CellBender --total-droplets-included", "ldk-integerfield", null, 20000),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--fpr"), "fpr", "FPR", "Passed to CellBender --fpr", "ldk-numberfield", new JSONObject(){{
@@ -42,7 +42,16 @@ public class CellBenderCiteSeqHandler extends AbstractParameterizedOutputHandler
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--cuda"), "useGpus", "Use GPUs", "If checked, the --cuda argument will be set on cellbender", "checkbox", new JSONObject(){{
                     put("checked", useGPU);
                 }}, useGPU)
-        );
+        ));
+
+        if (copyH5)
+        {
+            ret.add(ToolParameterDescriptor.create("copyH5", "Use Matrix Source Dir", "If checked, the filtered matrix and output will be deposited in the same folder as the input cellranger project. This is required to use the filtered matrix in the seurat pipeline", "checkbox", new JSONObject(){{
+                put("checked", true);
+            }}, true));
+        }
+
+        return ret;
     }
 
     @Override
