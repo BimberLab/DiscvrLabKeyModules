@@ -36,6 +36,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.pipeline.AbstractSingleCellPipelineStep;
 import org.labkey.api.singlecell.pipeline.AbstractSingleCellStep;
+import org.labkey.api.singlecell.pipeline.SingleCellRawDataStep;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
@@ -144,6 +145,16 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
         @Override
         public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
+            List<PipelineStepCtx<SingleCellRawDataStep>> rawCountSteps = SequencePipelineService.get().getSteps(ctx.getJob(), SingleCellRawDataStep.class);
+            if (!rawCountSteps.isEmpty())
+            {
+                for (PipelineStepCtx<SingleCellRawDataStep> stepCtx : rawCountSteps)
+                {
+                    SingleCellRawDataStep step = stepCtx.getProvider().create(ctx);
+                    step.init(ctx, inputFiles);
+                }
+            }
+
             boolean requiresHashing = false;
             boolean requiresCite = false;
             boolean doH5Caching = false;

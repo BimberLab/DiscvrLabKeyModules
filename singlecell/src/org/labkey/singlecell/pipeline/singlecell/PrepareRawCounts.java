@@ -1,20 +1,20 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
-import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
-import org.labkey.api.pipeline.PipelineJob;
-import org.labkey.api.pipeline.WorkDirectory;
+import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
-import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellRawDataStep;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 
 public class PrepareRawCounts extends AbstractCellMembraneStep
 {
@@ -57,6 +57,25 @@ public class PrepareRawCounts extends AbstractCellMembraneStep
         public PrepareRawCounts create(PipelineContext ctx)
         {
             return new PrepareRawCounts(ctx, this);
+        }
+    }
+
+    @Override
+    public void init(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputFiles) throws PipelineJobException
+    {
+        for (SequenceOutputFile so : inputFiles)
+        {
+            boolean useCellBender = getProvider().getParameterByName("useCellBender").extractValue(ctx.getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+            if (useCellBender)
+            {
+                // This is the outs dir:
+                File source = so.getFile().getParentFile();
+                File expected = new File(source, "raw_feature_bc_matrix.cellbender_filtered.h5");
+                if (!expected.exists())
+                {
+                    throw new IllegalArgumentException("Missing cellbender-corrected matrix. You can re-run cellbender on the loupe file to fix this: " + expected.getPath());
+                }
+            }
         }
     }
 
