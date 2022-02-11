@@ -31,7 +31,6 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.SimpleUserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
-import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
@@ -60,6 +59,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
 
         DefaultSchema.registerProvider(SequenceAnalysisSchema.SCHEMA_NAME, new DefaultSchema.SchemaProvider(m)
         {
+            @Override
             public QuerySchema createSchema(final DefaultSchema schema, Module module)
             {
                 return new SequenceAnalysisUserSchema(schema.getUser(), schema.getContainer(), dbSchema);
@@ -84,25 +84,25 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             return createReadDataTable(sourceTable, cf);
         }
         else if (SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable).init();
+            return new SharedDataTable<>(this, sourceTable).init();
         else if (SequenceAnalysisSchema.TABLE_REF_AA_FEATURES.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable).init();
+            return new SharedDataTable<>(this, sourceTable).init();
         else if (SequenceAnalysisSchema.TABLE_REF_NT_FEATURES.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable).init();
+            return new SharedDataTable<>(this, sourceTable).init();
         else if (SequenceAnalysisSchema.TABLE_SAVED_ANALYSES.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable).init();
+            return new SharedDataTable<>(this, sourceTable).init();
         else if (SequenceAnalysisSchema.TABLE_REF_LIBRARIES.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable).init();
+            return new SharedDataTable<>(this, sourceTable).init();
         else if (SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable).init();
+            return new SharedDataTable<>(this, sourceTable).init();
         else if (SequenceAnalysisSchema.TABLE_LIBRARY_TRACKS.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable).init();
+            return new SharedDataTable<>(this, sourceTable).init();
         else if (SequenceAnalysisSchema.TABLE_AA_FEATURES.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable).init();
+            return new SharedDataTable<>(this, sourceTable).init();
         else if (SequenceAnalysisSchema.TABLE_NT_FEATURES.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable).init();
+            return new SharedDataTable<>(this, sourceTable).init();
         else if (SequenceAnalysisSchema.TABLE_CHAIN_FILES.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable).init();
+            return new SharedDataTable<>(this, sourceTable).init();
         else if (SequenceAnalysisSchema.TABLE_READSET_STATUS.equalsIgnoreCase(name))
             return new ContainerScopedTable<>(this, sourceTable, cf, "status").init();
         else if (SequenceAnalysisSchema.TABLE_LIBRARY_TYPES.equalsIgnoreCase(name))
@@ -124,7 +124,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
 
     private TableInfo createOutputFiles(TableInfo sourceTable, ContainerFilter cf)
     {
-        SimpleTable ret = new SimpleTable(this, sourceTable, cf).init();
+        SimpleTable<?> ret = new SimpleTable<>(this, sourceTable, cf).init();
         LinkedHashSet<String> scriptIncludes = new LinkedHashSet<>();
         if (ret.getButtonBarConfig().getScriptIncludes() != null)
         {
@@ -132,7 +132,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         }
 
         scriptIncludes.add("sequenceanalysis/sequenceanalysisButtons.js");
-        for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers(SequenceOutputHandler.TYPE.OutputFile))
+        for (SequenceOutputHandler<?> handler : SequenceAnalysisServiceImpl.get().getFileHandlers(SequenceOutputHandler.TYPE.OutputFile))
         {
             if (handler.getOwningModule() != null && getContainer().getActiveModules().contains(handler.getOwningModule()) && handler.getClientDependencies() != null)
             {
@@ -140,7 +140,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             }
         }
 
-        for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers(SequenceOutputHandler.TYPE.Readset))
+        for (SequenceOutputHandler<?> handler : SequenceAnalysisServiceImpl.get().getFileHandlers(SequenceOutputHandler.TYPE.Readset))
         {
             if (handler.getOwningModule() != null && getContainer().getActiveModules().contains(handler.getOwningModule()) && handler.getClientDependencies() != null)
             {
@@ -165,7 +165,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
 
     private TableInfo createReadDataTable(TableInfo sourceTable, ContainerFilter cf)
     {
-        SimpleTable ret = new SimpleTable<>(this, sourceTable, cf).init();
+        SimpleTable<?> ret = new SimpleTable<>(this, sourceTable, cf).init();
 
         if (ret.getColumn("totalForwardReads") == null)
         {
@@ -197,7 +197,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
 
     private TableInfo createReadsetsTable(TableInfo sourceTable, ContainerFilter cf)
     {
-        SimpleTable ret = new SimpleTable<>(this, sourceTable, cf).init();
+        SimpleTable<?> ret = new SimpleTable<>(this, sourceTable, cf).init();
         if (ret.getColumn("files") == null)
         {
             WrappedColumn newCol = new WrappedColumn(ret.getColumn("rowid"), "files");
@@ -282,7 +282,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         {
             SQLFragment sql = new SQLFragment("(SELECT COUNT(rd.rowid) FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " rd WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
             ExprColumn newCol = new ExprColumn(ret, "totalAlignments", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
-            newCol.setLabel("Alignments Using This Readset");
+            newCol.setLabel("Analyses Using This Readset");
             newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=sequence_analyses&query.readset~eq=${rowid}", ret.getContainer().isWorkbook() ? ret.getContainer().getParent() : ret.getContainer()));
 
             ret.addColumn(newCol);
@@ -294,6 +294,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             SQLFragment sql = new SQLFragment("(SELECT ").append(ret.getSqlDialect().getGroupConcat(new SQLFragment("l.name"), true, true, (chr + "(10)"))).append(new SQLFragment(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " a JOIN " + SequenceAnalysisSchema.SCHEMA_NAME  + "." + SequenceAnalysisSchema.TABLE_REF_LIBRARIES + " l ON (a.library_id = l.rowid) WHERE a.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)"));
             ExprColumn newCol = new ExprColumn(ret, "distinctGenomes", sql, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
             newCol.setLabel("Genomes With Alignments For Readset");
+            newCol.setWidth("200");
             newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=sequence_analyses&query.readset~eq=${rowid}&query.library_id~isnonblank", ret.getContainer().isWorkbook() ? ret.getContainer().getParent() : ret.getContainer()));
 
             ret.addColumn(newCol);
@@ -304,6 +305,21 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             SQLFragment sql = new SQLFragment("(SELECT COUNT(rd.rowid) FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " rd WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
             ExprColumn newCol = new ExprColumn(ret, "totalOutputs", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
             newCol.setLabel("Output Files From This Readset");
+            newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=outputfiles&query.readset~eq=${rowid}", ret.getContainer().isWorkbook() ? ret.getContainer().getParent() : ret.getContainer()));
+            newCol.setUserEditable(false);
+            newCol.setCalculated(true);
+            ret.addColumn(newCol);
+        }
+
+        if (ret.getColumn("outputFileTypes") == null)
+        {
+            String chr = sourceTable.getSqlDialect().isPostgreSQL() ? "chr" : "char";
+            SQLFragment sql = new SQLFragment("(SELECT ").
+                    append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("rd.category"), true, true, chr + "(10)")).
+                    append(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " rd WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
+            ExprColumn newCol = new ExprColumn(ret, "outputFileTypes", sql, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
+            newCol.setLabel("Output File Types");
+            newCol.setWidth("250");
             newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=outputfiles&query.readset~eq=${rowid}", ret.getContainer().isWorkbook() ? ret.getContainer().getParent() : ret.getContainer()));
             newCol.setUserEditable(false);
             newCol.setCalculated(true);
@@ -399,11 +415,12 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
 
     private TableInfo createRefSequencesTable(TableInfo sourceTable)
     {
-        SharedDataTable ret = new SharedDataTable<>(this, sourceTable);
+        SharedDataTable<?> ret = new SharedDataTable<>(this, sourceTable);
         String chr = sourceTable.getSqlDialect().isPostgreSQL() ? "chr" : "char";
         SQLFragment sql = new SQLFragment("(SELECT ").append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("r.name"), true, true, chr + "(10)")).append(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS + " rm JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_LIBRARIES + " r ON (rm.library_id = r.rowid) WHERE rm.ref_nt_id = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
         ExprColumn newCol = new ExprColumn(ret, "genomes", sql, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
         newCol.setLabel("Genome(s) Using Sequence");
+        newCol.setWidth("200");
         ret.addColumn(newCol);
 
         return ret.init();

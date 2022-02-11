@@ -1,4 +1,4 @@
-<view xmlns="http://labkey.org/data/xml/view" title="Filter/Process VCF Files">
+<view xmlns="http://labkey.org/data/xml/view" title="Single-cell Processing">
     <dependencies>
         <dependency path="laboratory.context"/>
         <dependency path="SequenceAnalysis/sequenceAnalysis"/>

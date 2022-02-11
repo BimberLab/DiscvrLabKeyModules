@@ -92,7 +92,7 @@ public class SingleCellController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class DownloadLoupeDataAction extends ExportAction<OutputFilesForm>
+    public static class DownloadLoupeDataAction extends ExportAction<OutputFilesForm>
     {
         @Override
         public void export(OutputFilesForm form, HttpServletResponse response, BindException errors) throws Exception
@@ -113,7 +113,7 @@ public class SingleCellController extends SpringActionController
 
                     String name = FileUtil.makeLegalName(so.getName());
                     Set<File> toAdd = toExport.getOrDefault(name, new HashSet<>());
-                    toAdd.addAll(CellRangerWrapper.getRawDataDirs(loupe.getParentFile(), false));
+                    toAdd.addAll(CellRangerWrapper.getRawDataDirs(loupe.getParentFile(), false, true));
 
                     toExport.put(name, toAdd);
                 }
@@ -461,7 +461,7 @@ public class SingleCellController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class SingleCellProcessingAction extends SimpleViewAction<Object>
+    public static class SingleCellProcessingAction extends SimpleViewAction<Object>
     {
         public URLHelper getSuccessURL(Object form)
         {

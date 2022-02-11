@@ -22,7 +22,10 @@ public class RunSingleR extends AbstractCellMembraneStep
             super("RunSingleR", "Run SingleR", "CellMembrane/SingleR", "This will run singleR on the input object(s), and save the results in metadata.", Arrays.asList(
                     SeuratToolParameter.create("showHeatmap", "Generate Heatmaps", "If checked, the SingleR heatmaps will be generated. These can be expensive for large datasets and are often less useful than the DimPlots, so skipping them sometimes makes sense.", "checkbox", new JSONObject(){{
 
-                    }}, false, "showHeatmap", true)
+                    }}, false, "showHeatmap", true),
+                    SeuratToolParameter.create("nThreads", "# Threads", "If provided, this value will be passed to BiocParallel::MulticoreParam().", "ldk-integerfield", new JSONObject(){{
+                        put("minValue", 0);
+                    }}, null)
             ), null, null);
         }
 

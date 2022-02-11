@@ -60,6 +60,7 @@ import org.labkey.sequenceanalysis.analysis.UnmappedSequenceBasedGenotypeHandler
 import org.labkey.sequenceanalysis.button.AddSraRunButton;
 import org.labkey.sequenceanalysis.button.ChangeReadsetStatusButton;
 import org.labkey.sequenceanalysis.button.ChangeReadsetStatusForAnalysesButton;
+import org.labkey.sequenceanalysis.button.DownloadSraButton;
 import org.labkey.sequenceanalysis.button.ReprocessLibraryButton;
 import org.labkey.sequenceanalysis.button.RunMultiQCButton;
 import org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisJob;
@@ -82,6 +83,7 @@ import org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerPipelineProvid
 import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 import org.labkey.sequenceanalysis.query.SequenceAnalysisUserSchema;
 import org.labkey.sequenceanalysis.query.SequenceTriggerHelper;
+import org.labkey.sequenceanalysis.run.RestoreSraDataHandler;
 import org.labkey.sequenceanalysis.run.alignment.BWAMemWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWASWWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWAWrapper;
@@ -361,6 +363,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new NextCladeHandler());
 
         SequenceAnalysisService.get().registerReadsetHandler(new MultiQCHandler());
+        SequenceAnalysisService.get().registerReadsetHandler(new RestoreSraDataHandler());
 
         //ObjectFactory.Registry.register(AnalysisModelImpl.class, new UnderscoreBeanObjectFactory(AnalysisModelImpl.class));
         //ObjectFactory.Registry.register(SequenceReadsetImpl.class, new UnderscoreBeanObjectFactory(SequenceReadsetImpl.class));
@@ -407,6 +410,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
         LDKService.get().registerQueryButton(new AddSraRunButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS);
         LDKService.get().registerQueryButton(new RunMultiQCButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS);
+        LDKService.get().registerQueryButton(new DownloadSraButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS);
 
         LDKService.get().registerQueryButton(new ChangeReadsetStatusForAnalysesButton(), "sequenceanalysis", "sequence_analyses");
         LDKService.get().registerQueryButton(new ChangeReadsetStatusButton(), "sequenceanalysis", "sequence_readsets");

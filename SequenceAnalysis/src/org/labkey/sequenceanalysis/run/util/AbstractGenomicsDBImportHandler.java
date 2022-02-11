@@ -714,7 +714,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                     if (alwaysPerformRsync)
                     {
                         ctx.getLogger().debug("deleting existing done file: " + copyDone.getPath());
-                        copyDone.exists();
+                        copyDone.delete();
                     }
                     else
                     {

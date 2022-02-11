@@ -42,6 +42,7 @@ import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.model.CDNA_Library;
 import org.labkey.api.singlecell.model.Sample;
 import org.labkey.api.singlecell.model.Sort;
+import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.singlecell.run.CellRangerFeatureBarcodeHandler;
@@ -133,14 +134,19 @@ public class CellHashingServiceImpl extends CellHashingService
         HashMap<Integer, Integer> readsetToCiteSeqMap = new HashMap<>();
         HashMap<Integer, Set<String>> gexToPanels = new HashMap<>();
 
+        List<Readset> cachedReadsets = support.getCachedReadsets();
+        job.getLogger().debug("Total cached readsets: " + cachedReadsets.size());
+        if (cachedReadsets.isEmpty())
+        {
+            throw new PipelineJobException("There are no cached readsets. This might indicate hashing or CITE-seq is being selected for an input not associated with readsets, like a multi-dataset object");
+        }
+
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(output), '\t', CSVWriter.NO_QUOTE_CHARACTER); CSVWriter bcWriter = new CSVWriter(PrintWriters.getPrintWriter(barcodeOutput), ',', CSVWriter.NO_QUOTE_CHARACTER))
         {
             writer.writeNext(new String[]{"ReadsetId", "CDNA_ID", "SubjectId", "Stim", "Population", "HashingReadsetId", "HasHashingReads", "HTO_Name", "HTO_Seq", "CiteSeqReadsetId", "HasCiteSeqReads", "CiteSeqPanel"});
-            List<Readset> cachedReadsets = support.getCachedReadsets();
             Set<String> distinctHTOs = new HashSet<>();
             Set<Boolean> hashingStatus = new HashSet<>();
             AtomicInteger totalWritten = new AtomicInteger(0);
-            job.getLogger().debug("total cached readsets: " + cachedReadsets.size());
             for (Readset rs : cachedReadsets)
             {
                 AtomicBoolean hasError = new AtomicBoolean(false);
@@ -875,9 +881,13 @@ public class CellHashingServiceImpl extends CellHashingService
     {
         List<ToolParameterDescriptor> ret = new ArrayList<>(Arrays.asList(
             ToolParameterDescriptor.create("minCountPerCell", "Min Reads/Cell", null, "ldk-integerfield", null, 5),
+            ToolParameterDescriptor.create("majorityConsensusThreshold", "Majority Consensus Threshold", "This applies to calculating a consensus call when multiple algorithms are used. If NULL, then all non-negative calls must agree or that cell is marked discordant. If non-NULL, then the number of algorithms returning the top call is divided by the total number of non-negative calls. If this ratio is above the majorityConsensusThreshold, that value is selected. For example, when majorityConsensusThreshold=0.6 and the calls are: HTO-1,HTO-1,Negative,HTO-2, then 2/3 calls are for HTO-1, giving 0.66. This is greater than the majorityConsensusThreshold of 0.6, so HTO-1 is returned. This can be useful for situations where most algorithms agree, but a single caller fails.", "ldk-numberfield", new JSONObject(){{
+                put("minValue", 0);
+                put("maxValue", 1);
+                put("decimalPrecision", 2);
+            }}, 0.6),
             ToolParameterDescriptor.create("skipNormalizationQc", "Skip Normalization QC", null, "checkbox", null, true),
             ToolParameterDescriptor.create("retainRawCountFile", "Retain Raw Counts File", null, "checkbox", null, false)
-
         ));
 
         final List<String> allMethods = Arrays.stream(CALLING_METHOD.values()).filter(x -> allowDemuxEm || x != CALLING_METHOD.demuxem).map(Enum::name).collect(Collectors.toList());
@@ -900,6 +910,18 @@ public class CellHashingServiceImpl extends CellHashingService
             put("delimiter", ";");
             put("joinReturnValue", true);
         }}, null));
+
+        ret.add(SeuratToolParameter.create("maxHashingPctFail", "Hashing Max Fraction Failed", "The maximum fraction of cells that can have no call (i.e. not singlet or doublet). Otherwise it will fail the job. This is a number 0-1.", "ldk-numberfield", new JSONObject(){{
+            put("minValue", 0);
+            put("maxValue", 1);
+            put("decimalPrecision", 2);
+        }}, null));
+
+        ret.add(SeuratToolParameter.create("maxHashingPctDiscordant", "Hashing Max Fraction Discordant", "The maximum fraction of cells that can have discordant calls. High discordance is usually an indication of either poor quality data, or one caller performing badly.This is a number 0-1.", "ldk-numberfield", new JSONObject(){{
+            put("minValue", 0);
+            put("maxValue", 1);
+            put("decimalPrecision", 2);
+        }}, 0.2));
 
         return ret;
     }
@@ -1158,7 +1180,7 @@ public class CellHashingServiceImpl extends CellHashingService
             String keepMarkdown = parameters.keepMarkdown ? "TRUE" : "FALSE";
             String h5String = h5 == null ? "" : ", h5File = '/work/" + h5.getName() + "'";
             String consensusMethodString = consensusMethodNames.isEmpty() ? "" : ", methodsForConsensus = c('" + StringUtils.join(consensusMethodNames, "','") + "')";
-            writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "'" + h5String + ", molInfoFile = '/work/" + molInfo.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', rawCountsExport = '/work/" + countFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', skipNormalizationQc = " + skipNormalizationQcString + ", methods = c('" + StringUtils.join(methodNames, "','") + "')" + consensusMethodString + ", keepMarkdown = " + keepMarkdown + ")");
+            writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "'" + h5String + ", molInfoFile = '/work/" + molInfo.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', rawCountsExport = '/work/" + countFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', skipNormalizationQc = " + skipNormalizationQcString + ", methods = c('" + StringUtils.join(methodNames, "','") + "')" + consensusMethodString + ", keepMarkdown = " + keepMarkdown + ", minCountPerCell = " + (parameters.minCountPerCell == null ? "NULL" : parameters.minCountPerCell) + ", majorityConsensusThreshold = " + (parameters.majorityConsensusThreshold == null ? "NULL" : parameters.majorityConsensusThreshold) + ")");
             writer.println("print('Rmarkdown complete')");
 
         }

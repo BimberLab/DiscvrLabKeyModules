@@ -34,7 +34,7 @@ public class SequenceReadsetHandlerJob extends SequenceJob implements HasJobPara
     {
     }
 
-    public SequenceReadsetHandlerJob(Container c, User user, @Nullable String jobName, PipeRoot pipeRoot, SequenceOutputHandler handler, List<SequenceReadsetImpl> readsets, JSONObject jsonParams) throws IOException
+    public SequenceReadsetHandlerJob(Container c, User user, @Nullable String jobName, PipeRoot pipeRoot, SequenceOutputHandler<?> handler, List<SequenceReadsetImpl> readsets, JSONObject jsonParams) throws IOException
     {
         super(SequenceReadsetHandlerPipelineProvider.NAME, c, user, jobName, pipeRoot, jsonParams, null, SequenceOutputHandlerJob.FOLDER_NAME);
 
@@ -44,13 +44,13 @@ public class SequenceReadsetHandlerJob extends SequenceJob implements HasJobPara
         _readsetIds = new ArrayList<>();
         for (SequenceReadsetImpl rs : readsets)
         {
-            getSequenceSupport().cacheReadset(rs);
+            getSequenceSupport().cacheReadset(rs, getHandler().supportsSraArchivedData());
             _readsetIds.add(rs.getReadsetId());
         }
     }
 
     @Override
-    public TaskPipeline getTaskPipeline()
+    public TaskPipeline<?> getTaskPipeline()
     {
         return  PipelineJobService.get().getTaskPipeline(new TaskId(SequenceReadsetHandlerJob.class));
     }
@@ -81,7 +81,11 @@ public class SequenceReadsetHandlerJob extends SequenceJob implements HasJobPara
             {
                 for (ReadData d : rs.getReadData())
                 {
-                    ret.add(d.getFile1());
+                    if (d.getFile1() != null)
+                    {
+                        ret.add(d.getFile1());
+                    }
+
                     if (d.getFile2() != null)
                     {
                         ret.add(d.getFile2());

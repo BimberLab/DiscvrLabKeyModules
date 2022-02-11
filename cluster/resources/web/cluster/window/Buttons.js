@@ -16,6 +16,16 @@ Cluster.Utils = new function() {
             window.open(LABKEY.ActionURL.buildURL('cluster', 'viewJavaLog', null, {jobId: checked[0]}), '_blank');
         },
 
+        buttonHandlerForSubmissions: function(){
+            const checked = LABKEY.DataRegions[dataRegionName].getChecked();
+            if (!checked.length){
+                Ext4.Msg.alert('Error', 'No rows selected');
+                return;
+            }
+
+            window.open(LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'cluster', 'query.queryName': 'clusterJobs', '~query.statusFileId~in': checked.join(';')}), '_blank');
+        },
+
         recoverCompletedJobs: function (dataRegionName) {
             const checked = LABKEY.DataRegions[dataRegionName].getChecked();
             if (!checked.length){

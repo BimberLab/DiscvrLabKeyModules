@@ -75,7 +75,7 @@ public class SequenceReadsetHandlerInitTask extends PipelineJob.Task<SequenceRea
         return (SequenceReadsetHandlerJob)getJob();
     }
 
-    @NotNull
+    @NotNull @Override
     public RecordedActionSet run() throws PipelineJobException
     {
         List<RecordedAction> actions = new ArrayList<>();
@@ -90,7 +90,8 @@ public class SequenceReadsetHandlerInitTask extends PipelineJob.Task<SequenceRea
                 throw new PipelineJobException("Readset not instanceof SequenceReadsetImpl");
             }
 
-            ((SequenceReadsetImpl)f).cacheForRemoteServer();
+
+            getPipelineJob().getSequenceSupport().cacheReadset(f.getReadsetId(), getJob().getUser(), handler.supportsSraArchivedData());
         }
 
         getJob().getLogger().info("total readsets: " + getPipelineJob().getReadsets().size());

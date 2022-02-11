@@ -74,13 +74,13 @@ import java.util.Set;
  */
 public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
 {
-    private static SequenceAnalysisServiceImpl _instance = new SequenceAnalysisServiceImpl();
+    private static final SequenceAnalysisServiceImpl _instance = new SequenceAnalysisServiceImpl();
 
     private final Logger _log = LogManager.getLogger(SequenceAnalysisServiceImpl.class);
-    private Set<GenomeTrigger> _genomeTriggers = new HashSet<>();
-    private Set<SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>> _fileHandlers = new HashSet<>();
-    private Set<SequenceOutputHandler<SequenceOutputHandler.SequenceReadsetProcessor>> _readsetHandlers = new HashSet<>();
-    private Map<String, SequenceDataProvider> _dataProviders = new HashMap<>();
+    private final Set<GenomeTrigger> _genomeTriggers = new HashSet<>();
+    private final Set<SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>> _fileHandlers = new HashSet<>();
+    private final Set<SequenceOutputHandler<SequenceOutputHandler.SequenceReadsetProcessor>> _readsetHandlers = new HashSet<>();
+    private final Map<String, SequenceDataProvider> _dataProviders = new HashMap<>();
 
     private SequenceAnalysisServiceImpl()
     {
@@ -127,10 +127,10 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
 //        return new TabixRunner(log).execute(input);
 //    }
 
-    public Set<SequenceOutputHandler> getFileHandlers(Container c, SequenceOutputHandler.TYPE type)
+    public Set<SequenceOutputHandler<?>> getFileHandlers(Container c, SequenceOutputHandler.TYPE type)
     {
-        Set<SequenceOutputHandler> ret = new HashSet<>();
-        for (SequenceOutputHandler h : getFileHandlers(type))
+        Set<SequenceOutputHandler<?>> ret = new HashSet<>();
+        for (SequenceOutputHandler<?> h : getFileHandlers(type))
         {
             if (c.getActiveModules().contains(h.getOwningModule()))
             {
@@ -140,7 +140,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         return Collections.unmodifiableSet(ret);
     }
 
-    public Set<SequenceOutputHandler> getFileHandlers(SequenceOutputHandler.TYPE type)
+    public Set<SequenceOutputHandler<?>> getFileHandlers(SequenceOutputHandler.TYPE type)
     {
         return Collections.unmodifiableSet(type == SequenceOutputHandler.TYPE.OutputFile ? _fileHandlers : _readsetHandlers);
     }
@@ -156,6 +156,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         _dataProviders.put(p.getName(), p);
     }
 
+    @Override
     public List<NavItem> getNavItems(Container c, User u, SequenceDataProvider.SequenceNavItemCategory category)
     {
         List<NavItem> ret = new ArrayList<>();
@@ -167,6 +168,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         return ret;
     }
 
+    @Override
     public ReadDataImpl getReadData(int rowId, User u)
     {
         TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
@@ -187,6 +189,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         return model;
     }
 
+    @Override
     public SequenceReadsetImpl getReadset(int readsetId, User u)
     {
         TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
@@ -251,7 +254,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         try
         {
             FileType gz = new FileType(".gz");
-            File expected = new File(vcf.getPath() + Tribble.STANDARD_INDEX_EXTENSION);
+            File expected = new File(vcf.getPath() + FileExtensions.TRIBBLE_INDEX);
             File tbi = new File(vcf.getPath() + ".tbi");
 
             if (!forceRecreate && expected.exists())
@@ -288,6 +291,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         }
     }
 
+    @Override
     public File bgzipFile(File input, Logger log) throws PipelineJobException
     {
         return SequenceUtil.bgzip(input, log);
@@ -296,11 +300,11 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     @Override
     public void ensureFastaIndex(File fasta, Logger log) throws PipelineJobException
     {
-        FastaIndexer indexer = new FastaIndexer(log);
-        File index = indexer.getExpectedIndexName(fasta);
+        File index = FastaIndexer.getExpectedIndexName(fasta);
         if (!index.exists())
         {
             log.info("creating FASTA index: " + fasta.getName());
+            FastaIndexer indexer = new FastaIndexer(log);
             indexer.execute(fasta);
         }
     }
