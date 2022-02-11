@@ -27,6 +27,7 @@ import org.labkey.api.module.ModuleContext;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.singlecell.CellHashingService;
+import org.labkey.api.singlecell.pipeline.SingleCellRawDataStep;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.WebPartFactory;
@@ -36,6 +37,8 @@ import org.labkey.singlecell.analysis.ProcessSeuratObjectHandler;
 import org.labkey.singlecell.analysis.ProcessSingleCellHandler;
 import org.labkey.singlecell.button.FeatureBarcodeButton;
 import org.labkey.singlecell.pipeline.singlecell.*;
+import org.labkey.singlecell.run.CellBenderCiteSeqHandler;
+import org.labkey.singlecell.run.CellBenderLoupeHandler;
 import org.labkey.singlecell.run.CellRangerFeatureBarcodeHandler;
 import org.labkey.singlecell.run.CellRangerGexCountStep;
 import org.labkey.singlecell.run.CellRangerVDJWrapper;
@@ -123,6 +126,7 @@ public class SingleCellModule extends ExtendedSimpleModule
     public static void registerPipelineSteps()
     {
         SequencePipelineService.get().registerPipelineStepType(SingleCellStep.class, SingleCellStep.STEP_TYPE);
+        SequencePipelineService.get().registerPipelineStepType(SingleCellRawDataStep.class, SingleCellRawDataStep.STEP_TYPE);
         CellHashingService.setInstance(CellHashingServiceImpl.get());
 
         SequencePipelineService.get().registerPipelineStep(new CellRangerGexCountStep.Provider());
@@ -134,6 +138,8 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new CellRangerRawDataHandler());
         SequenceAnalysisService.get().registerFileHandler(new ProcessSingleCellHandler());
         SequenceAnalysisService.get().registerFileHandler(new ProcessSeuratObjectHandler());
+        SequenceAnalysisService.get().registerFileHandler(new CellBenderCiteSeqHandler());
+        SequenceAnalysisService.get().registerFileHandler(new CellBenderLoupeHandler());
 
         //Single-cell:
         SequencePipelineService.get().registerPipelineStep(new AppendCiteSeq.Provider());
@@ -144,8 +150,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new MergeSeurat.Provider());
         SequencePipelineService.get().registerPipelineStep(new NormalizeAndScale.Provider());
 
-        //Note: this should not be registered normally. It is used directly in ProcessSingleCellHandler
-        //SequencePipelineService.get().registerPipelineStep(new PrepareRawCounts.Provider());
+        SequencePipelineService.get().registerPipelineStep(new PrepareRawCounts.Provider());
 
         SequencePipelineService.get().registerPipelineStep(new RemoveCellCycle.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunCellHashing.Provider());
@@ -168,6 +173,10 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new DietSeurat.Provider());
         SequencePipelineService.get().registerPipelineStep(new ClearCommands.Provider());
         SequencePipelineService.get().registerPipelineStep(new PlotAverageCiteSeqCounts.Provider());
+        SequencePipelineService.get().registerPipelineStep(new DropCiteSeq.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RunScGate.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RunCelltypist.Provider());
+        SequencePipelineService.get().registerPipelineStep(new CheckExpectations.Provider());
 
         SequenceAnalysisService.get().registerFileHandler(new NimbleAlignmentStep());
     }
@@ -177,7 +186,8 @@ public class SingleCellModule extends ExtendedSimpleModule
     public Set<Class> getUnitTests()
     {
         return PageFlowUtil.set(
-                AbstractSingleCellHandler.TestCase.class
+                AbstractSingleCellHandler.TestCase.class,
+                PrepareRawCounts.TestCase.class
         );
     }
 }

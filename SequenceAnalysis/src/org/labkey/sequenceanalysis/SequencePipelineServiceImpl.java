@@ -105,7 +105,6 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         {
             ParameterizedType parameterizedType = (ParameterizedType)provider.getClass().getGenericSuperclass();
             Class clazz = (Class)parameterizedType.getActualTypeArguments()[0];
-
             if (stepType.isAssignableFrom(clazz))
             {
                 ret.add(provider);

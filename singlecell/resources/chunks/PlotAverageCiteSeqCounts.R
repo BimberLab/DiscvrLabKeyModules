@@ -4,7 +4,13 @@ for (datasetId in names(seuratObjects)) {
   if (!('ADT' %in% names(seuratObj@assays))) {
     print('ADT assay not present, skipping')
   } else {
-    CellMembrane::PlotAverageAdtCounts(seuratObj, groupFields = fieldNames)
+    tryCatch({
+      CellMembrane::PlotAverageAdtCounts(seuratObj, groupFields = fieldNames)
+    }, error = function(e){
+      print(paste0('Error running PlotAverageCiteSeqCounts for: ', datasetId))
+      print(conditionMessage(e))
+      traceback()
+    })
   }
 
   # Cleanup

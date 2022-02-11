@@ -1,9 +1,12 @@
 package org.labkey.api.singlecell.pipeline;
 
 import au.com.bytecode.opencsv.CSVReader;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
@@ -22,6 +25,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,6 +34,8 @@ import java.util.stream.Collectors;
 
 abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineStep implements SingleCellStep
 {
+    public static final String SEURAT_THREADS = "seuratMaxThreads";
+
     public AbstractSingleCellPipelineStep(PipelineStepProvider provider, PipelineContext ctx)
     {
         super(provider, ctx);
@@ -242,12 +248,33 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         lines.add("print('Rmarkdown complete')");
         lines.add("");
 
-        executeR(ctx, getDockerContainerName(), outputPrefix, lines);
+        File errorFile = getSeuratErrorFile(ctx);
+        if (errorFile.exists())
+        {
+            errorFile.delete();
+        }
+
+        Integer seuratThreads = null;
+        if (getProvider().getParameterByName(SEURAT_THREADS) != null)
+        {
+            seuratThreads = getProvider().getParameterByName(SEURAT_THREADS).extractValue(ctx.getJob(), getProvider(), getStepIdx(), Integer.class, null);
+        }
+
+        executeR(ctx, getDockerContainerName(), outputPrefix, lines, seuratThreads);
+
+        handlePossibleFailure(ctx, outputPrefix);
     }
 
-    public static void executeR(SequenceOutputHandler.JobContext ctx, String dockerContainerName, String outputPrefix, List<String> lines) throws PipelineJobException
+    protected static SeuratToolParameter getSeuratThreadsParam()
     {
-        File localRScript = new File(ctx.getOutputDir(), outputPrefix + ".R");
+        return SeuratToolParameter.create(SEURAT_THREADS, "Max Threads", "If provided, the docker session will set future::plan(strategy='multisession', workers=XXX), which is supported by certain Seurat functions.", "ldk-integerfield", new JSONObject(){{
+            put("minValue", 0);
+        }}, null);
+    }
+
+    public static void executeR(SequenceOutputHandler.JobContext ctx, String dockerContainerName, String outputPrefix, List<String> lines, @Nullable Integer seuratThreads) throws PipelineJobException
+    {
+        File localRScript = new File(ctx.getOutputDir(), FileUtil.makeLegalName(outputPrefix + ".R").replaceAll(" ", "_"));
         try (PrintWriter writer = PrintWriters.getPrintWriter(localRScript))
         {
             lines.forEach(writer::println);
@@ -275,6 +302,11 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                 writer.println("\t-e SEQUENCEANALYSIS_MAX_THREADS=" + maxThreads + " \\");
             }
 
+            if (seuratThreads != null)
+            {
+                writer.println("\t-e SEURAT_MAX_THREADS=" + seuratThreads + " \\");
+            }
+
             Integer maxRam = SequencePipelineService.get().getMaxRam();
             if (maxRam != null)
             {
@@ -293,7 +325,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             //NOTE: this seems to disrupt packages installed into home
             //writer.println("\t-e HOME=/homeDir \\");
             writer.println("\t" + dockerContainerName + " \\");
-            writer.println("\tRscript --vanilla " + localRScript.getName());
+            writer.println("\tRscript --vanilla '" + localRScript.getName() + "'");
             writer.println("");
             writer.println("echo 'Bash script complete'");
             writer.println("");
@@ -505,5 +537,54 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
     public boolean isIncluded(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputs) throws PipelineJobException
     {
         return true;
+    }
+
+    protected static File getSeuratErrorFile(SequenceOutputHandler.JobContext ctx)
+    {
+        return new File(ctx.getOutputDir(), "seuratErrors.txt");
+    }
+
+    protected void onFailure(SequenceOutputHandler.JobContext ctx, String outputPrefix) throws PipelineJobException
+    {
+        // This allows subclasses to implement tool-specific failure handling
+    }
+
+    private void handlePossibleFailure(SequenceOutputHandler.JobContext ctx, String outputPrefix) throws PipelineJobException
+    {
+        File errorFile = getSeuratErrorFile(ctx);
+        if (errorFile.exists())
+        {
+            try
+            {
+                List<String> errors = IOUtils.readLines(Readers.getReader(errorFile));
+                errorFile.delete();
+
+                onFailure(ctx, outputPrefix);
+
+                File html = getExpectedHtmlFile(ctx, outputPrefix);
+                if (html.exists())
+                {
+                    ctx.getLogger().info("Copying HTML locally for debugging: " + html.getName());
+                    File target = new File(ctx.getSourceDirectory(), html.getName());
+                    if (target.exists())
+                    {
+                        target.delete();
+                    }
+
+                    Files.copy(html.toPath(), target.toPath());
+                }
+                else
+                {
+                    ctx.getLogger().info("HTML not found: " + html.getPath());
+                }
+
+                ctx.getJob().setStatus(PipelineJob.TaskStatus.error, " Errors: " + StringUtils.join(errors, ";"));
+                throw new PipelineJobException(getProvider().getName() + " Errors: " + StringUtils.join(errors, ";"));
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
     }
 }

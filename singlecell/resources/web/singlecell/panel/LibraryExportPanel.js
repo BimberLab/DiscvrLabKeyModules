@@ -857,7 +857,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                     data.push(size);
                                     data.push('Others'); //Library Status
                                     data.push(totalData); //Total data
-                                    data.push('M raw reads');
+                                    data.push('G raw data');
                                     data.push(r[fieldName + '/concentration'] || '');
                                     data.push(defaultVolume);
 
@@ -874,10 +874,10 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                     var delim = instrument.startsWith('Novogene') ? '\t' : ',';
                     Ext4.Array.forEach(sortedRows, function (r) {
-                        processType(readsetIds, rows, r, 'readsetId', 'GEX', 500, 0.01, 'G', null, false, 225, runMap);
-                        processType(readsetIds, rows, r, 'tcrReadsetId', 'TCR', 700, 0.01, 'T', null, false, 150, runMap);
-                        processType(readsetIds, rows, r, 'hashingReadsetId', 'HTO', 182, 0.05, 'H', 'Cell hashing, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', true, 75, runMap);
-                        processType(readsetIds, rows, r, 'citeseqReadsetId', 'CITE', 182, 0.05, 'C', 'CITE-Seq, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', false, 75, runMap);
+                        processType(readsetIds, rows, r, 'readsetId', 'GEX', 500, 0.01, 'G', null, false, 70, runMap);
+                        processType(readsetIds, rows, r, 'tcrReadsetId', 'TCR', 700, 0.01, 'T', null, false, 45, runMap);
+                        processType(readsetIds, rows, r, 'hashingReadsetId', 'HTO', 182, 0.05, 'H', 'Cell hashing, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', true, 20, runMap);
+                        processType(readsetIds, rows, r, 'citeseqReadsetId', 'CITE', 182, 0.05, 'C', 'CITE-Seq, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', false, 20, runMap);
                     }, this);
 
                     //add missing barcodes:

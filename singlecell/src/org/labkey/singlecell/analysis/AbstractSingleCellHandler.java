@@ -35,6 +35,8 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.pipeline.AbstractSingleCellPipelineStep;
+import org.labkey.api.singlecell.pipeline.AbstractSingleCellStep;
+import org.labkey.api.singlecell.pipeline.SingleCellRawDataStep;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
@@ -143,6 +145,16 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
         @Override
         public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
+            List<PipelineStepCtx<SingleCellRawDataStep>> rawCountSteps = SequencePipelineService.get().getSteps(ctx.getJob(), SingleCellRawDataStep.class);
+            if (!rawCountSteps.isEmpty())
+            {
+                for (PipelineStepCtx<SingleCellRawDataStep> stepCtx : rawCountSteps)
+                {
+                    SingleCellRawDataStep step = stepCtx.getProvider().create(ctx);
+                    step.init(ctx, inputFiles);
+                }
+            }
+
             boolean requiresHashing = false;
             boolean requiresCite = false;
             boolean doH5Caching = false;
@@ -181,6 +193,53 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
 
             if (requiresCite || requiresHashing)
             {
+                for (SequenceOutputFile f : inputFiles)
+                {
+                    if (f.getReadset() == null && f.getFile() != null && f.getFile().getPath().toLowerCase().endsWith(".rds"))
+                    {
+                        ctx.getLogger().info("Seurat object lacks a readset, so attempting to infer from cellbarcodes");
+
+                        //NOTE: for a multi-dataset object, readset might be null, but the component loupe files might map to multiple readsets. For ease, try to lookup and recover the component readsets:
+                        File barcodeFile = CellHashingServiceImpl.get().getCellBarcodesFromSeurat(f.getFile());
+                        if (barcodeFile.exists())
+                        {
+                            Set<Integer> uniquePrefixes = new HashSet<>();
+                            try (CSVReader reader = new CSVReader(Readers.getReader(barcodeFile), '\t'))
+                            {
+                                String[] line;
+                                while ((line = reader.readNext()) != null)
+                                {
+                                    String[] tokens = line[0].split("_");
+                                    if (tokens.length > 1)
+                                    {
+                                        uniquePrefixes.add(Integer.parseInt(tokens[0]));
+                                    }
+                                }
+                            }
+                            catch (IOException e)
+                            {
+                                throw new PipelineJobException(e);
+                            }
+
+                            ctx.getLogger().info("Total dataset Ids: " + uniquePrefixes.size());
+                            for (int loupeId : uniquePrefixes)
+                            {
+                                SequenceOutputFile so = SequenceOutputFile.getForId(loupeId);
+                                if (so == null)
+                                {
+                                    throw new PipelineJobException("Unable to find loupe file for: " + loupeId);
+                                }
+                                else if (so.getReadset() == null)
+                                {
+                                    throw new PipelineJobException("Readset is blank for loupe file: " + loupeId);
+                                }
+
+                                ctx.getSequenceSupport().cacheReadset(so.getReadset(), ctx.getJob().getUser());
+                            }
+                        }
+                    }
+                }
+
                 CellHashingServiceImpl.get().prepareHashingAndCiteSeqFilesIfNeeded(ctx.getSourceDirectory(), ctx.getJob(), ctx.getSequenceSupport(), "readsetId", false, false, true, requiresHashing, requiresCite, doH5Caching);
             }
         }
@@ -290,7 +349,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             {
                 Integer readsetId = inputFiles.get(0).getReadset();
                 Readset rs = ctx.getSequenceSupport().getCachedReadset(readsetId);
-                basename = FileUtil.makeLegalName(rs.getName());
+                basename = FileUtil.makeLegalName(rs.getName()).replaceAll(" ", "_");
             }
             else
             {
@@ -307,10 +366,26 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             {
                 try
                 {
+                    Set<String> distinctIds = new HashSet<>();
+                    Set<String> copiedFiles = new HashSet<>();
+
                     currentFiles = new ArrayList<>();
                     for (SequenceOutputFile so : inputFiles)
                     {
+                        String datasetId = FileUtil.makeLegalName(so.getReadset() != null ? ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName() : so.getName());
+                        if (distinctIds.contains(datasetId))
+                        {
+                            throw new PipelineJobException("Duplicate dataset Ids in input data: " + datasetId);
+                        }
+                        distinctIds.add(datasetId);
+
                         //ensure local copy:
+                        if (copiedFiles.contains(so.getFile().getName()))
+                        {
+                            throw new PipelineJobException("Duplicate files names in input data: " + so.getFile().getName());
+                        }
+                        copiedFiles.add(so.getFile().getName());
+
                         File local = new File(ctx.getOutputDir(), so.getFile().getName());
                         if (local.exists())
                         {
@@ -320,7 +395,6 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                         FileUtils.copyFile(so.getFile(), local);
                         _resumer.getFileManager().addIntermediateFile(local);
 
-                        String datasetId = so.getName();
                         currentFiles.add(new SingleCellStep.SeuratObjectWrapper(datasetId, datasetId, so.getFile(), so));
                     }
                 }
@@ -329,6 +403,8 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     throw new PipelineJobException(e);
                 }
             }
+
+            Set<File> originalInputs = currentFiles.stream().map(AbstractSingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toSet());
 
             // Step 2: iterate seurat processing:
             String outputPrefix = basename;
@@ -381,6 +457,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 ctx.getFileManager().addIntermediateFiles(currentFiles.stream().map(SingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toList()));
 
                 outputPrefix = outputPrefix + "." + step.getFileSuffix() + (step.getStepIdx() == 0 ? "" : "-" + step.getStepIdx());
+                outputPrefix = outputPrefix.replaceAll(" ", "_");
                 SingleCellStep.Output output = step.execute(ctx, currentFiles, outputPrefix);
 
                 _resumer.getFileManager().addStepOutputs(action, output);
@@ -452,7 +529,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             File finalHtml = new File(ctx.getOutputDir(), "finalHtml.html");
             List<String> lines = new ArrayList<>();
             lines.add("rmarkdown::render(output_file = '" + finalHtml.getName() + "', input = '" + finalMarkdownFile.getName() + "', intermediates_dir  = '/work')");
-            AbstractSingleCellPipelineStep.executeR(ctx, AbstractCellMembraneStep.CONTAINER_NAME, "pandoc", lines);
+            AbstractSingleCellPipelineStep.executeR(ctx, AbstractCellMembraneStep.CONTAINER_NAME, "pandoc", lines, null);
             _resumer.getFileManager().addIntermediateFile(finalMarkdownFile);
             _resumer.getFileManager().addIntermediateFiles(_resumer.getMarkdownsInOrder());
             _resumer.getFileManager().addIntermediateFiles(_resumer.getHtmlFilesInOrder());
@@ -495,7 +572,15 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     }
                 }
 
-                _resumer.getFileManager().addSequenceOutput(so);
+                //This indicates the job processed an input file, but did not create a new object (like running FindMarkers)
+                if (originalInputs.contains(output.getFile()))
+                {
+                    ctx.getLogger().info("Sequence output is the same as an input, will not re-create output for seurat object: " + output.getFile().getPath());
+                }
+                else
+                {
+                    _resumer.getFileManager().addSequenceOutput(so);
+                }
 
                 // This could be a little confusing, but add one record out seurat output, even though there is one HTML file::
                 SequenceOutputFile o = new SequenceOutputFile();
@@ -533,11 +618,14 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             List<SingleCellStep.SeuratObjectWrapper> inputMatrices = new ArrayList<>();
             inputFiles.forEach(x -> {
                 String datasetName = ctx.getSequenceSupport().getCachedReadset(x.getReadset()).getName();
-                File source = new File(x.getFile().getParentFile(), "raw_feature_bc_matrix");
-                if (!source.exists())
+                File countsDir = new File(x.getFile().getParentFile(), "raw_feature_bc_matrix");
+                if (!countsDir.exists())
                 {
-                    throw new IllegalArgumentException("Unable to find file: " + source.getPath());
+                    throw new IllegalArgumentException("Unable to find file: " + countsDir.getPath());
                 }
+
+                // The outs directory:
+                File source = x.getFile().getParentFile();
 
                 try
                 {

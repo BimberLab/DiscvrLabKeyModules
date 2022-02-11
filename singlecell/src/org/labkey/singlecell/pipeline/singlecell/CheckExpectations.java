@@ -1,6 +1,5 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
-import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -17,9 +16,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-public class SeuratPrototype extends AbstractCellMembraneStep
+public class CheckExpectations extends AbstractCellMembraneStep
 {
-    public SeuratPrototype(PipelineContext ctx, SeuratPrototype.Provider provider)
+    public CheckExpectations(PipelineContext ctx, CheckExpectations.Provider provider)
     {
         super(provider, ctx);
     }
@@ -28,49 +27,27 @@ public class SeuratPrototype extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("SeuratPrototype", "Create Seurat Prototype", "CellMembrane", "This will tag the output of this job as a seurat prototype, which is designed to be a building block for subsequent analyses.", Arrays.asList(
+            super("CheckExpectations", "Check Expectations", "CellMembrane", "This will tag the output of this job as a seurat prototype, which is designed to be a building block for subsequent analyses.", Arrays.asList(
+                    SeuratToolParameter.create("requireSingleDatasetInput", "Expect Single Datasets", "If checked, this will enforce that each input seurat object holds a single dataset. This is expected if the input is a seurat prototype. In contrast, if the input is a merged object this would test false", "checkbox", null, true),
                     SeuratToolParameter.create("requireHashing", "Require Hashing, If Used", "If this dataset uses cell hashing, hashing calls are required", "checkbox", null, true),
-                    //Reject based on hashing criteria:
                     SeuratToolParameter.create("requireCiteSeq", "Require Cite-Seq, If Used", "If this dataset uses CITE-seq, cite-seq data are required", "checkbox", null, true),
-
                     SeuratToolParameter.create("requireSaturation", "Require Per-Cell Saturation", "If this dataset uses TCR sequencing, these data are required", "checkbox", null, true),
-                    SeuratToolParameter.create("minSaturation", "Min Average GEX Saturation", "The minimum average per-cell saturation. This is a number 0-100.", "ldk-numberfield", new JSONObject(){{
-                        put("minValue", 0);
-                        put("maxValue", 1);
-                        put("decimalPrecision", 2);
-                    }}, 0.5),
-
-                    SeuratToolParameter.create("dietSeurat", "Run DietSeurat", "If checked, DietSeurat will be run, which removes reductions and extraneous data to save file size.", "checkbox", null, true),
-
                     SeuratToolParameter.create("requireSingleR", "Require SingleR", "If checked, SingleR calls, including singleRConsensus are required to pass", "checkbox", null, true),
                     SeuratToolParameter.create("requireScGate", "Require scGate", "If checked, scGateConsensus calls are required to pass", "checkbox", null, true)
             ), null, null);
         }
 
         @Override
-        public SeuratPrototype create(PipelineContext ctx)
+        public CheckExpectations create(PipelineContext ctx)
         {
-            return new SeuratPrototype(ctx, this);
+            return new CheckExpectations(ctx, this);
         }
     }
 
     @Override
     public void init(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputFiles) throws PipelineJobException
     {
-        if (inputFiles.size() > 1)
-        {
-            throw new PipelineJobException("Seurat prototype step expects this job to have a single input. Consider selecting the option to run jobs individually instead of merged");
-        }
 
-        if (inputFiles.get(0).getReadset() == null)
-        {
-            throw new PipelineJobException("Seurat prototype step expects all inputs to have a readset ID.");
-        }
-
-        if (ctx.getSequenceSupport().getCachedGenomes().size() > 1)
-        {
-            throw new PipelineJobException("Expected seurat prototype step to use a single genome");
-        }
     }
 
     @Override
@@ -97,37 +74,5 @@ public class SeuratPrototype extends AbstractCellMembraneStep
         }
 
         return ret;
-    }
-
-    @Override
-    public Output execute(SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException
-    {
-        Output output = super.execute(ctx, inputObjects, outputPrefix);
-
-        if (ctx.getSequenceSupport().getCachedGenomes().size() > 1)
-        {
-            throw new PipelineJobException("Expected seurat prototype step to use a single genome");
-        }
-
-        for (SeuratObjectWrapper wrapper : output.getSeuratObjects())
-        {
-            if (wrapper.getReadsetId() == null)
-            {
-                throw new PipelineJobException("Missing readset Id: " + wrapper.getDatasetId());
-            }
-
-            SequenceOutputFile so = new SequenceOutputFile();
-            so.setFile(wrapper.getFile());
-            so.setCategory("Seurat Object Prototype");
-            so.setLibrary_id(ctx.getSequenceSupport().getCachedGenomes().iterator().next().getGenomeId());
-
-            String readsetName = ctx.getSequenceSupport().getCachedReadset(wrapper.getReadsetId()).getName();
-            so.setReadset(wrapper.getReadsetId());
-            so.setName(readsetName + ": Prototype Seurat Object");
-
-            ctx.getFileManager().addSequenceOutput(so);
-        }
-
-        return output;
     }
 }

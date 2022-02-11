@@ -3546,7 +3546,7 @@ public class SequenceAnalysisController extends SpringActionController
             o.put("totalReadData", rs.getReadData().size());
             for (ReadData rd : rs.getReadData())
             {
-                if (rd.isArchived())
+                if (rd.isArchived() && !handler.supportsSraArchivedData())
                 {
                     o.put("fileExists", false);
                     o.put("isArchived", true);
@@ -3557,9 +3557,12 @@ public class SequenceAnalysisController extends SpringActionController
                 ExpData d = rd.getFileId1() == 0 ? null : ExperimentService.get().getExpData(rd.getFileId1());
                 if (d == null || d.getFile() == null || !d.getFile().exists())
                 {
-                    o.put("fileExists", false);
-                    o.put("error", true);
-                    return o;
+                    if (!handler.supportsSraArchivedData())
+                    {
+                        o.put("fileExists", false);
+                        o.put("error", true);
+                        return o;
+                    }
                 }
 
                 if (rd.getFileId2() != null)
@@ -3567,9 +3570,12 @@ public class SequenceAnalysisController extends SpringActionController
                     d = rd.getFileId2() == 0 ? null : ExperimentService.get().getExpData(rd.getFileId2());
                     if (d == null || d.getFile() == null || !d.getFile().exists())
                     {
-                        o.put("fileExists", false);
-                        o.put("error", true);
-                        return o;
+                        if (!handler.supportsSraArchivedData())
+                        {
+                            o.put("fileExists", false);
+                            o.put("error", true);
+                            return o;
+                        }
                     }
                 }
             }
@@ -4063,11 +4069,12 @@ public class SequenceAnalysisController extends SpringActionController
             catch (IllegalArgumentException e)
             {
                 errors.reject(ERROR_MSG, e.getMessage());
+                _log.error("Unable to submit sequence handler", e);
                 return null;
             }
         }
 
-        protected PipelineJob createOutputJob(RunSequenceHandlerForm form, Container targetContainer, String jobName, PipeRoot pr1, SequenceOutputHandler handler, List<SequenceOutputFile> inputs, JSONObject json) throws IOException, PipelineJobException
+        protected PipelineJob createOutputJob(RunSequenceHandlerForm form, Container targetContainer, String jobName, PipeRoot pr1, SequenceOutputHandler<?> handler, List<SequenceOutputFile> inputs, JSONObject json) throws IOException, PipelineJobException
         {
             validateGenomes(inputs, handler);
             return new SequenceOutputHandlerJob(targetContainer, getUser(), jobName, pr1, handler, inputs, json);
@@ -4110,20 +4117,22 @@ public class SequenceAnalysisController extends SpringActionController
     public class RunVariantProcessingAction extends RunSequenceHandlerAction
     {
         @Override
-        protected PipelineJob createOutputJob(RunSequenceHandlerForm form, Container targetContainer, String jobName, PipeRoot pr1, SequenceOutputHandler handler, List<SequenceOutputFile> inputs, JSONObject json) throws PipelineJobException, IOException
+        protected PipelineJob createOutputJob(RunSequenceHandlerForm form, Container targetContainer, String jobName, PipeRoot pr1, SequenceOutputHandler<?> handler, List<SequenceOutputFile> inputs, JSONObject json) throws PipelineJobException, IOException
         {
             String method = json.getString("scatterGatherMethod");
+            validateGenomes(inputs, handler);
+
+            VariantProcessingStep.ScatterGatherMethod scatterMethod;
             try
             {
-                validateGenomes(inputs, handler);
-                VariantProcessingStep.ScatterGatherMethod scatterMethod = VariantProcessingStep.ScatterGatherMethod.valueOf(method);
-
-                return new VariantProcessingJob(targetContainer, getUser(), jobName, pr1, handler, inputs, json, scatterMethod);
+                scatterMethod = VariantProcessingStep.ScatterGatherMethod.valueOf(method);
             }
             catch (IllegalArgumentException e)
             {
-                throw new IllegalArgumentException("Unknown scatter method: " + method);
+                throw new IllegalArgumentException("Unknown scatter method: [" + method + "]", e);
             }
+
+            return new VariantProcessingJob(targetContainer, getUser(), jobName, pr1, handler, inputs, json, scatterMethod);
         }
     }
 

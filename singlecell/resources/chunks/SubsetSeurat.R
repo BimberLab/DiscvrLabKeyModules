@@ -21,5 +21,5 @@ for (datasetId in names(seuratObjects)) {
 }
 
 if (totalPassed == 0) {
-	stop('No cells remained in any seurat objects after subsetting')
+	addErrorMessage('No cells remained in any seurat objects after subsetting')
 }

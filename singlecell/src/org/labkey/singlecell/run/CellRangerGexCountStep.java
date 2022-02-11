@@ -422,16 +422,6 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         return output;
     }
 
-    private File getRawGeneMatrix(File bam)
-    {
-        return new File(bam.getParentFile(), "raw_gene_bc_matrices_h5.h5");
-    }
-
-    private File getFilteredGeneMatrix(File bam)
-    {
-        return new File(bam.getParentFile(), "filtered_gene_bc_matrices_h5.h5");
-    }
-
     @Override
     public boolean doAddReadGroups()
     {

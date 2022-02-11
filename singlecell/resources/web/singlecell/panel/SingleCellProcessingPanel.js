@@ -6,6 +6,8 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
     jobType: 'singleCell',
 
     initComponent: function(){
+        this.showPrepareRawData = this.handlerClass === 'ProcessSingleCellHandler';
+
         Ext4.apply(this, {
             itemId: 'sequenceAnalysisPanel',
             buttonAlign: 'left',
@@ -212,6 +214,18 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
         var panel = this.down('#analysisOptions');
 
         var items = [];
+        if (this.showPrepareRawData){
+            items.push({
+                xtype: 'sequenceanalysis-analysissectionpanel',
+                title: 'Prepare Raw Data',
+                stepType: 'singleCellRawData',
+                singleTool: true,
+                comboValue: 'PrepareRawCounts',
+                sectionDescription: 'This section allows you to control the parsing of the raw 10x count data',
+                toolConfig: results
+            });
+        }
+
         items.push({
             xtype: 'sequenceanalysis-analysissectionpanel',
             title: 'Seurat Processing',
@@ -253,6 +267,7 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
         var json = {
             handlerClass: 'org.labkey.singlecell.analysis.' + this.handlerClass,
             outputFileIds: this.outputFileIds,
+            useOutputFileContainer: !!values.useOutputFileContainer,
             params: Ext4.encode(values)
         };
 

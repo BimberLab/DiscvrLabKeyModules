@@ -118,7 +118,7 @@ public class ClusterController extends SpringActionController
 
             return new HtmlView(HtmlString.unsafe("This will change the status of the pipeline job with the provided ID to Cancelled.  It is intended to help the situation when the normal UI leave a job in a perpetual 'Cancelling' state." +
                     "To continue, enter a comma-delimited list of Job IDs and hit submit:<br><br>" +
-                    "<label>Enter Job ID(s): </label><input name=\"jobIds\" value = \"" + form.getJobIds() + "\"><br>"));
+                    "<label>Enter Job ID(s): </label><input name=\"jobIds\" value = \"" + HtmlString.of(form.getJobIds()) + "\"><br>"));
         }
 
         public boolean handlePost(JobIdsForm form, BindException errors) throws Exception
