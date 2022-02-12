@@ -5,21 +5,17 @@ import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
-import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.FileUtil;
-import org.labkey.singlecell.CellHashingServiceImpl;
 
+import java.io.File;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 public class TrainCelltypist extends AbstractRiraStep
 {
@@ -80,18 +76,20 @@ public class TrainCelltypist extends AbstractRiraStep
     public Output execute(SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException
     {
         Output output = super.execute(ctx, inputObjects, outputPrefix);
-
-        for (SeuratObjectWrapper wrapper : output.getSeuratObjects())
+        File modelFile = new File(ctx.getOutputDir(), getModelName(ctx.getJob(), true));
+        if (!modelFile.exists())
         {
-            SequenceOutputFile so = new SequenceOutputFile();
-            so.setFile(wrapper.getFile());
-            so.setCategory("Celltypist Classifier");
-            so.setLibrary_id(ctx.getSequenceSupport().getCachedGenomes().iterator().next().getGenomeId());
-            so.setName(getModelName(ctx.getJob(), false));
-            so.setDescription(getProvider().getParameterByName("modelDescription").extractValue(ctx.getJob(), getProvider(), getStepIdx(), String.class, null));
-
-            ctx.getFileManager().addSequenceOutput(so);
+            throw new PipelineJobException("Unable to find file: " + modelFile.getPath());
         }
+
+        SequenceOutputFile so = new SequenceOutputFile();
+        so.setFile(modelFile);
+        so.setCategory("Celltypist Classifier");
+        so.setLibrary_id(ctx.getSequenceSupport().getCachedGenomes().iterator().next().getGenomeId());
+        so.setName(getModelName(ctx.getJob(), false));
+        so.setDescription(getProvider().getParameterByName("modelDescription").extractValue(ctx.getJob(), getProvider(), getStepIdx(), String.class, null));
+
+        ctx.getFileManager().addSequenceOutput(so);
 
         return output;
     }
@@ -106,7 +104,7 @@ public class TrainCelltypist extends AbstractRiraStep
 
         if (asFile)
         {
-            modelName = FileUtil.makeLegalName(modelName);
+            modelName = FileUtil.makeLegalName(modelName) + ".pkl";
         }
 
         return modelName;
@@ -117,7 +115,7 @@ public class TrainCelltypist extends AbstractRiraStep
     {
         Chunk ret = super.createParamChunk(ctx, inputObjects, outputPrefix);
         String modelName = getModelName(ctx.getJob(), true);
-        ret.bodyLines.add("modelName <- /work/'" + modelName + "'");
+        ret.bodyLines.add("modelName <- '/work/" + modelName + "'");
 
         return ret;
     }
