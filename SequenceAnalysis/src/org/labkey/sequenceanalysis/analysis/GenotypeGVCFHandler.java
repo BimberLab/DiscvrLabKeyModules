@@ -411,7 +411,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 int nativeMemoryBuffer = ctx.getParams().optInt("variantCalling.GenotypeGVCFs.nativeMemoryBuffer", 0);
                 if (maxRam != null && nativeMemoryBuffer > 0)
                 {
-                    ctx.getLogger().info("Adjusting RAM based on memory buffer (" + nativeMemoryBuffer + ")");
+                    ctx.getLogger().info("Adjusting RAM (" + maxRam + ") based on memory buffer (" + nativeMemoryBuffer + ")");
                     maxRam = maxRam - nativeMemoryBuffer;
 
                     if (maxRam < 1)
