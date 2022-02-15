@@ -19,6 +19,8 @@ import java.util.List;
 
 public class TrainCelltypist extends AbstractRiraStep
 {
+    public static final String CATEGORY = "Celltypist Classifier";
+
     public TrainCelltypist(PipelineContext ctx, TrainCelltypist.Provider provider)
     {
         super(provider, ctx);
@@ -84,7 +86,7 @@ public class TrainCelltypist extends AbstractRiraStep
 
         SequenceOutputFile so = new SequenceOutputFile();
         so.setFile(modelFile);
-        so.setCategory("Celltypist Classifier");
+        so.setCategory(CATEGORY);
         so.setLibrary_id(ctx.getSequenceSupport().getCachedGenomes().iterator().next().getGenomeId());
         so.setName(getModelName(ctx.getJob(), false));
         so.setDescription(getProvider().getParameterByName("modelDescription").extractValue(ctx.getJob(), getProvider(), getStepIdx(), String.class, null));
