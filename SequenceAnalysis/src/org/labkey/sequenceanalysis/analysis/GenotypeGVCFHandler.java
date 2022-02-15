@@ -366,6 +366,10 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 {
                     toolParams.add("--max-alternate-alleles");
                     toolParams.add(ctx.getParams().get("variantCalling.GenotypeGVCFs.max_alternate_alleles").toString());
+
+                    toolParams.add("--genomicsdb-max-alternate-alleles");
+                    Integer maxAlt = ctx.getParams().getInt("variantCalling.GenotypeGVCFs.max_alternate_alleles") + 1;
+                    toolParams.add(maxAlt.toString());
                 }
 
                 if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.includeNonVariantSites"))
