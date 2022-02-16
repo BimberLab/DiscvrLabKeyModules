@@ -368,7 +368,10 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                     toolParams.add(ctx.getParams().get("variantCalling.GenotypeGVCFs.max_alternate_alleles").toString());
 
                     toolParams.add("--genomicsdb-max-alternate-alleles");
-                    Integer maxAlt = ctx.getParams().getInt("variantCalling.GenotypeGVCFs.max_alternate_alleles") + 1;
+
+                    // See: https://gatk.broadinstitute.org/hc/en-us/articles/4418054384027-GenotypeGVCFs#--genomicsdb-max-alternate-alleles
+                    // "A typical value is 3 more than the --max-alternate-alleles value that's used by GenotypeGVCFs and larger differences result in more robustness to PCR-related indel errors"
+                    Integer maxAlt = ctx.getParams().getInt("variantCalling.GenotypeGVCFs.max_alternate_alleles") + 3;
                     toolParams.add(maxAlt.toString());
                 }
 
