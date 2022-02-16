@@ -26,7 +26,7 @@ public class RunCelltypistCustomModel extends AbstractRiraStep
     {
         public Provider()
         {
-            super("RunCelltypistCustom", "Run Celltypist (Custom Model)", "Celltypist", "This will run celltypist using the selected model.", Arrays.asList(
+            super("RunCelltypistCustomModel", "Run Celltypist (Custom Model)", "Celltypist", "This will run celltypist using the selected model.", Arrays.asList(
                     ToolParameterDescriptor.createExpDataParam("modelFileId", "Model", "This is the pre-computed celltypist model to use for classification", "sequenceanalysis-sequenceoutputfileselectorfield", new JSONObject(){{
                         put("allowBlank", false);
                         put("category", TrainCelltypist.CATEGORY);
