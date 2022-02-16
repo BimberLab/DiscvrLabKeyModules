@@ -572,6 +572,21 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     }
                 }
 
+                //Note: when starting with a seurat object (not loupe), the ID is the string readset name, not an ID:
+                if (so.getReadset() == null)
+                {
+                    if (output.getReadsetId() != null)
+                    {
+                        ctx.getLogger().debug("setting readset from output to: " + output.getReadsetId());
+                        so.setReadset(output.getReadsetId());
+                    }
+                    else if (inputFiles.size() == 1)
+                    {
+                        ctx.getLogger().debug("only single input, so re-using readset: " + inputFiles.get(0).getReadset());
+                        so.setReadset(inputFiles.get(0).getReadset());
+                    }
+                }
+
                 //This indicates the job processed an input file, but did not create a new object (like running FindMarkers)
                 if (originalInputs.contains(output.getFile()))
                 {
