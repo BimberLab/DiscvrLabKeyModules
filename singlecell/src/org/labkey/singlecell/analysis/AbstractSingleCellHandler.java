@@ -423,6 +423,10 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     continue;
                 }
 
+                // NOTE: always set this upfront, so we have consistent outputPrefix after resume:
+                outputPrefix = outputPrefix + "." + step.getFileSuffix() + (step.getStepIdx() == 0 ? "" : "-" + step.getStepIdx());
+                outputPrefix = outputPrefix.replaceAll(" ", "_");
+
                 if (_resumer.isStepComplete(stepIdx))
                 {
                     ctx.getLogger().info("resuming from saved state");
@@ -456,8 +460,6 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 currentFiles.forEach(currentFile -> action.addInput(currentFile.getFile(), "Input Seurat Object"));
                 ctx.getFileManager().addIntermediateFiles(currentFiles.stream().map(SingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toList()));
 
-                outputPrefix = outputPrefix + "." + step.getFileSuffix() + (step.getStepIdx() == 0 ? "" : "-" + step.getStepIdx());
-                outputPrefix = outputPrefix.replaceAll(" ", "_");
                 SingleCellStep.Output output = step.execute(ctx, currentFiles, outputPrefix);
 
                 _resumer.getFileManager().addStepOutputs(action, output);
