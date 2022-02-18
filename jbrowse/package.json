@@ -15,12 +15,12 @@
     "yarn-install": "yarn install"
   },
   "dependencies": {
-    "@jbrowse/cli": "^1.6.4",
-    "@jbrowse/core": "^1.6.4",
-    "@jbrowse/plugin-variants": "^1.6.4",
-    "@jbrowse/plugin-svg": "^1.6.4",
-    "@jbrowse/plugin-linear-genome-view": "^1.6.4",
-    "@jbrowse/react-linear-genome-view": "^1.6.4",
+    "@jbrowse/cli": "^1.6.5",
+    "@jbrowse/core": "^1.6.5",
+    "@jbrowse/plugin-variants": "^1.6.5",
+    "@jbrowse/plugin-svg": "^1.6.5",
+    "@jbrowse/plugin-linear-genome-view": "^1.6.5",
+    "@jbrowse/react-linear-genome-view": "^1.6.5",
     "@gmod/vcf": "^5.0.5",
     "@labkey/components": "^2.108.0",
     "assert": "^2.0.0",
