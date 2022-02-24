@@ -78,6 +78,17 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
     }
 
     @Override
+    public String getAnalysisType(PipelineJob job)
+    {
+        if (!job.getParameters().containsKey("singleCell"))
+        {
+            return SequenceOutputHandler.super.getAnalysisType(job);
+        }
+
+        return Arrays.asList(job.getParameters().get("singleCell").split(";")).contains("SeuratPrototype") ? "Seurat Prototype" : SequenceOutputHandler.super.getAnalysisType(job);
+    }
+
+    @Override
     public String getButtonJSHandler()
     {
         return null;

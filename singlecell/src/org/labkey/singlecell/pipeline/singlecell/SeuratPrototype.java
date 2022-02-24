@@ -142,8 +142,10 @@ public class SeuratPrototype extends AbstractCellMembraneStep
                 int totalSinglet = 0;
                 int totalDiscordant = 0;
                 int totalDoublet = 0;
+                double totalSaturation = 0.0;
 
                 int hashingIdx = -1;
+                int saturationIdx = -1;
                 boolean hashingUsed = true;
                 while ((line = reader.readNext()) != null)
                 {
@@ -153,6 +155,12 @@ public class SeuratPrototype extends AbstractCellMembraneStep
                         if (hashingIdx == -1)
                         {
                             throw new PipelineJobException("Unable to find HTO.Classification field in file: " + metaTable.getName());
+                        }
+
+                        saturationIdx = Arrays.asList(line).indexOf("Saturation.RNA");
+                        if (saturationIdx == -1)
+                        {
+                            throw new PipelineJobException("Unable to find Saturation.RNA field in file: " + metaTable.getName());
                         }
                     }
                     else
@@ -175,6 +183,9 @@ public class SeuratPrototype extends AbstractCellMembraneStep
                         {
                             hashingUsed = false;
                         }
+
+                        double saturation = Double.parseDouble(line[saturationIdx]);
+                        totalSaturation += saturation;
                     }
                 }
 
@@ -193,6 +204,8 @@ public class SeuratPrototype extends AbstractCellMembraneStep
                 {
                     descriptions.add("Hashing not used");
                 }
+
+                descriptions.add("Mean RNA Saturation: " + (totalSaturation / (double) totalCells));
             }
             catch (IOException e)
             {
