@@ -395,7 +395,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                         FileUtils.copyFile(so.getFile(), local);
                         _resumer.getFileManager().addIntermediateFile(local);
 
-                        currentFiles.add(new SingleCellStep.SeuratObjectWrapper(datasetId, datasetId, so.getFile(), so));
+                        currentFiles.add(new SingleCellStep.SeuratObjectWrapper(datasetId, datasetId, local, so));
                     }
                 }
                 catch (IOException e)
@@ -467,9 +467,14 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 if (output.getSeuratObjects() != null && !output.getSeuratObjects().isEmpty())
                 {
                     currentFiles = new ArrayList<>(output.getSeuratObjects());
-                    _resumer.getFileManager().addIntermediateFiles(currentFiles.stream().map(SingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toSet()));
-                    _resumer.getFileManager().addIntermediateFiles(currentFiles.stream().map(x -> CellHashingServiceImpl.get().getCellBarcodesFromSeurat(x.getFile())).collect(Collectors.toSet()));
-                    _resumer.getFileManager().addIntermediateFiles(currentFiles.stream().map(x -> CellHashingServiceImpl.get().getMetaTableFromSeurat(x.getFile())).collect(Collectors.toSet()));
+                    Set<File> possibleIntermediates = currentFiles.stream().map(SingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toSet());
+                    possibleIntermediates.removeAll(originalInputs);
+                    if (!possibleIntermediates.isEmpty())
+                    {
+                        _resumer.getFileManager().addIntermediateFiles(possibleIntermediates);
+                        _resumer.getFileManager().addIntermediateFiles(possibleIntermediates.stream().map(x -> CellHashingServiceImpl.get().getCellBarcodesFromSeurat(x)).collect(Collectors.toSet()));
+                        _resumer.getFileManager().addIntermediateFiles(possibleIntermediates.stream().map(x -> CellHashingServiceImpl.get().getMetaTableFromSeurat(x)).collect(Collectors.toSet()));
+                    }
                 }
                 else if (step.createsSeuratObjects())
                 {
@@ -503,6 +508,8 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             {
                 throw new PipelineJobException("No markdown files produced!");
             }
+
+            originalInputs.stream().forEach(x -> _resumer.getFileManager().removeIntermediateFile(x));
 
             //process with pandoc
             ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Creating final report");
