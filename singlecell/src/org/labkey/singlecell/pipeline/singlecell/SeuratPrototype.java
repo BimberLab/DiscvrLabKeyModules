@@ -17,6 +17,7 @@ import org.labkey.singlecell.CellHashingServiceImpl;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -192,13 +193,16 @@ public class SeuratPrototype extends AbstractCellMembraneStep
                 NumberFormat pf = NumberFormat.getPercentInstance();
                 pf.setMaximumFractionDigits(2);
 
-                descriptions.add("Total Cells: " + totalCells);
+                NumberFormat decimal = DecimalFormat.getNumberInstance();
+                decimal.setGroupingUsed(false);
+
+                descriptions.add("Total Cells: " + decimal.format(totalCells));
                 if (hashingUsed)
                 {
-                    descriptions.add("Total Singlet: " + totalSinglet);
-                    descriptions.add("% Singlet: " + ((double) totalSinglet / (double) totalCells));
-                    descriptions.add("% Doublet: " + ((double) totalDoublet / (double) totalCells));
-                    descriptions.add("% Discordant: " + ((double) totalDiscordant / (double) totalCells));
+                    descriptions.add("Total Singlet: " + decimal.format(totalSinglet));
+                    descriptions.add("% Singlet: " + pf.format((double) totalSinglet / (double) totalCells));
+                    descriptions.add("% Doublet: " + pf.format((double) totalDoublet / (double) totalCells));
+                    descriptions.add("% Discordant: " + pf.format((double) totalDiscordant / (double) totalCells));
                 }
                 else
                 {
