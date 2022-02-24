@@ -603,7 +603,15 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 }
                 else
                 {
-                    _resumer.getFileManager().addSequenceOutput(so);
+                    Set<File> existingOutputs = _resumer.getFileManager().getOutputsToCreate().stream().map(SequenceOutputFile::getFile).collect(Collectors.toSet());
+                    if (existingOutputs.contains(so.getFile()))
+                    {
+                        ctx.getLogger().info("The RDS file has already been registered as an output, will not re-add: " + so.getFile().getPath());
+                    }
+                    else
+                    {
+                        _resumer.getFileManager().addSequenceOutput(so);
+                    }
                 }
 
                 // This could be a little confusing, but add one record out seurat output, even though there is one HTML file::

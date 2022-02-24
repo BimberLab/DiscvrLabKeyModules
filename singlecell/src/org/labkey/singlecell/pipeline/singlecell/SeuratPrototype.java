@@ -1,7 +1,10 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
+import au.com.bytecode.opencsv.CSVReader;
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
@@ -12,6 +15,10 @@ import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.singlecell.CellHashingServiceImpl;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -124,6 +131,97 @@ public class SeuratPrototype extends AbstractCellMembraneStep
             String readsetName = ctx.getSequenceSupport().getCachedReadset(wrapper.getReadsetId()).getName();
             so.setReadset(wrapper.getReadsetId());
             so.setName(readsetName + ": Prototype Seurat Object");
+
+            List<String> descriptions = new ArrayList<>();
+            File metaTable = CellHashingServiceImpl.get().getMetaTableFromSeurat(so.getFile());
+            try (CSVReader reader = new CSVReader(Readers.getReader(metaTable), ','))
+            {
+                String[] line;
+
+                int totalCells = 0;
+                int totalSinglet = 0;
+                int totalDiscordant = 0;
+                int totalDoublet = 0;
+
+                int hashingIdx = -1;
+                boolean hashingUsed = true;
+                while ((line = reader.readNext()) != null)
+                {
+                    if (hashingIdx == -1)
+                    {
+                        hashingIdx = Arrays.asList(line).indexOf("HTO.Classification");
+                        if (hashingIdx == -1)
+                        {
+                            throw new PipelineJobException("Unable to find HTO.Classification field in file: " + metaTable.getName());
+                        }
+                    }
+                    else
+                    {
+                        totalCells++;
+                        String val = line[hashingIdx];
+                        if ("Singlet".equals(val))
+                        {
+                            totalSinglet++;
+                        }
+                        else if ("Doublet".equals(val))
+                        {
+                            totalDoublet++;
+                        }
+                        else if ("Discordant".equals(val))
+                        {
+                            totalDiscordant++;
+                        }
+                        else if ("NotUsed".equals(val))
+                        {
+                            hashingUsed = false;
+                        }
+                    }
+                }
+
+                NumberFormat pf = NumberFormat.getPercentInstance();
+                pf.setMaximumFractionDigits(2);
+
+                descriptions.add("Total Cells: " + totalCells);
+                if (hashingUsed)
+                {
+                    descriptions.add("Total Singlet: " + totalSinglet);
+                    descriptions.add("% Singlet: " + ((double) totalSinglet / (double) totalCells));
+                    descriptions.add("% Doublet: " + ((double) totalDoublet / (double) totalCells));
+                    descriptions.add("% Discordant: " + ((double) totalDiscordant / (double) totalCells));
+                }
+                else
+                {
+                    descriptions.add("Hashing not used");
+                }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            if (ctx.getParams().optBoolean("singleCellRawData.PrepareRawCounts.useSoupX", false))
+            {
+                descriptions.add("SoupX: true");
+            }
+
+            String hashingMethods = ctx.getParams().optString("singleCell.RunCellHashing.consensusMethods");
+            if (hashingMethods != null)
+            {
+                descriptions.add("Hashing: " + hashingMethods);
+            }
+
+            String citeNormalize = ctx.getParams().optString("singleCell.AppendCiteSeq.normalizeMethod");
+            if (citeNormalize != null)
+            {
+                descriptions.add("Cite-seq Normalization: " + citeNormalize);
+            }
+
+            if (ctx.getParams().optBoolean("singleCell.AppendCiteSeq.runCellBender", false))
+            {
+                descriptions.add("Cite-seq/CellBender: true");
+            }
+
+            so.setDescription(StringUtils.join(descriptions, "\n"));
 
             ctx.getFileManager().addSequenceOutput(so);
         }
