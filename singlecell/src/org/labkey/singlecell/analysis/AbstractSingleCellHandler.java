@@ -64,6 +64,8 @@ import java.util.stream.Collectors;
 
 abstract public class AbstractSingleCellHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, SequenceOutputHandler.HasActionNames
 {
+    public static final String SEURAT_PROTOTYPE = "Seurat Object Prototype";
+
     protected Resumer _resumer;
 
     public AbstractSingleCellHandler()
@@ -272,7 +274,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     CellHashingService.get().processMetrics(so, job, true);
                 }
 
-                if ("Seurat Prototype".equals(so.getCategory()))
+                if (SEURAT_PROTOTYPE.equals(so.getCategory()))
                 {
                     //NOTE: upstream we enforce one dataset per job, so we can safely assume this is the only dataset here:
                     File metricFile = new File(job.getLogFile().getParentFile(), "seurat.metrics.txt");

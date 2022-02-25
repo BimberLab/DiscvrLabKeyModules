@@ -25,6 +25,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import static org.labkey.singlecell.analysis.AbstractSingleCellHandler.SEURAT_PROTOTYPE;
+
 public class SeuratPrototype extends AbstractCellMembraneStep
 {
     public SeuratPrototype(PipelineContext ctx, SeuratPrototype.Provider provider)
@@ -126,7 +128,7 @@ public class SeuratPrototype extends AbstractCellMembraneStep
 
             SequenceOutputFile so = new SequenceOutputFile();
             so.setFile(wrapper.getFile());
-            so.setCategory("Seurat Object Prototype");
+            so.setCategory(SEURAT_PROTOTYPE);
             so.setLibrary_id(ctx.getSequenceSupport().getCachedGenomes().iterator().next().getGenomeId());
 
             String readsetName = ctx.getSequenceSupport().getCachedReadset(wrapper.getReadsetId()).getName();
