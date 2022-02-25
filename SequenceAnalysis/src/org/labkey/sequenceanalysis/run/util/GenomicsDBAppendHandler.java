@@ -38,6 +38,9 @@ public class GenomicsDBAppendHandler extends AbstractGenomicsDBImportHandler
                 ToolParameterDescriptor.create("bypassFeatureReader", "Bypass Feature Reader", "If checked, rather than use the HTSJDK/Java reader, it will use a C-based implementation.", "checkbox", new JSONObject(){{
                     put("checked", true);
                 }}, true),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--genomicsdb-segment-size"), "genomicsdbSegmentSize", "Genomicsdb Segment Size", "Reducing this value may help with memory issues", "ldk-integerfield", new JSONObject(){{
+                    put("minValue", 0);
+                }}, null),
                 ToolParameterDescriptor.create("nativeMemoryBuffer", "C++ Memory Buffer", "By default, the pipeline java processes are allocated nearly all of the requested RAM.  GenomicsDB requires memory for the C++ layer - this value (in GB) will be reserved for this.  We recommend about 15-25% of the total job RAM", "ldk-integerfield", new JSONObject(){{
                     put("minValue", 0);
                 }}, 36),
