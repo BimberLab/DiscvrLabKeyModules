@@ -155,7 +155,9 @@ public class SeuratPrototype extends AbstractCellMembraneStep
                         hashingIdx = Arrays.asList(line).indexOf("HTO.Classification");
                         if (hashingIdx == -1)
                         {
-                            throw new PipelineJobException("Unable to find HTO.Classification field in file: " + metaTable.getName());
+                            ctx.getLogger().debug("HTO.Classification field not present, skipping");
+                            hashingUsed = false;
+                            hashingIdx = -2;
                         }
 
                         saturationIdx = Arrays.asList(line).indexOf("Saturation.RNA");
@@ -167,22 +169,25 @@ public class SeuratPrototype extends AbstractCellMembraneStep
                     else
                     {
                         totalCells++;
-                        String val = line[hashingIdx];
-                        if ("Singlet".equals(val))
+                        if (hashingUsed && hashingIdx >= 0)
                         {
-                            totalSinglet++;
-                        }
-                        else if ("Doublet".equals(val))
-                        {
-                            totalDoublet++;
-                        }
-                        else if ("Discordant".equals(val))
-                        {
-                            totalDiscordant++;
-                        }
-                        else if ("NotUsed".equals(val))
-                        {
-                            hashingUsed = false;
+                            String val = line[hashingIdx];
+                            if ("Singlet".equals(val))
+                            {
+                                totalSinglet++;
+                            }
+                            else if ("Doublet".equals(val))
+                            {
+                                totalDoublet++;
+                            }
+                            else if ("Discordant".equals(val))
+                            {
+                                totalDiscordant++;
+                            }
+                            else if ("NotUsed".equals(val))
+                            {
+                                hashingUsed = false;
+                            }
                         }
 
                         double saturation = Double.parseDouble(line[saturationIdx]);
