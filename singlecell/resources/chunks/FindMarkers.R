@@ -1,5 +1,6 @@
 plotList <- list()
 for (datasetId in names(seuratObjects)) {
+    printName(datasetId)
     seuratObj <- readRDS(seuratObjects[[datasetId]])
 
     outFile <- paste0(outputPrefix, '.', datasetId, '.markers.txt')

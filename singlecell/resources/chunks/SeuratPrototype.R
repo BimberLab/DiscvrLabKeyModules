@@ -1,6 +1,7 @@
 metricData <- data.frame(dataId = integer(), readsetId = integer(), metricname = character(), metricvalue = numeric())
 
 for (datasetId in names(seuratObjects)) {
+  printName(datasetId)
   seuratObj <- readRDS(seuratObjects[[datasetId]])
   metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'TotalCells', metricvalue = ncol(seuratObj)))
 
