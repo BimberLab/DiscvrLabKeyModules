@@ -45,7 +45,10 @@ public class CommonFilters extends AbstractCellMembraneStep
                     }}, null),
                     SeuratToolParameter.create("dropHashingFail", "Drop Cells Without Hashing", "If checked, any cell that lacks hashing data will be dropped. All cells from a lane that did not use hashing will be included.", "checkbox", new JSONObject(){{
                         put("checked", true);
-                    }}, null)
+                    }}, false),
+                    SeuratToolParameter.create("dropNullScGateConsensus", "Drop Cells With scGateConsensus", "If checked, any cell that lacks a call from scGateConsensus will be dropped.", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, false)
             ), null, null);
         }
 

@@ -82,6 +82,21 @@ for (datasetId in names(seuratObjects)) {
 		})
 	}
 
+	if (dropNullScGateConsensus) {
+		if (!'scGateConsensus' %in% names(seuratObj@meta.data)) {
+			stop('Missing field: scGateConsensus')
+		}
+
+		toDrop <- is.na(seuratObj@meta.data$scGateConsensus)
+		if (sum(toDrop) > 0) {
+			cells <- colnames(seuratObj)[!is.na(seuratObj@meta.data$scGateConsensus)]
+			seuratObj <- subset(seuratObj, cells = cells)
+			print(paste0('After dropping cells without scGateConsensus: ', length(colnames(x = seuratObj))))
+		} else {
+			print('All cells have a values for scGateConsensus, nothing to do')
+		}
+	}
+
 	if (!is.null(seuratObj)) {
 		saveData(seuratObj, datasetId)
 		totalPassed <- totalPassed + 1
