@@ -370,7 +370,8 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             }
 
             List<SingleCellStep.SeuratObjectWrapper> currentFiles;
-
+            Set<File> originalInputs = inputFiles.stream().map(SequenceOutputFile::getFile).collect(Collectors.toSet());
+            Set<File> originalRDSCopiedLocal = new HashSet<>();
             if (_doProcessRawCounts)
             {
                 currentFiles = processRawCounts(ctx, inputFiles, basename);
@@ -410,14 +411,14 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
 
                         currentFiles.add(new SingleCellStep.SeuratObjectWrapper(datasetId, datasetId, local, so));
                     }
+
+                    originalRDSCopiedLocal.addAll(currentFiles.stream().map(AbstractSingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toSet()));
                 }
                 catch (IOException e)
                 {
                     throw new PipelineJobException(e);
                 }
             }
-
-            Set<File> originalInputs = currentFiles.stream().map(AbstractSingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toSet());
 
             // Step 2: iterate seurat processing:
             String outputPrefix = basename;
@@ -522,7 +523,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 throw new PipelineJobException("No markdown files produced!");
             }
 
-            originalInputs.stream().forEach(x -> _resumer.getFileManager().removeIntermediateFile(x));
+            originalInputs.forEach(x -> _resumer.getFileManager().removeIntermediateFile(x));
 
             //process with pandoc
             ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Creating final report");
@@ -610,7 +611,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 }
 
                 //This indicates the job processed an input file, but did not create a new object (like running FindMarkers)
-                if (originalInputs.contains(output.getFile()))
+                if (originalRDSCopiedLocal.contains(output.getFile()))
                 {
                     ctx.getLogger().info("Sequence output is the same as an input, will not re-create output for seurat object: " + output.getFile().getPath());
                 }
