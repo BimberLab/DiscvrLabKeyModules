@@ -1063,19 +1063,19 @@ public class SequenceTest extends BaseWebDriverTest
         assertEquals("Unexpected value for param", "delete", fieldsJson.get("inputFileTreatment"));
         assertEquals("Unexpected value for param", true, fieldsJson.get("deleteIntermediateFiles"));
 
-        Map<String, Object> fileGroup0 = (Map) fieldsJson.get("fileGroup_1");
+        Map<String, Object> fileGroup0 = (Map) fieldsJson.get("fileGroup_3");
         Assert.assertEquals("Unexpected value for param", groupName, fileGroup0.get("name"));
         List<Map> arr0 = (List)fileGroup0.get("files");
-        Assert.assertEquals(2, arr0.size());
+        Assert.assertEquals(3, arr0.size());
         Assert.assertEquals(groupName, arr0.get(0).get("fileGroupId"));
         Assert.assertEquals("s_G1_L001", arr0.get(0).get("platformUnit"));
 
         Assert.assertEquals(groupName, arr0.get(1).get("fileGroupId"));
         Assert.assertEquals("", arr0.get(1).get("platformUnit"));
 
-        Map<String, Object> fileGroup1 = (Map) fieldsJson.get("fileGroup_2");
-        Assert.assertEquals(2, ((List)fileGroup1.get("files")).size());
-        Map<String, Object> fileGroup2 = (Map) fieldsJson.get("fileGroup_3");
+        Map<String, Object> fileGroup1 = (Map) fieldsJson.get("fileGroup_1");
+        Assert.assertEquals(1, ((List)fileGroup1.get("files")).size());
+        Map<String, Object> fileGroup2 = (Map) fieldsJson.get("fileGroup_2");
         Assert.assertEquals(1, ((List)fileGroup2.get("files")).size());
 
         Map<String, Object> sample0 = (Map) fieldsJson.get("readset_0");
