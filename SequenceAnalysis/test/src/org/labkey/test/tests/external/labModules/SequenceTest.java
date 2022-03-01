@@ -945,8 +945,6 @@ public class SequenceTest extends BaseWebDriverTest
 
         Assert.assertEquals("incorrect group count", 3L, readDataGrid.getEval("store.getGroups().length"));
 
-        scrollIntoView(readDataGrid.getTbarButton("Split/Regroup Selected"), true);
-        checker().takeScreenShot("Import1");
         //then split groups
         waitAndClick(readDataGrid.getRow(2));
         readDataGrid.clickTbarButton("Split/Regroup Selected");
@@ -955,17 +953,16 @@ public class SequenceTest extends BaseWebDriverTest
         _ext4Helper.queryOne("window textfield", Ext4FieldRef.class).setValue(groupName);
         waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
         sleep(200);
-        checker().takeScreenShot("Import2");
+
         Assert.assertEquals("incorrect group count", 4L, readDataGrid.getEval("store.getGroups().length"));
         Assert.assertEquals("incorrect readsetname", "dualBarcodes_SIV", readsetGrid.getFieldValue(1, "fileGroupId"));
         readDataGrid.setGridCell(4, "fileGroupId", groupName);
         sleep(200);
-        checker().takeScreenShot("Import3");
+
         Assert.assertEquals("incorrect group count", 3L, readDataGrid.getEval("store.getGroups().length"));
         Assert.assertEquals("incorrect readsetname", groupName, readsetGrid.getFieldValue(1, "fileGroupId"));
 
         readDataGrid.setGridCell(2, "fileGroupId", groupName);
-        checker().takeScreenShot("Import4");
         Assert.assertEquals("incorrect readsetname", "sample454_SIV", readsetGrid.getFieldValue(3, "fileGroupId"));
         readDataGrid.setGridCell(1, "fileGroupId", "sample454_SIVb");
         Assert.assertEquals("incorrect readsetname", "sample454_SIVb", readsetGrid.getFieldValue(3, "fileGroupId"));
