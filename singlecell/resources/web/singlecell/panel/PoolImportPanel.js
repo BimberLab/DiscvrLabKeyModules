@@ -201,6 +201,10 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                     val = val.replace(/^MS[- ]Idx/ig, 'MultiSeq-Idx');
                     val = val.replace(/^MultiSeq[- ]Idx[- ]RP/ig, 'MultiSeq-Idx-RP');
 
+                    if (val.length() <= 3) {
+                        val = panel.down('#useDualIndex').getValue() ? 'SI-TN-' + val : 'SI-NA-' + val;
+                    }
+
                     return val;
                 }
                 else if (val && type === 'BioLegend') {
@@ -227,7 +231,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                 return null;
             }
 
-            var barcodeSeries = panel.down('#citeseqBarcodeSeries').getValue();
+            var barcodeSeries = panel.down('#useDualIndex').getValue() ? 'SI-TN-' + val : 'SI-NA-' + val;
             val = val.toUpperCase();
             var re = new RegExp('^' + barcodeSeries + '-', 'i');
             if (!val.match(re)) {
@@ -247,7 +251,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                 return;
             }
 
-            var barcodeSeries = panel.down('#barcodeSeries').getValue();
+            var barcodeSeries = panel.down('#useDualIndex').getValue() ? 'SI-TT-' + val : 'SI-GA-' + val;
             val = val.toUpperCase();
             var re = new RegExp('^' + barcodeSeries + '-', 'i');
             if (!val.match(re)) {
@@ -499,27 +503,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         },{
             xtype: 'checkbox',
             fieldLabel: 'Use 10x V2/HT (Dual Index)',
-            itemId: 'useDualIndex',
-            listeners: {
-                change: function(field, val){
-                    field.up('panel').down('#barcodeSeries').setValue(field.getValue() ? 'SI-TT' : 'SI-GA');
-                    field.up('panel').down('#citeseqBarcodeSeries').setValue(field.getValue() ? 'SI-TN' : 'SI-NA');
-                }
-            }
-        },{
-            xtype: 'ldk-simplecombo',
-            fieldLabel: '10x GEX/TCR Barcode Series',
-            itemId: 'barcodeSeries',
-            forceSelection: true,
-            storeValues: ['SI-GA', 'SI-TT'],
-            value: 'SI-GA'
-        },{
-            xtype: 'ldk-simplecombo',
-            fieldLabel: '10x Cite-Seq Barcode Series',
-            itemId: 'citeseqBarcodeSeries',
-            forceSelection: true,
-            storeValues: ['SI-NA', 'SI-TN'],
-            value: 'SI-NA'
+            itemId: 'useDualIndex'
         },{
             xtype: 'ldk-simplelabkeycombo',
             fieldLabel: 'Hashing Type',
@@ -927,7 +911,6 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         subjectid = subjectid.length === 1 ? subjectid[0] : null;
 
         const requireConc = this.down('#requireConc').getValue();
-        const isDualIndex = this.down('#useDualIndex').getValue();
 
         if (idxValues.length === 1){
             if (requireConc && !conc[0]) {
@@ -936,11 +919,14 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
 
             var guid = LABKEY.Utils.generateUUID();
             LDK.Assert.assertNotEmpty('Expected non-null workbook', workbook);
+
+            // These are the dual-index 10x barcode series.
+            var isDualIndex = idxValues[0].startsWith('SI-TN') || idxValues[0].startsWith('SI-TT');
+
             readsetRows.push({
                 name: poolName + '-' + type,
-                // SI- is a proxy for being 10x (i.e. not multiseq)
-                barcode5: isDualIndex && idxValues[0].startsWith('SI-') ? idxValues[0] + '_F' : idxValues[0],
-                barcode3: isDualIndex && idxValues[0].startsWith('SI-') ? idxValues[0] + '_R' : null,
+                barcode5: isDualIndex ? idxValues[0] + '_F' : idxValues[0],
+                barcode3: isDualIndex ? idxValues[0] + '_R' : null,
                 concentration: conc[0],
                 fragmentSize: fragment[0],
                 platform: 'ILLUMINA',
