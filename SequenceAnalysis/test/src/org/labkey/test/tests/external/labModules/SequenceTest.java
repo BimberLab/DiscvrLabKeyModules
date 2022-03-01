@@ -944,6 +944,8 @@ public class SequenceTest extends BaseWebDriverTest
         Assert.assertNull(StringUtils.trimToNull(Objects.toString(readDataGrid.getFieldValue(5, "fileRecord2"))));
 
         Assert.assertEquals("incorrect group count", 3L, readDataGrid.getEval("store.getGroups().length"));
+
+        scrollIntoView(readDataGrid.getTbarButton("Split/Regroup Selected"));
         checker().takeScreenShot("Import1");
         //then split groups
         waitAndClick(readDataGrid.getRow(2));
@@ -956,7 +958,7 @@ public class SequenceTest extends BaseWebDriverTest
         checker().takeScreenShot("Import2");
         Assert.assertEquals("incorrect group count", 4L, readDataGrid.getEval("store.getGroups().length"));
         Assert.assertEquals("incorrect readsetname", "dualBarcodes_SIV", readsetGrid.getFieldValue(1, "fileGroupId"));
-        readDataGrid.setGridCell(5, "fileGroupId", groupName);
+        readDataGrid.setGridCell(2, "fileGroupId", groupName);
         sleep(200);
         checker().takeScreenShot("Import3");
         Assert.assertEquals("incorrect group count", 3L, readDataGrid.getEval("store.getGroups().length"));
