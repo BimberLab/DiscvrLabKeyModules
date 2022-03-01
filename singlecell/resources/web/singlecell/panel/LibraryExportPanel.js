@@ -581,7 +581,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
             schemaName: 'singlecell',
             queryName: 'cdna_libraries',
             sort: 'plateId,well/addressByColumn',
-            columns: 'rowid,plateid,cells' +
+            columns: 'rowid,plateid,sortId/cells' +
                 ',readsetId,readsetId/name,readsetId/application,readsetId/librarytype,readsetId/barcode5,readsetId/barcode5/sequence,readsetId/barcode3,readsetId/barcode3/sequence,readsetId/totalFiles,readsetId/concentration' +
                 ',tcrReadsetId,tcrReadsetId/name,tcrReadsetId/application,tcrReadsetId/librarytype,tcrReadsetId/barcode5,tcrReadsetId/barcode5/sequence,tcrReadsetId/barcode3,tcrReadsetId/barcode3/sequence,tcrReadsetId/totalFiles,tcrReadsetId/concentration' +
                 ',hashingReadsetId,hashingReadsetId/name,hashingReadsetId/application,hashingReadsetId/librarytype,hashingReadsetId/barcode5,hashingReadsetId/barcode5/sequence,hashingReadsetId/barcode3,hashingReadsetId/barcode3/sequence,hashingReadsetId/totalFiles,hashingReadsetId/concentration' +
@@ -600,9 +600,9 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                 var sortedRows = results.rows;
                 var totalCellsByReadset = {};
                 Ext4.Array.forEach(results.rows, function(row){
-                    if (row.plateId && row.cells) {
+                    if (row.plateId && row['sortId/cells']) {
                         totalCellsByReadset[row.plateId] = totalCellsByReadset[row.plateId] || 0;
-                        totalCellsByReadset[row.plateId] = totalCellsByReadset[row.plateId] + row.cells;
+                        totalCellsByReadset[row.plateId] = totalCellsByReadset[row.plateId] + row['sortId/cells'];
                     }
                 }, this);
 
