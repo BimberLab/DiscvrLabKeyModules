@@ -33,8 +33,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 sequenceImportPanel: this,
                 extend: 'Ext.data.Model',
                 fields: [
-                    {name: 'fileGroupId', allowBlank: false},
-                    {name: 'readset', allowBlank: false},
+                    {name: 'fileGroupId', allowBlank: false, sortType: SequenceAnalysis.Utils.getNaturalSortValue},
+                    {name: 'readset', allowBlank: false, sortType: SequenceAnalysis.Utils.getNaturalSortValue},
                     {name: 'readsetname', useNull: true},
                     {name: 'importType', useNull: true},
                     {name: 'barcode5', useNull: true},
@@ -128,8 +128,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
             model: Ext4.define('SequenceAnalysis.model.ReadsetDataModel', {
                 extend: 'Ext.data.Model',
                 fields: [
-                    {name: 'id'},
-                    {name: 'fileGroupId', allowBlank: false},
+                    {name: 'id', sortType: SequenceAnalysis.Utils.getNaturalSortValue},
+                    {name: 'fileGroupId', allowBlank: false, sortType: SequenceAnalysis.Utils.getNaturalSortValue},
                     {name: 'fileRecord1'},
                     {name: 'fileRecord2'},
                     {name: 'platformUnit'},
@@ -332,7 +332,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 distinctGroups.push(r.get('fileGroupId'));
             }
         }, this);
-        distinctGroups = Ext4.unique(distinctGroups);
+        distinctGroups = Ext4.unique(distinctGroups).sort(SequenceAnalysis.Utils.naturalSortFn);
 
         var found = [];
         Ext4.Array.forEach(this.fileGroupStore.getRange(), function(fg){
@@ -424,7 +424,13 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
     TENX_REGEX: /^(.+?)(_[0-9]+){0,1}_S(.+)_L(.+)_(R){0,1}([0-9])(_[0-9]+){0,1}(\.f(ast){0,1}q)(\.gz)?$/i,
 
     populateSamples: function(orderType, isPaired){
-        this.fileNameStore.sort('displayName', 'ASC');
+        this.fileNameStore.sort([{
+            sorterFn: function(o1, o2){
+                o1 = o1.get('displayName');
+                o2 = o2.get('displayName');
+                return o1 = SequenceAnalysis.Utils.naturalSortFn(o1, o2);
+            }
+        }]);
         this.readDataStore.removeAll();
         var errorMsgs = [];
 
@@ -483,9 +489,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                 }
             }, this);
 
-            var keys = Ext4.Object.getKeys(map);
-            keys.sort();
-
+            var keys = Ext4.Object.getKeys(map).sort(SequenceAnalysis.Utils.naturalSortFn);
             Ext4.Array.forEach(keys, function(key){
                 if (Ext4.isArray(map[key])){
                     Ext4.Array.forEach(map[key], function(r){
@@ -563,6 +567,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
             }
         }
 
+        this.readDataStore.sort('fileGroupId');
         this.down('#readDataGrid').getView().refresh();
 
         //populate readsets
@@ -570,7 +575,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         this.readDataStore.each(function(r){
             distinctNames.push(r.get('fileGroupId'));
         }, this);
-        distinctNames = Ext4.unique(distinctNames);
+        distinctNames = Ext4.unique(distinctNames).sort(SequenceAnalysis.Utils.naturalSortFn);
 
         //update fileGroupIds
         Ext4.Array.forEach(distinctNames, function(name){
@@ -947,7 +952,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
             model: this.fileNameStore.model
         });
 
-        this.fileNames.sort();
+        this.fileNames.sort(SequenceAnalysis.Utils.naturalSortFn);
         Ext4.Msg.wait('Loading...');
         var multi = new LABKEY.MultiRequest();
         multi.add(LABKEY.Ajax.request, {
@@ -1073,8 +1078,20 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
             }
         }, this);
 
-        this.fileNameStore.sort('displayName');
-        this.fileNameStoreCopy.sort('displayName');
+        this.fileNameStore.sort([{
+            sorterFn: function(o1, o2){
+                o1 = o1.get('displayName');
+                o2 = o2.get('displayName');
+                return SequenceAnalysis.Utils.naturalSortFn(o1, o2);
+            }
+        }]);
+        this.fileNameStoreCopy.sort([{
+            sorterFn: function(o1, o2){
+                o1 = o1.get('displayName');
+                o2 = o2.get('displayName');
+                return SequenceAnalysis.Utils.naturalSortFn(o1, o2);
+            }
+        }]);
 
         this.down('#fileListView').refresh();
         this.down('#totalFiles').update('Total files: ' + this.fileNameStore.getCount());

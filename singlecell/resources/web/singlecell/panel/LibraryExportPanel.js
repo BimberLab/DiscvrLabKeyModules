@@ -874,9 +874,9 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                                 }
                                 rows.push(data.join(delim));
-
-                                runMap[r.laneAssignment || 'Not Assigned'] = (runMap[r.laneAssignment || 'Not Assigned'] || 0) + (totalData || 0);
                             }, this);
+
+                            runMap[r.laneAssignment || 'Not Assigned'] = (runMap[r.laneAssignment || 'Not Assigned'] || 0) + (totalData || 0);
                         }
                     };
 
@@ -884,7 +884,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                     Ext4.Array.forEach(sortedRows, function (r) {
                         var totalCells = totalCellsByReadset[r.plateId];
                         console.log(totalCells);
-                        var gexData = totalCells > 15000 ? 70 : 50;
+                        var gexData = totalCells > 15000 ? 70 : 40;
                         var tcrData = totalCells > 15000 ? 45 : 25;
                         processType(readsetIds, rows, r, 'readsetId', 'GEX', 500, 0.01, 'G', null, false, gexData, runMap, totalCells);
                         processType(readsetIds, rows, r, 'tcrReadsetId', 'TCR', 700, 0.01, 'T', null, false, tcrData, runMap, totalCells);
@@ -919,7 +919,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                 duplicates = Ext4.unique(duplicates);
                 if (!allowDuplicates && duplicates.length){
-                    Ext4.Msg.alert('Error', 'Duplicate barcodes: ' + duplicates.join(', '));
+                    Ext4.Msg.alert('Error', 'Duplicate barcodes:<br>' + duplicates.join('<br>'));
                     btn.up('singlecell-libraryexportpanel').down('#outputArea').setValue(null);
                     btn.up('singlecell-libraryexportpanel').down('#downloadData').setDisabled(true);
                 }

@@ -137,7 +137,7 @@ SequenceAnalysis.Utils = new function(){
                     exonPosition = nt_position - startNT + exon[0];
                     nt_positions.push(exonPosition);
                     exons.push(idx);
-                    if(nt_positions.length == 3)
+                    if(nt_positions.length === 3)
                         return false;  //jump to next exon
 
                     nt_position++;
@@ -152,6 +152,22 @@ SequenceAnalysis.Utils = new function(){
                 nt_positions: nt_positions,
                 exons: exons
             };
+        },
+
+        // https://github.com/overset/javascript-natural-sort/blob/master/naturalSort.js
+        naturalSortFn: function(o1, o2){
+            o1 = SequenceAnalysis.Utils.getNaturalSortValue(o1);
+            o2 = SequenceAnalysis.Utils.getNaturalSortValue(o2);
+
+            if (o1 === o2) {
+                return 0;
+            }
+
+            return o1 < o2 ? -1 : 1;
+        },
+
+        getNaturalSortValue: function(value) {
+            return value ? value.replace(/(\d+)/g, "0000000000$1").replace(/0*(\d{10,})/g, "$1") : value;
         }
     }
 }
