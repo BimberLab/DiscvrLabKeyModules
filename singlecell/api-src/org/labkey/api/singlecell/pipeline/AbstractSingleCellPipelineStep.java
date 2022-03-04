@@ -187,13 +187,13 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
     }
 
     @Override
-    public boolean requiresHashing()
+    public boolean requiresHashing(SequenceOutputHandler.JobContext ctx)
     {
         return false;
     }
 
     @Override
-    public boolean requiresCiteSeq()
+    public boolean requiresCiteSeq(SequenceOutputHandler.JobContext ctx)
     {
         return false;
     }

@@ -29,9 +29,9 @@ public interface AbstractSingleCellStep extends PipelineStep
         return true;
     }
 
-    public boolean requiresCiteSeq();
+    public boolean requiresCiteSeq(SequenceOutputHandler.JobContext ctx);
 
-    public boolean requiresHashing();
+    public boolean requiresHashing(SequenceOutputHandler.JobContext ctx);
 
     public boolean isIncluded(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputs) throws PipelineJobException;
 

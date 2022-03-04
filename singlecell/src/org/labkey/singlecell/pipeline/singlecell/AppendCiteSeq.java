@@ -66,7 +66,7 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
     }
 
     @Override
-    public boolean requiresCiteSeq()
+    public boolean requiresCiteSeq(SequenceOutputHandler.JobContext ctx)
     {
         return true;
     }

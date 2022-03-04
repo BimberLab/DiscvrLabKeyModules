@@ -177,12 +177,12 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 SingleCellStep step = stepCtx.getProvider().create(ctx);
                 step.init(ctx, inputFiles);
 
-                if (step.requiresCiteSeq())
+                if (step.requiresCiteSeq(ctx))
                 {
                     requiresCite = true;
                 }
 
-                if (step.requiresHashing())
+                if (step.requiresHashing(ctx))
                 {
                     String methods = step.getProvider().getParameterByName("methods").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), String.class);
                     if (methods != null && methods.contains(CellHashingService.CALLING_METHOD.demuxem.name()))

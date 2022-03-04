@@ -65,6 +65,18 @@ public class SeuratPrototype extends AbstractCellMembraneStep
     }
 
     @Override
+    public boolean requiresHashing(SequenceOutputHandler.JobContext ctx)
+    {
+        return getProvider().getParameterByName("requireHashing").extractValue(ctx.getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+    }
+
+    @Override
+    public boolean requiresCiteSeq(SequenceOutputHandler.JobContext ctx)
+    {
+        return getProvider().getParameterByName("requireCiteSeq").extractValue(ctx.getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+    }
+
+    @Override
     public void init(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputFiles) throws PipelineJobException
     {
         if (inputFiles.size() > 1)
