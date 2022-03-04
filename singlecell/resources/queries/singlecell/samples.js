@@ -33,4 +33,14 @@ function beforeUpsert(row, oldRow, errors){
             }
         }
     }
+
+    if (['perLN', 'PerLN'].indexOf(row.tissue) !== -1){
+        row.tissue = 'pLN';
+    }
+    else if (['mesLN'].indexOf(row.tissue) !== -1){
+        row.tissue = 'MesLN';
+    }
+    else if (['Bone Marrow', 'BoneMarrow'].indexOf(row.tissue) !== -1){
+        row.tissue = 'Bone marrow';
+    }
 }

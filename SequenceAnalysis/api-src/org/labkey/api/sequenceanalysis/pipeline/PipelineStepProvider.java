@@ -83,6 +83,11 @@ public interface PipelineStepProvider<StepType extends PipelineStep>
      */
     public ToolParameterDescriptor getParameterByName(String name);
 
+    default boolean hasParameter(String name)
+    {
+        return getParameterByName(name) != null;
+    }
+
     /**
      * Creates the JSON object sent to the client that is used to build the client UI
      */

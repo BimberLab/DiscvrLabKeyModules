@@ -1,4 +1,5 @@
 for (datasetId in names(seuratObjects)) {
+    printName(datasetId)
     rawCountDir <- seuratObjects[[datasetId]]
 
     datasetName <- datasetIdToName[[datasetId]]

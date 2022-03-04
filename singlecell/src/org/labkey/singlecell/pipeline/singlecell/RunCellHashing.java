@@ -54,7 +54,7 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
     }
 
     @Override
-    public boolean requiresHashing()
+    public boolean requiresHashing(SequenceOutputHandler.JobContext ctx)
     {
         return true;
     }

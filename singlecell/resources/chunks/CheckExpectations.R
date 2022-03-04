@@ -1,4 +1,5 @@
 for (datasetId in names(seuratObjects)) {
+  printName(datasetId)
   seuratObj <- readRDS(seuratObjects[[datasetId]])
 
   if (requireSingleDatasetInput && length(unique(seuratObj$DatasetId)) > 1) {

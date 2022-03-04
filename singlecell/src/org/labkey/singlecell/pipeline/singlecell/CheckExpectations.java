@@ -51,6 +51,18 @@ public class CheckExpectations extends AbstractCellMembraneStep
     }
 
     @Override
+    public boolean requiresHashing(SequenceOutputHandler.JobContext ctx)
+    {
+        return getProvider().getParameterByName("requireHashing").extractValue(ctx.getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+    }
+
+    @Override
+    public boolean requiresCiteSeq(SequenceOutputHandler.JobContext ctx)
+    {
+        return getProvider().getParameterByName("requireCiteSeq").extractValue(ctx.getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+    }
+
+    @Override
     protected Chunk createParamChunk(SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException
     {
         Chunk ret = super.createParamChunk(ctx, inputObjects, outputPrefix);

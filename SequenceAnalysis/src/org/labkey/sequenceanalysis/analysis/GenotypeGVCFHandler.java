@@ -366,6 +366,13 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 {
                     toolParams.add("--max-alternate-alleles");
                     toolParams.add(ctx.getParams().get("variantCalling.GenotypeGVCFs.max_alternate_alleles").toString());
+
+                    toolParams.add("--genomicsdb-max-alternate-alleles");
+
+                    // See: https://gatk.broadinstitute.org/hc/en-us/articles/4418054384027-GenotypeGVCFs#--genomicsdb-max-alternate-alleles
+                    // "A typical value is 3 more than the --max-alternate-alleles value that's used by GenotypeGVCFs and larger differences result in more robustness to PCR-related indel errors"
+                    Integer maxAlt = ctx.getParams().getInt("variantCalling.GenotypeGVCFs.max_alternate_alleles") + 3;
+                    toolParams.add(maxAlt.toString());
                 }
 
                 if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.includeNonVariantSites"))
@@ -411,7 +418,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 int nativeMemoryBuffer = ctx.getParams().optInt("variantCalling.GenotypeGVCFs.nativeMemoryBuffer", 0);
                 if (maxRam != null && nativeMemoryBuffer > 0)
                 {
-                    ctx.getLogger().info("Adjusting RAM based on memory buffer (" + nativeMemoryBuffer + ")");
+                    ctx.getLogger().info("Adjusting RAM (" + maxRam + ") based on memory buffer (" + nativeMemoryBuffer + ")");
                     maxRam = maxRam - nativeMemoryBuffer;
 
                     if (maxRam < 1)

@@ -17,7 +17,7 @@ public class RunCelltypist extends AbstractRiraStep
     {
         public Provider()
         {
-            super("RunCelltypist", "Run Celltypist", "Celltypist", "This will run Celltypist with the Immune_All_Low.pkl model.", Arrays.asList(
+            super("RunCelltypist", "Run Celltypist (Built-In Model)", "Celltypist", "This will run Celltypist with the Immune_All_Low.pkl model.", Arrays.asList(
 
             ), null, null);
         }

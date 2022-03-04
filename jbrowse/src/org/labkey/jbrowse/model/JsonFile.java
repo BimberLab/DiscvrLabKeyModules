@@ -274,7 +274,11 @@ public class JsonFile
         }
 
         ExpData targetFile = getExpData();
-        if (!targetFile.getContainer().hasPermission(u, ReadPermission.class))
+        if (targetFile == null)
+        {
+            throw new IllegalStateException("Track lacks file associated with it: " + getObjectId());
+        }
+        else if (!targetFile.getContainer().hasPermission(u, ReadPermission.class))
         {
             //Note: this should never be allowed to get to this point...
             throw new UnauthorizedException("The current user does not have read permission for: " + targetFile.getContainer().getPath());
