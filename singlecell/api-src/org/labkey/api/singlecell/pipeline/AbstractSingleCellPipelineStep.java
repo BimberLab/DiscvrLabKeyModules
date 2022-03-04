@@ -75,6 +75,11 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 
         List<SeuratObjectWrapper> outputs = new ArrayList<>();
         File tracker = new File(ctx.getOutputDir(), "savedSeuratObjects.txt");
+        if (!tracker.exists())
+        {
+            throw new PipelineJobException("File not found: " + tracker.getPath());
+        }
+
         try (CSVReader reader = new CSVReader(Readers.getReader(tracker), '\t'))
         {
             String[] line;
@@ -182,13 +187,13 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
     }
 
     @Override
-    public boolean requiresHashing()
+    public boolean requiresHashing(SequenceOutputHandler.JobContext ctx)
     {
         return false;
     }
 
     @Override
-    public boolean requiresCiteSeq()
+    public boolean requiresCiteSeq(SequenceOutputHandler.JobContext ctx)
     {
         return false;
     }

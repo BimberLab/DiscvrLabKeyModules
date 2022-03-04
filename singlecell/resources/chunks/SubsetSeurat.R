@@ -1,5 +1,6 @@
 totalPassed <- 0
 for (datasetId in names(seuratObjects)) {
+	printName(datasetId)
 	seuratObj <- readRDS(seuratObjects[[datasetId]])
 
 	#TODO: this is a stopgap for a former bug in RunCellHashing. Retain until all existing seurat objects lacking this field are removed
