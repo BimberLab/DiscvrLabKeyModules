@@ -63,10 +63,14 @@ saveData <- function(seuratObj, datasetId) {
     print(paste0('Saving dataset: ', datasetId))
     print(seuratObj)
 
-    fn <- paste0(outputPrefix, '.', datasetId, '.seurat.rds')
+    datasetIdForFile <- gsub(datasetId, pattern = '\\\\', replacement = '_')
+    datasetIdForFile <- gsub(datasetIdForFile, pattern = '/', replacement = '_')
+
+    fn <- paste0(outputPrefix, '.', datasetIdForFile, '.seurat.rds')
+
     message(paste0('Saving RDS file: ', fn))
-    barcodeFile <- paste0(outputPrefix, '.', datasetId, '.cellBarcodes.csv')
-    metaFile <- paste0(outputPrefix, '.', datasetId, '.seurat.meta.txt')
+    barcodeFile <- paste0(outputPrefix, '.', datasetIdForFile, '.cellBarcodes.csv')
+    metaFile <- paste0(outputPrefix, '.', datasetIdForFile, '.seurat.meta.txt')
 
     saveRDS(seuratObj, file = fn)
 
