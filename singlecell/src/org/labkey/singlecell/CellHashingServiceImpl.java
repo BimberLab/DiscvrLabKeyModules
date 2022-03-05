@@ -1211,6 +1211,7 @@ public class CellHashingServiceImpl extends CellHashingService
                 writer.println("\t-e SEQUENCEANALYSIS_MAX_THREADS \\");
             }
 
+            writer.println("\t-e CELLHASHR_DEBUG=1 \\");
             writer.println("\t-v \"${WD}:/work\" \\");
             writer.println("\t-v \"${HOME}:/homeDir\" \\");
             writer.println("\t-u $UID \\");
