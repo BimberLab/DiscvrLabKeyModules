@@ -65,6 +65,7 @@ saveData <- function(seuratObj, datasetId) {
 
     datasetIdForFile <- gsub(datasetId, pattern = '\\\\', replacement = '_')
     datasetIdForFile <- gsub(datasetIdForFile, pattern = '/', replacement = '_')
+    datasetIdForFile <- gsub(datasetIdForFile, pattern = '\\|', replacement = '_')
 
     fn <- paste0(outputPrefix, '.', datasetIdForFile, '.seurat.rds')
 
