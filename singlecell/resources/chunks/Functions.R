@@ -63,10 +63,7 @@ saveData <- function(seuratObj, datasetId) {
     print(paste0('Saving dataset: ', datasetId))
     print(seuratObj)
 
-    datasetIdForFile <- gsub(datasetId, pattern = '\\\\', replacement = '_')
-    datasetIdForFile <- gsub(datasetIdForFile, pattern = '/', replacement = '_')
-    datasetIdForFile <- gsub(datasetIdForFile, pattern = '\\|', replacement = '_')
-
+    datasetIdForFile <- makeLegalFileName(datasetId)
     fn <- paste0(outputPrefix, '.', datasetIdForFile, '.seurat.rds')
 
     message(paste0('Saving RDS file: ', fn))
@@ -97,6 +94,13 @@ intermediateFiles <- c()
 addIntermediateFile <- function(f) {
     print(paste0('Adding intermediate file: ', f))
     intermediateFiles <<- c(intermediateFiles, f)
+}
+
+makeLegalFileName <- function(fn) {
+    fn <- gsub(fn, pattern = '\\\\', replacement = '_')
+    fn <- gsub(fn, pattern = '/', replacement = '_')
+    fn <- gsub(fn, pattern = '\\|', replacement = '_')
+    return(fn)
 }
 
 errorMessages <- c()
