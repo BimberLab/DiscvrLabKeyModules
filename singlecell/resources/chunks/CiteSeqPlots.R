@@ -6,7 +6,16 @@ for (datasetId in names(seuratObjects)) {
         print('ADT assay not present, skipping')
     } else {
         for (adt in rownames(seuratObj[['ADT']])) {
-            CellMembrane::FeaturePlotAcrossReductions(seuratObj, features = paste0('adt_', adt))
+            tryCatch({
+                CellMembrane::FeaturePlotAcrossReductions(seuratObj, features = paste0('adt_', adt))
+            }, error = function(e){
+                print(conditionMessage(e))
+                traceback()
+                print('ADTs:')
+                print(sort(rownames(seuratObj@assays$ADT)))
+                stop(paste0('Error running FeaturePlotAcrossReductions for: ', datasetId))
+            })
+
         }
     }
 
