@@ -98,7 +98,7 @@ addIntermediateFile <- function(f) {
 
 makeLegalFileName <- function(fn) {
     fn <- gsub(fn, pattern = '\\\\', replacement = '_')
-    fn <- gsub(fn, pattern = '/', replacement = '_')
+    fn <- gsub(fn, pattern = '[/ ,;]', replacement = '_')
     fn <- gsub(fn, pattern = '\\|', replacement = '_')
     return(fn)
 }
