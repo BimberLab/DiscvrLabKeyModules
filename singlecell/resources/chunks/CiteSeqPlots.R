@@ -9,10 +9,10 @@ for (datasetId in names(seuratObjects)) {
             tryCatch({
                 CellMembrane::FeaturePlotAcrossReductions(seuratObj, features = paste0('adt_', adt))
             }, error = function(e){
-                print(conditionMessage(e))
+                warning(conditionMessage(e))
                 traceback()
-                print('ADTs:')
-                print(sort(rownames(seuratObj@assays$ADT)))
+                message('ADTs:')
+                message(sort(rownames(seuratObj@assays$ADT)))
                 stop(paste0('Error running FeaturePlotAcrossReductions for: ', datasetId))
             })
 
