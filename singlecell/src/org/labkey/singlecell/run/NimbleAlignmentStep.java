@@ -51,6 +51,7 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
     public static final String REF_GENOMES = "refGenomes";
     public static final String ALIGN_TEMPLATE = "alignTemplate";
     public static final String GROUP_BY_LINEAGE = "groupByLineage";
+    public static final String ALIGN_OUTPUT = "alignmentOutput";
 
     public NimbleAlignmentStep()
     {
@@ -65,6 +66,9 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
                     put("delimiter", ";");
                 }}, null),
                 ToolParameterDescriptor.create(GROUP_BY_LINEAGE, "Group By Lineage", "If checked, results will be aggregated by lineage", "checkbox", new JSONObject(){{
+                    put("checked", true);
+                }}, true),
+                ToolParameterDescriptor.create(ALIGN_OUTPUT, "Create Alignment/Debug Output", "If checked, an alignment-level summary TSV will be created", "checkbox", new JSONObject(){{
                     put("checked", true);
                 }}, true)
         ));
@@ -303,6 +307,13 @@ public class NimbleAlignmentStep extends AbstractParameterizedOutputHandler<Sequ
 
             alignArgs.add("-l");
             alignArgs.add("/work/nimbleDebug.txt");
+
+            boolean debugOutput = ctx.getParams().optBoolean(ALIGN_OUTPUT, false);
+            if (debugOutput)
+            {
+                alignArgs.add("-a");
+                alignArgs.add("/work/nimbleAlignment.txt.gz");
+            }
 
             alignArgs.add("/work/" + localRefJson.getName());
             alignArgs.add("/work/" + resultsTsv.getName());
