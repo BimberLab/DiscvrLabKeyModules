@@ -231,7 +231,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                 return null;
             }
 
-            var barcodeSeries = panel.down('#useDualIndex').getValue() ? 'SI-TN-' + val : 'SI-NA-' + val;
+            var barcodeSeries = panel.down('#useDualIndex').getValue() ? 'SI-TN' : 'SI-NA';
             val = val.toUpperCase();
             var re = new RegExp('^' + barcodeSeries + '-', 'i');
             if (!val.match(re)) {
@@ -251,7 +251,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                 return;
             }
 
-            var barcodeSeries = panel.down('#useDualIndex').getValue() ? 'SI-TT-' + val : 'SI-GA-' + val;
+            var barcodeSeries = panel.down('#useDualIndex').getValue() ? 'SI-TT' : 'SI-GA';
             val = val.toUpperCase();
             var re = new RegExp('^' + barcodeSeries + '-', 'i');
             if (!val.match(re)) {
