@@ -58,7 +58,12 @@ public class NimbleAligner extends CellRangerGexCountStep
     {
         public Provider()
         {
-            super("Nimble", "This will run Nimble to generate a supplemental feature count matrix for the provided libraries", getCellRangerGexParams(Arrays.asList(ToolParameterDescriptor.create(REF_GENOMES, "Reference Genome(s)", null, "singlecell-nimblealignpanel", null, null))), new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js", "sequenceanalysis/field/GenomeField.js", "singlecell/panel/NimbleAlignPanel.js")), null, true, false, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
+            super("Nimble", "This will run Nimble to generate a supplemental feature count matrix for the provided libraries", getCellRangerGexParams(Arrays.asList(
+                    ToolParameterDescriptor.create(REF_GENOMES, "Reference Genome(s)", null, "singlecell-nimblealignpanel", null, null),
+                    ToolParameterDescriptor.create(NimbleAlignmentStep.ALIGN_OUTPUT, "Create Alignment/Debug Output", "If checked, an alignment-level summary TSV will be created", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, true)
+            )), new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js", "sequenceanalysis/field/GenomeField.js", "singlecell/panel/NimbleAlignPanel.js")), null, true, false, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
         }
 
         @Override
@@ -379,6 +384,13 @@ public class NimbleAligner extends CellRangerGexCountStep
 
         alignArgs.add("-l");
         alignArgs.add("/work/nimbleDebug.txt");
+
+        boolean alignOutput = getProvider().getParameterByName(NimbleAlignmentStep.ALIGN_OUTPUT).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+        if (alignOutput)
+        {
+            alignArgs.add("-a");
+            alignArgs.add("/work/nimbleAlignment.txt.gz");
+        }
 
         alignArgs.add("/work/" + localRefJson.getName());
         alignArgs.add("/work/" + resultsTsv.getName());
