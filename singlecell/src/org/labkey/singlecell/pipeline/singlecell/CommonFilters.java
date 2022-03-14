@@ -27,17 +27,17 @@ public class CommonFilters extends AbstractCellMembraneStep
                         put("minValue", 0);
                         put("maxValue", 1);
                         put("decimalPrecision", 3);
-                    }}, null),
+                    }}, 0.5),
                     SeuratToolParameter.create("saturation.RNA.max", "Saturation.RNA Max", "Saturation.RNA max value", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                         put("maxValue", 1);
                         put("decimalPrecision", 3);
-                    }}, null),
+                    }}, 0.9),
                     SeuratToolParameter.create("saturation.ADT.min", "Saturation.ADT Min", "Saturation.ADT min value", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                         put("maxValue", 1);
                         put("decimalPrecision", 3);
-                    }}, null),
+                    }}, 0.1),
                     SeuratToolParameter.create("saturation.ADT.max", "Saturation.ADT Max", "Saturation.ADT max value", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                         put("maxValue", 1);
@@ -46,7 +46,7 @@ public class CommonFilters extends AbstractCellMembraneStep
                     SeuratToolParameter.create("dropHashingFail", "Drop Cells Without Hashing", "If checked, any cell that lacks hashing data will be dropped. All cells from a lane that did not use hashing will be included.", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, false),
-                    SeuratToolParameter.create("dropNullScGateConsensus", "Drop Cells With scGateConsensus", "If checked, any cell that lacks a call from scGateConsensus will be dropped.", "checkbox", new JSONObject(){{
+                    SeuratToolParameter.create("dropNullScGateConsensus", "Drop Cells Without scGateConsensus", "If checked, any cell that lacks a call from scGateConsensus will be dropped.", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, false)
             ), null, null);
