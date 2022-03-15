@@ -11,9 +11,16 @@ for (datasetId in names(seuratObjects)) {
 		}
 
 		expr <- Seurat::FetchData(object = seuratObj, vars = 'Saturation.RNA')
-		seuratObj <- seuratObj[, which(x = expr >= saturation.RNA.min)]
-		print(paste0('After saturation.RNA.min filter: ', length(colnames(x = seuratObj))))
-		if (ncol(seuratObj) == 0) {
+		cells <- which(x = expr >= saturation.RNA.min)
+		if (length(cells) > 0){
+			seuratObj <- seuratObj[, cells]
+			print(paste0('After saturation.RNA.min filter: ', length(colnames(x = seuratObj))))
+			if (ncol(seuratObj) == 0) {
+				seuratObj <- NULL
+				next
+			}
+		} else {
+			print(paste0('No cells passing saturation.RNA.min filter'))
 			seuratObj <- NULL
 			next
 		}
@@ -25,9 +32,16 @@ for (datasetId in names(seuratObjects)) {
 		}
 
 		expr <- Seurat::FetchData(object = seuratObj, vars = 'Saturation.RNA')
-		seuratObj <- seuratObj[, which(x = expr <= saturation.RNA.max)]
-		print(paste0('After saturation.RNA.max filter: ', length(colnames(x = seuratObj))))
-		if (ncol(seuratObj) == 0) {
+		cells <- which(x = expr <= saturation.RNA.max)
+		if (length(cells) > 0){
+			seuratObj <- seuratObj[, cells]
+			print(paste0('After saturation.RNA.max filter: ', length(colnames(x = seuratObj))))
+			if (ncol(seuratObj) == 0) {
+				seuratObj <- NULL
+				next
+			}
+		} else {
+			print(paste0('No cells passing saturation.RNA.max filter'))
 			seuratObj <- NULL
 			next
 		}
@@ -39,9 +53,16 @@ for (datasetId in names(seuratObjects)) {
 		}
 
 		expr <- Seurat::FetchData(object = seuratObj, vars = 'Saturation.ADT')
-		seuratObj <- seuratObj[, which(x = expr >= saturation.ADT.min)]
-		print(paste0('After saturation.ADT.min filter: ', length(colnames(x = seuratObj))))
-		if (ncol(seuratObj) == 0) {
+		cells <- which(x = expr >= saturation.ADT.min)
+		if (length(cells) > 0){
+			seuratObj <- seuratObj[, cells]
+			print(paste0('After saturation.ADT.min filter: ', length(colnames(x = seuratObj))))
+			if (ncol(seuratObj) == 0) {
+				seuratObj <- NULL
+				next
+			}
+		} else {
+			print(paste0('No cells passing saturation.ADT.min filter'))
 			seuratObj <- NULL
 			next
 		}
@@ -53,9 +74,16 @@ for (datasetId in names(seuratObjects)) {
 		}
 
 		expr <- Seurat::FetchData(object = seuratObj, vars = 'Saturation.ADT')
-		seuratObj <- seuratObj[, which(x = expr <= saturation.ADT.max)]
-		print(paste0('After saturation.ADT.max filter: ', length(colnames(x = seuratObj))))
-		if (ncol(seuratObj) == 0) {
+		cells <- which(x = expr <= saturation.ADT.max)
+		if (length(cells) > 0){
+			seuratObj <- seuratObj[, cells]
+			print(paste0('After saturation.ADT.max filter: ', length(colnames(x = seuratObj))))
+			if (ncol(seuratObj) == 0) {
+				seuratObj <- NULL
+				next
+			}
+		} else {
+			print(paste0('No cells passing saturation.ADT.max filter'))
 			seuratObj <- NULL
 			next
 		}
