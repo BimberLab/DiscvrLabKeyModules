@@ -93,6 +93,12 @@ public class SeuratPrototype extends AbstractCellMembraneStep
         {
             throw new PipelineJobException("Expected seurat prototype step to use a single genome");
         }
+
+        Readset rs = ctx.getSequenceSupport().getCachedReadset(inputFiles.get(0).getReadset());
+        if (!ctx.getJob().getContainer().getId().equalsIgnoreCase(rs.getContainer()))
+        {
+            throw new PipelineJobException("Seurat prototype jobs must be submitted to the same folder as the source readset");
+        }
     }
 
     @Override
