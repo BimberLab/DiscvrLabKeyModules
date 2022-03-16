@@ -103,8 +103,8 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 put("minValue", 0);
             }}, 36),
             ToolParameterDescriptor.create("consolidate", "Consolidate", "If importing data in batches, a new fragment is created for each batch. In case thousands of fragments are created, GenomicsDB feature readers will try to open ~20x as many files. Also, internally GenomicsDB would consume more memory to maintain bookkeeping data from all fragments. Use this flag to merge all fragments into one. Merging can potentially improve read performance, however overall benefit might not be noticeable as the top Java layers have significantly higher overheads. This flag has no effect if only one batch is used. Defaults to false.", "checkbox", new JSONObject(){{
-                put("checked", false);
-            }}, false),
+                put("checked", true);
+            }}, true),
             ToolParameterDescriptor.create("scatterGather", "Scatter/Gather Options", "If selected, this job will be divided to run job per chromosome.  The final step will take the VCF from each intermediate step and combined to make a final VCF file.", "sequenceanalysis-variantscattergatherpanel", new JSONObject(){{
                 put("defaultValue", "chunked");
             }}, false)
@@ -601,11 +601,6 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             GenomicsDbImportWrapper wrapper = new GenomicsDbImportWrapper(ctx.getLogger());
             List<String> options = new ArrayList<>(getClientCommandArgs(ctx.getParams()));
 
-            if (ctx.getParams().optBoolean("consolidate", false))
-            {
-                options.add("--consolidate");
-            }
-
             if (ctx.getParams().optBoolean("sharedPosixOptimizations", false))
             {
                 options.add("--genomicsdb-shared-posixfs-optimizations");
@@ -622,47 +617,17 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                 wrapper.addToEnvironment("TILEDB_DISABLE_FILE_LOCKING", "1");
             }
 
-            if (ctx.getParams().optBoolean("consolidateFirst", false))
-            {
-                ctx.getLogger().info("Will pre-consolidate the workspace using consolidate_genomicsdb_array");
-                List<String> baseArgs = new ArrayList<>();
-                baseArgs.add(SequencePipelineService.get().getExeForPackage("GENOMICSDB_PATH", "consolidate_genomicsdb_array").getPath());
-
-                baseArgs.add("-w");
-                baseArgs.add(workingDestinationWorkspaceFolder.getPath());
-
-                if (ctx.getParams().optBoolean("sharedPosixOptimizations", false))
-                {
-                    baseArgs.add("--shared-posixfs-optimizations");
-                }
-
-                if (ctx.getParams().get("genomicsdbSegmentSize") != null)
-                {
-                    baseArgs.add("--segment-size");
-                    baseArgs.add(String.valueOf(ctx.getParams().get("genomicsdbSegmentSize")));
-                }
-
-                List<Interval> intervals = getIntervalsOrFullGenome(ctx, genome);
-                for (Interval i : intervals)
-                {
-                    File contigFolder = new File(workingDestinationWorkspaceFolder, getFolderNameFromInterval(i));
-                    ctx.getLogger().info("Consolidating contig folder: " + contigFolder);
-
-                    List<String> toRun = new ArrayList<>(baseArgs);
-                    toRun.add("-a");
-                    toRun.add(contigFolder.getName());
-
-                    new SimpleScriptWrapper(ctx.getLogger()).execute(toRun);
-
-                    reportFragmentsPerContig(ctx, contigFolder, i.getContig());
-                }
-            }
-
             if (!genomicsDbCompleted)
             {
                 try
                 {
                     List<Interval> intervals = getIntervals(ctx);
+
+                    if (ctx.getParams().optBoolean("consolidateFirst", false))
+                    {
+                        ctx.getLogger().info("Will pre-consolidate the workspace using consolidate_genomicsdb_array");
+                        doConsolidate(ctx, workingDestinationWorkspaceFolder, genome);
+                    }
 
                     Integer maxRam = SequencePipelineService.get().getMaxRam();
                     Integer nativeMemoryBuffer = ctx.getParams().optInt("nativeMemoryBuffer", 0);
@@ -679,6 +644,12 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                     }
 
                     wrapper.execute(genome, vcfsToProcess, workingDestinationWorkspaceFolder, intervals, options, _append);
+
+                    if (ctx.getParams().optBoolean("consolidate", true))
+                    {
+                        ctx.getLogger().info("Will consolidate the workspace using consolidate_genomicsdb_array");
+                        doConsolidate(ctx, workingDestinationWorkspaceFolder, genome);
+                    }
 
                     FileUtils.touch(doneFile);
                     ctx.getLogger().debug("GenomicsDB complete, touching file: " + doneFile.getPath());
@@ -778,6 +749,41 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                     f.delete();
                 }
             }
+        }
+    }
+
+    private void doConsolidate(JobContext ctx, File workingDestinationWorkspaceFolder, ReferenceGenome genome) throws PipelineJobException
+    {
+        List<String> baseArgs = new ArrayList<>();
+        baseArgs.add(SequencePipelineService.get().getExeForPackage("GENOMICSDB_PATH", "consolidate_genomicsdb_array").getPath());
+
+        baseArgs.add("-w");
+        baseArgs.add(workingDestinationWorkspaceFolder.getPath());
+
+        if (ctx.getParams().optBoolean("sharedPosixOptimizations", false))
+        {
+            baseArgs.add("--shared-posixfs-optimizations");
+        }
+
+        if (ctx.getParams().get("genomicsdbSegmentSize") != null)
+        {
+            baseArgs.add("--segment-size");
+            baseArgs.add(String.valueOf(ctx.getParams().get("genomicsdbSegmentSize")));
+        }
+
+        List<Interval> intervals = getIntervalsOrFullGenome(ctx, genome);
+        for (Interval i : intervals)
+        {
+            File contigFolder = new File(workingDestinationWorkspaceFolder, getFolderNameFromInterval(i));
+            ctx.getLogger().info("Consolidating contig folder: " + contigFolder);
+
+            List<String> toRun = new ArrayList<>(baseArgs);
+            toRun.add("-a");
+            toRun.add(contigFolder.getName());
+
+            new SimpleScriptWrapper(ctx.getLogger()).execute(toRun);
+
+            reportFragmentsPerContig(ctx, contigFolder, i.getContig());
         }
     }
 
