@@ -888,7 +888,10 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                         var tcrData = totalCells > 15000 ? 45 : 25;
                         processType(readsetIds, rows, r, 'readsetId', 'GEX', 500, 0.01, 'G', null, false, gexData, runMap, totalCells);
                         processType(readsetIds, rows, r, 'tcrReadsetId', 'TCR', 700, 0.01, 'T', null, false, tcrData, runMap, totalCells);
-                        processType(readsetIds, rows, r, 'hashingReadsetId', 'HTO', 182, 0.05, 'H', 'Cell hashing, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', true, 20, runMap, totalCells);
+
+                        // NOTE: Dual index 10x is always presented in the right orientation, so only RC if single-indexed
+                        const hashingDoRC = !r.barcode3;
+                        processType(readsetIds, rows, r, 'hashingReadsetId', 'HTO', 182, 0.05, 'H', 'Cell hashing, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', hashingDoRC, 20, runMap, totalCells);
                         processType(readsetIds, rows, r, 'citeseqReadsetId', 'CITE', 182, 0.05, 'C', 'CITE-Seq, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', false, 20, runMap, totalCells);
                     }, this);
 
