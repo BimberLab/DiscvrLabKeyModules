@@ -890,7 +890,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                         processType(readsetIds, rows, r, 'tcrReadsetId', 'TCR', 700, 0.01, 'T', null, false, tcrData, runMap, totalCells);
 
                         // NOTE: Dual index 10x is always presented in the right orientation, so only RC if single-indexed
-                        const hashingDoRC = !r.barcode3;
+                        const hashingDoRC = !r['hashingReadsetId/barcode3'];
                         processType(readsetIds, rows, r, 'hashingReadsetId', 'HTO', 182, 0.05, 'H', 'Cell hashing, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', hashingDoRC, 20, runMap, totalCells);
                         processType(readsetIds, rows, r, 'citeseqReadsetId', 'CITE', 182, 0.05, 'C', 'CITE-Seq, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', false, 20, runMap, totalCells);
                     }, this);
