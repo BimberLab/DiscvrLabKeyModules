@@ -765,7 +765,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             baseArgs.add("--shared-posixfs-optimizations");
         }
 
-        if (ctx.getParams().get("genomicsdbSegmentSize") != null)
+        if (StringUtils.trimToNull(ctx.getParams().optString("genomicsdbSegmentSize")) != null)
         {
             baseArgs.add("--segment-size");
             baseArgs.add(String.valueOf(ctx.getParams().get("genomicsdbSegmentSize")));
