@@ -22,10 +22,6 @@ clientConfig.resolve.fallback =
     "fs": false
 }
 
-clientConfig.resolve.alias["react/jsx-dev-runtime"] = "react/jsx-dev-runtime.js"
-clientConfig.resolve.alias["react/jsx-runtime"] = "react/jsx-runtime.js"
-clientConfig.resolve.alias["process/browser"] = "process/browser.js"
-
 clientConfig.plugins = [new NodePolyfillPlugin()].concat(constants.processPlugins(entryPoints))
 
 clientConfig.module.rules = clientConfig.module.rules.concat(
