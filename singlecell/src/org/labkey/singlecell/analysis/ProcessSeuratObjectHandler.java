@@ -24,7 +24,7 @@ public class ProcessSeuratObjectHandler extends AbstractSingleCellHandler implem
     @Override
     public boolean canProcess(SequenceOutputFile f)
     {
-        return f.getFile() != null && SEURAT_TYPE.isType(f.getFile());
+        return f.getFile() != null && (SEURAT_TYPE.isType(f.getFile()) || "Seurat Object".equals(f.getCategory()));
     }
 
     @Override
