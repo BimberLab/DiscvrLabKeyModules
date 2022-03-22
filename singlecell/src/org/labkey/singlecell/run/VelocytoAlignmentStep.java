@@ -39,7 +39,7 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
                     {{
                         put("extensions", Arrays.asList("gtf"));
                         put("width", 400);
-                        put("allowBlank", false);
+                        put("allowBlank", true);
                     }}, null)
             )), new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js")), null, true, false, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
         }

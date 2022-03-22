@@ -40,7 +40,7 @@ public class VelocytoAnalysisStep extends AbstractCommandPipelineStep<VelocytoAl
                     {{
                         put("extensions", Arrays.asList("gtf"));
                         put("width", 400);
-                        put("allowBlank", false);
+                        put("allowBlank", true);
                     }}, null)
             ), new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js")), null);
         }
