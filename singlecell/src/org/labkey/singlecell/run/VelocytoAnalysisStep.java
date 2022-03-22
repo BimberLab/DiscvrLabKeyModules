@@ -2,10 +2,11 @@ package org.labkey.singlecell.run;
 
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
-import org.labkey.api.sequenceanalysis.pipeline.BamProcessingOutputImpl;
-import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisOutputImpl;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -17,14 +18,14 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 
-public class VelocytoPostProcessingStep extends AbstractCommandPipelineStep<VelocytoAlignmentStep.VelocytoWrapper> implements BamProcessingStep
+public class VelocytoAnalysisStep extends AbstractCommandPipelineStep<VelocytoAlignmentStep.VelocytoWrapper> implements AnalysisStep
 {
-    public VelocytoPostProcessingStep(PipelineStepProvider provider, PipelineContext ctx)
+    public VelocytoAnalysisStep(PipelineStepProvider provider, PipelineContext ctx)
     {
         super(provider, ctx, new VelocytoAlignmentStep.VelocytoWrapper(ctx.getLogger()));
     }
 
-    public static class Provider extends AbstractPipelineStepProvider<VelocytoPostProcessingStep>
+    public static class Provider extends AbstractPipelineStepProvider<VelocytoAnalysisStep>
     {
         public Provider()
         {
@@ -45,16 +46,22 @@ public class VelocytoPostProcessingStep extends AbstractCommandPipelineStep<Velo
         }
 
         @Override
-        public VelocytoPostProcessingStep create(PipelineContext ctx)
+        public VelocytoAnalysisStep create(PipelineContext ctx)
         {
-            return new VelocytoPostProcessingStep(this, ctx);
+            return new VelocytoAnalysisStep(this, ctx);
         }
     }
 
     @Override
-    public Output processBam(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDirectory) throws PipelineJobException
+    public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta, File outDir) throws PipelineJobException
     {
-        BamProcessingOutputImpl output = new BamProcessingOutputImpl();
+        return null;
+    }
+
+    @Override
+    public Output performAnalysisPerSampleRemote(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
+    {
+        AnalysisOutputImpl output = new AnalysisOutputImpl();
         File gtf = getPipelineCtx().getSequenceSupport().getCachedData(getProvider().getParameterByName("gtf").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class));
         if (gtf == null)
         {
@@ -75,15 +82,9 @@ public class VelocytoPostProcessingStep extends AbstractCommandPipelineStep<Velo
             }
         }
 
-        File loom = getWrapper().runVelocytoFor10x(inputBam, gtf, outputDirectory, mask);
+        File loom = getWrapper().runVelocytoFor10x(inputBam, gtf, outputDir, mask);
         output.addSequenceOutput(loom, rs.getName() + ": velocyto", "Velocyto Counts", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
 
         return output;
-    }
-
-    @Override
-    public boolean expectToCreateNewBam()
-    {
-        return false;
     }
 }
