@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class NimbleAligner extends CellRangerGexCountStep
+public class NimbleAligner extends AbstractCellRangerDependentStep
 {
     public static final String REF_GENOMES = "refGenomes";
 
@@ -74,77 +74,16 @@ public class NimbleAligner extends CellRangerGexCountStep
     }
 
     @Override
-    public IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
-    {
-        return super.createIndex(referenceGenome, outputDir);
-    }
-
-    @Override
     public AlignmentOutput performAlignment(Readset rs, List<File> inputFastqs1, @Nullable List<File> inputFastqs2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException
     {
-        File localBam = new File(outputDirectory, basename + ".cellranger.bam");
-        File localBamIdx = new File(localBam.getPath() + ".bai");
-        AlignmentOutputImpl output = new AlignmentOutputImpl();;
-
-        String idParam = StringUtils.trimToNull(getProvider().getParameterByName("id").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
-        File cellrangerOutdir = new File(outputDirectory, CellRangerWrapper.getId(idParam, rs));
-
-        if (localBam.exists() && localBamIdx.exists())
-        {
-            getPipelineCtx().getLogger().info("Existing BAM found, re-using: " + localBam.getPath());
-        }
-        else
-        {
-            File crBam = new File(cellrangerOutdir, "outs/possorted_genome_bam.bam");
-            if (crBam.exists())
-            {
-                getPipelineCtx().getLogger().info("Using previous cellranger count run");
-            }
-            else
-            {
-                getPipelineCtx().getLogger().info("Running cellranger");
-                AlignmentOutput crOutput = super.performAlignment(rs, inputFastqs1, inputFastqs2, outputDirectory, referenceGenome, basename, readGroupId, platformUnit);
-                crBam = crOutput.getBAM();
-
-                // Remove all the normal 10x outputs:
-                output.addCommandsExecuted(crOutput.getCommandsExecuted());
-                output.addIntermediateFiles(crOutput.getIntermediateFiles());
-            }
-
-            // Remove the whole 10x folder:
-            output.addIntermediateFile(cellrangerOutdir);
-
-            try
-            {
-                if (localBam.exists())
-                {
-                    localBam.delete();
-                }
-                FileUtils.moveFile(crBam, localBam);
-
-                if (localBamIdx.exists())
-                {
-                    localBamIdx.delete();
-                }
-                FileUtils.moveFile(new File(crBam.getPath() + ".bai"), localBamIdx);
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-        }
+        AlignmentOutputImpl output = new AlignmentOutputImpl();
+        File localBam = runCellRanger(output, rs, inputFastqs1, inputFastqs2, outputDirectory, referenceGenome, basename, readGroupId, platformUnit);
 
         // Now run nimble itself:
         doNimbleAlign(localBam, output, rs, basename);
         output.setBAM(localBam);
 
         return output;
-    }
-
-    @Override
-    public boolean alwaysCopyIndexToWorkingDir()
-    {
-        return false;
     }
 
     @Override

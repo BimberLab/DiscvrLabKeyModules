@@ -44,6 +44,8 @@ import org.labkey.singlecell.run.CellRangerGexCountStep;
 import org.labkey.singlecell.run.CellRangerVDJWrapper;
 import org.labkey.singlecell.run.NimbleAligner;
 import org.labkey.singlecell.run.NimbleAlignmentStep;
+import org.labkey.singlecell.run.VelocytoAlignmentStep;
+import org.labkey.singlecell.run.VelocytoPostProcessingStep;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -132,6 +134,8 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new CellRangerGexCountStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new CellRangerVDJWrapper.VDJProvider());
         SequencePipelineService.get().registerPipelineStep(new NimbleAligner.Provider());
+        SequencePipelineService.get().registerPipelineStep(new VelocytoAlignmentStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new VelocytoPostProcessingStep.Provider());
 
         SequenceAnalysisService.get().registerReadsetHandler(new CellRangerFeatureBarcodeHandler());
 
