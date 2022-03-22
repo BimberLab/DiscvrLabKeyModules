@@ -35,12 +35,6 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
         public Provider()
         {
             super("velocyto", "This will run velocyto to generate a supplemental feature count matrix", getCellRangerGexParams(Arrays.asList(
-                    ToolParameterDescriptor.createExpDataParam("gtf", "Gene File", "This is the ID of a GTF file containing genes from this genome.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
-                    {{
-                        put("extensions", Arrays.asList("gtf"));
-                        put("width", 400);
-                        put("allowBlank", false);
-                    }}, null),
                     ToolParameterDescriptor.createExpDataParam("mask", "Mask File", "This is the ID of an optional GTF file containing repetitive regions to mask.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
                     {{
                         put("extensions", Arrays.asList("gtf"));
@@ -63,7 +57,7 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
         AlignmentOutputImpl output = new AlignmentOutputImpl();
         File localBam = runCellRanger(output, rs, inputFastqs1, inputFastqs2, outputDirectory, referenceGenome, basename, readGroupId, platformUnit);
 
-        File gtf = getPipelineCtx().getSequenceSupport().getCachedData(getProvider().getParameterByName("gtf").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class));
+        File gtf = getPipelineCtx().getSequenceSupport().getCachedData(getProvider().getParameterByName("gtfFile").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class));
         if (gtf == null)
         {
             throw new PipelineJobException("Missing GTF file param");
