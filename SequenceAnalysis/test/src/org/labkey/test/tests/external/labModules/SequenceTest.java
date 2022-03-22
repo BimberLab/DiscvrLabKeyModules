@@ -535,7 +535,7 @@ public class SequenceTest extends BaseWebDriverTest
         new Window.WindowFinder(getDriver()).withTitle("Tool Details").waitFor();
         waitAndClick(Ext4Helper.Locators.window("Tool Details").append(Ext4Helper.Locators.ext4Button("Done")));
 
-        List<Ext4CmpRef> btns = _ext4Helper.componentQuery("window ldk-linkbutton[text='Add']", Ext4CmpRef.class);
+        List<Ext4CmpRef> btns = _ext4Helper.componentQuery("window ldk-linkbutton[text='Add to End']", Ext4CmpRef.class);
         for (Ext4CmpRef btn : btns)
         {
             waitAndClick(Locator.id(btn.getId()).append(Locator.tag("a")));
@@ -783,7 +783,7 @@ public class SequenceTest extends BaseWebDriverTest
         waitForElement(win);
 
         //NOTE: team city is getting JS errors I cant repro locally.  adding sleep() to see if waiting helps
-        List<Ext4CmpRef> btns = _ext4Helper.componentQuery("window ldk-linkbutton[text='Add']", Ext4CmpRef.class);
+        List<Ext4CmpRef> btns = _ext4Helper.componentQuery("window ldk-linkbutton[text='Add to End']", Ext4CmpRef.class);
         for (Ext4CmpRef btn : btns)
         {
             // Note: BQSR includes a genome selector field, which will log a warning to the server is a genome isnt configured ahead of time.
