@@ -48,7 +48,13 @@ public class TrainCelltypist extends AbstractRiraStep
                     SeuratToolParameter.create("minCellsPerClass", "Min Cells Per Class", "Any classes with fewer than this many cells will be dropped", "ldk-integerfield", new JSONObject()
                     {{
                         put("minValue", 0);
-                    }}, 100)
+                    }}, 100),
+                    SeuratToolParameter.create("excludedClasses", "Excluded Classes", "Any cells with these labels will be dropped. Note: NA can be used to drop NA values as well.", "textarea", new JSONObject()
+                    {{
+                        put("width", 400);
+                        put("height", 200);
+                        put("delimiter", ";");
+                    }}, "NA", "excludedClasses", true, true)
             ), null, null);
         }
 
