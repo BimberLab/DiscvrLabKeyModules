@@ -100,14 +100,23 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
         {
             // https://velocyto.org/velocyto.py/tutorial/cli.html#run10x-run-on-10x-chromium-samples
             // velocyto run10x -m repeat_msk.gtf mypath/sample01 somepath/refdata-cellranger-mm10-1.2.0/genes/genes.gtf
+            // velocyto run -b filtered_barcodes.tsv -o output_path -m repeat_msk_srt.gtf possorted_genome_bam.bam mm10_annotation.gtf
 
             SimpleScriptWrapper wrapper = new SimpleScriptWrapper(getLogger());
             List<String> args = new ArrayList<>();
             args.add(SequencePipelineService.get().getExeForPackage("VELOCYTOPATH", "velocyto").getPath());
-            args.add("run10x");
+            args.add("run");
 
             args.add("-o");
             args.add(outputFolder.getPath());
+
+            args.add("-b");
+            File barcodeCSV = new File(localBam.getParentFile(), "outs/raw_feature_bc_matrix/barcodes.tsv.gz");
+            if (!barcodeCSV.exists())
+            {
+                throw new PipelineJobException("Unable to find file: " + barcodeCSV.getPath());
+            }
+            args.add(barcodeCSV.getPath());
 
             Integer threads = SequencePipelineService.get().getMaxThreads(getLogger());
             if (threads != null && threads > 1)
@@ -122,9 +131,7 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
                 args.add(mask.getPath());
             }
 
-            // Input 10x. This is the top-level project output
-            args.add(localBam.getParentFile().getParentFile().getPath());
-
+            args.add(localBam.getPath());
             args.add(gtf.getPath());
 
             wrapper.execute(args);
