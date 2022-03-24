@@ -101,7 +101,7 @@ for (datasetId in names(seuratObjects)) {
 				seuratObj <- NULL
 			} else {
 				seuratObj <- subset(seuratObj, cells = cells)
-				print(paste0('Cells after subset: ', ncol(seuratObj)))
+				print(paste0('After removing cells without hashing: ', ncol(seuratObj)))
 			}
 		}, error = function(e){
 			if (!is.null(e) && e$message == 'Cannot find cells provided') {
