@@ -102,6 +102,8 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
             // velocyto run10x -m repeat_msk.gtf mypath/sample01 somepath/refdata-cellranger-mm10-1.2.0/genes/genes.gtf
             // velocyto run -b filtered_barcodes.tsv -o output_path -m repeat_msk_srt.gtf possorted_genome_bam.bam mm10_annotation.gtf
 
+            getLogger().debug("Using BAM: " + localBam.getPath());
+
             SimpleScriptWrapper wrapper = new SimpleScriptWrapper(getLogger());
             List<String> args = new ArrayList<>();
             args.add(SequencePipelineService.get().getExeForPackage("VELOCYTOPATH", "velocyto").getPath());
@@ -112,7 +114,7 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
 
             args.add("-b");
             String sampleName = CellRangerWrapper.makeLegalSampleName(rs.getName());
-            File barcodeCSV = new File(localBam.getParentFile(), sampleName + "/outs/raw_feature_bc_matrix/barcodes.tsv.gz");
+            File barcodeCSV = new File(localBam.getParentFile(), "raw_feature_bc_matrix/barcodes.tsv.gz");
             if (!barcodeCSV.exists())
             {
                 throw new PipelineJobException("Unable to find file: " + barcodeCSV.getPath());
