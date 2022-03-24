@@ -77,7 +77,7 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
             }
         }
 
-        File loom = new VelocytoWrapper(getPipelineCtx().getLogger()).runVelocytoFor10x(localBam, gtf, outputDirectory, mask);
+        File loom = new VelocytoWrapper(getPipelineCtx().getLogger()).runVelocytoFor10x(localBam, gtf, outputDirectory, mask, rs);
         output.addSequenceOutput(loom, rs.getName() + ": velocyto", "Velocyto Counts", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
 
         return output;
@@ -96,7 +96,7 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
             super(log);
         }
 
-        public File runVelocytoFor10x(File localBam, File gtf, File outputFolder, @Nullable File mask) throws PipelineJobException
+        public File runVelocytoFor10x(File localBam, File gtf, File outputFolder, @Nullable File mask, Readset rs) throws PipelineJobException
         {
             // https://velocyto.org/velocyto.py/tutorial/cli.html#run10x-run-on-10x-chromium-samples
             // velocyto run10x -m repeat_msk.gtf mypath/sample01 somepath/refdata-cellranger-mm10-1.2.0/genes/genes.gtf
@@ -111,7 +111,8 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
             args.add(outputFolder.getPath());
 
             args.add("-b");
-            File barcodeCSV = new File(localBam.getParentFile(), "outs/raw_feature_bc_matrix/barcodes.tsv.gz");
+            String sampleName = CellRangerWrapper.makeLegalSampleName(rs.getName());
+            File barcodeCSV = new File(localBam.getParentFile(), sampleName + "/outs/raw_feature_bc_matrix/barcodes.tsv.gz");
             if (!barcodeCSV.exists())
             {
                 throw new PipelineJobException("Unable to find file: " + barcodeCSV.getPath());
@@ -136,7 +137,7 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
 
             wrapper.execute(args);
 
-            File loom = new File(outputFolder, "sample.loom");
+            File loom = new File(outputFolder, sampleName + ".loom");
             if (!loom.exists())
             {
                 throw new PipelineJobException("Missing expected file: " + loom.getPath());
