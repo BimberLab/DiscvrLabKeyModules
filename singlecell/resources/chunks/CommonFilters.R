@@ -2,6 +2,7 @@ totalPassed <- 0
 for (datasetId in names(seuratObjects)) {
 	printName(datasetId)
 	seuratObj <- readRDS(seuratObjects[[datasetId]])
+	origCells <- ncol(seuratObj)
 
 	print(paste0('Initial cells for dataset ', datasetId, ': ', ncol(seuratObj)))
 
@@ -11,7 +12,7 @@ for (datasetId in names(seuratObjects)) {
 		}
 
 		expr <- Seurat::FetchData(object = seuratObj, vars = 'Saturation.RNA')
-		cells <- which(x = expr >= saturation.RNA.min)
+		cells <- which(x = expr > saturation.RNA.min)
 		if (length(cells) > 0){
 			seuratObj <- seuratObj[, cells]
 			print(paste0('After saturation.RNA.min filter: ', length(colnames(x = seuratObj))))
@@ -32,7 +33,7 @@ for (datasetId in names(seuratObjects)) {
 		}
 
 		expr <- Seurat::FetchData(object = seuratObj, vars = 'Saturation.RNA')
-		cells <- which(x = expr <= saturation.RNA.max)
+		cells <- which(x = expr < saturation.RNA.max)
 		if (length(cells) > 0){
 			seuratObj <- seuratObj[, cells]
 			print(paste0('After saturation.RNA.max filter: ', length(colnames(x = seuratObj))))
@@ -129,7 +130,7 @@ for (datasetId in names(seuratObjects)) {
 		saveData(seuratObj, datasetId)
 		totalPassed <- totalPassed + 1
 
-		print(paste0('Final cells: ', ncol(seuratObj)))
+		print(paste0('Final cells: ', ncol(seuratObj), 'of ', origCells, ' (', round((ncol(seuratObj)/origCells) * 100, 2), '%)'))
 	}
 }
 
