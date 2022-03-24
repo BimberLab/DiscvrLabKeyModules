@@ -114,7 +114,9 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
 
             args.add("-b");
             String sampleName = CellRangerWrapper.makeLegalSampleName(rs.getName());
-            File barcodeCSV = new File(localBam.getParentFile(), "raw_feature_bc_matrix/barcodes.tsv.gz");
+
+            // NOTE: depends on whether this is run immediately after cellranger or not, the BAM might exist in ./outs or might have been moved top-level:
+            File barcodeCSV = new File(localBam.getParentFile(), (localBam.getParentFile().getName().equals("outs") ? "" : sampleName + "/outs/") + "raw_feature_bc_matrix/barcodes.tsv.gz");
             if (!barcodeCSV.exists())
             {
                 throw new PipelineJobException("Unable to find file: " + barcodeCSV.getPath());
