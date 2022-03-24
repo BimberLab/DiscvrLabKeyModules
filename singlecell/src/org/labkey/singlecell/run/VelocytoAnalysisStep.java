@@ -82,7 +82,7 @@ public class VelocytoAnalysisStep extends AbstractCommandPipelineStep<VelocytoAl
             }
         }
 
-        File loom = getWrapper().runVelocytoFor10x(inputBam, gtf, outputDir, mask);
+        File loom = getWrapper().runVelocytoFor10x(inputBam, gtf, outputDir, mask, rs);
         output.addSequenceOutput(loom, rs.getName() + ": velocyto", "Velocyto Counts", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
 
         return output;
