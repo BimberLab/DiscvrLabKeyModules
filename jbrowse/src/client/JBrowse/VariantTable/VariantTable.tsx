@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { observer } from 'mobx-react';
 import { getEnv } from 'mobx-state-tree'
-import { getSession } from '@jbrowse/core/util';
 import { createViewState } from '@jbrowse/react-linear-genome-view';
 import { ActionURL, Ajax } from '@labkey/api';
 import { parseLocString } from '@jbrowse/core/util'
@@ -19,8 +18,8 @@ function VariantTable() {
         return(<p>No session Id provided. Please have you admin use the customize icon to set the session ID for this webpart.</p>)
     }
 
-    const locStringsRaw = queryParam.get('location') || queryParam.get('loc')
-    if (!locStringsRaw) {
+    const locString = queryParam.get('location') || queryParam.get('loc')
+    if (!locString) {
         return(<p>Must provide the location to load</p>)
     }
 
@@ -30,7 +29,7 @@ function VariantTable() {
     }
 
     const [view, setView] = useState(null);
-    const [parsedLocStrings, setParsedLocStrings] = useState(null);
+    const [parsedLocString, setParsedLocString] = useState(null);
     const [assemblyNames, setAssemblyNames] = useState(null);
     const [assembly, setAssembly] = useState(null);
     const [pluginManager, setPluginManager] = useState(null);
@@ -70,10 +69,8 @@ function VariantTable() {
                     return assemblyManager.isValidRefName(refName, assemblyNames[0])
                 }
 
-                // Parse multiple location strings, separated by colons
-                const locStrings = locStringsRaw.split(":")
-                const parsedLocStrings = locStrings.map(locString => parseLocString(locString, isValidRefNameForAssembly))
-                setParsedLocStrings(parsedLocStrings)
+                const parsedLocString = parseLocString(locString, isValidRefNameForAssembly)
+                setParsedLocString(parsedLocString)
             },
             failure: function(res){
                 setView("invalid")
@@ -97,7 +94,7 @@ function VariantTable() {
 
     return (
         <div style={{height: "90vh"}}>
-            <VariantTableWidget view={view} trackId={trackId} parsedLocStrings={parsedLocStrings} assembly={assembly} sessionId={sessionId} pluginManager={pluginManager}/>
+            <VariantTableWidget view={view} trackId={trackId} parsedLocString={parsedLocString} assembly={assembly} sessionId={sessionId} pluginManager={pluginManager}/>
         </div>
     )
 }

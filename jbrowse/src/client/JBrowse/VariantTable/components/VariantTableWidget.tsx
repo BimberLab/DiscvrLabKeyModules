@@ -10,14 +10,16 @@ import useFocusRef from '../useFocusRef'
 import type { HeaderRendererProps, SortColumn } from 'react-data-grid'
 import { exportToXlsx, exportToPdf, exportToCsv } from '../exportUtils'
 
-import "../VariantTable.css"
+import '../VariantTable.css'
 import { ExportButton, FilterButton } from './Buttons'
 import type { Filter, Row } from '../types'
 import { defaultFilters, columnsObjRaw } from '../constants'
 import { filterFeature, sortFeatures, rawFeatureToRow } from '../dataUtils'
 
+import StandaloneSearch from "../../Search/StandaloneSearch"
+
 const VariantTableWidget = observer(props => {
-  const { view, trackId, parsedLocStrings, sessionId, pluginManager } = props
+  const { view, trackId, parsedLocString, sessionId, pluginManager } = props
   const track = view.tracks.find(
       t => t.configuration.trackId === trackId,
   )
@@ -62,7 +64,7 @@ const VariantTableWidget = observer(props => {
   const [filters, setFilters] = useState<Filter>(defaultFilters)
 
   // Contains column sort state
-  const [sortColumns, setSortColumns] = useState<readonly SortColumn[]>([]);
+  const [sortColumns, setSortColumns] = useState<readonly SortColumn[]>([])
 
 
   // API call to retrieve the requested features. Can handle multiple location strings.
@@ -73,19 +75,16 @@ const VariantTableWidget = observer(props => {
         await getAdapter(pluginManager, sessionId, adapterConfig)
       ).dataAdapter as BaseFeatureDataAdapter
 
-      let features = []
-      for(let locString of parsedLocStrings) {
-        const featureObservable = dataAdapter.getFeatures(locString)
-        features = features.concat(await featureObservable.pipe(toArray()).toPromise())
-      }
-
+      const featureObservable = dataAdapter.getFeatures(parsedLocString)
+      let features = await featureObservable.pipe(toArray()).toPromise()
       setFeatures(features.map((rawFeature, id) => rawFeatureToRow(rawFeature, id)))
     }
 
-    if(pluginManager && parsedLocStrings) {
-        fetch()
+    if(pluginManager && parsedLocString) {
+      console.log(pluginManager)
+      fetch()
     }
-  }, [pluginManager, parsedLocStrings])
+  }, [pluginManager, parsedLocString])
 
   // Sort the base feature list using the requested sort columns. Then, filter using the requested filters.
   // filteredFeatures goes on to become the rows of the datagrid.
@@ -95,7 +94,7 @@ const VariantTableWidget = observer(props => {
 
   // List of columns, which can contain arbitrary render components or a simple key-name object.
   // Based on whether the filterOn flag is enabled or not, the components will be shown or hidden.
-  const columnsObj = columnsObjRaw.map(obj => filtersOn ? ({
+  const columnsObj = columnsObjRaw.map(obj => filtersOn && obj.type == "string" ? ({
       key: obj.key,
       name: obj.name,
       headerCellClass: "variantDataHeader",
@@ -121,11 +120,6 @@ const VariantTableWidget = observer(props => {
     }): {key: obj.key, name: obj.name})
 
   const columns = [
-    {
-      key: 'id',
-      name: 'ID',
-      width: 50
-    },
     ...columnsObj
   ]
 
@@ -138,7 +132,7 @@ const VariantTableWidget = observer(props => {
       return(<p>Unable to find track: {trackId}</p>)
   }
 
-  if (!features) {
+  if (!features || !pluginManager.widgetTypes.registeredTypes.SampleFilterWidget.stateModel) {
         return (<p>Loading...</p>)
   } else {
     const gridElement = (
@@ -159,23 +153,22 @@ const VariantTableWidget = observer(props => {
 
     return (
       <>
-        <div style={{textAlign: 'end', marginBlockEnd: '8px'}}>
-          <FilterButton setFiltersOn={setFiltersOn} filtersOn={filtersOn}></FilterButton>
-       </div>
-        
-        {gridElement}
+        <div style={{textAlign: 'start', marginBlockEnd: '8px'}}>
 
-        <div style={{textAlign: 'end', marginBlockStart: '8px'}}>
+
+          <StandaloneSearch sessionId={sessionId} tableUrl={true}></StandaloneSearch>
+
           <ExportButton onExport={() => exportToCsv(gridElement, 'rows.csv')}>
             Export to CSV
           </ExportButton>
           <ExportButton onExport={() => exportToXlsx(gridElement, 'rows.xlsx')}>
             Export to XSLX
           </ExportButton>
-          <ExportButton onExport={() => exportToPdf(gridElement, 'rows.pdf')}>
-            Export to PDF
-          </ExportButton>
-        </div>
+
+          <FilterButton setFiltersOn={setFiltersOn} filtersOn={filtersOn}></FilterButton>
+       </div>
+        
+        {gridElement}
       </>
     )
   }

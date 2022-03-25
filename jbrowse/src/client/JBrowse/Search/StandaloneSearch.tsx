@@ -13,15 +13,17 @@ import ExtendedVariantPlugin from '../Browser/plugins/ExtendedVariantPlugin/inde
 
 const nativePlugins = [ExtendedVariantPlugin, LogSession]
 
-const StandaloneSearch = observer(({ sessionId, }: { sessionId: any}) => {
+const StandaloneSearch = observer(({ sessionId, tableUrl }: { sessionId: any, tableUrl: boolean}) => {
     if (!sessionId){
         return(<p>No session Id provided. Please have you admin use the customize icon to set the session ID for this webpart.</p>)
     }
 
     const [state, setState] = useState(null);
     const [op, setOption] = useState<BaseResult | undefined>()
-    if (op) {
+    if (op && !tableUrl) {
         window.location.href = ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: op.getLocation()})
+    } else if (op && tableUrl) {
+        window.location.href = ActionURL.buildURL("jbrowse", "varianttable.view", null, {session: sessionId, location: op.getLocation(), trackId: op.getTrackId()})
     }
 
     function generateViewState(genome){
@@ -113,7 +115,7 @@ const StandaloneSearch = observer(({ sessionId, }: { sessionId: any}) => {
     }
 
     return (
-        <span>
+    <span style={tableUrl ? {display: 'inline-block', marginRight: '14px'} : {}}>
       <RefNameAutocomplete
           model={view}
           assemblyName={assemblyName ?? undefined}

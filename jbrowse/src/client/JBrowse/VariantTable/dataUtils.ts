@@ -3,14 +3,10 @@ import type { Row } from './types'
 // Logic behind how to filter each field.
 export function filterFeature(feature, filters) {
     return (
-        (filters.chrom ? feature.chrom.includes(filters.chrom) : true) &&
-        (filters.pos ? feature.pos.includes(filters.pos) : true) &&
         (filters.ref ? feature.ref.includes(filters.ref) : true) &&
         (filters.alt ? feature.alt.includes(filters.alt) : true) &&
-        (filters.af ? feature.af.includes(filters.af) : true) &&
         (filters.impact ? feature.impact.includes(filters.impact) : true) &&
-        (filters.overlapping_genes ? feature.overlapping_genes.includes(filters.overlapping_genes) : true) &&
-        (filters.cadd_ph ? feature.cadd_ph.includes(filters.cadd_ph) : true)
+        (filters.overlapping_genes ? feature.overlapping_genes.includes(filters.overlapping_genes) : true)
     )
 }
 
@@ -34,8 +30,6 @@ export function sortFeatures(features, sortColumns) {
 type Comparator = (a: Row, b: Row) => number;
 function getComparator(sortColumn: string): Comparator {
   switch (sortColumn) {
-    case 'chrom':
-    case 'pos':
     case 'ref':
     case 'alt':
     case 'impact':
@@ -44,7 +38,8 @@ function getComparator(sortColumn: string): Comparator {
         return a[sortColumn].localeCompare(b[sortColumn]);
       };
     case 'cadd_ph':
-    case 'id':
+    case 'chrom':
+    case 'pos':
     case 'af':
       return (a, b) => {
         return Number(a[sortColumn]) - Number(b[sortColumn]);

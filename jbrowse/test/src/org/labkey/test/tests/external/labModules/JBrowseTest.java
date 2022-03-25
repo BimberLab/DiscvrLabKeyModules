@@ -628,8 +628,9 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("span", "fakeData.gff").withClass("MuiTypography-root"));
         waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));
 
-        //Now test search:
+        //Now test search and variantDataGrid:
         testSearch(sessionId);
+        testVariantDataGrid(sessionId);
     }
 
     private void testSearch(String sessionId) throws Exception
@@ -684,5 +685,79 @@ public class JBrowseTest extends BaseWebDriverTest
                     return list.get(0);
                 }
         );
+    }
+
+    private void testVariantDataGrid(String sessionId) throws Exception
+    {
+        beginAt("/home/JBrowse-varianttable.view?session=mgap&loc=1&trackId=mgap_hg38");
+        waitForElement(Locator.tagWithClass("div", "dataGrid"));
+
+        // Test default
+        Locator topRow = Locator.tagWithAttribute("div", "aria-rowindex", "2");
+        waitForElement(topRow);
+        WebElement topRowElement = topRow.findElement(getDriver());
+        testColumns(topRowElement, "0", "1", "116981270", "A", "T", "0.029", "HIGH",
+                "NTNG1", "7.2");
+
+        // Test sorting
+        Locator positionSort = Locator.tagWithText("span", "Position");
+        waitForElement(positionSort);
+        WebElement positionSortLocator = positionSort.findElement(getDriver());
+        WebElement parent = positionSortLocator.findElement(By.xpath("./.."));
+        parent.click();
+        parent.click();
+        Locator sortedTopRow = Locator.tagWithAttribute("div", "aria-rowindex", "2");
+        waitForElement(sortedTopRow);
+        WebElement sortedTopRowElement = topRow.findElement(getDriver());
+        testColumns(sortedTopRowElement,"502", "1", "117011493", "G", "A",
+                "0.003262", "", "NTNG1", "1.7");
+
+        // Test filtering
+        waitAndClick(Locator.tagWithText("button", "Show Filters"));
+        WebElement searchBox = getDriver().switchTo().activeElement();
+        searchBox.sendKeys("117011272");
+        Locator filteredTopRow = Locator.tagWithAttribute("div", "aria-rowindex", "2");
+        waitForElement(filteredTopRow);
+        WebElement filteredTopRowElement = topRow.findElement(getDriver());
+        testColumns(filteredTopRowElement,"494", "1", "117011272", "G", "A",
+                "0.003238", "", "NTNG1", "2.0");
+    }
+
+    private void testColumns(WebElement locator, String id, String chromosome, String position, String reference,
+                             String alt, String af, String impact, String overlapping, String cadd_ph) throws Exception {
+        for(WebElement elem : locator.findElements(By.xpath("./child::*"))) {
+            String value = elem.getText();
+
+            switch(elem.getAttribute("aria-colindex"))
+            {
+                case "1":
+                    Assert.assertEquals(value, id);
+                    break;
+                case "2":
+                    Assert.assertEquals(value, chromosome);
+                    break;
+                case "3":
+                    Assert.assertEquals(value, position);
+                    break;
+                case "4":
+                    Assert.assertEquals(value, reference);
+                    break;
+                case "5":
+                    Assert.assertEquals(value, alt);
+                    break;
+                case "6":
+                    Assert.assertEquals(value, af);
+                    break;
+                case "7":
+                    Assert.assertEquals(value, impact);
+                    break;
+                case "8":
+                    Assert.assertEquals(value, overlapping);
+                    break;
+                case "9":
+                    Assert.assertEquals(value, cadd_ph);
+                    break;
+            }
+        }
     }
 }
