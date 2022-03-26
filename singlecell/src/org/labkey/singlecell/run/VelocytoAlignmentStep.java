@@ -1,9 +1,12 @@
 package org.labkey.singlecell.run;
 
+import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentOutputImpl;
@@ -15,9 +18,12 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.writer.PrintWriters;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -98,6 +104,40 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
 
         public File runVelocytoFor10x(File localBam, File gtf, File outputFolder, @Nullable File mask, Readset rs) throws PipelineJobException
         {
+            getLogger().debug("Inspecting GTF for lines without gene_id or transcript_id");
+            int linesDropped = 0;
+            File gtfEdit = new File(outputFolder, FileUtil.getBaseName(gtf) + ".geneId.gtf");
+            try (CSVReader reader = new CSVReader(Readers.getReader(gtf), '\t', CSVWriter.NO_QUOTE_CHARACTER); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(gtfEdit), '\t', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER))
+            {
+                String[] line;
+                while ((line = reader.readNext()) != null)
+                {
+                    //Drop lines lacking gene_id/transcript, or with empty gene_id:
+                    if (!line[0].startsWith("#") && (!line[8].contains("gene_id") || !line[8].contains("transcript_id") || line[8].contains("gene_id \"\"") || line[8].contains("transcript_id \"\"")))
+                    {
+                        linesDropped++;
+                        continue;
+                    }
+
+                    writer.writeNext(line);
+                }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            if (linesDropped == 0)
+            {
+                getLogger().debug("No GTF lines were invalid, using original");
+                gtfEdit.delete();
+            }
+            else
+            {
+                getLogger().info("dropped " + linesDropped + " lines lacking gene_id, transcript_id, or with an empty value for gene_id/transcript_id");
+                gtf = gtfEdit;
+            }
+
             // https://velocyto.org/velocyto.py/tutorial/cli.html#run10x-run-on-10x-chromium-samples
             // velocyto run10x -m repeat_msk.gtf mypath/sample01 somepath/refdata-cellranger-mm10-1.2.0/genes/genes.gtf
             // velocyto run -b filtered_barcodes.tsv -o output_path -m repeat_msk_srt.gtf possorted_genome_bam.bam mm10_annotation.gtf
@@ -140,6 +180,11 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
             args.add(gtf.getPath());
 
             wrapper.execute(args);
+
+            if (gtfEdit.exists())
+            {
+                gtfEdit.delete();
+            }
 
             File loom = new File(outputFolder, sampleName + ".loom");
             if (!loom.exists())
