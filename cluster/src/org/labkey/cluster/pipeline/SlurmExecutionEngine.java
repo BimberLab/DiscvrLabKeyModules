@@ -77,7 +77,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         ctx.put("submitScript", getConfig().getClusterPath(submitScript));
         String command = getConfig().getSubmitCommandExpr().eval(ctx);
 
-        List<String> ret = execute(command);
+        List<String> ret = execute(command, submitScript.getParentFile());
         if (ret != null)
         {
             //verify success; create job
@@ -531,7 +531,6 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     //writer.write("#SBATCH --workdir=\"" + getConfig().getClusterPath(job.getLogFile().getParentFile()) + "\"\n");
 
                     String args = StringUtils.join(getConfig().getJobArgs(outDir, serializedJobFile, job, this), " ");
-                    writer.write("cd " + getConfig().getClusterPath(job.getLogFile().getParentFile()) + "\n");
                     writer.write("srun " + getConfig().getRemoteExecutable() + " " + args);
                 }
             }
