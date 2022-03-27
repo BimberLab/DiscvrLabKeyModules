@@ -41,7 +41,11 @@ public class VelocytoAnalysisStep extends AbstractCommandPipelineStep<VelocytoAl
                         put("extensions", Arrays.asList("gtf"));
                         put("width", 400);
                         put("allowBlank", true);
-                    }}, null)
+                    }}, null),
+                    ToolParameterDescriptor.createExpDataParam("samtoolsMem", "Samtools Mem To Sort (GB)", "The amount of ram to use to samtools sort", "ldk-integerfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                    }}, 10)
             ), new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js")), null);
         }
 
@@ -82,7 +86,8 @@ public class VelocytoAnalysisStep extends AbstractCommandPipelineStep<VelocytoAl
             }
         }
 
-        File loom = getWrapper().runVelocytoFor10x(inputBam, gtf, outputDir, mask, rs);
+        Integer samtoolsMem = getProvider().getParameterByName("samtoolsMem").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
+        File loom = getWrapper().runVelocytoFor10x(inputBam, gtf, outputDir, mask, rs, samtoolsMem);
         output.addSequenceOutput(loom, rs.getName() + ": velocyto", "Velocyto Counts", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
 
         return output;

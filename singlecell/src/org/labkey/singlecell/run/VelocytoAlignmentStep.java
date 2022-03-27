@@ -46,7 +46,11 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
                         put("extensions", Arrays.asList("gtf"));
                         put("width", 400);
                         put("allowBlank", true);
-                    }}, null)
+                    }}, null),
+                    ToolParameterDescriptor.createExpDataParam("samtoolsMem", "Samtools Mem To Sort (GB)", "The amount of ram to use to samtools sort", "ldk-integerfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                    }}, 10)
             )), new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js")), null, true, false, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
         }
 
@@ -83,7 +87,8 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
             }
         }
 
-        File loom = new VelocytoWrapper(getPipelineCtx().getLogger()).runVelocytoFor10x(localBam, gtf, outputDirectory, mask, rs);
+        Integer samtoolsMem = getProvider().getParameterByName("samtoolsMem").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
+        File loom = new VelocytoWrapper(getPipelineCtx().getLogger()).runVelocytoFor10x(localBam, gtf, outputDirectory, mask, rs, samtoolsMem);
         output.addSequenceOutput(loom, rs.getName() + ": velocyto", "Velocyto Counts", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
 
         return output;
@@ -102,7 +107,7 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
             super(log);
         }
 
-        public File runVelocytoFor10x(File localBam, File gtf, File outputFolder, @Nullable File mask, Readset rs) throws PipelineJobException
+        public File runVelocytoFor10x(File localBam, File gtf, File outputFolder, @Nullable File mask, Readset rs, @Nullable Integer samtoolsMem) throws PipelineJobException
         {
             getLogger().debug("Inspecting GTF for lines without gene_id or transcript_id");
             int linesDropped = 0;
@@ -168,6 +173,13 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
             {
                 args.add("--samtools-threads");
                 args.add(String.valueOf(threads - 1));
+            }
+
+            if (samtoolsMem != null)
+            {
+                // velocyto expects this in Mb
+                args.add("--samtools_memory");
+                args.add(String.valueOf(samtoolsMem * 1000));
             }
 
             if (mask != null)
