@@ -12,7 +12,7 @@ for (datasetId in names(seuratObjects)) {
                 warning(conditionMessage(e))
                 traceback()
                 message('ADTs:')
-                message(sort(rownames(seuratObj@assays$ADT)))
+                message(paste0(sort(rownames(seuratObj@assays$ADT)), collapse = ', '))
                 stop(paste0('Error running FeaturePlotAcrossReductions for: ', datasetId))
             })
 
