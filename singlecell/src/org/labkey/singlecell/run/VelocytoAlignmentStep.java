@@ -178,7 +178,7 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
             if (samtoolsMem != null)
             {
                 // velocyto expects this in Mb
-                args.add("--samtools_memory");
+                args.add("--samtools-memory");
                 args.add(String.valueOf(samtoolsMem * 1000));
             }
 
