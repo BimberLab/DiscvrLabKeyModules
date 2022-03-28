@@ -4,14 +4,16 @@ import { getConf } from '@jbrowse/core/configuration'
 import { getAdapter } from '@jbrowse/core/data_adapters/dataAdapterCache'
 import { BaseFeatureDataAdapter } from '@jbrowse/core/data_adapters/BaseAdapter'
 import { toArray } from 'rxjs/operators'
+import { getSession, SessionWithWidgets, Widget } from '@jbrowse/core/util'
+
 
 import DataGrid from 'react-data-grid'
 import useFocusRef from '../useFocusRef'
 import type { HeaderRendererProps, SortColumn } from 'react-data-grid'
-import { exportToXlsx, exportToPdf, exportToCsv } from '../exportUtils'
+import { exportToXlsx, exportToCsv } from '../exportUtils'
 
 import '../VariantTable.css'
-import { ExportButton, FilterButton } from './Buttons'
+import { ExportButton, FilterButton, JBrowseUIButton } from './Buttons'
 import type { Filter, Row } from '../types'
 import { defaultFilters, columnsObjRaw } from '../constants'
 import { filterFeature, sortFeatures, rawFeatureToRow } from '../dataUtils'
@@ -53,12 +55,19 @@ const VariantTableWidget = observer(props => {
     }
   }
 
+  // Manager for the activeWidgetList
+  function addActiveWidgetId(id: string) {
+    setActiveWidgetList([id, ...activeWidgetList])
+  }
+   
+  // Contains JBrowse session object
+  const session = getSession(track) as SessionWithWidgets
 
   // Contains all features from the API call once the useEffect finished
-  const [features, setFeatures] = useState(null)
+  const [features, setFeatures] = useState<Row[]>(null)
 
   // Flag for whether the filters boxes are being displayed or not
-  const [filtersOn, setFiltersOn] = useState(false)
+  const [filtersOn, setFiltersOn] = useState<boolean>(false)
 
   // Contains filter state
   const [filters, setFilters] = useState<Filter>(defaultFilters)
@@ -66,6 +75,11 @@ const VariantTableWidget = observer(props => {
   // Contains column sort state
   const [sortColumns, setSortColumns] = useState<readonly SortColumn[]>([])
 
+  // Active widget ID list to force rerender when a JBrowseUIButton is clicked
+  const [activeWidgetList, setActiveWidgetList] = useState<string[]>([])
+
+  // Widget setStates
+  const [sampleFilterWidget, setSampleFilterWidget] = useState<Widget | undefined>()
 
   // API call to retrieve the requested features. Can handle multiple location strings.
   useEffect(() => {
@@ -81,7 +95,12 @@ const VariantTableWidget = observer(props => {
     }
 
     if(pluginManager && parsedLocString) {
-      console.log(pluginManager)
+      setSampleFilterWidget(session.addWidget(
+        'SampleFilterWidget',
+        'Variant-' + getConf(track, 'trackId'),
+        { track: track.configuration }
+      ))
+
       fetch()
     }
   }, [pluginManager, parsedLocString])
@@ -90,7 +109,6 @@ const VariantTableWidget = observer(props => {
   // filteredFeatures goes on to become the rows of the datagrid.
   const sortedFeatures = features ? sortFeatures(features, sortColumns) : []
   const filteredFeatures = sortedFeatures?.filter((r) => filterFeature(r, filters)) ?? []
-
 
   // List of columns, which can contain arbitrary render components or a simple key-name object.
   // Based on whether the filterOn flag is enabled or not, the components will be shown or hidden.
@@ -123,7 +141,6 @@ const VariantTableWidget = observer(props => {
     ...columnsObj
   ]
 
-
   if (!view) {
       return
   }
@@ -132,7 +149,7 @@ const VariantTableWidget = observer(props => {
       return(<p>Unable to find track: {trackId}</p>)
   }
 
-  if (!features || !pluginManager.widgetTypes.registeredTypes.SampleFilterWidget.stateModel) {
+  if (!features) {
         return (<p>Loading...</p>)
   } else {
     const gridElement = (
@@ -148,15 +165,26 @@ const VariantTableWidget = observer(props => {
           onSortColumnsChange={setSortColumns}
           className="rdg-light dataGrid"
           headerRowHeight={90}
-          />
-      </>)
+        />
+      </>
+    )
 
     return (
       <>
+        {
+          [...session.activeWidgets].map((elem) => {
+            const key = elem[0]
+            const widget = elem[1]
+            const widgetType = pluginManager.getWidgetType(widget.type)
+            const { ReactComponent } = widgetType
+            return <ReactComponent model={{
+              track: track.configuration
+            }}/>
+          })
+        }
+
         <div style={{textAlign: 'start', marginBlockEnd: '8px'}}>
-
-
-          <StandaloneSearch sessionId={sessionId} tableUrl={true}></StandaloneSearch>
+          <StandaloneSearch sessionId={sessionId} tableUrl={true} trackId={trackId}></StandaloneSearch>
 
           <ExportButton onExport={() => exportToCsv(gridElement, 'rows.csv')}>
             Export to CSV
@@ -164,6 +192,10 @@ const VariantTableWidget = observer(props => {
           <ExportButton onExport={() => exportToXlsx(gridElement, 'rows.xlsx')}>
             Export to XSLX
           </ExportButton>
+
+          <JBrowseUIButton session={session} widget={sampleFilterWidget} addActiveWidgetId={addActiveWidgetId}>
+            Filter By Sample
+          </JBrowseUIButton>
 
           <FilterButton setFiltersOn={setFiltersOn} filtersOn={filtersOn}></FilterButton>
        </div>

@@ -6,6 +6,6 @@ import StandaloneSearch from '../StandaloneSearch';
 
 App.registerApp<any>('jbrowseSearchWebpart', (target: string, sessionId: string) => {
     ReactDOM.render(
-        <StandaloneSearch sessionId={sessionId} tableUrl={false}/>
+        <StandaloneSearch sessionId={sessionId} tableUrl={false} trackId={null}/>
     , document.getElementById(target));
 });

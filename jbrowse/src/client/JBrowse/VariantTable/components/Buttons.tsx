@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { getConf } from '@jbrowse/core/configuration'
 
 export function ExportButton({
     onExport,
@@ -26,4 +27,14 @@ export function ExportButton({
 export function FilterButton(props) {
   const { setFiltersOn, filtersOn } = props
   return(<button onClick={() => setFiltersOn(!filtersOn)}>{ filtersOn ? "Hide Filters" : "Show Filters"}</button>)
+}
+
+export function JBrowseUIButton(props) {
+  const onClick = () => {
+    const { session, widget, addActiveWidgetId } = props
+    session.showWidget(widget)
+    addActiveWidgetId(widget.id)
+  }
+
+  return(<button onClick={onClick}>Filter By Sample</button>)
 }

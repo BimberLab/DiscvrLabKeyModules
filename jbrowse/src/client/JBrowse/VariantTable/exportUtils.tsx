@@ -19,6 +19,7 @@ export async function exportToCsv<R, SR>(
   fileName: string
 ) {
   const { head, body, foot } = await getGridContent(gridElement);
+
   const content = [...head, ...body, ...foot]
     .map((cells) => cells.map(serialiseCellValue).join(','))
     .join('\n');

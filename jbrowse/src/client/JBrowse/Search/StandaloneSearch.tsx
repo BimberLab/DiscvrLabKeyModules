@@ -13,7 +13,7 @@ import ExtendedVariantPlugin from '../Browser/plugins/ExtendedVariantPlugin/inde
 
 const nativePlugins = [ExtendedVariantPlugin, LogSession]
 
-const StandaloneSearch = observer(({ sessionId, tableUrl }: { sessionId: any, tableUrl: boolean}) => {
+const StandaloneSearch = observer(({ sessionId, tableUrl, trackId }: { sessionId: any, tableUrl: boolean, trackId?: string}) => {
     if (!sessionId){
         return(<p>No session Id provided. Please have you admin use the customize icon to set the session ID for this webpart.</p>)
     }
@@ -23,7 +23,7 @@ const StandaloneSearch = observer(({ sessionId, tableUrl }: { sessionId: any, ta
     if (op && !tableUrl) {
         window.location.href = ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: op.getLocation()})
     } else if (op && tableUrl) {
-        window.location.href = ActionURL.buildURL("jbrowse", "varianttable.view", null, {session: sessionId, location: op.getLocation(), trackId: op.getTrackId()})
+        window.location.href = ActionURL.buildURL("jbrowse", "varianttable.view", null, {session: sessionId, location: op.getLocation(), trackId: trackId})
     }
 
     function generateViewState(genome){
