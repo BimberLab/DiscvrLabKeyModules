@@ -107,7 +107,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             }}, true),
             ToolParameterDescriptor.create("genomicsdbBatchSize", "Consolidate Batch Size", "This is passed to --batch-size of consolidate_genomicsdb_array, and can reduce memory usage.", "ldk-numberfield", new JSONObject(){{
                 put("minValue", 0);
-            }}, 50),
+            }}, null),
             ToolParameterDescriptor.create("scatterGather", "Scatter/Gather Options", "If selected, this job will be divided to run job per chromosome.  The final step will take the VCF from each intermediate step and combined to make a final VCF file.", "sequenceanalysis-variantscattergatherpanel", new JSONObject(){{
                 put("defaultValue", "chunked");
             }}, false)
@@ -774,9 +774,12 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             baseArgs.add(String.valueOf(ctx.getParams().get("genomicsdbSegmentSize")));
         }
 
-        int batchSize = ctx.getParams().optInt("genomicsdbBatchSize", 50);
-        baseArgs.add("-b");
-        baseArgs.add(String.valueOf(batchSize));
+        int batchSize = ctx.getParams().optInt("genomicsdbBatchSize", 0);
+        if (batchSize > 0)
+        {
+            baseArgs.add("-b");
+            baseArgs.add(String.valueOf(batchSize));
+        }
 
         List<Interval> intervals = getIntervalsOrFullGenome(ctx, genome);
         for (Interval i : intervals)
