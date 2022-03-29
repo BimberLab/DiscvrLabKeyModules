@@ -169,10 +169,11 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
             args.add(barcodeCSV.getPath());
 
             Integer threads = SequencePipelineService.get().getMaxThreads(getLogger());
-            if (threads != null && threads > 1)
+            if (threads != null && threads >= 4)
             {
                 args.add("--samtools-threads");
-                args.add(String.valueOf(threads - 1));
+                // Cap this at 4 due to memory
+                args.add(String.valueOf(Math.min(threads - 2, 4)));
             }
 
             if (samtoolsMem != null)
