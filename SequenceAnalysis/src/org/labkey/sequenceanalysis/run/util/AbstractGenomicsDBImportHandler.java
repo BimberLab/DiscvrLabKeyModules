@@ -786,6 +786,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         {
             File contigFolder = new File(workingDestinationWorkspaceFolder, getFolderNameFromInterval(i));
             ctx.getLogger().info("Consolidating contig folder: " + contigFolder);
+            ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Consolidating contig folder: " + contigFolder);
 
             List<String> toRun = new ArrayList<>(baseArgs);
             toRun.add("-a");
