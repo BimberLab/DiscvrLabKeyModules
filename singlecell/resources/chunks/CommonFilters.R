@@ -130,7 +130,7 @@ for (datasetId in names(seuratObjects)) {
 		saveData(seuratObj, datasetId)
 		totalPassed <- totalPassed + 1
 
-		print(paste0('Final cells: ', ncol(seuratObj), 'of ', origCells, ' (', round((ncol(seuratObj)/origCells) * 100, 2), '%)'))
+		print(paste0('Final cells: ', ncol(seuratObj), ' of ', origCells, ' (', round((ncol(seuratObj)/origCells) * 100, 2), '%)'))
 	}
 }
 
