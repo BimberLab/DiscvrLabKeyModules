@@ -587,7 +587,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         ST("Stopped", PipelineJob.TaskStatus.error),
         S("Suspended", PipelineJob.TaskStatus.waiting, null, "Job suspended"),
         TO("Timeout", PipelineJob.TaskStatus.error, null, "Job timeout"),
-        OOM("Out of Memory", PipelineJob.TaskStatus.error, Arrays.asList("OUT_OF_MEMORY"), "Out of Memory");
+        OOM("Out of Memory", PipelineJob.TaskStatus.error, Arrays.asList("OUT_OF_MEMORY", "OUT_OF_ME"), "Out of Memory");
 
         private Set<String> _aliases = new CaseInsensitiveHashSet();
         private String _labkeyStatus;
