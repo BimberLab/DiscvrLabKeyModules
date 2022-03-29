@@ -206,7 +206,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                     Pair<File, File> files = wrapper.downloadSra(accession, ctx.getOutputDir());
 
                     File sraLog = new File(expectedFile1.getParentFile(), FileUtil.makeLegalName("sraDownload_" + timestamp + ".txt"));
-                    try (PrintWriter writer = PrintWriters.getPrintWriter(IOUtil.openFileForWriting(sraLog, true)))
+                    try (PrintWriter writer = PrintWriters.getPrintWriter(IOUtil.openFileForWriting(sraLog, sraLog.exists())))
                     {
                         ctx.getLogger().info("Copying file to: " + expectedFile1.getPath());
                         Files.copy(files.first.toPath(), expectedFile1.toPath());
