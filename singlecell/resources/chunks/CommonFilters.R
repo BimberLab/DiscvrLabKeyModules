@@ -96,7 +96,7 @@ for (datasetId in names(seuratObjects)) {
 		}
 
 		tryCatch({
-			cells <- Seurat::WhichCells(seuratObj, expression = HTO.Classification!='ND' & HTO.Classification!='Discordant' & HTO.Classification!='Doublet')
+			cells <- Seurat::WhichCells(seuratObj, expression = HTO.Classification!='ND' & HTO.Classification!='Discordant' & HTO.Classification!='Doublet' & HTO.Classification!='Low Counts')
 			if (length(cells) == 0) {
 				print(paste0('There were no cells remaining after dropping cells without hashing'))
 				seuratObj <- NULL
