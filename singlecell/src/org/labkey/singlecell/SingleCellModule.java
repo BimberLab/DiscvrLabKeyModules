@@ -184,6 +184,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new TrainCelltypist.Provider());
         SequencePipelineService.get().registerPipelineStep(new CheckExpectations.Provider());
         SequencePipelineService.get().registerPipelineStep(new CommonFilters.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RunVision.Provider());
 
         SequenceAnalysisService.get().registerFileHandler(new NimbleAlignmentStep());
     }
