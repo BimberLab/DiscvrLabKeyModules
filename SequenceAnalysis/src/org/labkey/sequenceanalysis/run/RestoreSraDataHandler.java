@@ -209,6 +209,11 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                     try (PrintWriter writer = PrintWriters.getPrintWriter(IOUtil.openFileForWriting(sraLog, sraLog.exists())))
                     {
                         ctx.getLogger().info("Copying file to: " + expectedFile1.getPath());
+                        if (expectedFile1.exists())
+                        {
+                            ctx.getLogger().debug("Deleting pre-existing file: " + expectedFile1.getPath());
+                            expectedFile1.delete();
+                        }
                         Files.copy(files.first.toPath(), expectedFile1.toPath());
                         ctx.getFileManager().addIntermediateFile(files.first);
                         writer.println("Downloaded " + expectedFile1.getName() + " from " + accession + " on " + timestamp + ", size: " + FileUtils.byteCountToDisplaySize(FileUtils.sizeOf(expectedFile1)));
@@ -221,6 +226,11 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                             }
 
                             ctx.getLogger().info("Copying file to: " + expectedFile2.getPath());
+                            if (expectedFile2.exists())
+                            {
+                                ctx.getLogger().debug("Deleting pre-existing file: " + expectedFile2.getPath());
+                                expectedFile2.delete();
+                            }
                             Files.copy(files.second.toPath(), expectedFile2.toPath());
                             ctx.getFileManager().addIntermediateFile(files.second);
                             writer.println("Downloaded " + expectedFile2.getName() + " from SRA " + accession + " on " + timestamp + ", size: " + FileUtils.byteCountToDisplaySize(FileUtils.sizeOf(expectedFile2)));
