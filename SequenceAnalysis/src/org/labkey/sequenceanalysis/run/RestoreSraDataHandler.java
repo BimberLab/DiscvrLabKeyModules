@@ -279,8 +279,8 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
             {
                 throw new PipelineJobException("Missing file: " + file1.getPath());
             }
-            files.remove(file1);
             file1 = doGzip(file1);
+            files.remove(file1);
 
             File file2 = new File(outDir, dataset + "_2.fastq");
             if (!file2.exists())
@@ -289,8 +289,8 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
             }
             else
             {
-                files.remove(file2);
                 file2 = doGzip(file2);
+                files.remove(file2);
             }
 
             if (!files.isEmpty())
