@@ -2,6 +2,7 @@ package org.labkey.singlecell.run;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
+import htsjdk.samtools.SAMFileHeader;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -14,6 +15,8 @@ import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SamSorter;
+import org.labkey.api.sequenceanalysis.pipeline.SamtoolsRunner;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
@@ -149,6 +152,13 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
 
             getLogger().debug("Using BAM: " + localBam.getPath());
 
+            //Pre-sort since velocyto dies when doing this itself:
+            //samtools ``sort -l [compression] -m [mb_to_use]M -t [tagname] -O BAM -@ [threads_to_use] -o cellsorted_[bamfile] [bamfile]
+            List<String> sortArgs = Arrays.asList("-t", "CB");
+            File sortedBam = new File(localBam.getParentFile(), "cellsorted_" + localBam.getName());
+            new SamSorter(getLogger()).execute(localBam, sortedBam, SAMFileHeader.SortOrder.unknown, sortArgs);
+
+
             SimpleScriptWrapper wrapper = new SimpleScriptWrapper(getLogger());
             List<String> args = new ArrayList<>();
             args.add(SequencePipelineService.get().getExeForPackage("VELOCYTOPATH", "velocyto").getPath());
@@ -204,6 +214,8 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
             {
                 throw new PipelineJobException("Missing expected file: " + loom.getPath());
             }
+
+            sortedBam.delete();
 
             return loom;
         }
