@@ -33,6 +33,8 @@ function VariantTable() {
     const [parsedLocString, setParsedLocString] = useState(null)
     const [assemblyNames, setAssemblyNames] = useState(null)
     const [pluginManager, setPluginManager] = useState(null)
+    const [rpcManager, setRpcManager] = useState(null)
+    const [assembly, setAssembly] = useState(null)
 
     function generateViewState(genome){
         return createViewState({
@@ -57,8 +59,9 @@ function VariantTable() {
                 const { session } = viewState
                 const { pluginManager } = getEnv(viewState)
                 const { view } = session
-                const { assemblyNames, assemblyManager} = session
-                await assemblyManager.waitForAssembly(assemblyNames[0])
+                const { assemblyNames, assemblyManager, rpcManager } = session
+                setAssembly(await assemblyManager.waitForAssembly(assemblyNames[0]))
+                setRpcManager(rpcManager)
                 setSession(session)
                 setAssemblyNames(assemblyNames)
                 setView(view)
@@ -93,7 +96,7 @@ function VariantTable() {
 
     return (
         <div style={{height: "90vh"}}>
-            <VariantTableWidget trackId={trackId} parsedLocString={parsedLocString} sessionId={sessionId} session={session} pluginManager={pluginManager}/>
+            <VariantTableWidget rpcManager={rpcManager} assembly={assembly} trackId={trackId} parsedLocString={parsedLocString} sessionId={sessionId} session={session} pluginManager={pluginManager}/>
         </div>
     )
 }

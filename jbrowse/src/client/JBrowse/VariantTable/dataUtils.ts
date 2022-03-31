@@ -53,30 +53,30 @@ function getComparator(sortColumn: string): Comparator {
 // Takes a feature JSON from the API and converts it into a JS object in the schema we want.
 export function rawFeatureToRow(rawFeature: any, id: number): Row {
   let afString = ""
-  if(rawFeature.variant.INFO.AF && rawFeature.variant.INFO.AF.length > 1) {
-    afString = rawFeature.variant.INFO.AF.join(", ")
+  if(rawFeature.data.INFO.AF && rawFeature.data.INFO.AF.length > 1) {
+    afString = rawFeature.data.INFO.AF.join(", ")
     afString = afString.substring(0, afString.length - 2)
-  } else if (rawFeature.variant.INFO.AF && rawFeature.variant.INFO.AF.length === 1) {
-    afString = rawFeature.variant.INFO.AF[0]
+  } else if (rawFeature.data.INFO.AF && rawFeature.data.INFO.AF.length === 1) {
+    afString = rawFeature.data.INFO.AF[0]
   }
 
   let caddPHString = ""
-  if(rawFeature.variant.INFO.CADD_PH && rawFeature.variant.INFO.CADD_PH > 1) {
-    caddPHString = rawFeature.variant.INFO.CADD_PH.join(", ")
+  if(rawFeature.data.INFO.CADD_PH && rawFeature.data.INFO.CADD_PH > 1) {
+    caddPHString = rawFeature.data.INFO.CADD_PH.join(", ")
     caddPHString = caddPHString.substring(0, caddPHString.length - 2)
-  } else if (rawFeature.variant.INFO.CADD_PH && rawFeature.variant.INFO.CADD_PH.length === 1) {
-    caddPHString = rawFeature.variant.INFO.CADD_PH[0]
+  } else if (rawFeature.data.INFO.CADD_PH && rawFeature.data.INFO.CADD_PH.length === 1) {
+    caddPHString = rawFeature.data.INFO.CADD_PH[0]
   }
 
   let row = {
       id: id,
-      chrom: (rawFeature.variant.CHROM ?? "-1").toString(),
-      pos: (rawFeature.variant.POS ?? "-1").toString(),
-      ref: (rawFeature.variant.REF ?? "").toString(),
-      alt: (rawFeature.variant.ALT[0] ?? "").toString(),
+      chrom: (rawFeature.data.CHROM ?? "-1").toString(),
+      pos: (rawFeature.data.POS ?? "-1").toString(),
+      ref: (rawFeature.data.REF ?? "").toString(),
+      alt: (rawFeature.data.ALT[0] ?? "").toString(),
       af: afString,
-      impact: (rawFeature.variant.INFO.IMPACT ?? "").toString(),
-      overlapping_genes: generateGeneList(rawFeature.variant.INFO.ANN),
+      impact: (rawFeature.data.INFO.IMPACT ?? "").toString(),
+      overlapping_genes: generateGeneList(rawFeature.data.INFO.ANN),
       cadd_ph: caddPHString
   } as Row
 

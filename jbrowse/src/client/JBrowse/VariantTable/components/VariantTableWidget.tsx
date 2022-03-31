@@ -23,7 +23,7 @@ import StandaloneSearch from "../../Search/StandaloneSearch"
 import ExtendedVariantAdapter from '../../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter/ExtendedVariantAdapter'
 
 const VariantTableWidget = observer(props => {
-  const { trackId, parsedLocString, sessionId, session, pluginManager } = props
+  const { assembly, rpcManager, trackId, parsedLocString, sessionId, session, pluginManager } = props
   const { view } = session
 
   const track = view.tracks.find(
@@ -91,12 +91,16 @@ const VariantTableWidget = observer(props => {
   // API call to retrieve the requested features. Can handle multiple location strings.
   useEffect(() => {
     async function fetch() {
-      const adapterConfig = getConf(track, 'adapter') //track.configuration.adapter as ExtendedVariantAdapter
-      const dataAdapter = (
-        await getAdapter(pluginManager, sessionId, adapterConfig)
-      ).dataAdapter as BaseFeatureDataAdapter
-      const featureObservable = dataAdapter.getFeatures(parsedLocString)
-      let features = await featureObservable.pipe(toArray()).toPromise()
+      const features = await rpcManager.call(sessionId, 'CoreGetFeatures', {
+        adapterConfig: getConf(track, 'adapter'),
+        sessionId,
+        region: {
+          start: parsedLocString.start,
+          end: parsedLocString.end,
+          refName: assembly.getCanonicalRefName(parsedLocString.refName),
+        },
+      })
+
       setFeatures(features.map((rawFeature, id) => rawFeatureToRow(rawFeature, id)))
     }
 
