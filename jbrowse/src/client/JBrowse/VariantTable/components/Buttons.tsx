@@ -36,5 +36,5 @@ export function JBrowseUIButton(props) {
     addActiveWidgetId(widget.id)
   }
 
-  return(<button onClick={onClick}>Filter By Sample</button>)
+  return(<button onClick={onClick}>{props.children}</button>)
 }

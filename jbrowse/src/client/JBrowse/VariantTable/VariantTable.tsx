@@ -28,11 +28,11 @@ function VariantTable() {
         return(<p>Must provide the track Id</p>)
     }
 
-    const [view, setView] = useState(null);
-    const [parsedLocString, setParsedLocString] = useState(null);
-    const [assemblyNames, setAssemblyNames] = useState(null);
-    const [assembly, setAssembly] = useState(null);
-    const [pluginManager, setPluginManager] = useState(null);
+    const [session, setSession] = useState(null)
+    const [view, setView] = useState(null)
+    const [parsedLocString, setParsedLocString] = useState(null)
+    const [assemblyNames, setAssemblyNames] = useState(null)
+    const [pluginManager, setPluginManager] = useState(null)
 
     function generateViewState(genome){
         return createViewState({
@@ -58,9 +58,8 @@ function VariantTable() {
                 const { pluginManager } = getEnv(viewState)
                 const { view } = session
                 const { assemblyNames, assemblyManager} = session
-
-                const assembly = await assemblyManager.waitForAssembly(assemblyNames[0])
-                setAssembly(assembly)
+                await assemblyManager.waitForAssembly(assemblyNames[0])
+                setSession(session)
                 setAssemblyNames(assemblyNames)
                 setView(view)
                 setPluginManager(pluginManager)
@@ -94,7 +93,7 @@ function VariantTable() {
 
     return (
         <div style={{height: "90vh"}}>
-            <VariantTableWidget view={view} trackId={trackId} parsedLocString={parsedLocString} assembly={assembly} sessionId={sessionId} pluginManager={pluginManager}/>
+            <VariantTableWidget trackId={trackId} parsedLocString={parsedLocString} sessionId={sessionId} session={session} pluginManager={pluginManager}/>
         </div>
     )
 }

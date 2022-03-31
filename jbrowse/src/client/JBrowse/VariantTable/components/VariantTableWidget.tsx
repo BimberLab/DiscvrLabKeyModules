@@ -4,7 +4,8 @@ import { getConf } from '@jbrowse/core/configuration'
 import { getAdapter } from '@jbrowse/core/data_adapters/dataAdapterCache'
 import { BaseFeatureDataAdapter } from '@jbrowse/core/data_adapters/BaseAdapter'
 import { toArray } from 'rxjs/operators'
-import { getSession, SessionWithWidgets, Widget } from '@jbrowse/core/util'
+import { getSession, SessionWithWidgets, Widget, isSessionModel } from '@jbrowse/core/util'
+import { Dialog } from "@material-ui/core"
 
 
 import DataGrid from 'react-data-grid'
@@ -19,9 +20,12 @@ import { defaultFilters, columnsObjRaw } from '../constants'
 import { filterFeature, sortFeatures, rawFeatureToRow } from '../dataUtils'
 
 import StandaloneSearch from "../../Search/StandaloneSearch"
+import ExtendedVariantAdapter from '../../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter/ExtendedVariantAdapter'
 
 const VariantTableWidget = observer(props => {
-  const { view, trackId, parsedLocString, sessionId, pluginManager } = props
+  const { trackId, parsedLocString, sessionId, session, pluginManager } = props
+  const { view } = session
+
   const track = view.tracks.find(
       t => t.configuration.trackId === trackId,
   )
@@ -59,9 +63,11 @@ const VariantTableWidget = observer(props => {
   function addActiveWidgetId(id: string) {
     setActiveWidgetList([id, ...activeWidgetList])
   }
-   
-  // Contains JBrowse session object
-  const session = getSession(track) as SessionWithWidgets
+
+  // MaterialUI modal handlers
+  function handleClose(widget) {
+    session.hideWidget(widget)
+  }
 
   // Contains all features from the API call once the useEffect finished
   const [features, setFeatures] = useState<Row[]>(null)
@@ -78,17 +84,17 @@ const VariantTableWidget = observer(props => {
   // Active widget ID list to force rerender when a JBrowseUIButton is clicked
   const [activeWidgetList, setActiveWidgetList] = useState<string[]>([])
 
-  // Widget setStates
+  // Widget states
   const [sampleFilterWidget, setSampleFilterWidget] = useState<Widget | undefined>()
+  const [infoFilterWidget, setInfoFilterWidget] = useState<Widget | undefined>()
 
   // API call to retrieve the requested features. Can handle multiple location strings.
   useEffect(() => {
     async function fetch() {
-      const adapterConfig = getConf(track, 'adapter')
+      const adapterConfig = getConf(track, 'adapter') //track.configuration.adapter as ExtendedVariantAdapter
       const dataAdapter = (
         await getAdapter(pluginManager, sessionId, adapterConfig)
       ).dataAdapter as BaseFeatureDataAdapter
-
       const featureObservable = dataAdapter.getFeatures(parsedLocString)
       let features = await featureObservable.pipe(toArray()).toPromise()
       setFeatures(features.map((rawFeature, id) => rawFeatureToRow(rawFeature, id)))
@@ -97,13 +103,19 @@ const VariantTableWidget = observer(props => {
     if(pluginManager && parsedLocString) {
       setSampleFilterWidget(session.addWidget(
         'SampleFilterWidget',
-        'Variant-' + getConf(track, 'trackId'),
+        'Sample-Variant-' + getConf(track, 'trackId'),
+        { track: track.configuration }
+      ))
+
+      setInfoFilterWidget(session.addWidget(
+        'InfoFilterWidget',
+        'Info-Variant-' + getConf(track, 'trackId'),
         { track: track.configuration }
       ))
 
       fetch()
     }
-  }, [pluginManager, parsedLocString])
+  }, [pluginManager, parsedLocString, session.visibleWidget])
 
   // Sort the base feature list using the requested sort columns. Then, filter using the requested filters.
   // filteredFeatures goes on to become the rows of the datagrid.
@@ -173,13 +185,15 @@ const VariantTableWidget = observer(props => {
       <>
         {
           [...session.activeWidgets].map((elem) => {
-            const key = elem[0]
             const widget = elem[1]
             const widgetType = pluginManager.getWidgetType(widget.type)
             const { ReactComponent } = widgetType
-            return <ReactComponent model={{
-              track: track.configuration
-            }}/>
+            const { visibleWidget } = session
+            return (
+            <Dialog onClose={() => handleClose(widget)} open={true}>
+              <ReactComponent model={visibleWidget}/>
+            </Dialog>
+            )
           })
         }
 
@@ -189,12 +203,17 @@ const VariantTableWidget = observer(props => {
           <ExportButton onExport={() => exportToCsv(gridElement, 'rows.csv')}>
             Export to CSV
           </ExportButton>
+
           <ExportButton onExport={() => exportToXlsx(gridElement, 'rows.xlsx')}>
             Export to XSLX
           </ExportButton>
 
           <JBrowseUIButton session={session} widget={sampleFilterWidget} addActiveWidgetId={addActiveWidgetId}>
             Filter By Sample
+          </JBrowseUIButton>
+
+          <JBrowseUIButton session={session} widget={infoFilterWidget} addActiveWidgetId={addActiveWidgetId}>
+            Filter By Attributes
           </JBrowseUIButton>
 
           <FilterButton setFiltersOn={setFiltersOn} filtersOn={filtersOn}></FilterButton>
