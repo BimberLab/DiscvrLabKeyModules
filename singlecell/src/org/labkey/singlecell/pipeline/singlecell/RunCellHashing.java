@@ -74,16 +74,6 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
     protected void onFailure(SequenceOutputHandler.JobContext ctx, String outputPrefix) throws PipelineJobException
     {
         CellHashingService.get().copyHtmlLocally(ctx);
-
-        // Also delete the .done files, so hashing will repeat if we change params:
-        for (File f : ctx.getOutputDir().listFiles())
-        {
-            if (f.getName().endsWith(CellHashingServiceImpl.CALL_EXTENSION + ".done"))
-            {
-                ctx.getLogger().debug("Removing hashing .done file: " + f.getName());
-                f.delete();
-            }
-        }
     }
 
     @Override

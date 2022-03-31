@@ -1358,6 +1358,13 @@ public class CellHashingServiceImpl extends CellHashingService
 
                     Files.copy(f.toPath(), target.toPath());
                 }
+
+                // Also delete the .done files, so hashing will repeat if we change params:
+                if (f.getName().endsWith(CellHashingServiceImpl.CALL_EXTENSION + ".done"))
+                {
+                    ctx.getLogger().debug("Removing hashing .done file: " + f.getName());
+                    f.delete();
+                }
             }
         }
         catch (IOException e)
