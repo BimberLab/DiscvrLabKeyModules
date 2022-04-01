@@ -39,15 +39,15 @@ public class ReadDataImpl implements ReadData
     private Integer _runId;
     private boolean _archived = false;
     private String sra_accession;
-    private Integer _totalReads;
 
-    private Map<Integer, File> _cachedFiles = new HashMap<>();
+    private final Map<Integer, File> _cachedFiles = new HashMap<>();
 
     public ReadDataImpl()
     {
 
     }
 
+    @Override
     public Integer getRowid()
     {
         return _rowid;
@@ -58,6 +58,7 @@ public class ReadDataImpl implements ReadData
         _rowid = rowid;
     }
 
+    @Override
     public Integer getReadset()
     {
         return _readset;
@@ -68,6 +69,7 @@ public class ReadDataImpl implements ReadData
         _readset = readset;
     }
 
+    @Override
     public String getPlatformUnit()
     {
         return _platformUnit;
@@ -78,6 +80,7 @@ public class ReadDataImpl implements ReadData
         _platformUnit = platformUnit;
     }
 
+    @Override
     public String getCenterName()
     {
         return _centerName;
@@ -88,6 +91,7 @@ public class ReadDataImpl implements ReadData
         _centerName = centerName;
     }
 
+    @Override
     public Date getDate()
     {
         return _date;
@@ -98,6 +102,7 @@ public class ReadDataImpl implements ReadData
         _date = date;
     }
 
+    @Override
     public Integer getFileId1()
     {
         return _fileId1;
@@ -108,6 +113,7 @@ public class ReadDataImpl implements ReadData
         _fileId1 = fileId1;
     }
 
+    @Override
     public Integer getFileId2()
     {
         return _fileId2;
@@ -118,11 +124,13 @@ public class ReadDataImpl implements ReadData
         _fileId2 = fileId2;
     }
 
+    @Override
     public String getDescription()
     {
         return _description;
     }
 
+    @Override
     public Integer getRunId()
     {
         return _runId;
@@ -138,6 +146,7 @@ public class ReadDataImpl implements ReadData
         _description = description;
     }
 
+    @Override
     public String getContainer()
     {
         return _container;
@@ -148,6 +157,7 @@ public class ReadDataImpl implements ReadData
         _container = container;
     }
 
+    @Override
     public Date getCreated()
     {
         return _created;
@@ -158,6 +168,7 @@ public class ReadDataImpl implements ReadData
         _created = created;
     }
 
+    @Override
     public Integer getCreatedBy()
     {
         return _createdBy;
@@ -168,6 +179,7 @@ public class ReadDataImpl implements ReadData
         _createdBy = createdBy;
     }
 
+    @Override
     public Date getModified()
     {
         return _modified;
@@ -178,6 +190,7 @@ public class ReadDataImpl implements ReadData
         _modified = modified;
     }
 
+    @Override
     public Integer getModifiedBy()
     {
         return _modifiedBy;
@@ -188,12 +201,14 @@ public class ReadDataImpl implements ReadData
         _modifiedBy = modifiedBy;
     }
 
+    @Override
     @Transient
     public File getFile1()
     {
         return getFile(1, _fileId1);
     }
 
+    @Override
     @Transient
     public File getFile2()
     {
@@ -206,6 +221,7 @@ public class ReadDataImpl implements ReadData
     }
 
     @Override
+    @Transient
     public Integer getTotalReads()
     {
         if (getFileId1() == null)
@@ -213,34 +229,22 @@ public class ReadDataImpl implements ReadData
             return null;
         }
 
-        if (_totalReads == null)
+        if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
         {
-            if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
-            {
-                throw new IllegalStateException("Cannot call getTotalReads() on the remote server unless this value has been cached");
-            }
-
-            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("dataid"), getFileId1());
-            filter.addCondition(FieldKey.fromString("readset"), getReadset(), CompareType.EQUAL);
-            filter.addCondition(FieldKey.fromString("metricvalue"), "Total Reads", CompareType.EQUAL);
-            TableSelector ts = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), PageFlowUtil.set("metricvalue"), filter, new Sort("-rowid"));
-            List<Double> values = ts.getArrayList(Double.class);
-            if (!values.isEmpty())
-            {
-                _totalReads = values.get(0).intValue();
-            }
-            else
-            {
-                _totalReads = 0;
-            }
+            throw new IllegalStateException("Cannot call getTotalReads() on the remote server unless this value has been cached");
         }
 
-        return _totalReads;
-    }
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("dataid"), getFileId1());
+        filter.addCondition(FieldKey.fromString("readset"), getReadset(), CompareType.EQUAL);
+        filter.addCondition(FieldKey.fromString("metricvalue"), "Total Reads", CompareType.EQUAL);
+        TableSelector ts = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), PageFlowUtil.set("metricvalue"), filter, new Sort("-rowid"));
+        List<Double> values = ts.getArrayList(Double.class);
+        if (!values.isEmpty())
+        {
+            return values.get(0).intValue();
+        }
 
-    public void setTotalReads(Integer totalReads)
-    {
-        _totalReads = totalReads;
+        return 0;
     }
 
     @Transient
@@ -288,8 +292,6 @@ public class ReadDataImpl implements ReadData
             getFile1();
             getFile2();
         }
-
-        getTotalReads();
     }
 
     @Transient

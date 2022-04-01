@@ -679,25 +679,8 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                     actions.add(fqAction);
                 }
 
-                //calculate/cache metrics to save time on server
                 getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING QUALITY METRICS (" + idx + " of " + finalOutputs.size() + ")");
-                File cachedMetrics = new File(f.getPath() + ".metrics");
-                if (cachedMetrics.exists())
-                {
-                    getJob().getLogger().debug("reusing cached metrics file");
-                }
-                else
-                {
-                    Map<String, Object> metricsMap = FastqUtils.getQualityMetrics(f, getJob().getLogger());
-                    getJob().getLogger().debug("saving quality metrics to file: " + cachedMetrics.getPath());
-                    try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(cachedMetrics), '\t', CSVWriter.NO_QUOTE_CHARACTER))
-                    {
-                        for (String key : metricsMap.keySet())
-                        {
-                            writer.writeNext(new String[]{key, String.valueOf(metricsMap.get(key))});
-                        }
-                    }
-                }
+                generateAndWriteMetrics(getJob(), f);
             }
 
             if (baseDirectory.list().length == 0)
@@ -723,6 +706,32 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         }
 
         return new RecordedActionSet(actions);
+    }
+
+    public static void generateAndWriteMetrics(PipelineJob job, File f) throws PipelineJobException
+    {
+        //calculate/cache metrics to save time on server
+        File cachedMetrics = new File(f.getPath() + ".metrics");
+        if (cachedMetrics.exists())
+        {
+            job.getLogger().debug("reusing cached metrics file");
+        }
+        else
+        {
+            Map<String, Object> metricsMap = FastqUtils.getQualityMetrics(f, job.getLogger());
+            job.getLogger().debug("saving quality metrics to file: " + cachedMetrics.getPath());
+            try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(cachedMetrics), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+            {
+                for (String key : metricsMap.keySet())
+                {
+                    writer.writeNext(new String[]{key, String.valueOf(metricsMap.get(key))});
+                }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
     }
 
     private Barcoder getBarcoder() throws PipelineJobException

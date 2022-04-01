@@ -115,10 +115,7 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
         }
         else
         {
-            if (_cachedReadsets.contains(m))
-            {
-                _cachedReadsets.remove(m);
-            }
+            _cachedReadsets.remove(m);
         }
 
         _cachedReadsets.add(m);
