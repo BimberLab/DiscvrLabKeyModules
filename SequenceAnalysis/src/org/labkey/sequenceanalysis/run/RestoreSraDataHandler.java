@@ -45,6 +45,7 @@ import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.pipeline.ReadsetCreationTask;
 import org.labkey.sequenceanalysis.pipeline.SequenceNormalizationTask;
+import org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerJob;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -125,6 +126,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
             int totalArchivedPairs = 0;
 
             Map<String, List<ReadData>> readdataToSra = new HashMap<>();
+            HashSet<Integer> filesIdsDeleted = new HashSet<>();
             for (ReadData rd : rs.getReadData())
             {
                 String accession = rd.getSra_accession();
@@ -223,6 +225,12 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                                 writer.println("Condensing/merging readdata: " + r.getRowid() + ", " + r.getFile1() + ", " + r.getFile1().getPath() + ", " + (r.getFileId2() == null ? "N/A" : r.getFileId2()) + ", " + (r.getFileId2() == null ? "N/A" : r.getFile2().getPath()));
 
                                 List<Map<String, Object>> toDelete = Arrays.asList(Map.of("rowid", r.getRowid()));
+                                filesIdsDeleted.add(r.getFileId1());
+                                if (r.getFileId2() != null)
+                                {
+                                    filesIdsDeleted.add(r.getFileId2());
+                                }
+
                                 QueryService.get().getUserSchema(job.getUser(), ContainerManager.getForId(r.getContainer()), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_READ_DATA).getUpdateService().deleteRows(job.getUser(), ContainerManager.getForId(r.getContainer()), toDelete, null, null);
                             }
 
@@ -243,6 +251,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
             support.cacheReadset(rs.getReadsetId(), job.getUser(), true);
             support.cacheObject(UPDATED_ACCESSIONS, StringUtils.join(updatedAccessions, ";"));
             support.cacheObject(ACCESSION_TO_READS, accessionToReads);
+            support.cacheObject(FILE_IDS_DELETED, filesIdsDeleted);
         }
 
         private Map<String, Integer> getCachedReadCounts(SequenceAnalysisJobSupport support) throws PipelineJobException
@@ -250,7 +259,13 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
             return support.getCachedObject(ACCESSION_TO_READS, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, Integer.class, String.class));
         }
 
-        private static final String UPDATED_ACCESSIONS = "updatedAccessons";
+        private Set<Integer> getFilesIdsDeleted(SequenceAnalysisJobSupport support) throws PipelineJobException
+        {
+            return support.getCachedObject(FILE_IDS_DELETED, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Set.class, Integer.class));
+        }
+
+        private static final String FILE_IDS_DELETED = "filesIdsDeleted";
+        private static final String UPDATED_ACCESSIONS = "updatedAccessions";
         private static final String ACCESSION_TO_READS = "accessionToReads";
 
         @Override
@@ -321,6 +336,16 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
             catch (InvalidKeyException | BatchValidationException | QueryUpdateServiceException | SQLException e)
             {
                 throw new PipelineJobException(e);
+            }
+
+            // Delete pre-existing metrics:
+            for (int dataId : getFilesIdsDeleted(((SequenceReadsetHandlerJob)job).getSequenceSupport()))
+            {
+                SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), rs.getRowId());
+                filter.addCondition(FieldKey.fromString("container"), rs.getContainer());
+                filter.addCondition(FieldKey.fromString("dataId"), dataId);
+                int deleted = Table.delete(SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), filter);
+                job.getLogger().debug("existing metrics deleted: " + deleted);
             }
         }
 
