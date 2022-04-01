@@ -303,6 +303,12 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                         //then add:
                         ReadsetCreationTask.addQualityMetricsForReadset(rs, dataId, job);
                     }
+
+                    Map<String, Object> rsUpdate = new HashMap<>();
+                    rsUpdate.put("rowid", rs.getRowId());
+                    rsUpdate.put("modified", new Date());
+                    rsUpdate.put("modifiedby", job.getUser().getUserId());
+                    Table.update(job.getUser(), SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READSETS), rsUpdate, rs.getRowId());
                 }
             }
 
