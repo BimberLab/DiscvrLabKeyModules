@@ -223,7 +223,7 @@ const VariantTableWidget = observer(props => {
             const { ReactComponent } = widgetType
             const { visibleWidget } = session
             return (
-            <Dialog onClose={() => handleClose(widget)} open={true}>
+            <Dialog onClose={() => handleClose(widget)} open={true} key={widget.id}>
               <h3 style={{margin: "15px"}}>Filter Table</h3>
               
               <div style={{margin: "10px"}}>
