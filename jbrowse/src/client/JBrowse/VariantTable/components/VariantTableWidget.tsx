@@ -210,7 +210,7 @@ const VariantTableWidget = observer(props => {
           sortColumns={sortColumns}
           onSortColumnsChange={setSortColumns}
           className="rdg-light dataGrid"
-          headerRowHeight={90}
+          headerRowHeight={filtersOn ? 90 : 45}
         />
     )
 
