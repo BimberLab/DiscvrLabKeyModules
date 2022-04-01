@@ -236,7 +236,7 @@ public class ReadDataImpl implements ReadData
 
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("dataid"), getFileId1());
         filter.addCondition(FieldKey.fromString("readset"), getReadset(), CompareType.EQUAL);
-        filter.addCondition(FieldKey.fromString("metricvalue"), "Total Reads", CompareType.EQUAL);
+        filter.addCondition(FieldKey.fromString("metricname"), "Total Reads", CompareType.EQUAL);
         TableSelector ts = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), PageFlowUtil.set("metricvalue"), filter, new Sort("-rowid"));
         List<Double> values = ts.getArrayList(Double.class);
         if (!values.isEmpty())
