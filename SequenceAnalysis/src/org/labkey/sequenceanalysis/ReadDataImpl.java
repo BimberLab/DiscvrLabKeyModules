@@ -1,14 +1,21 @@
 package org.labkey.sequenceanalysis;
 
+import org.labkey.api.data.CompareType;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Sort;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.data.Transient;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJobService;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.sequenceanalysis.model.ReadData;
+import org.labkey.api.util.PageFlowUtil;
 
 import java.io.File;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -32,6 +39,7 @@ public class ReadDataImpl implements ReadData
     private Integer _runId;
     private boolean _archived = false;
     private String sra_accession;
+    private Integer _totalReads;
 
     private Map<Integer, File> _cachedFiles = new HashMap<>();
 
@@ -197,6 +205,44 @@ public class ReadDataImpl implements ReadData
         _cachedFiles.put(fileIdx, f);
     }
 
+    @Override
+    public Integer getTotalReads()
+    {
+        if (getFileId1() == null)
+        {
+            return null;
+        }
+
+        if (_totalReads == null)
+        {
+            if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
+            {
+                throw new IllegalStateException("Cannot call getTotalReads() on the remote server unless this value has been cached");
+            }
+
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("dataid"), getFileId1());
+            filter.addCondition(FieldKey.fromString("readset"), getReadset(), CompareType.EQUAL);
+            filter.addCondition(FieldKey.fromString("metricvalue"), "Total Reads", CompareType.EQUAL);
+            TableSelector ts = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), PageFlowUtil.set("metricvalue"), filter, new Sort("-rowid"));
+            List<Double> values = ts.getArrayList(Double.class);
+            if (!values.isEmpty())
+            {
+                _totalReads = values.get(0).intValue();
+            }
+            else
+            {
+                _totalReads = 0;
+            }
+        }
+
+        return _totalReads;
+    }
+
+    public void setTotalReads(Integer totalReads)
+    {
+        _totalReads = totalReads;
+    }
+
     @Transient
     private File getFile(int fileIdx, Integer fileId)
     {
@@ -242,6 +288,8 @@ public class ReadDataImpl implements ReadData
             getFile1();
             getFile2();
         }
+
+        getTotalReads();
     }
 
     @Transient
