@@ -19,9 +19,6 @@ function VariantTable() {
     }
 
     const locString = queryParam.get('location') || queryParam.get('loc')
-    if (!locString) {
-        return(<p>Must provide the location to load</p>)
-    }
 
     const trackId = queryParam.get('trackId')
     if (!trackId) {
@@ -71,8 +68,10 @@ function VariantTable() {
                     return assemblyManager.isValidRefName(refName, assemblyNames[0])
                 }
 
-                const parsedLocString = parseLocString(locString, isValidRefNameForAssembly)
-                setParsedLocString(parsedLocString)
+                if (locString) {
+                    const parsedLocString = parseLocString(locString, isValidRefNameForAssembly)
+                    setParsedLocString(parsedLocString)
+                }
             },
             failure: function(res){
                 setView("invalid")
@@ -96,7 +95,8 @@ function VariantTable() {
 
     return (
         <div style={{height: "90vh"}}>
-            <VariantTableWidget rpcManager={rpcManager} assembly={assembly} trackId={trackId} parsedLocString={parsedLocString} sessionId={sessionId} session={session} pluginManager={pluginManager}/>
+            <VariantTableWidget rpcManager={rpcManager} assembly={assembly} trackId={trackId} locString={locString} 
+                                parsedLocString={parsedLocString} sessionId={sessionId} session={session} pluginManager={pluginManager}/>
         </div>
     )
 }

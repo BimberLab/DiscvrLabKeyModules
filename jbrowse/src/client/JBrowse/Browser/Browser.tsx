@@ -6,7 +6,7 @@ import { PluginConstructor } from '@jbrowse/core/Plugin';
 import { ActionURL, Ajax } from '@labkey/api';
 import LogSession from './plugins/LogSession/index';
 import ExtendedVariantPlugin from './plugins/ExtendedVariantPlugin/index';
-import './jbrowse.css';
+import '../jbrowse.css';
 import JBrowseFooter from './components/JBrowseFooter';
 import { ErrorBoundary } from '@labkey/components';
 

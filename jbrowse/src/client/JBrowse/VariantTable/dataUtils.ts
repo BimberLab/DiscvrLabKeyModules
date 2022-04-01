@@ -1,4 +1,6 @@
 import type { Row } from './types'
+import { passesInfoFilters, passesSampleFilters } from '../utils'
+import { deserializeFilters } from '../Browser/plugins/ExtendedVariantPlugin/InfoFilterWidget/filterUtil'
 
 // Logic behind how to filter each field.
 export function filterFeature(feature, filters) {
@@ -94,4 +96,21 @@ function generateGeneList(anns) {
   
   let ret = Array.from(geneSet).join(", ")
   return ret.substring(0, ret.length - 2)
+}
+
+// Filters features according to the data from the relevant widgets
+export function filterFeatures(features, activeSamples, filters) {
+  let ret = []
+
+  let processedActiveSamples = activeSamples === "" ? [] : activeSamples.split(",")
+  let processedFilters = deserializeFilters(JSON.parse(filters))
+
+  features.forEach((feature) => {
+    if(passesSampleFilters(feature, processedActiveSamples) && passesInfoFilters(feature, processedFilters)) {
+      ret.push(feature)
+    }
+  })
+
+
+  return ret
 }

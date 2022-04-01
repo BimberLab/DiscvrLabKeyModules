@@ -127,12 +127,12 @@ const StandaloneSearch = observer(({ sessionId, tableUrl, trackId }: { sessionId
           TextFieldProps={{
               margin: 'normal',
               variant: 'outlined',
-              helperText: 'Enter a gene or location',
+              helperText: tableUrl ? undefined : 'Enter a gene or location',
               style: { margin: 7, minWidth: '175px' },
               InputProps: {
                   style: {
-                      padding: 0,
-                      height: 32
+                      padding: tableUrl ? 8 : 0,
+                      height: tableUrl ? 45 : 32
                   }
               }
           }}

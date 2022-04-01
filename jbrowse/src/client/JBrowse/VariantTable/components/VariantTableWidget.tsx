@@ -1,29 +1,26 @@
 import { observer } from 'mobx-react'
 import React, { useEffect, useState } from 'react'
 import { getConf } from '@jbrowse/core/configuration'
-import { getAdapter } from '@jbrowse/core/data_adapters/dataAdapterCache'
-import { BaseFeatureDataAdapter } from '@jbrowse/core/data_adapters/BaseAdapter'
-import { toArray } from 'rxjs/operators'
-import { getSession, SessionWithWidgets, Widget, isSessionModel } from '@jbrowse/core/util'
-import { Dialog } from "@material-ui/core"
-
+import {  Widget } from '@jbrowse/core/util'
+import { ActionURL } from '@labkey/api';
+import { Dialog, Grid, FormControl, Select, MenuItem, InputLabel } from "@material-ui/core"
 
 import DataGrid from 'react-data-grid'
-import useFocusRef from '../useFocusRef'
 import type { HeaderRendererProps, SortColumn } from 'react-data-grid'
-import { exportToXlsx, exportToCsv } from '../exportUtils'
 
-import '../VariantTable.css'
-import { ExportButton, FilterButton, JBrowseUIButton } from './Buttons'
+import useFocusRef from '../useFocusRef'
+import { exportToXlsx, exportToCsv } from '../exportUtils'
 import type { Filter, Row } from '../types'
 import { defaultFilters, columnsObjRaw } from '../constants'
-import { filterFeature, sortFeatures, rawFeatureToRow } from '../dataUtils'
+import { filterFeature, sortFeatures, rawFeatureToRow, filterFeatures } from '../dataUtils'
 
 import StandaloneSearch from "../../Search/StandaloneSearch"
-import ExtendedVariantAdapter from '../../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter/ExtendedVariantAdapter'
+
+import '../VariantTable.css'
+import '../../jbrowse.css'
 
 const VariantTableWidget = observer(props => {
-  const { assembly, rpcManager, trackId, parsedLocString, sessionId, session, pluginManager } = props
+  const { assembly, rpcManager, trackId, locString, parsedLocString, sessionId, session, pluginManager } = props
   const { view } = session
 
   const track = view.tracks.find(
@@ -59,6 +56,33 @@ const VariantTableWidget = observer(props => {
     }
   }
 
+  function handleSelectChange(event, gridElement) {
+    switch(event.target.value) {
+      case "filterSample":
+        session.showWidget(sampleFilterWidget)
+        addActiveWidgetId(sampleFilterWidget.id)
+        break;
+      case "filterInfo":
+        session.showWidget(infoFilterWidget)
+        addActiveWidgetId(infoFilterWidget.id)
+        break;
+      case "filterTable":
+        setFiltersOn(!filtersOn)
+        break;
+      case "exportCSV": 
+        exportToCsv(gridElement, 'rows.csv')
+        break;
+      case "exportXLSX":
+        exportToXlsx(gridElement, 'rows.xlsx')
+        break;
+      case "browserRedirect":
+        window.location.href = ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: locString, trackId: trackId})
+        break;
+    }
+
+    setSelectValue('')
+  }
+
   // Manager for the activeWidgetList
   function addActiveWidgetId(id: string) {
     setActiveWidgetList([id, ...activeWidgetList])
@@ -88,10 +112,13 @@ const VariantTableWidget = observer(props => {
   const [sampleFilterWidget, setSampleFilterWidget] = useState<Widget | undefined>()
   const [infoFilterWidget, setInfoFilterWidget] = useState<Widget | undefined>()
 
+  // Form control
+  const [selectValue, setSelectValue] = useState('')
+
   // API call to retrieve the requested features. Can handle multiple location strings.
   useEffect(() => {
     async function fetch() {
-      const features = await rpcManager.call(sessionId, 'CoreGetFeatures', {
+      const rawFeatures = await rpcManager.call(sessionId, 'CoreGetFeatures', {
         adapterConfig: getConf(track, 'adapter'),
         sessionId,
         region: {
@@ -101,7 +128,11 @@ const VariantTableWidget = observer(props => {
         },
       })
 
-      setFeatures(features.map((rawFeature, id) => rawFeatureToRow(rawFeature, id)))
+      const filteredFeatures = filterFeatures(rawFeatures, 
+        track.configuration.displays[0].renderer.activeSamples.value, 
+        track.configuration.displays[0].renderer.infoFilters.valueJSON)
+
+      setFeatures(filteredFeatures.map((rawFeature, id) => rawFeatureToRow(rawFeature, id)))
     }
 
     if(pluginManager && parsedLocString) {
@@ -169,8 +200,7 @@ const VariantTableWidget = observer(props => {
         return (<p>Loading...</p>)
   } else {
     const gridElement = (
-      <>
-        <DataGrid
+      <DataGrid
           columns={columns}
           rows={filteredFeatures}
           defaultColumnOptions={{
@@ -182,7 +212,6 @@ const VariantTableWidget = observer(props => {
           className="rdg-light dataGrid"
           headerRowHeight={90}
         />
-      </>
     )
 
     return (
@@ -195,33 +224,42 @@ const VariantTableWidget = observer(props => {
             const { visibleWidget } = session
             return (
             <Dialog onClose={() => handleClose(widget)} open={true}>
-              <ReactComponent model={visibleWidget}/>
+              <h3 style={{margin: "15px"}}>Filter Table</h3>
+              
+              <div style={{margin: "10px"}}>
+                <ReactComponent model={visibleWidget}/>
+              </div>
             </Dialog>
             )
           })
         }
 
-        <div style={{textAlign: 'start', marginBlockEnd: '8px'}}>
-          <StandaloneSearch sessionId={sessionId} tableUrl={true} trackId={trackId}></StandaloneSearch>
+        <div style={{marginBottom: "10px"}}>
+        <Grid container spacing={2} justifyContent="flex-start" alignItems="center">
+          <Grid key={'menu'} item xs={1}>
+            <FormControl fullWidth>
+              <InputLabel id="menu-label">Menu</InputLabel>
+              <Select
+                labelId="menu"
+                id="menuSelect"
+                label="Menu"
+                value={selectValue}
+                onChange={(e) => handleSelectChange(e, gridElement)}
+              >
+                <MenuItem value={"filterSample"}>Filter By Sample</MenuItem>
+                <MenuItem value={"filterInfo"}>Filter By Attributes</MenuItem>
+                <MenuItem value={"filterTable"}>{filtersOn ? "Hide Table Filters" : "Show Table Filters"}</MenuItem>
+                <MenuItem value={"exportCSV"}>Export to CSV</MenuItem>
+                <MenuItem value={"browserRedirect"}>View in Genome Browser</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
 
-          <ExportButton onExport={() => exportToCsv(gridElement, 'rows.csv')}>
-            Export to CSV
-          </ExportButton>
-
-          <ExportButton onExport={() => exportToXlsx(gridElement, 'rows.xlsx')}>
-            Export to XSLX
-          </ExportButton>
-
-          <JBrowseUIButton session={session} widget={sampleFilterWidget} addActiveWidgetId={addActiveWidgetId}>
-            Filter By Sample
-          </JBrowseUIButton>
-
-          <JBrowseUIButton session={session} widget={infoFilterWidget} addActiveWidgetId={addActiveWidgetId}>
-            Filter By Attributes
-          </JBrowseUIButton>
-
-          <FilterButton setFiltersOn={setFiltersOn} filtersOn={filtersOn}></FilterButton>
-       </div>
+          <Grid key='search' item xs={2}>
+            <StandaloneSearch sessionId={sessionId} tableUrl={true} trackId={trackId}></StandaloneSearch>
+          </Grid>
+        </Grid>
+        </div>
         
         {gridElement}
       </>
