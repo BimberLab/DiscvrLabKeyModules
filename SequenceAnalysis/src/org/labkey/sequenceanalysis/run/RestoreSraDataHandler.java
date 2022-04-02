@@ -188,7 +188,8 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                         rd.setArchived(true);
                         rd.setSra_accession(accession);
 
-                        File expectedFastq1 = new File(toMerge.get(0).getFile1().getParentFile(), accession + "_1.fastq.gz");
+                        ExpData data1 = ExperimentService.get().getExpData(toMerge.get(0).getFileId1());
+                        File expectedFastq1 = new File(data1.getFile().getParentFile(), accession + "_1.fastq.gz");
                         ExpData expData1 = ExperimentService.get().createData(ContainerManager.getForId(rs.getContainer()), new DataType("SequenceData"), accession);
                         expData1.setDataFileURI(expectedFastq1.toURI());
                         expData1.save(job.getUser());
@@ -197,7 +198,8 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
 
                         if (toMerge.get(0).getFileId2() != null)
                         {
-                            File expectedFastq2 = new File(toMerge.get(0).getFile1().getParentFile(), accession + "_2.fastq.gz");
+                            ExpData data2 = ExperimentService.get().getExpData(toMerge.get(0).getFileId2());
+                            File expectedFastq2 = new File(data2.getFile().getParentFile(), accession + "_2.fastq.gz");
                             ExpData expData2 = ExperimentService.get().createData(ContainerManager.getForId(rs.getContainer()), new DataType("SequenceData"), accession);
                             expData2.setDataFileURI(expectedFastq2.toURI());
                             expData2.save(job.getUser());
@@ -217,12 +219,14 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                         job.getLogger().debug("Total reads from prior data: " + totalReads);
 
                         job.getLogger().debug("Merging readdata for accession: " + accession);
-                        File sraLog = new File(toMerge.get(0).getFile1().getParentFile(), FileUtil.makeLegalName("sraDownload.txt"));
+                        File sraLog = new File(data1.getFile().getParentFile(), FileUtil.makeLegalName("sraDownload.txt"));
                         try (PrintWriter writer = PrintWriters.getPrintWriter(IOUtil.openFileForWriting(sraLog, sraLog.exists())))
                         {
                             for (ReadData r : toMerge)
                             {
-                                writer.println("Condensing/merging readdata: " + r.getRowid() + ", " + r.getFile1() + ", " + r.getFile1().getPath() + ", " + (r.getFileId2() == null ? "N/A" : r.getFileId2()) + ", " + (r.getFileId2() == null ? "N/A" : r.getFile2().getPath()));
+                                ExpData d1 = ExperimentService.get().getExpData(r.getFileId1());
+                                ExpData d2 = r.getFileId2() == null ? null : ExperimentService.get().getExpData(r.getFileId2());
+                                writer.println("Condensing/merging readdata: " + r.getRowid() + ", " + r.getFileId1() + ", " + d1.getFile().getPath() + ", " + (r.getFileId2() == null ? "N/A" : r.getFileId2()) + ", " + (r.getFileId2() == null ? "N/A" : d2.getFile().getPath()));
 
                                 List<Map<String, Object>> toDelete = Arrays.asList(Map.of("rowid", r.getRowid()));
                                 filesIdsDeleted.add(r.getFileId1());
@@ -235,7 +239,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                             }
 
                             rd = Table.insert(job.getUser(), SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA), rd);
-                            writer.println("Adding merged readdata: " + rd.getRowid() + ", " + rd.getFile1() + ", " + rd.getFile1().getPath() + ", " + (rd.getFileId2() == null ? "N/A" : rd.getFileId2()) + ", " + (rd.getFileId2() == null ? "N/A" : rd.getFile2().getPath()));
+                            writer.println("Adding merged readdata: " + rd.getRowid() + ", " + rd.getFileId1() + ", " + ExperimentService.get().getExpData(rd.getFileId1()).getFile().getPath() + ", " + (rd.getFileId2() == null ? "N/A" : rd.getFileId2()) + ", " + (rd.getFileId2() == null ? "N/A" : ExperimentService.get().getExpData(rd.getFileId2()).getFile().getPath()));
                         }
                         catch (QueryUpdateServiceException | SQLException | InvalidKeyException | BatchValidationException e)
                         {
