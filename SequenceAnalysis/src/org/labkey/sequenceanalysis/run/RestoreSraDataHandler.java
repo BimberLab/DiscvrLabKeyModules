@@ -190,7 +190,11 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
 
                         ExpData data1 = ExperimentService.get().getExpData(toMerge.get(0).getFileId1());
                         File expectedFastq1 = new File(data1.getFile().getParentFile(), accession + "_1.fastq.gz");
-                        ExpData expData1 = ExperimentService.get().createData(ContainerManager.getForId(rs.getContainer()), new DataType("SequenceData"), accession);
+                        ExpData expData1 = ExperimentService.get().getExpDataByURL(expectedFastq1, ContainerManager.getForId(rs.getContainer()));
+                        if (expData1 == null)
+                        {
+                            expData1 = ExperimentService.get().createData(ContainerManager.getForId(rs.getContainer()), new DataType("SequenceData"), expectedFastq1.getName());
+                        }
                         expData1.setDataFileURI(expectedFastq1.toURI());
                         expData1.save(job.getUser());
                         rd.setFileId1(expData1.getRowId());
@@ -200,7 +204,11 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                         {
                             ExpData data2 = ExperimentService.get().getExpData(toMerge.get(0).getFileId2());
                             File expectedFastq2 = new File(data2.getFile().getParentFile(), accession + "_2.fastq.gz");
-                            ExpData expData2 = ExperimentService.get().createData(ContainerManager.getForId(rs.getContainer()), new DataType("SequenceData"), accession);
+                            ExpData expData2 = ExperimentService.get().getExpDataByURL(expectedFastq2, ContainerManager.getForId(rs.getContainer()));
+                            if (expData2 == null)
+                            {
+                                expData2 = ExperimentService.get().createData(ContainerManager.getForId(rs.getContainer()), new DataType("SequenceData"), expectedFastq2.getName());
+                            }
                             expData2.setDataFileURI(expectedFastq2.toURI());
                             expData2.save(job.getUser());
                             rd.setFileId2(expData2.getRowId());
