@@ -268,7 +268,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
 
         private Map<String, Integer> getCachedReadCounts(SequenceAnalysisJobSupport support) throws PipelineJobException
         {
-            return support.getCachedObject(ACCESSION_TO_READS, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, Integer.class, String.class));
+            return support.getCachedObject(ACCESSION_TO_READS, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, String.class, Integer.class));
         }
 
         private Set<Integer> getFilesIdsDeleted(SequenceAnalysisJobSupport support) throws PipelineJobException
