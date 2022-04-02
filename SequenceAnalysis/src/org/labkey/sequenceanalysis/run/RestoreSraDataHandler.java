@@ -391,7 +391,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                     FastqDumpWrapper wrapper = new FastqDumpWrapper(ctx.getLogger());
                     Pair<File, File> files = wrapper.downloadSra(accession, ctx.getOutputDir());
 
-                    long lines1 = SequenceUtil.getLineCount(files.first);
+                    long lines1 = SequenceUtil.getLineCount(files.first) / 4;
                     ctx.getJob().getLogger().debug("Reads in " + files.first.getName() + ": " + lines1);
                     if (lines1 != accessionToReads.get(accession))
                     {
@@ -400,7 +400,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
 
                     if (files.second != null)
                     {
-                        long lines2 = SequenceUtil.getLineCount(files.second);
+                        long lines2 = SequenceUtil.getLineCount(files.second) / 4;
                         ctx.getJob().getLogger().debug("Reads in " + files.second.getName() + ": " + lines2);
                         if (lines2 != accessionToReads.get(accession))
                         {
