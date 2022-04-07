@@ -1,3 +1,5 @@
+library(Seurat)
+
 visionFiles <- data.frame(DatasetId = character(), FileName = character())
 
 for (datasetId in names(seuratObjects)) {
