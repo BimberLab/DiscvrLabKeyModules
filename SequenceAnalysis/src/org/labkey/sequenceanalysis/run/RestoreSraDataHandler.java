@@ -13,6 +13,7 @@ import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
@@ -37,15 +38,14 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.ReadDataImpl;
-import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.pipeline.ReadsetCreationTask;
 import org.labkey.sequenceanalysis.pipeline.SequenceNormalizationTask;
-import org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerJob;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -167,19 +167,19 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
             {
                 for (String accession : readdataToSra.keySet())
                 {
+                    List<ReadData> toMerge = readdataToSra.get(accession);
+                    if (toMerge.stream().map(ReadData::isArchived).collect(Collectors.toSet()).size() > 1)
+                    {
+                        throw new PipelineJobException("SRA group contains a mix of archived and non-archived readdata: " + accession);
+                    }
+
+                    if (!toMerge.get(0).isArchived())
+                    {
+                        continue;
+                    }
+
                     if (readdataToSra.get(accession).size() > 1)
                     {
-                        List<ReadData> toMerge = readdataToSra.get(accession);
-                        if (toMerge.stream().map(ReadData::isArchived).collect(Collectors.toSet()).size() > 1)
-                        {
-                            throw new PipelineJobException("SRA group contains a mix of archived and non-archived readdata: " + accession);
-                        }
-
-                        if (!toMerge.get(0).isArchived())
-                        {
-                            continue;
-                        }
-
                         job.getLogger().debug("Consolidating multiple readdata for: " + accession);
 
                         ReadDataImpl rd = new ReadDataImpl();
@@ -221,9 +221,6 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                         rd.setCreatedBy(job.getUser().getUserId());
                         rd.setModifiedBy(job.getUser().getUserId());
                         rd.setPlatformUnit(accession);
-                        int totalReads = toMerge.stream().map(ReadData::getTotalReads).reduce(0, Integer::sum);
-                        accessionToReads.put(accession, totalReads);
-                        job.getLogger().debug("Total reads from prior data: " + totalReads);
 
                         job.getLogger().debug("Merging readdata for accession: " + accession);
                         File sraLog = new File(data1.getFile().getParentFile(), FileUtil.makeLegalName("sraDownload.txt"));
@@ -248,6 +245,10 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                         }
                         updatedAccessions.add(accession);
                     }
+
+                    int totalReads = toMerge.stream().map(ReadData::getTotalReads).reduce(0, Integer::sum);
+                    job.getLogger().debug("Total reads from prior data: " + totalReads);
+                    accessionToReads.put(accession, totalReads);
                 }
 
                 transaction.commit();
@@ -298,23 +299,28 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
 
                     rows.add(toUpdate);
 
-                    List<Integer> toAdd = new ArrayList<>(rd.getFileId1());
-                    if (rd.getFileId2() != null)
+                    SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), rs.getRowId());
+                    filter.addCondition(FieldKey.fromString("category"), "Readset");
+                    filter.addCondition(FieldKey.fromString("container"), rs.getContainer());
+                    filter.addCondition(FieldKey.fromString("dataId"), rd.getFileId1());
+                    boolean hasMetrics = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), PageFlowUtil.set("RowId"), filter, null).exists();
+                    if (!hasMetrics)
                     {
-                        toAdd.add(rd.getFileId2());
+                        List<Integer> toAdd = new ArrayList<>(rd.getFileId1());
+                        if (rd.getFileId2() != null)
+                        {
+                            toAdd.add(rd.getFileId2());
+                        }
+
+                        for (int dataId : toAdd)
+                        {
+                            //then delete/add:
+                            ReadsetCreationTask.addQualityMetricsForReadset(rs, dataId, job, true);
+                        }
                     }
-
-                    for (int dataId : toAdd)
+                    else
                     {
-                        //update metrics. first delete existing:
-                        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), rs.getRowId());
-                        filter.addCondition(FieldKey.fromString("container"), rs.getContainer());
-                        filter.addCondition(FieldKey.fromString("dataId"), dataId);
-                        int deleted = Table.delete(SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), filter);
-                        job.getLogger().debug("existing metrics deleted: " + deleted);
-
-                        //then add:
-                        ReadsetCreationTask.addQualityMetricsForReadset(rs, dataId, job);
+                        job.getLogger().info("Existing metrics found, will not re-import");
                     }
 
                     Map<String, Object> rsUpdate = new HashMap<>();
