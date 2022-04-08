@@ -74,7 +74,7 @@ public class JBrowseTest extends BaseWebDriverTest
     {
         setUpTest();
 
-        /*testInferredDetails();
+        testInferredDetails();
 
         //These are passing:
         testNoSession();
@@ -92,11 +92,11 @@ public class JBrowseTest extends BaseWebDriverTest
 
         testLoadingConfigFilters();
         testSampleFilters();
-        testSampleFiltersFromUrl();*/
+        testSampleFiltersFromUrl();
 
         testBrowserNavToVariantTable();
 
-        //testOutputFileProcessing();
+        testOutputFileProcessing();
     }
 
     private void openTrackMenuItem(String name)
