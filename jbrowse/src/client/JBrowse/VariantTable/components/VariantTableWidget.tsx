@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { getConf } from '@jbrowse/core/configuration'
 import {  Widget } from '@jbrowse/core/util'
 import { ActionURL } from '@labkey/api';
-import { Dialog, Grid, FormControl, Select, MenuItem, InputLabel } from "@material-ui/core"
+import { Dialog, Grid, MenuItem, Button } from "@material-ui/core"
 
 import DataGrid from 'react-data-grid'
 import type { HeaderRendererProps, SortColumn } from 'react-data-grid'
@@ -13,6 +13,7 @@ import { exportToXlsx, exportToCsv } from '../exportUtils'
 import type { Filter, Row } from '../types'
 import { defaultFilters, columnsObjRaw } from '../constants'
 import { filterFeature, sortFeatures, rawFeatureToRow, filterFeatures } from '../dataUtils'
+import MenuButton from './MenuButton'
 
 import StandaloneSearch from "../../Search/StandaloneSearch"
 
@@ -56,8 +57,8 @@ const VariantTableWidget = observer(props => {
     }
   }
 
-  function handleSelectChange(event, gridElement) {
-    switch(event.target.value) {
+  function handleMenu(item, gridElement) {
+    switch(item) {
       case "filterSample":
         session.showWidget(sampleFilterWidget)
         addActiveWidgetId(sampleFilterWidget.id)
@@ -79,8 +80,6 @@ const VariantTableWidget = observer(props => {
         window.location.href = ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: locString, trackId: trackId})
         break;
     }
-
-    setSelectValue('')
   }
 
   // Manager for the activeWidgetList
@@ -89,8 +88,17 @@ const VariantTableWidget = observer(props => {
   }
 
   // MaterialUI modal handlers
-  function handleClose(widget) {
+  function handleModalClose(widget) {
     session.hideWidget(widget)
+  }
+  
+  // Menu handlers
+  function handleMenuClick(e, set) {
+    set(e.currentTarget)
+  }
+
+  function handleMenuClose(set) {
+    set(null)
   }
 
   // Contains all features from the API call once the useEffect finished
@@ -112,8 +120,10 @@ const VariantTableWidget = observer(props => {
   const [sampleFilterWidget, setSampleFilterWidget] = useState<Widget | undefined>()
   const [infoFilterWidget, setInfoFilterWidget] = useState<Widget | undefined>()
 
-  // Form control
-  const [selectValue, setSelectValue] = useState('')
+  // Menu management
+  const [anchorFilterMenu, setAnchorFilterMenu] = useState(null)
+  const [anchorExportMenu, setAnchorExportMenu] = useState(null)
+
 
   // API call to retrieve the requested features. Can handle multiple location strings.
   useEffect(() => {
@@ -169,6 +179,7 @@ const VariantTableWidget = observer(props => {
           {({filters, ...rest}) => (
             <input
               {...rest}
+              id={"searchbox-" + obj.key}
               style={{inlineSize: '100%', fontSize: '14px'}}
               value={filters[obj.key]}
               onChange={(e) => {
@@ -223,7 +234,7 @@ const VariantTableWidget = observer(props => {
             const { ReactComponent } = widgetType
             const { visibleWidget } = session
             return (
-            <Dialog onClose={() => handleClose(widget)} open={true} key={widget.id}>
+            <Dialog onClose={() => handleModalClose(widget)} open={true} key={widget.id}>
               <h3 style={{margin: "15px"}}>Filter Table</h3>
               
               <div style={{margin: "10px"}}>
@@ -235,30 +246,34 @@ const VariantTableWidget = observer(props => {
         }
 
         <div style={{marginBottom: "10px"}}>
-        <Grid container spacing={2} justifyContent="flex-start" alignItems="center">
-          <Grid key={'menu'} item xs={1}>
-            <FormControl fullWidth>
-              <InputLabel id="menu-label">Menu</InputLabel>
-              <Select
-                labelId="menu"
-                id="menuSelect"
-                label="Menu"
-                value={selectValue}
-                onChange={(e) => handleSelectChange(e, gridElement)}
-              >
-                <MenuItem value={"filterSample"}>Filter By Sample</MenuItem>
-                <MenuItem value={"filterInfo"}>Filter By Attributes</MenuItem>
-                <MenuItem value={"filterTable"}>{filtersOn ? "Hide Table Filters" : "Show Table Filters"}</MenuItem>
-                <MenuItem value={"exportCSV"}>Export to CSV</MenuItem>
-                <MenuItem value={"browserRedirect"}>View in Genome Browser</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
+          <Grid container spacing={1} justifyContent="flex-start" alignItems="center">
+            <Grid key='search' item xs="auto">
+              <StandaloneSearch sessionId={sessionId} tableUrl={true} trackId={trackId}></StandaloneSearch>
+            </Grid>
 
-          <Grid key='search' item xs={2}>
-            <StandaloneSearch sessionId={sessionId} tableUrl={true} trackId={trackId}></StandaloneSearch>
+            <Grid key='filterMenu' item xs="auto">
+              <MenuButton id={'filterMenu'} text="Filter" anchor={anchorFilterMenu}
+                handleClick={(e) => handleMenuClick(e, setAnchorFilterMenu)}
+                handleClose={(e) => handleMenuClose(setAnchorFilterMenu)}>
+                <MenuItem className="menuItem" onClick={() => { handleMenu("filterSample", gridElement); handleMenuClose(setAnchorFilterMenu) }}>Filter By Sample</MenuItem>
+                <MenuItem className="menuItem" onClick={() => { handleMenu("filterInfo", gridElement); handleMenuClose(setAnchorFilterMenu) }}>Filter By Attributes</MenuItem>
+                <MenuItem className="menuItem" onClick={() => { handleMenu("filterTable", gridElement); handleMenuClose(setAnchorFilterMenu) }}>{filtersOn ? "Hide Table Filters" : "Show Table Filters"}</MenuItem>
+              </MenuButton>
+            </Grid>
+
+            <Grid key='exportMenu' item xs="auto">
+              <MenuButton id={'exportMenu'} text="Export" anchor={anchorExportMenu}
+                handleClick={(e) => handleMenuClick(e, setAnchorExportMenu)}
+                handleClose={() => handleMenuClose(setAnchorExportMenu)}>
+                <MenuItem className="menuItem" onClick={() => { handleMenu("exportCSV", gridElement); handleMenuClose(setAnchorExportMenu) }}>Export to CSV</MenuItem>
+                <MenuItem className="menuItem" onClick={() => { handleMenu("exportXLSX", gridElement); handleMenuClose(setAnchorExportMenu) }}>Export to XLSX</MenuItem>
+              </MenuButton>
+            </Grid>
+
+            <Grid key='genomeViewButton' item xs="auto">
+              <Button style={{backgroundColor: "#116596", marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("browserRedirect", gridElement)}>View in Genome Browser </Button>
+            </Grid>
           </Grid>
-        </Grid>
         </div>
         
         {gridElement}

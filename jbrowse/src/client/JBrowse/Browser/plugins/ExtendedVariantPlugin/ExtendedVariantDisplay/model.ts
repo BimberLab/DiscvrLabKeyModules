@@ -1,12 +1,14 @@
 import { ConfigurationReference, getConf } from '@jbrowse/core/configuration';
 import { AnyConfigurationModel, } from '@jbrowse/core/configuration/configurationSchema';
-import { getContainingTrack, getSession } from '@jbrowse/core/util';
+import { getContainingTrack, getContainingView, getSession } from '@jbrowse/core/util';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import VisibilityIcon from '@material-ui/icons/Visibility';
 import configSchemaF from './configSchema';
 import { getEnv, IAnyStateTreeNode, types } from 'mobx-state-tree';
 import PaletteIcon from '@material-ui/icons/Palette';
 import { default as SetMaxHeightDlg } from '@jbrowse/plugin-linear-genome-view/src/LinearBasicDisplay/components/SetMaxHeight';
+import {ActionURL} from "@labkey/api";
+import { LinearGenomeViewModel} from '@jbrowse/plugin-linear-genome-view'
 
 export default jbrowse => {
    const configSchema = jbrowse.jbrequire(configSchemaF)
@@ -198,6 +200,18 @@ export default jbrowse => {
                            SetMaxHeightDlg,
                            { model: self, handleClose: doneCallback },
                         ])
+                     },
+                  },
+                  {
+                     label: 'View As Table',
+                     onClick: () => {
+                        const track = getContainingTrack(self) as IAnyStateTreeNode & { configuration: AnyConfigurationModel }
+                        const view = getContainingView(self) as LinearGenomeViewModel
+                        
+                        const region = view.getSelectedRegions(undefined, undefined)[0]
+                        const location = region.refName + ':' + region.start + '..' + region.end
+                        const sessionId = view.id;
+                        window.location.href = ActionURL.buildURL("jbrowse", "variantTable.view", null, {session: sessionId, trackId: track.configuration.trackId, location: location})
                      },
                   }
               ]
