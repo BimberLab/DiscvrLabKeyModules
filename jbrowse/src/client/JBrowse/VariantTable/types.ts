@@ -3,6 +3,7 @@ export interface Filter extends Omit<Row, 'chrom'|'pos'|'af'|'cadd_ph'> {
     ref: string;
     alt: string;
     impact: string;
+    variant_type: string;
     overlapping_genes: string;
   }
    
@@ -13,6 +14,7 @@ export interface Row {
     alt: string;
     af: string;
     impact: string;
+    variant_type: string;
     overlapping_genes: string;
     cadd_ph: string;
 }
