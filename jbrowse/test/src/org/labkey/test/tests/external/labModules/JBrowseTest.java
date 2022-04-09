@@ -359,7 +359,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private Locator.XPathLocator getTrackLocator(String trackId, boolean waitFor)
     {
-        trackId = "trackRenderingContainer-linearGenomeView-" + trackId;
+        trackId = "trackRenderingContainer-mgap-" + trackId;
         Locator.XPathLocator l = Locator.tagWithAttributeContaining("div", "data-testid", trackId);
         if (waitFor)
         {
