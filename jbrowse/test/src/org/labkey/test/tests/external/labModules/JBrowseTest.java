@@ -707,7 +707,7 @@ public class JBrowseTest extends BaseWebDriverTest
         Locator topRow = Locator.tagWithAttribute("div", "aria-rowindex", "2");
         waitForElement(topRow);
         WebElement topRowElement = topRow.findElement(getDriver());
-        testColumns(topRowElement, "1", "116981270", "A", "T", "0.029", "HIGH",
+        testColumns(topRowElement, "1", "116981270", "A", "T", "0.029", "intron_variant", "HIGH",
                 "NTNG1", "7.2");
 
         // Test sorting
@@ -721,7 +721,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(sortedTopRow);
         WebElement sortedTopRowElement = topRow.findElement(getDriver());
         testColumns(sortedTopRowElement, "1", "117000545", "TTGCTCGTTTTATTGG", "T",
-                "0.0009927", "", "NTNG1", "");
+                "0.0009927", "intron_variant", "", "NTNG1", "");
 
         // Test filtering
         waitAndClick(Locator.tagWithText("button", "Filter"));
@@ -732,7 +732,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(filteredTopRow);
         WebElement filteredTopRowElement = topRow.findElement(getDriver());
         testColumns(filteredTopRowElement,"1", "116987527", "GGCAT", "G",
-                "0.029", "", "NTNG1", "");
+                "0.029", "intron_variant", "", "NTNG1", "");
 
         // Test the table responding to the filtering backend by using the infoFilterWidget
         waitAndClick(Locator.tagWithText("button", "Filter"));
@@ -747,11 +747,11 @@ public class JBrowseTest extends BaseWebDriverTest
         value.sendKeys("0.0009728");
         waitAndClick(Locator.tagWithText("button", "Apply"));
         testColumns(filteredTopRowElement,"1", "116989670", "ATGGCTCCTG", "A",
-                "0.0009728", "", "NTNG1", "3.9");
+                "0.0009728", "intron_variant", "", "NTNG1", "3.9");
     }
 
     private void testColumns(WebElement locator, String chromosome, String position, String reference,
-                             String alt, String af, String impact, String overlapping, String cadd_ph) throws Exception {
+                             String alt, String af, String type, String impact, String overlapping, String cadd_ph) throws Exception {
         for(WebElement elem : locator.findElements(By.xpath("./child::*"))) {
             String value = elem.getText();
 
@@ -773,12 +773,15 @@ public class JBrowseTest extends BaseWebDriverTest
                     Assert.assertEquals(value, af);
                     break;
                 case "6":
-                    Assert.assertEquals(value, impact);
+                    Assert.assertEquals(value, type);
                     break;
                 case "7":
-                    Assert.assertEquals(value, overlapping);
+                    Assert.assertEquals(value, impact);
                     break;
                 case "8":
+                    Assert.assertEquals(value, overlapping);
+                    break;
+                case "9":
                     Assert.assertEquals(value, cadd_ph);
                     break;
             }
