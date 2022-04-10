@@ -1441,8 +1441,13 @@ public class CellHashingServiceImpl extends CellHashingService
 
     public File getCellBarcodesFromSeurat(File seuratObj)
     {
+        return getCellBarcodesFromSeurat(seuratObj, true);
+    }
+
+    public File getCellBarcodesFromSeurat(File seuratObj, boolean throwIfNotFound)
+    {
         File barcodes = new File(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds", "cellBarcodes.csv"));
-        if (!barcodes.exists())
+        if (throwIfNotFound && !barcodes.exists())
         {
             throw new IllegalArgumentException("Unable to find expected cell barcodes file.  This might indicate the seurat object was created with an older version of the pipeline.  Expected: " + barcodes.getPath());
         }
@@ -1452,8 +1457,13 @@ public class CellHashingServiceImpl extends CellHashingService
 
     public File getMetaTableFromSeurat(File seuratObj)
     {
+        return getCellBarcodesFromSeurat(seuratObj, true);
+    }
+
+    public File getMetaTableFromSeurat(File seuratObj, boolean throwIfNotFound)
+    {
         File barcodes = new File(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds", "seurat.meta.txt"));
-        if (!barcodes.exists())
+        if (throwIfNotFound && !barcodes.exists())
         {
             throw new IllegalArgumentException("Unable to find expected metadata file.  This might indicate the seurat object was created with an older version of the pipeline.  Expected: " + barcodes.getPath());
         }

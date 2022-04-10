@@ -516,8 +516,8 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     ctx.getLogger().debug("Removing intermediate file: " + seurat.getFile().getPath());
                     ctx.getFileManager().removeIntermediateFile(seurat.getFile());
                     _resumer.getFileManager().removeIntermediateFile(seurat.getFile());
-                    _resumer.getFileManager().removeIntermediateFile(CellHashingServiceImpl.get().getCellBarcodesFromSeurat(seurat.getFile()));
-                    _resumer.getFileManager().removeIntermediateFile(CellHashingServiceImpl.get().getMetaTableFromSeurat(seurat.getFile()));
+                    _resumer.getFileManager().removeIntermediateFile(CellHashingServiceImpl.get().getCellBarcodesFromSeurat(seurat.getFile(), false));
+                    _resumer.getFileManager().removeIntermediateFile(CellHashingServiceImpl.get().getMetaTableFromSeurat(seurat.getFile(), false));
                 }
             }
 
