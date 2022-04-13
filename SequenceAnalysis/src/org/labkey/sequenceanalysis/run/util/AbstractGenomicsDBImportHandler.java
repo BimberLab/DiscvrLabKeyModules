@@ -105,7 +105,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             ToolParameterDescriptor.create("consolidate", "Consolidate", "If importing data in batches, a new fragment is created for each batch. In case thousands of fragments are created, GenomicsDB feature readers will try to open ~20x as many files. Also, internally GenomicsDB would consume more memory to maintain bookkeeping data from all fragments. Use this flag to merge all fragments into one. Merging can potentially improve read performance, however overall benefit might not be noticeable as the top Java layers have significantly higher overheads. This flag has no effect if only one batch is used. Defaults to false.", "checkbox", new JSONObject(){{
                 put("checked", true);
             }}, true),
-            ToolParameterDescriptor.create("genomicsdbBatchSize", "Consolidate Batch Size", "This is passed to --batch-size of consolidate_genomicsdb_array, and can reduce memory usage.", "ldk-numberfield", new JSONObject(){{
+            ToolParameterDescriptor.create("genomicsdbBatchSize", "Consolidate Batch Size", "This is passed to --batch-size of consolidate_genomicsdb_array, and can reduce memory usage. If a value of -1 is used, this will auto-calculate batch size using numberOfFragments/4", "ldk-numberfield", new JSONObject(){{
                 put("minValue", 0);
             }}, null),
             ToolParameterDescriptor.create("scatterGather", "Scatter/Gather Options", "If selected, this job will be divided to run job per chromosome.  The final step will take the VCF from each intermediate step and combined to make a final VCF file.", "sequenceanalysis-variantscattergatherpanel", new JSONObject(){{
@@ -792,6 +792,19 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             toRun.add("-a");
             toRun.add(contigFolder.getName());
 
+            if (batchSize == -1)
+            {
+                int totalFragments = getFragmentsPerContig(contigFolder).size();
+                int inferredBatchSize = Math.max(1, totalFragments / 4);
+
+                ctx.getLogger().debug("Inferring batch size from fragments (" + totalFragments + "). Using: " + inferredBatchSize);
+                if (inferredBatchSize > 1)
+                {
+                    baseArgs.add("-b");
+                    baseArgs.add(String.valueOf(inferredBatchSize));
+                }
+            }
+
             new SimpleScriptWrapper(ctx.getLogger()).execute(toRun);
 
             reportFragmentsPerContig(ctx, contigFolder, i.getContig());
@@ -902,7 +915,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         }
         else
         {
-            ctx.getLogger().info(contigName + " total fragments: " + children.size());
+            ctx.getLogger().info(contigName + ", total fragments: " + children.size()+ ", in: " + destContigFolder.getPath());
         }
     }
 
