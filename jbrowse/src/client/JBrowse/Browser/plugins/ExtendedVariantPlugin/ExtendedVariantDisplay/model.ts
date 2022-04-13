@@ -9,6 +9,7 @@ import PaletteIcon from '@material-ui/icons/Palette';
 import { default as SetMaxHeightDlg } from '@jbrowse/plugin-linear-genome-view/src/LinearBasicDisplay/components/SetMaxHeight';
 import {ActionURL} from "@labkey/api";
 import { LinearGenomeViewModel} from '@jbrowse/plugin-linear-genome-view'
+import { navigateToTable } from '../../../../utils';
 
 export default jbrowse => {
    const configSchema = jbrowse.jbrequire(configSchemaF)
@@ -211,7 +212,7 @@ export default jbrowse => {
                         const region = view.getSelectedRegions(undefined, undefined)[0]
                         const location = region.refName + ':' + region.start + '..' + region.end
                         const sessionId = view.id;
-                        window.location.href = ActionURL.buildURL("jbrowse", "variantTable.view", null, {session: sessionId, trackId: track.configuration.trackId, location: location})
+                        navigateToTable(sessionId, location, track.configuration.trackId, track)
                      },
                   }
               ]

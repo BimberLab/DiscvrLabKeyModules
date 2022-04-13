@@ -5,7 +5,7 @@ export default function MenuButton(props) {
   return (
     <>
     <Button
-          style={{backgroundColor: "#116596", marginTop:"8px"}}
+          style={{ marginTop:"8px"}}
           aria-owns={props.anchor ? props.id : undefined}
           aria-haspopup="true"
           onClick={props.handleClick}

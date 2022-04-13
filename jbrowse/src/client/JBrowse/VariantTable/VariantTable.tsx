@@ -1,24 +1,28 @@
-import React, { useEffect, useState } from 'react';
-import { observer } from 'mobx-react';
+import React, { useEffect, useState } from 'react'
+import { observer } from 'mobx-react'
 import { getEnv } from 'mobx-state-tree'
-import { createViewState } from '@jbrowse/react-linear-genome-view';
-import { ActionURL, Ajax } from '@labkey/api';
+import { createTheme } from '@material-ui/core/styles'
 import { parseLocString } from '@jbrowse/core/util'
-import LogSession from '../Browser/plugins/LogSession/index';
-import ExtendedVariantPlugin from '../Browser/plugins/ExtendedVariantPlugin/index';
-import VariantTableWidget from './components/VariantTableWidget';
+import { readConfObject } from '@jbrowse/core/configuration'
+import { createJBrowseTheme } from '@jbrowse/core/ui'
+import { ThemeProvider } from '@material-ui/core'
+import LogSession from '../Browser/plugins/LogSession/index'
+import ExtendedVariantPlugin from '../Browser/plugins/ExtendedVariantPlugin/index'
+import VariantTableWidget from './components/VariantTableWidget'
+import { fetchSession } from '../utils'
 
 const nativePlugins = [ExtendedVariantPlugin, LogSession]
 
 function VariantTable() {
+      
     const queryParam = new URLSearchParams(window.location.search);
     const sessionId = queryParam.get('session') || queryParam.get('database')
+    const locString = queryParam.get('location') || queryParam.get('loc')
+    const refTheme = createTheme()
 
     if (!sessionId){
         return(<p>No session Id provided. Please have you admin use the customize icon to set the session ID for this webpart.</p>)
     }
-
-    const locString = queryParam.get('location') || queryParam.get('loc')
 
     const trackId = queryParam.get('trackId')
     if (!trackId) {
@@ -26,6 +30,8 @@ function VariantTable() {
     }
 
     const [session, setSession] = useState(null)
+    const [state, setState] = useState(null)
+    const [theme, setTheme] = useState(null)
     const [view, setView] = useState(null)
     const [parsedLocString, setParsedLocString] = useState(null)
     const [assemblyNames, setAssemblyNames] = useState(null)
@@ -33,59 +39,42 @@ function VariantTable() {
     const [rpcManager, setRpcManager] = useState(null)
     const [assembly, setAssembly] = useState(null)
 
-    function generateViewState(genome){
-        return createViewState({
-            assembly: genome.assembly ?? genome.assemblies,
-            tracks: genome.tracks,
-            configuration: genome.configuration,
-            plugins: nativePlugins,
-            location: genome.location,
-            defaultSession: genome.defaultSession,
-            onChange: genome.onChange
-        })
-    }
 
     // Get the LinearGenomeViewModel from the API, providing the session as a parameter
     useEffect(() => {
-        Ajax.request({
-            url: ActionURL.buildURL('jbrowse', 'getSession.api'),
-            method: 'GET',
-            success: async function(res){
-                let jsonRes = JSON.parse(res.response)
-                const viewState = generateViewState(jsonRes)
-                const { session } = viewState
-                const { pluginManager } = getEnv(viewState)
-                const { view } = session
-                const { assemblyNames, assemblyManager, rpcManager } = session
-                setAssembly(await assemblyManager.waitForAssembly(assemblyNames[0]))
-                setRpcManager(rpcManager)
-                setSession(session)
-                setAssemblyNames(assemblyNames)
-                setView(view)
-                setPluginManager(pluginManager)
+        async function successCallback(state) {
+            const { session } = state
+            const { pluginManager } = getEnv(state)
+            const { view } = session
+            const { assemblyNames, assemblyManager, rpcManager } = session
+            setAssembly(await assemblyManager.waitForAssembly(assemblyNames[0]))
+            setRpcManager(rpcManager)
+            setSession(session)
+            setAssemblyNames(assemblyNames)
+            setView(view)
+            setPluginManager(pluginManager)
 
-                const isValidRefNameForAssembly = function(refName: string, assemblyName?: string) {
-                    return assemblyManager.isValidRefName(refName, assemblyNames[0])
-                }
+            const isValidRefNameForAssembly = function(refName: string, assemblyName?: string) {
+                return assemblyManager.isValidRefName(refName, assemblyNames[0])
+            }
 
-                if (locString) {
-                    const parsedLocString = parseLocString(locString, isValidRefNameForAssembly)
-                    setParsedLocString(parsedLocString)
-                }
-            },
-            failure: function(res){
-                setView("invalid")
-                console.log(res);
-            },
-            params: {session: sessionId}
-        });
+            if (locString) {
+                const parsedLocString = parseLocString(locString, isValidRefNameForAssembly)
+                setParsedLocString(parsedLocString)
+            }
+
+            setState(state)
+            setTheme(createJBrowseTheme(readConfObject(state.config.configuration, 'theme')))
+        }
+
+        fetchSession(queryParam, sessionId, nativePlugins, refTheme, setState, undefined, undefined, successCallback)
     }, []);
 
     // Error handle and then render the component
-    if (view === null){
+    if (view === null || theme == null) {
         return (<p>Loading...</p>)
     }
-    else if (view === "invalid") {
+    else if (view === "invalid" || state == "invalid") {
         return (<p>Error fetching config. See console for more details</p>)
     }
 
@@ -93,11 +82,14 @@ function VariantTable() {
         return (<p>No configured assemblies</p>)
     }
 
+    console.log(theme)
     return (
-        <div style={{height: "90vh"}}>
-            <VariantTableWidget rpcManager={rpcManager} assembly={assembly} trackId={trackId} locString={locString} 
-                                parsedLocString={parsedLocString} sessionId={sessionId} session={session} pluginManager={pluginManager}/>
+        <ThemeProvider theme={theme}>
+        <div style={{height: "90vh", display:"block"}}>
+                <VariantTableWidget rpcManager={rpcManager} assembly={assembly} trackId={trackId} locString={locString} 
+                                    parsedLocString={parsedLocString} sessionId={sessionId} session={session} pluginManager={pluginManager}/>
         </div>
+        </ThemeProvider>
     )
 }
 

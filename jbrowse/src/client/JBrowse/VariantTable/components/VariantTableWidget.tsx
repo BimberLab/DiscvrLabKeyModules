@@ -2,7 +2,6 @@ import { observer } from 'mobx-react'
 import React, { useEffect, useState } from 'react'
 import { getConf } from '@jbrowse/core/configuration'
 import {  Widget } from '@jbrowse/core/util'
-import { ActionURL } from '@labkey/api';
 import { Dialog, Grid, MenuItem, Button } from "@material-ui/core"
 
 import DataGrid from 'react-data-grid'
@@ -19,6 +18,7 @@ import StandaloneSearch from "../../Search/StandaloneSearch"
 
 import '../VariantTable.css'
 import '../../jbrowse.css'
+import { navigateToBrowser } from '../../utils'
 
 const VariantTableWidget = observer(props => {
   const { assembly, rpcManager, trackId, locString, parsedLocString, sessionId, session, pluginManager } = props
@@ -77,7 +77,7 @@ const VariantTableWidget = observer(props => {
         exportToXlsx(gridElement, 'rows.xlsx')
         break;
       case "browserRedirect":
-        window.location.href = ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: locString, trackId: trackId})
+        navigateToBrowser(sessionId, locString, trackId, track)
         break;
     }
   }
@@ -252,7 +252,7 @@ const VariantTableWidget = observer(props => {
             </Grid>
 
             <Grid key='filterMenu' item xs="auto">
-              <MenuButton id={'filterMenu'} text="Filter" anchor={anchorFilterMenu}
+              <MenuButton id={'filterMenu'} color="primary" variant="contained" text="Filter" anchor={anchorFilterMenu}
                 handleClick={(e) => handleMenuClick(e, setAnchorFilterMenu)}
                 handleClose={(e) => handleMenuClose(setAnchorFilterMenu)}>
                 <MenuItem className="menuItem" onClick={() => { handleMenu("filterSample", gridElement); handleMenuClose(setAnchorFilterMenu) }}>Filter By Sample</MenuItem>
@@ -262,7 +262,7 @@ const VariantTableWidget = observer(props => {
             </Grid>
 
             <Grid key='exportMenu' item xs="auto">
-              <MenuButton id={'exportMenu'} text="Export" anchor={anchorExportMenu}
+              <MenuButton id={'exportMenu'} color="primary" variant="contained" text="Export" anchor={anchorExportMenu}
                 handleClick={(e) => handleMenuClick(e, setAnchorExportMenu)}
                 handleClose={() => handleMenuClose(setAnchorExportMenu)}>
                 <MenuItem className="menuItem" onClick={() => { handleMenu("exportCSV", gridElement); handleMenuClose(setAnchorExportMenu) }}>Export to CSV</MenuItem>
@@ -271,7 +271,7 @@ const VariantTableWidget = observer(props => {
             </Grid>
 
             <Grid key='genomeViewButton' item xs="auto">
-              <Button style={{backgroundColor: "#116596", marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("browserRedirect", gridElement)}>View in Genome Browser </Button>
+              <Button style={{ marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("browserRedirect", gridElement)}>View in Genome Browser </Button>
             </Grid>
           </Grid>
         </div>

@@ -74,7 +74,7 @@ public class JBrowseTest extends BaseWebDriverTest
     {
         setUpTest();
 
-        testInferredDetails();
+        /*testInferredDetails();
 
         //These are passing:
         testNoSession();
@@ -92,7 +92,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
         testLoadingConfigFilters();
         testSampleFilters();
-        testSampleFiltersFromUrl();
+        testSampleFiltersFromUrl();*/
 
         testBrowserNavToVariantTable();
 
@@ -748,6 +748,13 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(Locator.tagWithText("button", "Apply"));
         testColumns(filteredTopRowElement,"1", "116989670", "ATGGCTCCTG", "A",
                 "0.0009728", "", "NTNG1", "3.9");
+
+        // Test navigating back to table with filters intact
+        waitAndClickAndWait(Locator.tagContainingText("button", "View In Genome Browser"));
+        openTrackMenuItem("Filter By Attributes");
+        waitForElement(Locator.tagWithText("h6", "Filter Variants"));
+        WebElement filterVal = Locator.tagWithId("input", "standard-number").findElement(getDriver());
+        Assert.assertEquals("Incorrect filter value", "0.0009728", filterVal.getText());
     }
 
     private void testColumns(WebElement locator, String chromosome, String position, String reference,
