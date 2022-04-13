@@ -159,7 +159,7 @@ function applyUrlParams(json, queryParam) {
     }
 
     // TODO: track doesn't contain an infoFilters list, for some reason
-    /*const infoFilters = queryParam.get('infoFilters')
+    const infoFilters = queryParam.get('infoFilters')
     if (infoFilters) {
         const filterTokens = infoFilters.split(':')
         if (filterTokens.length != 2) {
@@ -170,8 +170,7 @@ function applyUrlParams(json, queryParam) {
             let found = false
             for (const track of json.tracks) {
                 if (track.trackId?.toLowerCase() === trackId?.toLowerCase() || track.name?.toLowerCase() === trackId?.toLowerCase()) {
-                    console.log(track)
-                    track.displays[0].renderer.infoFilters.set([...infoFilterList])
+                    track.displays[0].renderer.infoFilters = [...infoFilterList]
                     found = true
                     break
                 }
@@ -181,7 +180,7 @@ function applyUrlParams(json, queryParam) {
                 console.error('Unable to find matching track for sample filter: ' + sampleFilters)
             }
         }
-    }*/
+    }
 }
 
 function generateViewState(genome, plugins, nativePlugins){

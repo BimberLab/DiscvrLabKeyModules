@@ -74,7 +74,7 @@ public class JBrowseTest extends BaseWebDriverTest
     {
         setUpTest();
 
-        /*testInferredDetails();
+        testInferredDetails();
 
         //These are passing:
         testNoSession();
@@ -92,7 +92,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
         testLoadingConfigFilters();
         testSampleFilters();
-        testSampleFiltersFromUrl();*/
+        testSampleFiltersFromUrl();
 
         testBrowserNavToVariantTable();
 
@@ -750,11 +750,21 @@ public class JBrowseTest extends BaseWebDriverTest
                 "0.0009728", "intron_variant", "", "NTNG1", "3.9");
 
         // Test navigating back to table with InfoFilters intact
-        waitAndClickAndWait(Locator.tagContainingText("button", "View In Genome Browser"));
+        waitAndClickAndWait(Locator.tagWithText("button", "View in Genome Browser"));
+        waitForJBrowseToLoad();
         openTrackMenuItem("Filter By Attributes");
         waitForElement(Locator.tagWithText("h6", "Filter Variants"));
-        WebElement filterVal = Locator.tagWithId("input", "standard-number").findElement(getDriver());
-        Assert.assertEquals("Incorrect filter value", "0.0009728", filterVal.getText());
+        WebElement filterValBrowser = Locator.tagWithId("input", "standard-number").findElement(getDriver());
+        Assert.assertEquals("Incorrect filter value", "0.0009728", filterValBrowser.getAttribute("value"));
+        waitAndClick(Locator.tagWithText("button", "Apply"));
+
+        // Navigate back to table with InfoFilters intact
+        waitAndClick(Locator.tagWithAttribute("button", "data-testid", "track_menu_icon"));
+        waitAndClickAndWait(Locator.tagContainingText("span", "View As Table"));
+        waitAndClick(Locator.tagWithText("button", "Filter"));
+        waitAndClick(Locator.tagWithText("li", "Filter By Attributes"));
+        WebElement filterValTable = Locator.tagWithId("input", "standard-number").findElement(getDriver());
+        Assert.assertEquals("Incorrect filter value", "0.0009728", filterValTable.getAttribute("value"));
     }
 
     private void testColumns(WebElement locator, String chromosome, String position, String reference,
