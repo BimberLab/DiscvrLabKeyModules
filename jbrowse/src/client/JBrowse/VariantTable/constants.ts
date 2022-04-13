@@ -5,9 +5,10 @@ export const columnsObjRaw = [
   { key: 'ref', name: 'Reference', type: "string" },
   { key: 'alt', name: 'Alternative Allele', type: "string" },
   { key: 'af', name: 'Allele Frequency', type: "number" },
+  { key: 'variant_type', name: 'Type', type: "string" },
   { key: 'impact', name: 'Impact', type: "string" },
   { key: 'overlapping_genes', name: 'Overlapping Genes', type: "string" },
-  { key: 'cadd_ph', name: 'PHRED Score', type: "number" },
+  { key: 'cadd_ph', name: 'CADD Score', type: "number" },
 ]
 
 // Default state of each filter.
@@ -16,4 +17,5 @@ export const defaultFilters = {
   alt: '',
   impact: '',
   overlapping_genes: '',
+  variant_type: '',
 }

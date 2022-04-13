@@ -8,6 +8,7 @@ export function filterFeature(feature, filters) {
         (filters.ref ? feature.ref.includes(filters.ref) : true) &&
         (filters.alt ? feature.alt.includes(filters.alt) : true) &&
         (filters.impact ? feature.impact.includes(filters.impact) : true) &&
+        (filters.variant_type ? feature.variant_type.includes(filters.variant_type) : true) &&
         (filters.overlapping_genes ? feature.overlapping_genes.includes(filters.overlapping_genes) : true)
     )
 }
@@ -35,6 +36,7 @@ function getComparator(sortColumn: string): Comparator {
     case 'ref':
     case 'alt':
     case 'impact':
+    case 'variant_type':
     case 'overlapping_genes':
       return (a, b) => {
         return a[sortColumn].localeCompare(b[sortColumn]);
@@ -78,7 +80,8 @@ export function rawFeatureToRow(rawFeature: any, id: number): Row {
       alt: (rawFeature.data.ALT[0] ?? "").toString(),
       af: afString,
       impact: (rawFeature.data.INFO.IMPACT ?? "").toString(),
-      overlapping_genes: generateGeneList(rawFeature.data.INFO.ANN),
+      overlapping_genes: generateGeneList(rawFeature.data.INFO.ANN, 3, null),
+      variant_type: generateGeneList(rawFeature.data.INFO.ANN, 1, 'custom'),
       cadd_ph: caddPHString
   } as Row
 
@@ -87,15 +90,20 @@ export function rawFeatureToRow(rawFeature: any, id: number): Row {
 
 
 // Takes a list of ANNS and retrieves all unique genes from it.
-function generateGeneList(anns) {
+function generateGeneList(anns, fieldIdx, ignoredTerms) {
   let geneSet = new Set()
   for(let ann of anns) {
-    let geneName = ann.split("|")[3]
-    geneSet.add(geneName)
+    let geneName = ann.split("|")[fieldIdx]
+    if (ignoredTerms && ignoredTerms.includes(geneName)) {
+      continue
+    }
+
+    if (geneName) {
+      geneSet.add(geneName)
+    }
   }
-  
-  let ret = Array.from(geneSet).join(", ")
-  return ret.substring(0, ret.length - 2)
+
+  return Array.from(geneSet).join(", ")
 }
 
 // Filters features according to the data from the relevant widgets
