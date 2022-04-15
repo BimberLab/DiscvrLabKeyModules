@@ -15,7 +15,7 @@ import { navigateToTable, navigateToBrowser } from '../utils';
 
 const nativePlugins = [ExtendedVariantPlugin, LogSession]
 
-const StandaloneSearch = observer(({ sessionId, tableUrl, trackId }: { sessionId: any, tableUrl: boolean, trackId?: string}) => {
+const StandaloneSearch = observer(({ sessionId, tableUrl, trackId, selectedRegion }: { sessionId: any, tableUrl: boolean, trackId?: string, selectedRegion?: string}) => {
     if (!sessionId){
         return(<p>No session Id provided. Please have you admin use the customize icon to set the session ID for this webpart.</p>)
     }
@@ -32,7 +32,7 @@ const StandaloneSearch = observer(({ sessionId, tableUrl, trackId }: { sessionId
 
     // Get the LinearGenomeViewModel from the API, providing the session as a parameter
     useEffect(() => {
-        fetchSession(queryParam, sessionId, nativePlugins, refTheme, setState)
+        fetchSession(queryParam, sessionId, nativePlugins, refTheme, setState, false)
     }, []);
 
     // Error handle and then render the component
@@ -56,7 +56,7 @@ const StandaloneSearch = observer(({ sessionId, tableUrl, trackId }: { sessionId
     const assemblyName = assemblyNames[0]
     const assembly = assemblyManager.get(assemblyName)
     const searchScope = view.searchScope(assemblyName)
-    const selectedRegion = op?.getLocation()
+    selectedRegion = op?.getLocation() || selectedRegion
 
     // TODO: can we avoid this duplication?
     function dedupe(

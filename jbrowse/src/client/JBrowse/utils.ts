@@ -2,6 +2,7 @@ import { isEmptyObject } from 'jquery'
 import jexl from 'jexl'
 import { createViewState, loadPlugins } from '@jbrowse/react-linear-genome-view';
 import { ActionURL, Ajax } from '@labkey/api';
+import { AnyConfigurationSchemaType } from '@jbrowse/core/configuration/configurationSchema';
 
 export function passesInfoFilters(feature, filters) {
     if (!filters || !filters.length){
@@ -18,7 +19,7 @@ export function passesInfoFilters(feature, filters) {
                 return false
             }
         } catch (e){
-            console.error("Error in filter execution: " + e)
+            handleFailure("Error in filter execution: " + e)
         }
     }
 
@@ -66,7 +67,7 @@ function isVariant(gt) {
 }
 
 
-export async function fetchSession(queryParam, session, nativePlugins, refTheme, setState, activeTracks?:any, setBgColor?: any, successCallback?: any) {
+export async function fetchSession(queryParam, sessionId, nativePlugins, refTheme, setState, isTable: boolean, activeTracks?:any, setBgColor?: any, successCallback?: any, trackId?: any) {
     return Ajax.request({
         url: ActionURL.buildURL('jbrowse', 'getSession.api'),
         method: 'GET',
@@ -79,7 +80,7 @@ export async function fetchSession(queryParam, session, nativePlugins, refTheme,
                 try {
                     loadedPlugins = await loadPlugins(jsonRes.plugins);
                 } catch (error) {
-                    console.error("Error: ", error)
+                    handleFailure("Error: " + error)
                 }
             } else {
                 loadedPlugins = []
@@ -111,17 +112,19 @@ export async function fetchSession(queryParam, session, nativePlugins, refTheme,
             }
 
             if (successCallback) {
-                await successCallback(generateViewState(jsonRes, loadedPlugins, nativePlugins))
+                try {
+                    await successCallback(generateViewState(jsonRes, loadedPlugins, nativePlugins))
+                } catch(error) {
+                    handleFailure(error, sessionId, trackId, isTable)
+                }
             } else {
                 setState(generateViewState(jsonRes, loadedPlugins, nativePlugins))
             }
         },
         failure: function(res){
-            //TODO: better, consistent error handling
-            setState("invalid");
-            console.log(res);
+            handleFailure("There was an error. " + res.status + ": " + res.statusText, sessionId, trackId, isTable)
         },
-        params: {session: session, activeTracks: activeTracks ? activeTracks.join(',') : undefined}
+        params: {session: sessionId, activeTracks: activeTracks ? activeTracks.join(',') : undefined}
     });
 }
 
@@ -135,12 +138,12 @@ function applyUrlParams(json, queryParam) {
     if (sampleFilters) {
         const filterTokens = sampleFilters.split(':')
         if (filterTokens.length != 2) {
-            console.error('Invalid sample filters: ' + sampleFilters)
+            handleFailure('Invalid sample filters: ' + sampleFilters)
         } else {
             const [trackId, sampleIds] = filterTokens
             const sampleList = sampleIds.split(',')
             if (sampleList.length == 0) {
-                console.error('No samples in filter: ' + sampleFilters)
+                handleFailure('No samples in filter: ' + sampleFilters)
             } else {
                 let found = false
                 for (const track of json.tracks) {
@@ -152,18 +155,17 @@ function applyUrlParams(json, queryParam) {
                 }
 
                 if (!found) {
-                    console.error('Unable to find matching track for sample filter: ' + sampleFilters)
+                    handleFailure('Unable to find matching track for sample filter: ' + sampleFilters)
                 }
             }
         }
     }
 
-    // TODO: track doesn't contain an infoFilters list, for some reason
     const infoFilters = queryParam.get('infoFilters')
     if (infoFilters) {
         const filterTokens = infoFilters.split(':')
         if (filterTokens.length != 2) {
-            console.error('Invalid info filters: ' + infoFilters)
+            handleFailure('Invalid info filters: ' + infoFilters)
         } else {
             const [trackId, infoFilterObj] = filterTokens
             const infoFilterList = JSON.parse(decodeURIComponent(infoFilterObj))
@@ -177,7 +179,7 @@ function applyUrlParams(json, queryParam) {
             }
 
             if (!found) {
-                console.error('Unable to find matching track for sample filter: ' + sampleFilters)
+                handleFailure('Unable to find matching track for info filter: ' + infoFilters)
             }
         }
     }
@@ -221,4 +223,16 @@ function serializeInfoFilters(track) {
     }
 
     return track.configuration.trackId + ":" + encodeURIComponent(track.configuration.displays[0].renderer.infoFilters.valueJSON)
+}
+
+function handleFailure(error, sessionId?, trackId?, isTable?) {
+    alert(error)
+
+    if(sessionId && trackId) {
+        if(isTable) {
+            navigateToTable(sessionId, "", trackId)
+        } else {
+            navigateToBrowser(sessionId, "", trackId)
+        }
+    }
 }

@@ -35,7 +35,7 @@ function View(){
             activeTracks = activeTracks.concat(queryParam.get('tracks').split(','))
         }
 
-        fetchSession(queryParam, session, nativePlugins, refTheme, setState, activeTracks, setBgColor)
+        fetchSession(queryParam, session, nativePlugins, refTheme, setState, false, activeTracks, setBgColor)
     }, []);
 
     if (session === null){

@@ -123,6 +123,7 @@ const VariantTableWidget = observer(props => {
   // Menu management
   const [anchorFilterMenu, setAnchorFilterMenu] = useState(null)
   const [anchorExportMenu, setAnchorExportMenu] = useState(null)
+  const [validLocString, setValidLocString] = useState(true)
 
 
   // API call to retrieve the requested features. Can handle multiple location strings.
@@ -145,7 +146,7 @@ const VariantTableWidget = observer(props => {
       setFeatures(filteredFeatures.map((rawFeature, id) => rawFeatureToRow(rawFeature, id)))
     }
 
-    if(pluginManager && parsedLocString) {
+    if(pluginManager && parsedLocString && validLocString) {
       setSampleFilterWidget(session.addWidget(
         'SampleFilterWidget',
         'Sample-Variant-' + getConf(track, 'trackId'),
@@ -157,8 +158,15 @@ const VariantTableWidget = observer(props => {
         'Info-Variant-' + getConf(track, 'trackId'),
         { track: track.configuration }
       ))
-
-      fetch()
+      
+      const regionLength = parsedLocString.end - parsedLocString.start
+      const maxRegionSize = 200000
+      if (regionLength > maxRegionSize) {
+        alert("Location " + locString + " is too large to load.")
+        setValidLocString(false)
+      } else {
+        fetch()
+      }
     }
   }, [pluginManager, parsedLocString, session.visibleWidget])
 
@@ -207,7 +215,7 @@ const VariantTableWidget = observer(props => {
       return(<p>Unable to find track: {trackId}</p>)
   }
 
-  if (!features) {
+  if (!features && locString && validLocString) {
         return (<p>Loading...</p>)
   } else {
     const gridElement = (
@@ -248,10 +256,10 @@ const VariantTableWidget = observer(props => {
         <div style={{marginBottom: "10px"}}>
           <Grid container spacing={1} justifyContent="flex-start" alignItems="center">
             <Grid key='search' item xs="auto">
-              <StandaloneSearch sessionId={sessionId} tableUrl={true} trackId={trackId}></StandaloneSearch>
+              <StandaloneSearch sessionId={sessionId} tableUrl={true} trackId={trackId} selectedRegion={validLocString ? locString : ""}></StandaloneSearch>
             </Grid>
 
-            <Grid key='filterMenu' item xs="auto">
+            <Grid style={locString && validLocString ? {} : {display:"none"}} key='filterMenu' item xs="auto">
               <MenuButton id={'filterMenu'} color="primary" variant="contained" text="Filter" anchor={anchorFilterMenu}
                 handleClick={(e) => handleMenuClick(e, setAnchorFilterMenu)}
                 handleClose={(e) => handleMenuClose(setAnchorFilterMenu)}>
@@ -261,7 +269,7 @@ const VariantTableWidget = observer(props => {
               </MenuButton>
             </Grid>
 
-            <Grid key='exportMenu' item xs="auto">
+            <Grid style={locString && validLocString ? {} : {display:"none"}} key='exportMenu' item xs="auto">
               <MenuButton id={'exportMenu'} color="primary" variant="contained" text="Export" anchor={anchorExportMenu}
                 handleClick={(e) => handleMenuClick(e, setAnchorExportMenu)}
                 handleClose={() => handleMenuClose(setAnchorExportMenu)}>
@@ -270,8 +278,8 @@ const VariantTableWidget = observer(props => {
               </MenuButton>
             </Grid>
 
-            <Grid key='genomeViewButton' item xs="auto">
-              <Button style={{ marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("browserRedirect", gridElement)}>View in Genome Browser </Button>
+            <Grid style={locString && validLocString ? {} : {display:"none"}} key='genomeViewButton' item xs="auto">
+              <Button style={{ marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("browserRedirect", gridElement)}>View in Genome Browser</Button>
             </Grid>
           </Grid>
         </div>

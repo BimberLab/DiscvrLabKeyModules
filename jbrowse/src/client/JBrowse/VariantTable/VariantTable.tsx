@@ -10,6 +10,7 @@ import LogSession from '../Browser/plugins/LogSession/index'
 import ExtendedVariantPlugin from '../Browser/plugins/ExtendedVariantPlugin/index'
 import VariantTableWidget from './components/VariantTableWidget'
 import { fetchSession } from '../utils'
+import { ErrorBoundary } from '@labkey/components';
 
 const nativePlugins = [ExtendedVariantPlugin, LogSession]
 
@@ -58,7 +59,7 @@ function VariantTable() {
                 return assemblyManager.isValidRefName(refName, assemblyNames[0])
             }
 
-            if (locString) {
+            if(locString) {
                 const parsedLocString = parseLocString(locString, isValidRefNameForAssembly)
                 setParsedLocString(parsedLocString)
             }
@@ -67,7 +68,7 @@ function VariantTable() {
             setTheme(createJBrowseTheme(readConfObject(state.config.configuration, 'theme')))
         }
 
-        fetchSession(queryParam, sessionId, nativePlugins, refTheme, setState, undefined, undefined, successCallback)
+        fetchSession(queryParam, sessionId, nativePlugins, refTheme, setState, true, undefined, undefined, successCallback, trackId)
     }, []);
 
     // Error handle and then render the component
@@ -78,16 +79,17 @@ function VariantTable() {
         return (<p>Error fetching config. See console for more details</p>)
     }
 
-    if (!assemblyNames.length){
+    if (!assemblyNames.length) {
         return (<p>No configured assemblies</p>)
     }
 
-    console.log(theme)
     return (
         <ThemeProvider theme={theme}>
         <div style={{height: "90vh", display:"block"}}>
+            <ErrorBoundary>
                 <VariantTableWidget rpcManager={rpcManager} assembly={assembly} trackId={trackId} locString={locString} 
                                     parsedLocString={parsedLocString} sessionId={sessionId} session={session} pluginManager={pluginManager}/>
+            </ErrorBoundary>
         </div>
         </ThemeProvider>
     )
