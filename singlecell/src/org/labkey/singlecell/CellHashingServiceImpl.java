@@ -1457,7 +1457,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
     public File getMetaTableFromSeurat(File seuratObj)
     {
-        return getCellBarcodesFromSeurat(seuratObj, true);
+        return getMetaTableFromSeurat(seuratObj, true);
     }
 
     public File getMetaTableFromSeurat(File seuratObj, boolean throwIfNotFound)
