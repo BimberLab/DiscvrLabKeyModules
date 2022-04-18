@@ -39,6 +39,7 @@ import org.labkey.test.util.PortalHelper;
 import org.labkey.test.util.ext4cmp.Ext4ComboRef;
 import org.labkey.test.util.ext4cmp.Ext4FieldRef;
 import org.labkey.test.util.external.labModules.LabModuleHelper;
+import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.StaleElementReferenceException;
@@ -353,8 +354,12 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testNoSession()
     {
-        beginAt("/home/jbrowse-jbrowse.view?");
-        waitForElement(Locator.tagWithText("p", "Error - no session provided."));
+        try
+        {
+            beginAt("/home/jbrowse-jbrowse.view?");
+        } catch (Exception e) {
+            waitForElement(Locator.tagWithText("p", "Error - no session provided."));
+        }
     }
 
     private Locator.XPathLocator getTrackLocator(String trackId, boolean waitFor)

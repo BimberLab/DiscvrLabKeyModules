@@ -160,7 +160,7 @@ const VariantTableWidget = observer(props => {
       ))
       
       const regionLength = parsedLocString.end - parsedLocString.start
-      const maxRegionSize = 200000
+      const maxRegionSize = 900000
       if (regionLength > maxRegionSize) {
         alert("Location " + locString + " is too large to load.")
         setValidLocString(false)

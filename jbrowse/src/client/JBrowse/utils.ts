@@ -122,7 +122,7 @@ export async function fetchSession(queryParam, sessionId, nativePlugins, refThem
             }
         },
         failure: function(res){
-            handleFailure("There was an error. " + res.status + ": " + res.statusText, sessionId, trackId, isTable)
+            handleFailure("There was an error: " + res.status, sessionId, trackId, isTable)
         },
         params: {session: sessionId, activeTracks: activeTracks ? activeTracks.join(',') : undefined}
     });
