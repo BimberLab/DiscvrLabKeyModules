@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { observer } from 'mobx-react';
 import { getSession } from '@jbrowse/core/util';
 import { RefNameAutocomplete } from '@jbrowse/plugin-linear-genome-view';
-import { createViewState } from '@jbrowse/react-linear-genome-view';
+import { createTheme } from '@material-ui/core/styles';
 import BaseResult from '@jbrowse/core/TextSearch/BaseResults';
 import { ActionURL, Ajax } from '@labkey/api';
 import './search.css';
@@ -10,47 +10,29 @@ import { SearchType } from '@jbrowse/core/data_adapters/BaseAdapter';
 
 import LogSession from '../Browser/plugins/LogSession/index';
 import ExtendedVariantPlugin from '../Browser/plugins/ExtendedVariantPlugin/index';
+import { fetchSession } from '../utils'
+import { navigateToTable, navigateToBrowser } from '../utils';
 
 const nativePlugins = [ExtendedVariantPlugin, LogSession]
 
-const StandaloneSearch = observer(({ sessionId, }: { sessionId: any}) => {
+const StandaloneSearch = observer(({ sessionId, tableUrl, trackId, selectedRegion }: { sessionId: any, tableUrl: boolean, trackId?: string, selectedRegion?: string}) => {
     if (!sessionId){
         return(<p>No session Id provided. Please have you admin use the customize icon to set the session ID for this webpart.</p>)
     }
 
-    const [state, setState] = useState(null);
+    const queryParam = new URLSearchParams(window.location.search)
+    const refTheme = createTheme()
+    const [state, setState] = useState(null)
     const [op, setOption] = useState<BaseResult | undefined>()
-    if (op) {
-        window.location.href = ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: op.getLocation()})
-    }
-
-    function generateViewState(genome){
-        return createViewState({
-            assembly: genome.assembly ?? genome.assemblies,
-            tracks: genome.tracks,
-            configuration: genome.configuration,
-            plugins: nativePlugins,
-            location: genome.location,
-            defaultSession: genome.defaultSession,
-            onChange: genome.onChange
-        })
+    if (op && !tableUrl) {
+        navigateToBrowser(sessionId, op.getLocation())
+    } else if (op && tableUrl) {
+        navigateToTable(sessionId, op.getLocation(), trackId)
     }
 
     // Get the LinearGenomeViewModel from the API, providing the session as a parameter
     useEffect(() => {
-        Ajax.request({
-            url: ActionURL.buildURL('jbrowse', 'getSession.api'),
-            method: 'GET',
-            success: async function(res){
-                let jsonRes = JSON.parse(res.response);
-                setState(generateViewState(jsonRes));
-            },
-            failure: function(res){
-                setState("invalid");
-                console.log(res);
-            },
-            params: {session: sessionId}
-        });
+        fetchSession(queryParam, sessionId, nativePlugins, refTheme, setState, false)
     }, []);
 
     // Error handle and then render the component
@@ -74,7 +56,7 @@ const StandaloneSearch = observer(({ sessionId, }: { sessionId: any}) => {
     const assemblyName = assemblyNames[0]
     const assembly = assemblyManager.get(assemblyName)
     const searchScope = view.searchScope(assemblyName)
-    const selectedRegion = op?.getLocation()
+    selectedRegion = op?.getLocation() || selectedRegion
 
     // TODO: can we avoid this duplication?
     function dedupe(
@@ -113,7 +95,7 @@ const StandaloneSearch = observer(({ sessionId, }: { sessionId: any}) => {
     }
 
     return (
-        <span>
+    <span style={tableUrl ? {display: 'inline-block', marginRight: '14px'} : {}}>
       <RefNameAutocomplete
           model={view}
           assemblyName={assemblyName ?? undefined}
@@ -125,12 +107,12 @@ const StandaloneSearch = observer(({ sessionId, }: { sessionId: any}) => {
           TextFieldProps={{
               margin: 'normal',
               variant: 'outlined',
-              helperText: 'Enter a gene or location',
+              helperText: tableUrl ? undefined : 'Enter a gene or location',
               style: { margin: 7, minWidth: '175px' },
               InputProps: {
                   style: {
-                      padding: 0,
-                      height: 32
+                      paddingBottom: 0,
+                      height: tableUrl ? 45 : 32
                   }
               }
           }}

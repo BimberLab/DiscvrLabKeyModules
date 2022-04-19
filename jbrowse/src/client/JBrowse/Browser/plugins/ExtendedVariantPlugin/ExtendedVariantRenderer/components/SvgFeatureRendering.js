@@ -12,7 +12,8 @@ import SvgOverlay from '@jbrowse/plugin-svg/src/SvgFeatureRenderer/components/Sv
 import {chooseGlyphComponent, layOut} from './util' // NEW: chooseGlyphComponent() in util updated to render SNVs as a diamond
 import {deserializeFilters} from '../../InfoFilterWidget/filterUtil' // NOTE: Now dependent on FilterWidget plugin
 import jexl from 'jexl'
-import { isEmptyObject } from 'jquery';
+import { passesInfoFilters, passesSampleFilters } from '../../../../../utils'
+
 
 const renderingStyle = {
     position: 'relative',
@@ -130,62 +131,6 @@ function RenderedFeatureGlyph(props) {
 jexl.addFunction('arrayMax', (array) => {
     return Array.isArray(array) ? Math.max(...array) : array
 })
-
-function passesInfoFilters(feature, filters){
-    if (!filters || !filters.length){
-        return true
-    }
-
-    for (const filterObj of filters){
-        try {
-            if (!jexl.evalSync(filterObj.jexlExpression, feature)){
-                return false
-            }
-        } catch (e){
-            console.error("Error in filter execution: " + e)
-        }
-    }
-
-    return true
-}
-
-function isVariant(gt) {
-    return !(gt === "./." || gt === ".|." || gt === "0/0" || gt === "0|0")
-}
-
-function passesSampleFilters(feature, sampleIDs){
-    if (!sampleIDs || sampleIDs.length === 0) {
-        return true
-    }
-
-    if (!feature.variant.SAMPLES || isEmptyObject(feature.variant.SAMPLES)) {
-        return false
-    }
-
-    // Preferentially use pre-computed values:
-    if (feature.variant.INFO._variableSamples) {
-        for (const sampleId of sampleIDs) {
-            if (feature.variant.INFO._variableSamples.indexOf(sampleId) > -1) {
-                return true
-            }
-        }
-
-        return false
-    }
-
-    for (const sampleId of sampleIDs) {
-        if (feature.variant.SAMPLES[sampleId]) {
-            const gt = feature.variant.SAMPLES[sampleId]["GT"][0]
-
-            // If any sample in the whitelist is non-WT, show this site. Otherwise filter.
-            if (isVariant(gt)) {
-                return true
-            }
-        }
-    }
-
-    return false
-}
 
 RenderedFeatureGlyph.propTypes = {
     layout: ReactPropTypes.shape({

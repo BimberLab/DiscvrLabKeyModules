@@ -19,6 +19,7 @@ export default class extends VcfTabixAdapter {
             // that the fetched ranges tend to be repeated
             const cacheKey = `${refName}:${start}-${end}`
             let f = this.featureCache.get(cacheKey) as VcfFeature[] | undefined
+
             if (!f) {
                 f = await this.getFeaturesAsArray(query, opts)
                 this.featureCache.set(cacheKey, f)
