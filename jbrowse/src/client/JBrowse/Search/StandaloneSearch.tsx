@@ -17,7 +17,7 @@ const nativePlugins = [ExtendedVariantPlugin, LogSession]
 
 const StandaloneSearch = observer(({ sessionId, tableUrl, trackId, selectedRegion }: { sessionId: any, tableUrl: boolean, trackId?: string, selectedRegion?: string}) => {
     if (!sessionId){
-        return(<p>No session Id provided. Please have you admin use the customize icon to set the session ID for this webpart.</p>)
+        return(<p>No session Id provided. Please have your site admin use the customize icon to set the session ID for this webpart.</p>)
     }
 
     const queryParam = new URLSearchParams(window.location.search)

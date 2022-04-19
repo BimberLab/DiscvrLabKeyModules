@@ -354,12 +354,8 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testNoSession()
     {
-        try
-        {
-            beginAt("/home/jbrowse-jbrowse.view?");
-        } catch (Exception e) {
-            waitForElement(Locator.tagWithText("p", "Error - no session provided."));
-        }
+        beginAt("/home/jbrowse-jbrowse.view?");
+        waitForElement(Locator.tagWithText("p", "Error - no session provided."));
     }
 
     private Locator.XPathLocator getTrackLocator(String trackId, boolean waitFor)
@@ -657,7 +653,7 @@ public class JBrowseTest extends BaseWebDriverTest
         PortalHelper portalHelper = new PortalHelper(this);
         portalHelper.addSideWebPart("JBrowse Search");
 
-        waitForElement(Locator.tagWithText("p", "No session Id provided. Please have you admin use the customize icon to set the session ID for this webpart."));
+        waitForElement(Locator.tagWithText("p", "No session Id provided. Please have your site admin use the customize icon to set the session ID for this webpart."));
         portalHelper.clickWebpartMenuItem("JBrowse Search", false, "Customize");
         Window window = new Window.WindowFinder(getDriver()).withTitle("Customize Webpart").waitFor();
         Ext4FieldRef.waitForField(this, "Target JBrowse DB");

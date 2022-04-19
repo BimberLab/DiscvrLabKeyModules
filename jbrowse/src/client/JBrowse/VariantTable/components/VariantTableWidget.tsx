@@ -28,6 +28,10 @@ const VariantTableWidget = observer(props => {
       t => t.configuration.trackId === trackId,
   )
 
+  if (!track) {
+    return (<p>Unknown track: {trackId}</p>)
+  }
+
   // Render function for the custom components that make up the header cells of the table
   function FilterRenderer<R, SR, T extends HTMLOrSVGElement>({
     isCellSelected,
