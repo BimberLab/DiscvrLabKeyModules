@@ -258,13 +258,13 @@ public class NimbleHelper
         }
 
         alignArgs.add("-l");
-        alignArgs.add("/work/nimbleDebug.txt");
+        alignArgs.add("/work/nimbleDebug." + genome.genomeId + ".txt");
 
         boolean alignOutput = getProvider().getParameterByName(NimbleHandler.ALIGN_OUTPUT).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
         if (alignOutput)
         {
             alignArgs.add("-a");
-            alignArgs.add("/work/nimbleAlignment.txt.gz");
+            alignArgs.add("/work/nimbleAlignment." + genome.genomeId + ".txt.gz");
         }
 
         alignArgs.add("/work/" + localRefJson.getName());
@@ -277,7 +277,7 @@ public class NimbleHelper
             throw new PipelineJobException("Expected to find file: " + resultsTsv.getPath());
         }
 
-        File log = new File(resultsTsv.getParentFile(), "nimbleDebug.txt");
+        File log = new File(resultsTsv.getParentFile(), "nimbleDebug." + genome.genomeId + ".txt");
         if (!log.exists())
         {
             throw new PipelineJobException("Expected to find file: " + log.getPath());
