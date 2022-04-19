@@ -22,7 +22,7 @@ function VariantTable() {
     const refTheme = createTheme()
 
     if (!sessionId){
-        return(<p>No session Id provided. Please have you admin use the customize icon to set the session ID for this webpart.</p>)
+        return(<p>No session Id provided.</p>)
     }
 
     const trackId = queryParam.get('trackId')

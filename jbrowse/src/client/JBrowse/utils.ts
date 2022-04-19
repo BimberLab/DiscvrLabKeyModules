@@ -68,6 +68,10 @@ function isVariant(gt) {
 
 
 export async function fetchSession(queryParam, sessionId, nativePlugins, refTheme, setState, isTable: boolean, activeTracks?:any, setBgColor?: any, successCallback?: any, trackId?: any) {
+    if (!sessionId) {
+        return null
+    }
+
     return Ajax.request({
         url: ActionURL.buildURL('jbrowse', 'getSession.api'),
         method: 'GET',
