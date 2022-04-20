@@ -68,7 +68,8 @@ function VariantTable() {
             setTheme(createJBrowseTheme(readConfObject(state.config.configuration, 'theme')))
         }
 
-        fetchSession(queryParam, sessionId, nativePlugins, refTheme, setState, true, undefined, undefined, successCallback, trackId)
+        // NOTE: pass trackId for activeTracks, to ensure view.tracks contains it
+        fetchSession(queryParam, sessionId, nativePlugins, refTheme, setState, true, [trackId], undefined, successCallback, trackId)
     }, []);
 
     // Error handle and then render the component

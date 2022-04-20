@@ -204,7 +204,7 @@ function generateViewState(genome, plugins, nativePlugins){
 export function navigateToTable(sessionId, locString, trackId, track?: any) {
     const sampleFilterURL = serializeSampleFilters(track)
     const infoFilterURL = serializeInfoFilters(track)
-    window.location.href = ActionURL.buildURL("jbrowse", "variantTable.view", null, {session: sessionId, location: locString, trackId: trackId, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
+    window.location.href = ActionURL.buildURL("jbrowse", "variantTable.view", null, {session: sessionId, location: locString, trackId: trackId, activeTracks: trackId, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
 }
 
 export function navigateToBrowser(sessionId, locString, trackId?: string, track?: any) {
