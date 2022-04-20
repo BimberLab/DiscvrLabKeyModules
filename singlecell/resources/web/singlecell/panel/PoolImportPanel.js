@@ -201,7 +201,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                     val = val.replace(/^MS[- ]Idx/ig, 'MultiSeq-Idx');
                     val = val.replace(/^MultiSeq[- ]Idx[- ]RP/ig, 'MultiSeq-Idx-RP');
 
-                    if (val.length() <= 3) {
+                    if (val.length <= 3) {
                         val = panel.down('#useDualIndex').getValue() ? 'SI-TN-' + val : 'SI-NA-' + val;
                     }
 
