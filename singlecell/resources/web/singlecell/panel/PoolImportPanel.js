@@ -483,6 +483,11 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             checked: false
         },{
             xtype: 'checkbox',
+            fieldLabel: 'Combined Hashing and Cite-Seq Libraries',
+            itemId: 'combineHashingCite',
+            checked: false
+        },{
+            xtype: 'checkbox',
             fieldLabel: 'Require Library Concentrations',
             itemId: 'requireConc',
             checked: false
@@ -828,7 +833,8 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                 libraryType = 'BioLegend';
             }
 
-            var rs = this.processReadsetForGroup(poolName, rowArr, ret.readsetRows, 'hto', 'HTO', 'Cell Hashing', libraryType);
+            var combineHashingCite = this.down('#combineHashingCite').getValue();
+            var rs = this.processReadsetForGroup(poolName, rowArr, ret.readsetRows, 'hto', 'HTO', (combineHashingCite ? 'Cell Hashing/CITE-seq' : 'Cell Hashing'), libraryType, (combineHashingCite ? 'HTO-CITE' : null));
             if (Ext4.isString(rs)) {
                 readsetGUIDs.hashingReadsetGUID = rs;
             }
@@ -839,18 +845,24 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             }
 
             var requireCITE = this.down('#requireCITE').getValue();
-            var rs = this.processReadsetForGroup(poolName, rowArr, ret.readsetRows, 'citeseq', 'CITE', 'CITE-Seq', null);
-            if (Ext4.isString(rs)) {
-                readsetGUIDs.citeseqReadsetGUID = rs;
+            if (combineHashingCite) {
+                readsetGUIDs.citeseqReadsetGUID = readsetGUIDs.hashingReadsetGUID;
             }
-            else if (requireCITE){
+            else {
+                var rs = this.processReadsetForGroup(poolName, rowArr, ret.readsetRows, 'citeseq', 'CITE', 'CITE-Seq', null, null);
+                if (Ext4.isString(rs)) {
+                    readsetGUIDs.citeseqReadsetGUID = rs;
+                }
+            }
+
+            if (requireCITE && !readsetGUIDs.citeseqReadsetGUID){
                 errorsMsgs.push('Missing CITE-Seq library');
                 errorsMsgs = errorsMsgs.concat(rs);
                 return false;
             }
 
             var requireGEX = this.down('#requireGEX').getValue();
-            rs = this.processReadsetForGroup(poolName, rowArr, ret.readsetRows, 'gex', 'GEX', 'RNA-seq, Single Cell', '10x 5\' GEX');
+            rs = this.processReadsetForGroup(poolName, rowArr, ret.readsetRows, 'gex', 'GEX', 'RNA-seq, Single Cell', '10x 5\' GEX', null);
             if (Ext4.isString(rs)) {
                 readsetGUIDs.readsetGUID = rs;
             }
@@ -861,7 +873,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             }
 
             var requireTCR = this.down('#requireTCR').getValue();
-            rs = this.processReadsetForGroup(poolName, rowArr, ret.readsetRows, 'tcr', 'TCR', 'RNA-seq, Single Cell', '10x 5\' VDJ (Rhesus A/B/D/G)');
+            rs = this.processReadsetForGroup(poolName, rowArr, ret.readsetRows, 'tcr', 'TCR', 'RNA-seq, Single Cell', '10x 5\' VDJ (Rhesus A/B/D/G)', null);
             if (Ext4.isString(rs)) {
                 readsetGUIDs.tcrReadsetGUID = rs;
             }
@@ -897,7 +909,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         return ret;
     },
 
-    processReadsetForGroup: function(poolName, rowArr, readsetRows, prefix, type, application, librarytype){
+    processReadsetForGroup: function(poolName, rowArr, readsetRows, prefix, type, application, librarytype, nameSuffix){
         var idxValues = this.getUniqueValues(rowArr, prefix + '_library_index');
         var conc = this.getUniqueValues(rowArr, prefix + '_library_conc');
         var fragment = this.getUniqueValues(rowArr, prefix + '_library_fragment');
@@ -924,7 +936,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             var isDualIndex = idxValues[0].startsWith('SI-TN') || idxValues[0].startsWith('SI-TT');
 
             readsetRows.push({
-                name: poolName + '-' + type,
+                name: poolName + '-' + (nameSuffix || type),
                 barcode5: isDualIndex ? idxValues[0] + '_F' : idxValues[0],
                 barcode3: isDualIndex ? idxValues[0] + '_R' : null,
                 concentration: conc[0],
