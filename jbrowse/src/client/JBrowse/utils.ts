@@ -32,8 +32,8 @@ export function passesSampleFilters(feature, sampleIDs){
     }
 
     const featureVariant = feature.variant ?? feature.data
-
-    if (!featureVariant.SAMPLES || isEmptyObject(featureVariant.SAMPLES)) {
+    const samples = featureVariant.SAMPLES || featureVariant.samples
+    if (!samples || isEmptyObject(samples)) {
         return false
     }
 
@@ -49,8 +49,8 @@ export function passesSampleFilters(feature, sampleIDs){
     }
 
     for (const sampleId of sampleIDs) {
-        if (featureVariant.SAMPLES[sampleId]) {
-            const gt = featureVariant.SAMPLES[sampleId]["GT"][0]
+        if (samples[sampleId]) {
+            const gt = samples[sampleId]["GT"][0]
 
             // If any sample in the whitelist is non-WT, show this site. Otherwise filter.
             if (isVariant(gt)) {
@@ -214,7 +214,11 @@ export function navigateToBrowser(sessionId, locString, trackId?: string, track?
 }
 
 function serializeSampleFilters(track) {
-    if(!track) {
+    if (!track) {
+        return undefined
+    }
+
+    if (!track.configuration.displays[0].renderer.activeSamples.value) {
         return undefined
     }
 
@@ -222,7 +226,11 @@ function serializeSampleFilters(track) {
 }
 
 function serializeInfoFilters(track) {
-    if(!track) {
+    if (!track) {
+        return undefined
+    }
+
+    if (!track.configuration.displays[0].renderer.infoFilters.valueJSON || isEmptyObject(track.configuration.displays[0].renderer.infoFilters.valueJSON)) {
         return undefined
     }
 
