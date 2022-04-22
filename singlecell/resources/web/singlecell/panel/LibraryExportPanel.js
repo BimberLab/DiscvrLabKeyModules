@@ -162,7 +162,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                                 r[0] = 'VDJ';
                                                 r.unshift(val);
                                             }
-                                            else if (val.startsWith('H')){
+                                            else if (val.startsWith('H') || val.startsWith('M')){
                                                 val = val.substr(1);
                                                 val = val.replace('_', '-');
                                                 r[0] = 'HTO';
@@ -581,7 +581,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
             schemaName: 'singlecell',
             queryName: 'cdna_libraries',
             sort: 'plateId,well/addressByColumn',
-            columns: 'rowid,plateid' +
+            columns: 'rowid,plateid,sortId/cells' +
                 ',readsetId,readsetId/name,readsetId/application,readsetId/librarytype,readsetId/barcode5,readsetId/barcode5/sequence,readsetId/barcode3,readsetId/barcode3/sequence,readsetId/totalFiles,readsetId/concentration' +
                 ',tcrReadsetId,tcrReadsetId/name,tcrReadsetId/application,tcrReadsetId/librarytype,tcrReadsetId/barcode5,tcrReadsetId/barcode5/sequence,tcrReadsetId/barcode3,tcrReadsetId/barcode3/sequence,tcrReadsetId/totalFiles,tcrReadsetId/concentration' +
                 ',hashingReadsetId,hashingReadsetId/name,hashingReadsetId/application,hashingReadsetId/librarytype,hashingReadsetId/barcode5,hashingReadsetId/barcode5/sequence,hashingReadsetId/barcode3,hashingReadsetId/barcode3/sequence,hashingReadsetId/totalFiles,hashingReadsetId/concentration' +
@@ -598,6 +598,14 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                 }
 
                 var sortedRows = results.rows;
+                var totalCellsByReadset = {};
+                Ext4.Array.forEach(results.rows, function(row){
+                    if (row.plateId && row['sortId/cells']) {
+                        totalCellsByReadset[row.plateId] = totalCellsByReadset[row.plateId] || 0;
+                        totalCellsByReadset[row.plateId] = totalCellsByReadset[row.plateId] + row['sortId/cells'];
+                    }
+                }, this);
+
                 if (expectedPairs) {
                     sortedRows = [];
                     var missingRows = [];
@@ -866,18 +874,25 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                                 }
                                 rows.push(data.join(delim));
-
-                                runMap[r.laneAssignment || 'Not Assigned'] = (runMap[r.laneAssignment || 'Not Assigned'] || 0) + (totalData || 0);
                             }, this);
+
+                            runMap[r.laneAssignment || 'Not Assigned'] = (runMap[r.laneAssignment || 'Not Assigned'] || 0) + (totalData || 0);
                         }
                     };
 
                     var delim = instrument.startsWith('Novogene') ? '\t' : ',';
                     Ext4.Array.forEach(sortedRows, function (r) {
-                        processType(readsetIds, rows, r, 'readsetId', 'GEX', 500, 0.01, 'G', null, false, 70, runMap);
-                        processType(readsetIds, rows, r, 'tcrReadsetId', 'TCR', 700, 0.01, 'T', null, false, 45, runMap);
-                        processType(readsetIds, rows, r, 'hashingReadsetId', 'HTO', 182, 0.05, 'H', 'Cell hashing, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', true, 20, runMap);
-                        processType(readsetIds, rows, r, 'citeseqReadsetId', 'CITE', 182, 0.05, 'C', 'CITE-Seq, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', false, 20, runMap);
+                        var totalCells = totalCellsByReadset[r.plateId];
+                        console.log(totalCells);
+                        var gexData = totalCells > 15000 ? 70 : 40;
+                        var tcrData = totalCells > 15000 ? 45 : 25;
+                        processType(readsetIds, rows, r, 'readsetId', 'GEX', 500, 0.01, 'G', null, false, gexData, runMap, totalCells);
+                        processType(readsetIds, rows, r, 'tcrReadsetId', 'TCR', 700, 0.01, 'T', null, false, tcrData, runMap, totalCells);
+
+                        // NOTE: Dual index 10x is always presented in the right orientation, so only RC if single-indexed
+                        const hashingDoRC = !r['hashingReadsetId/barcode3'];
+                        processType(readsetIds, rows, r, 'hashingReadsetId', 'HTO', 182, 0.05, 'H', 'Cell hashing, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', hashingDoRC, 20, runMap, totalCells);
+                        processType(readsetIds, rows, r, 'citeseqReadsetId', 'CITE', 182, 0.05, 'C', 'CITE-Seq, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', false, 20, runMap, totalCells);
                     }, this);
 
                     //add missing barcodes:
@@ -907,7 +922,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                 duplicates = Ext4.unique(duplicates);
                 if (!allowDuplicates && duplicates.length){
-                    Ext4.Msg.alert('Error', 'Duplicate barcodes: ' + duplicates.join(', '));
+                    Ext4.Msg.alert('Error', 'Duplicate barcodes:<br>' + duplicates.join('<br>'));
                     btn.up('singlecell-libraryexportpanel').down('#outputArea').setValue(null);
                     btn.up('singlecell-libraryexportpanel').down('#downloadData').setDisabled(true);
                 }

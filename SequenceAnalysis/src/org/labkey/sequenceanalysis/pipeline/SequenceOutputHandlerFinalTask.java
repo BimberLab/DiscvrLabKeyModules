@@ -110,7 +110,7 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
         am.setModified(new Date());
         am.setCreatedby(getJob().getUser().getUserId());
         am.setModifiedby(getJob().getUser().getUserId());
-        am.setType(getPipelineJob().getHandler().getName());
+        am.setType(getPipelineJob().getHandler().getAnalysisType(getJob()));
         TableInfo analysisTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
 
         Set<Integer> readsetIds = new HashSet<>();

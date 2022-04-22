@@ -51,6 +51,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -911,13 +912,13 @@ public class CellHashingServiceImpl extends CellHashingService
             put("joinReturnValue", true);
         }}, null));
 
-        ret.add(SeuratToolParameter.create("maxHashingPctFail", "Hashing Max Fraction Failed", "The maximum fraction of cells that can have no call (i.e. not singlet or doublet). Otherwise it will fail the job. This is a number 0-1.", "ldk-numberfield", new JSONObject(){{
+        ret.add(SeuratToolParameter.create(MAX_HASHING_PCT_FAIL, "Hashing Max Fraction Failed", "The maximum fraction of cells that can have no call (i.e. not singlet or doublet). Otherwise it will fail the job. This is a number 0-1.", "ldk-numberfield", new JSONObject(){{
             put("minValue", 0);
             put("maxValue", 1);
             put("decimalPrecision", 2);
         }}, null));
 
-        ret.add(SeuratToolParameter.create("maxHashingPctDiscordant", "Hashing Max Fraction Discordant", "The maximum fraction of cells that can have discordant calls. High discordance is usually an indication of either poor quality data, or one caller performing badly.This is a number 0-1.", "ldk-numberfield", new JSONObject(){{
+        ret.add(SeuratToolParameter.create(MAX_HASHING_PCT_DISCORDANT, "Hashing Max Fraction Discordant", "The maximum fraction of cells that can have discordant calls. High discordance is usually an indication of either poor quality data, or one caller performing badly.This is a number 0-1.", "ldk-numberfield", new JSONObject(){{
             put("minValue", 0);
             put("maxValue", 1);
             put("decimalPrecision", 2);
@@ -1211,6 +1212,7 @@ public class CellHashingServiceImpl extends CellHashingService
                 writer.println("\t-e SEQUENCEANALYSIS_MAX_THREADS \\");
             }
 
+            writer.println("\t-e CELLHASHR_DEBUG=1 \\");
             writer.println("\t-v \"${WD}:/work\" \\");
             writer.println("\t-v \"${HOME}:/homeDir\" \\");
             writer.println("\t-u $UID \\");
@@ -1339,6 +1341,39 @@ public class CellHashingServiceImpl extends CellHashingService
     }
 
     @Override
+    public void copyHtmlLocally(SequenceOutputHandler.JobContext ctx) throws PipelineJobException
+    {
+        try
+        {
+            for (File f : ctx.getOutputDir().listFiles())
+            {
+                if (f.getName().endsWith(".hashing.html"))
+                {
+                    ctx.getLogger().info("Copying hashing HTML locally for debugging: " + f.getName());
+                    File target = new File(ctx.getSourceDirectory(), f.getName());
+                    if (target.exists())
+                    {
+                        target.delete();
+                    }
+
+                    Files.copy(f.toPath(), target.toPath());
+                }
+
+                // Also delete the .done files, so hashing will repeat if we change params:
+                if (f.getName().endsWith(CellHashingServiceImpl.CALL_EXTENSION + ".done"))
+                {
+                    ctx.getLogger().debug("Removing hashing .done file: " + f.getName());
+                    f.delete();
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+    }
+
+    @Override
     public Set<String> getHtosForParentReadset(Integer parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support, boolean throwIfNotFound) throws PipelineJobException
     {
         Integer htoReadset = getCachedHashingReadsetMap(support).get(parentReadsetId);
@@ -1406,8 +1441,13 @@ public class CellHashingServiceImpl extends CellHashingService
 
     public File getCellBarcodesFromSeurat(File seuratObj)
     {
+        return getCellBarcodesFromSeurat(seuratObj, true);
+    }
+
+    public File getCellBarcodesFromSeurat(File seuratObj, boolean throwIfNotFound)
+    {
         File barcodes = new File(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds", "cellBarcodes.csv"));
-        if (!barcodes.exists())
+        if (throwIfNotFound && !barcodes.exists())
         {
             throw new IllegalArgumentException("Unable to find expected cell barcodes file.  This might indicate the seurat object was created with an older version of the pipeline.  Expected: " + barcodes.getPath());
         }
@@ -1417,8 +1457,13 @@ public class CellHashingServiceImpl extends CellHashingService
 
     public File getMetaTableFromSeurat(File seuratObj)
     {
+        return getMetaTableFromSeurat(seuratObj, true);
+    }
+
+    public File getMetaTableFromSeurat(File seuratObj, boolean throwIfNotFound)
+    {
         File barcodes = new File(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds", "seurat.meta.txt"));
-        if (!barcodes.exists())
+        if (throwIfNotFound && !barcodes.exists())
         {
             throw new IllegalArgumentException("Unable to find expected metadata file.  This might indicate the seurat object was created with an older version of the pipeline.  Expected: " + barcodes.getPath());
         }

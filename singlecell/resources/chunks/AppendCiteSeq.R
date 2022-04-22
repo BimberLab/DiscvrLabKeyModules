@@ -1,4 +1,5 @@
 for (datasetId in names(seuratObjects)) {
+    printName(datasetId)
     seuratObj <- readRDS(seuratObjects[[datasetId]])
 
     if (!(datasetId %in% names(featureData))) {
@@ -15,21 +16,15 @@ for (datasetId in names(seuratObjects)) {
 
     matrixDir <- featureData[[datasetId]]
     if (!is.null(matrixDir)) {
-        tryCatch({
-            aggregateBarcodeFile <- NULL
-            if (dropAggregateBarcodes) {
-                aggregateBarcodeFile <- paste0(matrixDir, ".aggregateCounts.csv")
-                if (!file.exists(aggregateBarcodeFile)) {
-                    stop(paste0('Unable to find file: ', aggregateBarcodeFile))
-                }
+        aggregateBarcodeFile <- NULL
+        if (dropAggregateBarcodes) {
+            aggregateBarcodeFile <- paste0(matrixDir, ".aggregateCounts.csv")
+            if (!file.exists(aggregateBarcodeFile)) {
+                stop(paste0('Unable to find file: ', aggregateBarcodeFile))
             }
+        }
 
-            seuratObj <- CellMembrane::AppendCiteSeq(seuratObj, unfilteredMatrixDir = matrixDir, normalizeMethod = normalizeMethod, datasetId = datasetId, featureMetadata = featureMetadata, adtWhitelist = adtWhitelist, runCellBender = runCellBender, aggregateBarcodeFile = aggregateBarcodeFile)
-        }, error = function(e){
-            print(paste0('Error running AppendCiteSeq for: ', datasetId))
-            print(conditionMessage(e))
-            traceback()
-        })
+        seuratObj <- CellMembrane::AppendCiteSeq(seuratObj, unfilteredMatrixDir = matrixDir, normalizeMethod = normalizeMethod, datasetId = datasetId, featureMetadata = featureMetadata, adtWhitelist = adtWhitelist, runCellBender = runCellBender, aggregateBarcodeFile = aggregateBarcodeFile)
     } else {
         print('matrixDir was NULL, skipping CITE-seq')
     }

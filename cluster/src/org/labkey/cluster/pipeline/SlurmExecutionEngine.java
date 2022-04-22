@@ -77,7 +77,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         ctx.put("submitScript", getConfig().getClusterPath(submitScript));
         String command = getConfig().getSubmitCommandExpr().eval(ctx);
 
-        List<String> ret = execute(command);
+        List<String> ret = execute(command, submitScript.getParentFile());
         if (ret != null)
         {
             //verify success; create job
@@ -527,7 +527,8 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                         writer.write(line + "\n");
                     }
 
-                    writer.write("#SBATCH --workdir=\"" + getConfig().getClusterPath(job.getLogFile().getParentFile()) + "\"\n");
+                    // NOTE: --workdir no longer support in sbatch
+                    //writer.write("#SBATCH --workdir=\"" + getConfig().getClusterPath(job.getLogFile().getParentFile()) + "\"\n");
 
                     String args = StringUtils.join(getConfig().getJobArgs(outDir, serializedJobFile, job, this), " ");
                     writer.write("srun " + getConfig().getRemoteExecutable() + " " + args);
@@ -586,7 +587,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         ST("Stopped", PipelineJob.TaskStatus.error),
         S("Suspended", PipelineJob.TaskStatus.waiting, null, "Job suspended"),
         TO("Timeout", PipelineJob.TaskStatus.error, null, "Job timeout"),
-        OOM("Out of Memory", PipelineJob.TaskStatus.error, Arrays.asList("OUT_OF_MEMORY"), "Out of Memory");
+        OOM("Out of Memory", PipelineJob.TaskStatus.error, Arrays.asList("OUT_OF_MEMORY", "OUT_OF_ME"), "Out of Memory");
 
         private Set<String> _aliases = new CaseInsensitiveHashSet();
         private String _labkeyStatus;

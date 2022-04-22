@@ -65,6 +65,11 @@ public interface SequenceOutputHandler<T>
 
     public String getName();
 
+    default String getAnalysisType(PipelineJob job)
+    {
+        return getName();
+    }
+
     public String getDescription();
 
     /**

@@ -535,7 +535,7 @@ public class SequenceTest extends BaseWebDriverTest
         new Window.WindowFinder(getDriver()).withTitle("Tool Details").waitFor();
         waitAndClick(Ext4Helper.Locators.window("Tool Details").append(Ext4Helper.Locators.ext4Button("Done")));
 
-        List<Ext4CmpRef> btns = _ext4Helper.componentQuery("window ldk-linkbutton[text='Add']", Ext4CmpRef.class);
+        List<Ext4CmpRef> btns = _ext4Helper.componentQuery("window ldk-linkbutton[text='Add to End']", Ext4CmpRef.class);
         for (Ext4CmpRef btn : btns)
         {
             waitAndClick(Locator.id(btn.getId()).append(Locator.tag("a")));
@@ -783,7 +783,7 @@ public class SequenceTest extends BaseWebDriverTest
         waitForElement(win);
 
         //NOTE: team city is getting JS errors I cant repro locally.  adding sleep() to see if waiting helps
-        List<Ext4CmpRef> btns = _ext4Helper.componentQuery("window ldk-linkbutton[text='Add']", Ext4CmpRef.class);
+        List<Ext4CmpRef> btns = _ext4Helper.componentQuery("window ldk-linkbutton[text='Add to End']", Ext4CmpRef.class);
         for (Ext4CmpRef btn : btns)
         {
             // Note: BQSR includes a genome selector field, which will log a warning to the server is a genome isnt configured ahead of time.
@@ -953,16 +953,18 @@ public class SequenceTest extends BaseWebDriverTest
         _ext4Helper.queryOne("window textfield", Ext4FieldRef.class).setValue(groupName);
         waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
         sleep(200);
+
         Assert.assertEquals("incorrect group count", 4L, readDataGrid.getEval("store.getGroups().length"));
         Assert.assertEquals("incorrect readsetname", "dualBarcodes_SIV", readsetGrid.getFieldValue(1, "fileGroupId"));
-        readDataGrid.setGridCell(2, "fileGroupId", groupName);
+        readDataGrid.setGridCell(4, "fileGroupId", groupName);
         sleep(200);
+
         Assert.assertEquals("incorrect group count", 3L, readDataGrid.getEval("store.getGroups().length"));
         Assert.assertEquals("incorrect readsetname", groupName, readsetGrid.getFieldValue(1, "fileGroupId"));
 
-        readDataGrid.setGridCell(1, "fileGroupId", groupName);
+        readDataGrid.setGridCell(2, "fileGroupId", groupName);
         Assert.assertEquals("incorrect readsetname", "sample454_SIV", readsetGrid.getFieldValue(3, "fileGroupId"));
-        readDataGrid.setGridCell(5, "fileGroupId", "sample454_SIVb");
+        readDataGrid.setGridCell(1, "fileGroupId", "sample454_SIVb");
         Assert.assertEquals("incorrect readsetname", "sample454_SIVb", readsetGrid.getFieldValue(3, "fileGroupId"));
 
         //now we check readset info
@@ -1058,19 +1060,19 @@ public class SequenceTest extends BaseWebDriverTest
         assertEquals("Unexpected value for param", "delete", fieldsJson.get("inputFileTreatment"));
         assertEquals("Unexpected value for param", true, fieldsJson.get("deleteIntermediateFiles"));
 
-        Map<String, Object> fileGroup0 = (Map) fieldsJson.get("fileGroup_1");
+        Map<String, Object> fileGroup0 = (Map) fieldsJson.get("fileGroup_3");
         Assert.assertEquals("Unexpected value for param", groupName, fileGroup0.get("name"));
         List<Map> arr0 = (List)fileGroup0.get("files");
-        Assert.assertEquals(2, arr0.size());
+        Assert.assertEquals(3, arr0.size());
         Assert.assertEquals(groupName, arr0.get(0).get("fileGroupId"));
         Assert.assertEquals("s_G1_L001", arr0.get(0).get("platformUnit"));
 
         Assert.assertEquals(groupName, arr0.get(1).get("fileGroupId"));
         Assert.assertEquals("", arr0.get(1).get("platformUnit"));
 
-        Map<String, Object> fileGroup1 = (Map) fieldsJson.get("fileGroup_2");
-        Assert.assertEquals(2, ((List)fileGroup1.get("files")).size());
-        Map<String, Object> fileGroup2 = (Map) fieldsJson.get("fileGroup_3");
+        Map<String, Object> fileGroup1 = (Map) fieldsJson.get("fileGroup_1");
+        Assert.assertEquals(1, ((List)fileGroup1.get("files")).size());
+        Map<String, Object> fileGroup2 = (Map) fieldsJson.get("fileGroup_2");
         Assert.assertEquals(1, ((List)fileGroup2.get("files")).size());
 
         Map<String, Object> sample0 = (Map) fieldsJson.get("readset_0");

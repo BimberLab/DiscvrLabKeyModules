@@ -160,5 +160,23 @@ public class SingleCellTableCustomizer extends AbstractTableCustomizer
                     .display("rowid"));
             ti.addColumn(newCol);
         }
+
+        String totalCells = "totalCells";
+        if (ti.getColumn(totalCells) == null)
+        {
+            SQLFragment sql = new SQLFragment("(CASE" +
+                    " WHEN ((select count(*) as expr FROM " + SingleCellSchema.NAME + "." + SingleCellSchema.TABLE_CDNAS + " c WHERE c.readsetId = " + ExprColumn.STR_TABLE_ALIAS + ".rowid OR c.tcrReadsetId = " + ExprColumn.STR_TABLE_ALIAS + ".rowid) > 0) " +
+                    " THEN (select sum(s.cells) FROM " + SingleCellSchema.NAME + "." + SingleCellSchema.TABLE_CDNAS + " c JOIN " + SingleCellSchema.NAME + "." + SingleCellSchema.TABLE_SORTS + " s ON (c.sortid = s.rowid) WHERE c.readsetId = " + ExprColumn.STR_TABLE_ALIAS + ".rowid OR c.tcrReadsetId = " + ExprColumn.STR_TABLE_ALIAS + ".rowid) " +
+                    " ELSE null " +
+                    "END)");
+            ExprColumn newCol = new ExprColumn(ti, totalCells, sql, JdbcType.INTEGER, ti.getColumn("rowid"));
+            newCol.setLabel("cDNA/Total Cells");
+            UserSchema us = QueryService.get().getUserSchema(ti.getUserSchema().getUser(), (ti.getUserSchema().getContainer().isWorkbook() ? ti.getUserSchema().getContainer().getParent() : ti.getUserSchema().getContainer()), SingleCellSchema.NAME);
+            newCol.setFk(QueryForeignKey.from(us, ti.getContainerFilter())
+                    .table(SingleCellSchema.TABLE_CDNAS)
+                    .key("rowid")
+                    .display("rowid"));
+            ti.addColumn(newCol);
+        }
     }
 }

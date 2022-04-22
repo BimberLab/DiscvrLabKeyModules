@@ -64,6 +64,8 @@ import java.util.stream.Collectors;
 
 abstract public class AbstractSingleCellHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, SequenceOutputHandler.HasActionNames
 {
+    public static final String SEURAT_PROTOTYPE = "Seurat Object Prototype";
+
     protected Resumer _resumer;
 
     public AbstractSingleCellHandler()
@@ -75,6 +77,17 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
     public String getDescription()
     {
         return "Run one or more tools to process 10x scRNA-seq Data";
+    }
+
+    @Override
+    public String getAnalysisType(PipelineJob job)
+    {
+        if (!job.getParameters().containsKey("singleCell"))
+        {
+            return SequenceOutputHandler.super.getAnalysisType(job);
+        }
+
+        return Arrays.asList(job.getParameters().get("singleCell").split(";")).contains("SeuratPrototype") ? "Seurat Prototype" : SequenceOutputHandler.super.getAnalysisType(job);
     }
 
     @Override
@@ -164,14 +177,14 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 SingleCellStep step = stepCtx.getProvider().create(ctx);
                 step.init(ctx, inputFiles);
 
-                if (step.requiresCiteSeq())
+                if (step.requiresCiteSeq(ctx))
                 {
                     requiresCite = true;
                 }
 
-                if (step.requiresHashing())
+                if (step.requiresHashing(ctx))
                 {
-                    String methods = step.getProvider().getParameterByName("methods").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), String.class);
+                    String methods = step.getProvider().hasParameter("methods") ? step.getProvider().getParameterByName("methods").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), String.class) : null;
                     if (methods != null && methods.contains(CellHashingService.CALLING_METHOD.demuxem.name()))
                     {
                         doH5Caching = true;
@@ -261,7 +274,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     CellHashingService.get().processMetrics(so, job, true);
                 }
 
-                if ("Seurat Prototype".equals(so.getCategory()))
+                if (SEURAT_PROTOTYPE.equals(so.getCategory()))
                 {
                     //NOTE: upstream we enforce one dataset per job, so we can safely assume this is the only dataset here:
                     File metricFile = new File(job.getLogFile().getParentFile(), "seurat.metrics.txt");
@@ -357,7 +370,8 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             }
 
             List<SingleCellStep.SeuratObjectWrapper> currentFiles;
-
+            Set<File> originalInputs = inputFiles.stream().map(SequenceOutputFile::getFile).collect(Collectors.toSet());
+            Set<File> originalRDSCopiedLocal = new HashSet<>();
             if (_doProcessRawCounts)
             {
                 currentFiles = processRawCounts(ctx, inputFiles, basename);
@@ -395,16 +409,16 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                         FileUtils.copyFile(so.getFile(), local);
                         _resumer.getFileManager().addIntermediateFile(local);
 
-                        currentFiles.add(new SingleCellStep.SeuratObjectWrapper(datasetId, datasetId, so.getFile(), so));
+                        currentFiles.add(new SingleCellStep.SeuratObjectWrapper(datasetId, datasetId, local, so));
                     }
+
+                    originalRDSCopiedLocal.addAll(currentFiles.stream().map(AbstractSingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toSet()));
                 }
                 catch (IOException e)
                 {
                     throw new PipelineJobException(e);
                 }
             }
-
-            Set<File> originalInputs = currentFiles.stream().map(AbstractSingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toSet());
 
             // Step 2: iterate seurat processing:
             String outputPrefix = basename;
@@ -422,6 +436,10 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     ctx.getLogger().info("Step not required, skipping");
                     continue;
                 }
+
+                // NOTE: always set this upfront, so we have consistent outputPrefix after resume:
+                outputPrefix = outputPrefix + "." + step.getFileSuffix() + (step.getStepIdx() == 0 ? "" : "-" + step.getStepIdx());
+                outputPrefix = outputPrefix.replaceAll(" ", "_");
 
                 if (_resumer.isStepComplete(stepIdx))
                 {
@@ -456,22 +474,28 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 currentFiles.forEach(currentFile -> action.addInput(currentFile.getFile(), "Input Seurat Object"));
                 ctx.getFileManager().addIntermediateFiles(currentFiles.stream().map(SingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toList()));
 
-                outputPrefix = outputPrefix + "." + step.getFileSuffix() + (step.getStepIdx() == 0 ? "" : "-" + step.getStepIdx());
-                outputPrefix = outputPrefix.replaceAll(" ", "_");
                 SingleCellStep.Output output = step.execute(ctx, currentFiles, outputPrefix);
 
                 _resumer.getFileManager().addStepOutputs(action, output);
 
-                if (output.getSeuratObjects() != null && !output.getSeuratObjects().isEmpty())
+                if (step.createsSeuratObjects())
                 {
-                    currentFiles = new ArrayList<>(output.getSeuratObjects());
-                    _resumer.getFileManager().addIntermediateFiles(currentFiles.stream().map(SingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toSet()));
-                    _resumer.getFileManager().addIntermediateFiles(currentFiles.stream().map(x -> CellHashingServiceImpl.get().getCellBarcodesFromSeurat(x.getFile())).collect(Collectors.toSet()));
-                    _resumer.getFileManager().addIntermediateFiles(currentFiles.stream().map(x -> CellHashingServiceImpl.get().getMetaTableFromSeurat(x.getFile())).collect(Collectors.toSet()));
-                }
-                else if (step.createsSeuratObjects())
-                {
-                    throw new PipelineJobException("Expected step to create seurat objects but none reported");
+                    if (output.getSeuratObjects() != null && !output.getSeuratObjects().isEmpty())
+                    {
+                        currentFiles = new ArrayList<>(output.getSeuratObjects());
+                        Set<File> possibleIntermediates = currentFiles.stream().map(SingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toSet());
+                        possibleIntermediates.removeAll(originalInputs);
+                        if (!possibleIntermediates.isEmpty())
+                        {
+                            _resumer.getFileManager().addIntermediateFiles(possibleIntermediates);
+                            _resumer.getFileManager().addIntermediateFiles(possibleIntermediates.stream().map(x -> CellHashingServiceImpl.get().getCellBarcodesFromSeurat(x)).collect(Collectors.toSet()));
+                            _resumer.getFileManager().addIntermediateFiles(possibleIntermediates.stream().map(x -> CellHashingServiceImpl.get().getMetaTableFromSeurat(x)).collect(Collectors.toSet()));
+                        }
+                    }
+                    else
+                    {
+                        throw new PipelineJobException("Expected step to create seurat objects but none reported");
+                    }
                 }
                 else
                 {
@@ -492,8 +516,8 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     ctx.getLogger().debug("Removing intermediate file: " + seurat.getFile().getPath());
                     ctx.getFileManager().removeIntermediateFile(seurat.getFile());
                     _resumer.getFileManager().removeIntermediateFile(seurat.getFile());
-                    _resumer.getFileManager().removeIntermediateFile(CellHashingServiceImpl.get().getCellBarcodesFromSeurat(seurat.getFile()));
-                    _resumer.getFileManager().removeIntermediateFile(CellHashingServiceImpl.get().getMetaTableFromSeurat(seurat.getFile()));
+                    _resumer.getFileManager().removeIntermediateFile(CellHashingServiceImpl.get().getCellBarcodesFromSeurat(seurat.getFile(), false));
+                    _resumer.getFileManager().removeIntermediateFile(CellHashingServiceImpl.get().getMetaTableFromSeurat(seurat.getFile(), false));
                 }
             }
 
@@ -501,6 +525,8 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             {
                 throw new PipelineJobException("No markdown files produced!");
             }
+
+            originalInputs.forEach(x -> _resumer.getFileManager().removeIntermediateFile(x));
 
             //process with pandoc
             ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Creating final report");
@@ -572,14 +598,37 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     }
                 }
 
+                //Note: when starting with a seurat object (not loupe), the ID is the string readset name, not an ID:
+                if (so.getReadset() == null)
+                {
+                    if (output.getReadsetId() != null)
+                    {
+                        ctx.getLogger().debug("setting readset from output to: " + output.getReadsetId());
+                        so.setReadset(output.getReadsetId());
+                    }
+                    else if (inputFiles.size() == 1)
+                    {
+                        ctx.getLogger().debug("only single input, so re-using readset: " + inputFiles.get(0).getReadset());
+                        so.setReadset(inputFiles.get(0).getReadset());
+                    }
+                }
+
                 //This indicates the job processed an input file, but did not create a new object (like running FindMarkers)
-                if (originalInputs.contains(output.getFile()))
+                if (originalRDSCopiedLocal.contains(output.getFile()))
                 {
                     ctx.getLogger().info("Sequence output is the same as an input, will not re-create output for seurat object: " + output.getFile().getPath());
                 }
                 else
                 {
-                    _resumer.getFileManager().addSequenceOutput(so);
+                    Set<File> existingOutputs = _resumer.getFileManager().getOutputsToCreate().stream().map(SequenceOutputFile::getFile).collect(Collectors.toSet());
+                    if (existingOutputs.contains(so.getFile()))
+                    {
+                        ctx.getLogger().info("The RDS file has already been registered as an output, will not re-add: " + so.getFile().getPath());
+                    }
+                    else
+                    {
+                        _resumer.getFileManager().addSequenceOutput(so);
+                    }
                 }
 
                 // This could be a little confusing, but add one record out seurat output, even though there is one HTML file::

@@ -16,7 +16,7 @@ Cluster.Utils = new function() {
             window.open(LABKEY.ActionURL.buildURL('cluster', 'viewJavaLog', null, {jobId: checked[0]}), '_blank');
         },
 
-        buttonHandlerForSubmissions: function(){
+        buttonHandlerForSubmissions: function(dataRegionName){
             const checked = LABKEY.DataRegions[dataRegionName].getChecked();
             if (!checked.length){
                 Ext4.Msg.alert('Error', 'No rows selected');

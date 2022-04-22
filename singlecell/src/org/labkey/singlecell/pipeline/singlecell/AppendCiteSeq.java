@@ -51,8 +51,8 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
         List<ToolParameterDescriptor> ret = new ArrayList<>();
         ret.add(SeuratToolParameter.create("normalizeMethod", "Normalization Method", "", "ldk-simplecombo", new JSONObject(){{
             put("storeValues", "dsb;clr");
-            put("initialValues", "dsb");
-        }}, "dsb"));
+            put("initialValues", "clr");
+        }}, "clr"));
 
         ret.add(SeuratToolParameter.create("runCellBender", "Run CellBender", "If checked, cellbender will be run on the raw count matrix to remove background/ambient RNA signal", "checkbox", new JSONObject(){{
 
@@ -66,7 +66,7 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
     }
 
     @Override
-    public boolean requiresCiteSeq()
+    public boolean requiresCiteSeq(SequenceOutputHandler.JobContext ctx)
     {
         return true;
     }

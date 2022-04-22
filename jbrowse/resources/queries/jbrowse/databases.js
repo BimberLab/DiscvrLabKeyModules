@@ -11,6 +11,6 @@ console.log("** evaluating: " + this['javax.script.filename']);
 function afterDelete(row, errors){
     if (row.objectid) {
         console.log('cascade deleting children of jbrowse database: ' + row.objectid);
-        org.labkey.jbrowse.model.Database.onDatabaseDelete(LABKEY.Security.currentContainer.id, row.objectid, true);
+        org.labkey.jbrowse.model.JBrowseSession.onDatabaseDelete(LABKEY.Security.currentContainer.id, row.objectid);
     }
 }

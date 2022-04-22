@@ -49,7 +49,7 @@ Ext4.define('SequenceAnalysis.field.SequenceOutputFileSelectorField', {
                     }
                 }
                 else {
-                    LDK.Utils.logError('unable to find library field in GenomeFileSelectorField');
+                    LDK.Utils.logError('unable to find library field in SequenceOutputFileSelectorField');
                 }
             }
             else if (window && window.libraryId){

@@ -1,4 +1,5 @@
 for (datasetId in names(seuratObjects)) {
+    printName(datasetId)
     seuratObj <- readRDS(seuratObjects[[datasetId]])
 
     seuratObj <- CellMembrane::DownsampleSeurat(seuratObj, targetCells = targetCells, subsetFields = subsetFields, seed = seed)

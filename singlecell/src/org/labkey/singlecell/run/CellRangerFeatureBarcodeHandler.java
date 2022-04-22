@@ -4,6 +4,7 @@ import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
@@ -114,41 +115,56 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
                 throw new PipelineJobException("Readset missing application: " + rs.getRowId());
             }
 
-            String field;
+            List<String> fields = new ArrayList<>();
             boolean failIfNoHashingReadset = false;
             boolean failIfNoCiteseqReadset = false;
-            if (rs.getApplication().equals("Cell Hashing"))
+            if (isHashing(rs))
             {
-                field = "hashingReadsetId";
+                fields.add("hashingReadsetId");
                 failIfNoHashingReadset = true;
             }
-            else if (rs.getApplication().equals("CITE-Seq"))
+
+            if (isCiteSeq(rs))
             {
-                field = "citeseqReadsetId";
+                fields.add("citeseqReadsetId");
                 failIfNoCiteseqReadset = true;
             }
-            else
+
+            if (fields.isEmpty())
             {
                 throw new PipelineJobException("Unexpected application: " + rs.getApplication());
             }
 
-            CellHashingServiceImpl.get().prepareHashingAndCiteSeqFilesForFeatureCountsIfNeeded(outputDir, job, support, field, failIfNoHashingReadset, failIfNoCiteseqReadset);
-
-            boolean useGEX = params.optBoolean("useGEX", false);
-            if (useGEX)
+            for (String field : fields)
             {
-                TableInfo cDNATable = QueryService.get().getUserSchema(job.getUser(), job.getContainer(), SingleCellSchema.NAME).getTable(SingleCellSchema.TABLE_CDNAS, null);
-                Set<Integer> gexReadsetIds = new HashSet<>(new TableSelector(cDNATable, PageFlowUtil.set("readsetid"), new SimpleFilter(FieldKey.fromString(field), rs.getRowId()), null).getArrayList(Integer.class));
-                if (gexReadsetIds.size() == 1)
+                CellHashingServiceImpl.get().prepareHashingAndCiteSeqFilesForFeatureCountsIfNeeded(outputDir, job, support, field, failIfNoHashingReadset, failIfNoCiteseqReadset);
+
+                boolean useGEX = params.optBoolean("useGEX", false);
+                if (useGEX)
                 {
-                    support.cacheReadset(gexReadsetIds.iterator().next(), job.getUser());
-                    support.cacheObject(FEATURE_TO_GEX, gexReadsetIds.iterator().next());
-                }
-                else
-                {
-                    job.getLogger().warn("Expected a single GEX readset for " + rs.getRowId() + ", found: " + gexReadsetIds.size());
+                    TableInfo cDNATable = QueryService.get().getUserSchema(job.getUser(), job.getContainer(), SingleCellSchema.NAME).getTable(SingleCellSchema.TABLE_CDNAS, null);
+                    Set<Integer> gexReadsetIds = new HashSet<>(new TableSelector(cDNATable, PageFlowUtil.set("readsetid"), new SimpleFilter(FieldKey.fromString(field), rs.getRowId()), null).getArrayList(Integer.class));
+                    if (gexReadsetIds.size() == 1)
+                    {
+                        support.cacheReadset(gexReadsetIds.iterator().next(), job.getUser());
+                        support.cacheObject(FEATURE_TO_GEX, gexReadsetIds.iterator().next());
+                    }
+                    else
+                    {
+                        job.getLogger().warn("Expected a single GEX readset for " + rs.getRowId() + ", found: " + gexReadsetIds.size());
+                    }
                 }
             }
+        }
+
+        private boolean isHashing(Readset rs)
+        {
+            return rs.getApplication().equals("Cell Hashing") || rs.getApplication().equals("Cell Hashing/CITE-seq");
+        }
+
+        private boolean isCiteSeq(Readset rs)
+        {
+            return rs.getApplication().equals("CITE-Seq") || rs.getApplication().equals("Cell Hashing/CITE-seq");
         }
 
         @Override
@@ -169,37 +185,9 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
             }
 
             AlignmentOutputImpl output = new AlignmentOutputImpl();
-            CellRangerWrapper wrapper = new CellRangerWrapper(ctx.getLogger());
-
-            Readset rs = readsets.get(0);
-
-            String category;
-            File featureFile;
-            if (rs.getApplication().equals("Cell Hashing"))
-            {
-                category = HASHING_CATEGORY;
-                featureFile = createFeatureRefForHashing(ctx.getOutputDir(), CellHashingServiceImpl.get().getAllHashingBarcodesFile(ctx.getSourceDirectory()));
-
-            }
-            else if (rs.getApplication().equals("CITE-Seq"))
-            {
-                category = CITESEQ_CATEGORY;
-                featureFile = createFeatureRefForCiteSeq(ctx.getOutputDir(), CellHashingServiceImpl.get().getValidCiteSeqBarcodeMetadataFile(ctx.getSourceDirectory(), rs.getReadsetId()));
-            }
-            else
-            {
-                throw new IllegalStateException("Unknown category. This should be caught upstream");
-            }
-
-            List<String> extraArgs = new ArrayList<>(getClientCommandArgs("=", ctx.getParams()));
-            extraArgs.add("--nosecondary");
-
-            extraArgs.add("--feature-ref=" + featureFile.getPath());
-
-            String idParam = ctx.getParams().optString("id", null);
-            String id = CellRangerWrapper.getId(idParam, rs);
 
             List<Pair<File, File>> inputFastqs = new ArrayList<>();
+            Readset rs = readsets.get(0);
             rs.getReadData().forEach(rd -> {
                 inputFastqs.add(Pair.of(rd.getFile1(), rd.getFile2()));
                 action.addInputIfNotPresent(rd.getFile1(), "Input FASTQ");
@@ -218,6 +206,33 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
                 });
             }
 
+            if (isHashing(rs))
+            {
+                processType(inputFastqs, output, ctx, HASHING_CATEGORY, createFeatureRefForHashing(ctx.getOutputDir(), CellHashingServiceImpl.get().getAllHashingBarcodesFile(ctx.getSourceDirectory())), rs, (isCiteSeq(rs) ? "-Hashing" : null));
+
+            }
+
+            if (isCiteSeq(rs))
+            {
+                processType(inputFastqs, output, ctx, CITESEQ_CATEGORY, createFeatureRefForCiteSeq(ctx.getOutputDir(), CellHashingServiceImpl.get().getValidCiteSeqBarcodeMetadataFile(ctx.getSourceDirectory(), rs.getReadsetId())), rs, (isHashing(rs) ? "-CITE" : null));
+            }
+
+            ctx.getFileManager().addStepOutputs(action, output);
+            ctx.addActions(action);
+        }
+
+        private void processType(List<Pair<File, File>> inputFastqs, AlignmentOutputImpl output, JobContext ctx, String category, File featureFile, Readset rs, @Nullable String idSuffix) throws PipelineJobException
+        {
+            CellRangerWrapper wrapper = new CellRangerWrapper(ctx.getLogger());
+
+            List<String> extraArgs = new ArrayList<>(getClientCommandArgs("=", ctx.getParams()));
+            extraArgs.add("--nosecondary");
+
+            extraArgs.add("--feature-ref=" + featureFile.getPath());
+
+            String idParam = ctx.getParams().optString("id", null);
+            String id = CellRangerWrapper.getId(idParam, rs);
+
             List<String> args = wrapper.prepareCountArgs(output, id, ctx.getOutputDir(), rs, inputFastqs, extraArgs, false);
 
             //https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/feature-bc-analysis
@@ -225,7 +240,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
             try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(libraryCsv), ',', CSVWriter.NO_QUOTE_CHARACTER))
             {
                 writer.writeNext(new String[]{"fastqs", "sample", "library_type"});
-                writer.writeNext(new String[]{wrapper.getLocalFastqDir(ctx.getOutputDir()).getPath(), wrapper.makeLegalSampleName(rs.getName()), "Antibody Capture"});
+                writer.writeNext(new String[]{wrapper.getLocalFastqDir(ctx.getOutputDir()).getPath(), CellRangerWrapper.makeLegalSampleName(rs.getName()), "Antibody Capture"});
             }
             catch (IOException e)
             {
@@ -248,10 +263,26 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
 
             wrapper.execute(args);
 
-            File outdir = new File(ctx.getOutputDir(), id);
-            outdir = new File(outdir, "outs");
+            File crDir  = new File(ctx.getOutputDir(), id);
+            if (idSuffix != null)
+            {
+                File toMove = new File(crDir.getPath() + idSuffix);
+                ctx.getLogger().debug("Moving cellranger folder to: " + toMove.getPath());
+                try
+                {
+                    FileUtils.moveDirectory(crDir, toMove);
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
 
-            File bam = new File(outdir, "possorted_genome_bam.bam");
+                crDir = toMove;
+            }
+
+            File outsdir = new File(crDir, "outs");
+
+            File bam = new File(outsdir, "possorted_genome_bam.bam");
             if (!bam.exists())
             {
                 throw new PipelineJobException("Unable to find file: " + bam.getPath());
@@ -264,13 +295,13 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
             try
             {
                 String prefix = FileUtil.makeLegalName(rs.getName() + "_");
-                File outputHtml = new File(outdir, "web_summary.html");
+                File outputHtml = new File(outsdir, "web_summary.html");
                 if (!outputHtml.exists())
                 {
                     throw new PipelineJobException("Unable to find file: " + outputHtml.getPath());
                 }
 
-                File outputHtmlRename = new File(outdir, prefix + outputHtml.getName());
+                File outputHtmlRename = new File(outsdir, prefix + outputHtml.getName());
                 if (outputHtmlRename.exists())
                 {
                     outputHtmlRename.delete();
@@ -280,7 +311,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
                 String description = ctx.getParams().optBoolean("useGEX", false) ? "HTO and GEX Counts" : null;
                 output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x " + rs.getApplication() + " Summary", "10x Run Summary", rs.getRowId(), null, null, description);
 
-                File rawCounts = new File(outdir, "raw_feature_bc_matrix/matrix.mtx.gz");
+                File rawCounts = new File(outsdir, "raw_feature_bc_matrix/matrix.mtx.gz");
                 if (rawCounts.exists())
                 {
                     output.addSequenceOutput(rawCounts, rs.getName() + ": " + rs.getApplication() + " Raw Counts", category, rs.getRowId(), null, null, description);
@@ -297,7 +328,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
             }
 
             //NOTE: this folder has many unnecessary files and symlinks that get corrupted when we rename the main outputs
-            File directory = new File(outdir.getParentFile(), "SC_RNA_COUNTER_CS");
+            File directory = new File(outsdir.getParentFile(), "SC_RNA_COUNTER_CS");
             if (directory.exists())
             {
                 //NOTE: this will have lots of symlinks, including corrupted ones, which java handles badly
@@ -307,9 +338,6 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
             {
                 ctx.getLogger().warn("Unable to find folder: " + directory.getPath());
             }
-
-            ctx.getFileManager().addStepOutputs(action, output);
-            ctx.addActions(action);
         }
 
         private File makeDummyIndex(JobContext ctx) throws PipelineJobException

@@ -4,7 +4,6 @@ import htsjdk.samtools.SAMFileHeader;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
@@ -31,6 +30,11 @@ public class SamSorter extends SamtoolsRunner
 
     public File execute(File input, @Nullable File output, SAMFileHeader.SortOrder sortOrder) throws PipelineJobException
     {
+        return execute(input, output, sortOrder, null);
+    }
+
+    public File execute(File input, @Nullable File output, SAMFileHeader.SortOrder sortOrder, @Nullable List<String> extraArgs) throws PipelineJobException
+    {
         getLogger().info("Sorting SAM/BAM: " + input.getPath());
 
         boolean replaceOriginal = output == null;
@@ -50,7 +54,7 @@ public class SamSorter extends SamtoolsRunner
         }
         else if (sortOrder != SAMFileHeader.SortOrder.coordinate)
         {
-            throw new PipelineJobException("Improper sort order: " + sortOrder.name());
+            getLogger().debug("Using sort order: " + sortOrder.name());
         }
 
         Integer threads = SequencePipelineService.get().getMaxThreads(getLogger());
@@ -70,6 +74,11 @@ public class SamSorter extends SamtoolsRunner
         }
         params.add("-T");
         params.add(tmpDir);
+
+        if (extraArgs != null)
+        {
+            params.addAll(extraArgs);
+        }
 
         params.add("-o");
         params.add(output.getPath());

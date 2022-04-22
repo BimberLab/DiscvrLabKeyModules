@@ -547,6 +547,25 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
 
     public static long addQualityMetricsForReadset(Readset rs, int fileId, PipelineJob job) throws PipelineJobException
     {
+        return addQualityMetricsForReadset(rs, fileId, job, false);
+    }
+
+    public static long addQualityMetricsForReadset(Readset rs, int fileId, PipelineJob job, boolean deleteExisting) throws PipelineJobException
+    {
+        if (deleteExisting)
+        {
+            //update metrics. first delete existing:
+            SimpleFilter metricsFilter = new SimpleFilter(FieldKey.fromString("readset"), rs.getRowId());
+            metricsFilter.addCondition(FieldKey.fromString("container"), rs.getContainer());
+            metricsFilter.addCondition(FieldKey.fromString("dataId"), fileId);
+            int deleted = Table.delete(SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), metricsFilter);
+            job.getLogger().debug("existing metrics deleted: " + deleted);
+        }
+        else
+        {
+            job.getLogger().debug("will not attempt to pre-delete existing metrics");
+        }
+
         try
         {
             ExpData d = ExperimentService.get().getExpData(fileId);
