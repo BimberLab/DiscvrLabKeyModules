@@ -19,5 +19,5 @@ p.MuiTypography-root {
 
 /* This corrects for the search box 'search for location' text being shifted downward. */
 .MuiAutocomplete-inputRoot[class*="MuiOutlinedInput-root"] {
-    padding: 0;
+    padding: 0 !important;
 }
