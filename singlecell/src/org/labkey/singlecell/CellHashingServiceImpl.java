@@ -285,7 +285,7 @@ public class CellHashingServiceImpl extends CellHashingService
             }
 
             // if distinct HTOs is 1, no point in running hashing.  note: presence of hashing readsets is a trigger downstream
-            HashMap<Integer, File> readsetToCountMap = new HashMap<>();
+            HashMap<String, File> readsetToCountMap = new HashMap<>();
             if (distinctHTOs.size() > 1)
             {
                 Set<Integer> hashingToRemove = new HashSet<>();
@@ -317,7 +317,7 @@ public class CellHashingServiceImpl extends CellHashingService
                             }
 
                             SequenceOutputFile so = ts.getArrayList(SequenceOutputFile.class).get(0);
-                            readsetToCountMap.put(hashingReadsetId, so.getFile().getParentFile());  //this is the umi_counts dir
+                            readsetToCountMap.put(BARCODE_TYPE.hashing.name() + "-" + hashingReadsetId, so.getFile().getParentFile());  //this is the umi_counts dir
                         }
                     }
 
@@ -379,7 +379,7 @@ public class CellHashingServiceImpl extends CellHashingService
                             job.getLogger().info("Multiple CITE-seq count matrices found, using most recent: " + sos.get(0).getRowid());
                         }
                         SequenceOutputFile so = sos.get(0);
-                        readsetToCountMap.put(citeseqReadsetId, so.getFile().getParentFile());  //this is the umi_count dir
+                        readsetToCountMap.put(BARCODE_TYPE.citeseq.name() + "-" + citeseqReadsetId, so.getFile().getParentFile());  //this is the umi_count dir
                     }
                 }
 
@@ -724,9 +724,12 @@ public class CellHashingServiceImpl extends CellHashingService
         return support.getCachedObject(READSET_TO_HASHING_MAP, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, Integer.class, Integer.class));
     }
 
-    public Map<Integer, File> getCachedReadsetToCountMatrixMap(SequenceAnalysisJobSupport support) throws PipelineJobException
+    public File getCachedReadsetToCountMatrix(SequenceAnalysisJobSupport support, int readsetId, CellHashingService.BARCODE_TYPE type) throws PipelineJobException
     {
-        return support.getCachedObject(READSET_TO_COUNTS_MAP, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, Integer.class, File.class));
+        Map<String, File> map = support.getCachedObject(READSET_TO_COUNTS_MAP, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, String.class, File.class));
+        String key = type.name() + "-" + readsetId;
+
+        return(map.get(key));
     }
 
     @Override
@@ -1331,7 +1334,7 @@ public class CellHashingServiceImpl extends CellHashingService
             throw new PipelineJobException("Unable to find cached readset of type " + type.name() + " for parent: " + parentReadset.getReadsetId());
         }
 
-        File ret = getCachedReadsetToCountMatrixMap(support).get(childId);
+        File ret = getCachedReadsetToCountMatrix(support, childId, type);
         if (ret == null)
         {
             throw new PipelineJobException("Unable to find cached count matrix of type " + type.name() + " for parent: " + parentReadset.getReadsetId());
