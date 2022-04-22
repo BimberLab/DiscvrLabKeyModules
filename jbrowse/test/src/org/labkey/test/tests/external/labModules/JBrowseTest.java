@@ -259,7 +259,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private long getTotalVariantFeatures()
     {
-        Locator l = Locator.tagWithClass("svg", "SvgFeatureRendering").append(Locator.tag("polygon"));
+        Locator l = Locator.tagWithAttribute("svg", "data-testid", "svgfeatures").append(Locator.tag("polygon"));
         try
         {
             return Locator.findElements(getDriver(), l).stream().filter(WebElement::isDisplayed).count();
