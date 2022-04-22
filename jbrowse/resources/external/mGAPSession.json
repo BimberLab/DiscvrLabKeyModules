@@ -98,7 +98,7 @@
   "defaultSession": {
     "name": "Test Session",
     "view": {
-      "id": "linearGenomeView",
+      "id": "mgap",
       "type": "LinearGenomeView",
       "tracks": [
         {

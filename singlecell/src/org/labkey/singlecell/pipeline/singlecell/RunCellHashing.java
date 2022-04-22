@@ -21,7 +21,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -54,7 +53,7 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
     }
 
     @Override
-    public boolean requiresHashing()
+    public boolean requiresHashing(SequenceOutputHandler.JobContext ctx)
     {
         return true;
     }
@@ -74,42 +73,7 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
     @Override
     protected void onFailure(SequenceOutputHandler.JobContext ctx, String outputPrefix) throws PipelineJobException
     {
-        copyHtmlLocally(ctx);
-
-        // Also delete the .done files, so hashing will repeat if we change params:
-        for (File f : ctx.getOutputDir().listFiles())
-        {
-            if (f.getName().endsWith(CellHashingServiceImpl.CALL_EXTENSION + ".done"))
-            {
-                ctx.getLogger().debug("Removing hashing .done file: " + f.getName());
-                f.delete();
-            }
-        }
-    }
-
-    private void copyHtmlLocally(SequenceOutputHandler.JobContext ctx) throws PipelineJobException
-    {
-        try
-        {
-            for (File f : ctx.getOutputDir().listFiles())
-            {
-                if (f.getName().endsWith(".hashing.html"))
-                {
-                    ctx.getLogger().info("Copying hashing HTML locally for debugging: " + f.getName());
-                    File target = new File(ctx.getSourceDirectory(), f.getName());
-                    if (target.exists())
-                    {
-                        target.delete();
-                    }
-
-                    Files.copy(f.toPath(), target.toPath());
-                }
-            }
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
+        CellHashingService.get().copyHtmlLocally(ctx);
     }
 
     @Override

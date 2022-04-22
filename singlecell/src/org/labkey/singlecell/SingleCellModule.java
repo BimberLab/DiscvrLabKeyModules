@@ -42,8 +42,11 @@ import org.labkey.singlecell.run.CellBenderLoupeHandler;
 import org.labkey.singlecell.run.CellRangerFeatureBarcodeHandler;
 import org.labkey.singlecell.run.CellRangerGexCountStep;
 import org.labkey.singlecell.run.CellRangerVDJWrapper;
-import org.labkey.singlecell.run.NimbleAligner;
 import org.labkey.singlecell.run.NimbleAlignmentStep;
+import org.labkey.singlecell.run.NimbleAnalysis;
+import org.labkey.singlecell.run.NimbleHandler;
+import org.labkey.singlecell.run.VelocytoAlignmentStep;
+import org.labkey.singlecell.run.VelocytoAnalysisStep;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -131,7 +134,10 @@ public class SingleCellModule extends ExtendedSimpleModule
 
         SequencePipelineService.get().registerPipelineStep(new CellRangerGexCountStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new CellRangerVDJWrapper.VDJProvider());
-        SequencePipelineService.get().registerPipelineStep(new NimbleAligner.Provider());
+        SequencePipelineService.get().registerPipelineStep(new NimbleAlignmentStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new NimbleAnalysis.Provider());
+        SequencePipelineService.get().registerPipelineStep(new VelocytoAlignmentStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new VelocytoAnalysisStep.Provider());
 
         SequenceAnalysisService.get().registerReadsetHandler(new CellRangerFeatureBarcodeHandler());
 
@@ -176,9 +182,13 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new DropCiteSeq.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunScGate.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunCelltypist.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RunCelltypistCustomModel.Provider());
+        SequencePipelineService.get().registerPipelineStep(new TrainCelltypist.Provider());
         SequencePipelineService.get().registerPipelineStep(new CheckExpectations.Provider());
+        SequencePipelineService.get().registerPipelineStep(new CommonFilters.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RunVision.Provider());
 
-        SequenceAnalysisService.get().registerFileHandler(new NimbleAlignmentStep());
+        SequenceAnalysisService.get().registerFileHandler(new NimbleHandler());
     }
 
     @Override

@@ -5,7 +5,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.StringBuilderWriter;
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.data.ColumnInfo;
@@ -20,15 +19,11 @@ import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.Readset;
-import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
-import org.labkey.api.sequenceanalysis.pipeline.AlignmentOutputImpl;
-import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
-import org.labkey.api.sequenceanalysis.pipeline.AlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
-import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
@@ -40,156 +35,41 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class NimbleAligner extends CellRangerGexCountStep
+import static org.labkey.singlecell.run.NimbleAlignmentStep.REF_GENOMES;
+
+public class NimbleHelper
 {
-    public static final String REF_GENOMES = "refGenomes";
+    private final PipelineContext _ctx;
+    private final PipelineStepProvider<?> _provider;
+    private final int _stepIdx;
 
-    public NimbleAligner(AlignmentStepProvider provider, PipelineContext ctx, CellRangerWrapper wrapper)
+    public NimbleHelper(PipelineContext ctx, PipelineStepProvider<?> provider, int stepIdx)
     {
-        super(provider, ctx, wrapper);
+        _ctx = ctx;
+        _provider = provider;
+        _stepIdx = stepIdx;
     }
 
-    public static class Provider extends AbstractAlignmentStepProvider<AlignmentStep>
+    private PipelineContext getPipelineCtx()
     {
-        public Provider()
-        {
-            super("Nimble", "This will run Nimble to generate a supplemental feature count matrix for the provided libraries", getCellRangerGexParams(Arrays.asList(ToolParameterDescriptor.create(REF_GENOMES, "Reference Genome(s)", null, "singlecell-nimblealignpanel", null, null))), new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js", "sequenceanalysis/field/GenomeField.js", "singlecell/panel/NimbleAlignPanel.js")), null, true, false, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
-        }
-
-        @Override
-        public AlignmentStep create(PipelineContext context)
-        {
-            return new NimbleAligner(this, context, new CellRangerWrapper(context.getLogger()));
-        }
+        return _ctx;
     }
 
-    @Override
-    public IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
+    private PipelineStepProvider<?> getProvider()
     {
-        return super.createIndex(referenceGenome, outputDir);
+        return _provider;
     }
 
-    @Override
-    public AlignmentOutput performAlignment(Readset rs, List<File> inputFastqs1, @Nullable List<File> inputFastqs2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException
+    public int getStepIdx()
     {
-        File localBam = new File(outputDirectory, basename + ".cellranger.bam");
-        File localBamIdx = new File(localBam.getPath() + ".bai");
-        AlignmentOutputImpl output = new AlignmentOutputImpl();;
-
-        String idParam = StringUtils.trimToNull(getProvider().getParameterByName("id").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
-        File cellrangerOutdir = new File(outputDirectory, CellRangerWrapper.getId(idParam, rs));
-
-        if (localBam.exists() && localBamIdx.exists())
-        {
-            getPipelineCtx().getLogger().info("Existing BAM found, re-using: " + localBam.getPath());
-        }
-        else
-        {
-            File crBam = new File(cellrangerOutdir, "outs/possorted_genome_bam.bam");
-            if (crBam.exists())
-            {
-                getPipelineCtx().getLogger().info("Using previous cellranger count run");
-            }
-            else
-            {
-                getPipelineCtx().getLogger().info("Running cellranger");
-                AlignmentOutput crOutput = super.performAlignment(rs, inputFastqs1, inputFastqs2, outputDirectory, referenceGenome, basename, readGroupId, platformUnit);
-                crBam = crOutput.getBAM();
-
-                // Remove all the normal 10x outputs:
-                output.addCommandsExecuted(crOutput.getCommandsExecuted());
-                output.addIntermediateFiles(crOutput.getIntermediateFiles());
-            }
-
-            // Remove the whole 10x folder:
-            output.addIntermediateFile(cellrangerOutdir);
-
-            try
-            {
-                if (localBam.exists())
-                {
-                    localBam.delete();
-                }
-                FileUtils.moveFile(crBam, localBam);
-
-                if (localBamIdx.exists())
-                {
-                    localBamIdx.delete();
-                }
-                FileUtils.moveFile(new File(crBam.getPath() + ".bai"), localBamIdx);
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-        }
-
-        // Now run nimble itself:
-        doNimbleAlign(localBam, output, rs, basename);
-        output.setBAM(localBam);
-
-        return output;
+        return _stepIdx;
     }
 
-    @Override
-    public boolean alwaysCopyIndexToWorkingDir()
-    {
-        return false;
-    }
-
-    @Override
-    public void init(SequenceAnalysisJobSupport support) throws PipelineJobException
-    {
-        super.init(support);
-
-        List<Integer> genomeIds = getGenomeIds();
-        for (int id : genomeIds)
-        {
-            prepareGenome(id);
-        }
-    }
-
-    private static class NimbleGenome
-    {
-        private final int genomeId;
-        private final String template;
-        private final boolean doGroup;
-
-        public NimbleGenome(String genomeStr) throws PipelineJobException
-        {
-            JSONArray arr = new JSONArray(genomeStr);
-            if (arr.length() != 3)
-            {
-                throw new PipelineJobException("Improper genome: " + genomeStr);
-            }
-
-            genomeId = arr.getInt(0);
-            template = arr.getString(1);
-            doGroup = arr.getBoolean(2);
-        }
-
-        public int getGenomeId()
-        {
-            return genomeId;
-        }
-
-        public String getTemplate()
-        {
-            return template;
-        }
-
-        public boolean isDoGroup()
-        {
-            return doGroup;
-        }
-    }
-
-    private List<Integer> getGenomeIds() throws PipelineJobException
+    public List<Integer> getGenomeIds() throws PipelineJobException
     {
         return getGenomes().stream().map(NimbleGenome::getGenomeId).collect(Collectors.toList());
     }
@@ -212,7 +92,7 @@ public class NimbleAligner extends CellRangerGexCountStep
         return ret;
     }
 
-    private void prepareGenome(int genomeId) throws PipelineJobException
+    public void prepareGenome(int genomeId) throws PipelineJobException
     {
         ReferenceGenome rg = SequenceAnalysisService.get().getReferenceGenome(genomeId, getPipelineCtx().getJob().getUser());
         if (rg == null)
@@ -222,7 +102,7 @@ public class NimbleAligner extends CellRangerGexCountStep
 
         getPipelineCtx().getSequenceSupport().cacheGenome(rg);
         getPipelineCtx().getLogger().info("Preparing genome CSV/FASTA for " + rg.getName());
-        try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(getGenomeCsv(genomeId)), ',', CSVWriter.NO_QUOTE_CHARACTER);PrintWriter fastaWriter = PrintWriters.getPrintWriter(getGenomeFasta(genomeId)))
+        try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(getGenomeCsv(genomeId)), ',', CSVWriter.NO_QUOTE_CHARACTER); PrintWriter fastaWriter = PrintWriters.getPrintWriter(getGenomeFasta(genomeId)))
         {
             writer.writeNext(new String[]{"reference_genome", "name", "nt_length", "genbank", "category", "subset", "locus", "lineage", "sequence"});
 
@@ -267,7 +147,7 @@ public class NimbleAligner extends CellRangerGexCountStep
         return new File(getPipelineCtx().getSourceDirectory(), "genome." + id + ".fasta");
     }
 
-    public void doNimbleAlign(File bam, AlignmentOutput output, Readset rs, String basename) throws UnsupportedOperationException, PipelineJobException
+    public void doNimbleAlign(File bam, PipelineStepOutput output, Readset rs, String basename) throws UnsupportedOperationException, PipelineJobException
     {
         for (NimbleGenome genome : getGenomes())
         {
@@ -285,7 +165,7 @@ public class NimbleAligner extends CellRangerGexCountStep
         }
     }
 
-    private File prepareReference(File genomeCsv, File genomeFasta, NimbleGenome genome, AlignmentOutput output) throws PipelineJobException
+    private File prepareReference(File genomeCsv, File genomeFasta, NimbleGenome genome, PipelineStepOutput output) throws PipelineJobException
     {
         genomeCsv = ensureLocalCopy(genomeCsv, output);
         genomeFasta = ensureLocalCopy(genomeFasta, output);
@@ -305,7 +185,7 @@ public class NimbleAligner extends CellRangerGexCountStep
     private void updateNimbleConfigFile(File configFile, NimbleGenome genome) throws PipelineJobException
     {
         JSONArray json;
-        try (BufferedReader reader = Readers.getReader(configFile);StringBuilderWriter writer = new StringBuilderWriter();)
+        try (BufferedReader reader = Readers.getReader(configFile); StringBuilderWriter writer = new StringBuilderWriter();)
         {
             IOUtils.copy(reader, writer);
             json = new JSONArray(writer.toString());
@@ -360,7 +240,7 @@ public class NimbleAligner extends CellRangerGexCountStep
         }
     }
 
-    private File doAlignment(NimbleGenome genome, File refJson, File bam, AlignmentOutput output) throws PipelineJobException
+    private File doAlignment(NimbleGenome genome, File refJson, File bam, PipelineStepOutput output) throws PipelineJobException
     {
         File localBam = ensureLocalCopy(bam, output);
         ensureLocalCopy(new File(bam.getPath() + ".bai"), output);
@@ -378,7 +258,14 @@ public class NimbleAligner extends CellRangerGexCountStep
         }
 
         alignArgs.add("-l");
-        alignArgs.add("/work/nimbleDebug.txt");
+        alignArgs.add("/work/nimbleDebug." + genome.genomeId + ".txt");
+
+        boolean alignOutput = getProvider().getParameterByName(NimbleHandler.ALIGN_OUTPUT).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+        if (alignOutput)
+        {
+            alignArgs.add("-a");
+            alignArgs.add("/work/nimbleAlignment." + genome.genomeId + ".txt.gz");
+        }
 
         alignArgs.add("/work/" + localRefJson.getName());
         alignArgs.add("/work/" + resultsTsv.getName());
@@ -390,7 +277,7 @@ public class NimbleAligner extends CellRangerGexCountStep
             throw new PipelineJobException("Expected to find file: " + resultsTsv.getPath());
         }
 
-        File log = new File(resultsTsv.getParentFile(), "nimbleDebug.txt");
+        File log = new File(resultsTsv.getParentFile(), "nimbleDebug." + genome.genomeId + ".txt");
         if (!log.exists())
         {
             throw new PipelineJobException("Expected to find file: " + log.getPath());
@@ -417,7 +304,7 @@ public class NimbleAligner extends CellRangerGexCountStep
 
     public static String DOCKER_CONTAINER_NAME = "ghcr.io/bimberlab/nimble:latest";
 
-    private void runUsingDocker(List<String> nimbleArgs, AlignmentOutput output) throws PipelineJobException
+    private void runUsingDocker(List<String> nimbleArgs, PipelineStepOutput output) throws PipelineJobException
     {
         File localBashScript = new File(getPipelineCtx().getWorkingDirectory(), "docker.sh");
         output.addIntermediateFile(localBashScript);
@@ -463,7 +350,7 @@ public class NimbleAligner extends CellRangerGexCountStep
         rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
     }
 
-    private File ensureLocalCopy(File input, AlignmentOutput output) throws PipelineJobException
+    private File ensureLocalCopy(File input, PipelineStepOutput output) throws PipelineJobException
     {
         try
         {
@@ -486,6 +373,42 @@ public class NimbleAligner extends CellRangerGexCountStep
         catch (IOException e)
         {
             throw new PipelineJobException(e);
+        }
+    }
+
+
+    private static class NimbleGenome
+    {
+        private final int genomeId;
+        private final String template;
+        private final boolean doGroup;
+
+        public NimbleGenome(String genomeStr) throws PipelineJobException
+        {
+            JSONArray arr = new JSONArray(genomeStr);
+            if (arr.length() != 3)
+            {
+                throw new PipelineJobException("Improper genome: " + genomeStr);
+            }
+
+            genomeId = arr.getInt(0);
+            template = arr.getString(1);
+            doGroup = arr.getBoolean(2);
+        }
+
+        public int getGenomeId()
+        {
+            return genomeId;
+        }
+
+        public String getTemplate()
+        {
+            return template;
+        }
+
+        public boolean isDoGroup()
+        {
+            return doGroup;
         }
     }
 }

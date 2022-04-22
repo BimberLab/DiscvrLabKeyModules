@@ -128,7 +128,27 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
 
             items.push({
                 xtype: 'ldk-linkbutton',
-                text: 'Add',
+                text: 'Add to Start',
+                linkCls: 'labkey-text-link',
+                step: step,
+                handler: function(btn){
+                    var win = btn.up('window');
+                    var owner = win.ownerPanel;
+                    var target = owner.down('#toolConfgPanel');
+
+                    //check if exists
+                    if (!owner.allowDuplicateSteps && target.down('[stepName=' + btn.step.name + ']')) {
+                        Ext4.Msg.alert('Already Added', 'This step has already been added and cannot be used twice.');
+                    }
+                    else {
+                        target.insert(0, owner.getAbbreviatedConfigForItem(btn.step));
+                    }
+                }
+            });
+
+            items.push({
+                xtype: 'ldk-linkbutton',
+                text: 'Add to End',
                 linkCls: 'labkey-text-link',
                 step: step,
                 handler: function(btn){
@@ -144,7 +164,7 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
                         target.add(owner.getAbbreviatedConfigForItem(btn.step));
                     }
                 }
-            })
+            });
         }, this);
 
         if (items.length){
@@ -161,7 +181,7 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
                 },
                 layout: {
                     type: 'table',
-                    columns: 3
+                    columns: 4
                 },
                 items: items
             }];

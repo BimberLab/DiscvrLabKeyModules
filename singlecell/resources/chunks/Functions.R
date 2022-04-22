@@ -51,20 +51,24 @@ clearSeuratCommands <- function(seuratObj, maxSize = 500000) {
     return(seuratObj)
 }
 
+printName <- function(datasetId) {
+    datasetName <- ifelse(datasetId %in% names(datasetIdToName), yes = datasetIdToName[[datasetId]], no = datasetId)
+    print(paste0('Processing dataset: ', datasetName))
+}
+
 savedFiles <- data.frame(datasetId = character(), datasetName = character(), filename = character(), outputFileId = character(), readsetId = character())
 write.table(savedFiles, file = 'savedSeuratObjects.txt', quote = FALSE, sep = '\t', row.names = FALSE, col.names = FALSE)
 
 saveData <- function(seuratObj, datasetId) {
     print(paste0('Saving dataset: ', datasetId))
-
     print(seuratObj)
-    if ("CellMembrane" %in% rownames(installed.packages())) {
-        CellMembrane::InspectSeurat(seuratObj)
-    }
 
-    fn <- paste0(outputPrefix, '.', datasetId, '.seurat.rds')
-    barcodeFile <- paste0(outputPrefix, '.', datasetId, '.cellBarcodes.csv')
-    metaFile <- paste0(outputPrefix, '.', datasetId, '.seurat.meta.txt')
+    datasetIdForFile <- makeLegalFileName(datasetId)
+    fn <- paste0(outputPrefix, '.', datasetIdForFile, '.seurat.rds')
+
+    message(paste0('Saving RDS file: ', fn))
+    barcodeFile <- paste0(outputPrefix, '.', datasetIdForFile, '.cellBarcodes.csv')
+    metaFile <- paste0(outputPrefix, '.', datasetIdForFile, '.seurat.meta.txt')
 
     saveRDS(seuratObj, file = fn)
 
@@ -74,6 +78,7 @@ saveData <- function(seuratObj, datasetId) {
     outputFileId <- ifelse(datasetId %in% names(datasetIdToOutputFileId), yes = datasetIdToOutputFileId[[datasetId]], no = NA)
 
     readsetId <- ifelse(datasetId %in% names(datasetIdToReadset), yes = datasetIdToReadset[[datasetId]], no = NA)
+    print(paste0('readsetId: ', readsetId))
 
     toAppend <- data.frame(datasetId = datasetId, datasetName = datasetName, filename = fn, outputFileId = outputFileId, readsetId = readsetId)
     write.table(toAppend, file = 'savedSeuratObjects.txt', quote = FALSE, sep = '\t', row.names = FALSE, col.names = FALSE, append = TRUE)
@@ -89,6 +94,13 @@ intermediateFiles <- c()
 addIntermediateFile <- function(f) {
     print(paste0('Adding intermediate file: ', f))
     intermediateFiles <<- c(intermediateFiles, f)
+}
+
+makeLegalFileName <- function(fn) {
+    fn <- gsub(fn, pattern = '\\\\', replacement = '_')
+    fn <- gsub(fn, pattern = '[/ ,;]', replacement = '_')
+    fn <- gsub(fn, pattern = '\\|', replacement = '_')
+    return(fn)
 }
 
 errorMessages <- c()

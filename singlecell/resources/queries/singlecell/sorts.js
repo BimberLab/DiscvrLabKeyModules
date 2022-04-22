@@ -42,18 +42,6 @@ function beforeUpsert(row, oldRow, errors){
         row.population = 'Bone marrow';
     }
 
-
-    //Tissue:
-    if (['perLN', 'PerLN'].indexOf(row.tissue) !== -1){
-        row.tissue = 'pLN';
-    }
-    else if (['mesLN'].indexOf(row.tissue) !== -1){
-        row.tissue = 'MesLN';
-    }
-    else if (['Bone Marrow', 'BoneMarrow'].indexOf(row.tissue) !== -1){
-        row.tissue = 'Bone marrow';
-    }
-
     //Naive cells
     if (row.population && row.population.match(/ï/)){
         row.population = row.population.replace(/ï/g, 'i');

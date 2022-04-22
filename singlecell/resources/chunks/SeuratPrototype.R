@@ -1,6 +1,7 @@
 metricData <- data.frame(dataId = integer(), readsetId = integer(), metricname = character(), metricvalue = numeric())
 
 for (datasetId in names(seuratObjects)) {
+  printName(datasetId)
   seuratObj <- readRDS(seuratObjects[[datasetId]])
   metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'TotalCells', metricvalue = ncol(seuratObj)))
 
@@ -23,6 +24,15 @@ for (datasetId in names(seuratObjects)) {
 
     fractionDiscordantHashing <- sum(seuratObj@meta.data$HTO.Classification == 'Discordant') / nrow(seuratObj@meta.data)
     metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'FractionDiscordantHashing', metricvalue = fractionDiscordantHashing))
+  } else {
+    # Ensure these fields exist:
+    if (!'HTO.Classification' %in% names(seuratObj@meta.data)) {
+      seuratObj$HTO.Classification <- c('NotUsed')
+    }
+
+    if (!'HTO' %in% names(seuratObj@meta.data)) {
+      seuratObj$HTO <- c('NotUsed')
+    }
   }
 
   if (is.null(usesCiteSeq[[datasetId]])) {
