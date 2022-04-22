@@ -7,8 +7,7 @@ import configSchemaF from './configSchema';
 import { getEnv, IAnyStateTreeNode, types } from 'mobx-state-tree';
 import PaletteIcon from '@material-ui/icons/Palette';
 import { default as SetMaxHeightDlg } from '@jbrowse/plugin-linear-genome-view/src/LinearBasicDisplay/components/SetMaxHeight';
-import {ActionURL} from "@labkey/api";
-import { LinearGenomeViewModel} from '@jbrowse/plugin-linear-genome-view'
+import { LinearGenomeViewModel } from '@jbrowse/plugin-linear-genome-view';
 import { navigateToTable } from '../../../../utils';
 
 export default jbrowse => {
