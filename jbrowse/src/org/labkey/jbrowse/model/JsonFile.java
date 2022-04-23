@@ -783,64 +783,14 @@ public class JsonFile
                 }
             }
 
-            if (forceReprocess || !idx.exists())
-            {
-                if (throwIfNotPrepared)
-                {
-                    throw new IllegalStateException("This track should have been previously indexed: " + finalLocation.getPath());
-                }
-                else
-                {
-                    if (SystemUtils.IS_OS_WINDOWS)
-                    {
-                        try
-                        {
-                            if (TRACK_TYPES.bed.getFileType().isType(finalLocation))
-                            {
-                                Index index = IndexFactory.createIndex(finalLocation.toPath(), new BEDCodec(), IndexFactory.IndexType.TABIX);
-                                index.write(idx);
-                            }
-                            else if (TRACK_TYPES.gtf.getFileType().isType(finalLocation) || TRACK_TYPES.gff.getFileType().isType(finalLocation))
-                            {
-                                Index index = IndexFactory.createIndex(finalLocation.toPath(), new Gff3Codec(), IndexFactory.IndexType.TABIX);
-                                index.write(idx);
-                            }
-                            else
-                            {
-                                log.warn("Cannot create tabix index on windows!");
-                            }
-                        }
-                        catch (IOException e)
-                        {
-                            log.error("Error creating tabix index!", e);
-                        }
-                    }
-                    else
-                    {
-                        //Ensure sorted:
-                        if (TRACK_TYPES.bed.getFileType().isType(finalLocation))
-                        {
-                            try
-                            {
-                                SequencePipelineService.get().sortROD(finalLocation, log, 2);
-                            }
-                            catch (IOException e)
-                            {
-                                throw new PipelineJobException(e);
-                            }
-                        }
-                        else if (TRACK_TYPES.gff.getFileType().isType(finalLocation) || TRACK_TYPES.gtf.getFileType().isType(finalLocation))
-                        {
-                            SequenceAnalysisService.get().sortGxf(log, finalLocation, null);
-                        }
-
-                        TabixRunner tabix = new TabixRunner(log);
-                        tabix.execute(finalLocation);
-                    }
-                }
-            }
-
             targetFile = finalLocation;
+        }
+
+        // Ensure index check runs even if file was already gzipped:
+        File idx = new File(targetFile.getPath() + ".tbi");
+        if (needsGzip() && (forceReprocess || !idx.exists()))
+        {
+            createIndex(targetFile, log, idx, throwIfNotPrepared);
         }
 
         if (doIndex())
@@ -890,6 +840,63 @@ public class JsonFile
         }
 
         return targetFile;
+    }
+
+    protected void createIndex(File finalLocation, Logger log, File idx, boolean throwIfNotPrepared) throws PipelineJobException
+    {
+        if (throwIfNotPrepared)
+        {
+            throw new IllegalStateException("This track should have been previously indexed: " + finalLocation.getPath());
+        }
+        else
+        {
+            if (SystemUtils.IS_OS_WINDOWS)
+            {
+                try
+                {
+                    if (TRACK_TYPES.bed.getFileType().isType(finalLocation))
+                    {
+                        Index index = IndexFactory.createIndex(finalLocation.toPath(), new BEDCodec(), IndexFactory.IndexType.TABIX);
+                        index.write(idx);
+                    }
+                    else if (TRACK_TYPES.gtf.getFileType().isType(finalLocation) || TRACK_TYPES.gff.getFileType().isType(finalLocation))
+                    {
+                        Index index = IndexFactory.createIndex(finalLocation.toPath(), new Gff3Codec(), IndexFactory.IndexType.TABIX);
+                        index.write(idx);
+                    }
+                    else
+                    {
+                        log.warn("Cannot create tabix index on windows!");
+                    }
+                }
+                catch (IOException e)
+                {
+                    log.error("Error creating tabix index!", e);
+                }
+            }
+            else
+            {
+                //Ensure sorted:
+                if (TRACK_TYPES.bed.getFileType().isType(finalLocation))
+                {
+                    try
+                    {
+                        SequencePipelineService.get().sortROD(finalLocation, log, 2);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
+                }
+                else if (TRACK_TYPES.gff.getFileType().isType(finalLocation) || TRACK_TYPES.gtf.getFileType().isType(finalLocation))
+                {
+                    SequenceAnalysisService.get().sortGxf(log, finalLocation, null);
+                }
+
+                TabixRunner tabix = new TabixRunner(log);
+                tabix.execute(finalLocation);
+            }
+        }
     }
 
     public File getLocationOfProcessedTrack(boolean createDir)
