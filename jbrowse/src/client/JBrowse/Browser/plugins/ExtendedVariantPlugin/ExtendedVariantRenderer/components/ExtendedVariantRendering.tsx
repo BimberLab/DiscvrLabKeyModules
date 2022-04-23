@@ -25,11 +25,6 @@ export function ExtendedVariantRendering(props) {
         return passesInfoFilters(feature, expandedFilters) && passesSampleFilters(feature, sampleFilters)
     }
 
-    // TODO: can we access the pluginManager.jexl instance directly??
-    jexl.addFunction('arrayMax', (array) => {
-        return Array.isArray(array) ? Math.max(...array) : array
-    })
-
     function getDiamondValidator() {
         return {
             glyph: Diamond,

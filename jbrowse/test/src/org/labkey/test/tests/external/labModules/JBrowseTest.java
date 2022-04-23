@@ -396,6 +396,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithClassContaining("span", "MuiTypography-root").notHidden(), WAIT_FOR_PAGE); //this is the icon from the track label
 
         waitForElementToDisappear(Locator.tagWithText("div", "Loading...")); //track data
+        waitForElementToDisappear(Locator.tagWithText("p", "Loading..."));
     }
 
     private void testSessionCardDisplay()
