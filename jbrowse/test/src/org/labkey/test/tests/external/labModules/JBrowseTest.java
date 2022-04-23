@@ -116,8 +116,8 @@ public class JBrowseTest extends BaseWebDriverTest
 
         // We expect IMPACT to be the default scheme
         assertElementPresent(Locator.tagWithText("td", "HIGH"));
-        assertElementPresent(Locator.tagWithAttribute("div", "fill", "red"));
-        assertElementPresent(Locator.tagWithAttribute("polygon", "fill", "red"));
+        waitForElement(Locator.tagWithAttribute("div", "fill", "red"));
+        waitForElement(Locator.tagWithAttribute("polygon", "fill", "red"));
 
         assertElementPresent(Locator.tagWithText("td", "MODERATE"));
         assertElementPresent(Locator.tagWithAttribute("div", "fill", "goldenrod"));
