@@ -335,10 +335,7 @@ public class JBrowseTest extends BaseWebDriverTest
     {
         // Note: this can be taxing on the browser, so load a more targeted region
         beginAt("/home/jbrowse-jbrowse.view?session=mgap&sampleFilters=mgap:m00010&location=1:116,980,271..116,983,486");
-        checker().takeScreenShot("Jbrowse1_OnLoad");
-
         waitForJBrowseToLoad();
-        checker().takeScreenShot("Jbrowse2_OnLoad");
 
         // Wait for variants to load:
         getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> G"));
