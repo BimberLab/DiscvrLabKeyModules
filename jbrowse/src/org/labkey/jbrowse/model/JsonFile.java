@@ -831,7 +831,7 @@ public class JsonFile
 
                 //TODO: eventually remove this. see: https://github.com/GMOD/jbrowse-components/issues/2354#issuecomment-926320747
                 wrapper.addToEnvironment("DEBUG", "*");
-                wrapper.execute(Arrays.asList(exe.getPath(), "text-index", "--force", "--quiet", "--attributes", StringUtils.join(attributes, ","), "--file", targetFile.getPath()));
+                wrapper.execute(Arrays.asList(exe.getPath(), "text-index", "--force", "--quiet", "--attributes", StringUtils.join(attributes, ","), "--prefixSize", "5", "--file", targetFile.getPath()));
                 if (!ixx.exists())
                 {
                     throw new PipelineJobException("Unable to find expected index file: " + ixx.getPath());
