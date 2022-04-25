@@ -10,6 +10,7 @@ import java.util.regex.Matcher
 
 repositories {
     mavenCentral()
+    // Added for org.clojars.chapmanb:sam dependency required by com.github.samtools:htsjdk
     maven {
         url "https://clojars.org/repo"
     }
