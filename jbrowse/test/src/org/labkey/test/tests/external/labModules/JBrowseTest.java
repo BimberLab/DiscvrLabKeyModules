@@ -116,8 +116,8 @@ public class JBrowseTest extends BaseWebDriverTest
 
         // We expect IMPACT to be the default scheme
         assertElementPresent(Locator.tagWithText("td", "HIGH"));
-        assertElementPresent(Locator.tagWithAttribute("div", "fill", "red"));
-        assertElementPresent(Locator.tagWithAttribute("polygon", "fill", "red"));
+        waitForElement(Locator.tagWithAttribute("div", "fill", "red"));
+        waitForElement(Locator.tagWithAttribute("polygon", "fill", "red"));
 
         assertElementPresent(Locator.tagWithText("td", "MODERATE"));
         assertElementPresent(Locator.tagWithAttribute("div", "fill", "goldenrod"));
@@ -259,7 +259,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private long getTotalVariantFeatures()
     {
-        Locator l = Locator.tagWithClass("svg", "SvgFeatureRendering").append(Locator.tag("polygon"));
+        Locator l = Locator.tagWithAttribute("svg", "data-testid", "svgfeatures").append(Locator.tag("polygon"));
         try
         {
             return Locator.findElements(getDriver(), l).stream().filter(WebElement::isDisplayed).count();
@@ -335,10 +335,7 @@ public class JBrowseTest extends BaseWebDriverTest
     {
         // Note: this can be taxing on the browser, so load a more targeted region
         beginAt("/home/jbrowse-jbrowse.view?session=mgap&sampleFilters=mgap:m00010&location=1:116,980,271..116,983,486");
-        checker().takeScreenShot("Jbrowse1_OnLoad");
-
         waitForJBrowseToLoad();
-        checker().takeScreenShot("Jbrowse2_OnLoad");
 
         // Wait for variants to load:
         getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> G"));
@@ -399,6 +396,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithClassContaining("span", "MuiTypography-root").notHidden(), WAIT_FOR_PAGE); //this is the icon from the track label
 
         waitForElementToDisappear(Locator.tagWithText("div", "Loading...")); //track data
+        waitForElementToDisappear(Locator.tagWithText("p", "Loading..."));
     }
 
     private void testSessionCardDisplay()

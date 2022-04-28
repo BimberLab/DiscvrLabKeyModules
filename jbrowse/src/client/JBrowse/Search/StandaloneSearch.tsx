@@ -48,12 +48,7 @@ const StandaloneSearch = observer(({ sessionId, tableUrl, trackId, selectedRegio
     const { textSearchManager, assemblyManager } = session
     const { rankSearchResults } = view
 
-    const { assemblyNames } = getSession(session)
-    if (!assemblyNames.length){
-        return (<p>No configured assemblies</p>)
-    }
-
-    const assemblyName = assemblyNames[0]
+    const assemblyName = state.config.assembly.name
     const assembly = assemblyManager.get(assemblyName)
     const searchScope = view.searchScope(assemblyName)
     selectedRegion = op?.getLocation() || selectedRegion
