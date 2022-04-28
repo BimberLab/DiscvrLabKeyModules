@@ -104,7 +104,7 @@ export async function fetchSession(queryParam, sessionId, nativePlugins, refThem
             delete jsonRes.themeLightColor
             delete jsonRes.themeDarkColor
 
-            if(setBgColor) {
+            if (setBgColor) {
                 setBgColor(themeSecondaryColor)
             }
 
@@ -244,8 +244,8 @@ function serializeInfoFilters(track) {
 function handleFailure(error, sessionId?, trackId?, isTable?) {
     alert(error)
 
-    if(sessionId && trackId) {
-        if(isTable) {
+    if (sessionId && trackId) {
+        if (isTable) {
             navigateToTable(sessionId, "", trackId)
         } else {
             navigateToBrowser(sessionId, "", trackId)
