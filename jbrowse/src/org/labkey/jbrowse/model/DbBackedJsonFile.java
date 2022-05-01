@@ -1,9 +1,8 @@
 package org.labkey.jbrowse.model;
 
+import htsjdk.samtools.util.BlockCompressedOutputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Logger;
-import org.labkey.api.data.Container;
-import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.SimpleFilter;
@@ -22,7 +21,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.zip.GZIPOutputStream;
 
 abstract public class DbBackedJsonFile extends JsonFile
 {
@@ -148,10 +146,13 @@ abstract public class DbBackedJsonFile extends JsonFile
 
             if (forceRecreate || !outFile.exists())
             {
-                try (final PrintWriter writer = PrintWriters.getPrintWriter(new GZIPOutputStream(new FileOutputStream(outFile))))
+                try (final PrintWriter writer = PrintWriters.getPrintWriter(new BlockCompressedOutputStream(new FileOutputStream(outFile), outFile)))
                 {
                     printGtf(writer, log);
                 }
+
+                File idx = new File(outFile.getPath() + ".tbi");
+                createIndex(outFile, log, idx, false);
             }
         }
         catch (IOException e)
