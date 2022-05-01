@@ -169,6 +169,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new CiteSeqWnn.Provider());
         SequencePipelineService.get().registerPipelineStep(new AvgExpression.Provider());
         SequencePipelineService.get().registerPipelineStep(new DimPlots.Provider());
+        SequencePipelineService.get().registerPipelineStep(new DropAssays.Provider());
         SequencePipelineService.get().registerPipelineStep(new FeaturePlots.Provider());
         SequencePipelineService.get().registerPipelineStep(new CiteSeqDimReduxPca.Provider());
         SequencePipelineService.get().registerPipelineStep(new CiteSeqPlots.Provider());
