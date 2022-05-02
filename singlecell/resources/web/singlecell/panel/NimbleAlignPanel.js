@@ -68,6 +68,8 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 					editor: {
 						xtype: 'ldk-simplecombo',
 						allowBlank: false,
+						queryMode: 'local',
+						forceSelection: true,
 						storeValues: 'strict;lenient',
 						initialValues: 'lenient',
 						delimiter: ';'
