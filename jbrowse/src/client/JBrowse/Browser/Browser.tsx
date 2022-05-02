@@ -8,6 +8,7 @@ import '../jbrowse.css';
 import JBrowseFooter from './components/JBrowseFooter';
 import { ErrorBoundary } from '@labkey/components';
 import { fetchSession } from '../utils';
+import JBrowseFilterPanel from './components/JBrowseFilterPanel';
 
 const nativePlugins = [ExtendedVariantPlugin, LogSession]
 const refTheme = createTheme()
@@ -39,7 +40,7 @@ function View(){
     }, []);
 
     if (session === null){
-        return(<p>Error - no session provided.</p>)
+        return (<p>Error - no session provided.</p>)
     }
     else if (state === null){
         return (<p>Loading...</p>)
@@ -47,12 +48,14 @@ function View(){
     else if (state == "invalid") {
         return (<p>Error fetching config. See console for more details</p>)
     }
+
     return (
         //TODO: can we make this expand to full page height?
         <div style={{height: "100%"}}>
             <ErrorBoundary>
                 <JBrowseLinearGenomeView viewState={state as ViewModel} />
                 <JBrowseFooter viewState={state} bgColor={bgColor}/>
+                <JBrowseFilterPanel session={state.session}/>
             </ErrorBoundary>
         </div>
     )

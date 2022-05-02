@@ -152,6 +152,8 @@ public class JBrowseTest extends BaseWebDriverTest
         clickDialogButton("Apply");
 
         waitForElement(Locator.tagWithAttribute("polygon", "fill", "#2425E0"));
+
+        //TODO: ensure test filter panel reflects this
     }
 
     private void assertBoxWithColorPresent(final String expectedColor)
@@ -205,6 +207,8 @@ public class JBrowseTest extends BaseWebDriverTest
 
         // Indicates the IMPACT scheme applies:
         waitForElement(Locator.tagWithAttribute("polygon", "fill", "gray"));
+
+        //TODO: ensure test filter panel reflects this
     }
 
     private void testAFColor()
@@ -225,12 +229,16 @@ public class JBrowseTest extends BaseWebDriverTest
 
         clickDialogButton("Apply");
         waitForElement(Locator.tagWithAttribute("polygon", "fill", "#9A1764"));
+
+        //TODO: ensure test filter panel reflects this
     }
 
     private void testFilterWidget()
     {
         beginAt("/home/jbrowse-jbrowse.view?session=mgap");
         waitForJBrowseToLoad();
+
+        //TODO: ensure test filter panel UI throughout this
 
         openTrackMenuItem("Filter By Attributes");
         waitForElement(Locator.tagWithText("h6", "Filter Variants"));
@@ -1458,6 +1466,8 @@ public class JBrowseTest extends BaseWebDriverTest
     private void testVariantDataGrid() throws Exception
     {
         waitForTableLoadingToDisappear();
+
+        //TODO: ensure filter panel UI working throughout this
 
         // Test default
         testColumns("1", "1", "A", "T", "0.029", "intron_variant", "HIGH",
