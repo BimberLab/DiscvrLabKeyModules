@@ -86,7 +86,7 @@ function VariantTable() {
 
     return (
         <ThemeProvider theme={theme}>
-        <div style={{height: "90vh", display:"block"}}>
+        <div style={{height: "80vh", display:"block"}}>
             <ErrorBoundary>
                 <VariantTableWidget rpcManager={rpcManager} assembly={assembly} trackId={trackId} locString={locString} 
                                     parsedLocString={parsedLocString} sessionId={sessionId} session={session} pluginManager={pluginManager}/>

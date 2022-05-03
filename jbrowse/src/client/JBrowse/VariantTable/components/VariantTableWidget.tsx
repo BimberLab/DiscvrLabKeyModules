@@ -4,13 +4,13 @@ import { getConf } from '@jbrowse/core/configuration'
 import {  Widget } from '@jbrowse/core/util'
 import { Dialog, Grid, MenuItem, Button } from "@material-ui/core"
 
-import DataGrid from 'react-data-grid'
+import { DataGrid, GridToolbar } from '@mui/x-data-grid'
 import type { HeaderRendererProps, SortColumn } from 'react-data-grid'
 
 import useFocusRef from '../useFocusRef'
 import { exportToXlsx, exportToCsv } from '../exportUtils'
 import type { Filter, Row } from '../types'
-import { defaultFilters, columnsObjRaw } from '../constants'
+import { defaultFilters, columns } from '../constants'
 import { filterFeature, sortFeatures, rawFeatureToRow, filterFeatures } from '../dataUtils'
 import MenuButton from './MenuButton'
 
@@ -179,38 +179,6 @@ const VariantTableWidget = observer(props => {
   const sortedFeatures = features ? sortFeatures(features, sortColumns) : []
   const filteredFeatures = sortedFeatures?.filter((r) => filterFeature(r, filters)) ?? []
 
-  // List of columns, which can contain arbitrary render components or a simple key-name object.
-  // Based on whether the filterOn flag is enabled or not, the components will be shown or hidden.
-  const columnsObj = columnsObjRaw.map(obj => filtersOn && obj.type == "string" ? ({
-      key: obj.key,
-      name: obj.name,
-      headerCellClass: "variantDataHeader",
-      sortable: true,
-      headerRenderer: (p) => (
-        <FilterRenderer<Row, unknown, HTMLInputElement> {...p}>
-          {({filters, ...rest}) => (
-            <input
-              {...rest}
-              id={"searchbox-" + obj.key}
-              style={{inlineSize: '100%', fontSize: '14px'}}
-              value={filters[obj.key]}
-              onChange={(e) => {
-                setFilters({
-                  ...filters,
-                  [obj.key]: e.target.value
-                })}
-              }
-              onKeyDown={inputStopPropagation}
-            />
-          )}
-        </FilterRenderer>
-      )
-    }): {key: obj.key, name: obj.name})
-
-  const columns = [
-    ...columnsObj
-  ]
-
   if (!view) {
       return
   }
@@ -226,14 +194,8 @@ const VariantTableWidget = observer(props => {
       <DataGrid
           columns={columns}
           rows={filteredFeatures}
-          defaultColumnOptions={{
-            sortable: true,
-            resizable: true
-          }}
-          sortColumns={sortColumns}
-          onSortColumnsChange={setSortColumns}
-          className="rdg-light dataGrid"
-          headerRowHeight={filtersOn ? 90 : 45}
+          components={{ Toolbar: GridToolbar }}
+          autoPageSize
         />
     )
 
@@ -269,16 +231,6 @@ const VariantTableWidget = observer(props => {
                 handleClose={(e) => handleMenuClose(setAnchorFilterMenu)}>
                 <MenuItem className="menuItem" onClick={() => { handleMenu("filterSample", gridElement); handleMenuClose(setAnchorFilterMenu) }}>Filter By Sample</MenuItem>
                 <MenuItem className="menuItem" onClick={() => { handleMenu("filterInfo", gridElement); handleMenuClose(setAnchorFilterMenu) }}>Filter By Attributes</MenuItem>
-                <MenuItem className="menuItem" onClick={() => { handleMenu("filterTable", gridElement); handleMenuClose(setAnchorFilterMenu) }}>{filtersOn ? "Hide Table Filters" : "Show Table Filters"}</MenuItem>
-              </MenuButton>
-            </Grid>
-
-            <Grid style={locString && validLocString ? {} : {display:"none"}} key='exportMenu' item xs="auto">
-              <MenuButton id={'exportMenu'} color="primary" variant="contained" text="Export" anchor={anchorExportMenu}
-                handleClick={(e) => handleMenuClick(e, setAnchorExportMenu)}
-                handleClose={() => handleMenuClose(setAnchorExportMenu)}>
-                <MenuItem className="menuItem" onClick={() => { handleMenu("exportCSV", gridElement); handleMenuClose(setAnchorExportMenu) }}>Export to CSV</MenuItem>
-                <MenuItem className="menuItem" onClick={() => { handleMenu("exportXLSX", gridElement); handleMenuClose(setAnchorExportMenu) }}>Export to XLSX</MenuItem>
               </MenuButton>
             </Grid>
 
