@@ -222,6 +222,10 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             if (val && (val.toLowerCase() === 'no' || val.toLowerCase() === 'n')) {
                 return null;
             }
+            else if (val && (val.toLowerCase() === 'yes' || val.toLowerCase() === 'y')) {
+                var panel = panel.down('#defaultCiteSeqPanel').getValue();
+                return panel || val;
+            }
 
             return val;
         },
@@ -498,13 +502,18 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             checked: true,
             listeners: {
                 scope: this,
-                change: function(field, val) {
+                change: function (field, val) {
                     field.up('panel').down('#requireGEX').setValue(!val);
                     field.up('panel').down('#requireTCR').setValue(!val);
                     field.up('panel').down('#requireHTO').setValue(!val);
                     field.up('panel').down('#requireCITE').setValue(!val);
                 }
             }
+        },{
+            xtype: 'textfield',
+            itemId: 'defaultCiteSeqPanel',
+            fieldLabel: 'Default CITE-seq Panel',
+            value: 'TB-V2'
         },{
             xtype: 'checkbox',
             fieldLabel: 'Use 10x V2/HT (Dual Index)',

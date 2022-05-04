@@ -50,6 +50,12 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                 labelWidth: 160,
                                 storeValues: ['NextSeq (MPSSR)', 'MiSeq (ONPRC)', 'Basic List (MedGenome)', '10x Sample Sheet', 'Novogene', 'Novogene-New']
                             },{
+                                xtype: 'textfield',
+                                itemId: 'hashingPrefix',
+                                fieldLabel: 'Hashing Library Prefix',
+                                labelWidth: 160,
+                                value: 'H'
+                            },{
                                 xtype: 'ldk-simplecombo',
                                 itemId: 'application',
                                 fieldLabel: 'Application/Type',
@@ -535,15 +541,16 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
         plateIds = Ext4.unique(plateIds);
 
-        var instrument = btn.up('singlecell-libraryexportpanel').down('#instrument').getValue();
-        var application = btn.up('singlecell-libraryexportpanel').down('#application') ? btn.up('singlecell-libraryexportpanel').down('#application').getValue() :  null;
-        var defaultVolume = btn.up('singlecell-libraryexportpanel').down('#defaultVolume') ? btn.up('singlecell-libraryexportpanel').down('#defaultVolume').getValue() :  '';
-        var adapter = btn.up('singlecell-libraryexportpanel').down('#adapter') ? btn.up('singlecell-libraryexportpanel').down('#adapter').getValue() : null;
-        var includeWithData = btn.up('singlecell-libraryexportpanel').down('#includeWithData').getValue();
-        var allowDuplicates = btn.up('singlecell-libraryexportpanel').down('#allowDuplicates').getValue();
-        var simpleSampleNames = btn.up('singlecell-libraryexportpanel').down('#simpleSampleNames').getValue();
-        var includeBlanks = btn.up('singlecell-libraryexportpanel').down('#includeBlanks').getValue();
-        var doReverseComplement = btn.up('singlecell-libraryexportpanel').doReverseComplement;
+        const instrument = btn.up('singlecell-libraryexportpanel').down('#instrument').getValue();
+        const application = btn.up('singlecell-libraryexportpanel').down('#application') ? btn.up('singlecell-libraryexportpanel').down('#application').getValue() :  null;
+        const defaultVolume = btn.up('singlecell-libraryexportpanel').down('#defaultVolume') ? btn.up('singlecell-libraryexportpanel').down('#defaultVolume').getValue() :  '';
+        const adapter = btn.up('singlecell-libraryexportpanel').down('#adapter') ? btn.up('singlecell-libraryexportpanel').down('#adapter').getValue() : null;
+        const includeWithData = btn.up('singlecell-libraryexportpanel').down('#includeWithData').getValue();
+        const allowDuplicates = btn.up('singlecell-libraryexportpanel').down('#allowDuplicates').getValue();
+        const simpleSampleNames = btn.up('singlecell-libraryexportpanel').down('#simpleSampleNames').getValue();
+        const includeBlanks = btn.up('singlecell-libraryexportpanel').down('#includeBlanks').getValue();
+        const doReverseComplement = btn.up('singlecell-libraryexportpanel').doReverseComplement;
+        const hashingPrefix = btn.up('singlecell-libraryexportpanel').down('#hashingPrefix').getValue();
 
         var isMatchingApplication = function(application, libraryType, readsetApplication, rowLevelApplication){
             if (!application && !rowLevelApplication){
@@ -891,7 +898,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                         // NOTE: Dual index 10x is always presented in the right orientation, so only RC if single-indexed
                         const hashingDoRC = !r['hashingReadsetId/barcode3'];
-                        processType(readsetIds, rows, r, 'hashingReadsetId', 'HTO', 182, 0.05, 'H', 'Cell hashing, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', hashingDoRC, 20, runMap, totalCells);
+                        processType(readsetIds, rows, r, 'hashingReadsetId', 'HTO', 182, 0.05, hashingPrefix, 'Cell hashing, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', hashingDoRC, 20, runMap, totalCells);
                         processType(readsetIds, rows, r, 'citeseqReadsetId', 'CITE', 182, 0.05, 'C', 'CITE-Seq, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', false, 20, runMap, totalCells);
                     }, this);
 
