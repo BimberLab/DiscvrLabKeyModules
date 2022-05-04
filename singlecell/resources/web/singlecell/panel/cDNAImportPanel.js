@@ -122,7 +122,12 @@ Ext4.define('SingleCell.panel.cDNAImportPanel', {
             fieldLabel: 'Require Cite-Seq Library',
             itemId: 'requireCITE',
             checked: false
-        }, {
+        },{
+            xtype: 'checkbox',
+            fieldLabel: 'Combined Hashing and Cite-Seq Libraries',
+            itemId: 'combineHashingCite',
+            checked: false
+        },{
             xtype: 'checkbox',
             fieldLabel: 'Require Library Concentrations',
             itemId: 'requireConc',
