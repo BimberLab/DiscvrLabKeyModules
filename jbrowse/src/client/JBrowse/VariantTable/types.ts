@@ -1,12 +1,4 @@
 // Various interfaces used thoughout VariantTableWidget.
-export interface Filter extends Omit<Row, 'chrom'|'pos'|'af'|'cadd_ph'> {
-    ref: string;
-    alt: string;
-    impact: string;
-    variant_type: string;
-    overlapping_genes: string;
-  }
-   
 export interface Row {
     chrom: string;
     pos: string;

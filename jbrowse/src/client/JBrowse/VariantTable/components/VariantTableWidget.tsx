@@ -5,13 +5,10 @@ import {  Widget } from '@jbrowse/core/util'
 import { Dialog, Grid, MenuItem, Button } from "@material-ui/core"
 
 import { DataGrid, GridToolbar } from '@mui/x-data-grid'
-import type { HeaderRendererProps, SortColumn } from 'react-data-grid'
 
-import useFocusRef from '../useFocusRef'
-import { exportToXlsx, exportToCsv } from '../exportUtils'
-import type { Filter, Row } from '../types'
-import { defaultFilters, columns } from '../constants'
-import { filterFeature, sortFeatures, rawFeatureToRow, filterFeatures } from '../dataUtils'
+import type { Row } from '../types'
+import { columns } from '../constants'
+import { rawFeatureToRow, filterFeatures } from '../dataUtils'
 import MenuButton from './MenuButton'
 
 import StandaloneSearch from "../../Search/StandaloneSearch"
@@ -32,35 +29,6 @@ const VariantTableWidget = observer(props => {
     return (<p>Unknown track: {trackId}</p>)
   }
 
-  // Render function for the custom components that make up the header cells of the table
-  function FilterRenderer<R, SR, T extends HTMLOrSVGElement>({
-    isCellSelected,
-    column,
-    children
-  }: HeaderRendererProps<R, SR> & {
-    children: (args: {
-      ref: React.RefObject<T>;
-      tabIndex: number;
-      filters: Filter;
-    }) => React.ReactElement;
-  }) {
-    const { ref, tabIndex } = useFocusRef<T>(isCellSelected)
-    
-    return (
-      <>
-        <div>{column.name}</div>
-        {<div>{children({ ref, tabIndex, filters })}</div>}
-      </>
-    )
-  }
-
-  // Ensure you can't arrow-navigate out of a filter input box when you're typing into it
-  function inputStopPropagation(event: React.KeyboardEvent<HTMLInputElement>) {
-    if (['ArrowLeft', 'ArrowRight'].includes(event.key)) {
-      event.stopPropagation();
-    }
-  }
-
   function handleMenu(item, gridElement) {
     switch(item) {
       case "filterSample":
@@ -73,12 +41,6 @@ const VariantTableWidget = observer(props => {
         break;
       case "filterTable":
         setFiltersOn(!filtersOn)
-        break;
-      case "exportCSV": 
-        exportToCsv(gridElement, 'rows.csv')
-        break;
-      case "exportXLSX":
-        exportToXlsx(gridElement, 'rows.xlsx')
         break;
       case "browserRedirect":
         navigateToBrowser(sessionId, locString, trackId, track)
@@ -111,12 +73,6 @@ const VariantTableWidget = observer(props => {
   // Flag for whether the filters boxes are being displayed or not
   const [filtersOn, setFiltersOn] = useState<boolean>(false)
 
-  // Contains filter state
-  const [filters, setFilters] = useState<Filter>(defaultFilters)
-
-  // Contains column sort state
-  const [sortColumns, setSortColumns] = useState<readonly SortColumn[]>([])
-
   // Active widget ID list to force rerender when a JBrowseUIButton is clicked
   const [activeWidgetList, setActiveWidgetList] = useState<string[]>([])
 
@@ -126,7 +82,6 @@ const VariantTableWidget = observer(props => {
 
   // Menu management
   const [anchorFilterMenu, setAnchorFilterMenu] = useState(null)
-  const [anchorExportMenu, setAnchorExportMenu] = useState(null)
   const [validLocString, setValidLocString] = useState(true)
 
 
@@ -174,11 +129,6 @@ const VariantTableWidget = observer(props => {
     }
   }, [pluginManager, parsedLocString, session.visibleWidget])
 
-  // Sort the base feature list using the requested sort columns. Then, filter using the requested filters.
-  // filteredFeatures goes on to become the rows of the datagrid.
-  const sortedFeatures = features ? sortFeatures(features, sortColumns) : []
-  const filteredFeatures = sortedFeatures?.filter((r) => filterFeature(r, filters)) ?? []
-
   if (!view) {
       return
   }
@@ -193,7 +143,7 @@ const VariantTableWidget = observer(props => {
     const gridElement = (
       <DataGrid
           columns={columns}
-          rows={filteredFeatures}
+          rows={features}
           components={{ Toolbar: GridToolbar }}
           autoPageSize
         />
