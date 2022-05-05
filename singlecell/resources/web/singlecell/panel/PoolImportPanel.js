@@ -181,7 +181,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                     }
                     return 'D' + val;
                 }
-                else if (type === 'MultiSeq') {
+                else if (type === 'MultiSeq' && !panel.down('#useDualIndex').getValue()) {
                     val = parseInt(val);
 
                     return 'MultiSeq-Idx-RP' + val;
@@ -201,8 +201,11 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                     val = val.replace(/^MS[- ]Idx/ig, 'MultiSeq-Idx');
                     val = val.replace(/^MultiSeq[- ]Idx[- ]RP/ig, 'MultiSeq-Idx-RP');
 
-                    if (val.length <= 3) {
-                        val = panel.down('#useDualIndex').getValue() ? 'SI-TN-' + val : 'SI-NA-' + val;
+                    if (val.length <= 3 && panel.down('#useDualIndex').getValue()) {
+                        val = 'MS-TN-' + val;
+                    }
+                    else {
+                        LDK.Utils.logError('Unexpected value with single-end hashing: ' + val);
                     }
 
                     return val;
@@ -517,7 +520,8 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         },{
             xtype: 'checkbox',
             fieldLabel: 'Use 10x V2/HT (Dual Index)',
-            itemId: 'useDualIndex'
+            itemId: 'useDualIndex',
+            checked: true
         },{
             xtype: 'ldk-simplelabkeycombo',
             fieldLabel: 'Hashing Type',
@@ -942,7 +946,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             LDK.Assert.assertNotEmpty('Expected non-null workbook', workbook);
 
             // These are the dual-index 10x barcode series.
-            var isDualIndex = idxValues[0].startsWith('SI-TN') || idxValues[0].startsWith('SI-TT');
+            var isDualIndex = idxValues[0].startsWith('MS-TN') || idxValues[0].startsWith('SI-TN') || idxValues[0].startsWith('SI-TT');
 
             readsetRows.push({
                 name: poolName + '-' + (nameSuffix || type),

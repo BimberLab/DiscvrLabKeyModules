@@ -136,6 +136,7 @@ Ext4.define('SingleCell.panel.cDNAImportPanel', {
             xtype: 'checkbox',
             fieldLabel: 'Use 10x V2/HT (Dual Index)',
             itemId: 'useDualIndex',
+            checked: true,
             listeners: {
                 change: function(field, val){
                     field.up('panel').down('#barcodeSeries').setValue(field.getValue() ? 'SI-TT' : 'SI-GA');
