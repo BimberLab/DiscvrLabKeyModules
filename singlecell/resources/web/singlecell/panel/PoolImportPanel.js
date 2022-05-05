@@ -946,6 +946,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
 
             readsetRows.push({
                 name: poolName + '-' + (nameSuffix || type),
+                plateId: poolName,
                 barcode5: isDualIndex ? idxValues[0] + '_F' : idxValues[0],
                 barcode3: isDualIndex ? idxValues[0] + '_R' : null,
                 concentration: conc[0],

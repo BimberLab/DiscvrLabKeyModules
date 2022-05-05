@@ -281,7 +281,7 @@ Ext4.define('SingleCell.panel.cDNAImportPanel', {
             containerPath: Laboratory.Utils.getQueryContainerPath(),
             schemaName: 'singlecell',
             queryName: 'cdna_libraries',
-            columns: 'rowid,plateid',
+            columns: 'rowid,plateid,readsetId,tcrReadsetId,hashingReadsetId,citeseqReadsetId',
             filterArray: [LABKEY.Filter.create('plateId', plateIDs.join(';'), LABKEY.Filter.Types.IN)],
             scope: this,
             success: function(results) {
@@ -295,7 +295,7 @@ Ext4.define('SingleCell.panel.cDNAImportPanel', {
                 var plateToCDNAMap = {};
                 Ext4.Array.forEach(results.rows, function(row) {
                     plateToCDNAMap[row.plateId] = plateToCDNAMap[row.plateId] || [];
-                    plateToCDNAMap[row.plateId].push(row.rowid);
+                    plateToCDNAMap[row.plateId].push(row);
                 }, this);
 
                 var missing = [];
@@ -310,8 +310,38 @@ Ext4.define('SingleCell.panel.cDNAImportPanel', {
                     return;
                 }
 
+                function getUnique(value, index, self) {
+                    return self.indexOf(value) === index;
+                }
+                
                 Ext4.Array.forEach(groupedRows.cDNARows, function(r){
-                    r.rowIds = plateToCDNAMap[r.plateId];
+                    r.rowIds = plateToCDNAMap[r.plateId] ? plateToCDNAMap[r.plateId].map(r => r.rowid) : null;
+                    r.readsetId = plateToCDNAMap[r.plateId] ? plateToCDNAMap[r.plateId].map(r => r.readsetId).filter(r => !!r).filter(getUnique).join('') : null;
+                    r.tcrReadsetId = plateToCDNAMap[r.plateId] ? plateToCDNAMap[r.plateId].map(r => r.tcrReadsetId).filter(r => !!r).filter(getUnique).join('') : null;
+                    r.hashingReadsetId = plateToCDNAMap[r.plateId] ? plateToCDNAMap[r.plateId].map(r => r.hashingReadsetId).filter(r => !!r).filter(getUnique).join('') : null;
+                    r.citeseqReadsetId = plateToCDNAMap[r.plateId] ? plateToCDNAMap[r.plateId].map(r => r.citeseqReadsetId).filter(r => !!r).filter(getUnique).join('') : null;
+                }, this);
+
+                Ext4.Array.forEach(groupedRows.readsetRows, function(r){
+                    var fieldName;
+                    if (r.application === 'CITE-Seq') {
+                        fieldName = 'citeseqReadsetId';
+                    }
+                    else if (r.application === 'Cell Hashing') {
+                        fieldName = 'hashingReadsetId';
+                    }
+                    else if (r.librarytype === '10x 5\' GEX') {
+                        fieldName = 'readsetId';
+                    }
+                    else if (r.librarytype === '10x 5\' VDJ (Rhesus A/B/D/G)') {
+                        fieldName = 'tcrReadsetId';
+                    }
+                    else {
+                        console.error('Unknown row type')
+                        console.error(row)
+                    }
+
+                    r.doInsert = !(plateToCDNAMap[r.plateId] ? plateToCDNAMap[r.plateId].map(r => r[fieldName]).filter(r => !!r).filter(getUnique).join('') : null);
                 }, this);
 
                 this.renderPreview(colArray, parsedRows, groupedRows);
@@ -324,74 +354,91 @@ Ext4.define('SingleCell.panel.cDNAImportPanel', {
         Ext4.Msg.wait('Saving...');
 
         var data = config.rowData.groupedRows;
+        var toInsert = data.readsetRows.filter(r => r.doInsert)
+        if (!toInsert.length) {
+            Ext4.Msg.hide();
+            Ext4.Msg.alert('Success', 'Data Saved', function(){
+                window.location = LABKEY.ActionURL.buildURL('query', 'executeQuery.view', Laboratory.Utils.getQueryContainerPath(), {'query.queryName': 'cdna_libraries', schemaName: 'singlecell', 'query.sort': '-created'});
+            }, this);
+        }
+        else {
+            LABKEY.Query.insertRows({
+                containerPath: Laboratory.Utils.getQueryContainerPath(),
+                schemaName: 'sequenceanalysis',
+                queryName: 'sequence_readsets',
+                rows: toInsert,
+                success: function (results) {
+                    var readsetMap = {};
+                    Ext4.Array.forEach(results.rows, function (row) {
+                        readsetMap[row.name] = row.rowId;
+                    }, this);
 
-        LABKEY.Query.insertRows({
-            containerPath: Laboratory.Utils.getQueryContainerPath(),
-            schemaName: 'sequenceanalysis',
-            queryName: 'sequence_readsets',
-            rows: data.readsetRows,
-            success: function(results){
-                var readsetMap = {};
-                Ext4.Array.forEach(results.rows, function(row){
-                    readsetMap[row.name] = row.rowId;
-                }, this);
+                    var toUpdate = [];
+                    Ext4.Array.forEach(data.cDNARows, function (row) {
+                        var baseRow = {
+                            readsetId: row.readsetId,
+                            tcrReadsetId: row.tcrReadsetId,
+                            hashingReadsetId: row.hashingReadsetId,
+                            citeseqReadsetId: row.citeseqReadsetId
+                        };
 
-                var toUpdate = [];
-                Ext4.Array.forEach(data.cDNARows, function(row){
-                    var baseRow = {};
+                        var gexReadsetId = readsetMap[row.plateId + '-GEX'];
+                        if (gexReadsetId) {
+                            baseRow.readsetId = gexReadsetId;
+                        }
 
-                    var gexReadsetId = readsetMap[row.plateId + '-GEX'];
-                    if (gexReadsetId) {
-                        baseRow.readsetId = gexReadsetId;
-                    }
+                        var tcrReadsetId = readsetMap[row.plateId + '-TCR'];
+                        if (tcrReadsetId) {
+                            baseRow.tcrReadsetId = tcrReadsetId;
+                        }
 
-                    var tcrReadsetId = readsetMap[row.plateId + '-TCR'];
-                    if (tcrReadsetId) {
-                        baseRow.tcrReadsetId = tcrReadsetId;
-                    }
+                        var htoReadsetId = readsetMap[row.plateId + '-HTO'];
+                        if (htoReadsetId) {
+                            baseRow.hashingReadsetId = htoReadsetId;
+                        }
 
-                    var htoReadsetId = readsetMap[row.plateId + '-HTO'];
-                    if (htoReadsetId) {
-                        baseRow.hashingReadsetId = htoReadsetId;
-                    }
+                        var citeseqReadsetId = readsetMap[row.plateId + '-CITE'];
+                        if (citeseqReadsetId) {
+                            baseRow.citeseqReadsetId = citeseqReadsetId;
+                        }
 
-                    var citeseqReadsetId = readsetMap[row.plateId + '-CITE'];
-                    if (citeseqReadsetId) {
-                        baseRow.citeseqReadsetId = citeseqReadsetId;
-                    }
+                        baseRow.container = row.container;
 
-                    baseRow.container = row.container;
+                        if (row.rowIds) {
+                            Ext4.Array.forEach(row.rowIds, function (r) {
+                                var toAdd = Ext4.apply({
+                                    rowId: r
+                                }, baseRow);
 
-                    if (row.rowIds) {
-                        Ext4.Array.forEach(row.rowIds, function(r){
-                            var toAdd = Ext4.apply({
-                                rowId: r
-                            }, baseRow);
-
-                            toUpdate.push(toAdd);
-                        }, this);
-                    }
-                }, this);
-
-                if (toUpdate.length) {
-                    LABKEY.Query.updateRows({
-                        containerPath: Laboratory.Utils.getQueryContainerPath(),
-                        schemaName: 'singlecell',
-                        queryName: 'cdna_libraries',
-                        rows: toUpdate,
-                        success: function (results) {
-                            Ext4.Msg.hide();
-                            Ext4.Msg.alert('Success', 'Data Saved', function(){
-                                window.location = LABKEY.ActionURL.buildURL('query', 'executeQuery.view', Laboratory.Utils.getQueryContainerPath(), {'query.queryName': 'cdna_libraries', schemaName: 'singlecell', 'query.sort': '-created'});
+                                toUpdate.push(toAdd);
                             }, this);
-                        },
-                        failure: LDK.Utils.getErrorCallback(),
-                        scope: this
-                    });
-                }
-            },
-            failure: LDK.Utils.getErrorCallback(),
-            scope: this
-        });
+                        }
+                    }, this);
+
+                    if (toUpdate.length) {
+                        LABKEY.Query.updateRows({
+                            containerPath: Laboratory.Utils.getQueryContainerPath(),
+                            schemaName: 'singlecell',
+                            queryName: 'cdna_libraries',
+                            rows: toUpdate,
+                            success: function (results) {
+                                Ext4.Msg.hide();
+                                Ext4.Msg.alert('Success', 'Data Saved', function () {
+                                    window.location = LABKEY.ActionURL.buildURL('query', 'executeQuery.view', Laboratory.Utils.getQueryContainerPath(), {
+                                        'query.queryName': 'cdna_libraries',
+                                        schemaName: 'singlecell',
+                                        'query.sort': '-created'
+                                    });
+                                }, this);
+                            },
+                            failure: LDK.Utils.getErrorCallback(),
+                            scope: this
+                        });
+                    }
+                },
+                failure: LDK.Utils.getErrorCallback(),
+                scope: this
+            });
+        }
     }
 });
