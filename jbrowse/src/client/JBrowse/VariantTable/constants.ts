@@ -11,6 +11,7 @@ export const columns: GridColumns = [
   { field: 'impact', headerName: 'Impact', width: 50, type: "string", flex: 1, headerAlign: 'left' },
   { field: 'overlapping_genes', headerName: 'Overlapping Genes', type: "string", flex: 1, headerAlign: 'left' },
   { field: 'cadd_ph', headerName: 'CADD Score', width: 50, type: "number", flex: 1, headerAlign: 'left' },
+  { field: 'show_genotypes', headerName: 'Show Genotypes', width: 50, type: "actions", flex: 1, headerAlign: 'left' },
 ]
 
 // Default state of each filter.

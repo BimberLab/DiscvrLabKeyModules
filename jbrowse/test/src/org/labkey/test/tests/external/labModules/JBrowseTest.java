@@ -78,7 +78,7 @@ public class JBrowseTest extends BaseWebDriverTest
         testInferredDetails();
 
         //These are passing:
-        /*testNoSession();
+        testNoSession();
         testMessageDisplay();
         testSessionCardDisplay();
         testTitleMapping();
@@ -93,7 +93,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
         testLoadingConfigFilters();
         testSampleFilters();
-        testSampleFiltersFromUrl();*/
+        testSampleFiltersFromUrl();
 
         testBrowserNavToVariantTable();
 
