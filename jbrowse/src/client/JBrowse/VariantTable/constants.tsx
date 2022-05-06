@@ -1,7 +1,6 @@
 import { GridColumns, GridRenderCellParams } from '@mui/x-data-grid';
 import { getGenotypeURL } from "../utils"
 import React from "react"
-import { createImportSpecifier } from 'typescript';
 
 // Columns to be shown, minus the ID column.
 export const columns: GridColumns = [
@@ -14,15 +13,18 @@ export const columns: GridColumns = [
   { field: 'impact', headerName: 'Impact', width: 50, type: "string", flex: 1, headerAlign: 'left' },
   { field: 'overlapping_genes', headerName: 'Overlapping Genes', type: "string", flex: 1, headerAlign: 'left' },
   { field: 'cadd_ph', headerName: 'CADD Score', width: 50, type: "number", flex: 1, headerAlign: 'left' },
-  { 
+  { field: 'cadd_ph', headerName: 'CADD Score', width: 50, type: "number", flex: 1, headerAlign: 'left' },
+  { field: 'track_id', headerName: 'Track ID', width: 50, type: "string", flex: 1, headerAlign: 'left', hide: true },
+  { field: 'start', headerName: 'Start Location', width: 50, type: "string", flex: 1, headerAlign: 'left', hide: true },
+  { field: 'end', headerName: 'End Location', width: 50, type: "string", flex: 1, headerAlign: 'left', hide: true },
+  {
     field: 'show_genotypes',
     headerName: 'Show Genotypes',
     width: 50,
     flex: 1,
     headerAlign: 'left',
     renderCell: (params: GridRenderCellParams) => {
-      console.log(params)
-      return (<p>Show Genotypes</p>)
+      return (<a target="_blank" href={getGenotypeURL(params.row.trackId, params.row.chrom, params.row.start, params.row.end)}>Show Genotypes</a>)
     }
   },
 ]

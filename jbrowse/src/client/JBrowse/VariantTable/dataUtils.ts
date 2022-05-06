@@ -3,7 +3,7 @@ import { passesInfoFilters, passesSampleFilters } from '../utils'
 import { deserializeFilters } from '../Browser/plugins/ExtendedVariantPlugin/InfoFilterWidget/filterUtil'
 
 // Takes a feature JSON from the API and converts it into a JS object in the schema we want.
-export function rawFeatureToRow(rawFeature: any, id: number): Row {
+export function rawFeatureToRow(rawFeature: any, id: number, trackId: string): Row {
   let afString = ""
   if(rawFeature.data.INFO.AF && rawFeature.data.INFO.AF.length > 1) {
     afString = rawFeature.data.INFO.AF.join(", ")
@@ -30,7 +30,10 @@ export function rawFeatureToRow(rawFeature: any, id: number): Row {
       impact: (rawFeature.data.INFO.IMPACT ?? "").toString(),
       overlapping_genes: generateGeneList(rawFeature.data.INFO.ANN, 3, null),
       variant_type: generateGeneList(rawFeature.data.INFO.ANN, 1, 'custom'),
-      cadd_ph: caddPHString
+      cadd_ph: caddPHString,
+      start: rawFeature.data.start,
+      end: rawFeature.data.end,
+      trackId: trackId
   } as Row
 
   return row

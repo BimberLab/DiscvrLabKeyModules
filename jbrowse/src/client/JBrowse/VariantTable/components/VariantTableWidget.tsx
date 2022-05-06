@@ -102,7 +102,7 @@ const VariantTableWidget = observer(props => {
         track.configuration.displays[0].renderer.activeSamples.value, 
         track.configuration.displays[0].renderer.infoFilters.valueJSON)
 
-      setFeatures(filteredFeatures.map((rawFeature, id) => rawFeatureToRow(rawFeature, id)))
+      setFeatures(filteredFeatures.map((rawFeature, id) => rawFeatureToRow(rawFeature, id, trackId)))
     }
 
     if(pluginManager && parsedLocString && validLocString) {
