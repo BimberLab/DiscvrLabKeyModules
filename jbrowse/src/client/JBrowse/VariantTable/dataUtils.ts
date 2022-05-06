@@ -2,58 +2,6 @@ import type { Row } from './types'
 import { passesInfoFilters, passesSampleFilters } from '../utils'
 import { deserializeFilters } from '../Browser/plugins/ExtendedVariantPlugin/InfoFilterWidget/filterUtil'
 
-// Logic behind how to filter each field.
-export function filterFeature(feature, filters) {
-    return (
-        (filters.ref ? feature.ref.includes(filters.ref) : true) &&
-        (filters.alt ? feature.alt.includes(filters.alt) : true) &&
-        (filters.impact ? feature.impact.includes(filters.impact) : true) &&
-        (filters.variant_type ? feature.variant_type.includes(filters.variant_type) : true) &&
-        (filters.overlapping_genes ? feature.overlapping_genes.includes(filters.overlapping_genes) : true)
-    )
-}
-
-// Utility function to apply getComparator, which contains our sorting logic, to each column.
-export function sortFeatures(features, sortColumns) {
-  if (sortColumns.length === 0) return features;
-
-  return [...features].sort((a, b) => {
-    for (const sort of sortColumns) {
-      const comparator = getComparator(sort.columnKey);
-      const compResult = comparator(a, b);
-      if (compResult !== 0) {
-        return sort.direction === 'ASC' ? compResult : -compResult;
-      }
-    }
-    return 0;
-  });
-}
-
-// Contains logic for how to compare values within a column to themselves.
-type Comparator = (a: Row, b: Row) => number;
-function getComparator(sortColumn: string): Comparator {
-  switch (sortColumn) {
-    case 'ref':
-    case 'alt':
-    case 'impact':
-    case 'variant_type':
-    case 'overlapping_genes':
-      return (a, b) => {
-        return a[sortColumn].localeCompare(b[sortColumn]);
-      };
-    case 'cadd_ph':
-    case 'chrom':
-    case 'pos':
-    case 'af':
-      return (a, b) => {
-        return Number(a[sortColumn]) - Number(b[sortColumn]);
-      };
-    default:
-      throw new Error(`unsupported sortColumn: "${sortColumn}"`);
-  }
-}
-
-
 // Takes a feature JSON from the API and converts it into a JS object in the schema we want.
 export function rawFeatureToRow(rawFeature: any, id: number): Row {
   let afString = ""

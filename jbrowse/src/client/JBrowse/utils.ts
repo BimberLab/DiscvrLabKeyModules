@@ -252,3 +252,7 @@ function handleFailure(error, sessionId?, trackId?, isTable?) {
         }
     }
 }
+
+export function getGenotypeURL(trackId, contig, start, end) {
+    return ActionURL.buildURL("jbrowse", "genotypeTable.view", null, {trackId: trackId, chr: contig, start: start, stop: end})
+}
