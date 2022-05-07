@@ -757,6 +757,7 @@ public class JBrowseTest extends BaseWebDriverTest
         WebElement value = Locator.tagWithId("input", "standard-number").findElement(getDriver());
         value.sendKeys("0.0009728");
         waitAndClick(Locator.tagWithText("button", "Apply"));
+        waitForElementToDisappear(Locator.tagWithText("div", "GGCAT"));
         testColumns(filteredTopRowElement,"1", "116989670", "ATGGCTCCTG", "A",
                 "0.0009728", "intron_variant", "", "NTNG1", "3.9");
 
