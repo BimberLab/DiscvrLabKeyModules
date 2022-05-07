@@ -733,6 +733,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(valueSelector);
         WebElement valueSelectorElem = valueSelector.findElement(getDriver());
         valueSelectorElem.sendKeys("GGC");
+        waitForElementToDisappear(Locator.tagWithText("div", "TTGCTCGTTTTATTGG"));
 
         Locator filteredTopRow = Locator.tagWithAttribute("div", "aria-rowindex", "2");
         waitForElement(filteredTopRow);
