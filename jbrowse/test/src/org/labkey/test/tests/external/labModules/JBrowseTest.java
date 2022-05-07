@@ -714,7 +714,11 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(referenceSort);
         WebElement elem = referenceSort.findElement(getDriver());
         elem.click();
+        waitForElement(Locator.tagWithText("div", "116985082"));
         elem.click();
+        waitForElementToDisappear(Locator.tagWithText("div", "116985082"));
+        waitForElement(Locator.tagWithText("div", "117000545"));
+
         Locator sortedTopRow = Locator.tagWithAttribute("div", "aria-rowindex", "2");
         waitForElement(sortedTopRow);
         WebElement sortedTopRowElement = topRow.findElement(getDriver());
