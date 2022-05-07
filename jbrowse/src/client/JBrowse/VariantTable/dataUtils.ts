@@ -4,46 +4,37 @@ import { deserializeFilters } from '../Browser/plugins/ExtendedVariantPlugin/Inf
 
 // Takes a feature JSON from the API and converts it into a JS object in the schema we want.
 export function rawFeatureToRow(rawFeature: any, id: number, trackId: string): Row {
-  let afString = ""
-  if(rawFeature.data.INFO.AF && rawFeature.data.INFO.AF.length > 1) {
-    afString = rawFeature.data.INFO.AF.join(", ")
-    afString = afString.substring(0, afString.length - 2)
-  } else if (rawFeature.data.INFO.AF && rawFeature.data.INFO.AF.length === 1) {
-    afString = rawFeature.data.INFO.AF[0]
-  }
+    // TODO: we should pass in the VCF header and do a more complete job of parsing the INFO fields. We should use the datatype (which is defined in the VCF header to more automatically handle type and parsing)
+    // See: https://samtools.github.io/hts-specs/VCFv4.2.pdf, and in particular the INFO definitions. Number=A means per-allele, which gives the array
+    // ##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">
+    // ##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+    // ##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
 
-  let caddPHString = ""
-  if(rawFeature.data.INFO.CADD_PH && rawFeature.data.INFO.CADD_PH > 1) {
-    caddPHString = rawFeature.data.INFO.CADD_PH.join(", ")
-    caddPHString = caddPHString.substring(0, caddPHString.length - 2)
-  } else if (rawFeature.data.INFO.CADD_PH && rawFeature.data.INFO.CADD_PH.length === 1) {
-    caddPHString = rawFeature.data.INFO.CADD_PH[0]
-  }
+  let afString = rawFeature.data.INFO.AF && rawFeature.data.INFO.AF.length ? rawFeature.data.INFO.AF.filter(x => !!x).join(", ") : ""
+  let caddPHString = rawFeature.data.INFO.CADD_PH && rawFeature.data.INFO.CADD_PH.length ? rawFeature.data.INFO.CADD_PH.filter(x => !!x).join(", ") : ""
+  let altString = rawFeature.data.ALT && rawFeature.data.ALT.length ? rawFeature.data.ALT.filter(x => !!x).join(", ") : ""
 
-  let row = {
+  return {
       id: id,
       chrom: (rawFeature.data.CHROM ?? "-1").toString(),
       pos: (rawFeature.data.POS ?? "-1").toString(),
       ref: (rawFeature.data.REF ?? "").toString(),
-      alt: (rawFeature.data.ALT[0] ?? "").toString(),
+      alt: altString,
       af: afString,
       impact: (rawFeature.data.INFO.IMPACT ?? "").toString(),
-      overlapping_genes: generateGeneList(rawFeature.data.INFO.ANN, 3, null),
-      variant_type: generateGeneList(rawFeature.data.INFO.ANN, 1, 'custom'),
+      overlapping_genes: parseAnnField(rawFeature.data.INFO.ANN, 3, null),
+      variant_type: parseAnnField(rawFeature.data.INFO.ANN, 1, 'custom'),
       cadd_ph: caddPHString,
       start: rawFeature.data.start,
       end: rawFeature.data.end,
       trackId: trackId
   } as Row
-
-  return row
 }
 
-
-// Takes a list of ANNS and retrieves all unique genes from it.
-function generateGeneList(anns, fieldIdx, ignoredTerms) {
+// Takes a list of ANN annotations and retrieves all unique genes from it.
+function parseAnnField(anns, fieldIdx, ignoredTerms) {
   let geneSet = new Set()
-  for(let ann of anns) {
+  for (let ann of anns) {
     let geneName = ann.split("|")[fieldIdx]
     if (ignoredTerms && ignoredTerms.includes(geneName)) {
       continue
@@ -69,7 +60,6 @@ export function filterFeatures(features, activeSamples, filters) {
       ret.push(feature)
     }
   })
-
 
   return ret
 }

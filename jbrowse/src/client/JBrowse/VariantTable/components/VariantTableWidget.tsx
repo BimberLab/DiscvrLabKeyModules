@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
 import { Widget } from '@jbrowse/core/util';
 import { Button, Dialog, Grid, MenuItem } from '@material-ui/core';
-
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 
 import type { Row } from '../types';
@@ -17,6 +16,7 @@ import '../VariantTable.css';
 import '../../jbrowse.css';
 import { navigateToBrowser } from '../../utils';
 import LoadingIndicator from './LoadingIndicator';
+import ExtendedVcfFeature from '../../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter/ExtendedVcfFeature';
 
 const VariantTableWidget = observer(props => {
   const { assembly, rpcManager, trackId, locString, parsedLocString, sessionId, session, pluginManager } = props
@@ -93,7 +93,7 @@ const VariantTableWidget = observer(props => {
           end: parsedLocString.end,
           refName: assembly.getCanonicalRefName(parsedLocString.refName),
         },
-      })
+      }) as ExtendedVcfFeature[]
 
       const filteredFeatures = filterFeatures(rawFeatures, 
         track.configuration.displays[0].renderer.activeSamples.value, 
@@ -178,8 +178,8 @@ const VariantTableWidget = observer(props => {
             <StandaloneSearch sessionId={sessionId} tableUrl={true} trackId={trackId} selectedRegion={isValidLocString ? locString : ""}/>
           </Grid>
 
-          <Grid style={isValidLocString ? {} : {display:"none"}} key='filterMenu' item xs="auto">
-            <MenuButton id={'filterMenu'} color="primary" variant="contained" text="Filter" anchor={anchorFilterMenu}
+          <Grid key='filterMenu' item xs="auto">
+            <MenuButton disabled={!isValidLocString} id={'filterMenu'} color="primary" variant="contained" text="Filter" anchor={anchorFilterMenu}
               handleClick={(e) => handleMenuClick(e, setAnchorFilterMenu)}
               handleClose={(e) => handleMenuClose(setAnchorFilterMenu)}>
               <MenuItem className="menuItem" onClick={() => { handleMenu("filterSample", gridElement); handleMenuClose(setAnchorFilterMenu) }}>Filter By Sample</MenuItem>
@@ -187,8 +187,8 @@ const VariantTableWidget = observer(props => {
             </MenuButton>
           </Grid>
 
-          <Grid style={isValidLocString ? {} : {display:"none"}} key='genomeViewButton' item xs="auto">
-            <Button style={{ marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("browserRedirect", gridElement)}>View in Genome Browser</Button>
+          <Grid key='genomeViewButton' item xs="auto">
+            <Button disabled={!isValidLocString} style={{ marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("browserRedirect", gridElement)}>View in Genome Browser</Button>
           </Grid>
         </Grid>
       </div>

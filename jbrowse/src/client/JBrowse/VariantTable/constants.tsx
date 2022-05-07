@@ -1,6 +1,21 @@
-import { GridColumns, GridRenderCellParams } from '@mui/x-data-grid';
+import { GridColumns, GridRenderCellParams, GridValueFormatterParams } from '@mui/x-data-grid';
 import { getGenotypeURL } from '../utils';
 import React from 'react';
+
+// TODO: we need to look into this for all numeric fields. Because some attributes are per-allele,
+// The value of these attributes is a CSV string. See comments in dataUtils/rawFeatureToRow()
+// const csvNumberFormatFn = (params: GridValueFormatterParams) => {
+//   if (!params.value) {
+//     return params.value
+//   }
+//
+//   const strVal = String(params.value)
+//   const vals = strVal.includes(",") ? strVal.split(',') : [strVal]
+//   return vals.map(val => {
+//     console.log(val)
+//     val ? Number(val).toLocaleString(navigator.language, {maximumFractionDigits: 6}) : val
+//   }).join(', ')
+// }
 
 // Columns to be shown, minus the ID column.
 export const columns: GridColumns = [
