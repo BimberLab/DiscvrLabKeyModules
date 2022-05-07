@@ -1,10 +1,10 @@
 import { GridColumns, GridRenderCellParams } from '@mui/x-data-grid';
-import { getGenotypeURL } from "../utils"
-import React from "react"
+import { getGenotypeURL } from '../utils';
+import React from 'react';
 
 // Columns to be shown, minus the ID column.
 export const columns: GridColumns = [
-  { field: 'chrom', headerName: 'Chromosome', width: 150, type: "number", flex: 1, headerAlign: 'left' },
+  { field: 'chrom', headerName: 'Chromosome', width: 150, type: "string", flex: 1, headerAlign: 'left' },
   { field: 'pos', headerName: 'Position', width: 150, type: "number", flex: 1, headerAlign: 'left' },
   { field: 'ref', headerName: 'Reference', width: 150, type: "string", flex: 1, headerAlign: 'left' },
   { field: 'alt', headerName: 'Alternative Allele', width: 50, type: "string", flex: 1, headerAlign: 'left' },
@@ -18,12 +18,12 @@ export const columns: GridColumns = [
   { field: 'end', headerName: 'End Location', width: 50, type: "string", flex: 1, headerAlign: 'left', hide: true },
   {
     field: 'show_genotypes',
-    headerName: 'Show Genotypes',
+    headerName: 'Genotypes',
     width: 50,
     flex: 1,
     headerAlign: 'left',
     renderCell: (params: GridRenderCellParams) => {
-      return (<a target="_blank" href={getGenotypeURL(params.row.trackId, params.row.chrom, params.row.start, params.row.end)}>Show Genotypes</a>)
+      return (<a target="_blank" href={getGenotypeURL(params.row.trackId, params.row.chrom, params.row.start, params.row.end)}>View Genotypes</a>)
     }
   },
 ]

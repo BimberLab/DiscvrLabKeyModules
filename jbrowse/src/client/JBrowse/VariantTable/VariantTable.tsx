@@ -1,16 +1,17 @@
-import React, { useEffect, useState } from 'react'
-import { observer } from 'mobx-react'
-import { getEnv } from 'mobx-state-tree'
-import { createTheme } from '@material-ui/core/styles'
-import { parseLocString } from '@jbrowse/core/util'
-import { readConfObject } from '@jbrowse/core/configuration'
-import { createJBrowseTheme } from '@jbrowse/core/ui'
-import { ThemeProvider } from '@material-ui/core'
-import LogSession from '../Browser/plugins/LogSession/index'
-import ExtendedVariantPlugin from '../Browser/plugins/ExtendedVariantPlugin/index'
-import VariantTableWidget from './components/VariantTableWidget'
-import { fetchSession } from '../utils'
+import React, { useEffect, useState } from 'react';
+import { observer } from 'mobx-react';
+import { getEnv } from 'mobx-state-tree';
+import { createTheme } from '@material-ui/core/styles';
+import { parseLocString } from '@jbrowse/core/util';
+import { readConfObject } from '@jbrowse/core/configuration';
+import { createJBrowseTheme } from '@jbrowse/core/ui';
+import { ThemeProvider } from '@material-ui/core';
+import LogSession from '../Browser/plugins/LogSession/index';
+import ExtendedVariantPlugin from '../Browser/plugins/ExtendedVariantPlugin/index';
+import VariantTableWidget from './components/VariantTableWidget';
+import { fetchSession } from '../utils';
 import { ErrorBoundary } from '@labkey/components';
+import LoadingIndicator from './components/LoadingIndicator';
 
 const nativePlugins = [ExtendedVariantPlugin, LogSession]
 
@@ -74,7 +75,7 @@ function VariantTable() {
 
     // Error handle and then render the component
     if (view === null || theme == null) {
-        return (<p>Loading...</p>)
+        return (<LoadingIndicator isOpen={true}/>)
     }
     else if (view === "invalid" || state == "invalid") {
         return (<p>Error fetching config. See console for more details</p>)

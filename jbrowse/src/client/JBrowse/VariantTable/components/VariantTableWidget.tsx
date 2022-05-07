@@ -1,21 +1,22 @@
-import { observer } from 'mobx-react'
-import React, { useEffect, useState } from 'react'
-import { getConf } from '@jbrowse/core/configuration'
-import {  Widget } from '@jbrowse/core/util'
-import { Dialog, Grid, MenuItem, Button } from "@material-ui/core"
+import { observer } from 'mobx-react';
+import React, { useEffect, useState } from 'react';
+import { getConf } from '@jbrowse/core/configuration';
+import { Widget } from '@jbrowse/core/util';
+import { Button, Dialog, Grid, MenuItem } from '@material-ui/core';
 
-import { DataGrid, GridToolbar } from '@mui/x-data-grid'
+import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 
-import type { Row } from '../types'
-import { columns } from '../constants'
-import { rawFeatureToRow, filterFeatures } from '../dataUtils'
-import MenuButton from './MenuButton'
+import type { Row } from '../types';
+import { columns } from '../constants';
+import { filterFeatures, rawFeatureToRow } from '../dataUtils';
+import MenuButton from './MenuButton';
 
-import StandaloneSearch from "../../Search/StandaloneSearch"
+import StandaloneSearch from '../../Search/StandaloneSearch';
 
-import '../VariantTable.css'
-import '../../jbrowse.css'
-import { navigateToBrowser } from '../../utils'
+import '../VariantTable.css';
+import '../../jbrowse.css';
+import { navigateToBrowser } from '../../utils';
+import LoadingIndicator from './LoadingIndicator';
 
 const VariantTableWidget = observer(props => {
   const { assembly, rpcManager, trackId, locString, parsedLocString, sessionId, session, pluginManager } = props
@@ -38,9 +39,6 @@ const VariantTableWidget = observer(props => {
       case "filterInfo":
         session.showWidget(infoFilterWidget)
         addActiveWidgetId(infoFilterWidget.id)
-        break;
-      case "filterTable":
-        setFiltersOn(!filtersOn)
         break;
       case "browserRedirect":
         navigateToBrowser(sessionId, locString, trackId, track)
@@ -68,10 +66,7 @@ const VariantTableWidget = observer(props => {
   }
 
   // Contains all features from the API call once the useEffect finished
-  const [features, setFeatures] = useState<Row[]>(null)
-
-  // Flag for whether the filters boxes are being displayed or not
-  const [filtersOn, setFiltersOn] = useState<boolean>(false)
+  const [features, setFeatures] = useState<Row[]>([])
 
   // Active widget ID list to force rerender when a JBrowseUIButton is clicked
   const [activeWidgetList, setActiveWidgetList] = useState<string[]>([])
@@ -82,8 +77,10 @@ const VariantTableWidget = observer(props => {
 
   // Menu management
   const [anchorFilterMenu, setAnchorFilterMenu] = useState(null)
-  const [validLocString, setValidLocString] = useState(true)
+  const [isValidLocString, setIsValidLocString] = useState(true)
 
+  // False until initial data load or an error:
+  const [dataLoaded, setDataLoaded] = useState(!parsedLocString)
 
   // API call to retrieve the requested features. Can handle multiple location strings.
   useEffect(() => {
@@ -103,9 +100,10 @@ const VariantTableWidget = observer(props => {
         track.configuration.displays[0].renderer.infoFilters.valueJSON)
 
       setFeatures(filteredFeatures.map((rawFeature, id) => rawFeatureToRow(rawFeature, id, trackId)))
+      setDataLoaded(true)
     }
 
-    if(pluginManager && parsedLocString && validLocString) {
+    if (pluginManager && parsedLocString && isValidLocString) {
       setSampleFilterWidget(session.addWidget(
         'SampleFilterWidget',
         'Sample-Variant-' + getConf(track, 'trackId'),
@@ -117,12 +115,18 @@ const VariantTableWidget = observer(props => {
         'Info-Variant-' + getConf(track, 'trackId'),
         { track: track.configuration }
       ))
-      
+
       const regionLength = parsedLocString.end - parsedLocString.start
       const maxRegionSize = 900000
-      if (regionLength > maxRegionSize) {
+      if (!parsedLocString.start) {
+        alert("Must include start/stop in location to avoid loading too many sites: " + locString)
+        setDataLoaded(true)
+        setIsValidLocString(false)
+      }
+      else if (regionLength > maxRegionSize) {
         alert("Location " + locString + " is too large to load.")
-        setValidLocString(false)
+        setDataLoaded(true)
+        setIsValidLocString(false)
       } else {
         fetch()
       }
@@ -137,63 +141,61 @@ const VariantTableWidget = observer(props => {
       return(<p>Unable to find track: {trackId}</p>)
   }
 
-  if (!features && locString && validLocString) {
-        return (<p>Loading...</p>)
-  } else {
-    const gridElement = (
-      <DataGrid
-          columns={columns}
-          rows={features}
-          components={{ Toolbar: GridToolbar }}
-          autoPageSize
-        />
-    )
+  const gridElement = (
+    <DataGrid
+        columns={columns}
+        rows={features}
+        components={{ Toolbar: GridToolbar }}
+        rowsPerPageOptions={[10,50,100,250]}
+        pageSize={25}
+      />
+  )
 
-    return (
-      <>
-        {
-          [...session.activeWidgets].map((elem) => {
-            const widget = elem[1]
-            const widgetType = pluginManager.getWidgetType(widget.type)
-            const { ReactComponent } = widgetType
-            const { visibleWidget } = session
-            return (
-            <Dialog onClose={() => handleModalClose(widget)} open={true} key={widget.id}>
-              <h3 style={{margin: "15px"}}>Filter Table</h3>
-              
-              <div style={{margin: "10px"}}>
-                <ReactComponent model={visibleWidget}/>
-              </div>
-            </Dialog>
-            )
-          })
-        }
+  return (
+    <>
+      <LoadingIndicator isOpen={!dataLoaded}/>
+      {
+        [...session.activeWidgets].map((elem) => {
+          const widget = elem[1]
+          const widgetType = pluginManager.getWidgetType(widget.type)
+          const { ReactComponent } = widgetType
+          const { visibleWidget } = session
+          return (
+          <Dialog onClose={() => handleModalClose(widget)} open={true} key={widget.id}>
+            <h3 style={{margin: "15px"}}>Filter Table</h3>
 
-        <div style={{marginBottom: "10px"}}>
-          <Grid container spacing={1} justifyContent="flex-start" alignItems="center">
-            <Grid key='search' item xs="auto">
-              <StandaloneSearch sessionId={sessionId} tableUrl={true} trackId={trackId} selectedRegion={validLocString ? locString : ""}></StandaloneSearch>
-            </Grid>
+            <div style={{margin: "10px"}}>
+              <ReactComponent model={visibleWidget}/>
+            </div>
+          </Dialog>
+          )
+        })
+      }
 
-            <Grid style={locString && validLocString ? {} : {display:"none"}} key='filterMenu' item xs="auto">
-              <MenuButton id={'filterMenu'} color="primary" variant="contained" text="Filter" anchor={anchorFilterMenu}
-                handleClick={(e) => handleMenuClick(e, setAnchorFilterMenu)}
-                handleClose={(e) => handleMenuClose(setAnchorFilterMenu)}>
-                <MenuItem className="menuItem" onClick={() => { handleMenu("filterSample", gridElement); handleMenuClose(setAnchorFilterMenu) }}>Filter By Sample</MenuItem>
-                <MenuItem className="menuItem" onClick={() => { handleMenu("filterInfo", gridElement); handleMenuClose(setAnchorFilterMenu) }}>Filter By Attributes</MenuItem>
-              </MenuButton>
-            </Grid>
-
-            <Grid style={locString && validLocString ? {} : {display:"none"}} key='genomeViewButton' item xs="auto">
-              <Button style={{ marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("browserRedirect", gridElement)}>View in Genome Browser</Button>
-            </Grid>
+      <div style={{marginBottom: "10px"}}>
+        <Grid container spacing={1} justifyContent="flex-start" alignItems="center">
+          <Grid key='search' item xs="auto">
+            <StandaloneSearch sessionId={sessionId} tableUrl={true} trackId={trackId} selectedRegion={isValidLocString ? locString : ""}/>
           </Grid>
-        </div>
-        
-        {gridElement}
-      </>
-    )
-  }
+
+          <Grid style={isValidLocString ? {} : {display:"none"}} key='filterMenu' item xs="auto">
+            <MenuButton id={'filterMenu'} color="primary" variant="contained" text="Filter" anchor={anchorFilterMenu}
+              handleClick={(e) => handleMenuClick(e, setAnchorFilterMenu)}
+              handleClose={(e) => handleMenuClose(setAnchorFilterMenu)}>
+              <MenuItem className="menuItem" onClick={() => { handleMenu("filterSample", gridElement); handleMenuClose(setAnchorFilterMenu) }}>Filter By Sample</MenuItem>
+              <MenuItem className="menuItem" onClick={() => { handleMenu("filterInfo", gridElement); handleMenuClose(setAnchorFilterMenu) }}>Filter By Attributes</MenuItem>
+            </MenuButton>
+          </Grid>
+
+          <Grid style={isValidLocString ? {} : {display:"none"}} key='genomeViewButton' item xs="auto">
+            <Button style={{ marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("browserRedirect", gridElement)}>View in Genome Browser</Button>
+          </Grid>
+        </Grid>
+      </div>
+
+      {gridElement}
+    </>
+  )
 })
 
 export default VariantTableWidget
