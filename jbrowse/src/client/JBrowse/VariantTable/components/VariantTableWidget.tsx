@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
 import { Widget } from '@jbrowse/core/util';
 import { Button, Dialog, Grid, MenuItem } from '@material-ui/core';
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridRenderCellParams, GridToolbar } from '@mui/x-data-grid';
 
 import type { Row } from '../types';
 import { columns } from '../constants';
@@ -14,7 +14,7 @@ import StandaloneSearch from '../../Search/StandaloneSearch';
 
 import '../VariantTable.css';
 import '../../jbrowse.css';
-import { navigateToBrowser } from '../../utils';
+import { getGenotypeURL, navigateToBrowser } from '../../utils';
 import LoadingIndicator from './LoadingIndicator';
 import ExtendedVcfFeature from '../../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter/ExtendedVcfFeature';
 
@@ -30,7 +30,7 @@ const VariantTableWidget = observer(props => {
     return (<p>Unknown track: {trackId}</p>)
   }
 
-  function handleMenu(item, gridElement) {
+  function handleMenu(item) {
     switch(item) {
       case "filterSample":
         session.showWidget(sampleFilterWidget)
@@ -99,7 +99,7 @@ const VariantTableWidget = observer(props => {
         track.configuration.displays[0].renderer.activeSamples.value, 
         track.configuration.displays[0].renderer.infoFilters.valueJSON)
 
-      setFeatures(filteredFeatures.map((rawFeature, id) => rawFeatureToRow(rawFeature, id, trackId)))
+      setFeatures(filteredFeatures)
       setDataLoaded(true)
     }
 
@@ -141,10 +141,50 @@ const VariantTableWidget = observer(props => {
       return(<p>Unable to find track: {trackId}</p>)
   }
 
+  const showDetailsWidget = (rowIdx: number) => {
+    //TODO: find the feature object associated with this row.
+    // NOTE: this probably needs to be an ExtendedVcfFeature object for the details widget to work right
+    const feature = features[rowIdx]
+
+    const trackId = getConf(track, 'trackId')
+    const detailsConfig = getConf(track, ['displays', '0', 'detailsConfig'])
+    const widgetId = 'Variant-' + trackId;
+    const featureWidget = session.addWidget(
+        'ExtendedVariantWidget',
+        widgetId,
+        {
+          featureData: feature,
+          trackId: trackId,
+          message: '',
+          detailsConfig: detailsConfig
+        }
+    )
+
+    session.showWidget(featureWidget)
+  }
+
+  const actionsCol: GridColDef = {
+    field: 'actions',
+    headerName: 'Actions',
+    width: 50,
+    flex: 1,
+    headerAlign: 'left',
+    renderCell: (params: GridRenderCellParams) => {
+      return (
+          <>
+            <a className={"labkey-text-link"} onClick={() => { showDetailsWidget(params.row.id) }}>Variant Details</a>
+            {/*TODO: how to add a line break in react?*/}
+            <br />
+            <a className={"labkey-text-link"} target="_blank" href={getGenotypeURL(params.row.trackId, params.row.chrom, params.row.start, params.row.end)}>View Genotypes</a>
+          </>
+      )
+    }
+  }
+
   const gridElement = (
     <DataGrid
-        columns={columns}
-        rows={features}
+        columns={[...columns, actionsCol]}
+        rows={features.map((rawFeature, id) => rawFeatureToRow(rawFeature, id, trackId))}
         components={{ Toolbar: GridToolbar }}
         rowsPerPageOptions={[10,50,100,250]}
         pageSize={25}
@@ -182,13 +222,13 @@ const VariantTableWidget = observer(props => {
             <MenuButton disabled={!isValidLocString} id={'filterMenu'} color="primary" variant="contained" text="Filter" anchor={anchorFilterMenu}
               handleClick={(e) => handleMenuClick(e, setAnchorFilterMenu)}
               handleClose={(e) => handleMenuClose(setAnchorFilterMenu)}>
-              <MenuItem className="menuItem" onClick={() => { handleMenu("filterSample", gridElement); handleMenuClose(setAnchorFilterMenu) }}>Filter By Sample</MenuItem>
-              <MenuItem className="menuItem" onClick={() => { handleMenu("filterInfo", gridElement); handleMenuClose(setAnchorFilterMenu) }}>Filter By Attributes</MenuItem>
+              <MenuItem className="menuItem" onClick={() => { handleMenu("filterSample"); handleMenuClose(setAnchorFilterMenu) }}>Filter By Sample</MenuItem>
+              <MenuItem className="menuItem" onClick={() => { handleMenu("filterInfo"); handleMenuClose(setAnchorFilterMenu) }}>Filter By Attributes</MenuItem>
             </MenuButton>
           </Grid>
 
           <Grid key='genomeViewButton' item xs="auto">
-            <Button disabled={!isValidLocString} style={{ marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("browserRedirect", gridElement)}>View in Genome Browser</Button>
+            <Button disabled={!isValidLocString} style={{ marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("browserRedirect")}>View in Genome Browser</Button>
           </Grid>
         </Grid>
       </div>

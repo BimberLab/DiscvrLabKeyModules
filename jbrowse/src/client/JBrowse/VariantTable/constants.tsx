@@ -30,24 +30,5 @@ export const columns: GridColumns = [
   { field: 'cadd_ph', headerName: 'CADD Score', width: 50, type: "number", flex: 1, headerAlign: 'left' },
   { field: 'track_id', headerName: 'Track ID', width: 50, type: "string", flex: 1, headerAlign: 'left', hide: true },
   { field: 'start', headerName: 'Start Location', width: 50, type: "string", flex: 1, headerAlign: 'left', hide: true },
-  { field: 'end', headerName: 'End Location', width: 50, type: "string", flex: 1, headerAlign: 'left', hide: true },
-  {
-    field: 'show_genotypes',
-    headerName: 'Genotypes',
-    width: 50,
-    flex: 1,
-    headerAlign: 'left',
-    renderCell: (params: GridRenderCellParams) => {
-      return (<a target="_blank" href={getGenotypeURL(params.row.trackId, params.row.chrom, params.row.start, params.row.end)}>View Genotypes</a>)
-    }
-  },
+  { field: 'end', headerName: 'End Location', width: 50, type: "string", flex: 1, headerAlign: 'left', hide: true }
 ]
-
-// Default state of each filter.
-export const defaultFilters = {
-  ref: '',
-  alt: '',
-  impact: '',
-  overlapping_genes: '',
-  variant_type: '',
-}
