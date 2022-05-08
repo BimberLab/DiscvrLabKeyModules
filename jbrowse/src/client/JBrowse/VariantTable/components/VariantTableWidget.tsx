@@ -85,6 +85,7 @@ const VariantTableWidget = observer(props => {
   // API call to retrieve the requested features. Can handle multiple location strings.
   useEffect(() => {
     async function fetch() {
+      //TODO: discuss whether we should try the original adapter.getFeatures() approach. This would return ExtendedVcfFeature objects
       const rawFeatures = await rpcManager.call(sessionId, 'CoreGetFeatures', {
         adapterConfig: getConf(track, 'adapter'),
         sessionId,
