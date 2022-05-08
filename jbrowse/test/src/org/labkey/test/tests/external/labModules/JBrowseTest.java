@@ -701,6 +701,7 @@ public class JBrowseTest extends BaseWebDriverTest
     private void testVariantDataGrid() throws Exception
     {
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
+        waitForTableLoadingToDisappear();
 
         // Test default
         testColumns("1", "116981270", "A", "T", "0.029", "intron_variant", "HIGH",
@@ -768,10 +769,16 @@ public class JBrowseTest extends BaseWebDriverTest
         // Navigate back to table with InfoFilters intact
         waitAndClick(Locator.tagWithAttribute("button", "data-testid", "track_menu_icon"));
         waitAndClickAndWait(Locator.tagContainingText("span", "View As Table"));
+        waitForTableLoadingToDisappear();
         waitAndClick(Locator.tagWithText("button", "Filter"));
         waitAndClick(Locator.tagWithText("li", "Filter By Attributes"));
         WebElement filterValTable = Locator.tagWithId("input", "standard-number").findElement(getDriver());
         Assert.assertEquals("Incorrect filter value", "0.0009728", filterValTable.getAttribute("value"));
+    }
+
+    private void waitForTableLoadingToDisappear()
+    {
+        waitForElementToDisappear(Locator.tagWithClass("div", "MuiCircularProgress-root").notHidden());
     }
 
     private void testColumns(String chromosome, String position, String reference, String alt, String af, String type, String impact, String overlapping, String cadd_ph) throws Exception {
