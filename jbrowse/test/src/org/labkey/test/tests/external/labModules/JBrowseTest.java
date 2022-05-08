@@ -700,7 +700,6 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testVariantDataGrid() throws Exception
     {
-        waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
         waitForTableLoadingToDisappear();
 
         // Test default
@@ -778,6 +777,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void waitForTableLoadingToDisappear()
     {
+        waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
         waitForElementToDisappear(Locator.tagWithClass("div", "MuiCircularProgress-root").notHidden(), WAIT_FOR_JAVASCRIPT*2);
     }
 
