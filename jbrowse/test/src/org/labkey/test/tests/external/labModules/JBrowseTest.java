@@ -754,7 +754,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(Locator.tagWithText("button", "Apply"));
         waitForElementToDisappear(Locator.tagWithText("div", "GGCAT"));
         testColumns("1", "116989670", "ATGGCTCCTG", "A",
-                "0.000973", "intron_variant", "", "NTNG1", "3.911");
+                "0.0009728", "intron_variant", "", "NTNG1", "3.911");
 
         // Test navigating back to table with InfoFilters intact
         waitAndClickAndWait(Locator.tagWithText("button", "View in Genome Browser"));
