@@ -719,7 +719,7 @@ public class JBrowseTest extends BaseWebDriverTest
         Locator sortedTopRow = Locator.tagWithAttribute("div", "aria-rowindex", "2");
         waitForElement(sortedTopRow);
         testColumns("1", "117000545", "TTGCTCGTTTTATTGG", "T",
-                "0.000993", "intron_variant", "", "NTNG1", "");
+                "0.0009927", "intron_variant", "", "NTNG1", "");
 
         // Test filtering
         waitAndClick(Locator.tagWithAttributeContaining("button", "aria-label", "Show filters"));
