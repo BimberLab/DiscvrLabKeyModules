@@ -835,23 +835,27 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
         waitForElement(Locator.tagWithText("div", "No rows").withClass("MuiDataGrid-overlay"));
 
-        // TODO: fix/enable these:
         // will fail to parse, and then reload without features:
-        //beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:116999.1");
-        //assertAlert("Error: could not parse range \"116999.1\" on location \"116999.1\"");
-        //waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
-        //waitForElement(Locator.tagWithText("div", "No rows").withClass("MuiDataGrid-overlay"));
+        doAndWaitForPageToLoad(() -> {
+            beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:116999.1", 0);
+            assertAlert("Error: could not parse range \"116999.1\" on location \"116999.1\"");
+        });
+        waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
+        waitForElement(Locator.tagWithText("div", "No rows").withClass("MuiDataGrid-overlay"));
 
-        //beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:116589761..117411999771");
-        //assertAlert("Location 1:116589761..117411999771 is too large to load.");
-        //waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
-        //waitForElement(Locator.tagWithText("div", "No rows").withClass("MuiDataGrid-overlay"));
+        doAndWaitForPageToLoad(() -> {
+            beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:116589761..117411999771", 0);
+            assertAlert("Location 1:116589761..117411999771 is too large to load.");
+        });
+        waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
+        waitForElement(Locator.tagWithText("div", "No rows").withClass("MuiDataGrid-overlay"));
 
-        //beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1");
-        //waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
-        //assertAlert("Must include start/stop in location to avoid loading too many sites: 1");
-        //waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
-        //waitForElement(Locator.tagWithText("div", "No rows").withClass("MuiDataGrid-overlay"));
+        doAndWaitForPageToLoad(() -> {
+            beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1", 0);
+            assertAlert("Must include start/stop in location to avoid loading too many sites: 1");
+        });
+        waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
+        waitForElement(Locator.tagWithText("div", "No rows").withClass("MuiDataGrid-overlay"));
 
         beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:100-200");
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
