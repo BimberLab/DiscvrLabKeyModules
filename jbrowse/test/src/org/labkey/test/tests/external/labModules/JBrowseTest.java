@@ -778,7 +778,7 @@ public class JBrowseTest extends BaseWebDriverTest
     private void waitForTableLoadingToDisappear()
     {
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
-        waitForElementToDisappear(Locator.tagWithClass("div", "MuiCircularProgress-root").notHidden(), WAIT_FOR_JAVASCRIPT*2);
+        waitForElementToDisappear(Locator.tagWithClass("div", "MuiCircularProgress-root").notHidden(), WAIT_FOR_JAVASCRIPT * 3);
     }
 
     private void testColumns(String chromosome, String position, String reference, String alt, String af, String type, String impact, String overlapping, String cadd_ph) throws Exception {
