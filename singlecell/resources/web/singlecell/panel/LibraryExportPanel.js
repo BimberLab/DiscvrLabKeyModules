@@ -50,12 +50,6 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                 labelWidth: 160,
                                 storeValues: ['NextSeq (MPSSR)', 'MiSeq (ONPRC)', 'Basic List (MedGenome)', '10x Sample Sheet', 'Novogene', 'Novogene-New']
                             },{
-                                xtype: 'textfield',
-                                itemId: 'hashingPrefix',
-                                fieldLabel: 'Hashing Library Prefix',
-                                labelWidth: 160,
-                                value: 'H'
-                            },{
                                 xtype: 'ldk-simplecombo',
                                 itemId: 'application',
                                 fieldLabel: 'Application/Type',
@@ -135,6 +129,12 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                             }
                                         }
                                     },
+                                },{
+                                    xtype: 'textfield',
+                                    itemId: 'hashingPrefix',
+                                    fieldLabel: 'Hashing Library Prefix',
+                                    labelWidth: 160,
+                                    value: 'H'
                                 },{
                                     xtype: 'ldk-numberfield',
                                     itemId: 'defaultVolume',
@@ -550,7 +550,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
         const simpleSampleNames = btn.up('singlecell-libraryexportpanel').down('#simpleSampleNames').getValue();
         const includeBlanks = btn.up('singlecell-libraryexportpanel').down('#includeBlanks').getValue();
         const doReverseComplement = btn.up('singlecell-libraryexportpanel').doReverseComplement;
-        const hashingPrefix = btn.up('singlecell-libraryexportpanel').down('#hashingPrefix').getValue();
+        const hashingPrefix = btn.up('singlecell-libraryexportpanel').down('#hashingPrefix') ? btn.up('singlecell-libraryexportpanel').down('#hashingPrefix').getValue() : 'H';
 
         var isMatchingApplication = function(application, libraryType, readsetApplication, rowLevelApplication){
             if (!application && !rowLevelApplication){
