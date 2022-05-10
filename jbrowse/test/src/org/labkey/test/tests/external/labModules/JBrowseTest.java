@@ -838,7 +838,7 @@ public class JBrowseTest extends BaseWebDriverTest
         // will fail to parse, and then reload without features:
         doAndWaitForPageToLoad(() -> {
             beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:116999.1", 0);
-            assertAlert("Error: could not parse range \"116999.1\" on location \"116999.1\"");
+            assertAlert("Error: could not parse range \"116999.1\" on location \"1:116999.1\"");
         });
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
         waitForElement(Locator.tagWithText("div", "No rows").withClass("MuiDataGrid-overlay"));
