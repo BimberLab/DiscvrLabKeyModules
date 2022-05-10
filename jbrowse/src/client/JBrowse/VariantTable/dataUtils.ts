@@ -10,23 +10,23 @@ export function rawFeatureToRow(rawFeature: any, id: number, trackId: string): R
     // ##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
     // ##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
 
-  let afString = rawFeature.data.INFO.AF && rawFeature.data.INFO.AF.length ? rawFeature.data.INFO.AF.filter(x => !!x).join(", ") : ""
-  let caddPHString = rawFeature.data.INFO.CADD_PH && rawFeature.data.INFO.CADD_PH.length ? rawFeature.data.INFO.CADD_PH.filter(x => !!x).join(", ") : ""
-  let altString = rawFeature.data.ALT && rawFeature.data.ALT.length ? rawFeature.data.ALT.filter(x => !!x).join(", ") : ""
+  let afString = rawFeature.INFO.AF && rawFeature.INFO.AF.length ? rawFeature.INFO.AF.filter(x => !!x).join(", ") : ""
+  let caddPHString = rawFeature.INFO.CADD_PH && rawFeature.INFO.CADD_PH.length ? rawFeature.INFO.CADD_PH.filter(x => !!x).join(", ") : ""
+  let altString = rawFeature.ALT && rawFeature.ALT.length ? rawFeature.ALT.filter(x => !!x).join(", ") : ""
 
   return {
       id: id,
-      chrom: (rawFeature.data.CHROM ?? "-1").toString(),
-      pos: (rawFeature.data.POS ?? "-1").toString(),
-      ref: (rawFeature.data.REF ?? "").toString(),
+      chrom: (rawFeature.CHROM ?? "-1").toString(),
+      pos: (rawFeature.POS ?? "-1").toString(),
+      ref: (rawFeature.REF ?? "").toString(),
       alt: altString,
       af: afString,
-      impact: (rawFeature.data.INFO.IMPACT ?? "").toString(),
-      overlapping_genes: parseAnnField(rawFeature.data.INFO.ANN, 3, null),
-      variant_type: parseAnnField(rawFeature.data.INFO.ANN, 1, 'custom'),
+      impact: (rawFeature.INFO.IMPACT ?? "").toString(),
+      overlapping_genes: parseAnnField(rawFeature.INFO.ANN, 3, null),
+      variant_type: parseAnnField(rawFeature.INFO.ANN, 1, 'custom'),
       cadd_ph: caddPHString,
-      start: rawFeature.data.start,
-      end: rawFeature.data.end,
+      start: rawFeature.start,
+      end: rawFeature.end,
       trackId: trackId
   } as Row
 }

@@ -2,6 +2,9 @@ import { observer } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
 import { Widget } from '@jbrowse/core/util';
+import { toArray } from 'rxjs/operators'
+import { getAdapter } from '@jbrowse/core/data_adapters/dataAdapterCache'
+import { EVAdapterClass } from '../../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter'
 import { Button, Dialog, Grid, MenuItem } from '@material-ui/core';
 import { DataGrid, GridColDef, GridRenderCellParams, GridToolbar } from '@mui/x-data-grid';
 
@@ -19,7 +22,7 @@ import LoadingIndicator from './LoadingIndicator';
 import ExtendedVcfFeature from '../../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter/ExtendedVcfFeature';
 
 const VariantTableWidget = observer(props => {
-  const { assembly, rpcManager, trackId, locString, parsedLocString, sessionId, session, pluginManager } = props
+  const { assembly, assemblyName, trackId, locString, parsedLocString, sessionId, session, pluginManager } = props
   const { view } = session
 
   const track = view.tracks.find(
@@ -82,21 +85,29 @@ const VariantTableWidget = observer(props => {
   // False until initial data load or an error:
   const [dataLoaded, setDataLoaded] = useState(!parsedLocString)
 
-  // API call to retrieve the requested features. Can handle multiple location strings.
+  // API call to retrieve the requested features.
   useEffect(() => {
     async function fetch() {
-      //TODO: discuss whether we should try the original adapter.getFeatures() approach. This would return ExtendedVcfFeature objects
-      const rawFeatures = await rpcManager.call(sessionId, 'CoreGetFeatures', {
-        adapterConfig: getConf(track, 'adapter'),
-        sessionId,
-        region: {
-          start: parsedLocString.start,
-          end: parsedLocString.end,
-          refName: assembly.getCanonicalRefName(parsedLocString.refName),
-        },
-      }) as ExtendedVcfFeature[]
+      let adapterConfig = getConf(track, 'adapter')
 
-      const filteredFeatures = filterFeatures(rawFeatures, 
+      let adapter = (await getAdapter(
+          pluginManager,
+          sessionId,
+          adapterConfig,
+      )).dataAdapter as EVAdapterClass
+
+      const ret = adapter.getFeatures({
+        refName: assembly.getCanonicalRefName(parsedLocString.refName),
+        start: parsedLocString.start,
+        end: parsedLocString.end
+      })
+
+      const r = await ret.pipe(toArray()).toPromise()
+      const rawFeatures = r.map(f => f.toJSON())
+
+      console.log(rawFeatures)
+
+      const filteredFeatures = filterFeatures(rawFeatures,
         track.configuration.displays[0].renderer.activeSamples.value, 
         track.configuration.displays[0].renderer.infoFilters.valueJSON)
 
