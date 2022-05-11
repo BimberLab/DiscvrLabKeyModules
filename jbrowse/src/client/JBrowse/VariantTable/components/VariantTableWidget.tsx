@@ -4,7 +4,8 @@ import { getConf } from '@jbrowse/core/configuration';
 import { Widget } from '@jbrowse/core/util';
 import { toArray } from 'rxjs/operators';
 import { getAdapter } from '@jbrowse/core/data_adapters/dataAdapterCache';
-import { Box, Button, Dialog, Grid, MenuItem, Typography } from '@material-ui/core';
+import { AppBar, Box, Button, Dialog, Grid, MenuItem, Toolbar, Typography, Paper } from '@material-ui/core';
+import ScopedCssBaseline from '@material-ui/core/ScopedCssBaseline';
 import { DataGrid, GridColDef, GridRenderCellParams, GridToolbar } from '@mui/x-data-grid';
 import { columns } from '../constants';
 import { filterFeatures, rawFeatureToRow } from '../dataUtils';
@@ -210,13 +211,20 @@ const VariantTableWidget = observer(props => {
           const widgetType = pluginManager.getWidgetType(widget.type)
           const { ReactComponent } = widgetType
           const { visibleWidget } = session
+
+          // Note: this is based on ModalWidget.tsx from JBrowse.
           return (
           <Dialog onClose={() => handleModalClose(widget)} open={true} key={widget.id}>
-            <Typography variant="h6">{widgetType.heading}</Typography>
-
-            <div style={{margin: "10px"}}>
-              <ReactComponent model={visibleWidget}/>
-            </div>
+            <Paper>
+              <AppBar position="static">
+                <Toolbar>
+                    <Typography variant="h6">{widgetType.heading}</Typography>
+                </Toolbar>
+              </AppBar>
+              <ScopedCssBaseline>
+                <ReactComponent model={visibleWidget}/>
+              </ScopedCssBaseline>
+            </Paper>
           </Dialog>
           )
         })
