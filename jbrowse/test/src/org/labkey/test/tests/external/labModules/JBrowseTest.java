@@ -244,7 +244,9 @@ public class JBrowseTest extends BaseWebDriverTest
         Locator.XPathLocator valueField = Locator.tagWithClass("div", "MuiInput-underline").index(1);
         waitForElement(valueField);
         WebElement input = getDriver().findElement(valueField.child(Locator.tag("input")));
-        input.sendKeys("0.02");
+
+        // NOTE: this is deliberate, so we ensure ".2" => 0.2
+        input.sendKeys(".02");
 
         waitAndClick(Locator.tagWithText("em", "Operator"));
         waitAndClick(Locator.tagContainingText("li", "<"));

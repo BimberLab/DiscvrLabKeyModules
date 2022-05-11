@@ -2,24 +2,22 @@ import { observer } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
 import { Widget } from '@jbrowse/core/util';
-import { toArray } from 'rxjs/operators'
-import { getAdapter } from '@jbrowse/core/data_adapters/dataAdapterCache'
-import { EVAdapterClass } from '../../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter'
-import { Button, Dialog, Grid, MenuItem } from '@material-ui/core';
+import { toArray } from 'rxjs/operators';
+import { getAdapter } from '@jbrowse/core/data_adapters/dataAdapterCache';
+import { Box, Button, Dialog, Grid, MenuItem, Typography } from '@material-ui/core';
 import { DataGrid, GridColDef, GridRenderCellParams, GridToolbar } from '@mui/x-data-grid';
-
-import type { Row } from '../types';
 import { columns } from '../constants';
 import { filterFeatures, rawFeatureToRow } from '../dataUtils';
 import MenuButton from './MenuButton';
-
-import StandaloneSearch from '../../Search/StandaloneSearch';
 
 import '../VariantTable.css';
 import '../../jbrowse.css';
 import { getGenotypeURL, navigateToBrowser } from '../../utils';
 import LoadingIndicator from './LoadingIndicator';
 import ExtendedVcfFeature from '../../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter/ExtendedVcfFeature';
+import { NoAssemblyRegion } from '@jbrowse/core/util/types';
+import StandaloneSearchComponent from '../../Search/components/StandaloneSearchComponent';
+import { EVAdapterClass } from '../../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter';
 
 const VariantTableWidget = observer(props => {
   const { assembly, assemblyName, trackId, locString, parsedLocString, sessionId, session, pluginManager } = props
@@ -69,7 +67,7 @@ const VariantTableWidget = observer(props => {
   }
 
   // Contains all features from the API call once the useEffect finished
-  const [features, setFeatures] = useState<Row[]>([])
+  const [features, setFeatures] = useState<ExtendedVcfFeature[]>([])
 
   // Active widget ID list to force rerender when a JBrowseUIButton is clicked
   const [activeWidgetList, setActiveWidgetList] = useState<string[]>([])
@@ -96,17 +94,18 @@ const VariantTableWidget = observer(props => {
           adapterConfig,
       )).dataAdapter as EVAdapterClass
 
+      console.log('calling getFeatures')
       const ret = adapter.getFeatures({
         refName: assembly.getCanonicalRefName(parsedLocString.refName),
         start: parsedLocString.start,
         end: parsedLocString.end
-      })
+      } as NoAssemblyRegion)
 
-      const r = await ret.pipe(toArray()).toPromise()
-      const rawFeatures = r.map(f => f.toJSON())
-
-      console.log(rawFeatures)
-
+      // TODO: do we actually want to cache the in-memory filtered features, or should we
+      // cache the full set and react to changes in track.configuration and filter on-demand?
+      // I suspect the fact this is responsive to session.visibleWidget is accidentally getting the reload correct, since that forces
+      // this to be re-called when the filter widget is removed.
+      const rawFeatures = await ret.pipe(toArray()).toPromise()
       const filteredFeatures = filterFeatures(rawFeatures,
         track.configuration.displays[0].renderer.activeSamples.value, 
         track.configuration.displays[0].renderer.infoFilters.valueJSON)
@@ -154,10 +153,7 @@ const VariantTableWidget = observer(props => {
   }
 
   const showDetailsWidget = (rowIdx: number) => {
-    //TODO: find the feature object associated with this row.
-    // NOTE: this probably needs to be an ExtendedVcfFeature object for the details widget to work right
     const feature = features[rowIdx]
-
     const trackId = getConf(track, 'trackId')
     const detailsConfig = getConf(track, ['displays', '0', 'detailsConfig'])
     const widgetId = 'Variant-' + trackId;
@@ -182,23 +178,25 @@ const VariantTableWidget = observer(props => {
     flex: 1,
     headerAlign: 'left',
     renderCell: (params: GridRenderCellParams) => {
+      // TODO: how to make these arrange vertically? flex box?
       return (
           <>
-            <a className={"labkey-text-link"} onClick={() => { showDetailsWidget(params.row.id) }}>Variant Details</a>
-            {/*TODO: how to add a line break in react?*/}
-            <br />
-            <a className={"labkey-text-link"} target="_blank" href={getGenotypeURL(params.row.trackId, params.row.chrom, params.row.start, params.row.end)}>View Genotypes</a>
+            <Box>
+              <a className={"labkey-text-link"} onClick={() => { showDetailsWidget(params.row.id) }}>Variant Details</a>
+              <a className={"labkey-text-link"} target="_blank" href={getGenotypeURL(params.row.trackId, params.row.chrom, params.row.start, params.row.end)}>View Genotypes</a>
+            </Box>
           </>
       )
     }
   }
 
+  // TODO: the page size selector is now rendering, but it's not changeable.
   const gridElement = (
     <DataGrid
         columns={[...columns, actionsCol]}
         rows={features.map((rawFeature, id) => rawFeatureToRow(rawFeature, id, trackId))}
         components={{ Toolbar: GridToolbar }}
-        rowsPerPageOptions={[10,50,100,250]}
+        rowsPerPageOptions={[10,25,50,100,250]}
         pageSize={25}
       />
   )
@@ -214,7 +212,7 @@ const VariantTableWidget = observer(props => {
           const { visibleWidget } = session
           return (
           <Dialog onClose={() => handleModalClose(widget)} open={true} key={widget.id}>
-            <h3 style={{margin: "15px"}}>Filter Table</h3>
+            <Typography variant="h6">{widgetType.heading}</Typography>
 
             <div style={{margin: "10px"}}>
               <ReactComponent model={visibleWidget}/>
@@ -227,7 +225,7 @@ const VariantTableWidget = observer(props => {
       <div style={{marginBottom: "10px"}}>
         <Grid container spacing={1} justifyContent="flex-start" alignItems="center">
           <Grid key='search' item xs="auto">
-            <StandaloneSearch sessionId={sessionId} tableUrl={true} trackId={trackId} selectedRegion={isValidLocString ? locString : ""}/>
+            <StandaloneSearchComponent session={session} tableUrl={true} assemblyName={assemblyName} trackId={trackId} selectedRegion={isValidLocString ? locString : ""}/>
           </Grid>
 
           <Grid key='filterMenu' item xs="auto">
