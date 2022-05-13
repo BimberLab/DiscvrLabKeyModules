@@ -3,11 +3,6 @@ import jexl from 'jexl';
 import { createViewState, loadPlugins } from '@jbrowse/react-linear-genome-view';
 import { ActionURL, Ajax } from '@labkey/api';
 
-// TODO: can we access the pluginManager.jexl instance directly??
-jexl.addFunction('arrayMax', (array) => {
-    return Array.isArray(array) ? Math.max(...array) : array
-})
-
 export function passesInfoFilters(feature, filters) {
     if (!filters || !filters.length){
         return true

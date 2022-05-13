@@ -84,6 +84,8 @@ const VariantTableWidget = observer(props => {
   // False until initial data load or an error:
   const [dataLoaded, setDataLoaded] = useState(!parsedLocString)
 
+  const [pageSize, setPageSize] = React.useState<number>(25);
+
   // API call to retrieve the requested features.
   useEffect(() => {
     async function fetch() {
@@ -191,14 +193,14 @@ const VariantTableWidget = observer(props => {
     }
   }
 
-  // TODO: the page size selector is now rendering, but it's not changeable.
   const gridElement = (
     <DataGrid
         columns={[...columns, actionsCol]}
         rows={features.map((rawFeature, id) => rawFeatureToRow(rawFeature, id, trackId))}
         components={{ Toolbar: GridToolbar }}
-        rowsPerPageOptions={[10,25,50,100,250]}
-        pageSize={25}
+        rowsPerPageOptions={[10,25,50,100]}
+        pageSize={pageSize}
+        onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
       />
   )
 
