@@ -815,6 +815,8 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                 return;
                             }
 
+                            var barcode5Name = r[fieldName + '/barcode5'] ? r[fieldName + '/barcode5'].replace(/_F$/, '') : ''
+
                             var barcode3s = r[fieldName + '/barcode3/sequence'] ? r[fieldName + '/barcode3/sequence'].split(',') : [];
                             if (barcode3s.length && barcode3s.length !== barcode5s.length) {
                                 var msg = 'Unequal i7/i5 barcodes: ' + sampleName;
@@ -878,7 +880,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                                     //data.push(phiX);  //PhiX
                                     data.push(r.laneAssignment || '');
-
+                                    data.push(barcode5Name || '');
                                 }
                                 rows.push(data.join(delim));
                             }, this);
