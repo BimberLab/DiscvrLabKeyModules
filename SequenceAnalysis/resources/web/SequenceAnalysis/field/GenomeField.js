@@ -8,6 +8,7 @@ Ext4.define('SequenceAnalysis.field.GenomeField', {
             displayField: 'name',
             valueField: 'rowid',
             queryMode: 'local',
+            triggerAction: 'all',
             store: {
                 type: 'labkey-store',
                 schemaName: 'sequenceanalysis',

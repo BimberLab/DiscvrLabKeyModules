@@ -13,7 +13,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
             minWidth: 650,
 			border: true,
 			items: [{
-				html: 'This step will first run cellranger using the primary genome (selected above). The resulting BAM will be passed to nimble, which will align using each of the genomes selected below, creating supplemental feature counts. By default, the original cellranger output is discarded.',
+				html: 'This step will query nimble results for the selected genome(s). It will then append these results to the seurat object on the target assay.',
 				maxWidth: 600,
 				border: false,
 				style: 'padding-bottom: 10px;'
@@ -48,7 +48,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 					header: 'Genome',
 					editor: this.genomeField,
 					renderer: function(val){
-						const store = this.up('singlecell-nimblealignpanel').genomeField.store
+						const store = this.up('singlecell-nimbleappendpanel').genomeField.store
 						if (val && store) {
 							const recIdx = store.find('rowid', val);
 							return store.getAt(recIdx).get('name');

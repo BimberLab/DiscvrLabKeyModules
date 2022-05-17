@@ -29,7 +29,7 @@ public class NimbleAnalysis extends AbstractPipelineStep implements AnalysisStep
     {
         public Provider()
         {
-            super("NimbleAnalysis", "Nimble", null, "This will run Nimble to generate a supplemental feature count matrix for the provided libraries", NimbleAlignmentStep.getToolParameters(), new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js", "sequenceanalysis/field/GenomeField.js", "singlecell/panel/NimbleAlignPanel.js")), null);
+            super("NimbleAnalysis", "Nimble", null, "This will run Nimble to generate a supplemental feature count matrix for the provided libraries", NimbleAlignmentStep.getToolParameters(), new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/GenomeField.js", "singlecell/panel/NimbleAlignPanel.js")), null);
         }
 
         @Override
