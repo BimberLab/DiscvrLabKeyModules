@@ -643,7 +643,14 @@ public class SequenceAnalysisManager
             if (libraryDir.exists())
             {
                 _log.info("deleting reference library dir: " + libraryDir.getPath());
-                FileUtils.deleteDirectory(libraryDir);
+                try
+                {
+                    FileUtils.deleteDirectory(libraryDir);
+                }
+                catch (IOException e)
+                {
+                    _log.error("Unable to delete folder: " + libraryDir.getPath(), e);
+                }
             }
         }
 

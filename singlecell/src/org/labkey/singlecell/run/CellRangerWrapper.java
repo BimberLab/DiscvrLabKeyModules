@@ -170,7 +170,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
         Files.createSymbolicLink(target.toPath(), input.toPath());
     }
 
-    public String makeLegalSampleName(String sampleName)
+    public static String makeLegalSampleName(String sampleName)
     {
         return FileUtil.makeLegalName(sampleName.replaceAll("_", "-")).replaceAll(" ", "-").replaceAll("\\.", "-").replaceAll("\\+", "");
     }

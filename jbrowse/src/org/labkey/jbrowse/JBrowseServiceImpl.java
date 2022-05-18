@@ -78,9 +78,8 @@ public class JBrowseServiceImpl extends JBrowseService
             throw new IllegalArgumentException("Unable to find session: " + databaseGuid);
         }
 
-        List<String> files = session.getJsonFiles(u, true).stream().map(JsonFile::getObjectId).collect(Collectors.toList());
         PipeRoot root = PipelineService.get().getPipelineRootSetting(session.getContainerObj());
-        PipelineService.get().queueJob(JBrowseSessionPipelineJob.refreshResources(session.getContainerObj(), u, root, files));
+        PipelineService.get().queueJob(JBrowseSessionPipelineJob.refreshDatabase(session.getContainerObj(), u, root, databaseGuid));
     }
 
     @Override

@@ -741,6 +741,11 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
 
     protected List<String> execute(String command)
     {
+        return execute(command, null);
+    }
+
+    protected List<String> execute(String command, @Nullable File workDir)
+    {
         if (command == null)
         {
             throw new IllegalArgumentException("attempting to execute a null command");
@@ -752,7 +757,7 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
 
         try
         {
-            Process p = Runtime.getRuntime().exec(command);
+            Process p = Runtime.getRuntime().exec(command, null, workDir);
             try
             {
                 String output = IOUtils.toString(p.getInputStream(), StringUtilsLabKey.DEFAULT_CHARSET);

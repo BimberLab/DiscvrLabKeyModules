@@ -23,6 +23,14 @@ function convertFilterStringToObj(filter){
 }
 
 function convertFilterObjToString(filter) {
+    const fieldDef = filterMap[filter.field]
+    if (fieldDef.dataType === 'number') {
+        // Ensure values like ".5" become 0.5. Remember we have integers, string, and double
+        if (filter.value && filter.value.startsWith(".")) {
+            filter.value = "0" + filter.value
+        }
+    }
+
     return [filter.field, filter.operator || '', filter.value || ''].join(':')
 }
 
@@ -46,12 +54,25 @@ const InfoFilterRow = observer(props => {
     }
 
     const getValueComponent = ((filterObj) => {
-        if (filterMap[filterObj.field].dataType === 'number') {
+        const fieldDef = filterMap[filterObj.field]
+        if (fieldDef.dataType === 'number') {
+            const inputProps = { inputMode: "numeric" }
+
+            //TODO: why doesnt the browser respect this?
+            if (fieldDef.minValue !== undefined) {
+                inputProps.min = Number(fieldDef.minValue)
+            }
+
+            if (fieldDef.maxValue !== undefined) {
+                inputProps.max = Number(fieldDef.maxValue)
+            }
+
             return (
                     <FormControl className={classes.numValueControl}>
                         <TextField
                                 id="standard-number"
                                 type="number"
+                                inputProps={inputProps}
                                 value={filterObj.value}
                                 required={true}
                                 error={hasSubmitted && !filterObj.value}

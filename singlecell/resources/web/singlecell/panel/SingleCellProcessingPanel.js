@@ -328,5 +328,15 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
 
         errors = Ext4.unique(errors);
         return errors;
+    },
+
+    applySavedValues: function(values){
+        this.callOverridden(arguments);
+
+        Ext4.Array.forEach(['submissionType', 'useOutputFileContainer'], function(val) {
+            if (values[val]) {
+                this.down('[name="' + val + '"]').setValue(values[val]);
+            }
+        }, this);
     }
 });

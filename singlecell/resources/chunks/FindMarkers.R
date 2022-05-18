@@ -3,7 +3,7 @@ for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readRDS(seuratObjects[[datasetId]])
 
-    outFile <- paste0(outputPrefix, '.', datasetId, '.markers.txt')
+    outFile <- paste0(outputPrefix, '.', makeLegalFileName(datasetId), '.markers.txt')
     datasetName <- datasetIdToName[[datasetId]]
 
     dt <- bindArgs(CellMembrane::Find_Markers, seuratObj)()

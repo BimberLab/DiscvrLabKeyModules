@@ -1,4 +1,3 @@
-
 export const filterMap = {
     AF: {
         title: 'Allele Frequency',

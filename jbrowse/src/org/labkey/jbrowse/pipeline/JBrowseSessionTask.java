@@ -106,13 +106,18 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
         }
         else if (getPipelineJob().getMode() == JBrowseSessionPipelineJob.Mode.PrepareGenome)
         {
-            prepareGenome();
+            prepareGenome(true);
+        }
+        else if (getPipelineJob().getMode() == JBrowseSessionPipelineJob.Mode.ReprocessSession)
+        {
+            prepareGenome(false);
+            reprocessResources();
         }
 
         return new RecordedActionSet(Collections.singleton(new RecordedAction("JBrowse")));
     }
 
-    private void prepareGenome() throws PipelineJobException
+    private void prepareGenome(boolean forceReprocess) throws PipelineJobException
     {
         if (getPipelineJob().getLibraryId() == null)
         {
@@ -124,7 +129,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
         getJob().getLogger().info("total files to reprocess: " + jsonFiles.size());
         for (JsonFile f : jsonFiles)
         {
-            f.prepareResource(getJob().getLogger(), false, true);
+            f.prepareResource(getJob().getLogger(), false, forceReprocess);
         }
     }
 

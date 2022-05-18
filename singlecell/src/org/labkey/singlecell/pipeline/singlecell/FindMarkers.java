@@ -45,6 +45,12 @@ public class FindMarkers extends AbstractCellMembraneStep
                     SeuratToolParameter.create("foldChangeThreshold", "Log2 Fold-Change Threshold", "Only genes with log2-foldchange above this will be reported", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, 0.25),
+                    SeuratToolParameter.create("minPct", "Min Pct", "Only test genes that are detected in a minimum fraction of min.pct cells in either of the two populations", "ldk-numberfield", new JSONObject(){{
+                        put("minValue", 0);
+                    }}, 0.1),
+                    SeuratToolParameter.create("minDiffPct", "Min Diff Pct", "Only test genes that show a minimum difference in the fraction of detection between the two groups", "ldk-numberfield", new JSONObject(){{
+                        put("minValue", 0);
+                    }}, null, "minDiffPct", false),
                     getSeuratThreadsParam()
                 ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }

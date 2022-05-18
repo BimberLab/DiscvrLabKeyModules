@@ -130,6 +130,12 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                         }
                                     },
                                 },{
+                                    xtype: 'textfield',
+                                    itemId: 'hashingPrefix',
+                                    fieldLabel: 'Hashing Library Prefix',
+                                    labelWidth: 160,
+                                    value: 'H'
+                                },{
                                     xtype: 'ldk-numberfield',
                                     itemId: 'defaultVolume',
                                     fieldLabel: 'Default Volume (uL)',
@@ -535,15 +541,16 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
         plateIds = Ext4.unique(plateIds);
 
-        var instrument = btn.up('singlecell-libraryexportpanel').down('#instrument').getValue();
-        var application = btn.up('singlecell-libraryexportpanel').down('#application') ? btn.up('singlecell-libraryexportpanel').down('#application').getValue() :  null;
-        var defaultVolume = btn.up('singlecell-libraryexportpanel').down('#defaultVolume') ? btn.up('singlecell-libraryexportpanel').down('#defaultVolume').getValue() :  '';
-        var adapter = btn.up('singlecell-libraryexportpanel').down('#adapter') ? btn.up('singlecell-libraryexportpanel').down('#adapter').getValue() : null;
-        var includeWithData = btn.up('singlecell-libraryexportpanel').down('#includeWithData').getValue();
-        var allowDuplicates = btn.up('singlecell-libraryexportpanel').down('#allowDuplicates').getValue();
-        var simpleSampleNames = btn.up('singlecell-libraryexportpanel').down('#simpleSampleNames').getValue();
-        var includeBlanks = btn.up('singlecell-libraryexportpanel').down('#includeBlanks').getValue();
-        var doReverseComplement = btn.up('singlecell-libraryexportpanel').doReverseComplement;
+        const instrument = btn.up('singlecell-libraryexportpanel').down('#instrument').getValue();
+        const application = btn.up('singlecell-libraryexportpanel').down('#application') ? btn.up('singlecell-libraryexportpanel').down('#application').getValue() :  null;
+        const defaultVolume = btn.up('singlecell-libraryexportpanel').down('#defaultVolume') ? btn.up('singlecell-libraryexportpanel').down('#defaultVolume').getValue() :  '';
+        const adapter = btn.up('singlecell-libraryexportpanel').down('#adapter') ? btn.up('singlecell-libraryexportpanel').down('#adapter').getValue() : null;
+        const includeWithData = btn.up('singlecell-libraryexportpanel').down('#includeWithData').getValue();
+        const allowDuplicates = btn.up('singlecell-libraryexportpanel').down('#allowDuplicates').getValue();
+        const simpleSampleNames = btn.up('singlecell-libraryexportpanel').down('#simpleSampleNames').getValue();
+        const includeBlanks = btn.up('singlecell-libraryexportpanel').down('#includeBlanks').getValue();
+        const doReverseComplement = btn.up('singlecell-libraryexportpanel').doReverseComplement;
+        const hashingPrefix = btn.up('singlecell-libraryexportpanel').down('#hashingPrefix') ? btn.up('singlecell-libraryexportpanel').down('#hashingPrefix').getValue() : 'H';
 
         var isMatchingApplication = function(application, libraryType, readsetApplication, rowLevelApplication){
             if (!application && !rowLevelApplication){
@@ -808,6 +815,8 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                 return;
                             }
 
+                            var barcode5Name = r[fieldName + '/barcode5'] ? r[fieldName + '/barcode5'].replace(/_F$/, '') : ''
+
                             var barcode3s = r[fieldName + '/barcode3/sequence'] ? r[fieldName + '/barcode3/sequence'].split(',') : [];
                             if (barcode3s.length && barcode3s.length !== barcode5s.length) {
                                 var msg = 'Unequal i7/i5 barcodes: ' + sampleName;
@@ -871,7 +880,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                                     //data.push(phiX);  //PhiX
                                     data.push(r.laneAssignment || '');
-
+                                    data.push(barcode5Name || '');
                                 }
                                 rows.push(data.join(delim));
                             }, this);
@@ -888,7 +897,10 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                         var tcrData = totalCells > 15000 ? 45 : 25;
                         processType(readsetIds, rows, r, 'readsetId', 'GEX', 500, 0.01, 'G', null, false, gexData, runMap, totalCells);
                         processType(readsetIds, rows, r, 'tcrReadsetId', 'TCR', 700, 0.01, 'T', null, false, tcrData, runMap, totalCells);
-                        processType(readsetIds, rows, r, 'hashingReadsetId', 'HTO', 182, 0.05, 'H', 'Cell hashing, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', true, 20, runMap, totalCells);
+
+                        // NOTE: Dual index 10x is always presented in the right orientation, so only RC if single-indexed
+                        const hashingDoRC = !r['hashingReadsetId/barcode3'];
+                        processType(readsetIds, rows, r, 'hashingReadsetId', 'HTO', 182, 0.05, hashingPrefix, 'Cell hashing, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', hashingDoRC, 20, runMap, totalCells);
                         processType(readsetIds, rows, r, 'citeseqReadsetId', 'CITE', 182, 0.05, 'C', 'CITE-Seq, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', false, 20, runMap, totalCells);
                     }, this);
 

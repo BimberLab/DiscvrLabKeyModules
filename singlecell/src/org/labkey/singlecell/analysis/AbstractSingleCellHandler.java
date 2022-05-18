@@ -478,21 +478,24 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
 
                 _resumer.getFileManager().addStepOutputs(action, output);
 
-                if (output.getSeuratObjects() != null && !output.getSeuratObjects().isEmpty())
+                if (step.createsSeuratObjects())
                 {
-                    currentFiles = new ArrayList<>(output.getSeuratObjects());
-                    Set<File> possibleIntermediates = currentFiles.stream().map(SingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toSet());
-                    possibleIntermediates.removeAll(originalInputs);
-                    if (!possibleIntermediates.isEmpty())
+                    if (output.getSeuratObjects() != null && !output.getSeuratObjects().isEmpty())
                     {
-                        _resumer.getFileManager().addIntermediateFiles(possibleIntermediates);
-                        _resumer.getFileManager().addIntermediateFiles(possibleIntermediates.stream().map(x -> CellHashingServiceImpl.get().getCellBarcodesFromSeurat(x)).collect(Collectors.toSet()));
-                        _resumer.getFileManager().addIntermediateFiles(possibleIntermediates.stream().map(x -> CellHashingServiceImpl.get().getMetaTableFromSeurat(x)).collect(Collectors.toSet()));
+                        currentFiles = new ArrayList<>(output.getSeuratObjects());
+                        Set<File> possibleIntermediates = currentFiles.stream().map(SingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toSet());
+                        possibleIntermediates.removeAll(originalInputs);
+                        if (!possibleIntermediates.isEmpty())
+                        {
+                            _resumer.getFileManager().addIntermediateFiles(possibleIntermediates);
+                            _resumer.getFileManager().addIntermediateFiles(possibleIntermediates.stream().map(x -> CellHashingServiceImpl.get().getCellBarcodesFromSeurat(x)).collect(Collectors.toSet()));
+                            _resumer.getFileManager().addIntermediateFiles(possibleIntermediates.stream().map(x -> CellHashingServiceImpl.get().getMetaTableFromSeurat(x)).collect(Collectors.toSet()));
+                        }
                     }
-                }
-                else if (step.createsSeuratObjects())
-                {
-                    throw new PipelineJobException("Expected step to create seurat objects but none reported");
+                    else
+                    {
+                        throw new PipelineJobException("Expected step to create seurat objects but none reported");
+                    }
                 }
                 else
                 {
@@ -513,8 +516,8 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     ctx.getLogger().debug("Removing intermediate file: " + seurat.getFile().getPath());
                     ctx.getFileManager().removeIntermediateFile(seurat.getFile());
                     _resumer.getFileManager().removeIntermediateFile(seurat.getFile());
-                    _resumer.getFileManager().removeIntermediateFile(CellHashingServiceImpl.get().getCellBarcodesFromSeurat(seurat.getFile()));
-                    _resumer.getFileManager().removeIntermediateFile(CellHashingServiceImpl.get().getMetaTableFromSeurat(seurat.getFile()));
+                    _resumer.getFileManager().removeIntermediateFile(CellHashingServiceImpl.get().getCellBarcodesFromSeurat(seurat.getFile(), false));
+                    _resumer.getFileManager().removeIntermediateFile(CellHashingServiceImpl.get().getMetaTableFromSeurat(seurat.getFile(), false));
                 }
             }
 

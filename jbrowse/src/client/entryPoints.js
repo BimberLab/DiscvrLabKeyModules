@@ -16,5 +16,10 @@ module.exports = {
         template: 'app',
         generateLib: true,
         path: './src/client/JBrowse/Search/webpart'
+    },{
+        name: 'variantTable',
+        title: 'Variant Table',
+        permission: 'read',
+        path: './src/client/JBrowse/VariantTable'
     }]
 };
