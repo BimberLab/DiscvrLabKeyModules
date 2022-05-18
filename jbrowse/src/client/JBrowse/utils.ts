@@ -3,9 +3,12 @@ import jexl from 'jexl';
 import { createViewState, loadPlugins } from '@jbrowse/react-linear-genome-view';
 import { ActionURL, Ajax } from '@labkey/api';
 
-// TODO: can we access the pluginManager.jexl instance directly??
-jexl.addFunction('arrayMax', (array) => {
+export function arrayMax(array) {
     return Array.isArray(array) ? Math.max(...array) : array
+}
+
+jexl.addFunction('arrayMax', (array) => {
+    return arrayMax(array)
 })
 
 export function passesInfoFilters(feature, filters) {
@@ -251,4 +254,8 @@ function handleFailure(error, sessionId?, trackId?, isTable?) {
             navigateToBrowser(sessionId, "", trackId)
         }
     }
+}
+
+export function getGenotypeURL(trackId, contig, start, end) {
+    return ActionURL.buildURL("jbrowse", "genotypeTable.view", null, {trackId: trackId, chr: contig, start: start, stop: end})
 }
