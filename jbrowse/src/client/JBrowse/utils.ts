@@ -3,6 +3,14 @@ import jexl from 'jexl';
 import { createViewState, loadPlugins } from '@jbrowse/react-linear-genome-view';
 import { ActionURL, Ajax } from '@labkey/api';
 
+export function arrayMax(array) {
+    return Array.isArray(array) ? Math.max(...array) : array
+}
+
+jexl.addFunction('arrayMax', (array) => {
+    return arrayMax(array)
+})
+
 export function passesInfoFilters(feature, filters) {
     if (!filters || !filters.length){
         return true

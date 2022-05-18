@@ -181,7 +181,6 @@ const VariantTableWidget = observer(props => {
     flex: 1,
     headerAlign: 'left',
     renderCell: (params: GridRenderCellParams) => {
-      // TODO: how to make these arrange vertically? flex box?
       return (
           <>
             <Box
