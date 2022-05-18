@@ -51,7 +51,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 						const store = this.up('singlecell-nimbleappendpanel').genomeField.store
 						if (val && store) {
 							const recIdx = store.find('rowid', val);
-							return store.getAt(recIdx).get('name');
+							return recIdx === -1 ? '[' + val + ']' : store.getAt(recIdx).get('name');
 						}
 						else if (val) {
 							return '[' + val + ']';
