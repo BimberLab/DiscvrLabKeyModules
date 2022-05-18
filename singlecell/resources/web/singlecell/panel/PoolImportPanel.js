@@ -181,7 +181,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                     }
                     return 'D' + val;
                 }
-                else if (type === 'MultiSeq') {
+                else if (type === 'MultiSeq' && !panel.down('#useDualIndex').getValue()) {
                     val = parseInt(val);
 
                     return 'MultiSeq-Idx-RP' + val;
@@ -201,8 +201,11 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                     val = val.replace(/^MS[- ]Idx/ig, 'MultiSeq-Idx');
                     val = val.replace(/^MultiSeq[- ]Idx[- ]RP/ig, 'MultiSeq-Idx-RP');
 
-                    if (val.length() <= 3) {
-                        val = panel.down('#useDualIndex').getValue() ? 'SI-TN-' + val : 'SI-NA-' + val;
+                    if (val.length <= 3 && panel.down('#useDualIndex').getValue()) {
+                        val = 'MS-TN-' + val;
+                    }
+                    else {
+                        LDK.Utils.logError('Unexpected value with single-end hashing: ' + val);
                     }
 
                     return val;
@@ -222,6 +225,10 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             if (val && (val.toLowerCase() === 'no' || val.toLowerCase() === 'n')) {
                 return null;
             }
+            else if (val && (val.toLowerCase() === 'yes' || val.toLowerCase() === 'y')) {
+                var panel = panel.down('#defaultCiteSeqPanel').getValue();
+                return panel || val;
+            }
 
             return val;
         },
@@ -231,7 +238,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                 return null;
             }
 
-            var barcodeSeries = panel.down('#useDualIndex').getValue() ? 'SI-TN-' + val : 'SI-NA-' + val;
+            var barcodeSeries = panel.down('#useDualIndex').getValue() ? 'SI-TN' : 'SI-NA';
             val = val.toUpperCase();
             var re = new RegExp('^' + barcodeSeries + '-', 'i');
             if (!val.match(re)) {
@@ -251,7 +258,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                 return;
             }
 
-            var barcodeSeries = panel.down('#useDualIndex').getValue() ? 'SI-TT-' + val : 'SI-GA-' + val;
+            var barcodeSeries = panel.down('#useDualIndex').getValue() ? 'SI-TT' : 'SI-GA';
             val = val.toUpperCase();
             var re = new RegExp('^' + barcodeSeries + '-', 'i');
             if (!val.match(re)) {
@@ -483,6 +490,11 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             checked: false
         },{
             xtype: 'checkbox',
+            fieldLabel: 'Combined Hashing and Cite-Seq Libraries',
+            itemId: 'combineHashingCite',
+            checked: false
+        },{
+            xtype: 'checkbox',
             fieldLabel: 'Require Library Concentrations',
             itemId: 'requireConc',
             checked: false
@@ -493,7 +505,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             checked: true,
             listeners: {
                 scope: this,
-                change: function(field, val) {
+                change: function (field, val) {
                     field.up('panel').down('#requireGEX').setValue(!val);
                     field.up('panel').down('#requireTCR').setValue(!val);
                     field.up('panel').down('#requireHTO').setValue(!val);
@@ -501,9 +513,15 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                 }
             }
         },{
+            xtype: 'textfield',
+            itemId: 'defaultCiteSeqPanel',
+            fieldLabel: 'Default CITE-seq Panel',
+            value: 'TB-V2'
+        },{
             xtype: 'checkbox',
             fieldLabel: 'Use 10x V2/HT (Dual Index)',
-            itemId: 'useDualIndex'
+            itemId: 'useDualIndex',
+            checked: true
         },{
             xtype: 'ldk-simplelabkeycombo',
             fieldLabel: 'Hashing Type',
@@ -828,7 +846,8 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                 libraryType = 'BioLegend';
             }
 
-            var rs = this.processReadsetForGroup(poolName, rowArr, ret.readsetRows, 'hto', 'HTO', 'Cell Hashing', libraryType);
+            var combineHashingCite = this.down('#combineHashingCite').getValue();
+            var rs = this.processReadsetForGroup(poolName, rowArr, ret.readsetRows, 'hto', 'HTO', (combineHashingCite ? 'Cell Hashing/CITE-seq' : 'Cell Hashing'), libraryType, (combineHashingCite ? 'HTO-CITE' : null));
             if (Ext4.isString(rs)) {
                 readsetGUIDs.hashingReadsetGUID = rs;
             }
@@ -839,18 +858,24 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             }
 
             var requireCITE = this.down('#requireCITE').getValue();
-            var rs = this.processReadsetForGroup(poolName, rowArr, ret.readsetRows, 'citeseq', 'CITE', 'CITE-Seq', null);
-            if (Ext4.isString(rs)) {
-                readsetGUIDs.citeseqReadsetGUID = rs;
+            if (combineHashingCite) {
+                readsetGUIDs.citeseqReadsetGUID = readsetGUIDs.hashingReadsetGUID;
             }
-            else if (requireCITE){
+            else {
+                var rs = this.processReadsetForGroup(poolName, rowArr, ret.readsetRows, 'citeseq', 'CITE', 'CITE-Seq', null, null);
+                if (Ext4.isString(rs)) {
+                    readsetGUIDs.citeseqReadsetGUID = rs;
+                }
+            }
+
+            if (requireCITE && !readsetGUIDs.citeseqReadsetGUID){
                 errorsMsgs.push('Missing CITE-Seq library');
                 errorsMsgs = errorsMsgs.concat(rs);
                 return false;
             }
 
             var requireGEX = this.down('#requireGEX').getValue();
-            rs = this.processReadsetForGroup(poolName, rowArr, ret.readsetRows, 'gex', 'GEX', 'RNA-seq, Single Cell', '10x 5\' GEX');
+            rs = this.processReadsetForGroup(poolName, rowArr, ret.readsetRows, 'gex', 'GEX', 'RNA-seq, Single Cell', '10x 5\' GEX', null);
             if (Ext4.isString(rs)) {
                 readsetGUIDs.readsetGUID = rs;
             }
@@ -861,7 +886,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             }
 
             var requireTCR = this.down('#requireTCR').getValue();
-            rs = this.processReadsetForGroup(poolName, rowArr, ret.readsetRows, 'tcr', 'TCR', 'RNA-seq, Single Cell', '10x 5\' VDJ (Rhesus A/B/D/G)');
+            rs = this.processReadsetForGroup(poolName, rowArr, ret.readsetRows, 'tcr', 'TCR', 'RNA-seq, Single Cell', '10x 5\' VDJ (Rhesus A/B/D/G)', null);
             if (Ext4.isString(rs)) {
                 readsetGUIDs.tcrReadsetGUID = rs;
             }
@@ -897,7 +922,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         return ret;
     },
 
-    processReadsetForGroup: function(poolName, rowArr, readsetRows, prefix, type, application, librarytype){
+    processReadsetForGroup: function(poolName, rowArr, readsetRows, prefix, type, application, librarytype, nameSuffix){
         var idxValues = this.getUniqueValues(rowArr, prefix + '_library_index');
         var conc = this.getUniqueValues(rowArr, prefix + '_library_conc');
         var fragment = this.getUniqueValues(rowArr, prefix + '_library_fragment');
@@ -921,10 +946,11 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             LDK.Assert.assertNotEmpty('Expected non-null workbook', workbook);
 
             // These are the dual-index 10x barcode series.
-            var isDualIndex = idxValues[0].startsWith('SI-TN') || idxValues[0].startsWith('SI-TT');
+            var isDualIndex = idxValues[0].startsWith('MS-TN') || idxValues[0].startsWith('SI-TN') || idxValues[0].startsWith('SI-TT');
 
             readsetRows.push({
-                name: poolName + '-' + type,
+                name: poolName + '-' + (nameSuffix || type),
+                plateId: poolName,
                 barcode5: isDualIndex ? idxValues[0] + '_F' : idxValues[0],
                 barcode3: isDualIndex ? idxValues[0] + '_R' : null,
                 concentration: conc[0],

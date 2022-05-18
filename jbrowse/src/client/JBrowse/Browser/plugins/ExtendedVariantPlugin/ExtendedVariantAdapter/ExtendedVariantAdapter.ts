@@ -6,8 +6,6 @@ import { Feature } from '@jbrowse/core/util/simpleFeature';
 import ExtendedVcfFeature from './ExtendedVcfFeature';
 import { default as VcfTabixAdapter } from '@jbrowse/plugin-variants/src/VcfTabixAdapter/VcfTabixAdapter';
 import { VcfFeature } from '@jbrowse/plugin-variants';
-import { Instance } from 'mobx-state-tree';
-import MyConfigSchema from './configSchema';
 
 export default class extends VcfTabixAdapter {
     protected featureCache = new QuickLRU({ maxSize: 20 })
@@ -19,6 +17,7 @@ export default class extends VcfTabixAdapter {
             // that the fetched ranges tend to be repeated
             const cacheKey = `${refName}:${start}-${end}`
             let f = this.featureCache.get(cacheKey) as VcfFeature[] | undefined
+
             if (!f) {
                 f = await this.getFeaturesAsArray(query, opts)
                 this.featureCache.set(cacheKey, f)

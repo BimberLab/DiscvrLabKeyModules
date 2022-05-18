@@ -63,9 +63,12 @@ saveData <- function(seuratObj, datasetId) {
     print(paste0('Saving dataset: ', datasetId))
     print(seuratObj)
 
-    fn <- paste0(outputPrefix, '.', datasetId, '.seurat.rds')
-    barcodeFile <- paste0(outputPrefix, '.', datasetId, '.cellBarcodes.csv')
-    metaFile <- paste0(outputPrefix, '.', datasetId, '.seurat.meta.txt')
+    datasetIdForFile <- makeLegalFileName(datasetId)
+    fn <- paste0(outputPrefix, '.', datasetIdForFile, '.seurat.rds')
+
+    message(paste0('Saving RDS file: ', fn))
+    barcodeFile <- paste0(outputPrefix, '.', datasetIdForFile, '.cellBarcodes.csv')
+    metaFile <- paste0(outputPrefix, '.', datasetIdForFile, '.seurat.meta.txt')
 
     saveRDS(seuratObj, file = fn)
 
@@ -91,6 +94,13 @@ intermediateFiles <- c()
 addIntermediateFile <- function(f) {
     print(paste0('Adding intermediate file: ', f))
     intermediateFiles <<- c(intermediateFiles, f)
+}
+
+makeLegalFileName <- function(fn) {
+    fn <- gsub(fn, pattern = '\\\\', replacement = '_')
+    fn <- gsub(fn, pattern = '[/ ,;]', replacement = '_')
+    fn <- gsub(fn, pattern = '\\|', replacement = '_')
+    return(fn)
 }
 
 errorMessages <- c()

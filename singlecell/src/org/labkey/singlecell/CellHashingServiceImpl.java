@@ -51,6 +51,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -284,7 +285,7 @@ public class CellHashingServiceImpl extends CellHashingService
             }
 
             // if distinct HTOs is 1, no point in running hashing.  note: presence of hashing readsets is a trigger downstream
-            HashMap<Integer, File> readsetToCountMap = new HashMap<>();
+            HashMap<String, File> readsetToCountMap = new HashMap<>();
             if (distinctHTOs.size() > 1)
             {
                 Set<Integer> hashingToRemove = new HashSet<>();
@@ -316,7 +317,7 @@ public class CellHashingServiceImpl extends CellHashingService
                             }
 
                             SequenceOutputFile so = ts.getArrayList(SequenceOutputFile.class).get(0);
-                            readsetToCountMap.put(hashingReadsetId, so.getFile().getParentFile());  //this is the umi_counts dir
+                            readsetToCountMap.put(BARCODE_TYPE.hashing.name() + "-" + hashingReadsetId, so.getFile().getParentFile());  //this is the umi_counts dir
                         }
                     }
 
@@ -378,7 +379,7 @@ public class CellHashingServiceImpl extends CellHashingService
                             job.getLogger().info("Multiple CITE-seq count matrices found, using most recent: " + sos.get(0).getRowid());
                         }
                         SequenceOutputFile so = sos.get(0);
-                        readsetToCountMap.put(citeseqReadsetId, so.getFile().getParentFile());  //this is the umi_count dir
+                        readsetToCountMap.put(BARCODE_TYPE.citeseq.name() + "-" + citeseqReadsetId, so.getFile().getParentFile());  //this is the umi_count dir
                     }
                 }
 
@@ -723,9 +724,12 @@ public class CellHashingServiceImpl extends CellHashingService
         return support.getCachedObject(READSET_TO_HASHING_MAP, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, Integer.class, Integer.class));
     }
 
-    public Map<Integer, File> getCachedReadsetToCountMatrixMap(SequenceAnalysisJobSupport support) throws PipelineJobException
+    public File getCachedReadsetToCountMatrix(SequenceAnalysisJobSupport support, int readsetId, CellHashingService.BARCODE_TYPE type) throws PipelineJobException
     {
-        return support.getCachedObject(READSET_TO_COUNTS_MAP, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, Integer.class, File.class));
+        Map<String, File> map = support.getCachedObject(READSET_TO_COUNTS_MAP, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, String.class, File.class));
+        String key = type.name() + "-" + readsetId;
+
+        return(map.get(key));
     }
 
     @Override
@@ -911,13 +915,13 @@ public class CellHashingServiceImpl extends CellHashingService
             put("joinReturnValue", true);
         }}, null));
 
-        ret.add(SeuratToolParameter.create("maxHashingPctFail", "Hashing Max Fraction Failed", "The maximum fraction of cells that can have no call (i.e. not singlet or doublet). Otherwise it will fail the job. This is a number 0-1.", "ldk-numberfield", new JSONObject(){{
+        ret.add(SeuratToolParameter.create(MAX_HASHING_PCT_FAIL, "Hashing Max Fraction Failed", "The maximum fraction of cells that can have no call (i.e. not singlet or doublet). Otherwise it will fail the job. This is a number 0-1.", "ldk-numberfield", new JSONObject(){{
             put("minValue", 0);
             put("maxValue", 1);
             put("decimalPrecision", 2);
         }}, null));
 
-        ret.add(SeuratToolParameter.create("maxHashingPctDiscordant", "Hashing Max Fraction Discordant", "The maximum fraction of cells that can have discordant calls. High discordance is usually an indication of either poor quality data, or one caller performing badly.This is a number 0-1.", "ldk-numberfield", new JSONObject(){{
+        ret.add(SeuratToolParameter.create(MAX_HASHING_PCT_DISCORDANT, "Hashing Max Fraction Discordant", "The maximum fraction of cells that can have discordant calls. High discordance is usually an indication of either poor quality data, or one caller performing badly.This is a number 0-1.", "ldk-numberfield", new JSONObject(){{
             put("minValue", 0);
             put("maxValue", 1);
             put("decimalPrecision", 2);
@@ -1211,6 +1215,7 @@ public class CellHashingServiceImpl extends CellHashingService
                 writer.println("\t-e SEQUENCEANALYSIS_MAX_THREADS \\");
             }
 
+            writer.println("\t-e CELLHASHR_DEBUG=1 \\");
             writer.println("\t-v \"${WD}:/work\" \\");
             writer.println("\t-v \"${HOME}:/homeDir\" \\");
             writer.println("\t-u $UID \\");
@@ -1329,13 +1334,46 @@ public class CellHashingServiceImpl extends CellHashingService
             throw new PipelineJobException("Unable to find cached readset of type " + type.name() + " for parent: " + parentReadset.getReadsetId());
         }
 
-        File ret = getCachedReadsetToCountMatrixMap(support).get(childId);
+        File ret = getCachedReadsetToCountMatrix(support, childId, type);
         if (ret == null)
         {
             throw new PipelineJobException("Unable to find cached count matrix of type " + type.name() + " for parent: " + parentReadset.getReadsetId());
         }
 
         return ret;
+    }
+
+    @Override
+    public void copyHtmlLocally(SequenceOutputHandler.JobContext ctx) throws PipelineJobException
+    {
+        try
+        {
+            for (File f : ctx.getOutputDir().listFiles())
+            {
+                if (f.getName().endsWith(".hashing.html"))
+                {
+                    ctx.getLogger().info("Copying hashing HTML locally for debugging: " + f.getName());
+                    File target = new File(ctx.getSourceDirectory(), f.getName());
+                    if (target.exists())
+                    {
+                        target.delete();
+                    }
+
+                    Files.copy(f.toPath(), target.toPath());
+                }
+
+                // Also delete the .done files, so hashing will repeat if we change params:
+                if (f.getName().endsWith(CellHashingServiceImpl.CALL_EXTENSION + ".done"))
+                {
+                    ctx.getLogger().debug("Removing hashing .done file: " + f.getName());
+                    f.delete();
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
     }
 
     @Override
@@ -1406,8 +1444,13 @@ public class CellHashingServiceImpl extends CellHashingService
 
     public File getCellBarcodesFromSeurat(File seuratObj)
     {
+        return getCellBarcodesFromSeurat(seuratObj, true);
+    }
+
+    public File getCellBarcodesFromSeurat(File seuratObj, boolean throwIfNotFound)
+    {
         File barcodes = new File(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds", "cellBarcodes.csv"));
-        if (!barcodes.exists())
+        if (throwIfNotFound && !barcodes.exists())
         {
             throw new IllegalArgumentException("Unable to find expected cell barcodes file.  This might indicate the seurat object was created with an older version of the pipeline.  Expected: " + barcodes.getPath());
         }
@@ -1417,8 +1460,13 @@ public class CellHashingServiceImpl extends CellHashingService
 
     public File getMetaTableFromSeurat(File seuratObj)
     {
+        return getMetaTableFromSeurat(seuratObj, true);
+    }
+
+    public File getMetaTableFromSeurat(File seuratObj, boolean throwIfNotFound)
+    {
         File barcodes = new File(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds", "seurat.meta.txt"));
-        if (!barcodes.exists())
+        if (throwIfNotFound && !barcodes.exists())
         {
             throw new IllegalArgumentException("Unable to find expected metadata file.  This might indicate the seurat object was created with an older version of the pipeline.  Expected: " + barcodes.getPath());
         }

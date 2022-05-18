@@ -18,6 +18,11 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.exp.api.DataType;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
@@ -25,6 +30,7 @@ import org.labkey.api.security.UserManager;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Arrays;
@@ -220,5 +226,32 @@ public class SequenceTriggerHelper
                 _log.error(e.getMessage(), e);
             }
         }
+    }
+    
+    public int createExpData(String relPath) {
+        PipeRoot pr = PipelineService.get().getPipelineRootSetting(getContainer());
+        if (pr == null)
+        {
+            throw new IllegalArgumentException("Unable to find pipeline root");
+        }
+
+        File f = new File(pr.getRootPath(), relPath);
+        if (!f.exists())
+        {
+            throw new IllegalArgumentException("Unable to find file: " + f.getPath());
+        }
+
+        ExpData d = ExperimentService.get().getExpDataByURL(f, getContainer());
+        if (d != null)
+        {
+            return d.getRowId();
+        }
+        
+        d = ExperimentService.get().createData(getContainer(), new DataType("Output"));
+        d.setDataFileURI(f.toURI());
+        d.setName(f.getName());
+        d.save(getUser());
+
+        return d.getRowId();
     }
 }

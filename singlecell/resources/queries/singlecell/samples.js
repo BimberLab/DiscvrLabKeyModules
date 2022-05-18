@@ -20,6 +20,9 @@ function beforeUpsert(row, oldRow, errors){
     else if (['IE-1|IE-2', 'IE1/IE2', 'IE-1/IE-2', 'IE1IE2', 'CMV IE-2 Pool', 'CMV IE2 Pool'].indexOf(row.stim) !== -1){
         row.stim = 'IE-1/IE-2';
     }
+    else if (['No stim', 'No Stim'].indexOf(row.stim) !== -1){
+        row.stim = 'NoStim';
+    }
 
     var lookupFields = ['stim'];
     for (var i=0;i<lookupFields.length;i++){

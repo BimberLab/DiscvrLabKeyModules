@@ -13,7 +13,7 @@ import java.util.List;
 
 public class ProcessSeuratObjectHandler extends AbstractSingleCellHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, SequenceOutputHandler.HasActionNames
 {
-    private static FileType SEURAT_TYPE = new FileType("seurat.rds", false);
+    private static final FileType SEURAT_TYPE = new FileType("seurat.rds", false);
 
     @Override
     public String getName()
@@ -24,7 +24,7 @@ public class ProcessSeuratObjectHandler extends AbstractSingleCellHandler implem
     @Override
     public boolean canProcess(SequenceOutputFile f)
     {
-        return f.getFile() != null && SEURAT_TYPE.isType(f.getFile());
+        return f.getFile() != null && (SEURAT_TYPE.isType(f.getFile()) || "Seurat Object".equals(f.getCategory()));
     }
 
     @Override

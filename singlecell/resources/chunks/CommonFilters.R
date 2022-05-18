@@ -2,6 +2,7 @@ totalPassed <- 0
 for (datasetId in names(seuratObjects)) {
 	printName(datasetId)
 	seuratObj <- readRDS(seuratObjects[[datasetId]])
+	origCells <- ncol(seuratObj)
 
 	print(paste0('Initial cells for dataset ', datasetId, ': ', ncol(seuratObj)))
 
@@ -11,9 +12,16 @@ for (datasetId in names(seuratObjects)) {
 		}
 
 		expr <- Seurat::FetchData(object = seuratObj, vars = 'Saturation.RNA')
-		seuratObj <- seuratObj[, which(x = expr >= saturation.RNA.min)]
-		print(paste0('After saturation.RNA.min filter: ', length(colnames(x = seuratObj))))
-		if (ncol(seuratObj) == 0) {
+		cells <- which(x = expr > saturation.RNA.min)
+		if (length(cells) > 0){
+			seuratObj <- seuratObj[, cells]
+			print(paste0('After saturation.RNA.min filter: ', length(colnames(x = seuratObj))))
+			if (ncol(seuratObj) == 0) {
+				seuratObj <- NULL
+				next
+			}
+		} else {
+			print(paste0('No cells passing saturation.RNA.min filter'))
 			seuratObj <- NULL
 			next
 		}
@@ -25,9 +33,16 @@ for (datasetId in names(seuratObjects)) {
 		}
 
 		expr <- Seurat::FetchData(object = seuratObj, vars = 'Saturation.RNA')
-		seuratObj <- seuratObj[, which(x = expr <= saturation.RNA.max)]
-		print(paste0('After saturation.RNA.max filter: ', length(colnames(x = seuratObj))))
-		if (ncol(seuratObj) == 0) {
+		cells <- which(x = expr < saturation.RNA.max)
+		if (length(cells) > 0){
+			seuratObj <- seuratObj[, cells]
+			print(paste0('After saturation.RNA.max filter: ', length(colnames(x = seuratObj))))
+			if (ncol(seuratObj) == 0) {
+				seuratObj <- NULL
+				next
+			}
+		} else {
+			print(paste0('No cells passing saturation.RNA.max filter'))
 			seuratObj <- NULL
 			next
 		}
@@ -39,9 +54,16 @@ for (datasetId in names(seuratObjects)) {
 		}
 
 		expr <- Seurat::FetchData(object = seuratObj, vars = 'Saturation.ADT')
-		seuratObj <- seuratObj[, which(x = expr >= saturation.ADT.min)]
-		print(paste0('After saturation.ADT.min filter: ', length(colnames(x = seuratObj))))
-		if (ncol(seuratObj) == 0) {
+		cells <- which(x = expr >= saturation.ADT.min)
+		if (length(cells) > 0){
+			seuratObj <- seuratObj[, cells]
+			print(paste0('After saturation.ADT.min filter: ', length(colnames(x = seuratObj))))
+			if (ncol(seuratObj) == 0) {
+				seuratObj <- NULL
+				next
+			}
+		} else {
+			print(paste0('No cells passing saturation.ADT.min filter'))
 			seuratObj <- NULL
 			next
 		}
@@ -53,9 +75,16 @@ for (datasetId in names(seuratObjects)) {
 		}
 
 		expr <- Seurat::FetchData(object = seuratObj, vars = 'Saturation.ADT')
-		seuratObj <- seuratObj[, which(x = expr <= saturation.ADT.max)]
-		print(paste0('After saturation.ADT.max filter: ', length(colnames(x = seuratObj))))
-		if (ncol(seuratObj) == 0) {
+		cells <- which(x = expr <= saturation.ADT.max)
+		if (length(cells) > 0){
+			seuratObj <- seuratObj[, cells]
+			print(paste0('After saturation.ADT.max filter: ', length(colnames(x = seuratObj))))
+			if (ncol(seuratObj) == 0) {
+				seuratObj <- NULL
+				next
+			}
+		} else {
+			print(paste0('No cells passing saturation.ADT.max filter'))
 			seuratObj <- NULL
 			next
 		}
@@ -67,13 +96,13 @@ for (datasetId in names(seuratObjects)) {
 		}
 
 		tryCatch({
-			cells <- Seurat::WhichCells(seuratObj, expression = HTO.Classification!='ND' & HTO.Classification!='Discordant' & HTO.Classification!='Doublet')
+			cells <- Seurat::WhichCells(seuratObj, expression = HTO.Classification!='ND' & HTO.Classification!='Discordant' & HTO.Classification!='Doublet' & HTO.Classification!='Low Counts')
 			if (length(cells) == 0) {
 				print(paste0('There were no cells remaining after dropping cells without hashing'))
 				seuratObj <- NULL
 			} else {
 				seuratObj <- subset(seuratObj, cells = cells)
-				print(paste0('Cells after subset: ', ncol(seuratObj)))
+				print(paste0('After removing cells without hashing: ', ncol(seuratObj)))
 			}
 		}, error = function(e){
 			if (!is.null(e) && e$message == 'Cannot find cells provided') {
@@ -101,7 +130,7 @@ for (datasetId in names(seuratObjects)) {
 		saveData(seuratObj, datasetId)
 		totalPassed <- totalPassed + 1
 
-		print(paste0('Final cells: ', ncol(seuratObj)))
+		print(paste0('Final cells: ', ncol(seuratObj), ' of ', origCells, ' (', round((ncol(seuratObj)/origCells) * 100, 2), '%)'))
 	}
 }
 

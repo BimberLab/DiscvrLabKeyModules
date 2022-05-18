@@ -14,3 +14,17 @@ function beforeDelete(row, errors){
         errors._form = 'You cannot directly delete analyses.  To delete these records, use the delete button above the analysis grid.';
     }
 }
+
+function beforeInsert(row, errors){
+    beforeUpsert(row, errors);
+}
+
+function beforeUpdate(row, errors){
+    beforeUpsert(row, errors);
+}
+
+function beforeUpsert(row, errors) {
+    if (row.dataid && typeof row.dataid == 'string') {
+        row.dataid = triggerHelper.createExpData(row.dataid);
+    }
+}

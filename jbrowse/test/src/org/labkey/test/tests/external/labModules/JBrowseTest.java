@@ -74,9 +74,7 @@ public class JBrowseTest extends BaseWebDriverTest
     {
         setUpTest();
 
-        testInferredDetails();
-
-        //These are passing:
+        /*testInferredDetails();
         testNoSession();
         testMessageDisplay();
         testSessionCardDisplay();
@@ -92,9 +90,13 @@ public class JBrowseTest extends BaseWebDriverTest
 
         testLoadingConfigFilters();
         testSampleFilters();
-        testSampleFiltersFromUrl();
+        testSampleFiltersFromUrl();*/
 
-        testOutputFileProcessing();
+        //testBrowserNavToVariantTable();
+        //testGridFailureConditions();
+        testVariantTableComparators();
+
+        //testOutputFileProcessing();
     }
 
     private void openTrackMenuItem(String name)
@@ -113,8 +115,8 @@ public class JBrowseTest extends BaseWebDriverTest
 
         // We expect IMPACT to be the default scheme
         assertElementPresent(Locator.tagWithText("td", "HIGH"));
-        assertElementPresent(Locator.tagWithAttribute("div", "fill", "red"));
-        assertElementPresent(Locator.tagWithAttribute("polygon", "fill", "red"));
+        waitForElement(Locator.tagWithAttribute("div", "fill", "red"));
+        waitForElement(Locator.tagWithAttribute("polygon", "fill", "red"));
 
         assertElementPresent(Locator.tagWithText("td", "MODERATE"));
         assertElementPresent(Locator.tagWithAttribute("div", "fill", "goldenrod"));
@@ -143,6 +145,17 @@ public class JBrowseTest extends BaseWebDriverTest
     private void clickDialogButton(String text)
     {
         waitAndClick(Locator.XPathLocator.tagWithClass("button", "MuiButtonBase-root").withChild(Locator.tagWithText("span", text)));
+    }
+
+    private void testBrowserNavToVariantTable() throws Exception
+    {
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap");
+        waitForJBrowseToLoad();
+
+        waitAndClick(Locator.tagWithAttribute("button", "data-testid", "track_menu_icon"));
+        waitAndClickAndWait(Locator.tagContainingText("span", "View As Table"));
+
+        testVariantDataGrid();
     }
 
     private void testDefaultColorApplied()
@@ -232,7 +245,9 @@ public class JBrowseTest extends BaseWebDriverTest
         Locator.XPathLocator valueField = Locator.tagWithClass("div", "MuiInput-underline").index(1);
         waitForElement(valueField);
         WebElement input = getDriver().findElement(valueField.child(Locator.tag("input")));
-        input.sendKeys("0.02");
+
+        // NOTE: this is deliberate, so we ensure ".2" => 0.2
+        input.sendKeys(".02");
 
         waitAndClick(Locator.tagWithText("em", "Operator"));
         waitAndClick(Locator.tagContainingText("li", "<"));
@@ -245,7 +260,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private long getTotalVariantFeatures()
     {
-        Locator l = Locator.tagWithClass("svg", "SvgFeatureRendering").append(Locator.tag("polygon"));
+        Locator l = Locator.tagWithAttribute("svg", "data-testid", "svgfeatures").append(Locator.tag("polygon"));
         try
         {
             return Locator.findElements(getDriver(), l).stream().filter(WebElement::isDisplayed).count();
@@ -321,10 +336,7 @@ public class JBrowseTest extends BaseWebDriverTest
     {
         // Note: this can be taxing on the browser, so load a more targeted region
         beginAt("/home/jbrowse-jbrowse.view?session=mgap&sampleFilters=mgap:m00010&location=1:116,980,271..116,983,486");
-        checker().takeScreenShot("Jbrowse1_OnLoad");
-
         waitForJBrowseToLoad();
-        checker().takeScreenShot("Jbrowse2_OnLoad");
 
         // Wait for variants to load:
         getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> G"));
@@ -346,7 +358,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private Locator.XPathLocator getTrackLocator(String trackId, boolean waitFor)
     {
-        trackId = "trackRenderingContainer-linearGenomeView-" + trackId;
+        trackId = "trackRenderingContainer-mgap-" + trackId;
         Locator.XPathLocator l = Locator.tagWithAttributeContaining("div", "data-testid", trackId);
         if (waitFor)
         {
@@ -385,6 +397,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithClassContaining("span", "MuiTypography-root").notHidden(), WAIT_FOR_PAGE); //this is the icon from the track label
 
         waitForElementToDisappear(Locator.tagWithText("div", "Loading...")); //track data
+        waitForElementToDisappear(Locator.tagWithText("p", "Loading..."));
     }
 
     private void testSessionCardDisplay()
@@ -628,7 +641,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("span", "fakeData.gff").withClass("MuiTypography-root"));
         waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));
 
-        //Now test search:
+        //Now test search
         testSearch(sessionId);
     }
 
@@ -639,7 +652,7 @@ public class JBrowseTest extends BaseWebDriverTest
         PortalHelper portalHelper = new PortalHelper(this);
         portalHelper.addSideWebPart("JBrowse Search");
 
-        waitForElement(Locator.tagWithText("p", "No session Id provided. Please have you admin use the customize icon to set the session ID for this webpart."));
+        waitForElement(Locator.tagWithText("p", "No session Id provided. Please have your site admin use the customize icon to set the session ID for this webpart."));
         portalHelper.clickWebpartMenuItem("JBrowse Search", false, "Customize");
         Window window = new Window.WindowFinder(getDriver()).withTitle("Customize Webpart").waitFor();
         Ext4FieldRef.waitForField(this, "Target JBrowse DB");
@@ -684,5 +697,199 @@ public class JBrowseTest extends BaseWebDriverTest
                     return list.get(0);
                 }
         );
+    }
+
+    private static final Locator TOP_ROW = Locator.tagWithAttribute("div", "aria-rowindex", "2");
+
+    private void testVariantDataGrid() throws Exception
+    {
+        waitForTableLoadingToDisappear();
+
+        // Test default
+        testColumns("1", "116981270", "A", "T", "0.029", "intron_variant", "HIGH",
+                "NTNG1", "7.292");
+
+        // Test sorting
+        Locator referenceSort = Locator.tagWithText("div", "Reference");
+        waitForElement(referenceSort);
+        WebElement elem = referenceSort.findElement(getDriver());
+        elem.click();
+        waitForElement(Locator.tagWithText("div", "116985082"));
+        elem.click();
+        waitForElementToDisappear(Locator.tagWithText("div", "116985082"));
+        waitForElement(Locator.tagWithText("div", "117000545"));
+
+        Locator sortedTopRow = Locator.tagWithAttribute("div", "aria-rowindex", "2");
+        waitForElement(sortedTopRow);
+        testColumns("1", "117000545", "TTGCTCGTTTTATTGG", "T",
+                "0.0009927", "intron_variant", "", "NTNG1", "");
+
+        // Test filtering
+        waitAndClick(Locator.tagWithAttributeContaining("button", "aria-label", "Show filters"));
+
+        Locator columnSelector = Locator.tagWithClass("div", "MuiGridFilterForm-columnSelect");
+        waitAndClick(columnSelector);
+        Locator refOption = Locator.tagWithAttributeContaining("option", "value", "ref");
+        waitAndClick(refOption);
+
+        Locator valueSelector = Locator.tagWithAttributeContaining("input", "placeholder", "Filter value");
+        waitAndClick(valueSelector);
+        WebElement valueSelectorElem = valueSelector.findElement(getDriver());
+        valueSelectorElem.sendKeys("GGC");
+        waitForElementToDisappear(Locator.tagWithText("div", "TTGCTCGTTTTATTGG"));
+
+        Locator filteredTopRow = Locator.tagWithAttribute("div", "aria-rowindex", "2");
+        waitForElement(filteredTopRow);
+        testColumns("1", "116987527", "GGCAT", "G",
+                "0.029", "intron_variant", "", "NTNG1", "");
+
+        // Test the table responding to the filtering backend by using the infoFilterWidget
+        waitAndClick(Locator.tagWithText("button", "Filter"));
+        waitAndClick(Locator.tagWithText("li", "Filter By Attributes"));
+        waitAndClick(Locator.tagWithText("button", "Add Filter"));
+        waitAndClick(Locator.tagWithText("li", "Allele Frequency"));
+        WebElement categorySelect = Locator.tagWithId("div", "category-select").findElement(getDriver()).findElement(By.xpath("./.."));
+        categorySelect.click();
+        Locator operatorMenu = Locator.tagWithText("li", "=");
+        waitAndClick(operatorMenu);
+        WebElement value = Locator.tagWithId("input", "standard-number").findElement(getDriver());
+        value.sendKeys("0.0009728");
+        waitAndClick(Locator.tagWithText("button", "Apply"));
+        waitForElementToDisappear(Locator.tagWithText("div", "GGCAT"));
+        testColumns("1", "116989670", "ATGGCTCCTG", "A",
+                "0.0009728", "intron_variant", "", "NTNG1", "3.911");
+
+        // Test navigating back to table with InfoFilters intact
+        waitAndClickAndWait(Locator.tagWithText("button", "View in Genome Browser"));
+        waitForJBrowseToLoad();
+        openTrackMenuItem("Filter By Attributes");
+        waitForElement(Locator.tagWithText("h6", "Filter Variants"));
+        WebElement filterValBrowser = Locator.tagWithId("input", "standard-number").findElement(getDriver());
+        Assert.assertEquals("Incorrect filter value", "0.0009728", filterValBrowser.getAttribute("value"));
+        waitAndClick(Locator.tagWithText("button", "Apply"));
+
+        // Navigate back to table with InfoFilters intact
+        waitAndClick(Locator.tagWithAttribute("button", "data-testid", "track_menu_icon"));
+        waitAndClickAndWait(Locator.tagContainingText("span", "View As Table"));
+        waitForTableLoadingToDisappear();
+        waitAndClick(Locator.tagWithText("button", "Filter"));
+        waitAndClick(Locator.tagWithText("li", "Filter By Attributes"));
+        WebElement filterValTable = Locator.tagWithId("input", "standard-number").findElement(getDriver());
+        Assert.assertEquals("Incorrect filter value", "0.0009728", filterValTable.getAttribute("value"));
+
+        testVariantTableComparators();
+    }
+
+    private void waitForTableLoadingToDisappear()
+    {
+        waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
+        waitForElementToDisappear(Locator.tagWithClass("div", "MuiCircularProgress-root").notHidden(), WAIT_FOR_JAVASCRIPT * 3);
+    }
+
+    private void testColumns(String chromosome, String position, String reference, String alt, String af, String type, String impact, String overlapping, String cadd_ph) throws Exception {
+        waitForElement(TOP_ROW);
+        WebElement locator = TOP_ROW.findElement(getDriver());
+
+        for (WebElement elem : locator.findElements(By.xpath("./child::*"))) {
+            String value = elem.getText();
+
+            if (StringUtils.isEmpty(elem.getText())) {
+                return;
+            }
+
+            switch(elem.getAttribute("aria-colindex"))
+            {
+                case "1":
+                    Assert.assertEquals(value, chromosome);
+                    break;
+                case "2":
+                    Assert.assertEquals(value, position);
+                    break;
+                case "3":
+                    Assert.assertEquals(value, reference);
+                    break;
+                case "4":
+                    Assert.assertEquals(value, alt);
+                    break;
+                case "5":
+                    Assert.assertEquals(value, af);
+                    break;
+                case "6":
+                    Assert.assertEquals(value, type);
+                    break;
+                case "7":
+                    Assert.assertEquals(value, impact);
+                    break;
+                case "8":
+                    Assert.assertEquals(value, overlapping);
+                    break;
+                case "9":
+                    Assert.assertEquals(value, cadd_ph);
+                    break;
+            }
+        }
+    }
+
+    private void testGridFailureConditions()
+    {
+        beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:116999734..116999776");
+        waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
+        waitForElement(Locator.tagWithText("div", "116999755"));
+
+        beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=");
+        waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
+        waitForElement(Locator.tagWithText("div", "No rows").withClass("MuiDataGrid-overlay"));
+
+        // will fail to parse, and then reload without features:
+        doAndWaitForPageToLoad(() -> {
+            beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:116999.1", 0);
+            assertAlert("Error: could not parse range \"116999.1\" on location \"1:116999.1\"");
+        });
+        waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
+        waitForElement(Locator.tagWithText("div", "No rows").withClass("MuiDataGrid-overlay"));
+
+        doAndWaitForPageToLoad(() -> {
+            beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:116589761..117411999771", 0);
+            assertAlert("Location 1:116589761..117411999771 is too large to load.");
+        });
+        waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
+        waitForElement(Locator.tagWithText("div", "No rows").withClass("MuiDataGrid-overlay"));
+
+        doAndWaitForPageToLoad(() -> {
+            beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1", 0);
+            assertAlert("Must include start/stop in location to avoid loading too many sites: 1");
+        });
+        waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
+        waitForElement(Locator.tagWithText("div", "No rows").withClass("MuiDataGrid-overlay"));
+
+        beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:100-200");
+        waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
+        waitForElement(Locator.tagWithText("div", "No rows").withClass("MuiDataGrid-overlay"));
+    }
+
+    private void testVariantTableComparators() throws Exception {
+        beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:116589678..117411688");
+        waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
+
+        // Test filtering AF with wrapped comparators
+        waitAndClick(Locator.tagWithAttributeContaining("button", "aria-label", "Show filters"));
+
+        Locator columnSelector = Locator.tagWithClass("div", "MuiGridFilterForm-columnSelect");
+        waitAndClick(columnSelector);
+        Locator afOption = Locator.tagWithAttributeContaining("option", "value", "af");
+        waitAndClick(afOption);
+        waitForElementToDisappear(Locator.tagWithText("div", "116981270"));
+
+        Locator valueSelector = Locator.tagWithAttributeContaining("input", "placeholder", "Filter value");
+        waitAndClick(valueSelector);
+        WebElement valueSelectorElem = valueSelector.findElement(getDriver());
+        valueSelectorElem.sendKeys("0");
+        waitForElement(Locator.tagWithText("div", "116985775"));
+
+        Locator filteredTopRow = Locator.tagWithAttribute("div", "aria-rowindex", "2");
+        waitForElement(filteredTopRow);
+        testColumns("1", "116985775", "GAAAA", "GAA, GAAA, GAAAAA, G, GA, GAAAAAA, GTTAAAA",
+                "0.008258, 0.44, 0.17, 0.036, 0.005367, 0.019, 0", "intron_variant", "", "NTNG1", "");
+        waitAndClick(Locator.tagWithAttributeContaining("button", "aria-label", "Show filters"));
     }
 }

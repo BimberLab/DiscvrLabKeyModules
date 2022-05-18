@@ -48,7 +48,13 @@ public class TrainCelltypist extends AbstractRiraStep
                     SeuratToolParameter.create("minCellsPerClass", "Min Cells Per Class", "Any classes with fewer than this many cells will be dropped", "ldk-integerfield", new JSONObject()
                     {{
                         put("minValue", 0);
-                    }}, 100)
+                    }}, 100),
+                    SeuratToolParameter.create("excludedClasses", "Excluded Classes", "Any cells with these labels will be dropped. Note: NA can be used to drop NA values as well.", "textarea", new JSONObject()
+                    {{
+                        put("width", 400);
+                        put("height", 200);
+                        put("delimiter", ";");
+                    }}, "NA", "excludedClasses", true, true)
             ), null, null);
         }
 
@@ -65,14 +71,15 @@ public class TrainCelltypist extends AbstractRiraStep
         return false;
     }
 
-    @Override
-    public void init(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputFiles) throws PipelineJobException
-    {
-        if (inputFiles.size() > 1)
-        {
-            throw new PipelineJobException("Celltypist train step expects this job to have a single input. Consider selecting the option to run jobs individually instead of merged");
-        }
-    }
+    //@Override
+    //public void init(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputFiles) throws PipelineJobException
+    //{
+    //    //NOTE: a valid use-case is to merge/filter many inputs, produce one object, and train, so dont perform this check.
+    //    if (inputFiles.size() > 1)
+    //    {
+    //        throw new PipelineJobException("Celltypist train step expects this job to have a single input. Consider selecting the option to run jobs individually instead of merged");
+    //    }
+    //}
 
     @Override
     public Output execute(SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException

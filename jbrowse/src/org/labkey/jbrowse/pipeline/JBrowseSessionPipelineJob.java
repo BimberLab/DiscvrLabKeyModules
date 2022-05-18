@@ -21,9 +21,12 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.jbrowse.JBrowseManager;
 import org.labkey.jbrowse.JBrowseSchema;
+import org.labkey.jbrowse.model.JBrowseSession;
+import org.labkey.jbrowse.model.JsonFile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * User: bimber
@@ -59,6 +62,13 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         }
 
         return new JBrowseSessionPipelineJob(c, user, pipeRoot, (String)existingRow.get("name"), (String)existingRow.get("description"), null, trackIds, outputFileIds, databaseGuid, (existingRow.get("temporary") == null ? false : (boolean)existingRow.get("temporary")));
+    }
+
+    public static JBrowseSessionPipelineJob refreshDatabase(Container c, User user, PipeRoot pipeRoot, String databaseGuid)
+    {
+        JBrowseSession session = JBrowseSession.getForId(databaseGuid);
+        List<String> files = session.getJsonFiles(user, true).stream().map(JsonFile::getObjectId).collect(Collectors.toList());
+        return new JBrowseSessionPipelineJob(c, user, pipeRoot, files, session.getLibraryId(), databaseGuid, Mode.ReprocessSession);
     }
 
     public static JBrowseSessionPipelineJob refreshResources(Container c, User user, PipeRoot pipeRoot, List<String> jsonFiles)
@@ -192,7 +202,8 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         CreateNew("Create New Session"),
         AddToExisting("Add To Existing Session"),
         PrepareGenome("Prepare Genome"),
-        ReprocessResources("Recreating Resources");
+        ReprocessResources("Recreating Resources"),
+        ReprocessSession("Recreating Session");
 
         private String _description;
 

@@ -32,6 +32,9 @@ import java.util.stream.Collectors;
 
 abstract public class CellHashingService
 {
+    public static final String MAX_HASHING_PCT_FAIL = "maxHashingPctFail";
+    public static final String MAX_HASHING_PCT_DISCORDANT = "maxHashingPctDiscordant";
+
     private static CellHashingService _instance;
 
     public static CellHashingService get()
@@ -73,6 +76,8 @@ abstract public class CellHashingService
     abstract public Set<String> getHtosForParentReadset(Integer parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support, boolean throwIfNotFound) throws PipelineJobException;
 
     abstract public File getExistingFeatureBarcodeCountDir(Readset parentReadset, BARCODE_TYPE type, SequenceAnalysisJobSupport support) throws PipelineJobException;
+
+    abstract public void copyHtmlLocally(SequenceOutputHandler.JobContext ctx) throws PipelineJobException;
 
     public static class CellHashingParameters
     {
