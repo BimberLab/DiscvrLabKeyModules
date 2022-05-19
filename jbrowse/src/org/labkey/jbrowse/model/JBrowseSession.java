@@ -313,7 +313,7 @@ public class JBrowseSession
             if (visibleByDefault) {
                 defaultTracks.put(new JSONObject(){{
                     put("type", jf.getTrackType());
-                    put("configuration", jf.getObjectId());
+                    put("configuration", jf.getJsonTrackId());
                     JSONArray displaysArr = new JSONArray();
                     displaysArr.put(new JSONObject(){{
                         String displayType = jf.getDisplayType();
