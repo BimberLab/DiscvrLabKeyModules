@@ -311,7 +311,7 @@ public class JBrowseSession
         {
             boolean visibleByDefault = jf.isVisibleByDefault() || jf.matchesTrackSelector(additionalActiveTracks);
             if (visibleByDefault) {
-                String trackId = jf.getObjectId();
+                String trackId = jf.getJsonTrackId();
                 defaultTracks.put(new JSONObject(){{
                     put("type", jf.getTrackType());
                     put("configuration", trackId);

@@ -501,8 +501,7 @@ public class JsonFile
     {
         JSONObject ret = new JSONObject();
         ret.put("type", getTrackType());
-        final File finalLocation = getLocationOfProcessedTrack(false);
-        ret.put("trackId", finalLocation == null ? null : finalLocation.getName());
+        ret.put("trackId", getJsonTrackId());
         ret.put("name", getLabel());
         ret.put("assemblyNames", new JSONArray(){{
             put(JBrowseSession.getAssemblyName(rg));
@@ -564,12 +563,17 @@ public class JsonFile
         return toTest.contains(getObjectId()) || toTest.contains(getLabel());
     }
 
+    public String getJsonTrackId()
+    {
+        final File finalLocation = getLocationOfProcessedTrack(false);
+        return finalLocation == null ? null : finalLocation.getName();
+    }
+
     private JSONObject getBamTrack(Logger log, ExpData targetFile, ReferenceGenome rg)
     {
         JSONObject ret = new JSONObject();
         ret.put("type", getTrackType());
-        final File finalLocation = getLocationOfProcessedTrack(false);
-        ret.put("trackId", finalLocation == null ? null : finalLocation.getName());
+        ret.put("trackId", getJsonTrackId());
         ret.put("name", getLabel());
         ret.put("category", new JSONArray(){{
             put(getCategory());
@@ -653,8 +657,7 @@ public class JsonFile
     {
         JSONObject ret = new JSONObject();
         ret.put("type", getTrackType());
-        final File finalLocation = getLocationOfProcessedTrack(false);
-        ret.put("trackId", finalLocation == null ? null : finalLocation.getName());
+        ret.put("trackId", getJsonTrackId());
         ret.put("name", getLabel());
         ret.put("category", new JSONArray(){{
             put(getCategory());
