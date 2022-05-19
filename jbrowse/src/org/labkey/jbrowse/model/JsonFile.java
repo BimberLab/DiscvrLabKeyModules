@@ -501,7 +501,9 @@ public class JsonFile
     {
         JSONObject ret = new JSONObject();
         ret.put("type", getTrackType());
-        ret.put("trackId", getObjectId());
+        final File finalLocation = getLocationOfProcessedTrack(false);
+        ret.put("trackId", finalLocation == null ? null : finalLocation.getName());
+        ret.put("trackGUID", getObjectId());
         ret.put("name", getLabel());
         ret.put("assemblyNames", new JSONArray(){{
             put(JBrowseSession.getAssemblyName(rg));
@@ -567,7 +569,9 @@ public class JsonFile
     {
         JSONObject ret = new JSONObject();
         ret.put("type", getTrackType());
-        ret.put("trackId", getObjectId());
+        final File finalLocation = getLocationOfProcessedTrack(false);
+        ret.put("trackId", finalLocation == null ? null : finalLocation.getName());
+        ret.put("trackGUID", getObjectId());
         ret.put("name", getLabel());
         ret.put("category", new JSONArray(){{
             put(getCategory());
@@ -651,7 +655,9 @@ public class JsonFile
     {
         JSONObject ret = new JSONObject();
         ret.put("type", getTrackType());
-        ret.put("trackId", getObjectId());
+        final File finalLocation = getLocationOfProcessedTrack(false);
+        ret.put("trackId", finalLocation == null ? null : finalLocation.getName());
+        ret.put("trackGUID", getObjectId());
         ret.put("name", getLabel());
         ret.put("category", new JSONArray(){{
             put(getCategory());
@@ -833,8 +839,6 @@ public class JsonFile
                 wrapper.setWorkingDir(targetFile.getParentFile());
                 wrapper.setThrowNonZeroExits(true);
 
-                //TODO: eventually remove this. see: https://github.com/GMOD/jbrowse-components/issues/2354#issuecomment-926320747
-                wrapper.addToEnvironment("DEBUG", "*");
                 wrapper.execute(Arrays.asList(exe.getPath(), "text-index", "--force", "--quiet", "--attributes", StringUtils.join(attributes, ","), "--prefixSize", "5", "--file", targetFile.getPath()));
                 if (!ixx.exists())
                 {
@@ -848,31 +852,6 @@ public class JsonFile
                 if (!ix.exists())
                 {
                     throw new PipelineJobException("Unable to find file: " + ix.getPath());
-                }
-
-                File ixCopy = new File(ix.getPath() + ".tmp");
-                try (PrintWriter writer = PrintWriters.getPrintWriter(ixCopy); BufferedReader reader = Readers.getReader(ix))
-                {
-                    String line;
-                    while ((line = reader.readLine()) != null)
-                    {
-                        line = line.replaceAll("\"" + targetFile.getName() + "\"", "\"" + getObjectId() + "\"");
-                        writer.println(line);
-                    }
-                }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
-                }
-
-                try
-                {
-                    ix.delete();
-                    FileUtils.moveFile(ixCopy, ix);
-                }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
                 }
             }
         }
