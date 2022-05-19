@@ -318,7 +318,7 @@ public class JBrowseSession
                     displaysArr.put(new JSONObject(){{
                         String displayType = jf.getDisplayType();
                         put("type", displayType);
-                        put("configuration", jf.getObjectId() + "-" + displayType);
+                        put("configuration", jf.getJsonTrackId() + "-" + displayType);
                     }});
                     put("displays", displaysArr);
                 }});

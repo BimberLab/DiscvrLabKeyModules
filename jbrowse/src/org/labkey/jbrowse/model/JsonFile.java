@@ -531,7 +531,7 @@ public class JsonFile
         ret.put("displays", new JSONArray(){{
             put(new JSONObject(){{
                 put("type", "ExtendedVariantDisplay");
-                put("displayId", getObjectId() + "-ExtendedVariantDisplay");
+                put("displayId", getJsonTrackId() + "-ExtendedVariantDisplay");
                 put("maxDisplayedBpPerPx", 2000);
                 put("mouseover", "jexl:'Position: ' + formatWithCommas(get(feature,'POS'))");
                 put("renderer", new JSONObject(){{
