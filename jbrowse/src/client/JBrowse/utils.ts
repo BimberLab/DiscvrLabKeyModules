@@ -158,7 +158,7 @@ function applyUrlParams(json, queryParam) {
             } else {
                 let found = false
                 for (const track of json.tracks) {
-                    if (track.trackId?.toLowerCase() === trackId?.toLowerCase() || track.name?.toLowerCase() === trackId?.toLowerCase()) {
+                    if (track.trackId?.toLowerCase() === trackId?.toLowerCase() || track.name?.toLowerCase() === trackId?.toLowerCase() || track.trackId?.toLowerCase().includes(trackId?.toLowerCase())) {
                         track.displays[0].renderer.activeSamples = sampleList.join(',')
                         found = true
                         break
@@ -182,7 +182,7 @@ function applyUrlParams(json, queryParam) {
             const infoFilterList = JSON.parse(decodeURIComponent(infoFilterObj))
             let found = false
             for (const track of json.tracks) {
-                if (track.trackId?.toLowerCase() === trackId?.toLowerCase() || track.name?.toLowerCase() === trackId?.toLowerCase()) {
+                if (track.trackId?.toLowerCase() === trackId?.toLowerCase() || track.name?.toLowerCase() === trackId?.toLowerCase() || track.trackId?.toLowerCase().includes(trackId?.toLowerCase())) {
                     track.displays[0].renderer.infoFilters = [...infoFilterList]
                     found = true
                     break

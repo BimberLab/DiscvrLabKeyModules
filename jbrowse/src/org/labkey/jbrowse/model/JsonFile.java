@@ -503,7 +503,6 @@ public class JsonFile
         ret.put("type", getTrackType());
         final File finalLocation = getLocationOfProcessedTrack(false);
         ret.put("trackId", finalLocation == null ? null : finalLocation.getName());
-        ret.put("trackGUID", getObjectId());
         ret.put("name", getLabel());
         ret.put("assemblyNames", new JSONArray(){{
             put(JBrowseSession.getAssemblyName(rg));
@@ -571,7 +570,6 @@ public class JsonFile
         ret.put("type", getTrackType());
         final File finalLocation = getLocationOfProcessedTrack(false);
         ret.put("trackId", finalLocation == null ? null : finalLocation.getName());
-        ret.put("trackGUID", getObjectId());
         ret.put("name", getLabel());
         ret.put("category", new JSONArray(){{
             put(getCategory());
@@ -657,7 +655,6 @@ public class JsonFile
         ret.put("type", getTrackType());
         final File finalLocation = getLocationOfProcessedTrack(false);
         ret.put("trackId", finalLocation == null ? null : finalLocation.getName());
-        ret.put("trackGUID", getObjectId());
         ret.put("name", getLabel());
         ret.put("category", new JSONArray(){{
             put(getCategory());
