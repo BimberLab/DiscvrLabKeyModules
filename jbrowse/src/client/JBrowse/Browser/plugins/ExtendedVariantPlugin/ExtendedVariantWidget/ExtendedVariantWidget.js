@@ -1,7 +1,7 @@
-import {FIELD_NAME_MAP, INFO_FIELD_GROUPS, IGNORED_INFO_FIELDS} from "./fields";
-import {ActionURL} from "@labkey/api";
+import {FIELD_NAME_MAP, IGNORED_INFO_FIELDS, INFO_FIELD_GROUPS} from "./fields";
 import {Chart} from "react-google-charts";
 import {style as styles} from "./style";
+import {getGenotypeURL} from "../../../../utils";
 
 export default jbrowse => {
     const {
@@ -245,8 +245,7 @@ export default jbrowse => {
             const start = feat["POS"];
             const end = feat["end"];
 
-            const link = ActionURL.buildURL("jbrowse", "genotypeTable.view", null, {trackId: trackId, chr: contig, start: start, stop: end})
-            const href = <a href={link} target="_blank">Click here to view sample-level genotypes</a>
+            const href = <a href={getGenotypeURL(trackId, contig, start, end)} target="_blank">Click here to view sample-level genotypes</a>
 
             setState(
                     <div>

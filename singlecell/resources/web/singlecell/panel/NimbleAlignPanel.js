@@ -52,7 +52,7 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 						const store = this.up('singlecell-nimblealignpanel').genomeField.store
 						if (val && store) {
 							const recIdx = store.find('rowid', val);
-							return store.getAt(recIdx).get('name');
+							return recIdx === -1 ? '[' + val + ']' : store.getAt(recIdx).get('name');
 						}
 						else if (val) {
 							return '[' + val + ']';
