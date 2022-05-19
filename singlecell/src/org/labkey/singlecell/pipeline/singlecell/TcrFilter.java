@@ -20,7 +20,7 @@ public class TcrFilter extends AbstractCellMembraneStep
         public Provider()
         {
             super("TcrFilter", "TCR-Based Filter", "CellMembrane/Seurat", "This will run standard Seurat processing steps to normalize and scale the data.", Arrays.asList(
-                    SeuratToolParameter.create("cdr3s", "CDR3s To Keep", "A list of CDR3 sequences where locus prefixes the AA sequence (i.e. TRB:XXXXXX or TRA:YYYYYYY). These should not contain commas. Any cell matching any of these CDR3s will be kept. If that cell has multiple chains for a locus (i.e. 'CASSXXXXX,CASSYYYYY'), then only one of these needs to match for that cell to be kept.", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
+                    SeuratToolParameter.create("cdr3s", "CDR3s To Keep", "A comma- or newline-delimited list of CDR3 sequences where locus prefixes the AA sequence (i.e. TRB:XXXXXX or TRA:YYYYYYY). These should not contain commas. Any cell matching any of these CDR3s will be kept. If that cell has multiple chains for a locus (i.e. 'CASSXXXXX,CASSYYYYY'), then only one of these needs to match for that cell to be kept.", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("height", 150);
                         put("delimiter", ",");
                     }}, null).delimiter(",")
