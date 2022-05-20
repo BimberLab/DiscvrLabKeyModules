@@ -15,9 +15,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class NimbleAppend extends AbstractRDiscvrStep
+public class AppendNimble extends AbstractRDiscvrStep
 {
-    public NimbleAppend(PipelineContext ctx, NimbleAppend.Provider provider)
+    public AppendNimble(PipelineContext ctx, AppendNimble.Provider provider)
     {
         super(provider, ctx);
     }
@@ -35,9 +35,9 @@ public class NimbleAppend extends AbstractRDiscvrStep
 
 
         @Override
-        public NimbleAppend create(PipelineContext ctx)
+        public AppendNimble create(PipelineContext ctx)
         {
-            return new NimbleAppend(ctx, this);
+            return new AppendNimble(ctx, this);
         }
     }
 
