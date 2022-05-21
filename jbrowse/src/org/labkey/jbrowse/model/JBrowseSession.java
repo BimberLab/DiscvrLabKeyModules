@@ -311,15 +311,14 @@ public class JBrowseSession
         {
             boolean visibleByDefault = jf.isVisibleByDefault() || jf.matchesTrackSelector(additionalActiveTracks);
             if (visibleByDefault) {
-                String trackId = jf.getObjectId();
                 defaultTracks.put(new JSONObject(){{
                     put("type", jf.getTrackType());
-                    put("configuration", trackId);
+                    put("configuration", jf.getJsonTrackId());
                     JSONArray displaysArr = new JSONArray();
                     displaysArr.put(new JSONObject(){{
                         String displayType = jf.getDisplayType();
                         put("type", displayType);
-                        put("configuration", trackId + "-" + displayType);
+                        put("configuration", jf.getJsonTrackId() + "-" + displayType);
                     }});
                     put("displays", displaysArr);
                 }});

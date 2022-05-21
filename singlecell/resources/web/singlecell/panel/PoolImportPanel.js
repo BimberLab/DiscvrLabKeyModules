@@ -202,7 +202,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                     val = val.replace(/^MultiSeq[- ]Idx[- ]RP/ig, 'MultiSeq-Idx-RP');
 
                     if (val.length <= 3 && panel.down('#useDualIndex').getValue()) {
-                        val = 'MS-TN-' + val;
+                        val = 'SI-TN-' + val;
                     }
                     else {
                         LDK.Utils.logError('Unexpected value with single-end hashing: ' + val);

@@ -32,6 +32,7 @@ import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
@@ -46,13 +47,16 @@ import org.labkey.api.util.GUID;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.view.UnauthorizedException;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.jbrowse.JBrowseManager;
 import org.labkey.jbrowse.JBrowseSchema;
 import org.labkey.sequenceanalysis.run.util.TabixRunner;
 
 import javax.annotation.Nullable;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -497,7 +501,7 @@ public class JsonFile
     {
         JSONObject ret = new JSONObject();
         ret.put("type", getTrackType());
-        ret.put("trackId", getObjectId());
+        ret.put("trackId", getJsonTrackId());
         ret.put("name", getLabel());
         ret.put("assemblyNames", new JSONArray(){{
             put(JBrowseSession.getAssemblyName(rg));
@@ -527,7 +531,7 @@ public class JsonFile
         ret.put("displays", new JSONArray(){{
             put(new JSONObject(){{
                 put("type", "ExtendedVariantDisplay");
-                put("displayId", getObjectId() + "-ExtendedVariantDisplay");
+                put("displayId", getJsonTrackId() + "-ExtendedVariantDisplay");
                 put("maxDisplayedBpPerPx", 2000);
                 put("mouseover", "jexl:'Position: ' + formatWithCommas(get(feature,'POS'))");
                 put("renderer", new JSONObject(){{
@@ -559,11 +563,17 @@ public class JsonFile
         return toTest.contains(getObjectId()) || toTest.contains(getLabel());
     }
 
+    public String getJsonTrackId()
+    {
+        final File finalLocation = getLocationOfProcessedTrack(false);
+        return finalLocation == null ? null : finalLocation.getName();
+    }
+
     private JSONObject getBamTrack(Logger log, ExpData targetFile, ReferenceGenome rg)
     {
         JSONObject ret = new JSONObject();
         ret.put("type", getTrackType());
-        ret.put("trackId", getObjectId());
+        ret.put("trackId", getJsonTrackId());
         ret.put("name", getLabel());
         ret.put("category", new JSONArray(){{
             put(getCategory());
@@ -647,7 +657,7 @@ public class JsonFile
     {
         JSONObject ret = new JSONObject();
         ret.put("type", getTrackType());
-        ret.put("trackId", getObjectId());
+        ret.put("trackId", getJsonTrackId());
         ret.put("name", getLabel());
         ret.put("category", new JSONArray(){{
             put(getCategory());
@@ -829,12 +839,19 @@ public class JsonFile
                 wrapper.setWorkingDir(targetFile.getParentFile());
                 wrapper.setThrowNonZeroExits(true);
 
-                //TODO: eventually remove this. see: https://github.com/GMOD/jbrowse-components/issues/2354#issuecomment-926320747
-                wrapper.addToEnvironment("DEBUG", "*");
                 wrapper.execute(Arrays.asList(exe.getPath(), "text-index", "--force", "--quiet", "--attributes", StringUtils.join(attributes, ","), "--prefixSize", "5", "--file", targetFile.getPath()));
                 if (!ixx.exists())
                 {
                     throw new PipelineJobException("Unable to find expected index file: " + ixx.getPath());
+                }
+
+                // See here: https://github.com/GMOD/jbrowse-components/issues/2344
+                // for background. this hackery is needed to ensure the trackId listed in the ix matches the GUID, not the filename:
+                log.info("Updating trackId in trix ix file");
+                File ix = getExpectedLocationOfIndexFile(".ix", false);
+                if (!ix.exists())
+                {
+                    throw new PipelineJobException("Unable to find file: " + ix.getPath());
                 }
             }
         }

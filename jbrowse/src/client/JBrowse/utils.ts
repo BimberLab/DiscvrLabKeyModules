@@ -133,7 +133,7 @@ export async function fetchSession(queryParam, sessionId, nativePlugins, refThem
             }
         },
         failure: function(res){
-            handleFailure("There was an error: " + res.status, sessionId, trackId, isTable)
+            handleFailure("There was an error: " + res.status, sessionId, trackId, isTable, false)
         },
         params: {session: sessionId, activeTracks: activeTracks ? activeTracks.join(',') : undefined}
     });
@@ -158,7 +158,7 @@ function applyUrlParams(json, queryParam) {
             } else {
                 let found = false
                 for (const track of json.tracks) {
-                    if (track.trackId?.toLowerCase() === trackId?.toLowerCase() || track.name?.toLowerCase() === trackId?.toLowerCase()) {
+                    if (track.trackId?.toLowerCase() === trackId?.toLowerCase() || track.name?.toLowerCase() === trackId?.toLowerCase() || track.trackId?.toLowerCase().includes(trackId?.toLowerCase())) {
                         track.displays[0].renderer.activeSamples = sampleList.join(',')
                         found = true
                         break
@@ -182,7 +182,7 @@ function applyUrlParams(json, queryParam) {
             const infoFilterList = JSON.parse(decodeURIComponent(infoFilterObj))
             let found = false
             for (const track of json.tracks) {
-                if (track.trackId?.toLowerCase() === trackId?.toLowerCase() || track.name?.toLowerCase() === trackId?.toLowerCase()) {
+                if (track.trackId?.toLowerCase() === trackId?.toLowerCase() || track.name?.toLowerCase() === trackId?.toLowerCase() || track.trackId?.toLowerCase().includes(trackId?.toLowerCase())) {
                     track.displays[0].renderer.infoFilters = [...infoFilterList]
                     found = true
                     break
@@ -244,10 +244,10 @@ function serializeInfoFilters(track) {
     return track.configuration.trackId + ":" + encodeURIComponent(track.configuration.displays[0].renderer.infoFilters.valueJSON)
 }
 
-function handleFailure(error, sessionId?, trackId?, isTable?) {
+function handleFailure(error, sessionId?, trackId?, isTable?, reloadOnFailure = true) {
     alert(error)
 
-    if (sessionId && trackId) {
+    if (reloadOnFailure && sessionId && trackId) {
         if (isTable) {
             navigateToTable(sessionId, "", trackId)
         } else {
@@ -257,5 +257,12 @@ function handleFailure(error, sessionId?, trackId?, isTable?) {
 }
 
 export function getGenotypeURL(trackId, contig, start, end) {
+    // NOTE: due to jbrowse/trix behavior, the trackId that gets serialized into the trix index is the actual trackGUID plus the filename.
+    // Since this action expects the GUID alone, detect long filenames and subset.
+    // TODO: once this behavior is fixed in jbrowse, remove this logic
+    if (trackId.length > 36) {
+        trackId = trackId.substr(0,36)
+    }
+
     return ActionURL.buildURL("jbrowse", "genotypeTable.view", null, {trackId: trackId, chr: contig, start: start, stop: end})
 }
