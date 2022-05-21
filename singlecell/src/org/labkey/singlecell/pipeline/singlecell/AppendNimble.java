@@ -62,6 +62,7 @@ public class AppendNimble extends AbstractRDiscvrStep
         ret.bodyLines.add("nimbleGenomes <- list(");
         String genomeStr = getProvider().getParameterByName("nimbleGenomes").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
         JSONArray json = new JSONArray(genomeStr);
+        String delim = "";
         for (int i = 0; i < json.length(); i++)
         {
             JSONArray arr = json.getJSONArray(i);
@@ -72,7 +73,8 @@ public class AppendNimble extends AbstractRDiscvrStep
 
             int genomeId = arr.getInt(0);
             String targetAssay = arr.getString(1);
-            ret.bodyLines.add("\t" + genomeId + " = " + targetAssay);
+            ret.bodyLines.add("\t" + delim + "'" + genomeId + "' = " + targetAssay);
+            delim = ",";
         }
         ret.bodyLines.add(")");
 
