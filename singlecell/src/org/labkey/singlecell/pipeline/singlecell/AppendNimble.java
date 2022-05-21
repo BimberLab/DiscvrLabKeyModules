@@ -73,7 +73,7 @@ public class AppendNimble extends AbstractRDiscvrStep
 
             int genomeId = arr.getInt(0);
             String targetAssay = arr.getString(1);
-            ret.bodyLines.add("\t" + delim + "'" + genomeId + "' = " + targetAssay);
+            ret.bodyLines.add("\t" + delim + "'" + genomeId + "' = '" + targetAssay + "'");
             delim = ",";
         }
         ret.bodyLines.add(")");
