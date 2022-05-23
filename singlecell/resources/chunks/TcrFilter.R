@@ -41,8 +41,9 @@ for (datasetId in names(seuratObjects)) {
   if (all(is.null(cellsToKeep))) {
     print('There were no matching cells')
   } else {
+    print(paste0('Total passing cells: ', length(cellsToKeep)))
     seuratObj <- subset(seuratObj, cells = cellsToKeep)
-    #saveData(seuratObj, datasetId)
+    saveData(seuratObj, datasetId)
     totalPassed <- totalPassed + 1
   }
 
