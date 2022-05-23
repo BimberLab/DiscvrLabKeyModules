@@ -18,6 +18,10 @@ for (datasetId in names(seuratObjects)) {
 
     cdr3ForLocus <- gsub(cdr3ForLocus, pattern = paste0(fieldName, ':'), replacement = '')
     matchingCells <- sapply(seuratObj@meta.data[[fieldName]], function(x){
+      if (is.na(x)) {
+        return(FALSE)
+      }
+
       values <- unlist(strsplit(x, split = ','))
       return(length(intersect(values, cdr3ForLocus)) != 0)
     })
