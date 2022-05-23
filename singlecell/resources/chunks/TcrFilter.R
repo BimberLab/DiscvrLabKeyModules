@@ -22,7 +22,7 @@ for (datasetId in names(seuratObjects)) {
         return(FALSE)
       }
 
-      values <- unlist(strsplit(x, split = ','))
+      values <- unlist(strsplit(as.character(x), split = ','))
       return(length(intersect(values, cdr3ForLocus)) != 0)
     })
 
