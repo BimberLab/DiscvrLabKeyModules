@@ -348,38 +348,51 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         localBashScript.delete();
     }
 
-    protected String prepareValueForR(SeuratToolParameter pd)
+    protected void addParameterVariables(SeuratToolParameter pd, List<String> body)
     {
         String val = StringUtils.trimToNull(pd.extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()));
         if (val == null)
         {
-            return "NULL";
+            body.add((pd.getVariableName() + " <- NULL"));
         }
         else if ("false".equals(val))
         {
-            return "FALSE";
+            body.add((pd.getVariableName() + " <- FALSE"));
         }
         else if ("true".equals(val))
         {
-            return "TRUE";
+            body.add((pd.getVariableName() + " <- TRUE"));
         }
         else if (NumberUtils.isCreatable(val))
         {
-            return val;
+            body.add((pd.getVariableName() + " <- " + val));
         }
         else if ("sequenceanalysis-trimmingtextarea".equals(pd.getFieldXtype()))
         {
             val = val.replace("'", "\\\'");
-            String[] vals = val.split(pd.getDelimiter());
-            return "c('" + StringUtils.join(vals, "','") + "')";
+            serializeMultiValueParam(pd, body, val);
+
         }
         else if (pd.isMultiValue())
         {
-            String[] vals = val.split(pd.getDelimiter());
-            return "c('" + StringUtils.join(vals, "','") + "')";
+            serializeMultiValueParam(pd, body, val);
         }
 
-        return  "'" + val + "'";
+        body.add((pd.getVariableName() + " <- '" + val + "'"));
+    }
+
+    private void serializeMultiValueParam(SeuratToolParameter pd, List<String> body, String val)
+    {
+        String[] vals = val.split(pd.getDelimiter());
+        final int batchSize = 75;
+        int numBatches = (int)Math.ceil((double)vals.length / batchSize);
+
+        for (int i=0;i<numBatches;i++)
+        {
+            int start = (i * batchSize);
+            int end = Math.min(start + batchSize, vals.length);
+            body.add(pd.getVariableName() + " <- " + "c(" + (i == 0 ? "" : pd.getVariableName() + ", ") + "'" + StringUtils.join(Arrays.copyOfRange(vals, start, end), "','") + "')");
+        }
     }
 
     protected List<String> loadChunkFromFile() throws PipelineJobException
@@ -423,7 +436,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                 SeuratToolParameter stp = (SeuratToolParameter)pd;
                 if (stp.shouldIncludeInMarkdown(getPipelineCtx().getJob(), getProvider(), getStepIdx()))
                 {
-                    body.add(((SeuratToolParameter) pd).getVariableName() + " <- " + prepareValueForR(stp));
+                    addParameterVariables(stp, body);
                 }
             }
         }
