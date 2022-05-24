@@ -371,11 +371,13 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         {
             val = val.replace("'", "\\\'");
             serializeMultiValueParam(pd, body, val);
+            return;
 
         }
         else if (pd.isMultiValue())
         {
             serializeMultiValueParam(pd, body, val);
+            return;
         }
 
         body.add((pd.getVariableName() + " <- '" + val + "'"));
