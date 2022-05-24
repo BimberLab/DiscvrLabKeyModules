@@ -14,10 +14,6 @@ repositories {
     maven {
         url "https://clojars.org/repo"
     }
-    // Added for opencharts dependency (required by biojava)
-    maven {
-        url "https://repository.jboss.org/nexus/content/repositories/thirdparty-releases/"
-    }
 }
 
 configurations.all {
