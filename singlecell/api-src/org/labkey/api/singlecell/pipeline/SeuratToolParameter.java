@@ -50,7 +50,7 @@ public class SeuratToolParameter extends ToolParameterDescriptor
         return _rName == null ? getName() : _rName;
     }
 
-    public boolean shouldIncludeInMarkdown(PipelineJob job, PipelineStepProvider provider, int stepIdx)
+    public boolean shouldIncludeInMarkdown(PipelineJob job, PipelineStepProvider<?> provider, int stepIdx)
     {
         if (!_includeIfEmptyOrNull)
         {
