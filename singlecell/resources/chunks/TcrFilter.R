@@ -18,7 +18,11 @@ for (datasetId in names(seuratObjects)) {
 
     cdr3ForLocus <- gsub(cdr3ForLocus, pattern = paste0(fieldName, ':'), replacement = '')
     matchingCells <- sapply(seuratObj@meta.data[[fieldName]], function(x){
-      values <- unlist(strsplit(x, split = ','))
+      if (is.na(x)) {
+        return(FALSE)
+      }
+
+      values <- unlist(strsplit(as.character(x), split = ','))
       return(length(intersect(values, cdr3ForLocus)) != 0)
     })
 
@@ -37,8 +41,9 @@ for (datasetId in names(seuratObjects)) {
   if (all(is.null(cellsToKeep))) {
     print('There were no matching cells')
   } else {
+    print(paste0('Total passing cells: ', length(cellsToKeep)))
     seuratObj <- subset(seuratObj, cells = cellsToKeep)
-    #saveData(seuratObj, datasetId)
+    saveData(seuratObj, datasetId)
     totalPassed <- totalPassed + 1
   }
 
