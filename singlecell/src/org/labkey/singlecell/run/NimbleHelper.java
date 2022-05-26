@@ -171,7 +171,7 @@ public class NimbleHelper
         genomeFasta = ensureLocalCopy(genomeFasta, output);
 
         File nimbleJson = new File(getPipelineCtx().getWorkingDirectory(), FileUtil.getBaseName(genomeFasta) + ".json");
-        runUsingDocker(Arrays.asList("generate", "/work/" + genomeFasta.getName(), "/work/" + genomeCsv.getName(), "/work/" + nimbleJson.getName()), output);
+        runUsingDocker(Arrays.asList("generate", "/work/" + genomeFasta.getName(), "/work/" + genomeCsv.getName(), "/work/" + nimbleJson.getName()), output, "generate-" + genome.genomeId);
         if (!nimbleJson.exists())
         {
             throw new PipelineJobException("Unable to find expected file: " + nimbleJson.getPath());
@@ -271,7 +271,7 @@ public class NimbleHelper
         alignArgs.add("/work/" + resultsTsv.getName());
         alignArgs.add("/work/" + localBam.getName());
 
-        runUsingDocker(alignArgs, output);
+        runUsingDocker(alignArgs, output, "align-" + genome.genomeId);
         if (!resultsTsv.exists())
         {
             throw new PipelineJobException("Expected to find file: " + resultsTsv.getPath());
@@ -302,9 +302,14 @@ public class NimbleHelper
         return resultsTsv;
     }
 
+    private File getNimbleDoneFile(File parentDir, String resumeString)
+    {
+        return new File(parentDir, "nimble." + resumeString + ".done");
+    }
+
     public static String DOCKER_CONTAINER_NAME = "ghcr.io/bimberlab/nimble:latest";
 
-    private void runUsingDocker(List<String> nimbleArgs, PipelineStepOutput output) throws PipelineJobException
+    private void runUsingDocker(List<String> nimbleArgs, PipelineStepOutput output, String resumeString) throws PipelineJobException
     {
         File localBashScript = new File(getPipelineCtx().getWorkingDirectory(), "docker.sh");
         output.addIntermediateFile(localBashScript);
@@ -345,9 +350,28 @@ public class NimbleHelper
             throw new PipelineJobException(e);
         }
 
-        SimpleScriptWrapper rWrapper = new SimpleScriptWrapper(getPipelineCtx().getLogger());
-        rWrapper.setWorkingDir(getPipelineCtx().getWorkingDirectory());
-        rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
+        File doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), resumeString);
+        output.addIntermediateFile(doneFile);
+
+        if (doneFile.exists())
+        {
+            getPipelineCtx().getLogger().info("Nimble already completed, resuming: " + resumeString);
+        }
+        else
+        {
+            SimpleScriptWrapper rWrapper = new SimpleScriptWrapper(getPipelineCtx().getLogger());
+            rWrapper.setWorkingDir(getPipelineCtx().getWorkingDirectory());
+            rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
+
+            try
+            {
+                FileUtils.touch(doneFile);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
     }
 
     private File ensureLocalCopy(File input, PipelineStepOutput output) throws PipelineJobException
