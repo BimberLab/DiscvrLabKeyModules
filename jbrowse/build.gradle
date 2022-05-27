@@ -6,6 +6,10 @@ repositories {
     maven {
         url "https://clojars.org/repo"
     }
+    // Added for org.clojars.chapmanb:sam (required by SequenceAnalysis)
+    maven {
+        url "https://maven.scijava.org/content/groups/public"
+    }
 }
 
 dependencies {
