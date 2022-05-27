@@ -300,7 +300,7 @@ public class NimbleHelper
             throw new PipelineJobException(e);
         }
 
-        log.delete();
+        output.addIntermediateFile(log);
 
         return resultsTsv;
     }
