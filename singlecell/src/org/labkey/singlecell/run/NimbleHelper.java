@@ -12,6 +12,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
@@ -151,6 +152,8 @@ public class NimbleHelper
     {
         for (NimbleGenome genome : getGenomes())
         {
+            getPipelineCtx().getJob().setStatus(PipelineJob.TaskStatus.running, "Running Nimble for: " + genome.genomeId);
+
             File genomeCsv = getGenomeCsv(genome.getGenomeId());
             File genomeFasta = getGenomeFasta(genome.getGenomeId());
 
