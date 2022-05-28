@@ -10,6 +10,7 @@ import java.util.regex.Matcher
 
 repositories {
     mavenCentral()
+    // Added to support ancient sam JAR needed by FASTQC (in sequenceanalysis)
     maven {
         url "https://clojars.org/repo"
     }
@@ -95,7 +96,7 @@ dependencies {
     BuildUtils.addExternalDependency(
             project,
             new ExternalDependency(
-                    'org.clojars.chapmanb:sam:1.96',
+                    'org.clojars.chapmanb:sam:1.107',
                     'picard tools',
                     'picard tools',
                     'http://sourceforge.net/projects/picard/',
