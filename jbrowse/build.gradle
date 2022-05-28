@@ -6,6 +6,10 @@ repositories {
 	maven {
 		url "https://repository.jboss.org/nexus/content/repositories/thirdparty-releases/"
 	}
+	// Added to support ancient sam JAR needed by FASTQC (in sequenceanalysis)
+	maven {
+		url "https://clojars.org/repo"
+	}
 }
 
 dependencies {

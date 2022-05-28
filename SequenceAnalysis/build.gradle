@@ -96,7 +96,7 @@ dependencies {
     BuildUtils.addExternalDependency(
             project,
             new ExternalDependency(
-                    'org.clojars.chapmanb:sam:1.107',
+                    'org.clojars.chapmanb:sam:1.96',
                     'picard tools',
                     'picard tools',
                     'http://sourceforge.net/projects/picard/',
