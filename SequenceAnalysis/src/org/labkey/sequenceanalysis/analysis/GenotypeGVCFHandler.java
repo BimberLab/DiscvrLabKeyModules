@@ -109,7 +109,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
     {
         Set<String> allowableNames = new HashSet<>();
         allowableNames.add(getName());
-        for (PipelineStepProvider provider: SequencePipelineService.get().getProviders(VariantProcessingStep.class))
+        for (PipelineStepProvider<?> provider: SequencePipelineService.get().getProviders(VariantProcessingStep.class))
         {
             allowableNames.add(provider.getLabel());
         }
