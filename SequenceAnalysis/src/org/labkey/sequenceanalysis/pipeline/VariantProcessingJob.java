@@ -16,13 +16,18 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
+import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.pipeline.TaskPipeline;
 import org.labkey.api.pipeline.WorkDirectory;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
@@ -207,9 +212,21 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
         {
             ArrayList<PipelineJob> jobs = new ArrayList<>();
             Map<String, List<Interval>> intervalMap = getJobToIntervalMap();
+            final TableInfo ti = PipelineService.get().getJobsTable(getUser(), getContainer());
             for (String name : intervalMap.keySet())
             {
-                jobs.add(createSingleContigJob(name));
+                // Check if exists and only create if needed:
+                SimpleFilter filter = new SimpleFilter(FieldKey.fromString("JobParent"), getJobGUID());
+                filter.addCondition(FieldKey.fromString("Name"), getChildJobName(this, name));
+                TableSelector ts = new TableSelector(ti, filter, null);
+                if (ts.exists())
+                {
+                    getLogger().debug("Child job already exists, will not re-create: " + getChildJobName(this, name));
+                }
+                else
+                {
+                    jobs.add(createSingleContigJob(name));
+                }
             }
 
             return Collections.unmodifiableList(jobs);
@@ -275,6 +292,8 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
     {
         try
         {
+            String jobName = getChildJobName(this, jobNameSuffix);
+
             VariantProcessingJob childJob = new VariantProcessingJob(this, jobNameSuffix);
 
             return childJob;
