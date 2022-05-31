@@ -180,6 +180,7 @@ const VariantTableWidget = observer(props => {
     width: 50,
     flex: 1,
     headerAlign: 'left',
+    filterable: false,
     renderCell: (params: GridRenderCellParams) => {
       return (
           <>
@@ -258,7 +259,9 @@ const VariantTableWidget = observer(props => {
         </Grid>
       </div>
 
-      {gridElement}
+      <div style={{height: "calc(95% - 20px)"}}>
+        {gridElement}
+      </div>
     </>
   )
 })

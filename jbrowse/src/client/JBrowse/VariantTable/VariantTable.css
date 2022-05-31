@@ -19,3 +19,7 @@
 .menuItem {
     height: 100%;
 }
+
+.MuiTextField-root {
+    margin-top: 0px !important;
+}
