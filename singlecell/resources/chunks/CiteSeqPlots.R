@@ -2,24 +2,22 @@ for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readRDS(seuratObjects[[datasetId]])
 
-    if (!('ADT' %in% names(seuratObj@assays))) {
-        print('ADT assay not present, skipping')
+    assayName <- 'ADT'
+    if (!(assayName %in% names(seuratObj@assays))) {
+        print(paste0('Assay: ', assayName, ' not present, skipping'))
     } else {
-        for (adt in rownames(seuratObj[['ADT']])) {
+        for (feat in rownames(seuratObj[[assayName]])) {
             tryCatch({
-                CellMembrane::FeaturePlotAcrossReductions(seuratObj, features = paste0('adt_', adt))
+                CellMembrane::FeaturePlotAcrossReductions(seuratObj, features = paste0(toLower(assayName), '_', feat))
             }, error = function(e){
                 warning(conditionMessage(e))
                 traceback()
-                message('ADTs:')
-                message(paste0(sort(rownames(seuratObj@assays$ADT)), collapse = ', '))
+                message('Features:')
+                message(paste0(sort(rownames(seuratObj@assays[[assayName]])), collapse = ', '))
                 stop(paste0('Error running FeaturePlotAcrossReductions for: ', datasetId))
             })
-
         }
     }
-
-    saveData(seuratObj, datasetId)
 
     # Cleanup
     rm(seuratObj)
