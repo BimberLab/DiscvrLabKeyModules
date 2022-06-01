@@ -113,7 +113,7 @@ public class SequenceTest extends BaseWebDriverTest
         }
         log("sequencePipelineEnabled: " + sequencePipelineEnabled);
 
-        if (TestProperties.isTestRunningOnTeamCity() && !sequencePipelineEnabled)
+        if (!sequencePipelineEnabled && TestProperties.isTestRunningOnTeamCity() && WebTestHelper.getDatabaseType() == WebTestHelper.DatabaseType.PostgreSQL)
         {
             throw new IllegalStateException("When running on team city, -DsequencePipelineEnabled should be true");
         }
