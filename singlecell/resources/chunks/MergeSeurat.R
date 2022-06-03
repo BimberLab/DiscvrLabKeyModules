@@ -12,6 +12,17 @@ mergeBatch <- function(dat) {
         }
     }
 
+    if (!is.null(assaysToDrop)) {
+        for (assayName in assaysToDrop) {
+            print(paste0('Dropping assay: ', assayName))
+            for (datasetId in names(toMerge)) {
+                if (assayName %in% names(toMerge[[datasetId]]@assays)) {
+                    toMerge[[datasetId]]@assays[[assayName]] <- NULL
+                }
+            }
+        }
+    }
+
     seuratObj <- CellMembrane::MergeSeuratObjs(toMerge, projectName = projectName, doGC = doDiet, errorOnBarcodeSuffix = errorOnBarcodeSuffix)
     return(seuratObj)
 }
