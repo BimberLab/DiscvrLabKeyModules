@@ -217,7 +217,7 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
             {
                 // Check if exists and only create if needed:
                 SimpleFilter filter = new SimpleFilter(FieldKey.fromString("JobParent"), getJobGUID());
-                filter.addCondition(FieldKey.fromString("Name"), getChildJobName(this, name));
+                filter.addCondition(FieldKey.fromString("Description"), getChildJobName(this, name));
                 TableSelector ts = new TableSelector(ti, filter, null);
                 if (ts.exists())
                 {
