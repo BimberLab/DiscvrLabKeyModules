@@ -341,7 +341,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                 disabled: true,
                 handler: function (btn) {
                     var instrument = btn.up('singlecell-libraryexportpanel').down('#instrument').getValue();
-                    var plateId = btn.up('singlecell-libraryexportpanel').down('#sourcePlates').getValue();
+                    var plateId = btn.up('singlecell-libraryexportpanel').down('#sourcePlates') ? btn.up('singlecell-libraryexportpanel').down('#sourcePlates').getValue() : 'Libraries';
                     var delim = 'TAB';
                     var extension = 'txt';
                     var split = '\t';
