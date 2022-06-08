@@ -123,6 +123,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
             int jobIdx = -1;
             int stateIdx = -1;
             int hostnameIdx = -1;
+            int reasonIdx = -1;
             for (String line : ret)
             {
                 line = StringUtils.trimToNull(line);
@@ -138,6 +139,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     jobIdx = header.indexOf("JOBID");
                     stateIdx = header.indexOf("STATE");
                     hostnameIdx = header.indexOf("NODELIST");
+                    reasonIdx = header.indexOf("REASON");
 
                     if (stateIdx == -1)
                     {
@@ -177,6 +179,21 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                                 }
 
                                 Pair<String, String> status = translateSlurmStatusToTaskStatus(StringUtils.trimToNull(tokens[stateIdx]));
+
+                                String reason = tokens.length > reasonIdx ? StringUtils.trimToNull(tokens[reasonIdx]) : null;
+                                if (reason != null)
+                                {
+                                    if (!"Priority".equals(reason))
+                                    {
+                                        if (status == null)
+                                        {
+                                            status = new Pair<>("ERROR", null);
+                                        }
+
+                                        status.second = "ERROR: " + reason;
+                                    }
+                                }
+
                                 updateJobStatus(status == null ? null : status.first, j, status == null ? null : status.second);
                                 jobsUpdated.add(j.getClusterId());
                             }
