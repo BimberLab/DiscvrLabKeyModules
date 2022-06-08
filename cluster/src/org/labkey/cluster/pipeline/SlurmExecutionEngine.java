@@ -183,7 +183,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                                 String reason = reasonIdx != -1 && tokens.length > reasonIdx ? StringUtils.trimToNull(tokens[reasonIdx]) : null;
                                 if (reason != null)
                                 {
-                                    if (!"Priority".equals(reason))
+                                    if (!"Priority".equals(reason) && !"None".equals(reason))
                                     {
                                         if (status == null)
                                         {

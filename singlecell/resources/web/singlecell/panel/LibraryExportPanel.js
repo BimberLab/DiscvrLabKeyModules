@@ -839,6 +839,20 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                 return;
                             }
 
+                            // The goal is to assign samples per lane, incrementing as we reach lane capacity
+                            if (totalData && autoAssignLane && !r.laneAssignment) {
+                                const dataAfterLane = dataInActiveLane + totalData;
+                                if (dataAfterLane > laneDataMax) {
+                                    currentLane++;
+                                    dataInActiveLane = totalData;
+                                }
+                                else {
+                                    dataInActiveLane = dataAfterLane;
+                                }
+
+                                r.laneAssignment = currentLane;
+                            }
+
                             barcodeCombosUsed.push([r[fieldName + '/barcode5'], r[fieldName + '/barcode3'], r.laneAssignment || ''].join('/'));
 
                             //The new format requires one/line
@@ -852,20 +866,6 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                                 //NOTE: Novogene now wants one/line
                                 //barcode5s = [barcode5s.join(',')];
-                            }
-
-                            // The goal is to assign samples per lane, incrementing as we reach lane capacity
-                            if (totalData && autoAssignLane && !r.laneAssignment) {
-                                const dataAfterLane = dataInActiveLane + totalData;
-                                if (dataAfterLane > laneDataMax) {
-                                    currentLane++;
-                                    dataInActiveLane = totalData;
-                                }
-                                else {
-                                    dataInActiveLane = dataAfterLane;
-                                }
-
-                                r.laneAssignment = currentLane;
                             }
 
                             Ext4.Array.forEach(barcode5s, function (bc, idx) {
