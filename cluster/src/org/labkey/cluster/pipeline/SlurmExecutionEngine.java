@@ -172,7 +172,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                             }
                             else
                             {
-                                String hostname = tokens.length > hostnameIdx ? StringUtils.trimToNull(tokens[hostnameIdx]) : null;
+                                String hostname = hostnameIdx != -1 && tokens.length > hostnameIdx ? StringUtils.trimToNull(tokens[hostnameIdx]) : null;
                                 if (hostname != null)
                                 {
                                     j.setHostname(hostname);
@@ -180,7 +180,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
 
                                 Pair<String, String> status = translateSlurmStatusToTaskStatus(StringUtils.trimToNull(tokens[stateIdx]));
 
-                                String reason = tokens.length > reasonIdx ? StringUtils.trimToNull(tokens[reasonIdx]) : null;
+                                String reason = reasonIdx != -1 && tokens.length > reasonIdx ? StringUtils.trimToNull(tokens[reasonIdx]) : null;
                                 if (reason != null)
                                 {
                                     if (!"Priority".equals(reason))
