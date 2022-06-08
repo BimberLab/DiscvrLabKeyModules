@@ -136,6 +136,17 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                     labelWidth: 160,
                                     value: 'H'
                                 },{
+                                    xtype: 'checkbox',
+                                    itemId: 'autoAssignLane',
+                                    fieldLabel: 'Auto-assign to Lanes',
+                                    helpPopup: 'If the lane is null, samples will be auto-assigned to lanes, starting with 1, and incrementing whenever Max Data Per Lane is reached',
+                                    checked: true
+                                },{
+                                    xtype: 'ldk-numberfield',
+                                    itemId: 'laneDataMax',
+                                    fieldLabel: 'Max Data Per Lane',
+                                    value: 700
+                                },{
                                     xtype: 'ldk-numberfield',
                                     itemId: 'defaultVolume',
                                     fieldLabel: 'Default Volume (uL)',
@@ -551,6 +562,8 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
         const includeBlanks = btn.up('singlecell-libraryexportpanel').down('#includeBlanks').getValue();
         const doReverseComplement = btn.up('singlecell-libraryexportpanel').doReverseComplement;
         const hashingPrefix = btn.up('singlecell-libraryexportpanel').down('#hashingPrefix') ? btn.up('singlecell-libraryexportpanel').down('#hashingPrefix').getValue() : 'H';
+        const autoAssignLane = btn.up('singlecell-libraryexportpanel').down('#autoAssignLane') ? btn.up('singlecell-libraryexportpanel').down('#autoAssignLane').getValue() : false;
+        const laneDataMax = btn.up('singlecell-libraryexportpanel').down('#laneDataMax') ? btn.up('singlecell-libraryexportpanel').down('#laneDataMax').getValue() : -1;
 
         var isMatchingApplication = function(application, libraryType, readsetApplication, rowLevelApplication){
             if (!application && !rowLevelApplication){
@@ -606,6 +619,8 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                 var sortedRows = results.rows;
                 var totalCellsByReadset = {};
+                let currentLane = 1;
+                let dataInActiveLane = 0;
                 Ext4.Array.forEach(results.rows, function(row){
                     if (row.plateId && row['sortId/cells']) {
                         totalCellsByReadset[row.plateId] = totalCellsByReadset[row.plateId] || 0;
@@ -837,6 +852,20 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                                 //NOTE: Novogene now wants one/line
                                 //barcode5s = [barcode5s.join(',')];
+                            }
+
+                            // The goal is to assign samples per lane, incrementing as we reach lane capacity
+                            if (totalData && autoAssignLane && !r.laneAssignment) {
+                                const dataAfterLane = dataInActiveLane + totalData;
+                                if (dataAfterLane > laneDataMax) {
+                                    currentLane++;
+                                    dataInActiveLane = totalData;
+                                }
+                                else {
+                                    dataInActiveLane = dataAfterLane;
+                                }
+
+                                r.laneAssignment = currentLane;
                             }
 
                             Ext4.Array.forEach(barcode5s, function (bc, idx) {
