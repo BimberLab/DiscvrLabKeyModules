@@ -921,7 +921,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                     var delim = instrument.startsWith('Novogene') ? '\t' : ',';
                     Ext4.Array.forEach(sortedRows, function (r) {
                         var totalCells = totalCellsByReadset[r.plateId];
-                        console.log(totalCells);
+
                         var gexData = totalCells > 15000 ? 70 : 40;
                         var tcrData = totalCells > 15000 ? 45 : 25;
                         processType(readsetIds, rows, r, 'readsetId', 'GEX', 500, 0.01, 'G', null, false, gexData, runMap, totalCells);
@@ -971,7 +971,6 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                     var runVal = 'Summary of data per lane:<br><br><table>';
                     runVal += '<tr></tr><th>Lane</th><th>Amount (M Bases)</th></tr>';
                     Ext4.Array.forEach(Ext4.Object.getKeys(runMap), function(x){
-                        console.log(x);
                         runVal += '<tr><td style="padding: 5px;border: 1px solid black;border-collapse: collapse;">' + x + '</td><td style="padding: 5px;border: 1px solid black;border-collapse: collapse;">' + runMap[x] + '</td></tr>'
                     }, this);
                     runVal += '</table>';
