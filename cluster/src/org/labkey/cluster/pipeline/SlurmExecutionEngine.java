@@ -451,7 +451,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                         for (ClusterResourceAllocator.Factory allocatorFact : allocatorFactories)
                         {
                             ClusterResourceAllocator allocator = allocatorFact.getAllocator();
-                            job.getLogger().debug("using resource allocator: " + allocator.getClass().getName());
+                            job.getLogger().debug("using resource allocator: " + allocator.getClass().getName() + " for activeTask: " + job.getActiveTaskId());
                             Integer c = allocator.getMaxRequestCpus(job);
                             if (c != null)
                             {
