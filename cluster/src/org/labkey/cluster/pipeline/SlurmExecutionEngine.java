@@ -190,7 +190,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                                             status = new Pair<>("ERROR", null);
                                         }
 
-                                        status.second = "ERROR: " + reason;
+                                        status.second = "Reason: " + reason;
                                     }
                                 }
 
