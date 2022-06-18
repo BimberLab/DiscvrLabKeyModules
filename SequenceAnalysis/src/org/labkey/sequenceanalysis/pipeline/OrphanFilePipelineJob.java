@@ -517,7 +517,7 @@ public class OrphanFilePipelineJob extends PipelineJob
                     //iterate possible issues:
 
                     //orphan index
-                    if (f.getPath().toLowerCase().endsWith(".bai") || f.getPath().toLowerCase().endsWith(".tbi") || f.getPath().toLowerCase().endsWith(".idx"))
+                    if (f.getPath().toLowerCase().endsWith(".bai") || f.getPath().toLowerCase().endsWith(".tbi") || f.getPath().toLowerCase().endsWith(".idx") || f.getPath().toLowerCase().endsWith(".crai"))
                     {
                         if (!new File(FileUtil.getBaseName(f.getPath())).exists())
                         {

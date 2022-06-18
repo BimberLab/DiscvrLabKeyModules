@@ -459,6 +459,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
     }
 
     private static FileType _bamFileType = new FileType("bam");
+    private static FileType _cramFileType = new FileType("cram");
     private static FileType _vcfFileType = new FileType("vcf", FileType.gzSupportLevel.SUPPORT_GZ);
     private static FileType _bedFileType = new FileType("bed");
 
@@ -473,6 +474,10 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         if (_bamFileType.isType(f))
         {
             ret.add(f.getName() + ".bai");
+        }
+        else if (_cramFileType.isType(f))
+        {
+            ret.add(f.getName() + ".crai");
         }
         else if (_vcfFileType.isType(f))
         {
