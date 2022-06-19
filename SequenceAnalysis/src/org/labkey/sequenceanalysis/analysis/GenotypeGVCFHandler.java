@@ -370,6 +370,9 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                     mergeArgs.add("-O");
                     mergeArgs.add(sitesOnlyVcf.getPath());
 
+                    mergeArgs.add("-R");
+                    mergeArgs.add(genome.getWorkingFastaFile());
+
                     runner.execute(mergeArgs);
                     ctx.getFileManager().addIntermediateFile(sitesOnlyVcf);
                     ctx.getFileManager().addIntermediateFile(new File(sitesOnlyVcf.getPath() + ".tbi"));
