@@ -347,8 +347,11 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
 
                     // Run GenotypeGVCFs individually:
                     List<File> intermediateVcfs = new ArrayList<>();
+                    int idx = 0;
                     for (File input : filesToProcess)
                     {
+                        idx++;
+                        ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Running GenotypeGVCFs: " + idx + " of " + filesToProcess.size());
                         File tempOutput = new File(ctx.getOutputDir(), SequenceAnalysisService.get().getUnzippedBaseName(input.getName()) + ".temp.vcf.gz");
                         processOneInput(ctx, job, genome, input, tempOutput, forceCallSitesFile);
                         ctx.getFileManager().addIntermediateFile(tempOutput);
@@ -359,6 +362,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
 
                     // Create the union of all sites to force calling:
                     ctx.getLogger().info("Creating VCF with union of sites");
+                    ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Generating union of sites");
                     File sitesOnlyVcf = new File(ctx.getWorkingDirectory(), "sitesOnlyVcfForMerge.vcf.gz");
                     DISCVRSeqRunner runner = new DISCVRSeqRunner(ctx.getLogger());
                     List<String> mergeArgs = new ArrayList<>(runner.getBaseArgs("MergeVariantSites"));
@@ -379,8 +383,11 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
 
                     // Run GenotypeGVCFs individually:
                     List<File> intermediateVcfsForcedSites = new ArrayList<>();
+                    idx = 0;
                     for (File input : filesToProcess)
                     {
+                        idx++;
+                        ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Second GenotypeGVCFs: " + idx + " of " + filesToProcess.size());
                         File tempOutput = new File(ctx.getOutputDir(), SequenceAnalysisService.get().getUnzippedBaseName(input.getName()) + ".tempForceSites.vcf.gz");
                         processOneInput(ctx, job, genome, input, tempOutput, sitesOnlyVcf);
                         ctx.getFileManager().addIntermediateFile(tempOutput);
@@ -390,6 +397,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                     }
 
                     // Perform final merge:
+                    ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Merging final VCFs");
                     new MergeVcfsAndGenotypesWrapper(ctx.getLogger()).execute(genome.getWorkingFastaFile(), intermediateVcfsForcedSites, outputVcf, null);
                 }
                 else
