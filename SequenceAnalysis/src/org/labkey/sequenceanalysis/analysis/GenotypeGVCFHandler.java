@@ -371,7 +371,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                     mergeArgs.add(sitesOnlyVcf.getPath());
 
                     mergeArgs.add("-R");
-                    mergeArgs.add(genome.getWorkingFastaFile());
+                    mergeArgs.add(genome.getWorkingFastaFile().getPath());
 
                     runner.execute(mergeArgs);
                     ctx.getFileManager().addIntermediateFile(sitesOnlyVcf);
