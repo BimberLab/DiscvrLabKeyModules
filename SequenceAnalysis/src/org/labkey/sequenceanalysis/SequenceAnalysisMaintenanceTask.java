@@ -27,6 +27,7 @@ import org.labkey.api.util.SystemMaintenance.MaintenanceTask;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.pipeline.CacheGenomeTrigger;
 import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
+import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 
 import java.io.File;
 import java.io.IOException;
@@ -309,8 +310,15 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                             genome.createGzippedFile(log);
                         }
 
+                        File gzi = new File(fasta.getPath() + ".gz.gzi");
+                        if (!gzi.exists())
+                        {
+                            new FastaIndexer(log).execute(gz);
+                        }
+
                         expectedChildren.add(fasta.getName() + ".gz");
-                        expectedChildren.add(fasta.getName() + ".gzi");
+                        expectedChildren.add(fasta.getName() + ".gz.gzi");
+                        expectedChildren.add(fasta.getName() + ".gz.fai");
 
                         expectedChildren.add(fasta.getName());
                         expectedChildren.add(fasta.getName() + ".fai");
@@ -512,8 +520,10 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         }
         else if (_fastaFileType.isType(f))
         {
+            ret.add(f.getName() + ".fai");
             ret.add(f.getName() + ".gz");
-            ret.add(f.getName() + ".gzi");
+            ret.add(f.getName() + ".gz.gzi");
+            ret.add(f.getName() + ".gz.fai");
         }
 
         return ret;
