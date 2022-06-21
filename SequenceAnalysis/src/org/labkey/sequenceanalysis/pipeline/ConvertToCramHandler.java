@@ -29,7 +29,11 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
         super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Convert To Cram", "This will convert a BAM file to CRAM, replacing the original", null, Arrays.asList(
                 ToolParameterDescriptor.create("replaceOriginal", "Replace Original File", "If selected, the input BAM will be deleted and the database record will be switched to use this filepath.", "checkbox", new JSONObject(){{
                     put("checked", true);
-                }}, true))
+                }}, true),
+                ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
+                    put("checked", true);
+                }}, true)
+            )
         );
     }
 
