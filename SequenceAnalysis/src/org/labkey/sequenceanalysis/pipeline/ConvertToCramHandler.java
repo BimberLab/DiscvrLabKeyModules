@@ -1,11 +1,17 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import org.json.JSONObject;
+import org.labkey.api.collections.CaseInsensitiveHashMap;
+import org.labkey.api.data.Container;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
+import org.labkey.api.query.BatchValidationException;
+import org.labkey.api.query.InvalidKeyException;
+import org.labkey.api.query.QueryService;
+import org.labkey.api.query.QueryUpdateServiceException;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -16,11 +22,16 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
@@ -128,6 +139,12 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
         @Override
         public void complete(PipelineJob job, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated, SequenceAnalysisJobSupport support) throws PipelineJobException
         {
+            List<Map<String, Object>> toUpdate = new ArrayList<>();
+            List<Map<String, Object>> oldKeys = inputs.stream().map(x -> {
+                Map<String, Object> row = new CaseInsensitiveHashMap<>();
+                row.put("rowid", x.getRowid());
+                return(row);
+            }).collect(Collectors.toList());
 
             for (SequenceOutputFile so : inputs)
             {
@@ -137,7 +154,29 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
                 job.getLogger().info("Updating ExpData record with new filepath: " + cram.getPath());
                 ExpData d = so.getExpData();
                 d.setDataFileURI(cram.toURI());
+                d.setName(cram.getName());
                 d.save(job.getUser());
+
+                if (so.getName().contains(".bam"))
+                {
+                    Map<String, Object> row = new CaseInsensitiveHashMap<>();
+                    row.put("rowid", so.getRowid());
+                    row.put("container", so.getContainer());
+                    row.put("name", so.getName().replaceAll("\\.bam", "\\.cram"));
+                    row.put("description", (so.getDescription() == null ? "" : so.getDescription() + "\n") + "Converted from BAM to CRAM");
+                    toUpdate.add(row);
+                }
+            }
+
+            try
+            {
+                Container target = job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer();
+                QueryService.get().getUserSchema(job.getUser(), target, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES).getUpdateService().updateRows(job.getUser(), target, toUpdate, oldKeys, null, null);
+            }
+            catch (QueryUpdateServiceException | InvalidKeyException | BatchValidationException | SQLException e)
+            {
+                throw new PipelineJobException(e);
+
             }
         }
     }
