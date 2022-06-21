@@ -1670,7 +1670,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
             schemaName: 'sequenceanalysis',
             queryName: 'sequence_readsets',
             filterArray: [LABKEY.Filter.create('rowid', readsetIds.join(';'), LABKEY.Filter.Types.IN)],
-            columns: 'rowid,name,platform,application,chemistry,concentration,fragmentSize,librarytype,sampletype,subjectid,sampledate,sampleid,comments,barcode5,barcode3,instrument_run_id,totalFiles',
+            columns: 'rowid,name,platform,application,chemistry,concentration,fragmentSize,librarytype,sampletype,subjectid,sampledate,sampleid,comments,barcode5,barcode3,instrument_run_id,totalFiles,status',
             scope: this,
             failure: LDK.Utils.getErrorCallback(),
             success: function(results){
@@ -1697,6 +1697,13 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                         else if (!doDemultiplex && !showBarcodes && (row.barcode3 || row.barcode5)) {
                             this.down('#showBarcodes').setValue(true);
                             showBarcodes = true;
+                        }
+
+                        if (row.totalFiles && row.status === 'Replaced'){
+                            msgs.push('Readset ' + row.rowid + ' has been marked Replaced, but you are attempting to append data to it. This is probably an error.');
+                            Ext4.Array.forEach(records, function(record) {
+                                record.data.readset = null;
+                            }, this);
                         }
 
                         //update row based on saved readset.  avoid firing event
