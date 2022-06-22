@@ -10,13 +10,13 @@ import java.util.regex.Matcher
 
 repositories {
     mavenCentral()
-    // Added to support ancient sam JAR needed by FASTQC (in sequenceanalysis)
+    // Added for org.clojars.chapmanb:sam dependency required by com.github.samtools:htsjdk
     maven {
         url "https://clojars.org/repo"
     }
-    // Added for opencharts dependency (required by biojava)
+    // Added for org.clojars.chapmanb:sam
     maven {
-        url "https://repository.jboss.org/nexus/content/repositories/thirdparty-releases/"
+        url "https://maven.scijava.org/content/groups/public"
     }
 }
 

@@ -558,7 +558,7 @@ public class JsonFile
             return false;
         }
 
-        return toTest.contains(getObjectId()) || toTest.contains(getLabel());
+        return toTest.contains(getObjectId()) || toTest.contains(getLabel()) || toTest.contains(getJsonTrackId());
     }
 
     public String getJsonTrackId()

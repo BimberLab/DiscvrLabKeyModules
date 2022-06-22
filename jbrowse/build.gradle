@@ -2,13 +2,13 @@ import org.labkey.gradle.util.BuildUtils;
 
 repositories {
 	mavenCentral()
-	// Added for opencharts dependency (required by biojava)
-	maven {
-		url "https://repository.jboss.org/nexus/content/repositories/thirdparty-releases/"
-	}
-	// Added to support ancient sam JAR needed by FASTQC (in sequenceanalysis)
+	// Added for org.clojars.chapmanb:sam dependency required by com.github.samtools:htsjdk
 	maven {
 		url "https://clojars.org/repo"
+	}
+	// Added for org.clojars.chapmanb:sam (required by SequenceAnalysis)
+	maven {
+		url "https://maven.scijava.org/content/groups/public"
 	}
 }
 
