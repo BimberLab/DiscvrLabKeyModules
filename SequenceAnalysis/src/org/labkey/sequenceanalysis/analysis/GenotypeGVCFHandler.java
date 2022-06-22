@@ -17,6 +17,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.security.User;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -24,15 +25,16 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
+import org.labkey.api.sequenceanalysis.run.DISCVRSeqRunner;
 import org.labkey.api.util.FileType;
 import org.labkey.api.view.ActionURL;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.pipeline.JobContextImpl;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
-import org.labkey.sequenceanalysis.run.util.CombineGVCFsWrapper;
 import org.labkey.sequenceanalysis.run.util.GenomicsDBImportHandler;
 import org.labkey.sequenceanalysis.run.util.GenotypeGVCFsWrapper;
+import org.labkey.sequenceanalysis.run.util.MergeVcfsAndGenotypesWrapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -109,7 +111,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
     {
         Set<String> allowableNames = new HashSet<>();
         allowableNames.add(getName());
-        for (PipelineStepProvider provider: SequencePipelineService.get().getProviders(VariantProcessingStep.class))
+        for (PipelineStepProvider<?> provider: SequencePipelineService.get().getProviders(VariantProcessingStep.class))
         {
             allowableNames.add(provider.getLabel());
         }
@@ -204,7 +206,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
             PipelineJob job = ctx.getJob();
-            ProcessVariantsHandler.Resumer resumer = ProcessVariantsHandler.Resumer.create((JobContextImpl)ctx);
+            ProcessVariantsHandler.Resumer resumer = ProcessVariantsHandler.Resumer.create((JobContextImpl) ctx);
 
             Set<Integer> genomeIds = new HashSet<>();
             List<File> inputVcfs = new ArrayList<>();
@@ -284,6 +286,11 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             return basename;
         }
 
+        private File getDoneFile(File vcf)
+        {
+            return new File(vcf.getPath() + ".done");
+        }
+
         private File runGenotypeGVCFs(PipelineJob job, JobContext ctx, ProcessVariantsHandler.Resumer resumer, List<File> inputFiles, int genomeId) throws PipelineJobException
         {
             RecordedAction action = new RecordedAction(getName());
@@ -294,7 +301,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
 
             File outputVcf = new File(outDir, basename + ".vcf.gz");
             File outputVcfIdx = new File(outDir, basename + ".vcf.gz.tbi");
-            File outputVcfDone = new File(outDir, basename + ".vcf.gz.done");
+            File outputVcfDone = getDoneFile(outputVcf);
 
             for (File f : inputFiles)
             {
@@ -315,6 +322,18 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 filesToProcess.addAll(inputFiles);
             }
 
+            ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(genomeId);
+            if (genome == null)
+            {
+                throw new PipelineJobException("Unable to find cached genome for Id: " + genomeId);
+            }
+
+            File forceCallSitesFile = null;
+            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.forceSitesFile") != null)
+            {
+                forceCallSitesFile = ctx.getSequenceSupport().getCachedData(ctx.getParams().getInt("variantCalling.GenotypeGVCFs.forceSitesFile"));
+            }
+
             ctx.getFileManager().addIntermediateFile(outputVcfDone);
             if (outputVcfDone.exists())
             {
@@ -322,120 +341,76 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             }
             else
             {
-                //Allow CombineGVCFs to run on interval(s)
-                File inputVcf;
                 if (filesToProcess.size() > 1)
                 {
-                    inputVcf = combineInputs(ctx, filesToProcess, genomeId);
-                    ctx.getFileManager().addIntermediateFile(inputVcf);
-                    ctx.getFileManager().addIntermediateFile(new File(inputVcf.getPath() + ".tbi"));
+                    ctx.getLogger().info("Multiple inputs present, so genotypes will be called individually, then merged");
+
+                    // Run GenotypeGVCFs individually:
+                    List<File> intermediateVcfs = new ArrayList<>();
+                    int idx = 0;
+                    for (File input : filesToProcess)
+                    {
+                        idx++;
+                        ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Running GenotypeGVCFs: " + idx + " of " + filesToProcess.size());
+                        File tempOutput = new File(ctx.getOutputDir(), SequenceAnalysisService.get().getUnzippedBaseName(input.getName()) + ".temp.vcf.gz");
+                        processOneInput(ctx, job, genome, input, tempOutput, forceCallSitesFile);
+                        ctx.getFileManager().addIntermediateFile(tempOutput);
+                        ctx.getFileManager().addIntermediateFile(new File(tempOutput.getPath() + ".tbi"));
+                        ctx.getFileManager().addIntermediateFile(getDoneFile(tempOutput));
+                        intermediateVcfs.add(tempOutput);
+                    }
+
+                    // Create the union of all sites to force calling:
+                    ctx.getLogger().info("Creating VCF with union of sites");
+                    ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Generating union of sites");
+                    File sitesOnlyVcf = new File(ctx.getWorkingDirectory(), "sitesOnlyVcfForMerge.vcf.gz");
+                    DISCVRSeqRunner runner = new DISCVRSeqRunner(ctx.getLogger());
+                    List<String> mergeArgs = new ArrayList<>(runner.getBaseArgs("MergeVariantSites"));
+                    intermediateVcfs.forEach(vcf -> {
+                        mergeArgs.add("-V");
+                        mergeArgs.add(vcf.getPath());
+                    });
+                    mergeArgs.add("-env");
+                    mergeArgs.add("-O");
+                    mergeArgs.add(sitesOnlyVcf.getPath());
+
+                    mergeArgs.add("-R");
+                    mergeArgs.add(genome.getWorkingFastaFile().getPath());
+
+                    runner.execute(mergeArgs);
+                    ctx.getFileManager().addIntermediateFile(sitesOnlyVcf);
+                    ctx.getFileManager().addIntermediateFile(new File(sitesOnlyVcf.getPath() + ".tbi"));
+
+                    // Run GenotypeGVCFs individually:
+                    List<File> intermediateVcfsForcedSites = new ArrayList<>();
+                    idx = 0;
+                    for (File input : filesToProcess)
+                    {
+                        idx++;
+                        ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Second GenotypeGVCFs: " + idx + " of " + filesToProcess.size());
+                        File tempOutput = new File(ctx.getOutputDir(), SequenceAnalysisService.get().getUnzippedBaseName(input.getName()) + ".tempForceSites.vcf.gz");
+                        processOneInput(ctx, job, genome, input, tempOutput, sitesOnlyVcf);
+                        ctx.getFileManager().addIntermediateFile(tempOutput);
+                        ctx.getFileManager().addIntermediateFile(new File(tempOutput.getPath() + ".tbi"));
+                        ctx.getFileManager().addIntermediateFile(getDoneFile(tempOutput));
+                        intermediateVcfsForcedSites.add(tempOutput);
+                    }
+
+                    // Perform final merge:
+                    ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Merging final VCFs");
+                    new MergeVcfsAndGenotypesWrapper(ctx.getLogger()).execute(genome.getWorkingFastaFile(), intermediateVcfsForcedSites, outputVcf, null);
                 }
                 else
                 {
-                    inputVcf = filesToProcess.get(0);
-                }
-
-                GenotypeGVCFsWrapper wrapper = new GenotypeGVCFsWrapper(job.getLogger());
-                ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(genomeId);
-                if (genome == null)
-                {
-                    throw new PipelineJobException("Unable to find cached genome for Id: " + genomeId);
-                }
-
-                List<String> toolParams = new ArrayList<>();
-                if (ctx.getParams().get("variantCalling.GenotypeGVCFs.stand_call_conf") != null)
-                {
-                    toolParams.add("-stand-call-conf");
-                    toolParams.add(ctx.getParams().get("variantCalling.GenotypeGVCFs.stand_call_conf").toString());
-                }
-
-                if (ctx.getParams().get("variantCalling.GenotypeGVCFs.exclude_intervals") != null)
-                {
-                    toolParams.add("-XL");
-                    int dataId = Integer.parseInt(ctx.getParams().get("variantCalling.GenotypeGVCFs.exclude_intervals").toString());
-                    File bed = ctx.getSequenceSupport().getCachedData(dataId);
-                    if (bed == null)
+                    processOneInput(ctx, job, genome, filesToProcess.get(0), outputVcf, forceCallSitesFile);
+                    try
                     {
-                        throw new PipelineJobException("Unable to find ExpData: " + dataId);
+                        FileUtils.touch(getDoneFile(outputVcf));
                     }
-
-                    toolParams.add(bed.getPath());
-                }
-
-                if (ctx.getParams().get("variantCalling.GenotypeGVCFs.max_alternate_alleles") != null)
-                {
-                    toolParams.add("--max-alternate-alleles");
-                    toolParams.add(ctx.getParams().get("variantCalling.GenotypeGVCFs.max_alternate_alleles").toString());
-
-                    toolParams.add("--genomicsdb-max-alternate-alleles");
-
-                    // See: https://gatk.broadinstitute.org/hc/en-us/articles/4418054384027-GenotypeGVCFs#--genomicsdb-max-alternate-alleles
-                    // "A typical value is 3 more than the --max-alternate-alleles value that's used by GenotypeGVCFs and larger differences result in more robustness to PCR-related indel errors"
-                    Integer maxAlt = ctx.getParams().getInt("variantCalling.GenotypeGVCFs.max_alternate_alleles") + 3;
-                    toolParams.add(maxAlt.toString());
-                }
-
-                if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.includeNonVariantSites"))
-                {
-                    toolParams.add("--include-non-variant-sites");
-                }
-
-                if (ctx.getParams().get("variantCalling.GenotypeGVCFs.forceSitesFile") != null)
-                {
-                    File f = ctx.getSequenceSupport().getCachedData(ctx.getParams().getInt("variantCalling.GenotypeGVCFs.forceSitesFile"));
-                    toolParams.add("--force-output-intervals");
-                    toolParams.add(f.getPath());
-                }
-
-                if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.allowOldRmsMappingData", false))
-                {
-                    toolParams.add("--allow-old-rms-mapping-quality-annotation-data");
-                }
-
-                List<Interval> intervals = ProcessVariantsHandler.getIntervals(ctx);
-                if (intervals != null)
-                {
-                    intervals.forEach(interval -> {
-                        toolParams.add("-L");
-                        toolParams.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
-                    });
-
-                    toolParams.add("--only-output-calls-starting-in-intervals");
-                }
-
-                if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.disableFileLocking", false))
-                {
-                    ctx.getLogger().debug("Disabling file locking for TileDB");
-                    wrapper.addToEnvironment("TILEDB_DISABLE_FILE_LOCKING", "1");
-                }
-
-                if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.sharedPosixOptimizations", false))
-                {
-                    toolParams.add("--genomicsdb-shared-posixfs-optimizations");
-                }
-
-                Integer maxRam = SequencePipelineService.get().getMaxRam();
-                int nativeMemoryBuffer = ctx.getParams().optInt("variantCalling.GenotypeGVCFs.nativeMemoryBuffer", 0);
-                if (maxRam != null && nativeMemoryBuffer > 0)
-                {
-                    ctx.getLogger().info("Adjusting RAM (" + maxRam + ") based on memory buffer (" + nativeMemoryBuffer + ")");
-                    maxRam = maxRam - nativeMemoryBuffer;
-
-                    if (maxRam < 1)
+                    catch (IOException e)
                     {
-                        throw new PipelineJobException("After adjusting for nativeMemoryBuffer, maxRam is less than 1: " + maxRam);
+                        throw new PipelineJobException(e);
                     }
-                    wrapper.setMaxRamOverride(maxRam);
-                }
-
-                wrapper.execute(genome.getWorkingFastaFile(), outputVcf, toolParams, inputVcf);
-                try
-                {
-                    FileUtils.touch(outputVcfDone);
-                }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
                 }
             }
 
@@ -458,33 +433,60 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             return outputVcf;
         }
 
-        private File combineInputs(JobContext ctx, List<File> inputFiles, int genomeId) throws PipelineJobException
+        private void processOneInput(JobContext ctx, PipelineJob job, ReferenceGenome genome, File inputVcf, File outputVcf, @Nullable File forceCallSites) throws PipelineJobException
         {
-            for (File f : inputFiles)
-            {
-                if (!GenotypeGVCFsWrapper.GVCF.isType(f))
-                {
-                    throw new PipelineJobException("If multiple inputs are used, all must be gVCFs: " + f.getName());
-                }
-            }
+            ctx.getLogger().info("Running genotypeGVCFs for: " + inputVcf.getPath());
 
-            String basename = getBasename(ctx);
-            File combined = new File(ctx.getOutputDir(), basename + ".combined.gvcf.gz");
-
-            File idx = new File(combined.getPath() + ".tbi");
-            if (idx.exists())
-            {
-                ctx.getLogger().info("Index exists, resuming combine with existing file: " + combined.getPath());
-                return combined;
-            }
-
-            ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(genomeId);
-            if (genome == null)
-            {
-                throw new PipelineJobException("Unable to find cached genome for Id: " + genomeId);
-            }
-
+            GenotypeGVCFsWrapper wrapper = new GenotypeGVCFsWrapper(job.getLogger());
             List<String> toolParams = new ArrayList<>();
+            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.stand_call_conf") != null)
+            {
+                toolParams.add("-stand-call-conf");
+                toolParams.add(ctx.getParams().get("variantCalling.GenotypeGVCFs.stand_call_conf").toString());
+            }
+
+            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.exclude_intervals") != null)
+            {
+                toolParams.add("-XL");
+                int dataId = Integer.parseInt(ctx.getParams().get("variantCalling.GenotypeGVCFs.exclude_intervals").toString());
+                File bed = ctx.getSequenceSupport().getCachedData(dataId);
+                if (bed == null)
+                {
+                    throw new PipelineJobException("Unable to find ExpData: " + dataId);
+                }
+
+                toolParams.add(bed.getPath());
+            }
+
+            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.max_alternate_alleles") != null)
+            {
+                toolParams.add("--max-alternate-alleles");
+                toolParams.add(ctx.getParams().get("variantCalling.GenotypeGVCFs.max_alternate_alleles").toString());
+
+                toolParams.add("--genomicsdb-max-alternate-alleles");
+
+                // See: https://gatk.broadinstitute.org/hc/en-us/articles/4418054384027-GenotypeGVCFs#--genomicsdb-max-alternate-alleles
+                // "A typical value is 3 more than the --max-alternate-alleles value that's used by GenotypeGVCFs and larger differences result in more robustness to PCR-related indel errors"
+                Integer maxAlt = ctx.getParams().getInt("variantCalling.GenotypeGVCFs.max_alternate_alleles") + 3;
+                toolParams.add(maxAlt.toString());
+            }
+
+            if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.includeNonVariantSites"))
+            {
+                toolParams.add("--include-non-variant-sites");
+            }
+
+            if (forceCallSites != null)
+            {
+                toolParams.add("--force-output-intervals");
+                toolParams.add(forceCallSites.getPath());
+            }
+
+            if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.allowOldRmsMappingData", false))
+            {
+                toolParams.add("--allow-old-rms-mapping-quality-annotation-data");
+            }
+
             List<Interval> intervals = ProcessVariantsHandler.getIntervals(ctx);
             if (intervals != null)
             {
@@ -492,12 +494,50 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                     toolParams.add("-L");
                     toolParams.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
                 });
+
+                toolParams.add("--only-output-calls-starting-in-intervals");
             }
 
-            CombineGVCFsWrapper wrapper = new CombineGVCFsWrapper(ctx.getLogger());
-            wrapper.execute(genome.getWorkingFastaFile(), combined, toolParams, inputFiles.toArray(new File[inputFiles.size()]));
+            if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.disableFileLocking", false))
+            {
+                ctx.getLogger().debug("Disabling file locking for TileDB");
+                wrapper.addToEnvironment("TILEDB_DISABLE_FILE_LOCKING", "1");
+            }
 
-            return combined;
+            if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.sharedPosixOptimizations", false))
+            {
+                toolParams.add("--genomicsdb-shared-posixfs-optimizations");
+            }
+
+            Integer maxRam = SequencePipelineService.get().getMaxRam();
+            int nativeMemoryBuffer = ctx.getParams().optInt("variantCalling.GenotypeGVCFs.nativeMemoryBuffer", 0);
+            if (maxRam != null && nativeMemoryBuffer > 0)
+            {
+                ctx.getLogger().info("Adjusting RAM (" + maxRam + ") based on memory buffer (" + nativeMemoryBuffer + ")");
+                maxRam = maxRam - nativeMemoryBuffer;
+
+                if (maxRam < 1)
+                {
+                    throw new PipelineJobException("After adjusting for nativeMemoryBuffer, maxRam is less than 1: " + maxRam);
+                }
+                wrapper.setMaxRamOverride(maxRam);
+            }
+
+            if (getDoneFile(outputVcf).exists())
+            {
+                ctx.getLogger().info("VCF already created, skipping: " + outputVcf.getPath());
+                return;
+            }
+
+            wrapper.execute(genome.getWorkingFastaFile(), outputVcf, toolParams, inputVcf);
+            try
+            {
+                FileUtils.touch(getDoneFile(outputVcf));
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
         }
     }
 
@@ -509,9 +549,8 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
     @Override
     public boolean isRequired(PipelineJob job)
     {
-        if (job instanceof VariantProcessingJob)
+        if (job instanceof VariantProcessingJob vpj)
         {
-            VariantProcessingJob vpj = (VariantProcessingJob)job;
 
             return doCopyLocal(vpj.getParameterJson());
         }

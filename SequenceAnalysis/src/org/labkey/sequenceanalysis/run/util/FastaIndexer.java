@@ -38,7 +38,7 @@ public class FastaIndexer extends SamtoolsRunner
 
     public static File getExpectedIndexName(File input)
     {
-        return new File(input.getPath() + ".fai");
+        return new File(input.getPath() + (input.getName().toLowerCase().endsWith("gz") ? ".gzi" : ".fai"));
     }
 
     public List<String> getParams(File input)

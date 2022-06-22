@@ -35,6 +35,7 @@ import org.labkey.serverapi.reader.Readers;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.TestFileUtils;
+import org.labkey.test.TestProperties;
 import org.labkey.test.TestTimeoutException;
 import org.labkey.test.WebTestHelper;
 import org.labkey.test.categories.External;
@@ -111,6 +112,11 @@ public class SequenceTest extends BaseWebDriverTest
             sequencePipelineEnabled = false;
         }
         log("sequencePipelineEnabled: " + sequencePipelineEnabled);
+
+        if (!sequencePipelineEnabled && TestProperties.isTestRunningOnTeamCity() && WebTestHelper.getDatabaseType() == WebTestHelper.DatabaseType.PostgreSQL)
+        {
+            throw new IllegalStateException("When running on team city, -DsequencePipelineEnabled should be true");
+        }
 
         goToProjectHome();
 

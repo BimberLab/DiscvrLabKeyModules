@@ -3690,6 +3690,7 @@ public class SequenceAnalysisController extends SpringActionController
 
             Set<File> files = new HashSet<>();
             FileType bamFileType = new FileType("bam");
+            FileType cramFileType = new FileType("cram");
             FileType fastaFileType = new FileType("fasta", FileType.gzSupportLevel.SUPPORT_GZ);
             FileType gzFileType = new FileType("gz");
             for (int id : form.getDataIds())
@@ -3705,6 +3706,14 @@ public class SequenceAnalysisController extends SpringActionController
                 if (bamFileType.isType(data.getFile()))
                 {
                     File index = new File(data.getFile() + ".bai");
+                    if (index.exists())
+                    {
+                        files.add(index);
+                    }
+                }
+                if (cramFileType.isType(data.getFile()))
+                {
+                    File index = new File(data.getFile() + ".crai");
                     if (index.exists())
                     {
                         files.add(index);

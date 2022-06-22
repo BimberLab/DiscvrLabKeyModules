@@ -378,14 +378,14 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                         getJob().getLogger().info(status);
                         getJob().setStatus(PipelineJob.TaskStatus.running, status);
 
-                        File merged1 = new File(normalizationDir, SequenceTaskHelper.getUnzippedBaseName(fg.filePairs.get(0).file1.getName()) + ".merged.fastq.gz");
+                        File merged1 = new File(normalizationDir, SequenceTaskHelper.getUnzippedBaseName(lane.get(0).file1.getName()) + ".merged.fastq.gz");
                         getJob().getLogger().debug("\tto: " + merged1.getPath());
 
-                        File merged2 = fg.filePairs.get(0).file2 == null ? null : new File(normalizationDir, SequenceTaskHelper.getUnzippedBaseName(fg.filePairs.get(0).file2.getName()) + ".merged.fastq.gz");
+                        File merged2 = lane.get(0).file2 == null ? null : new File(normalizationDir, SequenceTaskHelper.getUnzippedBaseName(lane.get(0).file2.getName()) + ".merged.fastq.gz");
 
                         List<File> toMerge1 = new ArrayList<>();
                         List<File> toMerge2 = new ArrayList<>();
-                        for (FileGroup.FilePair fp : fg.filePairs)
+                        for (FileGroup.FilePair fp : lane)
                         {
                             toMerge1.add(fp.file1);
                             if (fp.file2 != null)

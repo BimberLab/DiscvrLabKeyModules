@@ -3,6 +3,7 @@ package org.labkey.singlecell.run;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentOutputImpl;
@@ -29,6 +30,8 @@ public class AbstractCellRangerDependentStep extends CellRangerGexCountStep
 
     protected File runCellRanger(AlignmentOutputImpl output, Readset rs, List<File> inputFastqs1, @Nullable List<File> inputFastqs2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException
     {
+        getPipelineCtx().getJob().setStatus(PipelineJob.TaskStatus.running, "Running Cellranger GEX");
+
         File localBam = new File(outputDirectory, basename + ".cellranger.bam");
         File localBamIdx = new File(localBam.getPath() + ".bai");
 

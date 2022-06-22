@@ -39,7 +39,7 @@ public class DISCVRSeqRunner extends AbstractCommandWrapper
 
     }
 
-    protected List<String> getBaseArgs(String toolName)
+    public List<String> getBaseArgs(String toolName)
     {
         List<String> args = new ArrayList<>();
         args.add(SequencePipelineService.get().getJava8FilePath());

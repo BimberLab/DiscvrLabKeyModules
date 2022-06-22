@@ -12,6 +12,7 @@ import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.ldk.LDKService;
 import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
@@ -25,10 +26,13 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance.MaintenanceTask;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.pipeline.CacheGenomeTrigger;
+import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
+import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -206,7 +210,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         }
     }
 
-    private void processContainer(Container c, Logger log) throws IOException
+    private void processContainer(Container c, Logger log) throws IOException, PipelineJobException
     {
         PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
         if (root != null && !root.isCloudRoot())
@@ -283,7 +287,8 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                     {
                         //inspect within library
                         List<String> expectedChildren = new ArrayList<>();
-                        Integer fastaId = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("fasta_file")).getObject(Integer.parseInt(child.getName()), Integer.class);
+                        int libraryId = Integer.parseInt(child.getName());
+                        Integer fastaId = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("fasta_file")).getObject(libraryId, Integer.class);
                         if (fastaId == null)
                         {
                             log.error("Unable to find FASTA ExpData in DB matching jbrowse directory: " + child.getPath());
@@ -296,6 +301,24 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                         {
                             log.error("expected fasta file does not exist: " + fasta.getPath());
                         }
+
+                        // Use this to retroactively convert existing genomes:
+                        File gz = new File(fasta.getPath() + ".gz");
+                        if (!gz.exists())
+                        {
+                            ReferenceGenomeImpl genome = new ReferenceGenomeImpl(fasta, fastaData, libraryId, null);
+                            genome.createGzippedFile(log);
+                        }
+
+                        File gzi = new File(fasta.getPath() + ".gz.gzi");
+                        if (!gzi.exists())
+                        {
+                            new FastaIndexer(log).execute(gz);
+                        }
+
+                        expectedChildren.add(fasta.getName() + ".gz");
+                        expectedChildren.add(fasta.getName() + ".gz.gzi");
+                        expectedChildren.add(fasta.getName() + ".gz.fai");
 
                         expectedChildren.add(fasta.getName());
                         expectedChildren.add(fasta.getName() + ".fai");
@@ -319,8 +342,6 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                                 deleteFile(new File(child, fileName), log);
                             }
                         }
-
-                        Integer libraryId = Integer.parseInt(child.getName());
 
                         //check/verify tracks
                         File trackDir = new File(child, "tracks");
@@ -459,8 +480,10 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
     }
 
     private static FileType _bamFileType = new FileType("bam");
+    private static FileType _cramFileType = new FileType("cram");
     private static FileType _vcfFileType = new FileType("vcf", FileType.gzSupportLevel.SUPPORT_GZ);
     private static FileType _bedFileType = new FileType("bed");
+    private static FileType _fastaFileType = new FileType(Arrays.asList("fasta", "fa"), "fasta", FileType.gzSupportLevel.SUPPORT_GZ);
 
     /**
      * This is intended to return any files associated with an input, which is primarily designed to pick up index files
@@ -473,6 +496,10 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         if (_bamFileType.isType(f))
         {
             ret.add(f.getName() + ".bai");
+        }
+        else if (_cramFileType.isType(f))
+        {
+            ret.add(f.getName() + ".crai");
         }
         else if (_vcfFileType.isType(f))
         {
@@ -490,6 +517,13 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         else if (_bedFileType.isType(f))
         {
             ret.add(f.getName() + ".idx");
+        }
+        else if (_fastaFileType.isType(f))
+        {
+            ret.add(f.getName() + ".fai");
+            ret.add(f.getName() + ".gz");
+            ret.add(f.getName() + ".gz.gzi");
+            ret.add(f.getName() + ".gz.fai");
         }
 
         return ret;
