@@ -370,7 +370,10 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                         mergeArgs.add("-V");
                         mergeArgs.add(vcf.getPath());
                     });
-                    mergeArgs.add("-env");
+
+                    // NOTE: do not drop these sites for now, since we plan to process each technology separately and then merge.
+                    //mergeArgs.add("-env");
+
                     mergeArgs.add("-O");
                     mergeArgs.add(sitesOnlyVcf.getPath());
 
