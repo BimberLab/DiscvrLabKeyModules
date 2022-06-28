@@ -24,7 +24,7 @@
     "@jbrowse/plugin-linear-genome-view": "^1.7.4",
     "@jbrowse/react-linear-genome-view": "^1.7.4",
     "@labkey/api": "^1.10.0",
-    "@labkey/components": "2.157.0",
+    "@labkey/components": "^2.190.0",
     "@gmod/vcf": "^5.0.6",
     "react": "^16.14.0",
     "assert": "^2.0.0",
