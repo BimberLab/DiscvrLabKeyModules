@@ -60,7 +60,7 @@ public class SamtoolsCramConverter extends SamtoolsRunner
 
         if (threads != null)
         {
-            params.add("--threads");
+            params.add("-@");
             params.add(String.valueOf(threads));
         }
 
