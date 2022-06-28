@@ -92,6 +92,7 @@ import org.labkey.sequenceanalysis.run.alignment.Bowtie2Wrapper;
 import org.labkey.sequenceanalysis.run.alignment.BowtieWrapper;
 import org.labkey.sequenceanalysis.run.alignment.GSnapWrapper;
 import org.labkey.sequenceanalysis.run.alignment.MosaikWrapper;
+import org.labkey.sequenceanalysis.run.alignment.Pbmm2Wrapper;
 import org.labkey.sequenceanalysis.run.alignment.StarWrapper;
 import org.labkey.sequenceanalysis.run.analysis.BamIterator;
 import org.labkey.sequenceanalysis.run.analysis.ExportOverlappingReadsAnalysis;
@@ -102,6 +103,7 @@ import org.labkey.sequenceanalysis.run.analysis.MergeLoFreqVcfHandler;
 import org.labkey.sequenceanalysis.run.analysis.NextCladeHandler;
 import org.labkey.sequenceanalysis.run.analysis.PARalyzerAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.PangolinHandler;
+import org.labkey.sequenceanalysis.run.analysis.PbsvAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.PindelAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SnpCountAnalysis;
@@ -280,6 +282,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new MosaikWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new GSnapWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new StarWrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new Pbmm2Wrapper.Provider());
 
         //de novo assembly
         SequencePipelineService.get().registerPipelineStep(new TrinityRunner.Provider());
@@ -310,6 +313,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new TagPcrSummaryStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new LofreqAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new PindelAnalysis.Provider());
+        SequencePipelineService.get().registerPipelineStep(new PbsvAnalysis.Provider());
 
         //SequencePipelineService.get().registerPipelineStep(new BlastUnmappedReadAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new PARalyzerAnalysis.Provider());
