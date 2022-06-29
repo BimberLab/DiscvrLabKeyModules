@@ -94,6 +94,7 @@ import org.labkey.sequenceanalysis.run.alignment.GSnapWrapper;
 import org.labkey.sequenceanalysis.run.alignment.MosaikWrapper;
 import org.labkey.sequenceanalysis.run.alignment.Pbmm2Wrapper;
 import org.labkey.sequenceanalysis.run.alignment.StarWrapper;
+import org.labkey.sequenceanalysis.run.alignment.VulcanWrapper;
 import org.labkey.sequenceanalysis.run.analysis.BamIterator;
 import org.labkey.sequenceanalysis.run.analysis.ExportOverlappingReadsAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.HaplotypeCallerAnalysis;
@@ -283,6 +284,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new GSnapWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new StarWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new Pbmm2Wrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new VulcanWrapper.Provider());
 
         //de novo assembly
         SequencePipelineService.get().registerPipelineStep(new TrinityRunner.Provider());

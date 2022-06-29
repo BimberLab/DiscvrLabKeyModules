@@ -428,5 +428,14 @@ public class NimbleHandler extends AbstractParameterizedOutputHandler<SequenceOu
                 throw new PipelineJobException(e);
             }
         }
+
+        @Override
+        public void complete(PipelineJob job, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated, SequenceAnalysisJobSupport support) throws PipelineJobException
+        {
+            for (SequenceOutputFile so : outputsCreated)
+            {
+                NimbleHelper.importQualityMetrics(so, job);
+            }
+        }
     }
 }

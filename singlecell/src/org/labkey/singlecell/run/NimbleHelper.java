@@ -1,5 +1,6 @@
 package org.labkey.singlecell.run;
 
+import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -9,9 +10,14 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
@@ -19,6 +25,7 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
@@ -26,9 +33,11 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
+import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
+import org.labkey.singlecell.SingleCellSchema;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -36,6 +45,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -160,11 +170,14 @@ public class NimbleHelper
             File refJson = prepareReference(genomeCsv, genomeFasta, genome, output);
             File results = doAlignment(genome, refJson, bam, output);
 
+            File resultsGz = Compress.compressGzip(results);
+            results.delete();
+
             output.addIntermediateFile(genomeCsv);
             output.addIntermediateFile(genomeFasta);
             output.addIntermediateFile(refJson);
 
-            output.addSequenceOutput(results, basename + ": nimble align", "Nimble Alignment", rs.getRowId(), null, genome.getGenomeId(), null);
+            output.addSequenceOutput(resultsGz, basename + ": nimble align", "Nimble Alignment", rs.getRowId(), null, genome.getGenomeId(), null);
         }
     }
 
@@ -280,7 +293,7 @@ public class NimbleHelper
             throw new PipelineJobException("Expected to find file: " + resultsTsv.getPath());
         }
 
-        File log = new File(resultsTsv.getParentFile(), "nimbleDebug." + genome.genomeId + ".txt");
+        File log = getNimbleLogFile(resultsTsv.getParentFile(), genome.genomeId);
         if (!log.exists())
         {
             throw new PipelineJobException("Expected to find file: " + log.getPath());
@@ -300,9 +313,12 @@ public class NimbleHelper
             throw new PipelineJobException(e);
         }
 
-        output.addIntermediateFile(log);
-
         return resultsTsv;
+    }
+
+    public static File getNimbleLogFile(File baseDir, int genomeId)
+    {
+        return new File(baseDir, "nimbleDebug." + genomeId + ".txt");
     }
 
     private File getNimbleDoneFile(File parentDir, String resumeString)
@@ -436,6 +452,59 @@ public class NimbleHelper
         public boolean isDoGroup()
         {
             return doGroup;
+        }
+    }
+
+    public static void importQualityMetrics(SequenceOutputFile so, PipelineJob job) throws PipelineJobException
+    {
+        try
+        {
+            ExpData d = ExperimentService.get().getExpData(so.getDataId());
+            File cachedMetrics = getNimbleLogFile(so.getFile().getParentFile(), so.getLibrary_id());
+            job.getLogger().debug("looking for cached metrics: " + cachedMetrics.getPath());
+
+            Map<String, Object> metricsMap;
+            if (cachedMetrics.exists())
+            {
+                job.getLogger().debug("reading previously calculated metrics from file:");
+                metricsMap = new HashMap<>();
+                try (CSVReader reader = new CSVReader(Readers.getReader(cachedMetrics), ':'))
+                {
+                    String[] line;
+                    while ((line = reader.readNext()) != null)
+                    {
+                        metricsMap.put(StringUtils.trim(line[0]), StringUtils.trim(line[1]));
+                    }
+                }
+            }
+            else
+            {
+                throw new PipelineJobException("Unable to find metrics file: " + cachedMetrics);
+            }
+
+            TableInfo metricsTable = DbSchema.get(SingleCellSchema.SEQUENCE_SCHEMA_NAME, DbSchemaType.Module).getTable(SingleCellSchema.TABLE_QUALITY_METRICS);
+            for (String metricName : metricsMap.keySet())
+            {
+                Map<String, Object> r = new HashMap<>();
+                r.put("category", "Nimble");
+                r.put("metricname", metricName);
+                r.put("metricvalue", metricsMap.get(metricName));
+                r.put("dataid", d.getRowId());
+                r.put("readset", so.getReadset());
+                r.put("container", so.getContainer());
+                r.put("createdby", job.getUser().getUserId());
+
+                Table.insert(job.getUser(), metricsTable, r);
+            }
+
+            if (cachedMetrics.exists())
+            {
+                cachedMetrics.delete();
+            }
+        }
+        catch (Exception e)
+        {
+            throw new PipelineJobException(e);
         }
     }
 }
