@@ -52,13 +52,7 @@ public class Pbmm2Wrapper extends AbstractCommandWrapper
                     }}, false)
             ), null, "https://github.com/PacificBiosciences/pbmm2", true, true);
 
-            setAlwaysCacheIndex(true);
-        }
-
-        @Override
-        public String getName()
-        {
-            return "pbmm2";
+            setAlwaysCacheIndex(false);
         }
 
         @Override
@@ -85,12 +79,6 @@ public class Pbmm2Wrapper extends AbstractCommandWrapper
         public boolean supportsGzipFastqs()
         {
             return true;
-        }
-
-        @Override
-        public String getIndexCachedDirName(PipelineJob job)
-        {
-            return "pbmm2";
         }
 
         @Override
@@ -153,7 +141,7 @@ public class Pbmm2Wrapper extends AbstractCommandWrapper
             args.add(new File(indexDir, getIndexFileName(referenceGenome)).getPath());
             args.add(inputFastq1.getPath());
 
-            File outBam = new File(getPipelineCtx().getWorkingDirectory(), SequenceAnalysisService.get().getUnzippedBaseName(inputFastq1.getName()) + ".bam");
+            File outBam = new File(getPipelineCtx().getWorkingDirectory(), SequenceAnalysisService.get().getUnzippedBaseName(inputFastq1.getName()) + ".pbmm2.bam");
             args.add(outBam.getPath());
             args.add("--sort");
 
