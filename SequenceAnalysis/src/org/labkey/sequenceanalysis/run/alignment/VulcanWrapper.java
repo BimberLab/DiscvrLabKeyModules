@@ -97,7 +97,13 @@ public class VulcanWrapper extends AbstractCommandWrapper
             args.add("-r");
             args.add(referenceGenome.getWorkingFastaFile().getPath());
 
-            File outBam = new File(getPipelineCtx().getWorkingDirectory(), SequenceAnalysisService.get().getUnzippedBaseName(inputFastq1.getName()) + ".vulcan.bam");
+            if (!outputDirectory.exists())
+            {
+                getPipelineCtx().getLogger().debug("Creating output directory: " + outputDirectory.getPath());
+                outputDirectory.mkdirs();
+            }
+
+            File outBam = new File(outputDirectory, SequenceAnalysisService.get().getUnzippedBaseName(inputFastq1.getName()) + ".vulcan.bam");
             args.add("-o");
             args.add(outBam.getPath());
 
