@@ -103,7 +103,7 @@ public class VulcanWrapper extends AbstractCommandWrapper
                 outputDirectory.mkdirs();
             }
 
-            File outBam = new File(outputDirectory, SequenceAnalysisService.get().getUnzippedBaseName(inputFastq1.getName()) + ".vulcan.bam");
+            File outBam = new File(outputDirectory, SequenceAnalysisService.get().getUnzippedBaseName(inputFastq1.getName()) + ".vulcan");
             args.add("-o");
             args.add(outBam.getPath());
 
@@ -127,10 +127,15 @@ public class VulcanWrapper extends AbstractCommandWrapper
 
             getWrapper().execute(args);
 
+            // this will name the BAM based on percentage (defaulting to 90)
+            outBam = new File(outBam, "_90.bam");
             if (!outBam.exists())
             {
                 throw new PipelineJobException("Unable to find BAM: " + outBam.getPath());
             }
+
+            output.addIntermediateFile(new File(outBam.getParentFile(), "minimap2_full_primary.sam"));
+            output.addIntermediateFile(new File(outBam.getParentFile(), "minimap2_full.sam"));
 
             output.addCommandsExecuted(getWrapper().getCommandsExecuted());
             output.setBAM(outBam);

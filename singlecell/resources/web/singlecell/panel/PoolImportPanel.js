@@ -494,7 +494,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             checked: false
         },{
             xtype: 'checkbox',
-            fieldLabel: 'Combined Hashing and Cite-Seq Libraries',
+            fieldLabel: 'Combine Hashing and Cite-Seq Libraries',
             itemId: 'combineHashingCite',
             checked: false
         },{
