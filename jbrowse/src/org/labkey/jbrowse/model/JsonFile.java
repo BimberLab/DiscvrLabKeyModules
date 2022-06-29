@@ -589,22 +589,44 @@ public class JsonFile
 
         String type = TRACK_TYPES.bam.getFileType().isType(targetFile.getFile()) ? "BamAdapter" : "CramAdapter";
         boolean isBam = "BamAdapter".equals(type);
-        ret.put("adapter", new JSONObject(){{
-            put("type", type);
-            put(isBam ? "bamLocation" : "cramLocation", new JSONObject(){{
-                put("uri", url);
-            }});
-
-            put("index", new JSONObject(){{
-                put("location", new JSONObject(){{
-                    put("uri", url + (isBam ? ".bai" : ".crai"));
+        if (isBam)
+        {
+            ret.put("adapter", new JSONObject()
+            {{
+                put("type", type);
+                put("bamLocation", new JSONObject()
+                {{
+                    put("uri", url);
                 }});
-                put("indexType", isBam ? "BAI" : "CRAI");
+
+                put("index", new JSONObject()
+                {{
+                    put("location", new JSONObject()
+                    {{
+                        put("uri", url + ".bai");
+                    }});
+                    put("indexType", "BAI");
+                }});
+
+                put("sequenceAdapter", JBrowseSession.getIndexedFastaAdapter(rg));
             }});
-
-            put("sequenceAdapter", JBrowseSession.getIndexedFastaAdapter(rg));
-        }});
-
+        }
+        else
+        {
+            ret.put("adapter", new JSONObject()
+            {{
+                put("type", type);
+                put("cramLocation", new JSONObject()
+                {{
+                    put("uri", url);
+                }});
+                put("craiLocation", new JSONObject()
+                {{
+                    put("uri", url + ".crai");
+                }});
+                put("sequenceAdapter", JBrowseSession.getBgZippedIndexedFastaAdapter(rg));
+            }});
+        }
         return ret;
     }
 

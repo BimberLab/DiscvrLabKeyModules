@@ -274,6 +274,10 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         },
 
         hto: function(val, panel){
+            if (val === 'N/A') {
+                return null;
+            }
+
             if (Ext4.isNumeric(val)){
                 var type = panel.down('#hashingType').getValue();
                 if (type === 'CD298') {
