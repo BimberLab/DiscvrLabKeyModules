@@ -136,6 +136,17 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                     labelWidth: 160,
                                     value: 'H'
                                 },{
+                                    xtype: 'checkbox',
+                                    itemId: 'autoAssignLane',
+                                    fieldLabel: 'Auto-assign to Lanes',
+                                    helpPopup: 'If the lane is null, samples will be auto-assigned to lanes, starting with 1, and incrementing whenever Max Data Per Lane is reached',
+                                    checked: true
+                                },{
+                                    xtype: 'ldk-numberfield',
+                                    itemId: 'laneDataMax',
+                                    fieldLabel: 'Max Data Per Lane',
+                                    value: 700
+                                },{
                                     xtype: 'ldk-numberfield',
                                     itemId: 'defaultVolume',
                                     fieldLabel: 'Default Volume (uL)',
@@ -341,7 +352,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                 disabled: true,
                 handler: function (btn) {
                     var instrument = btn.up('singlecell-libraryexportpanel').down('#instrument').getValue();
-                    var plateId = btn.up('singlecell-libraryexportpanel').down('#sourcePlates').getValue();
+                    var plateId = btn.up('singlecell-libraryexportpanel').down('#sourcePlates') ? btn.up('singlecell-libraryexportpanel').down('#sourcePlates').getValue() : 'Libraries';
                     var delim = 'TAB';
                     var extension = 'txt';
                     var split = '\t';
@@ -551,6 +562,8 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
         const includeBlanks = btn.up('singlecell-libraryexportpanel').down('#includeBlanks').getValue();
         const doReverseComplement = btn.up('singlecell-libraryexportpanel').doReverseComplement;
         const hashingPrefix = btn.up('singlecell-libraryexportpanel').down('#hashingPrefix') ? btn.up('singlecell-libraryexportpanel').down('#hashingPrefix').getValue() : 'H';
+        const autoAssignLane = btn.up('singlecell-libraryexportpanel').down('#autoAssignLane') ? btn.up('singlecell-libraryexportpanel').down('#autoAssignLane').getValue() : false;
+        const laneDataMax = btn.up('singlecell-libraryexportpanel').down('#laneDataMax') ? btn.up('singlecell-libraryexportpanel').down('#laneDataMax').getValue() : -1;
 
         var isMatchingApplication = function(application, libraryType, readsetApplication, rowLevelApplication){
             if (!application && !rowLevelApplication){
@@ -606,6 +619,8 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                 var sortedRows = results.rows;
                 var totalCellsByReadset = {};
+                let currentLane = 1;
+                let dataInActiveLane = 0;
                 Ext4.Array.forEach(results.rows, function(row){
                     if (row.plateId && row['sortId/cells']) {
                         totalCellsByReadset[row.plateId] = totalCellsByReadset[row.plateId] || 0;
@@ -824,6 +839,20 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                 return;
                             }
 
+                            // The goal is to assign samples per lane, incrementing as we reach lane capacity
+                            if (totalData && autoAssignLane && !r.laneAssignment) {
+                                const dataAfterLane = dataInActiveLane + totalData;
+                                if (dataAfterLane > laneDataMax) {
+                                    currentLane++;
+                                    dataInActiveLane = totalData;
+                                }
+                                else {
+                                    dataInActiveLane = dataAfterLane;
+                                }
+
+                                r.laneAssignment = currentLane;
+                            }
+
                             barcodeCombosUsed.push([r[fieldName + '/barcode5'], r[fieldName + '/barcode3'], r.laneAssignment || ''].join('/'));
 
                             //The new format requires one/line
@@ -892,7 +921,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                     var delim = instrument.startsWith('Novogene') ? '\t' : ',';
                     Ext4.Array.forEach(sortedRows, function (r) {
                         var totalCells = totalCellsByReadset[r.plateId];
-                        console.log(totalCells);
+
                         var gexData = totalCells > 15000 ? 70 : 40;
                         var tcrData = totalCells > 15000 ? 45 : 25;
                         processType(readsetIds, rows, r, 'readsetId', 'GEX', 500, 0.01, 'G', null, false, gexData, runMap, totalCells);
@@ -942,7 +971,6 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                     var runVal = 'Summary of data per lane:<br><br><table>';
                     runVal += '<tr></tr><th>Lane</th><th>Amount (M Bases)</th></tr>';
                     Ext4.Array.forEach(Ext4.Object.getKeys(runMap), function(x){
-                        console.log(x);
                         runVal += '<tr><td style="padding: 5px;border: 1px solid black;border-collapse: collapse;">' + x + '</td><td style="padding: 5px;border: 1px solid black;border-collapse: collapse;">' + runMap[x] + '</td></tr>'
                     }, this);
                     runVal += '</table>';

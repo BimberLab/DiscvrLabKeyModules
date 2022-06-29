@@ -13,8 +13,8 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.AfterClass;
@@ -88,6 +88,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * User: bimber
@@ -923,8 +924,8 @@ public class SequenceIntegrationTests
 
             verifyJob(basedir, jobName, expectedOutputs, new String[]{PAIRED_FILENAME_L1a, PAIRED_FILENAME2_L1a, PAIRED_FILENAME_L1b, PAIRED_FILENAME2_L1b, PAIRED_FILENAME_L2, PAIRED_FILENAME2_L2}, prefix, config);
 
-            Assert.assertEquals("Incorrect read number", 633L, FastqUtils.getSequenceCount(merge1));
-            Assert.assertEquals("Incorrect read number", 633L, FastqUtils.getSequenceCount(merge2));
+            Assert.assertEquals("Incorrect read number", 422L, FastqUtils.getSequenceCount(merge1));
+            Assert.assertEquals("Incorrect read number", 422L, FastqUtils.getSequenceCount(merge2));
 
             //job2: g2
             expectedOutputs = new HashSet<>();
@@ -1337,7 +1338,12 @@ public class SequenceIntegrationTests
                 SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
                 Assert.assertEquals("Incorrect sampleDate", o.getString("sampledate"), m.getSampleDate() == null ?  null : format.format(m.getSampleDate()));
 
-                //TODO: readData
+                String fileGroup = o.getString("fileGroupId");
+                List<String> keys = config.keySet().stream().filter(x -> x.startsWith("fileGroup_")).filter(x -> fileGroup.equals(new JSONObject(config.getString(x)).getString("name"))).collect(Collectors.toList());
+                Set<String> platformUnits = keys.stream().map(x -> new JSONObject(config.getString(x)).getJSONArray("files").toJSONObjectArray()).flatMap(Arrays::stream).map(y -> y.getString("platformUnit") == null ? y.getString("file1") : y.getString("platformUnit")).collect(Collectors.toSet());
+                Assert.assertFalse("No matching readdata", platformUnits.isEmpty());
+
+                Assert.assertEquals("Incorrect number of readdata", m.getReadData().size(), platformUnits.size());
             }
         }
 

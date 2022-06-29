@@ -33,11 +33,11 @@ abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentSt
     public static String ALIGNMENT_MODE_PARAM = "alignmentMode";
     public static String SUPPORT_MERGED_UNALIGNED = "supportsMergeUnaligned";
     public static String COLLECT_WGS_METRICS = "collectWgsMetrics";
+    public static String CONVERT_TO_CRAM = "convertToCram";
     public static String COLLECT_WGS_METRICS_NON_ZERO = "collectWgsMetricsNonZero";
     public static String DISCARD_BAM = "discardBam";
-    public static String SUPPORT_ALIGNMENT_METRICS = "supportAlignmentMetrics";
 
-    public static enum ALIGNMENT_MODE
+    public enum ALIGNMENT_MODE
     {
         ALIGN_THEN_MERGE(),
         MERGE_THEN_ALIGN();

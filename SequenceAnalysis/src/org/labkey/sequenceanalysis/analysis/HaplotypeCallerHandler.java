@@ -20,6 +20,7 @@ import org.labkey.sequenceanalysis.run.util.HaplotypeCallerWrapper;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -28,7 +29,7 @@ import java.util.List;
  */
 public class HaplotypeCallerHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
-    private FileType _bamFileType = new FileType("bam", false);
+    private FileType _bamOrCramFileType = new FileType(Arrays.asList("bam", "cram"), "bam");
 
     public HaplotypeCallerHandler()
     {
@@ -38,7 +39,7 @@ public class HaplotypeCallerHandler extends AbstractParameterizedOutputHandler<S
     @Override
     public boolean canProcess(SequenceOutputFile o)
     {
-        return o.getFile() != null && _bamFileType.isType(o.getFile());
+        return o.getFile() != null && _bamOrCramFileType.isType(o.getFile());
     }
 
     @Override

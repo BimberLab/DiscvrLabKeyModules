@@ -37,6 +37,7 @@ public class ClusterServiceImpl extends ClusterService
 
     }
 
+    @Override
     public void registerResourceAllocator(ClusterResourceAllocator.Factory allocator)
     {
         _allocatorList.add(allocator);

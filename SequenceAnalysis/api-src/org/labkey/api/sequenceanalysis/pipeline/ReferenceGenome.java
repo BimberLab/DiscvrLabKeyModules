@@ -46,6 +46,12 @@ public interface ReferenceGenome extends Serializable
      */
     public @NotNull File getWorkingFastaFile();
 
+    /**
+     * @return This is the file that should typically be used by callers.  The pipeline code usually copies this file to the local working directory.
+     * If this has occurred, that file will preferentially be used.  Otherwise, the source FASTA file will be returned.
+     */
+    public @NotNull File getWorkingFastaFileGzipped();
+
     public void setWorkingFasta(File workingFasta);
 
     /**

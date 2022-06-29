@@ -67,6 +67,7 @@ import org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisJob;
 import org.labkey.sequenceanalysis.pipeline.AlignmentImportJob;
 import org.labkey.sequenceanalysis.pipeline.CacheGenomePipelineJob;
 import org.labkey.sequenceanalysis.pipeline.CacheGenomeTrigger;
+import org.labkey.sequenceanalysis.pipeline.ConvertToCramHandler;
 import org.labkey.sequenceanalysis.pipeline.IlluminaImportJob;
 import org.labkey.sequenceanalysis.pipeline.ImportFastaSequencesPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.ImportGenomeTrackPipelineJob;
@@ -361,6 +362,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new MergeLoFreqVcfHandler());
         SequenceAnalysisService.get().registerFileHandler(new PangolinHandler());
         SequenceAnalysisService.get().registerFileHandler(new NextCladeHandler());
+        SequenceAnalysisService.get().registerFileHandler(new ConvertToCramHandler());
 
         SequenceAnalysisService.get().registerReadsetHandler(new MultiQCHandler());
         SequenceAnalysisService.get().registerReadsetHandler(new RestoreSraDataHandler());

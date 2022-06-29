@@ -26,6 +26,12 @@ public class CiteSeqPlots extends AbstractCellMembraneStep
     }
 
     @Override
+    public boolean createsSeuratObjects()
+    {
+        return false;
+    }
+
+    @Override
     public String getFileSuffix()
     {
         return "cite-plots";

@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
@@ -8,13 +9,17 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenomeManager;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
+import org.labkey.sequenceanalysis.run.util.BgzipRunner;
+import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 
 import java.io.File;
 
@@ -71,6 +76,18 @@ public class ReferenceGenomeImpl implements ReferenceGenome
         }
 
         return _workingFasta == null ? _sourceFasta : _workingFasta;
+    }
+
+    @Override
+    public @NotNull File getWorkingFastaFileGzipped()
+    {
+        File fasta = new File(getWorkingFastaFile().getPath() + ".gz");
+        if (!fasta.exists())
+        {
+            throw new IllegalStateException("File does not exist: " + fasta.getPath());
+        }
+
+        return fasta;
     }
 
     @Override
@@ -170,5 +187,32 @@ public class ReferenceGenomeImpl implements ReferenceGenome
         String containerId = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("container"), new SimpleFilter(FieldKey.fromString("rowid"), libraryId), null).getObject(String.class);
 
         return containerId == null ? null : ContainerManager.getForId(containerId);
+    }
+
+    public void createGzippedFile(Logger log) throws PipelineJobException
+    {
+        createGzippedFile(log, false);
+    }
+
+    public void createGzippedFile(Logger log, boolean deleteIfExists) throws PipelineJobException
+    {
+        File target = new File(getSourceFastaFile().getPath() + ".gz");
+        if (target.exists())
+        {
+            if (deleteIfExists)
+            {
+                target.delete();
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        BgzipRunner runner = new BgzipRunner(log);
+        File gz = runner.execute(getSourceFastaFile(), true);
+        new FastaIndexer(log).execute(gz);
+
+        ReferenceGenomeManager.get().markGenomeModified(this, log);
     }
 }

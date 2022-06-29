@@ -175,6 +175,11 @@ public class JBrowseManager
     {
         Module module = ModuleLoader.getInstance().getModule(JBrowseModule.NAME);
         DirectoryResource resource = (DirectoryResource) module.getModuleResolver().lookup(Path.parse("external/jb-cli"));
+        if (resource == null)
+        {
+            throw new PipelineJobException("Unable to find expected module resource: external/jb-cli");
+        }
+
         File toolDir = resource.getDir();
         if (!toolDir.exists())
         {

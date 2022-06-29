@@ -178,8 +178,6 @@ public class JsonFile
         return needsProcessing() ? new File(jbrowseDir, getObjectId()) : null;
     }
 
-    private static final FileType _ft = new FileType(Arrays.asList(".bam", ".vcf"), ".vcf", FileType.gzSupportLevel.SUPPORT_GZ);
-
     public String getLabel()
     {
         if (_label == null)
@@ -293,9 +291,9 @@ public class JsonFile
         {
             ret = getVcfTrack(log, targetFile, rg);
         }
-        else if (TRACK_TYPES.bam.getFileType().isType(targetFile.getFile()))
+        else if (TRACK_TYPES.bam.getFileType().isType(targetFile.getFile()) || TRACK_TYPES.cram.getFileType().isType(targetFile.getFile()))
         {
-            ret = getBamTrack(log, targetFile, rg);
+            ret = getBamOrCramTrack(log, targetFile, rg);
         }
         else if (TRACK_TYPES.gff.getFileType().isType(targetFile.getFile()))
         {
@@ -569,7 +567,7 @@ public class JsonFile
         return finalLocation == null ? null : finalLocation.getName();
     }
 
-    private JSONObject getBamTrack(Logger log, ExpData targetFile, ReferenceGenome rg)
+    private JSONObject getBamOrCramTrack(Logger log, ExpData targetFile, ReferenceGenome rg)
     {
         JSONObject ret = new JSONObject();
         ret.put("type", getTrackType());
@@ -589,17 +587,19 @@ public class JsonFile
             return null;
         }
 
+        String type = TRACK_TYPES.bam.getFileType().isType(targetFile.getFile()) ? "BamAdapter" : "CramAdapter";
+        boolean isBam = "BamAdapter".equals(type);
         ret.put("adapter", new JSONObject(){{
-            put("type", "BamAdapter");
-            put("bamLocation", new JSONObject(){{
+            put("type", type);
+            put(isBam ? "bamLocation" : "cramLocation", new JSONObject(){{
                 put("uri", url);
             }});
 
             put("index", new JSONObject(){{
                 put("location", new JSONObject(){{
-                    put("uri", url + ".bai");
+                    put("uri", url + (isBam ? ".bai" : ".crai"));
                 }});
-                put("indexType", "BAI");
+                put("indexType", isBam ? "BAI" : "CRAI");
             }});
 
             put("sequenceAdapter", JBrowseSession.getIndexedFastaAdapter(rg));
@@ -631,7 +631,7 @@ public class JsonFile
         {
             return "ExtendedVariantTrack";
         }
-        else if (TRACK_TYPES.bam.getFileType().isType(targetFile.getFile()))
+        else if (TRACK_TYPES.bam.getFileType().isType(targetFile.getFile()) || TRACK_TYPES.cram.getFileType().isType(targetFile.getFile()))
         {
             return "AlignmentsTrack";
         }
@@ -1113,7 +1113,7 @@ public class JsonFile
         {
             return "ExtendedVariantDisplay";
         }
-        else if (TRACK_TYPES.bam.getFileType().isType(targetFile.getFile()))
+        else if (TRACK_TYPES.bam.getFileType().isType(targetFile.getFile()) || TRACK_TYPES.cram.getFileType().isType(targetFile.getFile()))
         {
             return "LinearAlignmentsDisplay";
         }
@@ -1138,6 +1138,7 @@ public class JsonFile
     public static enum TRACK_TYPES
     {
         bam(".bam", false),
+        cram(".cram", false),
         gtf(".gtf", true),
         gff(Arrays.asList(".gff", ".gff3"), true),
         bed(".bed", true),

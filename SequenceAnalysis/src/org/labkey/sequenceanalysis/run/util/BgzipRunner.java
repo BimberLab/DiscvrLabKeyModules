@@ -1,7 +1,6 @@
 package org.labkey.sequenceanalysis.run.util;
 
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -36,14 +35,19 @@ public class BgzipRunner extends AbstractCommandWrapper
 
     public File execute(File input) throws PipelineJobException
     {
+        return execute(input, false);
+    }
+
+    public File execute(File input, boolean preserveInput) throws PipelineJobException
+    {
         getLogger().info("BGZipping file: " + input.getPath());
 
-        execute(getParams(input));
+        execute(getParams(input, preserveInput));
         File output = new File(input.getPath() + ".gz");
         if (!output.exists())
             throw new PipelineJobException("Output not created, expected: " + output.getPath());
 
-        if (input.exists())
+        if (!preserveInput && input.exists())
         {
             getLogger().debug("deleting input: " + input.getPath());
             input.delete();
@@ -52,11 +56,16 @@ public class BgzipRunner extends AbstractCommandWrapper
         return output;
     }
 
-    public List<String> getParams(File input)
+    private List<String> getParams(File input, boolean preserveInput)
     {
         List<String> params = new ArrayList<>();
         params.add(getExe().getPath());
         params.add("-f");
+
+        if (preserveInput)
+        {
+            params.add("-k");
+        }
 
         Integer threads;
         if (_maxThreads == -1)
