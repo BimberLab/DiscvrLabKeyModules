@@ -128,7 +128,7 @@ public class VulcanWrapper extends AbstractCommandWrapper
             getWrapper().execute(args);
 
             // this will name the BAM based on percentage (defaulting to 90)
-            outBam = new File(outBam, "_90.bam");
+            outBam = new File(outBam.getPath() + "_90.bam");
             if (!outBam.exists())
             {
                 throw new PipelineJobException("Unable to find BAM: " + outBam.getPath());
