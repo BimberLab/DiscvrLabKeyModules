@@ -221,7 +221,7 @@ public class NimbleHelper
             {
                 config.put("num_mismatches", 10);
                 config.put("intersect_level", 0);
-                config.put("score_threshold", 25);
+                config.put("score_threshold", 65);
                 config.put("score_filter", 25);
                 //discard_multiple_matches: false
                 //discard_multi_hits: ?
@@ -231,7 +231,7 @@ public class NimbleHelper
             {
                 config.put("num_mismatches", 0);
                 config.put("intersect_level", 0);
-                config.put("score_threshold", 50);
+                config.put("score_threshold", 80);
                 config.put("score_filter", 25);
             }
             else
