@@ -432,6 +432,11 @@ public class NimbleHandler extends AbstractParameterizedOutputHandler<SequenceOu
         @Override
         public void complete(PipelineJob job, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated, SequenceAnalysisJobSupport support) throws PipelineJobException
         {
+            if (outputsCreated.isEmpty())
+            {
+                job.getLogger().debug("No outputs were created, this is not expected");
+            }
+
             for (SequenceOutputFile so : outputsCreated)
             {
                 NimbleHelper.importQualityMetrics(so, job);
