@@ -90,12 +90,10 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
     }
 
     @Override
-    public void complete(SequenceAnalysisJobSupport support, AnalysisModel model) throws PipelineJobException
+    public void complete(SequenceAnalysisJobSupport support, AnalysisModel model, List<SequenceOutputFile> outputFilesToCreate) throws PipelineJobException
     {
-        TableInfo outputFiles = DbSchema.get(SingleCellSchema.SEQUENCE_SCHEMA_NAME, DbSchemaType.Module).getTable(SingleCellSchema.TABLE_OUTPUTFILES);
-        List<SequenceOutputFile> outputsCreated = new TableSelector(outputFiles, new SimpleFilter(FieldKey.fromString("analysis_id"), model.getAnalysisId()), null).getArrayList(SequenceOutputFile.class);
-        getPipelineCtx().getLogger().debug("Total sequence outputs created: " + outputsCreated.size());
-        for (SequenceOutputFile so : outputsCreated)
+        getPipelineCtx().getLogger().debug("Total sequence outputs to create: " + outputFilesToCreate.size());
+        for (SequenceOutputFile so : outputFilesToCreate)
         {
             NimbleHelper.importQualityMetrics(so, getPipelineCtx().getJob());
         }

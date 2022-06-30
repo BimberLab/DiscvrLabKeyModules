@@ -22,6 +22,7 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.reader.Readers;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
@@ -441,7 +442,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
     }
 
     @Override
-    public void complete(SequenceAnalysisJobSupport support, AnalysisModel model) throws PipelineJobException
+    public void complete(SequenceAnalysisJobSupport support, AnalysisModel model, List<SequenceOutputFile> outputFilesToCreate) throws PipelineJobException
     {
         File metrics = new File(model.getAlignmentFileObject().getParentFile(), "metrics_summary.csv");
         if (metrics.exists())

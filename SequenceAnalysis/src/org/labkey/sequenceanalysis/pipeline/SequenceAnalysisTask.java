@@ -305,7 +305,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         if (SequenceTaskHelper.isAlignmentUsed(getJob()))
         {
             AlignmentStep alignmentStep = taskHelper.getSingleStep(AlignmentStep.class).create(taskHelper);
-            alignmentStep.complete(taskHelper.getSequenceSupport(), analysisModel);
+            alignmentStep.complete(taskHelper.getSequenceSupport(), analysisModel, getPipelineJob().getOutputsToCreate());
 
             //build map used next to import metrics
             Map<Integer, Integer> readsetToAnalysisMap = new HashMap<>();
