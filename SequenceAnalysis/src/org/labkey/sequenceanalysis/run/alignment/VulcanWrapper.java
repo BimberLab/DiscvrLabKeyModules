@@ -40,7 +40,7 @@ public class VulcanWrapper extends AbstractCommandWrapper
                         put("storeValues", "clr;hifi;ont;any");
                         put("multiSelect", false);
                     }}, null)
-            ), null, "https://gitlab.com/treangenlab/vulcan", true, true);
+            ), null, "https://gitlab.com/treangenlab/vulcan", true, false);
 
             setAlwaysCacheIndex(false);
         }

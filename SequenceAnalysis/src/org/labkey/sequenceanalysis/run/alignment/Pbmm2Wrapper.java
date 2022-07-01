@@ -50,7 +50,7 @@ public class Pbmm2Wrapper extends AbstractCommandWrapper
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--median-filter"), "medianFilter", "Median Filter", "Using --median-filter, only the subread closest to the median subread length per ZMW is being aligned. Preferably, full-length subreads flanked by adapters are chosen.", "checkbox", new JSONObject(){{
 
                     }}, false)
-            ), null, "https://github.com/PacificBiosciences/pbmm2", true, true);
+            ), null, "https://github.com/PacificBiosciences/pbmm2", true, false);
 
             setAlwaysCacheIndex(false);
         }
