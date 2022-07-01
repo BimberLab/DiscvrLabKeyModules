@@ -2,13 +2,7 @@ package org.labkey.singlecell.run;
 
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
-import org.labkey.api.data.DbSchema;
-import org.labkey.api.data.DbSchemaType;
-import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.TableInfo;
-import org.labkey.api.data.TableSelector;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.query.FieldKey;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -21,7 +15,6 @@ import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.PageFlowUtil;
-import org.labkey.singlecell.SingleCellSchema;
 
 import java.io.File;
 import java.util.Arrays;
@@ -31,6 +24,7 @@ import java.util.List;
 public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
 {
     public static final String REF_GENOMES = "refGenomes";
+    public static final String MAX_HITS_TO_REPORT = "maxHitsToReport";
 
     public NimbleAlignmentStep(AlignmentStepProvider provider, PipelineContext ctx, CellRangerWrapper wrapper)
     {
@@ -57,7 +51,10 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
                 ToolParameterDescriptor.create(REF_GENOMES, "Reference Genome(s)", null, "singlecell-nimblealignpanel", null, null),
                 ToolParameterDescriptor.create(NimbleHandler.ALIGN_OUTPUT, "Create Alignment/Debug Output", "If checked, an alignment-level summary TSV will be created", "checkbox", new JSONObject(){{
                     put("checked", true);
-                }}, true)
+                }}, true),
+                ToolParameterDescriptor.create(MAX_HITS_TO_REPORT, "Max Hits To Report", "If a given hit has more than this number of references, it is discarded", "ldk-integerfield", new JSONObject(){{
+                    put("minValue", 0);
+                }}, 4)
         );
     }
 

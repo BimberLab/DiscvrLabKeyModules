@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.labkey.singlecell.run.NimbleAlignmentStep.MAX_HITS_TO_REPORT;
 import static org.labkey.singlecell.run.NimbleAlignmentStep.REF_GENOMES;
 
 public class NimbleHelper
@@ -95,9 +96,10 @@ public class NimbleHelper
 
         List<NimbleGenome> ret = new ArrayList<>();
         JSONArray json = new JSONArray(genomeStr);
+        int maxHitsToReport = getProvider().getParameterByName(MAX_HITS_TO_REPORT).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 4);
         for (int i = 0; i < json.length(); i++)
         {
-            ret.add(new NimbleGenome(json.getString(i)));
+            ret.add(new NimbleGenome(json.getString(i), maxHitsToReport));
         }
 
         return ret;
@@ -243,6 +245,8 @@ public class NimbleHelper
             {
                 config.put("group_on", "lineage");
             }
+
+            config.put("max_hits_to_report", genome.maxHitsToReport);
 
             getPipelineCtx().getLogger().info("Final config:");
             getPipelineCtx().getLogger().info(config.toString(1));
@@ -425,8 +429,9 @@ public class NimbleHelper
         private final int genomeId;
         private final String template;
         private final boolean doGroup;
+        private final int maxHitsToReport;
 
-        public NimbleGenome(String genomeStr) throws PipelineJobException
+        public NimbleGenome(String genomeStr, int maxHitsToReport) throws PipelineJobException
         {
             JSONArray arr = new JSONArray(genomeStr);
             if (arr.length() != 3)
@@ -437,6 +442,7 @@ public class NimbleHelper
             genomeId = arr.getInt(0);
             template = arr.getString(1);
             doGroup = arr.getBoolean(2);
+            this.maxHitsToReport = maxHitsToReport;
         }
 
         public int getGenomeId()
