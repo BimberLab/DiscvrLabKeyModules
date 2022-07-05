@@ -1,18 +1,16 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
-import org.json.JSONObject;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
-import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.PageFlowUtil;
 
 import java.util.Arrays;
 import java.util.Collection;
 
-public class PhenotypePlots extends AbstractRiraStep
+public class CalculateUCellScores extends AbstractRiraStep
 {
-    public PhenotypePlots(PipelineContext ctx, PhenotypePlots.Provider provider)
+    public CalculateUCellScores(PipelineContext ctx, CalculateUCellScores.Provider provider)
     {
         super(provider, ctx);
     }
@@ -21,13 +19,13 @@ public class PhenotypePlots extends AbstractRiraStep
     {
         public Provider()
         {
-            super("PhenotypePlots", "Immune Phenotype Plots", "Seurat", "This will generate FeaturePlots for a pre-defined set of immune markers. Any feature not present is skipped.", null, Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+            super("CalculateUCellScores", "Calculate UCell Scores", "Seurat", "This will generate UCell scores for a set of pre-defined gene modules", null, null, null);
         }
 
         @Override
-        public PhenotypePlots create(PipelineContext ctx)
+        public CalculateUCellScores create(PipelineContext ctx)
         {
-            return new PhenotypePlots(ctx, this);
+            return new CalculateUCellScores(ctx, this);
         }
     }
 
@@ -46,6 +44,6 @@ public class PhenotypePlots extends AbstractRiraStep
     @Override
     public String getFileSuffix()
     {
-        return "phenotype";
+        return "ucel";
     }
 }
