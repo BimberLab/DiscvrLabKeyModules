@@ -192,6 +192,12 @@ public class NimbleHelper
         runUsingDocker(Arrays.asList("generate", "/work/" + genomeFasta.getName(), "/work/" + genomeCsv.getName(), "/work/" + nimbleJson.getName()), output, "generate-" + genome.genomeId);
         if (!nimbleJson.exists())
         {
+            File doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), "generate-" + genome.genomeId);
+            if (doneFile.exists())
+            {
+                doneFile.delete();
+            }
+
             throw new PipelineJobException("Unable to find expected file: " + nimbleJson.getPath());
         }
 
@@ -294,6 +300,12 @@ public class NimbleHelper
         runUsingDocker(alignArgs, output, "align-" + genome.genomeId);
         if (!resultsTsv.exists())
         {
+            File doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), "align-" + genome.genomeId);
+            if (doneFile.exists())
+            {
+                doneFile.delete();
+            }
+
             throw new PipelineJobException("Expected to find file: " + resultsTsv.getPath());
         }
 
