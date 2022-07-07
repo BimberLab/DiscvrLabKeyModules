@@ -64,6 +64,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * User: bimber
@@ -304,9 +305,6 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
 
         if (SequenceTaskHelper.isAlignmentUsed(getJob()))
         {
-            AlignmentStep alignmentStep = taskHelper.getSingleStep(AlignmentStep.class).create(taskHelper);
-            alignmentStep.complete(taskHelper.getSequenceSupport(), analysisModel, getPipelineJob().getOutputsToCreate());
-
             //build map used next to import metrics
             Map<Integer, Integer> readsetToAnalysisMap = new HashMap<>();
             Map<Integer, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap = new HashMap<>();
@@ -316,7 +314,11 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             typeMap.get(analysisModel.getReadset()).put(PipelineStepOutput.PicardMetricsOutput.TYPE.bam, analysisModel.getAlignmentFileObject());
             typeMap.get(analysisModel.getReadset()).put(PipelineStepOutput.PicardMetricsOutput.TYPE.reads, analysisModel.getAlignmentFileObject());
             taskHelper.getFileManager().writeMetricsToDb(readsetToAnalysisMap, typeMap);
-            taskHelper.getFileManager().createSequenceOutputRecords(analysisModel.getRowId());
+            Set<SequenceOutputFile> outputsCreated = taskHelper.getFileManager().createSequenceOutputRecords(analysisModel.getRowId());
+
+            // Note: execute this after createSequenceOutputRecords()
+            AlignmentStep alignmentStep = taskHelper.getSingleStep(AlignmentStep.class).create(taskHelper);
+            alignmentStep.complete(taskHelper.getSequenceSupport(), analysisModel, outputsCreated);
 
             if (discardBam)
             {

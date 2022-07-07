@@ -790,6 +790,11 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                         i++;
                     }
 
+                    if (model.getAlignmentFile() == null)
+                    {
+                        throw new PipelineJobException("model.getAlignmentFile() was null");
+                    }
+
                     int totalAdded = 0;
                     TableInfo ti = DbSchema.get("sequenceanalysis", DbSchemaType.Module).getTable("quality_metrics");
 

@@ -355,16 +355,17 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     }
 
     @Override
-    public void createSequenceOutputRecords(@Nullable Integer analysisId) throws PipelineJobException
+    public Set<SequenceOutputFile> createSequenceOutputRecords(@Nullable Integer analysisId) throws PipelineJobException
     {
         if (!_job.getOutputsToCreate().isEmpty())
         {
             Integer runId = SequenceTaskHelper.getExpRunIdForJob(_job);
-            SequenceOutputHandlerFinalTask.createOutputFiles(_job, runId, analysisId);
+            return SequenceOutputHandlerFinalTask.createOutputFiles(_job, runId, analysisId);
         }
         else
         {
             _job.getLogger().info("no outputs created, nothing to do");
+            return Collections.emptySet();
         }
     }
 

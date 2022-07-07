@@ -477,6 +477,11 @@ public class NimbleHelper
     {
         try
         {
+            if (so.getDataId() == null)
+            {
+                throw new PipelineJobException("DataId is null for SequenceOutputFile");
+            }
+
             ExpData d = ExperimentService.get().getExpData(so.getDataId());
             File cachedMetrics = getNimbleLogFile(so.getFile().getParentFile(), so.getLibrary_id());
             job.getLogger().debug("looking for cached metrics: " + cachedMetrics.getPath());

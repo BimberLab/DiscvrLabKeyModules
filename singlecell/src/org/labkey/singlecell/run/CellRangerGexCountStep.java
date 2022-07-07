@@ -48,6 +48,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -442,7 +443,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
     }
 
     @Override
-    public void complete(SequenceAnalysisJobSupport support, AnalysisModel model, List<SequenceOutputFile> outputFilesToCreate) throws PipelineJobException
+    public void complete(SequenceAnalysisJobSupport support, AnalysisModel model, Collection<SequenceOutputFile> outputFilesCreated) throws PipelineJobException
     {
         File metrics = new File(model.getAlignmentFileObject().getParentFile(), "metrics_summary.csv");
         if (metrics.exists())
@@ -468,6 +469,11 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
                     }
 
                     i++;
+                }
+
+                if (model.getAlignmentFile() == null)
+                {
+                    throw new PipelineJobException("model.getAlignmentFile() was null");
                 }
 
                 TableInfo ti = DbSchema.get("sequenceanalysis", DbSchemaType.Module).getTable("quality_metrics");

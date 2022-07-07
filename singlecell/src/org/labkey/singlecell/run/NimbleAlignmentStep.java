@@ -18,6 +18,7 @@ import org.labkey.api.util.PageFlowUtil;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -87,10 +88,10 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
     }
 
     @Override
-    public void complete(SequenceAnalysisJobSupport support, AnalysisModel model, List<SequenceOutputFile> outputFilesToCreate) throws PipelineJobException
+    public void complete(SequenceAnalysisJobSupport support, AnalysisModel model, Collection<SequenceOutputFile> outputFilesCreated) throws PipelineJobException
     {
-        getPipelineCtx().getLogger().debug("Total sequence outputs to create: " + outputFilesToCreate.size());
-        for (SequenceOutputFile so : outputFilesToCreate)
+        getPipelineCtx().getLogger().debug("Total sequence outputs created: " + outputFilesCreated.size());
+        for (SequenceOutputFile so : outputFilesCreated)
         {
             NimbleHelper.importQualityMetrics(so, getPipelineCtx().getJob());
         }

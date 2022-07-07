@@ -23,6 +23,7 @@ import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -111,7 +112,7 @@ public interface AlignmentStep extends PipelineStep
     /**
      * Optional.  Allows steps to be run on the webserver upon completion.
      */
-    default void complete(SequenceAnalysisJobSupport support, AnalysisModel model, List<SequenceOutputFile> outputFilesToCreate) throws PipelineJobException
+    default void complete(SequenceAnalysisJobSupport support, AnalysisModel model, Collection<SequenceOutputFile> outputFilesCreated) throws PipelineJobException
     {
 
     }
