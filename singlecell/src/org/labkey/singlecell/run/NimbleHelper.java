@@ -484,25 +484,31 @@ public class NimbleHelper
 
             ExpData d = ExperimentService.get().getExpData(so.getDataId());
             File cachedMetrics = getNimbleLogFile(so.getFile().getParentFile(), so.getLibrary_id());
-            job.getLogger().debug("looking for cached metrics: " + cachedMetrics.getPath());
 
             Map<String, Object> metricsMap;
             if (cachedMetrics.exists())
             {
-                job.getLogger().debug("reading previously calculated metrics from file:");
+                job.getLogger().debug("reading previously calculated metrics from file: " + cachedMetrics.getPath());
                 metricsMap = new HashMap<>();
                 try (CSVReader reader = new CSVReader(Readers.getReader(cachedMetrics), ':'))
                 {
                     String[] line;
                     while ((line = reader.readNext()) != null)
                     {
+                        if (metricsMap.containsKey(StringUtils.trim(line[0])))
+                        {
+                            throw new PipelineJobException("Unexpected duplicate metric names: " + StringUtils.trim(line[0]));
+                        }
+
                         metricsMap.put(StringUtils.trim(line[0]), StringUtils.trim(line[1]));
                     }
                 }
+
+                job.getLogger().debug("Total metrics: " + metricsMap.size());
             }
             else
             {
-                throw new PipelineJobException("Unable to find metrics file: " + cachedMetrics);
+                throw new PipelineJobException("Unable to find metrics file: " + cachedMetrics.getPath());
             }
 
             TableInfo metricsTable = DbSchema.get(SingleCellSchema.SEQUENCE_SCHEMA_NAME, DbSchemaType.Module).getTable(SingleCellSchema.TABLE_QUALITY_METRICS);
