@@ -448,6 +448,12 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 toolParams.add(ctx.getParams().get("variantCalling.GenotypeGVCFs.stand_call_conf").toString());
             }
 
+            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.maxGenotypeCount") != null)
+            {
+                toolParams.add("-max-genotype-count");
+                toolParams.add(String.valueOf(ctx.getParams().get("variantCalling.GenotypeGVCFs.maxGenotypeCount")));
+            }
+
             if (ctx.getParams().get("variantCalling.GenotypeGVCFs.exclude_intervals") != null)
             {
                 toolParams.add("-XL");
