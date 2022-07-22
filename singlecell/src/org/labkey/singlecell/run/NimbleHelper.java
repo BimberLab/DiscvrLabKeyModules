@@ -172,14 +172,11 @@ public class NimbleHelper
             File refJson = prepareReference(genomeCsv, genomeFasta, genome, output);
             File results = doAlignment(genome, refJson, bam, output);
 
-            File resultsGz = Compress.compressGzip(results);
-            results.delete();
-
             output.addIntermediateFile(genomeCsv);
             output.addIntermediateFile(genomeFasta);
             output.addIntermediateFile(refJson);
 
-            output.addSequenceOutput(resultsGz, basename + ": nimble align", "Nimble Alignment", rs.getRowId(), null, genome.getGenomeId(), null);
+            output.addSequenceOutput(results, basename + ": nimble align", "Nimble Alignment", rs.getRowId(), null, genome.getGenomeId(), null);
         }
     }
 
@@ -298,6 +295,12 @@ public class NimbleHelper
         alignArgs.add("/work/" + localBam.getName());
 
         runUsingDocker(alignArgs, output, "align-" + genome.genomeId);
+
+        // NOTE: perform compression outside of nimble until nimble bugs fixed
+        File resultsGz = Compress.compressGzip(resultsTsv);
+        resultsTsv.delete();
+        resultsTsv = resultsGz;
+
         if (!resultsTsv.exists())
         {
             File doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), "align-" + genome.genomeId);
