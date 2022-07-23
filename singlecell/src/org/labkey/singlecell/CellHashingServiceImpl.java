@@ -339,7 +339,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
             if (totalWritten.get() == 0)
             {
-                throw new PipelineJobException("No matching cDNA records found");
+                throw new PipelineJobException("No matching cDNA records found, using filter on: " + filterField);
             }
 
             boolean useCellHashing = hashingStatus.size() == 1 ? hashingStatus.iterator().next() : !hashingStatus.isEmpty();
