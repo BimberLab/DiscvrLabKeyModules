@@ -296,9 +296,19 @@ public class NimbleHelper
 
         runUsingDocker(alignArgs, output, "align-" + genome.genomeId);
 
-        // NOTE: perform compression outside of nimble until nimble bugs fixed
-        File resultsGz = Compress.compressGzip(resultsTsv);
-        resultsTsv.delete();
+        File resultsGz = new File(resultsTsv.getPath() + ".gz");
+        if (!resultsGz.exists())
+        {
+            // NOTE: perform compression outside of nimble until nimble bugs fixed
+            getPipelineCtx().getLogger().debug("Compressing results TSV file");
+            resultsGz = Compress.compressGzip(resultsTsv);
+            resultsTsv.delete();
+        }
+        else
+        {
+            getPipelineCtx().getLogger().debug("Compressed output found, skipping gzip");
+        }
+
         resultsTsv = resultsGz;
 
         if (!resultsTsv.exists())
