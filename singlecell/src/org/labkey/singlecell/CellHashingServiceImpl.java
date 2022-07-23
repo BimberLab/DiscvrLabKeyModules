@@ -136,7 +136,7 @@ public class CellHashingServiceImpl extends CellHashingService
         HashMap<Integer, Set<String>> gexToPanels = new HashMap<>();
 
         List<Readset> cachedReadsets = support.getCachedReadsets();
-        job.getLogger().debug("Total cached readsets: " + cachedReadsets.size());
+        job.getLogger().debug("Total cached readsets: " + cachedReadsets.size() + ", using filter on: " + filterField);
         if (cachedReadsets.isEmpty())
         {
             throw new PipelineJobException("There are no cached readsets. This might indicate hashing or CITE-seq is being selected for an input not associated with readsets, like a multi-dataset object");
@@ -150,6 +150,7 @@ public class CellHashingServiceImpl extends CellHashingService
             AtomicInteger totalWritten = new AtomicInteger(0);
             for (Readset rs : cachedReadsets)
             {
+                job.getLogger().debug("Preparing: " + rs.getName() + " (" + rs.getRowId() + ")");
                 AtomicBoolean hasError = new AtomicBoolean(false);
                 //find cDNA records using this readset
                 new TableSelector(cDNAs, colMap.values(), new SimpleFilter(FieldKey.fromString(filterField), rs.getRowId()), null).forEachResults(results -> {
