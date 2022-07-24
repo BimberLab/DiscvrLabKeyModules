@@ -1,0 +1,51 @@
+<script type="text/javascript">
+
+    Ext4.onReady(function (){
+        var webpart = <%=webpartContext%>;
+
+        Ext4.create('Ext.panel.Panel', {
+            renderTo: webpart.wrapperDivId,
+            border: false,
+            items: [{
+                xtype: 'panel',
+                border: false,
+                defaults: {
+                    border: false
+                },
+                items: [{
+                    html: 'This page contains links and reports designed to help manage single-cell RNA-seq data.'
+                }]
+            },{
+                xtype: 'ldk-navpanel',
+                style: 'padding-top: 20px;',
+                border: false,
+                sections: [{
+                    header: 'Data and Processing',
+                    items: [{
+                        name: '10x GEX Libraries Needing Alignment',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.totalAlignments~eq': 0, 'query.totalForwardReads~isnonblank': null, 'query.application~contains': 'single', 'query.status~isblank': null, 'query.isArchived~eq': 0, 'query.librarytype~contains': 'GEX', 'query.sort': 'name'})
+                    },{
+                        name: '10x VDJ Libraries Needing Alignment',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.totalAlignments~eq': 0, 'query.totalForwardReads~isnonblank': null, 'query.application~contains': 'single', 'query.status~isblank': null, 'query.isArchived~eq': 0, 'query.librarytype~contains': 'VDJ', 'query.sort': 'name'})
+                    },{
+                        name: '10x Hashing/Cite-seq Libraries Needing Feature Counts',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.application~in': 'Cell Hashing;CITE-Seq', 'query.totalForwardReads~isnonblank': null, 'query.totalOutputs~eq': 0, 'query.status~isblank': null, 'query.sort': 'name'})
+                    },{
+                        name: 'VLoupe Files Needing TCR Import',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'outputfiles', 'query.readset/status~isblank': null, 'query.readset/numTcrResults~eq': 0, 'query.category~eq': '10x VLoupe', 'query.sort': 'readset/name'})
+                    },{
+                        name: 'Loupe Files Missing Prototype',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'outputfiles', 'query.category~eq': '10x Loupe File', 'query.readset/status~isblank': null, 'query.readset/outputFileTypes~doesnotcontain': 'Prototype', 'query.sort': 'readset/name'})
+                    }]
+                },{
+                    header: 'Data Archival',
+                    items: [{
+                        name: 'Readsets Not Archived to SRA',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.totalForwardReads~isnonblank': null, 'query.isArchived~eq': 0})
+                    }]
+                }]
+            }]
+        });
+    });
+
+</script>
