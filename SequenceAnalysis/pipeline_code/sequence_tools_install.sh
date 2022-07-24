@@ -1171,39 +1171,6 @@ fi
 
 
 #
-#jbrowse
-#
-
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Installing jbrowse"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/JBrowse-1.12.4 || ! -z $FORCE_REINSTALL ]];
-then
-    rm -Rf JBrowse-*
-    rm -Rf $LKTOOLS_DIR/JBrowse-*
-
-    wget $WGET_OPTS https://github.com/GMOD/jbrowse/releases/download/1.12.4-release/JBrowse-1.12.4.zip
-    unzip JBrowse-1.12.4.zip
-    rm JBrowse-1.12.4.zip
-    cd JBrowse-1.12.4
-    ./setup.sh
-
-    #this seems to cause issues on TeamCity and is not needed
-    rm -Rf ./sample_data
-
-    cd ../
-
-    cp -R ./JBrowse-1.12.4 $LKTOOLS_DIR/JBrowse-1.12.4
-else
-    echo "Already installed"
-fi
-
-
-#
 #BLAST+
 #
 
