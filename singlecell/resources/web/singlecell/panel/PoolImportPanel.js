@@ -147,7 +147,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
 
     transforms: {
         stim: function(val, panel) {
-            if (val && (val === '--' || val === '-')) {
+            if (val && (val === '--' || val === '-' || val.toLowerCase() === 'no stim')) {
                 val = 'NoStim';
             }
 
