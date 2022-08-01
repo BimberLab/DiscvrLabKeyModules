@@ -52,6 +52,7 @@ public class NimbleHandler extends AbstractParameterizedOutputHandler<SequenceOu
     public static final String ALIGN_TEMPLATE = "alignTemplate";
     public static final String GROUP_BY_LINEAGE = "groupByLineage";
     public static final String ALIGN_OUTPUT = "alignmentOutput";
+    public static final String STRANDEDNESS = "strandedness";
 
     public NimbleHandler()
     {
@@ -68,6 +69,12 @@ public class NimbleHandler extends AbstractParameterizedOutputHandler<SequenceOu
                     put("allowBlank", false);
                     put("storeValues", "strict;lenient");
                     put("initialValues", "strict");
+                    put("delimiter", ";");
+                }}, null),
+                ToolParameterDescriptor.create(STRANDEDNESS, "Strandedness Filter", "This will select a pre-defined set of alignment config options", "ldk-simplecombo", new JSONObject(){{
+                    put("allowBlank", false);
+                    put("storeValues", "unstranded;fiveprime;threeprime");
+                    put("initialValues", "unstranded");
                     put("delimiter", ";");
                 }}, null),
                 ToolParameterDescriptor.create(GROUP_BY_LINEAGE, "Group By Lineage", "If checked, results will be aggregated by lineage", "checkbox", new JSONObject(){{

@@ -32,6 +32,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileUtil;
@@ -288,6 +289,13 @@ public class NimbleHelper
         {
             alignArgs.add("-a");
             alignArgs.add("/work/nimbleAlignment." + genome.genomeId + ".txt.gz");
+        }
+
+        String strandedness = getProvider().getParameterByName(NimbleHandler.STRANDEDNESS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null);
+        if (strandedness != null)
+        {
+            alignArgs.add("-f");
+            alignArgs.add(strandedness);
         }
 
         alignArgs.add("/work/" + localRefJson.getName());
