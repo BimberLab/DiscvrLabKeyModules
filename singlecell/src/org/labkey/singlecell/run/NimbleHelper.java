@@ -32,7 +32,6 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileUtil;
@@ -51,8 +50,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.labkey.singlecell.run.NimbleAlignmentStep.ALIGN_OUTPUT;
 import static org.labkey.singlecell.run.NimbleAlignmentStep.MAX_HITS_TO_REPORT;
 import static org.labkey.singlecell.run.NimbleAlignmentStep.REF_GENOMES;
+import static org.labkey.singlecell.run.NimbleAlignmentStep.STRANDEDNESS;
 
 public class NimbleHelper
 {
@@ -284,14 +285,14 @@ public class NimbleHelper
         alignArgs.add("-l");
         alignArgs.add("/work/nimbleDebug." + genome.genomeId + ".txt");
 
-        boolean alignOutput = getProvider().getParameterByName(NimbleHandler.ALIGN_OUTPUT).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+        boolean alignOutput = getProvider().getParameterByName(ALIGN_OUTPUT).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
         if (alignOutput)
         {
             alignArgs.add("-a");
             alignArgs.add("/work/nimbleAlignment." + genome.genomeId + ".txt.gz");
         }
 
-        String strandedness = getProvider().getParameterByName(NimbleHandler.STRANDEDNESS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null);
+        String strandedness = getProvider().getParameterByName(STRANDEDNESS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null);
         if (strandedness != null)
         {
             alignArgs.add("-f");

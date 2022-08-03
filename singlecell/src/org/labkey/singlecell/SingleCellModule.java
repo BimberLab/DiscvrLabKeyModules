@@ -44,7 +44,6 @@ import org.labkey.singlecell.run.CellRangerGexCountStep;
 import org.labkey.singlecell.run.CellRangerVDJWrapper;
 import org.labkey.singlecell.run.NimbleAlignmentStep;
 import org.labkey.singlecell.run.NimbleAnalysis;
-import org.labkey.singlecell.run.NimbleHandler;
 import org.labkey.singlecell.run.VelocytoAlignmentStep;
 import org.labkey.singlecell.run.VelocytoAnalysisStep;
 
@@ -193,8 +192,6 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new AppendTcr.Provider());
         SequencePipelineService.get().registerPipelineStep(new TcrFilter.Provider());
         SequencePipelineService.get().registerPipelineStep(new PlotAssayFeatures.Provider());
-
-        SequenceAnalysisService.get().registerFileHandler(new NimbleHandler());
     }
 
     @Override
