@@ -44,6 +44,6 @@ public class CalculateUCellScores extends AbstractRiraStep
     @Override
     public String getFileSuffix()
     {
-        return "ucel";
+        return "ucell";
     }
 }
