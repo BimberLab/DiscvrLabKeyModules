@@ -25,6 +25,8 @@ public class CalculateGeneComponentScores extends AbstractRiraStep
                     SeuratToolParameter.create("savedComponent", "Saved Component(s)", "This is the name of the saved component (from RIRA) to apply", "ldk-simplecombo", new JSONObject(){{
                         put("storeValues", "Tcell_NaiveToEffector");
                         put("multiSelect", true);
+                        put("allowBlank", false);
+                        put("joinReturnValue", true);
                         put("delimiter", ";");
 
                     }}, null, null, true, true).delimiter(";")
