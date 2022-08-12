@@ -107,6 +107,7 @@ Ext4.define('SequenceAnalysis.window.AddFileSetsWindow', {
         //otherwise go direct to updating membership
         if (!existingField){
             LABKEY.Query.insertRows({
+                method: 'POST',
                 //TODO: consider whether this should really be limited to folder-level or not
                 containerPath: Laboratory.Utils.getQueryContainerPath(),
                 schemaName: 'sequenceanalysis',
@@ -132,6 +133,7 @@ Ext4.define('SequenceAnalysis.window.AddFileSetsWindow', {
     updateMembership: function(rowId) {
         //first find existing fileset membership for these files against these filesets
         LABKEY.Query.selectRows({
+            method: 'POST',
             containerPath: Laboratory.Utils.getQueryContainerPath(),
             schemaName: 'sequenceanalysis',
             queryName: 'analysisSetMembers',
@@ -160,6 +162,7 @@ Ext4.define('SequenceAnalysis.window.AddFileSetsWindow', {
 
                     var dataRegionName = this.dataRegionName;
                     LABKEY.Query.insertRows({
+                        method: 'POST',
                         //TODO: consider whether this should really be limited to folder-level or not
                         containerPath: Laboratory.Utils.getQueryContainerPath(),
                         schemaName: 'sequenceanalysis',
