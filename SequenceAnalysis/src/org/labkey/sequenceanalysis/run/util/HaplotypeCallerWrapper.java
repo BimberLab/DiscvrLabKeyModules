@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.run.AbstractGatk4Wrapper;
+import org.labkey.sequenceanalysis.pipeline.ReblockGvcfHandler;
 
 import java.io.File;
 import java.io.IOException;
@@ -85,20 +86,7 @@ public class HaplotypeCallerWrapper extends AbstractGatk4Wrapper
 
             File reblockOutput = new File(outputFile.getParentFile(), "tempReblock.g.vcf.gz");
 
-            List<String> reblockArgs = new ArrayList<>(getBaseArgs());
-            reblockArgs.add("ReblockGVCF");
-            reblockArgs.add("-R");
-            reblockArgs.add(referenceFasta.getPath());
-            reblockArgs.add("-V");
-            reblockArgs.add(outputFile.getPath());
-            reblockArgs.add("-O");
-            reblockArgs.add(reblockOutput.getPath());
-
-            execute(reblockArgs);
-            if (!reblockOutput.exists())
-            {
-                throw new PipelineJobException("Expected output not found: " + reblockOutput.getPath());
-            }
+            new ReblockGvcfHandler.ReblockGvcfWrapper(getLogger()).execute(outputFile, reblockOutput, referenceFasta);
 
             File outputFileIdx = new File(outputFile.getPath() + ".tbi");
 
