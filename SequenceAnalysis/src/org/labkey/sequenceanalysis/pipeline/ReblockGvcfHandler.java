@@ -115,7 +115,7 @@ public class ReblockGvcfHandler extends AbstractParameterizedOutputHandler<Seque
                 if (replaceOriginal)
                 {
                     ctx.getLogger().info("Deleting original gVCF: " + so.getFile().getPath());
-                    new File(so.getFile().getPath() + ".gz").delete();
+                    new File(so.getFile().getPath() + ".tbi").delete();
                     so.getFile().delete();
                 }
 
