@@ -186,7 +186,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             writer.println("\t-e USERID=$UID \\");
             writer.println("\t-w /work \\");
             writer.println("\tnextstrain/nextclade:latest \\");
-            writer.println("\t/bin/bash -c \"nextclade dataset get --name='sars-cov-2' --output-dir='/work/data/sars-cov-2';nextclade --input-dataset=/work/data/sars-cov-2 --input-fasta '/work/" + consensusFasta.getName() + "' --output-json '/work/" + jsonFile.getName() + "'\" && rm -Rf /work/data");
+            writer.println("\t/bin/bash -c \"nextclade dataset get --name='sars-cov-2' --output-dir='/work/data/sars-cov-2';nextclade run --input-dataset=/work/data/sars-cov-2 --input-fasta '/work/" + consensusFasta.getName() + "' --output-json '/work/" + jsonFile.getName() + "'\" && rm -Rf /work/data");
             writer.println("");
             writer.println("echo 'Bash script complete'");
             writer.println("");
