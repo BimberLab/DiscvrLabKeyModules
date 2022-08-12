@@ -136,7 +136,11 @@ public class ReblockGvcfHandler extends AbstractParameterizedOutputHandler<Seque
 
             for (SequenceOutputFile so : inputs)
             {
-                File reblocked = new File(so.getFile().getParentFile(), FileUtil.getBaseName(so.getFile()) + ".");
+                File reblocked = getReblockedName(so.getFile());
+                if (!reblocked.exists())
+                {
+                    throw new PipelineJobException("Unable to find file: " + reblocked.getPath());
+                }
 
                 job.getLogger().info("Updating ExpData record with new filepath: " + reblocked.getPath());
                 ExpData d = so.getExpData();
