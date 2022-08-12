@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
@@ -20,7 +21,6 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractGatk4Wrapper;
-import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
@@ -106,6 +106,8 @@ public class ReblockGvcfHandler extends AbstractParameterizedOutputHandler<Seque
 
             for (SequenceOutputFile so : inputFiles)
             {
+                ctx.getLogger().info("Input file size: " + FileUtils.byteCountToDisplaySize(so.getFile().length()));
+
                 ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id());
                 File reblocked = getReblockedName(so.getFile());
                 new ReblockGvcfWrapper(ctx.getLogger()).execute(so.getFile(), reblocked, genome.getWorkingFastaFile());
@@ -116,6 +118,8 @@ public class ReblockGvcfHandler extends AbstractParameterizedOutputHandler<Seque
                     new File(so.getFile().getPath() + ".gz").delete();
                     so.getFile().delete();
                 }
+
+                ctx.getLogger().info("Reblocked file size: " + FileUtils.byteCountToDisplaySize(reblocked.length()));
             }
         }
 
