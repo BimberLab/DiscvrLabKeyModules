@@ -207,6 +207,19 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 ctx.getJob().getLogger().debug("Caching ExpData: " + dataId);
                 ctx.getSequenceSupport().cacheExpData(data);
             }
+
+            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.exclude_intervals") != null)
+            {
+                int dataId = ctx.getParams().getInt("variantCalling.GenotypeGVCFs.exclude_intervals");
+                ExpData data = ExperimentService.get().getExpData(dataId);
+                if (data == null)
+                {
+                    throw new PipelineJobException("Unable to find ExpData with ID: " + dataId);
+                }
+
+                ctx.getJob().getLogger().debug("Caching ExpData: " + dataId);
+                ctx.getSequenceSupport().cacheExpData(data);
+            }
         }
 
         @Override
