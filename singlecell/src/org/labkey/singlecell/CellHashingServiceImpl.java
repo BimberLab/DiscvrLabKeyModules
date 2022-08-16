@@ -1450,7 +1450,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
     public File getCellBarcodesFromSeurat(File seuratObj, boolean throwIfNotFound)
     {
-        File barcodes = new File(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds", "cellBarcodes.csv"));
+        File barcodes = new File(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds$", "cellBarcodes.csv"));
         if (throwIfNotFound && !barcodes.exists())
         {
             throw new IllegalArgumentException("Unable to find expected cell barcodes file.  This might indicate the seurat object was created with an older version of the pipeline.  Expected: " + barcodes.getPath());
