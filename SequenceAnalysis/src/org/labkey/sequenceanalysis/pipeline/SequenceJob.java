@@ -425,7 +425,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
             {
                 getLogger().error(e.getMessage(), e);
                 getLogger().error("contents of JSON file: " + json.getPath());
-                try (BufferedReader reader = Readers.getReader(json))
+                try (BufferedReader reader = IOUtil.openFileForBufferedReading(json))
                 {
                     String line;
                     while ((line = reader.readLine()) != null)
