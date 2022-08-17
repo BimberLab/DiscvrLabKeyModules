@@ -108,6 +108,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         _params = parentJob.getParameterJson();
 
         setLogFile(_getLogFile());
+        writeSupportToDisk();
     }
 
     public SequenceJob(String providerName, Container c, User u, @Nullable String jobName, PipeRoot pipeRoot, JSONObject params, TaskId taskPipelineId, String folderPrefix) throws IOException
@@ -129,6 +130,25 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         _folderFileRoot = c.isWorkbook() ? PipelineService.get().findPipelineRoot(c.getParent()) : pipeRoot;
 
         setLogFile(_getLogFile());
+        writeSupportToDisk();
+    }
+
+    @Override
+    public boolean setActiveTaskStatus(@NotNull TaskStatus activeTaskStatus)
+    {
+        if (TaskStatus.complete == activeTaskStatus)
+        {
+            try
+            {
+                writeSupportToDisk();
+            }
+            catch (IOException e)
+            {
+                getLogger().error("Unable to serialize job support", e);
+            }
+        }
+
+        return super.setActiveTaskStatus(activeTaskStatus);
     }
 
     protected void addCustomParams(JSONObject params)
@@ -417,7 +437,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         }
         else
         {
-            getLogger().debug("serialized support JSON file not found: " + json.getPath());
+            getLogger().debug("serialized support JSON file not found: " + json.getPath(), new Exception());
         }
 
         return null;
