@@ -78,7 +78,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
 
     // NOTE: this allows optional deserializing of job JSON with this property,
     // to support pre-existing JSON before this change
-    @JsonProperty
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     transient private SequenceJobSupportImpl _support;
 
     // Default constructor for serialization
@@ -534,14 +534,25 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
             job.setLogFile(new File(FileUtil.getTempDirectory(), "testJob.log").toPath());
 
             File testFile = new File(FileUtil.getTempDirectory(), "testJob.json.txt");
-            job.writeToFile(testFile);
-
             File support = job.getCachedSupportFile();
+            if (support.exists())
+            {
+                support.delete();
+            }
+
+            job.writeToFile(testFile);
             assertTrue("Missing support file", support.exists());
 
             job._support = null;
             SequenceJobSupportImpl deserializedSupport = job.getSequenceSupport();
             assertEquals("Missing cached data", 1, deserializedSupport.getAllCachedData().size());
+
+            testFile.delete();
+            support.delete();
+
+            job.writeToFile(testFile);
+            SequenceJob deserializedJob = (SequenceJob)readFromFile(testFile);
+            assertNull("Support not null after deserialize", deserializedJob._support);
         }
     }
 }
