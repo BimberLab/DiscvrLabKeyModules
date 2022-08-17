@@ -1,11 +1,19 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import htsjdk.samtools.util.IOUtil;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
+import org.junit.Assert;
+import org.junit.Test;
+import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
+import org.labkey.api.exp.api.DataType;
+import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.exp.api.ExperimentUrls;
@@ -13,6 +21,7 @@ import org.labkey.api.exp.pipeline.XarGeneratorFactorySettings;
 import org.labkey.api.pipeline.ParamParser;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.TaskFactory;
@@ -25,7 +34,6 @@ import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.HasJobParams;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputTracker;
-import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -33,12 +41,15 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.api.writer.PrintWriters;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
-import javax.validation.constraints.Null;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -55,7 +66,6 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     private Integer _experimentRunRowId;
     private String _jobName;
     private String _description;
-    private SequenceJobSupportImpl _support;
     private File _webserverJobDir;
     private File _parentWebserverJobDir;
     private String _folderPrefix;
@@ -64,6 +74,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     private PipeRoot _folderFileRoot;
 
     transient private JSONObject _params;
+    transient private SequenceJobSupportImpl _support;
 
     // Default constructor for serialization
     protected SequenceJob()
@@ -77,7 +88,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         _experimentRunRowId = parentJob._experimentRunRowId;
         _jobName = jobName;
         _description = parentJob._description;
-        _support = parentJob._support;
+        _support = parentJob.getSequenceSupport();
         _parentWebserverJobDir = parentJob._webserverJobDir;
         _webserverJobDir = new File(parentJob._webserverJobDir, subdirectory);
         if (!_webserverJobDir.exists())
@@ -110,7 +121,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
 
         writeParameters(params);
 
-        _folderFileRoot = c.isWorkbook()? PipelineService.get().findPipelineRoot(c.getParent()) : pipeRoot;
+        _folderFileRoot = c.isWorkbook() ? PipelineService.get().findPipelineRoot(c.getParent()) : pipeRoot;
 
         setLogFile(_getLogFile());
     }
@@ -121,13 +132,13 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         params.put("labkeyFolderPath", getContainer().isWorkbook() ? getContainer().getParent().getPath() : getContainer().getPath());
     }
 
-    private File _getLogFile() throws IOException
+    private Path _getLogFile()
     {
-        return AssayFileWriter.findUniqueFileName((FileUtil.makeLegalName(_jobName) + ".log"), getDataDirectory());
+        return AssayFileWriter.findUniqueFileName((FileUtil.makeLegalName(_jobName) + ".log"), getDataDirectory().toPath());
     }
 
     @Override
-    public TaskPipeline getTaskPipeline()
+    public TaskPipeline<?> getTaskPipeline()
     {
         return PipelineJobService.get().getTaskPipeline(_taskPipelineId);
     }
@@ -339,7 +350,98 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
 
     public SequenceJobSupportImpl getSequenceSupport()
     {
+        if (_support == null)
+        {
+            try
+            {
+                _support = readSupportFromDisk();
+            }
+            catch (IOException e)
+            {
+                getLogger().error("Error reading cached support from file: " + getCachedSupportFile().getPath());
+            }
+        }
+
         return _support;
+    }
+
+    protected File getCachedSupportFile()
+    {
+        return new File(getLogFile().getParentFile(), "sequenceSupport.json.gz");
+    }
+
+    private SequenceJobSupportImpl readSupportFromDisk() throws IOException
+    {
+        File json = getCachedSupportFile();
+        if (json.exists())
+        {
+            try
+            {
+                if (!SequenceUtil.hasLineCount(json))
+                {
+                    getLogger().debug("serialized support JSON file is empty: " + json.getPath());
+                    return null;
+                }
+            }
+            catch (PipelineJobException e)
+            {
+                throw new IOException(e);
+            }
+
+            try (InputStream is = IOUtil.maybeBufferInputStream(IOUtil.openFileForReading(json)))
+            {
+                ObjectMapper objectMapper = createObjectMapper();
+                SequenceJobSupportImpl ret = objectMapper.readValue(is, SequenceJobSupportImpl.class);
+                getLogger().debug("read SequenceJobSupportImpl from file, total readsets: " + ret.getCachedReadsets().size());
+
+                return ret;
+            }
+            catch (Exception e)
+            {
+                getLogger().error(e.getMessage(), e);
+                getLogger().error("contents of JSON file: " + json.getPath());
+                try (BufferedReader reader = Readers.getReader(json))
+                {
+                    String line;
+                    while ((line = reader.readLine()) != null)
+                    {
+                        getLogger().error(line);
+                    }
+                }
+            }
+        }
+        else
+        {
+            getLogger().debug("serialized support JSON file not found: " + json.getPath());
+        }
+
+        return null;
+    }
+
+    @Override
+    public void writeToFile(File file) throws IOException
+    {
+        writeSupportToDisk();
+
+        super.writeToFile(file);
+    }
+
+    protected void writeSupportToDisk() throws IOException
+    {
+        if (_support != null)
+        {
+            File json = getCachedSupportFile();
+            try (OutputStream output = IOUtil.maybeBufferOutputStream(IOUtil.openFileForWriting(json)))
+            {
+                getLogger().info("writing SequenceJobSupportImpl to JSON: " + _support.getCachedReadsets().size());
+                ObjectMapper objectMapper = createObjectMapper();
+                objectMapper.writeValue(output, _support);
+            }
+        }
+        else
+        {
+            getLogger().debug("SequenceJobSupportImpl is null, will not write to disk");
+        }
     }
 
     @Override
@@ -387,7 +489,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         XarGeneratorFactorySettings settings = new XarGeneratorFactorySettings("xarGeneratorJoin");
         settings.setJoin(true);
 
-        TaskFactory factory = PipelineJobService.get().getTaskFactory(settings.getCloneId());
+        TaskFactory<?> factory = PipelineJobService.get().getTaskFactory(settings.getCloneId());
         if (factory == null)
         {
             PipelineJobService.get().addTaskFactory(settings);
@@ -411,5 +513,30 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         }
 
         return _outputsToCreate;
+    }
+
+    public static class TestCase extends Assert
+    {
+        @Test
+        public void testSerializeSupport() throws Exception
+        {
+            ExpData d1 = ExperimentService.get().createData(ContainerManager.getHomeContainer(), new DataType("testCase"));
+            d1.setDataFileURI(new File(FileUtil.getTempDirectory(), "foo.txt").toURI());
+
+            SequenceJob job = new SequenceJob();
+            job._support = new SequenceJobSupportImpl();
+            job._support.cacheExpData(d1);
+            job.setLogFile(new File(FileUtil.getTempDirectory(), "testJob.log").toPath());
+
+            File testFile = new File(FileUtil.getTempDirectory(), "testJob.json.txt");
+            job.writeToFile(testFile);
+
+            File support = job.getCachedSupportFile();
+            assertTrue("Missing support file", support.exists());
+
+            job._support = null;
+            SequenceJobSupportImpl deserializedSupport = job.getSequenceSupport();
+            assertEquals("Missing cached data", 1, deserializedSupport.getAllCachedData().size());
+        }
     }
 }

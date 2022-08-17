@@ -49,7 +49,7 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
         _handlerClassName = parentJob._handlerClassName;
     }
 
-    public SequenceOutputHandlerJob(Container c, User user, @Nullable String jobName, PipeRoot pipeRoot, SequenceOutputHandler handler, List<SequenceOutputFile> files, JSONObject jsonParams) throws IOException
+    public SequenceOutputHandlerJob(Container c, User user, @Nullable String jobName, PipeRoot pipeRoot, SequenceOutputHandler<?> handler, List<SequenceOutputFile> files, JSONObject jsonParams) throws IOException
     {
         super(SequenceOutputHandlerPipelineProvider.NAME, c, user, jobName, pipeRoot, jsonParams, null, FOLDER_NAME);
 

@@ -474,6 +474,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         return PageFlowUtil.set(
                 SequenceAlignmentTask.TestCase.class,
                 SequenceAnalysisManager.TestCase.class,
+                SequenceJob.TestCase.class,
                 SequenceJobSupportImpl.TestCase.class,
                 ProcessVariantsHandler.TestCase.class,
                 VariantProcessingJob.TestCase.class,
