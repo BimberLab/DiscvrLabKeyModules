@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import htsjdk.samtools.util.IOUtil;
 import org.apache.commons.io.IOUtils;
@@ -74,6 +75,10 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     private PipeRoot _folderFileRoot;
 
     transient private JSONObject _params;
+
+    // NOTE: this allows optional deserializing of job JSON with this property,
+    // to support pre-existing JSON before this change
+    @JsonProperty
     transient private SequenceJobSupportImpl _support;
 
     // Default constructor for serialization
