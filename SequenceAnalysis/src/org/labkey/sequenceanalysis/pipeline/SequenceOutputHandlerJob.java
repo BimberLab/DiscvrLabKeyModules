@@ -62,6 +62,7 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
         }
 
         saveFiles(files);
+        writeSupportToDisk();
     }
 
     protected void saveFiles(List<SequenceOutputFile> files) throws IOException
