@@ -778,6 +778,7 @@ public class SequenceIntegrationTests
             File fq = new File(basedir, prefix + DUAL_BARCODE_FILENAME + ".gz");
             expectedOutputs.add(fq);
             expectedOutputs.add(new File(basedir, "sequenceImport.json"));
+            expectedOutputs.add(new File(basedir, "sequenceSupport.json.gz"));
             expectedOutputs.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, jobName + ".log"));
             verifyFileOutputs(basedir, expectedOutputs);
@@ -1439,6 +1440,7 @@ public class SequenceIntegrationTests
 
             extraFiles.add(new File(basedir, jobName + ".log"));
             extraFiles.add(new File(basedir, "sequenceAnalysis.json"));
+            extraFiles.add(new File(basedir, "sequenceSupport.json.gz"));
             extraFiles.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
 
             extraFiles.add(new File(basedir, outDir));
