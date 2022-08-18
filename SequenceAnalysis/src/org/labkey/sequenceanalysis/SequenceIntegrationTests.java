@@ -1227,6 +1227,7 @@ public class SequenceIntegrationTests
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = getBaseDir(jobs.iterator().next());
             expectedOutputs.add(new File(basedir, "sequenceImport.json"));
+            expectedOutputs.add(new File(basedir, "sequenceSupport.json.gz"));
             expectedOutputs.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, jobName + ".log"));
 
