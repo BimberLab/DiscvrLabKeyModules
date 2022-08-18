@@ -250,7 +250,19 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 				description: 'By default, the pipeline java processes are allocated nearly all of the requested RAM.  GenomicsDB requires memory for the C++ layer - this value (in GB) will be reserved for this.  We recommend about 15-25% of the total job RAM',
 				defaultValue: null
 			},{
-				fieldXtype: 'checkbox',
+				fieldXtype: 'ldk-integerfield',
+				name: 'maxSamplesPerWorkspace',
+				label: 'Max Samples Per Workspace',
+				description: 'If multiple input gVCFs are provided, the pipeline will batch samples into workspaces with at most this many samples',
+				defaultValue: 500
+			},{
+				fieldXtype: 'ldk-integerfield',
+				name: 'batchSize',
+				label: 'GenomicsDB Batch Size',
+				description: 'Passed as batchSize to GenomicsDbImport',
+				defaultValue: 50
+			},{
+            	fieldXtype: 'checkbox',
 				name: 'disableFileLocking',
 				label: 'Disable File Locking',
 				description: 'This applies to GenomicsDB inputs only. Certain filesystems do not support file locking, including NFS and Lustre.  If your data will be processed on a filesystem that does not support locking, check this.',

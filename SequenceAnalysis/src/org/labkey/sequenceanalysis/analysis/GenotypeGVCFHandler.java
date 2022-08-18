@@ -354,6 +354,12 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 forceCallSitesFile = ctx.getSequenceSupport().getCachedData(ctx.getParams().getInt("variantCalling.GenotypeGVCFs.forceSitesFile"));
             }
 
+            int maxSamplesPerWorkspace = 500;
+            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.maxSamplesPerWorkspace") != null)
+            {
+                maxSamplesPerWorkspace = ctx.getParams().getInt("variantCalling.GenotypeGVCFs.maxSamplesPerWorkspace");
+            }
+
             ctx.getFileManager().addIntermediateFile(outputVcfDone);
             if (outputVcfDone.exists())
             {
@@ -380,7 +386,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
 
                 if (!gvcfInputs.isEmpty())
                 {
-                    genomicsDbInputs.addAll(combineGvcfs(ctx, genome, gvcfInputs));
+                    genomicsDbInputs.addAll(combineGvcfs(ctx, genome, gvcfInputs, maxSamplesPerWorkspace));
                 }
 
                 if (genomicsDbInputs.size() > 1)
@@ -486,11 +492,9 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             return outputVcf;
         }
 
-        private static final int MAX_SAMPLES_PER_WORKSPACE = 250;
-
-        private List<File> combineGvcfs(JobContext ctx, ReferenceGenome genome, Set<File> gvcfInputs) throws PipelineJobException
+        private List<File> combineGvcfs(JobContext ctx, ReferenceGenome genome, Set<File> gvcfInputs, int maxSamplesPerWorkspace) throws PipelineJobException
         {
-            List<List<File>> batches = Lists.partition(new ArrayList<>(gvcfInputs), MAX_SAMPLES_PER_WORKSPACE);
+            List<List<File>> batches = Lists.partition(new ArrayList<>(gvcfInputs), maxSamplesPerWorkspace);
             ctx.getLogger().info("Initial gVCFs: " + gvcfInputs.size() + " will be split into " + batches.size() + " workspaces for import");
 
             List<File> ret = new ArrayList<>();
@@ -498,6 +502,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             for (List<File> batch : batches)
             {
                 i++;
+                ctx.getLogger().info("Batch " + i + " of " + batches.size());
                 ret.add(createWorkspace(ctx, genome, batch, i));
             }
 
@@ -550,8 +555,9 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                     options.add("2");
                 }
 
+                int batchSize = ctx.getParams().optInt("variantCalling.GenotypeGVCFs.batchSize", 50);
                 options.add("--batch-size");
-                options.add("25");
+                options.add(String.valueOf(batchSize));
 
                 try
                 {
