@@ -136,7 +136,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     @Override
     public boolean setActiveTaskStatus(@NotNull TaskStatus activeTaskStatus)
     {
-        if (TaskStatus.complete == activeTaskStatus)
+        if (TaskStatus.complete == activeTaskStatus && PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
         {
             try
             {
