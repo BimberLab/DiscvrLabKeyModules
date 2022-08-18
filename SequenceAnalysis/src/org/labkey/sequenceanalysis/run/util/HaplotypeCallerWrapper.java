@@ -65,9 +65,6 @@ public class HaplotypeCallerWrapper extends AbstractGatk4Wrapper
         args.add("-A");
         args.add("DepthPerSampleHC");
 
-        args.add("--max-alternate-alleles");
-        args.add("12");
-
         execute(args);
         if (!outputFile.exists())
         {
