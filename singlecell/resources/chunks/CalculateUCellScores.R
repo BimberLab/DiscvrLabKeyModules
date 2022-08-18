@@ -4,6 +4,8 @@ for (datasetId in names(seuratObjects)) {
 
     seuratObj <- RIRA::CalculateUCellScores(seuratObj)
 
+    saveData(seuratObj, datasetId)
+
     # Cleanup
     rm(seuratObj)
     gc()

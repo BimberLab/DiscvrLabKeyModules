@@ -4,6 +4,8 @@ for (datasetId in names(seuratObjects)) {
 
     seuratObj <- RIRA::ScoreUsingSavedComponent(seuratObj, componentOrName = savedComponent, fieldName = savedComponent)
 
+    saveData(seuratObj, datasetId)
+
     # Cleanup
     rm(seuratObj)
     gc()
