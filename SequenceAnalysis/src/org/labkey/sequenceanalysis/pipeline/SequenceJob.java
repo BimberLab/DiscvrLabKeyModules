@@ -383,7 +383,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
             }
             catch (IOException e)
             {
-                getLogger().error("Error reading cached support from file: " + getCachedSupportFile().getPath());
+                throw new IllegalArgumentException("Error reading cached support from file: " + getCachedSupportFile().getPath());
             }
         }
 
@@ -437,7 +437,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         }
         else
         {
-            getLogger().debug("serialized support JSON file not found: " + json.getPath(), new Exception());
+            getLogger().warn("Serialized support JSON file not found: " + json.getPath(), new Exception());
         }
 
         return null;
