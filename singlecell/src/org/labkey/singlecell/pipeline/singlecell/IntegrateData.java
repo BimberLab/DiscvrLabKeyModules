@@ -64,12 +64,6 @@ public class IntegrateData extends AbstractCellMembraneStep
     }
 
     @Override
-    public boolean createsSeuratObjects()
-    {
-        return false;
-    }
-
-    @Override
     public String getFileSuffix()
     {
         return "integrated";

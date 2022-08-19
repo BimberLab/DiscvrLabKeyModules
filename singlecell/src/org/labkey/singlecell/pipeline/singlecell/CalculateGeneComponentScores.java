@@ -47,12 +47,6 @@ public class CalculateGeneComponentScores extends AbstractRiraStep
     }
 
     @Override
-    public boolean createsSeuratObjects()
-    {
-        return false;
-    }
-
-    @Override
     public String getFileSuffix()
     {
         return "gc";

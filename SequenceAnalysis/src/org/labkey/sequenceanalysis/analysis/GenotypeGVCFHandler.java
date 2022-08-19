@@ -502,7 +502,8 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             for (List<File> batch : batches)
             {
                 i++;
-                ctx.getLogger().info("Batch " + i + " of " + batches.size());
+                ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Preparing GenomicsDB: " + i + " of " + batches.size());
+                ctx.getLogger().info("Batch " + i + " of " + batches.size() + ", total samples: " + batch.size());
                 ret.add(createWorkspace(ctx, genome, batch, i));
             }
 
@@ -513,6 +514,8 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
         {
             File workspace = new File(ctx.getWorkingDirectory(), "genomicsDb" + id + ".gdb");
             File doneFile = getDoneFile(workspace);
+            ctx.getFileManager().addIntermediateFile(workspace);
+
             if (doneFile.exists())
             {
                 ctx.getLogger().debug("Workspace finished, skipping");
