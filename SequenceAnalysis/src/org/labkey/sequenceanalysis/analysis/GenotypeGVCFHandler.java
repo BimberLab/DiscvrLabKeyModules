@@ -515,6 +515,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             File workspace = new File(ctx.getWorkingDirectory(), "genomicsDb" + id + ".gdb");
             File doneFile = getDoneFile(workspace);
             ctx.getFileManager().addIntermediateFile(workspace);
+            ctx.getFileManager().addIntermediateFile(doneFile);
 
             if (doneFile.exists())
             {
@@ -579,8 +580,6 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                     throw new PipelineJobException(e);
                 }
             }
-
-            ctx.getFileManager().addIntermediateFile(doneFile);
 
             return workspace;
         }

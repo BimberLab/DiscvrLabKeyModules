@@ -74,13 +74,13 @@ public class CheckExpectations extends AbstractCellMembraneStep
         {
             if (so.getSequenceOutputFile().getReadset() == null)
             {
-                throw new PipelineJobException("Unable to find readset for outputfile: " + so.getSequenceOutputFileId() + ". This set requires single-dataset inputs. Removing this step may be a solution.");
+                throw new PipelineJobException("Unable to find readset for outputfile: " + so.getSequenceOutputFileId() + ". This step requires single-dataset inputs. Removing this step may be a solution.");
             }
 
             Readset parentReadset = ctx.getSequenceSupport().getCachedReadset(so.getSequenceOutputFile().getReadset());
             if (parentReadset == null)
             {
-                throw new PipelineJobException("Unable to find readset for outputfile: " + so.getSequenceOutputFileId() + ". This set requires single-dataset inputs. Removing this step may be a solution.");
+                throw new PipelineJobException("Unable to find readset for outputfile: " + so.getSequenceOutputFileId() + ". This step requires single-dataset inputs. Removing this step may be a solution.");
             }
 
             Set<String> htosPerReadset = CellHashingServiceImpl.get().getHtosForParentReadset(parentReadset.getReadsetId(), ctx.getSourceDirectory(), ctx.getSequenceSupport(), false);
