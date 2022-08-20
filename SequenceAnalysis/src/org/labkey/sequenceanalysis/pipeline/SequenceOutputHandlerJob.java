@@ -11,7 +11,6 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.pipeline.TaskPipeline;
-import org.labkey.api.reader.Readers;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.HasJobParams;
@@ -128,13 +127,13 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
             catch (Exception e)
             {
                 getLogger().error(e.getMessage(), e);
-                getLogger().error("contents of XML file: " + xml.getPath());
-                try (BufferedReader reader = Readers.getReader(xml))
+                getLogger().debug("contents of XML file: " + xml.getPath());
+                try (BufferedReader reader = IOUtil.openFileForBufferedReading(xml))
                 {
                     String line;
                     while ((line = reader.readLine()) != null)
                     {
-                        getLogger().error(line);
+                        getLogger().debug(line);
                     }
                 }
             }
