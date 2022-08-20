@@ -7,6 +7,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
@@ -502,9 +503,12 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             for (List<File> batch : batches)
             {
                 i++;
+                Date start = new Date();
                 ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Preparing GenomicsDB: " + i + " of " + batches.size());
                 ctx.getLogger().info("Batch " + i + " of " + batches.size() + ", total samples: " + batch.size());
                 ret.add(createWorkspace(ctx, genome, batch, i));
+
+                ctx.getLogger().info("GenomicsDB Batch " + i + " Duration: " + DurationFormatUtils.formatDurationWords(new Date().getTime() - start.getTime(), true, true));
             }
 
             return ret;
@@ -587,6 +591,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
         private void processOneInput(JobContext ctx, PipelineJob job, ReferenceGenome genome, File inputVcf, File outputVcf, @Nullable File forceCallSites) throws PipelineJobException
         {
             ctx.getLogger().info("Running genotypeGVCFs for: " + inputVcf.getPath());
+            Date start = new Date();
 
             GenotypeGVCFsWrapper wrapper = new GenotypeGVCFsWrapper(job.getLogger());
             List<String> toolParams = new ArrayList<>();
@@ -702,6 +707,8 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             {
                 throw new PipelineJobException(e);
             }
+
+            ctx.getLogger().info("GenotypeGVCFs Duration: " + DurationFormatUtils.formatDurationWords(new Date().getTime() - start.getTime(), true, true));
         }
     }
 
