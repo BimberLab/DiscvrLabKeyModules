@@ -462,6 +462,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 }
                 else
                 {
+                    ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Running GenotypeGVCFs, No Batches");
                     processOneInput(ctx, job, genome, genomicsDbInputs.iterator().next(), outputVcf, forceCallSitesFile);
                     try
                     {
@@ -504,7 +505,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             {
                 i++;
                 Date start = new Date();
-                ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Preparing GenomicsDB: " + i + " of " + batches.size());
+                ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "GenomicsDB: " + i + " of " + batches.size() + ", samples: " + batch.size());
                 ctx.getLogger().info("Batch " + i + " of " + batches.size() + ", total samples: " + batch.size());
                 ret.add(createWorkspace(ctx, genome, batch, i));
 
@@ -649,11 +650,6 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             {
                 toolParams.add("--force-output-intervals");
                 toolParams.add(forceCallSites.getPath());
-            }
-
-            if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.allowOldRmsMappingData", false))
-            {
-                toolParams.add("--allow-old-rms-mapping-quality-annotation-data");
             }
 
             List<Interval> intervals = ProcessVariantsHandler.getIntervals(ctx);
