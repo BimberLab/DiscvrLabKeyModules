@@ -2,7 +2,9 @@ package org.labkey.sequenceanalysis.analysis;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
+import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.util.Interval;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.apache.commons.io.FileUtils;
@@ -53,6 +55,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import static org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler.VCF_CATEGORY;
 import static org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler.getIntervals;
@@ -576,6 +579,20 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                     }
 
                     List<Interval> intervals = getIntervals(ctx);
+                    if (intervals != null)
+                    {
+                        int paddingWindow = ctx.getParams().optInt("variantCalling.GenotypeGVCFs.paddingWindow", 1000);
+                        ctx.getLogger().info("Expanding intervals used in workspace by: " + paddingWindow);
+                        SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath());
+                        intervals = intervals.stream().map(i -> {
+                            int length = dict.getSequence(i.getContig()).getSequenceLength();
+                            int start = Math.max(1, i.getStart() - paddingWindow);
+                            int end = Math.min(length, i.getEnd() + paddingWindow);
+
+                            return new Interval(i.getContig(), start, end, i.isNegativeStrand(), i.getName());
+                        }).collect(Collectors.toList());
+                    }
+
                     wrapper.execute(genome, vcfsToProcess, workspace, intervals, options, false);
 
                     Files.touch(doneFile);

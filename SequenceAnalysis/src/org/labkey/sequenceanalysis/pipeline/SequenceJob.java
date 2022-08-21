@@ -526,9 +526,16 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     public void addOutputToCreate(SequenceOutputFile o)
     {
         getLogger().debug("adding sequence output: " + (o.getFile() == null ? o.getName() : o.getFile().getPath()));
+        _outputsToCreate.forEach(so -> {
+            if (o.getFile().equals(so.getFile()) && o.getName().equals(so.getName()))
+            {
+                getLogger().warn("Adding sequence output, but another already exists for the same file: " + o.getFile().getPath());
+            }
+        });
         _outputsToCreate.add(o);
     }
 
+    @Override
     public List<SequenceOutputFile> getOutputsToCreate()
     {
         if (_outputsToCreate == null)
