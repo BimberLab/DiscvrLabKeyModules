@@ -15,7 +15,6 @@
 
 package org.labkey.sequenceanalysis;
 
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,6 +39,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
+import org.labkey.api.util.logging.LogHelper;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.sequenceanalysis.analysis.BamCleanupHandler;
 import org.labkey.sequenceanalysis.analysis.BamHaplotypeHandler;
@@ -142,7 +142,6 @@ import org.labkey.sequenceanalysis.run.variant.VariantEvalStep;
 import org.labkey.sequenceanalysis.run.variant.VariantFiltrationStep;
 import org.labkey.sequenceanalysis.run.variant.VariantQCStep;
 import org.labkey.sequenceanalysis.run.variant.VariantsToTableStep;
-import org.labkey.sequenceanalysis.run.variant.VcfComparisonStep;
 import org.labkey.sequenceanalysis.util.Barcoder;
 import org.labkey.sequenceanalysis.util.ChainFileValidator;
 import org.labkey.sequenceanalysis.util.ScatterGatherUtils;
@@ -156,7 +155,7 @@ import java.util.Set;
 
 public class SequenceAnalysisModule extends ExtendedSimpleModule
 {
-    private static final Logger _log = LogManager.getLogger(SequenceAnalysisModule.class);
+    private static final Logger _log = LogHelper.getLogger(SequenceAnalysisModule.class, "Sequence Analysis Module Messages");
 
     public static final String NAME = "SequenceAnalysis";
     public static final String CONTROLLER_NAME = "sequenceanalysis";
@@ -320,7 +319,6 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new VariantQCStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new PlinkPcaStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new MendelianViolationReportStep.Provider());
-        SequencePipelineService.get().registerPipelineStep(new VcfComparisonStep.Provider());
 
         //handlers
         SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
