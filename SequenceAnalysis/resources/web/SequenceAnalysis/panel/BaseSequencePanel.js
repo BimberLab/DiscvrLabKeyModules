@@ -117,7 +117,8 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
         return base;
     },
 
-    getJsonParams: function(){
+    getJsonParams: function(config){
+        config = config || {};
         var fieldInputs = this.form.getFields();
         var fields = {};
         var error;
@@ -205,7 +206,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
         });
     },
 
-    onSubmit: function(btn){
+    onSubmit: function(){
         var json = this.getJsonParams();
         if (!json)
             return false;

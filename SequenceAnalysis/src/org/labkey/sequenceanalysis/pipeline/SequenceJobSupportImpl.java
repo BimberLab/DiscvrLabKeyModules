@@ -3,6 +3,7 @@ package org.labkey.sequenceanalysis.pipeline;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import htsjdk.samtools.util.IOUtil;
+import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.exp.api.ExpData;
@@ -105,6 +106,11 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     public void markModified()
     {
         _modifiedSinceSerialize = true;
+    }
+
+    public boolean isModifiedSinceSerialize()
+    {
+        return _modifiedSinceSerialize;
     }
 
     protected void writeToDisk(File json) throws IOException
