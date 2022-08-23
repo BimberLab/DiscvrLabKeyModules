@@ -31,16 +31,19 @@ public class VariantProcessingScatterRemotePrepareTask extends WorkDirectoryTask
             super(VariantProcessingScatterRemotePrepareTask.class);
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.emptyList();
         }
 
+        @Override
         public String getStatusName()
         {
             return PipelineJob.TaskStatus.running.toString();
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
             List<String> allowableNames = new ArrayList<>();
@@ -78,11 +81,13 @@ public class VariantProcessingScatterRemotePrepareTask extends WorkDirectoryTask
             return false;
         }
 
-        public PipelineJob.Task createTask(PipelineJob job)
+        @Override
+        public PipelineJob.Task<?> createTask(PipelineJob job)
         {
             return new VariantProcessingScatterRemotePrepareTask(this, job);
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
@@ -102,7 +107,7 @@ public class VariantProcessingScatterRemotePrepareTask extends WorkDirectoryTask
         SequenceOutputHandlerRemoteTask.possiblyCacheGenomes(getPipelineJob(), getPipelineJob().getFiles());
 
         VariantProcessingJob variantJob = getPipelineJob();
-        SequenceOutputHandler handler = variantJob.getHandler();
+        SequenceOutputHandler<?> handler = variantJob.getHandler();
 
         if (!( handler instanceof VariantProcessingStep.MayRequirePrepareTask))
         {

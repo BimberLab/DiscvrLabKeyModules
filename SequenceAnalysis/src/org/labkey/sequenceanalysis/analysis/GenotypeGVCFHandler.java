@@ -356,6 +356,12 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             if (ctx.getParams().get("variantCalling.GenotypeGVCFs.forceSitesFile") != null)
             {
                 forceCallSitesFile = ctx.getSequenceSupport().getCachedData(ctx.getParams().getInt("variantCalling.GenotypeGVCFs.forceSitesFile"));
+                if (!forceCallSitesFile.exists())
+                {
+                    throw new PipelineJobException("Unable to find file: " + forceCallSitesFile.getPath());
+                }
+
+                forceCallSitesFile = getPossiblyLocalFile(ctx, forceCallSitesFile);
             }
 
             int maxSamplesPerWorkspace = 500;
@@ -642,6 +648,8 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                     throw new PipelineJobException("Unable to find ExpData: " + dataId);
                 }
 
+                bed = getPossiblyLocalFile(ctx, bed);
+
                 toolParams.add(bed.getPath());
             }
 
@@ -746,6 +754,38 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
     public void doWork(List<SequenceOutputFile> inputFiles, JobContext ctx) throws PipelineJobException
     {
         doCopyGvcfLocally(inputFiles, ctx);
+        possiblyCacheSupportFiles(ctx);
+    }
+
+    public static void possiblyCacheSupportFiles(JobContext ctx) throws PipelineJobException
+    {
+        for (String param : Arrays.asList("exclude_intervals", "forceSitesFile"))
+        {
+            if (ctx.getParams().get("variantCalling.GenotypeGVCFs." + param) != null)
+            {
+                File inputFile = ctx.getSequenceSupport().getCachedData(ctx.getParams().getInt("variantCalling.GenotypeGVCFs." + param));
+                if (!inputFile.exists())
+                {
+                    throw new PipelineJobException("Unable to find file: " + inputFile.getPath());
+                }
+
+                ctx.getLogger().debug("Making local copy of file: " + inputFile.getName());
+                File localCopy = new File(getLocalCopyDir(ctx, true), inputFile.getName());
+                File doneFile = new File(localCopy.getPath() + ".copyDone");
+                if (!doneFile.exists())
+                {
+                    try
+                    {
+                        FileUtils.copyFile(inputFile, localCopy);
+                        FileUtils.touch(doneFile);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
+                }
+            }
+        }
     }
 
     public static void doCopyGvcfLocally(List<SequenceOutputFile> inputFiles, JobContext ctx) throws PipelineJobException
@@ -765,5 +805,23 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
         }
 
         return ctx.getOutputDir();
+    }
+
+    protected File getPossiblyLocalFile(JobContext ctx, File sourceFile)
+    {
+        File cacheDir = getLocalCopyDir(ctx, false);
+        if (!cacheDir.exists())
+        {
+            return sourceFile;
+        }
+
+        File cachedFile = new File(cacheDir, sourceFile.getName());
+        if (cachedFile.exists())
+        {
+            ctx.getLogger().debug("Using locally cached file: " + cachedFile.getPath());
+            return cachedFile;
+        }
+
+        return sourceFile;
     }
 }
