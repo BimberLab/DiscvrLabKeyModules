@@ -277,64 +277,6 @@ else
 fi
 
 
-#
-# GATK3
-#
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install GATK3"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/Queue.jar || ! -z $FORCE_REINSTALL ]];
-then
-    rm -Rf ${LKTOOLS_DIR}/Queue.jar
-    rm -Rf ${LKTOOLS_DIR}/GenomeAnalysisTK.jar
-    rm -Rf ${LKSRC_DIR}/gatk
-
-    mkdir -p gatk
-    cd gatk
-
-    echo "Downloading GATK from GIT"
-    git clone git://github.com/broadgsa/gatk-protected.git
-    cd gatk-protected
-    git checkout tags/3.7
-    cd ../
-
-    #this manually increases Xss in the hope of fixing intermittent StackOverlowErrors
-    sed -i '/<groupId>org.scala-tools<\/groupId>/a <configuration><jvmArgs><jvmArg>-Xss10m<\/jvmArg><\/jvmArgs><\/configuration>' ./gatk-protected/pom.xml
-
-    #fix multithreading bug
-    sed -i 's/private final List<GenomeLoc> upstreamDeletionsLoc = new LinkedList<>();/private final ThreadLocal< List<GenomeLoc> > upstreamDeletionsLoc = ThreadLocal.withInitial(() -> new LinkedList<GenomeLoc>());/g' ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/genotyper/GenotypingEngine.java
-    sed -i 's/upstreamDeletionsLoc.add(genomeLoc);/upstreamDeletionsLoc.get().add(genomeLoc);/g' ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/genotyper/GenotypingEngine.java
-    sed -i 's/upstreamDeletionsLoc.iterator();/upstreamDeletionsLoc.get().iterator();/g' ./gatk-protected/protected/gatk-tools-protected/src/main/java/org/broadinstitute/gatk/tools/walkers/genotyper/GenotypingEngine.java
-
-    #libVectorLogless compile:
-    #see: https://gatkforums.broadinstitute.org/gatk/discussion/9947/crashes-with-segmentation-fault-in-shipped-libvectorloglesspairhmm-so
-    sed -i 's/<!--<USE_GCC>1<\/USE_GCC>-->/<USE_GCC>1<\/USE_GCC>/g' ./gatk-protected/public/VectorPairHMM/pom.xml
-    sed -i 's/<!--<C_COMPILER>\/opt\/gcc-4.8.2\/bin\/gcc<\/C_COMPILER>-->/<C_COMPILER>\/usr\/bin\/gcc<\/C_COMPILER>/g' ./gatk-protected/public/VectorPairHMM/pom.xml
-    sed -i 's/<!--<CPP_COMPILER>\/opt\/gcc-4.8.2\/bin\/g++<\/CPP_COMPILER>-->/<CPP_COMPILER>\/usr\/bin\/g++<\/CPP_COMPILER>/g' ./gatk-protected/public/VectorPairHMM/pom.xml
-    cd gatk-protected/public/VectorPairHMM/
-    mvn verify
-    cd ../../../
-    cp gatk-protected/public/VectorPairHMM/target/libVectorLoglessPairHMM.so ${LKTOOLS_DIR}
-
-    cd gatk-protected
-
-    #remove due to compilation / dependency resolution error
-    rm ./public/external-example/src/main/java/org/mycompany/app/*
-    rm ./public/external-example/src/test/java/org/mycompany/app/*
-    sed -i '/<module>external-example<\/module>/d' ./public/pom.xml
-
-    #NOTE: can add -P\!queue to skip queue in some cases
-    mvn verify -U
-    mvn package
-    cp ./protected/gatk-package-distribution/target/gatk-package-distribution-3.7.jar ${LKTOOLS_DIR}/GenomeAnalysisTK.jar
-    cp ./protected/gatk-queue-package-distribution/target/gatk-queue-package-distribution-3.7.jar ${LKTOOLS_DIR}/Queue.jar
-fi
-
-
 if [[ ! -e ${LKTOOLS_DIR}/DISCVRSeq.jar || ! -z $FORCE_REINSTALL ]];
 then
     rm -Rf DISCVRSeq*
@@ -1165,39 +1107,6 @@ then
     chmod +x faToTwoBit
 
     install ./faToTwoBit $LKTOOLS_DIR/faToTwoBit
-else
-    echo "Already installed"
-fi
-
-
-#
-#jbrowse
-#
-
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Installing jbrowse"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/JBrowse-1.12.4 || ! -z $FORCE_REINSTALL ]];
-then
-    rm -Rf JBrowse-*
-    rm -Rf $LKTOOLS_DIR/JBrowse-*
-
-    wget $WGET_OPTS https://github.com/GMOD/jbrowse/releases/download/1.12.4-release/JBrowse-1.12.4.zip
-    unzip JBrowse-1.12.4.zip
-    rm JBrowse-1.12.4.zip
-    cd JBrowse-1.12.4
-    ./setup.sh
-
-    #this seems to cause issues on TeamCity and is not needed
-    rm -Rf ./sample_data
-
-    cd ../
-
-    cp -R ./JBrowse-1.12.4 $LKTOOLS_DIR/JBrowse-1.12.4
 else
     echo "Already installed"
 fi
