@@ -124,6 +124,12 @@ abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentSt
         return parameters;
     }
 
+    @Override
+    public boolean supportsMergeUnaligned()
+    {
+        return _supportsMergeUnaligned;
+    }
+
     private static LinkedHashSet<String> getDependencies(Collection<String> input)
     {
         LinkedHashSet<String> ret = new LinkedHashSet<>();
