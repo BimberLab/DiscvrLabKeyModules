@@ -44,6 +44,11 @@ public class SamtoolsCramConverter extends SamtoolsRunner
 
         execute(params);
 
+        if (!outputCram.exists())
+        {
+            throw new PipelineJobException("Missing output: " + outputCram.getPath());
+        }
+
         if (doIndex)
         {
             doIndex(outputCram, threads);
