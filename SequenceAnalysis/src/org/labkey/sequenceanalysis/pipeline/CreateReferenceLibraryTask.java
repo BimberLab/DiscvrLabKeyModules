@@ -335,6 +335,15 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
 
             try
             {
+                ReferenceGenomeImpl.createGzippedFasta(fasta, getJob().getLogger(), true);
+            }
+            catch (PipelineJobException e)
+            {
+                getJob().getLogger().warn("Unable to create gzipped FASTA");
+            }
+
+            try
+            {
                 File dict = new File(outputDir, basename + ".dict");
                 if (dict.exists())
                 {
@@ -349,11 +358,6 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                 getJob().getLogger().warn("Unable to create sequence dictionary");
             }
 
-            ReferenceGenomeImpl rg = SequenceAnalysisServiceImpl.get().getReferenceGenome(rowId, getJob().getUser());
-            ReferenceGenomeManager.get().markGenomeModified(rg, getJob().getLogger());
-
-            rg.createGzippedFile(getJob().getLogger(), true);
-
             ExpData d = ExperimentService.get().createData(getJob().getContainer(), new DataType("ReferenceLibrary"));
             d.setName(fasta.getName());
             d.setDataFileURI(fasta.toURI());
@@ -365,7 +369,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             toUpdate.put("fasta_file", d.getRowId());
             Map<String, Object> existingKeys = new CaseInsensitiveHashMap<>();
             existingKeys.put("rowid", rowId);
-            libraryTable.getUpdateService().updateRows(getJob().getUser(), getJob().getContainer(), Arrays.asList(toUpdate), Arrays.asList(existingKeys), null, new HashMap<String, Object>());
+            libraryTable.getUpdateService().updateRows(getJob().getUser(), getJob().getContainer(), Arrays.asList(toUpdate), Arrays.asList(existingKeys), null, new HashMap<>());
 
             //then insert children, only if not already present
             List<Map<String, Object>> toInsert = new ArrayList<>();
@@ -403,6 +407,9 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             }
 
             getJob().getLogger().info("creation complete");
+
+            ReferenceGenome rg = SequenceAnalysisService.get().getReferenceGenome(rowId, getJob().getUser());
+            ReferenceGenomeManager.get().markGenomeModified(rg, getJob().getLogger());
 
             Set<GenomeTrigger> triggers = new HashSet<>(getPipelineJob().getExtraTriggers());
             if (getPipelineJob().isSkipTriggers())
