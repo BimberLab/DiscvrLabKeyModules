@@ -854,7 +854,7 @@ then
     rm -Rf $LKTOOLS_DIR/htsjdk-*
     rm -Rf $LKTOOLS_DIR/libIntelDeflater.so
 
-    wget $WGET_OPTS https://github.com/broadinstitute/picard/releases/download/2.18.4/picard.jar
+    wget $WGET_OPTS https://github.com/broadinstitute/picard/releases/download/2.27.4/picard.jar
 
     cp -R ./picard.jar $LKTOOLS_DIR/
 else
