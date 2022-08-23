@@ -705,6 +705,8 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             getJob().getLogger().debug("\t" + a.getName());
         }
 
+        getPipelineJob().getSequenceSupport().markModified();
+
         return new RecordedActionSet(actions);
     }
 

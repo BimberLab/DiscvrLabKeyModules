@@ -645,7 +645,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
         }
     },
 
-    getJsonParams: function(btn){
+    getJsonParams: function(){
         var values = this.callParent(arguments);
         if (!values) {
             return;

@@ -136,16 +136,9 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     @Override
     public boolean setActiveTaskStatus(@NotNull TaskStatus activeTaskStatus)
     {
-        if (TaskStatus.complete == activeTaskStatus && PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
+        if (TaskStatus.complete == activeTaskStatus)
         {
-            try
-            {
-                writeSupportToDisk();
-            }
-            catch (IOException e)
-            {
-                getLogger().error("Unable to serialize job support", e);
-            }
+            writeSupportToDiskIfNeeded();
         }
 
         return super.setActiveTaskStatus(activeTaskStatus);
@@ -446,22 +439,46 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     @Override
     public void writeToFile(File file) throws IOException
     {
-        writeSupportToDisk();
+        TaskFactory<?> factory = getActiveTaskFactory();
+        if (factory != null && !factory.isJobComplete(this))
+        {
+            writeSupportToDiskIfNeeded();
+        }
 
         super.writeToFile(file);
+    }
+
+    protected void writeSupportToDiskIfNeeded()
+    {
+        if (_support == null)
+        {
+            getLogger().debug("SequenceJobSupportImpl is null, will not write to disk");
+            return;
+        }
+        else if (_support.isModifiedSinceSerialize())
+        {
+            try
+            {
+                writeSupportToDisk();
+            }
+            catch (IOException e)
+            {
+                getLogger().error("Unable to serialize job support", e);
+            }
+        }
+        else
+        {
+            getLogger().debug("SequenceSupport was not modified, will not re-serialize to disk");
+        }
     }
 
     protected void writeSupportToDisk() throws IOException
     {
         if (_support != null)
         {
+            getLogger().info("writing SequenceJobSupportImpl to JSON, with " + _support.getCachedReadsets().size() + " readsets, " + _support.getAllCachedData().size() + ", files");
             File json = getCachedSupportFile();
-            try (OutputStream output = IOUtil.maybeBufferOutputStream(IOUtil.openFileForWriting(json)))
-            {
-                getLogger().info("writing SequenceJobSupportImpl to JSON: " + _support.getCachedReadsets().size());
-                ObjectMapper objectMapper = createObjectMapper();
-                objectMapper.writeValue(output, _support);
-            }
+            _support.writeToDisk(json);
         }
         else
         {

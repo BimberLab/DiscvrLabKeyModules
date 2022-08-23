@@ -5254,7 +5254,7 @@ public class SequenceAnalysisController extends SpringActionController
         {
             return new HtmlView(HtmlString.unsafe("This will update the DataFileUrl on the selected ExpData to the path provided. This should be a full URI, such as file:///my/path/myFile.txt." +
                     "<br><br>" +
-                    "<label>ExpData ID: </label><input name=\"rowId\" value = \"" + HtmlString.of(form.getRowId()) + "\"><br>" +
+                    "<label>ExpData ID: </label><input name=\"rowId\" value = \"" + HtmlString.of(form.getRowId() > 0 ? form.getRowId() : "") + "\"><br>" +
                     "<label>DataFileUrl </label><input name=\"dataFileUrl\" value = \"" + HtmlString.of(form.getDataFileUrl()) + "\"><br>"));
         }
 

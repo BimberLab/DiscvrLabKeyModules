@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import htsjdk.samtools.util.IOUtil;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.exp.api.ExpData;
@@ -20,6 +21,7 @@ import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -40,6 +42,8 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     private Map<Integer, AnalysisModel> _cachedAnalyses = new HashMap<>();
     private Map<Integer, ReferenceGenome> _cachedGenomes = new HashMap<>();
     private Map<String, Serializable> _cachedObjects = new HashMap<>();
+
+    private transient boolean _modifiedSinceSerialize = false;
 
     private static final int TEMPORARY_GENOME = -1;
 
@@ -98,6 +102,21 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
         cacheReadset(m, false);
     }
 
+    public void markModified()
+    {
+        _modifiedSinceSerialize = true;
+    }
+
+    protected void writeToDisk(File json) throws IOException
+    {
+        try (OutputStream output = IOUtil.maybeBufferOutputStream(IOUtil.openFileForWriting(json)))
+        {
+            ObjectMapper objectMapper = PipelineJob.createObjectMapper();
+            objectMapper.writeValue(output, this);
+            _modifiedSinceSerialize = false;
+        }
+    }
+
     public void cacheReadset(SequenceReadsetImpl m, boolean allowReadsetsWithArchivedData)
     {
         if (!allowReadsetsWithArchivedData && m.hasArchivedData())
@@ -105,6 +124,7 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
             throw new IllegalArgumentException("Readset has archived data, cannot be used for pipeline jobs", new Exception());
         }
 
+        markModified();
         m.cacheForRemoteServer();
         if (m.existsInDatabase())
         {
@@ -128,6 +148,8 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
 
     public void cacheAnalysis(AnalysisModelImpl m, PipelineJob job, boolean allowReadsetsWithArchivedData)
     {
+        markModified();
+
         if (m.getAlignmentFile() != null)
         {
             cacheExpData(m.getAlignmentData());
@@ -164,6 +186,8 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     @Override
     public void cacheGenome(ReferenceGenome m)
     {
+        markModified();
+
         Integer key = m.getGenomeId();
         if (m.isTemporaryGenome())
         {
@@ -205,6 +229,8 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     @Override
     public void cacheExpData(ExpData data)
     {
+        markModified();
+
         if (data != null)
         {
             _cachedFilePaths.put(data.getRowId(), data.getFile());
@@ -226,6 +252,8 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     @Override
     public void cacheObject(String key, Serializable object)
     {
+        markModified();
+
         _cachedObjects.put(key, object);
     }
 
