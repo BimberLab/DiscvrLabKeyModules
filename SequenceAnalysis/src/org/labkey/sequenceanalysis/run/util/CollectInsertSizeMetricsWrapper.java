@@ -32,10 +32,16 @@ public class CollectInsertSizeMetricsWrapper extends PicardWrapper
         setStringency(ValidationStringency.SILENT);
 
         List<String> params = getBaseArgs();
-        inferMaxRecordsInRam(params);
-        params.add("INPUT=" + inputFile.getPath());
-        params.add("OUTPUT=" + outputFile.getPath());
-        params.add("HISTOGRAM_FILE=" + histogramFile.getPath());
+
+        params.add("-INPUT");
+        params.add(inputFile.getPath());
+
+        params.add("-OUTPUT");
+        params.add(outputFile.getPath());
+
+        params.add("-HISTOGRAM_FILE");
+        params.add(histogramFile.getPath());
+
         execute(params);
 
         if (!outputFile.exists())
@@ -47,6 +53,7 @@ public class CollectInsertSizeMetricsWrapper extends PicardWrapper
         return outputFile;
     }
 
+    @Override
     protected String getToolName()
     {
         return "CollectInsertSizeMetrics";

@@ -4,7 +4,6 @@ import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.SamSorter;
@@ -74,19 +73,26 @@ public class MarkDuplicatesWrapper extends PicardWrapper
         }
 
         List<String> params = getBaseArgs();
-        inferMaxRecordsInRam(params);
+
         // added for compatibility with GATK.  see:
         // http://gatkforums.broadinstitute.org/discussion/2790/indelrealigner-with-markduplicates
-        params.add("PROGRAM_RECORD_ID=null");
-        params.add("INPUT=" + inputFile.getPath());
-        params.add("OUTPUT=" + outputBam.getPath());
+        params.add("-PROGRAM_RECORD_ID");
+        params.add("null");
+
+        params.add("-INPUT");
+        params.add(inputFile.getPath());
+
+        params.add("-OUTPUT");
+        params.add(outputBam.getPath());
+
         if (options != null)
         {
             params.addAll(options);
         }
 
         File metricsFile = getMetricsFile(inputFile);
-        params.add("METRICS_FILE=" + metricsFile.getPath());
+        params.add("-METRICS_FILE");
+        params.add(metricsFile.getPath());
 
         execute(params);
 
@@ -140,6 +146,7 @@ public class MarkDuplicatesWrapper extends PicardWrapper
         return new File(getOutputDir(inputFile), FileUtil.getBaseName(inputFile) + "." + getToolName().toLowerCase() + ".metrics");
     }
 
+    @Override
     protected String getToolName()
     {
         return "MarkDuplicates";

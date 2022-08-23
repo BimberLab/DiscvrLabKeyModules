@@ -36,9 +36,14 @@ public class SortVcfWrapper extends PicardWrapper
         File outputVcf = outputFile == null ? new File(getOutputDir(inputFile), FileUtil.getBaseName(inputFile) + ".sorted.vcf" + gz) : outputFile;
 
         List<String> params = getBaseArgs();
-        params.add("I=" + inputFile.getPath());
-        params.add("O=" + outputVcf.getPath());
-        params.add("SEQUENCE_DICTIONARY=" + sequenceDictionary.getPath());
+        params.add("-I");
+        params.add(inputFile.getPath());
+
+        params.add("-O");
+        params.add(outputVcf.getPath());
+
+        params.add("-SEQUENCE_DICTIONARY");
+        params.add(sequenceDictionary.getPath());
 
         execute(params);
 
@@ -109,6 +114,7 @@ public class SortVcfWrapper extends PicardWrapper
         }
     }
 
+    @Override
     protected String getToolName()
     {
         return "SortVcf";

@@ -4,7 +4,6 @@ import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
@@ -37,15 +36,24 @@ public class AddOrReplaceReadGroupsWrapper extends PicardWrapper
 
         File outputBam = outputFile == null ? new File(getOutputDir(inputFile), FileUtil.getBaseName(inputFile) + ".readgroups.bam") : outputFile;
         List<String> params = getBaseArgs();
-        inferMaxRecordsInRam(params);
-        params.add("INPUT=" + inputFile.getPath());
 
-        params.add("OUTPUT=" + outputBam.getPath());
+        params.add("-INPUT");
+        params.add(inputFile.getPath());
 
-        params.add("RGLB=" + library);
-        params.add("RGPL=" + (platform == null ? "ILLUMINA" : platform));
-        params.add("RGPU=" + platformUnit);
-        params.add("RGSM=" + sampleName);
+        params.add("-OUTPUT");
+        params.add(outputBam.getPath());
+
+        params.add("-RGLB");
+        params.add(library);
+
+        params.add("-RGPL");
+        params.add((platform == null ? "ILLUMINA" : platform));
+
+        params.add("-RGPU");
+        params.add(platformUnit);
+
+        params.add("-RGSM");
+        params.add(sampleName);
 
         execute(params);
 
@@ -89,6 +97,7 @@ public class AddOrReplaceReadGroupsWrapper extends PicardWrapper
         }
     }
 
+    @Override
     protected String getToolName()
     {
         return "AddOrReplaceReadGroups";

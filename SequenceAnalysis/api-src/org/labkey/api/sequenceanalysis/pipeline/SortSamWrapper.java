@@ -35,10 +35,15 @@ public class SortSamWrapper extends PicardWrapper
 
         File outputBam = outputFile == null ? new File(getOutputDir(inputFile), FileUtil.getBaseName(inputFile) + ".sorted.bam") : outputFile;
         List<String> params = getBaseArgs();
-        params.add("INPUT=" + inputFile.getPath());
-        params.add("OUTPUT=" + outputBam.getPath());
-        params.add("SORT_ORDER=" + order.name());
-        inferMaxRecordsInRam(params);
+
+        params.add("-INPUT");
+        params.add(inputFile.getPath());
+
+        params.add("-OUTPUT");
+        params.add(outputBam.getPath());
+
+        params.add("-SORT_ORDER");
+        params.add(order.name());
 
         execute(params);
 

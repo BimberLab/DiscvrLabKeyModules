@@ -800,7 +800,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             else
             {
                 getHelper().getFileManager().addInput(action, "Input BAM File", input);
-                List<File> created = wrapper.extractByReadGroup(input, outDir, null);
+                List<File> created = wrapper.extractByReadGroup(input, outDir);
                 for (File f : created)
                 {
                     getJob().getLogger().info("\tfile created: " + f.getName());
