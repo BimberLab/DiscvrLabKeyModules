@@ -89,26 +89,31 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             super(CreateReferenceLibraryTask.class);
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.emptyList();
         }
 
+        @Override
         public String getStatusName()
         {
             return PipelineJob.TaskStatus.running.toString();
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
             return Arrays.asList("Create Reference Genome");
         }
 
-        public PipelineJob.Task createTask(PipelineJob job)
+        @Override
+        public PipelineJob.Task<?> createTask(PipelineJob job)
         {
             return new CreateReferenceLibraryTask(this, job);
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
@@ -116,6 +121,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
     }
 
     @NotNull
+    @Override
     public RecordedActionSet run() throws PipelineJobException
     {
         TableInfo libraryTable = QueryService.get().getUserSchema(getJob().getUser(), getJob().getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
@@ -179,12 +185,15 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                 rowId = getPipelineJob().getLibraryId();
 
                 //if a previous FASTA exists, delete it
-                ReferenceGenome rg = SequenceAnalysisService.get().getReferenceGenome(rowId, getJob().getUser());
+                ReferenceGenomeImpl rg = SequenceAnalysisServiceImpl.get().getReferenceGenome(rowId, getJob().getUser());
                 ExpData existingFasta = ExperimentService.get().getExpData(rg.getFastaExpDataId());
-                if (existingFasta != null && existingFasta.getFile().exists())
+                if (existingFasta != null)
                 {
                     getJob().getLogger().debug("deleting existing FASTA: " + existingFasta.getFile().getPath());
-                    existingFasta.getFile().delete();
+                    if (existingFasta.getFile().exists())
+                    {
+                        existingFasta.getFile().delete();
+                    }
 
                     //also indexes/dict
                     String basename = FileUtil.getBaseName(existingFasta.getName());
@@ -233,8 +242,21 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                     {
                         idKey.delete();
                     }
+
+                    File gzFasta = new File(fasta.getPath() + ".gz");
+                    if (gzFasta.exists())
+                    {
+                        gzFasta.delete();
+                    }
+
+                    File gzFastaIdx = new File(fasta.getPath() + ".gz.gzi");
+                    if (gzFastaIdx.exists())
+                    {
+                        gzFastaIdx.delete();
+                    }
                 }
             }
+
             getPipelineJob().setLibraryId(rowId);
 
             String basename = FileUtil.makeLegalName(rowId + "_" + getPipelineJob().getLibraryName().replace(" ", "_"));
@@ -267,14 +289,6 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                 FileUtils.deleteDirectory(alignerIndexes);
             }
 
-            //TODO: check whether to include primary contigs only
-            //if (getPipelineJob().isCreateNew() && getPipelineJob().getUnplacedContigPrefixes() != null)
-            //{
-
-            //}
-
-            //TODO: check whether to build ChrUn
-
             //then gather sequences and create the FASTA
             try (PrintWriter writer = PrintWriters.getPrintWriter(fasta); PrintWriter idWriter = PrintWriters.getPrintWriter(idFile))
             {
@@ -306,8 +320,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             try
             {
                 FastaIndexer indexer = new FastaIndexer(getJob().getLogger());
-
-                File index = indexer.getExpectedIndexName(fasta);
+                File index = FastaIndexer.getExpectedIndexName(fasta);
                 if (index.exists())
                 {
                     index.delete();
@@ -336,6 +349,11 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                 getJob().getLogger().warn("Unable to create sequence dictionary");
             }
 
+            ReferenceGenomeImpl rg = SequenceAnalysisServiceImpl.get().getReferenceGenome(rowId, getJob().getUser());
+            ReferenceGenomeManager.get().markGenomeModified(rg, getJob().getLogger());
+
+            rg.createGzippedFile(getJob().getLogger(), true);
+
             ExpData d = ExperimentService.get().createData(getJob().getContainer(), new DataType("ReferenceLibrary"));
             d.setName(fasta.getName());
             d.setDataFileURI(fasta.toURI());
@@ -355,7 +373,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             {
                 if (row.getRowid() == 0)
                 {
-                    CaseInsensitiveHashMap childRow = new CaseInsensitiveHashMap();
+                    CaseInsensitiveHashMap<Object> childRow = new CaseInsensitiveHashMap<>();
                     childRow.put("library_id", rowId);
                     childRow.put("ref_nt_id", row.getRefNtId());
                     childRow.put("start", row.getStart());
@@ -385,9 +403,6 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             }
 
             getJob().getLogger().info("creation complete");
-
-            ReferenceGenome rg = SequenceAnalysisService.get().getReferenceGenome(rowId, getJob().getUser());
-            ReferenceGenomeManager.get().markGenomeModified(rg, getJob().getLogger());
 
             Set<GenomeTrigger> triggers = new HashSet<>(getPipelineJob().getExtraTriggers());
             if (getPipelineJob().isSkipTriggers())
