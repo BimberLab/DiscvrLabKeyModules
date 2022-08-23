@@ -455,7 +455,9 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
             getLogger().debug("SequenceJobSupportImpl is null, will not write to disk");
             return;
         }
-        else if (_support.isModifiedSinceSerialize())
+
+        File json = getCachedSupportFile();
+        if (!json.exists() || _support.isModifiedSinceSerialize())
         {
             try
             {
@@ -584,8 +586,13 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
                 support.delete();
             }
 
+            // This should re-create the cached file, even though support is not modified
             job.writeToFile(testFile);
             assertTrue("Missing support file", support.exists());
+            long modified = support.lastModified();
+
+            job.writeToFile(testFile);
+            assertEquals("Serialized support should not have been modified", modified, support.lastModified());
 
             job._support = null;
             SequenceJobSupportImpl deserializedSupport = job.getSequenceSupport();
