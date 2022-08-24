@@ -1805,16 +1805,10 @@ public class SequenceIntegrationTests
                     "paired1/Alignment/paired1.mosaik.bam.bai"
             ));
 
-            extraFiles.add("Shared/SIVmac239_Test.dict");
-
             extraFiles.add("paired1/Alignment/paired1.mosaik.readgroups.bam");
             extraFiles.add("paired1/Alignment/paired1.mosaik.readgroups.calmd.bam");
             extraFiles.add("paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.bam");
             extraFiles.add("paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.bam");
-
-            extraFiles.add("paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.intervals");
-            extraFiles.add("paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.bam");
-            extraFiles.add("paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.bai");
 
             extraFiles.add("paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.markduplicates.metrics");
 
@@ -1836,18 +1830,12 @@ public class SequenceIntegrationTests
                     "paired3/Alignment/paired3.mosaik.bam.bai"
             ));
 
-            extraFiles.add("Shared/SIVmac239_Test.dict");
-
             extraFiles.add("paired3/Alignment/paired3.mosaikreads");
             extraFiles.add("paired3/Alignment/paired3.mosaik.stat");
             extraFiles.add("paired3/Alignment/paired3.mosaik.readgroups.bam");
             extraFiles.add("paired3/Alignment/paired3.mosaik.readgroups.calmd.bam");
             extraFiles.add("paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.bam");
             extraFiles.add("paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.bam");
-
-            extraFiles.add("paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.intervals");
-            extraFiles.add("paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.bam");
-            extraFiles.add("paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.bai");
 
             extraFiles.add("paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.markduplicates.metrics");
 
@@ -1868,8 +1856,6 @@ public class SequenceIntegrationTests
                     "paired4/Alignment/paired4.mosaik.bam.bai"
             ));
 
-            extraFiles.add("Shared/SIVmac239_Test.dict");
-
             extraFiles.add("paired4");
             extraFiles.add("paired4/Alignment");
             extraFiles.add("paired4/Alignment/paired4.mosaikreads");
@@ -1878,10 +1864,6 @@ public class SequenceIntegrationTests
             extraFiles.add("paired4/Alignment/paired4.mosaik.readgroups.calmd.bam");
             extraFiles.add("paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.bam");
             extraFiles.add("paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.bam");
-
-            extraFiles.add("paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.intervals");
-            extraFiles.add("paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.bam");
-            extraFiles.add("paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.bai");
 
             extraFiles.add("paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.markduplicates.metrics");
 
