@@ -61,10 +61,10 @@ public class EstimateLibraryComplexityWrapper extends PicardWrapper
 
         List<String> params = getBaseArgs();
 
-        params.add("-INPUT");
+        params.add("--INPUT");
         params.add(inputFile.getPath());
 
-        params.add("-OUTPUT");
+        params.add("--OUTPUT");
         params.add(getMetricsFile(inputFile).getPath());
 
         execute(params);

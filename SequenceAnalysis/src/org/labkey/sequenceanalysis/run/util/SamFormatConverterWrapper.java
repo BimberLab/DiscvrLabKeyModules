@@ -48,10 +48,10 @@ public class SamFormatConverterWrapper extends PicardWrapper
     {
         List<String> params = getBaseArgs();
 
-        params.add("-INPUT");
+        params.add("--INPUT");
         params.add(inputFile.getPath());
 
-        params.add("-OUTPUT");
+        params.add("--OUTPUT");
         params.add(outputFile.getPath());
 
         return params;

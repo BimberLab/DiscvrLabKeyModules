@@ -45,10 +45,10 @@ public class CreateSequenceDictionaryWrapper extends PicardWrapper
 
         List<String> params = getBaseArgs();
 
-        params.add("-REFERENCE");
+        params.add("--REFERENCE");
         params.add(referenceFasta.getPath());
 
-        params.add("-OUTPUT");
+        params.add("--OUTPUT");
         params.add(expected.getPath());
 
         execute(params);

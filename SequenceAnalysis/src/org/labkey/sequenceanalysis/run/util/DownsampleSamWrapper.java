@@ -42,13 +42,13 @@ public class DownsampleSamWrapper extends PicardWrapper
     private List<String> getParams(File file, Double pctRetained)
     {
         List<String> params = getBaseArgs();
-        params.add("-INPUT");
+        params.add("--INPUT");
         params.add(file.getPath());
 
-        params.add("-OUTPUT");
+        params.add("--OUTPUT");
         params.add(new File(getOutputDir(file), getOutputFilename(file)).getPath());
 
-        params.add("-PROBABILITY");
+        params.add("--PROBABILITY");
         params.add(String.valueOf(pctRetained));
 
         return params;

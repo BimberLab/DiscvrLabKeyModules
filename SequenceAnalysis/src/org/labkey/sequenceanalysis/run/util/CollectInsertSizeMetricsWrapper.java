@@ -33,13 +33,13 @@ public class CollectInsertSizeMetricsWrapper extends PicardWrapper
 
         List<String> params = getBaseArgs();
 
-        params.add("-INPUT");
+        params.add("--INPUT");
         params.add(inputFile.getPath());
 
-        params.add("-OUTPUT");
+        params.add("--OUTPUT");
         params.add(outputFile.getPath());
 
-        params.add("-HISTOGRAM_FILE");
+        params.add("--HISTOGRAM_FILE");
         params.add(histogramFile.getPath());
 
         execute(params);

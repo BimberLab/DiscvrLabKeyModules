@@ -76,13 +76,13 @@ public class MarkDuplicatesWrapper extends PicardWrapper
 
         // added for compatibility with GATK.  see:
         // http://gatkforums.broadinstitute.org/discussion/2790/indelrealigner-with-markduplicates
-        params.add("-PROGRAM_RECORD_ID");
+        params.add("--PROGRAM_RECORD_ID");
         params.add("null");
 
-        params.add("-INPUT");
+        params.add("--INPUT");
         params.add(inputFile.getPath());
 
-        params.add("-OUTPUT");
+        params.add("--OUTPUT");
         params.add(outputBam.getPath());
 
         if (options != null)
@@ -91,7 +91,7 @@ public class MarkDuplicatesWrapper extends PicardWrapper
         }
 
         File metricsFile = getMetricsFile(inputFile);
-        params.add("-METRICS_FILE");
+        params.add("--METRICS_FILE");
         params.add(metricsFile.getPath());
 
         execute(params);

@@ -31,12 +31,12 @@ public class FixMateInformationWrapper extends PicardWrapper
 
         List<String> params = getBaseArgs();
 
-        params.add("-INPUT");
+        params.add("--INPUT");
         params.add(inputFile.getPath());
 
         if (outputFile != null)
         {
-            params.add("-OUTPUT");
+            params.add("--OUTPUT");
             params.add(outputFile.getPath());
         }
 

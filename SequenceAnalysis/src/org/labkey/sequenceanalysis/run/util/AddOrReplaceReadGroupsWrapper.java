@@ -37,22 +37,22 @@ public class AddOrReplaceReadGroupsWrapper extends PicardWrapper
         File outputBam = outputFile == null ? new File(getOutputDir(inputFile), FileUtil.getBaseName(inputFile) + ".readgroups.bam") : outputFile;
         List<String> params = getBaseArgs();
 
-        params.add("-INPUT");
+        params.add("--INPUT");
         params.add(inputFile.getPath());
 
-        params.add("-OUTPUT");
+        params.add("--OUTPUT");
         params.add(outputBam.getPath());
 
-        params.add("-RGLB");
+        params.add("--RGLB");
         params.add(library);
 
-        params.add("-RGPL");
+        params.add("--RGPL");
         params.add((platform == null ? "ILLUMINA" : platform));
 
-        params.add("-RGPU");
+        params.add("--RGPU");
         params.add(platformUnit);
 
-        params.add("-RGSM");
+        params.add("--RGSM");
         params.add(sampleName);
 
         execute(params);

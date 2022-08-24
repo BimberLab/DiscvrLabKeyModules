@@ -58,47 +58,47 @@ public class FastqToSamWrapper extends PicardWrapper
     {
         List<String> params = getBaseArgs();
 
-        params.add("-FASTQ");
+        params.add("--FASTQ");
         params.add(file.getPath());
 
         if (file2 != null)
         {
-            params.add("-FASTQ2");
+            params.add("--FASTQ2");
             params.add(file2.getPath());
         }
 
         if (sortOrder != null)
         {
-            params.add("-SORT_ORDER");
+            params.add("--SORT_ORDER");
             params.add(sortOrder.name());
         }
 
         if (rg != null)
         {
-            params.add("-READ_GROUP_NAME");
+            params.add("--READ_GROUP_NAME");
             params.add(rg.getReadGroupId());
 
             if (rg.getPlatform() != null)
             {
-                params.add("-PLATFORM");
+                params.add("--PLATFORM");
                 params.add(rg.getPlatform());
             }
 
             if (rg.getPlatformUnit() != null)
             {
-                params.add("-PLATFORM_UNIT");
+                params.add("--PLATFORM_UNIT");
                 params.add(rg.getPlatformUnit());
             }
 
-            params.add("-SAMPLE_NAME");
+            params.add("--SAMPLE_NAME");
             params.add((rg.getSample() == null ? "SAMPLE" : rg.getSample()));
         }
         else
         {
-            params.add("-READ_GROUP_NAME");
+            params.add("--READ_GROUP_NAME");
             params.add("null");
 
-            params.add("-SAMPLE_NAME");
+            params.add("--SAMPLE_NAME");
             params.add("SAMPLE");
         }
 
@@ -117,10 +117,10 @@ public class FastqToSamWrapper extends PicardWrapper
             }
         }
 
-        params.add("-QUALITY_FORMAT");
+        params.add("--QUALITY_FORMAT");
         params.add(encoding.name());
 
-        params.add("-OUTPUT");
+        params.add("--OUTPUT");
         params.add(new File(getOutputDir(file), getOutputFilename(file)).getPath());
 
         return params;

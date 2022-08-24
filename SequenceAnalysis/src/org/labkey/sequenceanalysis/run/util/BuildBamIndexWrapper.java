@@ -50,10 +50,10 @@ public class BuildBamIndexWrapper extends PicardWrapper
     {
         List<String> params = getBaseArgs();
 
-        params.add("-INPUT");
+        params.add("--INPUT");
         params.add(file.getPath());
 
-        params.add("-OUTPUT");
+        params.add("--OUTPUT");
         params.add(new File(getOutputDir(file), getOutputFilename(file)).getPath());
 
         return params;

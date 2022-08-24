@@ -92,14 +92,14 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
         params.add(getJar().getPath());
         params.add(getToolName());
 
-        params.add("-VALIDATION_STRINGENCY");
+        params.add("--VALIDATION_STRINGENCY");
         params.add(getStringency().name());
 
-        params.add("-COMPRESSION_LEVEL");
+        params.add("--COMPRESSION_LEVEL");
         params.add(String.valueOf(getCompressionLevel()));
 
         //note: having issues, probably due to OS versions
-        params.add("-USE_JDK_DEFLATER");
+        params.add("--USE_JDK_DEFLATER");
         params.add("true");
 
         return params;

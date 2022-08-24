@@ -34,22 +34,22 @@ public class CollectWgsMetricsWrapper extends PicardWrapper
 
         List<String> params = getBaseArgs();
 
-        params.add("-INPUT");
+        params.add("--INPUT");
         params.add(inputFile.getPath());
 
-        params.add("-OUTPUT");
+        params.add("--OUTPUT");
         params.add(outputFile.getPath());
 
-        params.add("-REFERENCE_SEQUENCE");
+        params.add("--REFERENCE_SEQUENCE");
         params.add(refFasta.getPath());
 
-        params.add("-INCLUDE_BQ_HISTOGRAM");
+        params.add("--INCLUDE_BQ_HISTOGRAM");
         params.add("true");
 
         if ("CollectWgsMetricsWithNonZeroCoverage".equals(getToolName()))
         {
             File pdf = new File(outputFile.getParentFile(), FileUtil.getBaseName(outputFile.getName()) + ".wgsMetrics.pdf");
-            params.add("-CHART_OUTPUT");
+            params.add("--CHART_OUTPUT");
             params.add(pdf.getPath());
         }
 

@@ -39,16 +39,16 @@ public class AlignmentSummaryMetricsWrapper extends PicardWrapper
             {
                 List<String> params = getBaseArgs();
 
-                params.add("-METRIC_ACCUMULATION_LEVEL");
+                params.add("--METRIC_ACCUMULATION_LEVEL");
                 params.add("ALL_READS");
 
-                params.add("-INPUT");
+                params.add("--INPUT");
                 params.add(inputFile.getPath());
 
                 params.add("-R");
                 params.add(reference.getPath());
 
-                params.add("-OUTPUT");
+                params.add("--OUTPUT");
                 params.add(outputFile.getPath());
 
                 execute(params);

@@ -42,7 +42,7 @@ public class SortVcfWrapper extends PicardWrapper
         params.add("-O");
         params.add(outputVcf.getPath());
 
-        params.add("-SEQUENCE_DICTIONARY");
+        params.add("--SEQUENCE_DICTIONARY");
         params.add(sequenceDictionary.getPath());
 
         execute(params);

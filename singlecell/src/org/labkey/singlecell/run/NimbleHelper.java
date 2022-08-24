@@ -306,7 +306,17 @@ public class NimbleHelper
         runUsingDocker(alignArgs, output, "align-" + genome.genomeId);
 
         File resultsGz = new File(resultsTsv.getPath() + ".gz");
-        if (!resultsGz.exists())
+        if (!resultsTsv.exists() && !resultsGz.exists())
+        {
+            File doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), "align-" + genome.genomeId);
+            if (doneFile.exists())
+            {
+                doneFile.delete();
+            }
+
+            throw new PipelineJobException("Expected to find file: " + resultsTsv.getPath());
+        }
+        else if (!resultsGz.exists())
         {
             // NOTE: perform compression outside of nimble until nimble bugs fixed
             getPipelineCtx().getLogger().debug("Compressing results TSV file");
@@ -319,17 +329,6 @@ public class NimbleHelper
         }
 
         resultsTsv = resultsGz;
-
-        if (!resultsTsv.exists())
-        {
-            File doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), "align-" + genome.genomeId);
-            if (doneFile.exists())
-            {
-                doneFile.delete();
-            }
-
-            throw new PipelineJobException("Expected to find file: " + resultsTsv.getPath());
-        }
 
         File log = getNimbleLogFile(resultsTsv.getParentFile(), genome.genomeId);
         if (!log.exists())
@@ -398,9 +397,9 @@ public class NimbleHelper
             writer.println("\t-w /work \\");
             writer.println("\t" + DOCKER_CONTAINER_NAME + " \\");
             writer.println("\t" + StringUtils.join(nimbleArgs, " "));
-            writer.println("");
-            writer.println("echo 'Bash script complete'");
-            writer.println("");
+            writer.println("EXIT_CODE=$?");
+            writer.println("echo 'Bash script complete: '$EXIT_CODE");
+            writer.println("exit $EXIT_CODE");
         }
         catch (IOException e)
         {

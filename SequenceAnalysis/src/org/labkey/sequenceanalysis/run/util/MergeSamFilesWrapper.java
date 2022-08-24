@@ -117,17 +117,17 @@ public class MergeSamFilesWrapper extends PicardWrapper
 
         for (File f : files)
         {
-            params.add("-INPUT");
+            params.add("--INPUT");
             params.add(f.getPath());
         }
 
-        params.add("-OUTPUT");
+        params.add("--OUTPUT");
         params.add(outputPath.getPath());
 
         Integer threads = SequencePipelineService.get().getMaxThreads(getLogger());
         if (threads != null && threads > 1)
         {
-            params.add("-USE_THREADING");
+            params.add("--USE_THREADING");
             params.add("TRUE");
         }
 

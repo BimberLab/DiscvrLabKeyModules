@@ -58,10 +58,10 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
             }
 
             List<String> params = getBaseArgs();
-            params.add("-ALIGNED_BAM");
+            params.add("--ALIGNED_BAM");
             params.add(querySortedAlignedBam.getPath());
 
-            params.add("-MAX_INSERTIONS_OR_DELETIONS");
+            params.add("--MAX_INSERTIONS_OR_DELETIONS");
             params.add("-1");
 
             //can take a long time to calculate
@@ -117,40 +117,40 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
             SortSamWrapper sorter = new SortSamWrapper(getLogger());
             finalUnmappedReadsBam = sorter.execute(finalUnmappedReadsBam, null, SAMFileHeader.SortOrder.queryname);
 
-            params.add("-UNMAPPED_BAM");
+            params.add("--UNMAPPED_BAM");
             params.add(finalUnmappedReadsBam.getPath());
 
             //TODO: bisulfiteSequence
 
-            params.add("-REFERENCE_SEQUENCE");
+            params.add("--REFERENCE_SEQUENCE");
             params.add(refFasta.getPath());
 
             boolean dictCreated = ensureDictionary(refFasta);
 
             //this argument is ignored by the tool, but is stil required
-            params.add("-PAIRED_RUN");
+            params.add("--PAIRED_RUN");
             params.add("false");
 
-            params.add("-ALIGNED_READS_ONLY");
+            params.add("--ALIGNED_READS_ONLY");
             params.add("false");
 
-            params.add("-CLIP_ADAPTERS");
+            params.add("--CLIP_ADAPTERS");
             params.add("false");
 
-            params.add("-CLIP_OVERLAPPING_READS");
+            params.add("--CLIP_OVERLAPPING_READS");
             params.add("false");
 
-            params.add("-INCLUDE_SECONDARY_ALIGNMENTS");
+            params.add("--INCLUDE_SECONDARY_ALIGNMENTS");
             params.add("true");
 
-            params.add("-ALIGNER_PROPER_PAIR_FLAGS");
+            params.add("--ALIGNER_PROPER_PAIR_FLAGS");
             params.add("false");
 
-            params.add("-SORT_ORDER");
+            params.add("--SORT_ORDER");
             params.add(SAMFileHeader.SortOrder.coordinate.name());
 
             File mergedFile = new File(getOutputDir(alignedBam), FileUtil.getBaseName(alignedBam) + ".merged.bam");
-            params.add("-OUTPUT");
+            params.add("--OUTPUT");
             params.add(mergedFile.getPath());
 
             execute(params);

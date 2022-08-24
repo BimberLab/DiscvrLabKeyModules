@@ -30,16 +30,16 @@ public class SamToFastqWrapper extends PicardWrapper
         getLogger().info("\tSamToFastq version: " + getVersion());
 
         List<String> args = getBaseParams(file);
-        args.add("-INCLUDE_NON_PRIMARY_ALIGNMENTS");
+        args.add("--INCLUDE_NON_PRIMARY_ALIGNMENTS");
         args.add("FALSE");
 
-        args.add("-INCLUDE_NON_PF_READS");
+        args.add("--INCLUDE_NON_PF_READS");
         args.add("TRUE");
 
-        args.add("-OUTPUT_PER_RG");
+        args.add("--OUTPUT_PER_RG");
         args.add("TRUE");
 
-        args.add("-OUTPUT_DIR");
+        args.add("--OUTPUT_DIR");
         args.add(outDir.getPath());
 
         execute(args);
@@ -57,13 +57,13 @@ public class SamToFastqWrapper extends PicardWrapper
         List<String> args = getBaseParams(file);
 
         File output1 = new File(getOutputDir(file), outputName1);
-        args.add("-FASTQ");
+        args.add("--FASTQ");
         args.add(output1.getPath());
 
         if (outputName2 != null)
         {
             File output2 = new File(getOutputDir(file), outputName2);
-            args.add("-SECOND_END_FASTQ");
+            args.add("--SECOND_END_FASTQ");
             args.add(output2.getPath());
         }
 
@@ -92,7 +92,7 @@ public class SamToFastqWrapper extends PicardWrapper
     private List<String> getBaseParams(File file)
     {
         List<String> params = getBaseArgs();
-        params.add("-INPUT");
+        params.add("--INPUT");
         params.add(file.getPath());
 
         return params;
