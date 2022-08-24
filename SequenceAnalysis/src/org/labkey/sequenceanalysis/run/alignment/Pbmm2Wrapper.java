@@ -46,7 +46,7 @@ public class Pbmm2Wrapper extends AbstractCommandWrapper
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--log-level"), "loglevel", "Log Level", "The verbosity of logging.", "ldk-simplecombo", new JSONObject(){{
                         put("storeValues", "DEBUG;INFO");
                         put("multiSelect", false);
-                    }}, "DEBUG"),
+                    }}, "INFO"),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--median-filter"), "medianFilter", "Median Filter", "Using --median-filter, only the subread closest to the median subread length per ZMW is being aligned. Preferably, full-length subreads flanked by adapters are chosen.", "checkbox", new JSONObject(){{
 
                     }}, false)
