@@ -39,7 +39,7 @@ public class CollectInsertSizeMetricsWrapper extends PicardWrapper
         params.add("--OUTPUT");
         params.add(outputFile.getPath());
 
-        params.add("--HISTOGRAM_FILE");
+        params.add("-H");
         params.add(histogramFile.getPath());
 
         execute(params);
