@@ -587,7 +587,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
             }
 
             // This should re-create the cached file, even though support is not modified
-            job.writeToFile(testFile);
+            job.writeSupportToDiskIfNeeded();
             assertTrue("Missing support file", support.exists());
             long modified = support.lastModified();
 
