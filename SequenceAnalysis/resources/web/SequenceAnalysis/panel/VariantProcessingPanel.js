@@ -200,7 +200,8 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
                 description: 'This is the basename that will be used for the output gzipped VCF',
                 commandLineParam: false,
 				additionalExtConfig: {
-					allowBlank: false
+					allowBlank: false,
+					doNotIncludeInTemplates: true
 				},
                 defaultValue: null
             },{
