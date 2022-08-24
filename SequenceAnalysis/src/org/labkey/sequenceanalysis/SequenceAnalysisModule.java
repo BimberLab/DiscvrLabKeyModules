@@ -15,7 +15,6 @@
 
 package org.labkey.sequenceanalysis;
 
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,6 +39,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
+import org.labkey.api.util.logging.LogHelper;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.sequenceanalysis.analysis.BamCleanupHandler;
 import org.labkey.sequenceanalysis.analysis.BamHaplotypeHandler;
@@ -63,25 +63,7 @@ import org.labkey.sequenceanalysis.button.ChangeReadsetStatusForAnalysesButton;
 import org.labkey.sequenceanalysis.button.DownloadSraButton;
 import org.labkey.sequenceanalysis.button.ReprocessLibraryButton;
 import org.labkey.sequenceanalysis.button.RunMultiQCButton;
-import org.labkey.sequenceanalysis.pipeline.AlignmentAnalysisJob;
-import org.labkey.sequenceanalysis.pipeline.AlignmentImportJob;
-import org.labkey.sequenceanalysis.pipeline.CacheGenomePipelineJob;
-import org.labkey.sequenceanalysis.pipeline.CacheGenomeTrigger;
-import org.labkey.sequenceanalysis.pipeline.ConvertToCramHandler;
-import org.labkey.sequenceanalysis.pipeline.IlluminaImportJob;
-import org.labkey.sequenceanalysis.pipeline.ImportFastaSequencesPipelineJob;
-import org.labkey.sequenceanalysis.pipeline.ImportGenomeTrackPipelineJob;
-import org.labkey.sequenceanalysis.pipeline.OrphanFilePipelineProvider;
-import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
-import org.labkey.sequenceanalysis.pipeline.ReadsetImportJob;
-import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineProvider;
-import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentJob;
-import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentTask;
-import org.labkey.sequenceanalysis.pipeline.SequenceJobSupportImpl;
-import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerPipelineProvider;
-import org.labkey.sequenceanalysis.pipeline.SequencePipelineProvider;
-import org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerPipelineProvider;
-import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
+import org.labkey.sequenceanalysis.pipeline.*;
 import org.labkey.sequenceanalysis.query.SequenceAnalysisUserSchema;
 import org.labkey.sequenceanalysis.query.SequenceTriggerHelper;
 import org.labkey.sequenceanalysis.run.RestoreSraDataHandler;
@@ -92,7 +74,9 @@ import org.labkey.sequenceanalysis.run.alignment.Bowtie2Wrapper;
 import org.labkey.sequenceanalysis.run.alignment.BowtieWrapper;
 import org.labkey.sequenceanalysis.run.alignment.GSnapWrapper;
 import org.labkey.sequenceanalysis.run.alignment.MosaikWrapper;
+import org.labkey.sequenceanalysis.run.alignment.Pbmm2Wrapper;
 import org.labkey.sequenceanalysis.run.alignment.StarWrapper;
+import org.labkey.sequenceanalysis.run.alignment.VulcanWrapper;
 import org.labkey.sequenceanalysis.run.analysis.BamIterator;
 import org.labkey.sequenceanalysis.run.analysis.ExportOverlappingReadsAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.HaplotypeCallerAnalysis;
@@ -102,6 +86,7 @@ import org.labkey.sequenceanalysis.run.analysis.MergeLoFreqVcfHandler;
 import org.labkey.sequenceanalysis.run.analysis.NextCladeHandler;
 import org.labkey.sequenceanalysis.run.analysis.PARalyzerAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.PangolinHandler;
+import org.labkey.sequenceanalysis.run.analysis.PbsvAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.PindelAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SnpCountAnalysis;
@@ -157,7 +142,6 @@ import org.labkey.sequenceanalysis.run.variant.VariantEvalStep;
 import org.labkey.sequenceanalysis.run.variant.VariantFiltrationStep;
 import org.labkey.sequenceanalysis.run.variant.VariantQCStep;
 import org.labkey.sequenceanalysis.run.variant.VariantsToTableStep;
-import org.labkey.sequenceanalysis.run.variant.VcfComparisonStep;
 import org.labkey.sequenceanalysis.util.Barcoder;
 import org.labkey.sequenceanalysis.util.ChainFileValidator;
 import org.labkey.sequenceanalysis.util.ScatterGatherUtils;
@@ -171,7 +155,7 @@ import java.util.Set;
 
 public class SequenceAnalysisModule extends ExtendedSimpleModule
 {
-    private static final Logger _log = LogManager.getLogger(SequenceAnalysisModule.class);
+    private static final Logger _log = LogHelper.getLogger(SequenceAnalysisModule.class, "Sequence Analysis Module Messages");
 
     public static final String NAME = "SequenceAnalysis";
     public static final String CONTROLLER_NAME = "sequenceanalysis";
@@ -280,6 +264,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new MosaikWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new GSnapWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new StarWrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new Pbmm2Wrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new VulcanWrapper.Provider());
 
         //de novo assembly
         SequencePipelineService.get().registerPipelineStep(new TrinityRunner.Provider());
@@ -310,6 +296,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new TagPcrSummaryStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new LofreqAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new PindelAnalysis.Provider());
+        SequencePipelineService.get().registerPipelineStep(new PbsvAnalysis.Provider());
 
         //SequencePipelineService.get().registerPipelineStep(new BlastUnmappedReadAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new PARalyzerAnalysis.Provider());
@@ -332,7 +319,6 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new VariantQCStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new PlinkPcaStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new MendelianViolationReportStep.Provider());
-        SequencePipelineService.get().registerPipelineStep(new VcfComparisonStep.Provider());
 
         //handlers
         SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
@@ -345,6 +331,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new BamCleanupHandler());
         SequenceAnalysisService.get().registerFileHandler(new PrintReadBackedHaplotypesHandler());
         SequenceAnalysisService.get().registerFileHandler(new HaplotypeCallerHandler());
+        SequenceAnalysisService.get().registerFileHandler(new ReblockGvcfHandler());
         SequenceAnalysisService.get().registerFileHandler(new RnaSeqcHandler());
         SequenceAnalysisService.get().registerFileHandler(new CombineStarGeneCountsHandler());
         SequenceAnalysisService.get().registerFileHandler(new CombineSubreadGeneCountsHandler());
@@ -485,6 +472,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         return PageFlowUtil.set(
                 SequenceAlignmentTask.TestCase.class,
                 SequenceAnalysisManager.TestCase.class,
+                SequenceJob.TestCase.class,
                 SequenceJobSupportImpl.TestCase.class,
                 ProcessVariantsHandler.TestCase.class,
                 VariantProcessingJob.TestCase.class,

@@ -183,6 +183,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.net.URI;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -5230,6 +5231,82 @@ public class SequenceAnalysisController extends SpringActionController
         public void setOutputFileIds(Integer[] outputFileIds)
         {
             _outputFileIds = outputFileIds;
+        }
+    }
+
+    @RequiresSiteAdmin
+    public class UpdateExpDataPathAction extends ConfirmAction<UpdateExpDataPathForm>
+    {
+        @Override
+        public void validateCommand(UpdateExpDataPathForm form, Errors errors)
+        {
+
+        }
+
+        @Override
+        public URLHelper getSuccessURL(UpdateExpDataPathForm form)
+        {
+            return getContainer().getStartURL(getUser());
+        }
+
+        @Override
+        public ModelAndView getConfirmView(UpdateExpDataPathForm form, BindException errors) throws Exception
+        {
+            return new HtmlView(HtmlString.unsafe("This will update the DataFileUrl on the selected ExpData to the path provided. This should be a full URI, such as file:///my/path/myFile.txt." +
+                    "<br><br>" +
+                    "<label>ExpData ID: </label><input name=\"rowId\" value = \"" + HtmlString.of(form.getRowId() > 0 ? form.getRowId() : "") + "\"><br>" +
+                    "<label>DataFileUrl </label><input name=\"dataFileUrl\" value = \"" + HtmlString.of(form.getDataFileUrl()) + "\"><br>"));
+        }
+
+        @Override
+        public boolean handlePost(UpdateExpDataPathForm form, BindException errors) throws Exception
+        {
+            int rowId = form.getRowId();
+            ExpData d = ExperimentService.get().getExpData(rowId);
+            if (d == null)
+            {
+                errors.reject(ERROR_MSG, "Invalid ExpData: " + form.getRowId());
+                return false;
+            }
+
+            URI newUri = URI.create(form.getDataFileUrl());
+            File f = new File(newUri);
+            if (!f.exists())
+            {
+                throw new PipelineJobException("Missing file: " + form.getDataFileUrl());
+            }
+
+            d.setDataFileURI(newUri);
+            d.save(getUser());
+
+            return true;
+        }
+    }
+
+    public static class UpdateExpDataPathForm
+    {
+        private int _rowId;
+
+        private String _dataFileUrl;
+
+        public int getRowId()
+        {
+            return _rowId;
+        }
+
+        public void setRowId(int rowId)
+        {
+            _rowId = rowId;
+        }
+
+        public String getDataFileUrl()
+        {
+            return _dataFileUrl;
+        }
+
+        public void setDataFileUrl(String dataFileUrl)
+        {
+            _dataFileUrl = dataFileUrl;
         }
     }
 }

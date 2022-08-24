@@ -492,7 +492,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             catch (PipelineJobException e)
             {
                 // ignore and continue:
-                log.error("Cannot count variants using bcftools, this index might have been created using another tool");
+                log.warn("Cannot count variants using bcftools, this index might have been created using another tool");
             }
 
         }

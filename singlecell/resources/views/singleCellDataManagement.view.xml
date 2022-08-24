@@ -1,0 +1,6 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Single Cell Data Management">
+    <dependencies>
+        <dependency path="laboratory.context"/>
+        <dependency path="sequenceAnalysis.context"/>
+    </dependencies>
+</view>

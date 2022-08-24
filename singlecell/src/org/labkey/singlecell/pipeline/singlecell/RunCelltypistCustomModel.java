@@ -30,6 +30,7 @@ public class RunCelltypistCustomModel extends AbstractRiraStep
                     ToolParameterDescriptor.createExpDataParam("modelFileId", "Model", "This is the pre-computed celltypist model to use for classification", "sequenceanalysis-sequenceoutputfileselectorfield", new JSONObject(){{
                         put("allowBlank", false);
                         put("category", TrainCelltypist.CATEGORY);
+                        put("performGenomeFilter", false);
                     }}, null)
             ), PageFlowUtil.set("sequenceanalysis/field/SequenceOutputFileSelectorField.js"), null);
         }

@@ -196,7 +196,14 @@ public class ReferenceGenomeImpl implements ReferenceGenome
 
     public void createGzippedFile(Logger log, boolean deleteIfExists) throws PipelineJobException
     {
-        File target = new File(getSourceFastaFile().getPath() + ".gz");
+        createGzippedFasta(getSourceFastaFile(), log, deleteIfExists);
+
+        ReferenceGenomeManager.get().markGenomeModified(this, log);
+    }
+
+    public static void createGzippedFasta(File sourceFasta, Logger log, boolean deleteIfExists) throws PipelineJobException
+    {
+        File target = new File(sourceFasta.getPath() + ".gz");
         if (target.exists())
         {
             if (deleteIfExists)
@@ -210,9 +217,7 @@ public class ReferenceGenomeImpl implements ReferenceGenome
         }
 
         BgzipRunner runner = new BgzipRunner(log);
-        File gz = runner.execute(getSourceFastaFile(), true);
+        File gz = runner.execute(sourceFasta, true);
         new FastaIndexer(log).execute(gz);
-
-        ReferenceGenomeManager.get().markGenomeModified(this, log);
     }
 }

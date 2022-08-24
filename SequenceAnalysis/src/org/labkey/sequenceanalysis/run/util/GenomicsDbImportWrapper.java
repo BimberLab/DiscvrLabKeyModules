@@ -66,6 +66,7 @@ public class GenomicsDbImportWrapper extends AbstractGatk4Wrapper
             {
                 if (intervals == null)
                 {
+                    getLogger().debug("No intervals provided, using entire genome");
                     SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath());
                     for (SAMSequenceRecord rec : dict.getSequences())
                     {

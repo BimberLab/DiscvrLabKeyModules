@@ -60,9 +60,12 @@ public class EstimateLibraryComplexityWrapper extends PicardWrapper
         }
 
         List<String> params = getBaseArgs();
-        inferMaxRecordsInRam(params);
-        params.add("INPUT=" + inputFile.getPath());
-        params.add("OUTPUT=" + getMetricsFile(inputFile).getPath());
+
+        params.add("-INPUT");
+        params.add(inputFile.getPath());
+
+        params.add("-OUTPUT");
+        params.add(getMetricsFile(inputFile).getPath());
 
         execute(params);
 
@@ -89,6 +92,7 @@ public class EstimateLibraryComplexityWrapper extends PicardWrapper
         return new File(getOutputDir(inputFile), FileUtil.getBaseName(inputFile) + "." + getToolName().toLowerCase() + ".metrics");
     }
 
+    @Override
     protected String getToolName()
     {
         return "EstimateLibraryComplexity";

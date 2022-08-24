@@ -65,6 +65,7 @@ public class SingleCellProvider extends AbstractSequenceDataProvider
         if (c.getActiveModules().contains(ModuleLoader.getInstance().getModule(SingleCellModule.class)))
         {
             items.add(new DetailsUrlWithoutLabelNavItem(this, "Export 10x Library Information", DetailsURL.fromString("singlecell/libraryExport.view"), LaboratoryService.NavItemCategory.misc, NAME));
+            items.add(new DetailsUrlWithoutLabelNavItem(this, "Manage Single-Cell Data", DetailsURL.fromString("singlecell/singleCellDataManagement.view"), LaboratoryService.NavItemCategory.misc, NAME));
         }
 
         return items;

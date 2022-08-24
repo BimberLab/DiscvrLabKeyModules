@@ -20,6 +20,10 @@ for (datasetId in names(seuratObjects)) {
         addErrorMessage(paste0('The seurat object has ', ncol(seuratObj), ' cells, which is more than the max allowable cells (', maxAllowableCells, '). Please review emptyDrops results as this probably means thresholds were suboptimal.'))
     }
 
+    if (!is.null(minAllowableCells) && ncol(seuratObj) < minAllowableCells) {
+        addErrorMessage(paste0('The seurat object has ', ncol(seuratObj), ' cells, which is less than the min allowable cells (', minAllowableCells, '). Please review emptyDrops results as this probably means thresholds were suboptimal.'))
+    }
+
     saveData(seuratObj, datasetId)
 
     # Cleanup

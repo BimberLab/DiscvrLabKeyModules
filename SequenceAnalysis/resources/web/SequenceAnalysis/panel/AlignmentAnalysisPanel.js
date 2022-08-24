@@ -131,9 +131,10 @@ Ext4.define('SequenceAnalysis.panel.AlignmentAnalysisPanel', {
         }
     },
 
-    getJsonParams: function(ignoreErrors){
+    getJsonParams: function(config){
+        config = config || {};
         var errors = this.getErrors();
-        if (!ignoreErrors && errors.length){
+        if (!config.ignoreErrors && errors.length){
             Ext4.Msg.alert('Error', errors.join('<br>'));
             return;
         }
@@ -151,7 +152,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentAnalysisPanel', {
         //then append each section
         var sections = this.query('sequenceanalysis-analysissectionpanel');
         Ext4.Array.forEach(sections, function(s){
-            Ext4.apply(json, s.toJSON());
+            Ext4.apply(json, s.toJSON(config));
         }, this);
 
         return json;

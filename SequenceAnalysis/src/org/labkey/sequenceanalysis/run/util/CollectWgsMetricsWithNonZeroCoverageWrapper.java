@@ -13,6 +13,7 @@ public class CollectWgsMetricsWithNonZeroCoverageWrapper extends CollectWgsMetri
         super(log);
     }
 
+    @Override
     protected String getToolName()
     {
         return "CollectWgsMetricsWithNonZeroCoverage";

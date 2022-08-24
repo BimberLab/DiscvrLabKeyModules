@@ -39,13 +39,17 @@ public class DownsampleSamWrapper extends PicardWrapper
 
     }
 
-    private List<String> getParams(File file, Double pctRetained) throws PipelineJobException
+    private List<String> getParams(File file, Double pctRetained)
     {
         List<String> params = getBaseArgs();
-        params.add("INPUT=" + file.getPath());
-        params.add("OUTPUT=" + new File(getOutputDir(file), getOutputFilename(file)).getPath());
-        params.add("PROBABILITY=" + pctRetained);
-        inferMaxRecordsInRam(params);
+        params.add("-INPUT");
+        params.add(file.getPath());
+
+        params.add("-OUTPUT");
+        params.add(new File(getOutputDir(file), getOutputFilename(file)).getPath());
+
+        params.add("-PROBABILITY");
+        params.add(String.valueOf(pctRetained));
 
         return params;
     }
