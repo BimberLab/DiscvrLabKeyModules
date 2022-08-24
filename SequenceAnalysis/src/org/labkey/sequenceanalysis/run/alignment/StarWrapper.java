@@ -11,6 +11,7 @@ import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.reader.Readers;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
@@ -26,7 +27,9 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractAlignmentPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
 import java.io.BufferedReader;
@@ -391,6 +394,12 @@ public class StarWrapper extends AbstractCommandWrapper
                 //NOTE: if the genome has a large number of contigs, this param can be necessary
                 try (IndexedFastaSequenceFile idx = new IndexedFastaSequenceFile(referenceGenome.getWorkingFastaFile()))
                 {
+                    File dict = new File(referenceGenome.getWorkingFastaFile(), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile()) + ".dict");
+                    if (!dict.exists())
+                    {
+                        throw new PipelineJobException("Unable to find file: " + dict.getPath());
+                    }
+
                     int refNumber = idx.getSequenceDictionary().getSequences().size();
                     long genomeLength = idx.getSequenceDictionary().getReferenceLength();
                     if (refNumber > 500)

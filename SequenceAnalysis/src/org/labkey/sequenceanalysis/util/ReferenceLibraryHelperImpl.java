@@ -66,6 +66,7 @@ public class ReferenceLibraryHelperImpl implements ReferenceLibraryHelper
         return ret;
     }
 
+    @Override
     public File getSequenceDictionaryFile(boolean createIfDoesntExist)
     {
         File ret = new File(getReferenceFasta().getParentFile(), FileUtil.getBaseName(getReferenceFasta().getName()) + ".dict");
