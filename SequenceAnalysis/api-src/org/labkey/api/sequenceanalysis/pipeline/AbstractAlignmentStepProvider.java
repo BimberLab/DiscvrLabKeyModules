@@ -112,12 +112,22 @@ abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentSt
             put("checked", false);
         }}, false));
 
+        parameters.add(ToolParameterDescriptor.create(CONVERT_TO_CRAM, "Convert to CRAM", "If checked, the final step of the pipeline will convert the BAM file to CRAM to save space.", "checkbox", new JSONObject(){{
+            put("checked", false);
+        }}, false));
+
         parameters.add(ToolParameterDescriptor.create(ALIGNMENT_MODE_PARAM, "Alignment Mode", "If your readset has more than one pair of FASTQs, there pipeline can either align each pair sequentially (and then merge these BAMs), or merge the pairs of FASTQs first and then perform alignment once.  The default is to align each pair of FASTQs separately; however, some pipelines like STAR require the latter.", "ldk-simplecombo", new JSONObject(){{
             put("storeValues", ALIGNMENT_MODE.ALIGN_THEN_MERGE.name() + ";" + ALIGNMENT_MODE.MERGE_THEN_ALIGN.name());
             put("value", alignmentMode.name());
         }}, true));
 
         return parameters;
+    }
+
+    @Override
+    public boolean supportsMergeUnaligned()
+    {
+        return _supportsMergeUnaligned;
     }
 
     private static LinkedHashSet<String> getDependencies(Collection<String> input)

@@ -3,6 +3,7 @@ Ext4.define('SequenceAnalysis.field.SequenceOutputFileSelectorField', {
     alias: 'widget.sequenceanalysis-sequenceoutputfileselectorfield',
 
     genomeId: -1,
+    performGenomeFilter: true,
 
     initComponent: function(){
         Ext4.apply(this, {
@@ -29,6 +30,11 @@ Ext4.define('SequenceAnalysis.field.SequenceOutputFileSelectorField', {
         this.on('afterrender', function() {
             var parent = this.up('sequenceanalysis-basesequencepanel');  //Alignment panels
             var window = this.up('window'); //OutputHandlerWindow
+            if (!this.performGenomeFilter) {
+                this.updateStoreFilters(-1);
+                return;
+            }
+
             if (parent) {
                 var field = parent.down('field[name=referenceLibraryCreation.SavedLibrary.libraryId]');
                 if (field) {
@@ -78,6 +84,11 @@ Ext4.define('SequenceAnalysis.field.SequenceOutputFileSelectorField', {
     },
 
     getFilterArray: function(){
-        return [LABKEY.Filter.create('library_id', this.genomeId), LABKEY.Filter.create('category', this.category, LABKEY.Filter.Types.EQUAL)];
+        var filters = [LABKEY.Filter.create('category', this.category, LABKEY.Filter.Types.EQUAL)];
+
+        if (this.performGenomeFilter) {
+            filters.push(LABKEY.Filter.create('library_id', this.genomeId));
+        }
+        return filters;
     }
 });

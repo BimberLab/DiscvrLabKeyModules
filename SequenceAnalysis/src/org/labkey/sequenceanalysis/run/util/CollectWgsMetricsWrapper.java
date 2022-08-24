@@ -33,16 +33,24 @@ public class CollectWgsMetricsWrapper extends PicardWrapper
         setStringency(ValidationStringency.SILENT);
 
         List<String> params = getBaseArgs();
-        inferMaxRecordsInRam(params);
-        params.add("INPUT=" + inputFile.getPath());
-        params.add("OUTPUT=" + outputFile.getPath());
-        params.add("REFERENCE_SEQUENCE=" + refFasta.getPath());
-        params.add("INCLUDE_BQ_HISTOGRAM=true");
+
+        params.add("-INPUT");
+        params.add(inputFile.getPath());
+
+        params.add("-OUTPUT");
+        params.add(outputFile.getPath());
+
+        params.add("-REFERENCE_SEQUENCE");
+        params.add(refFasta.getPath());
+
+        params.add("-INCLUDE_BQ_HISTOGRAM");
+        params.add("true");
 
         if ("CollectWgsMetricsWithNonZeroCoverage".equals(getToolName()))
         {
             File pdf = new File(outputFile.getParentFile(), FileUtil.getBaseName(outputFile.getName()) + ".wgsMetrics.pdf");
-            params.add("CHART_OUTPUT=" + pdf.getPath());
+            params.add("-CHART_OUTPUT");
+            params.add(pdf.getPath());
         }
 
         execute(params);
@@ -56,6 +64,7 @@ public class CollectWgsMetricsWrapper extends PicardWrapper
         return outputFile;
     }
 
+    @Override
     protected String getToolName()
     {
         return "CollectWgsMetrics";

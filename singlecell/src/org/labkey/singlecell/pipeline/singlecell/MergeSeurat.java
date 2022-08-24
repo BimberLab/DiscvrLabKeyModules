@@ -26,6 +26,7 @@ public class MergeSeurat extends AbstractCellMembraneStep
             super("MergeSeurat", "Merge Seurat Objects", "CellMembrane/Seurat", "This will merge the incoming seurat objects into a single object, merging all assays. Note: this will discard any normalization or DimRedux data, and performs zero validation to ensure this is compatible with downstream steps.", Arrays.asList(
                     SeuratToolParameter.create("projectName", "New Dataset Name", "The updated baseline for this merged object.", "textfield", new JSONObject(){{
                         put("allowBlank", false);
+                        put("doNotIncludeInTemplates", true);
                     }}, null),
                     SeuratToolParameter.create("doDiet", "Run DietSeurat", "If selected, this will run DietSeurat and gc() on the incoming seurat objects prior to merge. This is primarily to help with memory.", "checkbox", null, false, "dietSeurat", true, false),
                     SeuratToolParameter.create("errorOnBarcodeSuffix", "Error On Cell Barcode Suffixes", "In certain cases, software appends a digit (i.e. -1) to the end of cell barcodes; however, no code in DISCVR should do this. These are a problem if different datasets are inconsistent when using them.  If this setting is checked, the code will error if these are encountered.", "checkbox", null, true, "errorOnBarcodeSuffix", true, false),

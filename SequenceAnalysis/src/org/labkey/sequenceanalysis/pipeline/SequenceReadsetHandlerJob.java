@@ -47,6 +47,8 @@ public class SequenceReadsetHandlerJob extends SequenceJob implements HasJobPara
             getSequenceSupport().cacheReadset(rs, getHandler().supportsSraArchivedData());
             _readsetIds.add(rs.getReadsetId());
         }
+
+        writeSupportToDisk();
     }
 
     @Override

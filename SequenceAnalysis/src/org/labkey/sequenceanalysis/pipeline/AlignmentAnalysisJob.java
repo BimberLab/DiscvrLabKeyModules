@@ -54,6 +54,7 @@ public class AlignmentAnalysisJob extends SequenceJob
 
         getLogger().debug("caching analysis for use on remote server: " + model.getRowId());
         getSequenceSupport().cacheAnalysis(model, this);
+        writeSupportToDisk();
     }
 
     public static List<AlignmentAnalysisJob> createForAnalyses(Container c, User u, String jobName, String description, JSONObject params, JSONArray analysisIds, boolean submitJobToReadsetContainer) throws ClassNotFoundException, IOException, PipelineValidationException

@@ -111,6 +111,48 @@ for (datasetId in names(seuratObjects)) {
 		})
 	}
 
+	if (dropDoubletFinder) {
+		if (!'scDblFinder.class' %in% names(seuratObj@meta.data)) {
+			stop('Missing field: scDblFinder.class')
+		}
+
+		tryCatch({
+			cells <- Seurat::WhichCells(seuratObj, expression = scDblFinder.class=='singlet')
+			if (length(cells) == 0) {
+				print(paste0('There were no cells remaining after dropping scDblFinder doublets'))
+				seuratObj <- NULL
+			} else {
+				seuratObj <- subset(seuratObj, cells = cells)
+				print(paste0('After removing scDblFinder doublets: ', ncol(seuratObj)))
+			}
+		}, error = function(e){
+			if (!is.null(e) && e$message == 'Cannot find cells provided') {
+				print(paste0('There were no cells remaining after dropping scDblFinder doublets'))
+			}
+		})
+	}
+
+	if (dropHashingNegatives) {
+		if (!'HTO.Classification' %in% names(seuratObj@meta.data)) {
+			stop('Missing field: HTO.Classification')
+		}
+
+		tryCatch({
+			cells <- Seurat::WhichCells(seuratObj, expression = HTO.Classification=='Negative')
+			if (length(cells) == 0) {
+				print(paste0('There were no cells remaining after dropping cells where hashing is negative'))
+				seuratObj <- NULL
+			} else {
+				seuratObj <- subset(seuratObj, cells = cells, invert = TRUE)
+				print(paste0('After removing cells with negative hashing calls: ', ncol(seuratObj)))
+			}
+		}, error = function(e){
+			if (!is.null(e) && e$message == 'Cannot find cells provided') {
+				print(paste0('There were no cells remaining after dropping cells with negative hashing calls'))
+			}
+		})
+	}
+
 	if (dropNullScGateConsensus) {
 		if (!'scGateConsensus' %in% names(seuratObj@meta.data)) {
 			stop('Missing field: scGateConsensus')

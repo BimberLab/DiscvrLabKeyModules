@@ -1,7 +1,6 @@
 package org.labkey.api.sequenceanalysis.run;
 
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
@@ -45,9 +44,12 @@ public class CreateSequenceDictionaryWrapper extends PicardWrapper
         getLogger().info("Creating dictionary for: " + referenceFasta.getPath());
 
         List<String> params = getBaseArgs();
-        inferMaxRecordsInRam(params);
-        params.add("REFERENCE=" + referenceFasta.getPath());
-        params.add("OUTPUT=" + expected.getPath());
+
+        params.add("-REFERENCE");
+        params.add(referenceFasta.getPath());
+
+        params.add("-OUTPUT");
+        params.add(expected.getPath());
 
         execute(params);
 
@@ -59,6 +61,7 @@ public class CreateSequenceDictionaryWrapper extends PicardWrapper
         return expected;
     }
 
+    @Override
     protected String getToolName()
     {
         return "CreateSequenceDictionary";

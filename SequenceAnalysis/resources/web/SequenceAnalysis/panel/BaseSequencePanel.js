@@ -112,12 +112,13 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
 
     getBasename: function(str){
         var base = new String(str).substring(str.lastIndexOf('/') + 1);
-        if (base.lastIndexOf(".") != -1)
+        if (base.lastIndexOf(".") !== -1)
             base = base.substring(0, base.lastIndexOf("."));
         return base;
     },
 
-    getJsonParams: function(btn){
+    getJsonParams: function(config){
+        config = config || {};
         var fieldInputs = this.form.getFields();
         var fields = {};
         var error;
@@ -205,7 +206,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
         });
     },
 
-    onSubmit: function(btn){
+    onSubmit: function(){
         var json = this.getJsonParams();
         if (!json)
             return false;

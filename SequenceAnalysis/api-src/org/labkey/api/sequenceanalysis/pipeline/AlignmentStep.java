@@ -18,10 +18,12 @@ package org.labkey.api.sequenceanalysis.pipeline;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -110,7 +112,7 @@ public interface AlignmentStep extends PipelineStep
     /**
      * Optional.  Allows steps to be run on the webserver upon completion.
      */
-    default void complete(SequenceAnalysisJobSupport support, AnalysisModel model) throws PipelineJobException
+    default void complete(SequenceAnalysisJobSupport support, AnalysisModel model, Collection<SequenceOutputFile> outputFilesCreated) throws PipelineJobException
     {
 
     }

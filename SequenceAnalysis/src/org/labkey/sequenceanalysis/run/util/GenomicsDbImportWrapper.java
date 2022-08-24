@@ -59,13 +59,14 @@ public class GenomicsDbImportWrapper extends AbstractGatk4Wrapper
         }
 
         //NOTE: GenomicsDBImport requires explicit intervals
+        File intervalList = new File(outputFile.getParentFile(), "intervals.list");
         if (!append)
         {
-            File intervalList = new File(outputFile.getParentFile(), "intervals.list");
             try (PrintWriter writer = PrintWriters.getPrintWriter(intervalList))
             {
                 if (intervals == null)
                 {
+                    getLogger().debug("No intervals provided, using entire genome");
                     SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath());
                     for (SAMSequenceRecord rec : dict.getSequences())
                     {
@@ -96,6 +97,11 @@ public class GenomicsDbImportWrapper extends AbstractGatk4Wrapper
         if (!outputFile.exists())
         {
             throw new PipelineJobException("Unable to find expected file: " + outputFile.getPath());
+        }
+
+        if (intervalList.exists())
+        {
+            intervalList.delete();
         }
     }
 }

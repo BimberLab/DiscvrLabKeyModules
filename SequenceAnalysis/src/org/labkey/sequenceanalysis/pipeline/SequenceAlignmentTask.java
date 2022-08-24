@@ -59,6 +59,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenomeManager;
+import org.labkey.api.sequenceanalysis.pipeline.SamtoolsCramConverter;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
@@ -850,7 +851,6 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         }
         else
         {
-            List<RecordedAction> bamActions = new ArrayList<>();
             if (alignmentStep.doSortIndexBam())
             {
                 //finally index
@@ -887,7 +887,6 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 Date end = new Date();
                 indexAction.setEndTime(end);
                 getJob().getLogger().info("IndexBam Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
-                bamActions.add(indexAction);
 
                 _resumer.setIndexBamDone(true, indexAction);
             }
@@ -1049,6 +1048,28 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     _resumer.setBamAnalysisComplete(analysisActions);
                 }
             }
+        }
+
+        // optional convert to CRAM:
+        ToolParameterDescriptor cramParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.CONVERT_TO_CRAM);
+        boolean doCramConvert = cramParam == null ? false : cramParam.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
+        if (doCramConvert)
+        {
+            getJob().getLogger().info("BAM will be converted to CRAM");
+            final File cramFile = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".cram");
+            final File cramFileIdx = new File(cramFile.getPath() + ".crai");
+            Integer threads = SequenceTaskHelper.getMaxThreads(getJob());
+            new SamtoolsCramConverter(getJob().getLogger()).convert(renamedBam, cramFile, referenceGenome.getWorkingFastaFileGzipped(), true, threads);
+
+            final File finalBam = renamedBam;
+            final File finalBamIdx = new File(renamedBam.getPath() + ".bai");
+            _resumer.getRecordedActions().forEach(r -> {
+                r.updateForMovedFile(finalBam, cramFile);
+                r.updateForMovedFile(finalBamIdx, cramFileIdx);
+            });
+
+            getHelper().getFileManager().addIntermediateFile(renamedBam);
+            getHelper().getFileManager().addIntermediateFile(new File(renamedBam.getPath() + ".bai"));
         }
     }
 
@@ -1307,7 +1328,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             SequenceUtil.logFastqBamDifferences(getJob().getLogger(), alignmentOutput.getBAM());
 
             ToolParameterDescriptor mergeParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.SUPPORT_MERGED_UNALIGNED);
-            boolean doMergeUnaligned = mergeParam != null && mergeParam.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
+            boolean doMergeUnaligned = alignmentStep.getProvider().supportsMergeUnaligned() && mergeParam != null && mergeParam.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
             if (doMergeUnaligned)
             {
                 getJob().setStatus(PipelineJob.TaskStatus.running, "MERGING UNALIGNED READS INTO BAM" + msgSuffix);

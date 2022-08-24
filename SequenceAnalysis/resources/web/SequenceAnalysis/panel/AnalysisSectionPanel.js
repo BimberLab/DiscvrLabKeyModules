@@ -525,7 +525,7 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
         return ret;
     },
 
-    toJSON: function(){
+    toJSON: function(config){
         var ret = {};
 
         if (this.stepType){
@@ -544,6 +544,11 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
             Ext4.Array.forEach(params, function (p) {
                 if (!p.getValue){
                     LDK.Utils.logError('ERROR: AnalysisSectionPanel tool lacks getValue(): ' + p.name);
+                    return;
+                }
+
+                // Allow specific fields to opt-out from
+                if (config && config.skipFieldsNotSavable && p.doNotIncludeInTemplates) {
                     return;
                 }
 

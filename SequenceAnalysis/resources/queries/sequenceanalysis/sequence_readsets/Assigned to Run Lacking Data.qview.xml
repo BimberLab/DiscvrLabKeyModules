@@ -1,0 +1,9 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" canOverride="true">
+    <sorts>
+        <sort column="name" descending="true"/>
+    </sorts>
+    <filters>
+        <filter column="totalFiles" operator="eq" value="0"/>
+        <filter column="instrument_run_id" operator="isnonblank" value=""/>
+    </filters>
+</customView>

@@ -778,6 +778,7 @@ public class SequenceIntegrationTests
             File fq = new File(basedir, prefix + DUAL_BARCODE_FILENAME + ".gz");
             expectedOutputs.add(fq);
             expectedOutputs.add(new File(basedir, "sequenceImport.json"));
+            expectedOutputs.add(new File(basedir, "sequenceSupport.json.gz"));
             expectedOutputs.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, jobName + ".log"));
             verifyFileOutputs(basedir, expectedOutputs);
@@ -815,6 +816,7 @@ public class SequenceIntegrationTests
             File fq = new File(_pipelineRoot, prefix + PAIRED_FILENAME1);
             Assert.assertTrue("File not found", fq.exists());
             expectedOutputs.add(new File(basedir, "sequenceImport.json"));
+            expectedOutputs.add(new File(basedir, "sequenceSupport.json.gz"));
             expectedOutputs.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, jobName + ".log"));
             verifyFileOutputs(basedir, expectedOutputs);
@@ -957,6 +959,7 @@ public class SequenceIntegrationTests
             expectedOutputs.add(new File(basedir, jobName + ".log"));
             expectedOutputs.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, "sequenceImport.json"));
+            expectedOutputs.add(new File(basedir, "sequenceSupport.json.gz"));
 
             verifyFileOutputs(basedir, expectedOutputs);
             verifyFileInputs(basedir, fileNames, config, prefix);
@@ -1039,6 +1042,7 @@ public class SequenceIntegrationTests
             Set<File> expectedOutputs = new HashSet<>();
 
             expectedOutputs.add(new File(basedir, "sequenceImport.json"));
+            expectedOutputs.add(new File(basedir, "sequenceSupport.json.gz"));
 
             expectedOutputs.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, jobName + ".log"));
@@ -1177,6 +1181,7 @@ public class SequenceIntegrationTests
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = getBaseDir(jobs.iterator().next());
             expectedOutputs.add(new File(basedir, "sequenceImport.json"));
+            expectedOutputs.add(new File(basedir, "sequenceSupport.json.gz"));
             expectedOutputs.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, jobName + ".log"));
             expectedOutputs.add(new File(basedir, prefix + PAIRED_FILENAME1));
@@ -1222,6 +1227,7 @@ public class SequenceIntegrationTests
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = getBaseDir(jobs.iterator().next());
             expectedOutputs.add(new File(basedir, "sequenceImport.json"));
+            expectedOutputs.add(new File(basedir, "sequenceSupport.json.gz"));
             expectedOutputs.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, jobName + ".log"));
 
@@ -1270,6 +1276,7 @@ public class SequenceIntegrationTests
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = getBaseDir(jobs.iterator().next());
             expectedOutputs.add(new File(basedir, "sequenceImport.json"));
+            expectedOutputs.add(new File(basedir, "sequenceSupport.json.gz"));
             expectedOutputs.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, jobName + ".log"));
 
@@ -1439,6 +1446,7 @@ public class SequenceIntegrationTests
 
             extraFiles.add(new File(basedir, jobName + ".log"));
             extraFiles.add(new File(basedir, "sequenceAnalysis.json"));
+            extraFiles.add(new File(basedir, "sequenceSupport.json.gz"));
             extraFiles.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
 
             extraFiles.add(new File(basedir, outDir));

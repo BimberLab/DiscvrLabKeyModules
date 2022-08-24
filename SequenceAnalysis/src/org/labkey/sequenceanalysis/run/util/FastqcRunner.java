@@ -349,7 +349,15 @@ public class FastqcRunner
         params.add(SequencePipelineService.get().getJavaFilepath());
 
         int threads = getThreads();
-        params.add("-Xmx" + (250 * threads) + "m");
+        Integer maxRam = SequencePipelineService.get().getMaxRam();
+        if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer && maxRam != null)
+        {
+            params.add("-Xmx" + maxRam + "g");
+        }
+        else
+        {
+            params.add("-Xmx" + (250 * threads) + "m");
+        }
 
         if (threads > 1)
         {

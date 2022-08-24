@@ -53,6 +53,7 @@ public class SequenceAlignmentJob extends SequenceJob
 
         _readsetId = readset.getRowId();
         getSequenceSupport().cacheReadset(readset);
+        writeSupportToDisk();
     }
 
     public static List<SequenceAlignmentJob> createForReadsets(Container c, User u, String jobName, String description, JSONObject params, JSONArray readsetIds, boolean submitJobToReadsetContainer) throws ClassNotFoundException, IOException, PipelineValidationException

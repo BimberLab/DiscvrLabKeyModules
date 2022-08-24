@@ -65,7 +65,7 @@ Ext4.define('SequenceAnalysis.window.SaveAnalysisAsTemplateWindow', {
 
         var description = this.down('#descriptionField').getValue();
         var saveGlobally = this.down('#saveGloballyField').getValue();
-        var json = this.sequencePanel.getJsonParams(true);
+        var json = this.sequencePanel.getJsonParams({ignoreErrors: true, skipFieldsNotSavable: true});
         delete json.protocolName;
         delete json.protocolDescription;
         delete json.jobName;

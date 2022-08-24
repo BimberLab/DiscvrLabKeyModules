@@ -44,7 +44,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 				},
 				columns: [{
 					dataIndex: 'genomeId',
-					width: 200,
+					width: 325,
 					header: 'Genome',
 					editor: this.genomeField,
 					renderer: function(val){
@@ -62,7 +62,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 					}
 				},{
 					dataIndex: 'targetAssay',
-					width: 200,
+					width: 175,
 					header: 'Target Assay',
 					editor: {
 						xtype: 'textfield',

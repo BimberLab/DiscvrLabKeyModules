@@ -678,7 +678,8 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
         this.startAnalysis(json);
     },
 
-    getJsonParams: function(ignoreErrors){
+    getJsonParams: function(config){
+        config = config || {};
         var fields = this.callParent(arguments);
 
         if (!fields)
@@ -697,10 +698,10 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
         //then append each section
         var sections = this.query('sequenceanalysis-analysissectionpanel');
         Ext4.Array.forEach(sections, function(s){
-            Ext4.apply(fields, s.toJSON());
+            Ext4.apply(fields, s.toJSON(config));
         }, this);
 
-        if (errors.getCount() && !ignoreErrors){
+        if (errors.getCount() && !config.ignoreErrors){
             Ext4.Msg.alert('Error', 'There are ' + errors.getCount() + ' errors.  Please review the cells highlighted in red.  Note: you can hover over the cell for more information on the issue.');
             return;
         }
@@ -712,7 +713,7 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                 total++;
         }, this);
 
-        if (!total && !ignoreErrors){
+        if (!total && !config.ignoreErrors){
             Ext4.Msg.alert('Error', 'All input files had errors and cannot be used.  Please hover over the red cells near the top of the page to see more detail on these errors');
             return;
         }

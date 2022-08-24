@@ -58,9 +58,11 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
             }
 
             List<String> params = getBaseArgs();
-            params.add("ALIGNED_BAM=" + querySortedAlignedBam.getPath());
-            params.add("MAX_INSERTIONS_OR_DELETIONS=-1");
-            inferMaxRecordsInRam(params);
+            params.add("-ALIGNED_BAM");
+            params.add(querySortedAlignedBam.getPath());
+
+            params.add("-MAX_INSERTIONS_OR_DELETIONS");
+            params.add("-1");
 
             //can take a long time to calculate
             //getLogger().info("total alignments in starting BAM: ");
@@ -115,25 +117,41 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
             SortSamWrapper sorter = new SortSamWrapper(getLogger());
             finalUnmappedReadsBam = sorter.execute(finalUnmappedReadsBam, null, SAMFileHeader.SortOrder.queryname);
 
-            params.add("UNMAPPED_BAM=" + finalUnmappedReadsBam.getPath());
+            params.add("-UNMAPPED_BAM");
+            params.add(finalUnmappedReadsBam.getPath());
 
             //TODO: bisulfiteSequence
 
-            params.add("REFERENCE_SEQUENCE=" + refFasta.getPath());
+            params.add("-REFERENCE_SEQUENCE");
+            params.add(refFasta.getPath());
+
             boolean dictCreated = ensureDictionary(refFasta);
 
             //this argument is ignored by the tool, but is stil required
-            params.add("PAIRED_RUN=false");
+            params.add("-PAIRED_RUN");
+            params.add("false");
 
-            params.add("ALIGNED_READS_ONLY=false");
-            params.add("CLIP_ADAPTERS=false");
-            params.add("CLIP_OVERLAPPING_READS=false");
-            params.add("INCLUDE_SECONDARY_ALIGNMENTS=true");
-            params.add("ALIGNER_PROPER_PAIR_FLAGS=false");
-            params.add("SORT_ORDER=" + SAMFileHeader.SortOrder.coordinate.name());
+            params.add("-ALIGNED_READS_ONLY");
+            params.add("false");
+
+            params.add("-CLIP_ADAPTERS");
+            params.add("false");
+
+            params.add("-CLIP_OVERLAPPING_READS");
+            params.add("false");
+
+            params.add("-INCLUDE_SECONDARY_ALIGNMENTS");
+            params.add("true");
+
+            params.add("-ALIGNER_PROPER_PAIR_FLAGS");
+            params.add("false");
+
+            params.add("-SORT_ORDER");
+            params.add(SAMFileHeader.SortOrder.coordinate.name());
 
             File mergedFile = new File(getOutputDir(alignedBam), FileUtil.getBaseName(alignedBam) + ".merged.bam");
-            params.add("OUTPUT=" + mergedFile.getPath());
+            params.add("-OUTPUT");
+            params.add(mergedFile.getPath());
 
             execute(params);
 
@@ -209,6 +227,7 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
         return false;
     }
 
+    @Override
     protected String getToolName()
     {
         return "MergeBamAlignment";
