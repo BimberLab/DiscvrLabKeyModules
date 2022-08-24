@@ -516,7 +516,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 Date start = new Date();
                 ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "GenomicsDB: " + i + " of " + batches.size() + ", samples: " + batch.size());
                 ctx.getLogger().info("Batch " + i + " of " + batches.size() + ", total samples: " + batch.size());
-                ret.add(createWorkspace(ctx, genome, batch, i));
+                ret.add(createWorkspace(ctx, genome, batch, i + "of" + batches.size()));
 
                 ctx.getLogger().info("GenomicsDB Batch " + i + " Duration: " + DurationFormatUtils.formatDurationWords(new Date().getTime() - start.getTime(), true, true));
             }
@@ -524,7 +524,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             return ret;
         }
 
-        private File createWorkspace(JobContext ctx, ReferenceGenome genome, List<File> vcfsToProcess, int id) throws PipelineJobException
+        private File createWorkspace(JobContext ctx, ReferenceGenome genome, List<File> vcfsToProcess, String id) throws PipelineJobException
         {
             File workspace = new File(ctx.getWorkingDirectory(), "genomicsDb" + id + ".gdb");
             File doneFile = getDoneFile(workspace);
