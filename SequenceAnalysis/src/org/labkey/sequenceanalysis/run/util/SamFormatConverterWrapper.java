@@ -44,12 +44,15 @@ public class SamFormatConverterWrapper extends PicardWrapper
         return outputFile;
     }
 
-    private List<String> getParams(File inputFile, File outputFile) throws PipelineJobException
+    private List<String> getParams(File inputFile, File outputFile)
     {
         List<String> params = getBaseArgs();
-        inferMaxRecordsInRam(params);
-        params.add("INPUT=" + inputFile.getPath());
-        params.add("OUTPUT=" + outputFile.getPath());
+
+        params.add("--INPUT");
+        params.add(inputFile.getPath());
+
+        params.add("--OUTPUT");
+        params.add(outputFile.getPath());
 
         return params;
     }

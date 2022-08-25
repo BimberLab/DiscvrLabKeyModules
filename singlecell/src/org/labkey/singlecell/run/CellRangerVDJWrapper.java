@@ -22,6 +22,7 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -789,6 +790,11 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                         i++;
                     }
 
+                    if (model.getAlignmentFile() == null)
+                    {
+                        throw new PipelineJobException("model.getAlignmentFile() was null");
+                    }
+
                     int totalAdded = 0;
                     TableInfo ti = DbSchema.get("sequenceanalysis", DbSchemaType.Module).getTable("quality_metrics");
 
@@ -849,7 +855,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             }
         }
 
-        public void complete(SequenceAnalysisJobSupport support, AnalysisModel model) throws PipelineJobException
+        public void complete(SequenceAnalysisJobSupport support, AnalysisModel model, List<SequenceOutputFile> outputFilesToCreate) throws PipelineJobException
         {
             addMetrics(model);
 

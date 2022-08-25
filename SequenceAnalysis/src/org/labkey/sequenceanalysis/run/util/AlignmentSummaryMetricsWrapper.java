@@ -38,11 +38,18 @@ public class AlignmentSummaryMetricsWrapper extends PicardWrapper
             if (SequenceUtil.getBamSortOrder(inputFile) == SAMFileHeader.SortOrder.coordinate)
             {
                 List<String> params = getBaseArgs();
-                inferMaxRecordsInRam(params);
-                params.add("METRIC_ACCUMULATION_LEVEL=ALL_READS");
-                params.add("INPUT=" + inputFile.getPath());
-                params.add("R=" + reference.getPath());
-                params.add("OUTPUT=" + outputFile.getPath());
+
+                params.add("--METRIC_ACCUMULATION_LEVEL");
+                params.add("ALL_READS");
+
+                params.add("--INPUT");
+                params.add(inputFile.getPath());
+
+                params.add("-R");
+                params.add(reference.getPath());
+
+                params.add("--OUTPUT");
+                params.add(outputFile.getPath());
 
                 execute(params);
 
@@ -64,6 +71,7 @@ public class AlignmentSummaryMetricsWrapper extends PicardWrapper
         }
     }
 
+    @Override
     protected String getToolName()
     {
         return "CollectAlignmentSummaryMetrics";

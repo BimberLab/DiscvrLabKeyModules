@@ -164,6 +164,8 @@ public class SequenceRemoteIntegrationTests extends SequenceIntegrationTests.Abs
         job.setActiveTaskId(new TaskId(AlignmentInitTask.class));
         AlignmentInitTask task = (AlignmentInitTask)job.getActiveTaskFactory().createTask(job);
         WorkDirectory wd = job.getActiveTaskFactory().createWorkDirectory(job.getJobGUID(), job, job.getLogger());
+        assertNotNull("Sequence support is null", job.getSequenceSupport());
+        assertEquals("Readsets not cached", _readsets.size(), job.getSequenceSupport().getCachedReadsets().size());
         task.setWorkDirectory(wd);
         task.run();
 

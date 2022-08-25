@@ -372,6 +372,26 @@ public class JBrowseSession
         return ret;
     }
 
+    public static JSONObject getBgZippedIndexedFastaAdapter(ReferenceGenome rg)
+    {
+        ExpData d = ExperimentService.get().getExpData(rg.getFastaExpDataId());
+        String url = d.getWebDavURL(FileContentService.PathType.full);
+
+        JSONObject ret = new JSONObject();
+        ret.put("type", "BgzipFastaAdapter");
+        ret.put("fastaLocation", new JSONObject(){{
+            put("uri", url + ".gz");
+        }});
+        ret.put("faiLocation", new JSONObject(){{
+            put("uri", url + ".fai");
+        }});
+        ret.put("gziLocation", new JSONObject(){{
+            put("uri", url + ".gz.gzi");
+        }});
+
+        return ret;
+    }
+
     public static JBrowseSession getGenericGenomeSession(int genomeId)
     {
         Container genomeContainer = ContainerManager.getForId(new TableSelector(DbSchema.get(JBrowseManager.SEQUENCE_ANALYSIS, DbSchemaType.Module).getTable("reference_libraries"), PageFlowUtil.set("container"), new SimpleFilter(FieldKey.fromString("rowid"), genomeId), null).getObject(String.class));

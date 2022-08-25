@@ -74,7 +74,8 @@ public class JBrowseManager
             new FileType("gtf", FileType.gzSupportLevel.NO_GZ),
             new FileType("bed", FileType.gzSupportLevel.NO_GZ),
             new FileType("bedgraph", FileType.gzSupportLevel.NO_GZ),
-            new FileType("bam", FileType.gzSupportLevel.NO_GZ)
+            new FileType("bam", FileType.gzSupportLevel.NO_GZ),
+            new FileType("cram", FileType.gzSupportLevel.NO_GZ)
     );
 
     private JBrowseManager()

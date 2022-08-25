@@ -6,6 +6,7 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 
 import java.io.File;
@@ -116,12 +117,19 @@ public class MergeSamFilesWrapper extends PicardWrapper
 
         for (File f : files)
         {
-            params.add("INPUT=" + f.getPath());
+            params.add("--INPUT");
+            params.add(f.getPath());
         }
 
-        params.add("OUTPUT=" + outputPath.getPath());
-        inferMaxRecordsInRam(params);
-        //USE_THREADING=true ?
+        params.add("--OUTPUT");
+        params.add(outputPath.getPath());
+
+        Integer threads = SequencePipelineService.get().getMaxThreads(getLogger());
+        if (threads != null && threads > 1)
+        {
+            params.add("--USE_THREADING");
+            params.add("TRUE");
+        }
 
         return params;
     }

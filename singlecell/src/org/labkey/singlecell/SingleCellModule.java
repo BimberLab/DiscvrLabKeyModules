@@ -44,7 +44,6 @@ import org.labkey.singlecell.run.CellRangerGexCountStep;
 import org.labkey.singlecell.run.CellRangerVDJWrapper;
 import org.labkey.singlecell.run.NimbleAlignmentStep;
 import org.labkey.singlecell.run.NimbleAnalysis;
-import org.labkey.singlecell.run.NimbleHandler;
 import org.labkey.singlecell.run.VelocytoAlignmentStep;
 import org.labkey.singlecell.run.VelocytoAnalysisStep;
 
@@ -174,6 +173,8 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new CiteSeqDimReduxPca.Provider());
         SequencePipelineService.get().registerPipelineStep(new CiteSeqPlots.Provider());
         SequencePipelineService.get().registerPipelineStep(new PhenotypePlots.Provider());
+        SequencePipelineService.get().registerPipelineStep(new CalculateUCellScores.Provider());
+        SequencePipelineService.get().registerPipelineStep(new CalculateGeneComponentScores.Provider());
         SequencePipelineService.get().registerPipelineStep(new AppendMetadata.Provider());
         SequencePipelineService.get().registerPipelineStep(new AppendSaturation.Provider());
         SequencePipelineService.get().registerPipelineStep(new SeuratPrototype.Provider());
@@ -192,8 +193,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new AppendTcr.Provider());
         SequencePipelineService.get().registerPipelineStep(new TcrFilter.Provider());
         SequencePipelineService.get().registerPipelineStep(new PlotAssayFeatures.Provider());
-
-        SequenceAnalysisService.get().registerFileHandler(new NimbleHandler());
+        SequencePipelineService.get().registerPipelineStep(new IntegrateData.Provider());
     }
 
     @Override

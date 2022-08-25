@@ -136,7 +136,7 @@ public class CellHashingServiceImpl extends CellHashingService
         HashMap<Integer, Set<String>> gexToPanels = new HashMap<>();
 
         List<Readset> cachedReadsets = support.getCachedReadsets();
-        job.getLogger().debug("Total cached readsets: " + cachedReadsets.size());
+        job.getLogger().debug("Total cached readsets: " + cachedReadsets.size() + ", using filter on: " + filterField);
         if (cachedReadsets.isEmpty())
         {
             throw new PipelineJobException("There are no cached readsets. This might indicate hashing or CITE-seq is being selected for an input not associated with readsets, like a multi-dataset object");
@@ -150,6 +150,7 @@ public class CellHashingServiceImpl extends CellHashingService
             AtomicInteger totalWritten = new AtomicInteger(0);
             for (Readset rs : cachedReadsets)
             {
+                job.getLogger().debug("Preparing: " + rs.getName() + " (" + rs.getRowId() + ")");
                 AtomicBoolean hasError = new AtomicBoolean(false);
                 //find cDNA records using this readset
                 new TableSelector(cDNAs, colMap.values(), new SimpleFilter(FieldKey.fromString(filterField), rs.getRowId()), null).forEachResults(results -> {
@@ -338,7 +339,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
             if (totalWritten.get() == 0)
             {
-                throw new PipelineJobException("No matching cDNA records found");
+                throw new PipelineJobException("No matching cDNA records found, using filter on: " + filterField);
             }
 
             boolean useCellHashing = hashingStatus.size() == 1 ? hashingStatus.iterator().next() : !hashingStatus.isEmpty();
@@ -1449,7 +1450,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
     public File getCellBarcodesFromSeurat(File seuratObj, boolean throwIfNotFound)
     {
-        File barcodes = new File(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds", "cellBarcodes.csv"));
+        File barcodes = new File(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds$", "cellBarcodes.csv"));
         if (throwIfNotFound && !barcodes.exists())
         {
             throw new IllegalArgumentException("Unable to find expected cell barcodes file.  This might indicate the seurat object was created with an older version of the pipeline.  Expected: " + barcodes.getPath());

@@ -23,9 +23,10 @@ public class SplitSeurat extends AbstractCellMembraneStep
                     SeuratToolParameter.create("splitField", "Field Name", "This field will be used to split the seurat object. For each unique value of this field, cells will be subset and a new seurat object created. Any cells lacking a value in this field will be discarded.", "textfield", new JSONObject(){{
                         put("allowBlank", false);
                     }}, null),
-                    SeuratToolParameter.create("minCellsToKeep", "Min Cells To Keep", "If provided, any subset with fewer than this many cells will be discarded. Use zero to keep all.", "textfield", new JSONObject(){{
+                    SeuratToolParameter.create("minCellsToKeep", "Min Cells To Keep", "If provided, any subset with fewer than this many cells will be discarded. Use zero to keep all. Note: if the value is less than 1 it will be interpreted as a fraction of the total input cells", "ldk-numberfield", new JSONObject(){{
                         put("allowBlank", false);
-                    }}, 0)
+                        put("decimalPrecision", 3);
+                    }}, 0.05)
             ), null, null);
         }
 

@@ -93,9 +93,18 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
             //this means we have a duplicate
             if (job.getActiveTaskId() != null && job.getActiveTaskId().toString().equals(existingSubmission.getActiveTaskId()))
             {
-                job.getLogger().error("duplicate submission attempt, skipping.  original cluster id: " + existingSubmission.getClusterId());
-                _log.error("duplicate submission attempt, skipping.  original cluster id: " + existingSubmission.getClusterId() + ", job id: " +  job.getJobGUID());
-                return;
+                if (existingSubmission.getClusterId() == null)
+                {
+                    _log.error("Found cluster submission record without a cluster ID. This will be set to cancelled: " + existingSubmission.getRowId());
+                    existingSubmission.setStatus(PipelineJob.TaskStatus.cancelled.name().toUpperCase());
+                    Table.update(job.getUser(), ClusterSchema.getInstance().getSchema().getTable(ClusterSchema.CLUSTER_JOBS), existingSubmission, existingSubmission.getRowId());
+                }
+                else
+                {
+                    job.getLogger().error("duplicate submission attempt, skipping.  original cluster id: " + existingSubmission.getClusterId());
+                    _log.error("duplicate submission attempt, skipping.  original cluster id: " + existingSubmission.getClusterId() + ", job id: " + job.getJobGUID());
+                    return;
+                }
             }
         }
 

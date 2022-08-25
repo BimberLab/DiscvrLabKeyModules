@@ -42,16 +42,19 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
             super(VariantProcessingRemoteMergeTask.class);
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.emptyList();
         }
 
+        @Override
         public String getStatusName()
         {
             return PipelineJob.TaskStatus.running.toString();
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
             List<String> allowableNames = new ArrayList<>();
@@ -81,11 +84,13 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
             return super.isParticipant(job);
         }
 
-        public PipelineJob.Task createTask(PipelineJob job)
+        @Override
+        public PipelineJob.Task<?> createTask(PipelineJob job)
         {
             return new VariantProcessingRemoteMergeTask(this, job);
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;

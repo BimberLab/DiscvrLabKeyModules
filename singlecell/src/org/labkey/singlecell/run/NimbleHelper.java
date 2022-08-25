@@ -1,5 +1,6 @@
 package org.labkey.singlecell.run;
 
+import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -9,9 +10,14 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
@@ -19,6 +25,7 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
@@ -26,9 +33,11 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
+import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
+import org.labkey.singlecell.SingleCellSchema;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -36,11 +45,15 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.labkey.singlecell.run.NimbleAlignmentStep.ALIGN_OUTPUT;
+import static org.labkey.singlecell.run.NimbleAlignmentStep.MAX_HITS_TO_REPORT;
 import static org.labkey.singlecell.run.NimbleAlignmentStep.REF_GENOMES;
+import static org.labkey.singlecell.run.NimbleAlignmentStep.STRANDEDNESS;
 
 public class NimbleHelper
 {
@@ -85,9 +98,10 @@ public class NimbleHelper
 
         List<NimbleGenome> ret = new ArrayList<>();
         JSONArray json = new JSONArray(genomeStr);
+        int maxHitsToReport = getProvider().getParameterByName(MAX_HITS_TO_REPORT).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 4);
         for (int i = 0; i < json.length(); i++)
         {
-            ret.add(new NimbleGenome(json.getString(i)));
+            ret.add(new NimbleGenome(json.getString(i), maxHitsToReport));
         }
 
         return ret;
@@ -177,6 +191,12 @@ public class NimbleHelper
         runUsingDocker(Arrays.asList("generate", "/work/" + genomeFasta.getName(), "/work/" + genomeCsv.getName(), "/work/" + nimbleJson.getName()), output, "generate-" + genome.genomeId);
         if (!nimbleJson.exists())
         {
+            File doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), "generate-" + genome.genomeId);
+            if (doneFile.exists())
+            {
+                doneFile.delete();
+            }
+
             throw new PipelineJobException("Unable to find expected file: " + nimbleJson.getPath());
         }
 
@@ -208,7 +228,7 @@ public class NimbleHelper
             {
                 config.put("num_mismatches", 10);
                 config.put("intersect_level", 0);
-                config.put("score_threshold", 25);
+                config.put("score_threshold", 65);
                 config.put("score_filter", 25);
                 //discard_multiple_matches: false
                 //discard_multi_hits: ?
@@ -218,7 +238,7 @@ public class NimbleHelper
             {
                 config.put("num_mismatches", 0);
                 config.put("intersect_level", 0);
-                config.put("score_threshold", 50);
+                config.put("score_threshold", 80);
                 config.put("score_filter", 25);
             }
             else
@@ -230,6 +250,8 @@ public class NimbleHelper
             {
                 config.put("group_on", "lineage");
             }
+
+            config.put("max_hits_to_report", genome.maxHitsToReport);
 
             getPipelineCtx().getLogger().info("Final config:");
             getPipelineCtx().getLogger().info(config.toString(1));
@@ -263,11 +285,18 @@ public class NimbleHelper
         alignArgs.add("-l");
         alignArgs.add("/work/nimbleDebug." + genome.genomeId + ".txt");
 
-        boolean alignOutput = getProvider().getParameterByName(NimbleHandler.ALIGN_OUTPUT).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+        boolean alignOutput = getProvider().getParameterByName(ALIGN_OUTPUT).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
         if (alignOutput)
         {
             alignArgs.add("-a");
             alignArgs.add("/work/nimbleAlignment." + genome.genomeId + ".txt.gz");
+        }
+
+        String strandedness = getProvider().getParameterByName(STRANDEDNESS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null);
+        if (strandedness != null)
+        {
+            alignArgs.add("-f");
+            alignArgs.add(strandedness);
         }
 
         alignArgs.add("/work/" + localRefJson.getName());
@@ -275,12 +304,33 @@ public class NimbleHelper
         alignArgs.add("/work/" + localBam.getName());
 
         runUsingDocker(alignArgs, output, "align-" + genome.genomeId);
-        if (!resultsTsv.exists())
+
+        File resultsGz = new File(resultsTsv.getPath() + ".gz");
+        if (!resultsTsv.exists() && !resultsGz.exists())
         {
+            File doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), "align-" + genome.genomeId);
+            if (doneFile.exists())
+            {
+                doneFile.delete();
+            }
+
             throw new PipelineJobException("Expected to find file: " + resultsTsv.getPath());
         }
+        else if (!resultsGz.exists())
+        {
+            // NOTE: perform compression outside of nimble until nimble bugs fixed
+            getPipelineCtx().getLogger().debug("Compressing results TSV file");
+            resultsGz = Compress.compressGzip(resultsTsv);
+            resultsTsv.delete();
+        }
+        else
+        {
+            getPipelineCtx().getLogger().debug("Compressed output found, skipping gzip");
+        }
 
-        File log = new File(resultsTsv.getParentFile(), "nimbleDebug." + genome.genomeId + ".txt");
+        resultsTsv = resultsGz;
+
+        File log = getNimbleLogFile(resultsTsv.getParentFile(), genome.genomeId);
         if (!log.exists())
         {
             throw new PipelineJobException("Expected to find file: " + log.getPath());
@@ -300,9 +350,12 @@ public class NimbleHelper
             throw new PipelineJobException(e);
         }
 
-        output.addIntermediateFile(log);
-
         return resultsTsv;
+    }
+
+    public static File getNimbleLogFile(File baseDir, int genomeId)
+    {
+        return new File(baseDir, "nimbleDebug." + genomeId + ".txt");
     }
 
     private File getNimbleDoneFile(File parentDir, String resumeString)
@@ -344,9 +397,9 @@ public class NimbleHelper
             writer.println("\t-w /work \\");
             writer.println("\t" + DOCKER_CONTAINER_NAME + " \\");
             writer.println("\t" + StringUtils.join(nimbleArgs, " "));
-            writer.println("");
-            writer.println("echo 'Bash script complete'");
-            writer.println("");
+            writer.println("EXIT_CODE=$?");
+            writer.println("echo 'Bash script complete: '$EXIT_CODE");
+            writer.println("exit $EXIT_CODE");
         }
         catch (IOException e)
         {
@@ -409,8 +462,9 @@ public class NimbleHelper
         private final int genomeId;
         private final String template;
         private final boolean doGroup;
+        private final int maxHitsToReport;
 
-        public NimbleGenome(String genomeStr) throws PipelineJobException
+        public NimbleGenome(String genomeStr, int maxHitsToReport) throws PipelineJobException
         {
             JSONArray arr = new JSONArray(genomeStr);
             if (arr.length() != 3)
@@ -421,6 +475,7 @@ public class NimbleHelper
             genomeId = arr.getInt(0);
             template = arr.getString(1);
             doGroup = arr.getBoolean(2);
+            this.maxHitsToReport = maxHitsToReport;
         }
 
         public int getGenomeId()
@@ -436,6 +491,70 @@ public class NimbleHelper
         public boolean isDoGroup()
         {
             return doGroup;
+        }
+    }
+
+    public static void importQualityMetrics(SequenceOutputFile so, PipelineJob job) throws PipelineJobException
+    {
+        try
+        {
+            if (so.getDataId() == null)
+            {
+                throw new PipelineJobException("DataId is null for SequenceOutputFile");
+            }
+
+            ExpData d = ExperimentService.get().getExpData(so.getDataId());
+            File cachedMetrics = getNimbleLogFile(so.getFile().getParentFile(), so.getLibrary_id());
+
+            Map<String, Object> metricsMap;
+            if (cachedMetrics.exists())
+            {
+                job.getLogger().debug("reading previously calculated metrics from file: " + cachedMetrics.getPath());
+                metricsMap = new HashMap<>();
+                try (CSVReader reader = new CSVReader(Readers.getReader(cachedMetrics), ':'))
+                {
+                    String[] line;
+                    while ((line = reader.readNext()) != null)
+                    {
+                        if (metricsMap.containsKey(StringUtils.trim(line[0])))
+                        {
+                            throw new PipelineJobException("Unexpected duplicate metric names: " + StringUtils.trim(line[0]));
+                        }
+
+                        metricsMap.put(StringUtils.trim(line[0]), StringUtils.trim(line[1]));
+                    }
+                }
+
+                job.getLogger().debug("Total metrics: " + metricsMap.size());
+            }
+            else
+            {
+                throw new PipelineJobException("Unable to find metrics file: " + cachedMetrics.getPath());
+            }
+
+            TableInfo metricsTable = DbSchema.get(SingleCellSchema.SEQUENCE_SCHEMA_NAME, DbSchemaType.Module).getTable(SingleCellSchema.TABLE_QUALITY_METRICS);
+            for (String metricName : metricsMap.keySet())
+            {
+                Map<String, Object> r = new HashMap<>();
+                r.put("category", "Nimble");
+                r.put("metricname", metricName);
+                r.put("metricvalue", metricsMap.get(metricName));
+                r.put("dataid", d.getRowId());
+                r.put("readset", so.getReadset());
+                r.put("container", so.getContainer());
+                r.put("createdby", job.getUser().getUserId());
+
+                Table.insert(job.getUser(), metricsTable, r);
+            }
+
+            if (cachedMetrics.exists())
+            {
+                cachedMetrics.delete();
+            }
+        }
+        catch (Exception e)
+        {
+            throw new PipelineJobException(e);
         }
     }
 }

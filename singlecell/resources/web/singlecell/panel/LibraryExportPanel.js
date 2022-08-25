@@ -377,13 +377,14 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                 disabled: true,
                 handler: function (btn) {
                     var panel = btn.up('singlecell-libraryexportpanel');
-                    var readsetIds = btn.readsetIds;
-                    if (!readsetIds) {
+                    var readsetIdToLane = btn.readsetIdToLane;
+                    if (!readsetIdToLane) {
                         Ext4.Msg.alert('Error', 'No Readset IDs Found');
                         return;
                     }
 
                     Ext4.Msg.wait('Loading...');
+                    var readsetIds = Ext4.Object.getKeys(readsetIdToLane);
                     LABKEY.Query.selectRows({
                         containerPath: Laboratory.Utils.getQueryContainerPath(),
                         schemaName: 'sequenceanalysis',
@@ -407,7 +408,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                 title: 'Assign Readsets To Batch',
                                 width: 800,
                                 bodyStyle: 'padding: 10px;',
-                                readsetIds: readsetIds,
+                                readsetIdToLane: readsetIdToLane,
                                 items: [{
                                     html: 'The following readsets will be assigned to an instrument run/batch: ' + readsetIds.join(', '),
                                     style: 'padding-bottom: 10px;',
@@ -455,12 +456,12 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                                     LDK.Assert.assertEquality('Expected single workbook to be returned', results.rows.length, 1);
 
                                                     win.close();
-                                                    panel.createInstrumentRun(readsetRows, batchId, results.rows[0].EntityId);
+                                                    panel.createInstrumentRun(readsetRows, batchId, results.rows[0].EntityId, win.readsetIdToLane);
                                                 }
                                             });
                                         }
                                         else {
-                                            panel.createInstrumentRun(readsetRows, batchId);
+                                            panel.createInstrumentRun(readsetRows, batchId, null, win.readsetIdToLane);
                                         }
                                     }
                                 }, {
@@ -498,30 +499,50 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
         });
     },
 
-    createInstrumentRun: function (readsetRows, batchId, containerId) {
+    createInstrumentRun: function (readsetRows, batchId, containerId, readsetIdToLane) {
         containerId = containerId || Laboratory.Utils.getQueryContainerPath();
+        var batchNameToReadset = {};
+        var batchesToCreate = [];
+        Ext4.Array.forEach(readsetRows, function(rs){
+            var batchName = batchId + (readsetIdToLane[rs.rowid] ? '-' + readsetIdToLane[rs.rowid] : '');
+            batchNameToReadset[batchName] = batchNameToReadset[batchName] || [];
+            batchNameToReadset[batchName].push({
+                rowid: rs.rowid,
+                container: rs.container
+            });
+
+            batchesToCreate.push(batchName);
+        }, this);
+
+        batchesToCreate = Ext4.Array.unique(batchesToCreate);
+
         LABKEY.Query.insertRows({
             containerPath: containerId,
             schemaName: 'sequenceanalysis',
             queryName: 'instrument_runs',
             scope: this,
-            rows: [{
-                name: batchId
-            }],
+            rows: Ext4.Array.map(batchesToCreate, function(val){
+                return {name: val};
+            }, this),
             failure: LDK.Utils.getErrorCallback(),
             success: function (results) {
-                var runId = results.rows[0].rowId;
-                LDK.Assert.assertNotEmpty('Error creating instrument run', runId);
+                var toUpdate = [];
+                Ext4.Array.forEach(results.rows, function(batchRow){
+                    var runId = batchRow.rowId;
+                    var batchName = batchRow.name;
+                    LDK.Assert.assertNotEmpty('Error creating instrument run: ' + batchName, runId);
 
-                Ext4.Array.forEach(readsetRows, function (rs) {
-                    rs.instrument_run_id = runId
+                    Ext4.Array.forEach(batchNameToReadset[batchName], function (row) {
+                        row.instrument_run_id = runId;
+                        toUpdate.push(row);
+                    }, this);
                 }, this);
 
                 LABKEY.Query.updateRows({
                     containerPath: Laboratory.Utils.getQueryContainerPath(),
                     schemaName: 'sequenceanalysis',
                     queryName: 'sequence_readsets',
-                    rows: readsetRows,
+                    rows: toUpdate,
                     failure: LDK.Utils.getErrorCallback(),
                     success: function (results) {
                         Ext4.Msg.hide();
@@ -619,6 +640,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                 var sortedRows = results.rows;
                 var totalCellsByReadset = {};
+                var readsetIdToLane = {};
                 let currentLane = 1;
                 let dataInActiveLane = 0;
                 Ext4.Array.forEach(results.rows, function(row){
@@ -814,7 +836,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                     }
 
                     //only include readsets without existing data
-                    var processType = function(readsetIds, rows, r, fieldName, suffix, size, phiX, samplePrefix, comment, doRC, totalData, runMap) {
+                    var processType = function(readsetIds, rows, r, fieldName, suffix, size, phiX, samplePrefix, comment, doRC, totalData, runMap, readsetIdToLane) {
                         if (!readsetIds[r[fieldName]] && r[fieldName] && (includeWithData || r[fieldName + '/totalFiles'] === 0) && isMatchingApplication(application, r[fieldName + '/librarytype'], r[fieldName + '/application'], r.targetApplication)) {
                             //allow for shared readsets across cDNAs (hashing, etc.)
                             readsetIds[r[fieldName]] = true;
@@ -915,6 +937,9 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                             }, this);
 
                             runMap[r.laneAssignment || 'Not Assigned'] = (runMap[r.laneAssignment || 'Not Assigned'] || 0) + (totalData || 0);
+                            if (r.laneAssignment) {
+                                readsetIdToLane[r[fieldName]] = r.laneAssignment;
+                            }
                         }
                     };
 
@@ -924,13 +949,13 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                         var gexData = totalCells > 15000 ? 70 : 40;
                         var tcrData = totalCells > 15000 ? 45 : 25;
-                        processType(readsetIds, rows, r, 'readsetId', 'GEX', 500, 0.01, 'G', null, false, gexData, runMap, totalCells);
-                        processType(readsetIds, rows, r, 'tcrReadsetId', 'TCR', 700, 0.01, 'T', null, false, tcrData, runMap, totalCells);
+                        processType(readsetIds, rows, r, 'readsetId', 'GEX', 500, 0.01, 'G', null, false, gexData, runMap, readsetIdToLane);
+                        processType(readsetIds, rows, r, 'tcrReadsetId', 'TCR', 700, 0.01, 'T', null, false, tcrData, runMap, readsetIdToLane);
 
                         // NOTE: Dual index 10x is always presented in the right orientation, so only RC if single-indexed
                         const hashingDoRC = !r['hashingReadsetId/barcode3'];
-                        processType(readsetIds, rows, r, 'hashingReadsetId', 'HTO', 182, 0.05, hashingPrefix, 'Cell hashing, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', hashingDoRC, 20, runMap, totalCells);
-                        processType(readsetIds, rows, r, 'citeseqReadsetId', 'CITE', 182, 0.05, 'C', 'CITE-Seq, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', false, 20, runMap, totalCells);
+                        processType(readsetIds, rows, r, 'hashingReadsetId', 'HTO', 182, 0.05, hashingPrefix, 'Cell hashing, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', hashingDoRC, 20, runMap, readsetIdToLane);
+                        processType(readsetIds, rows, r, 'citeseqReadsetId', 'CITE', 182, 0.05, 'C', 'CITE-Seq, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', false, 20, runMap, readsetIdToLane);
                     }, this);
 
                     //add missing barcodes:
@@ -977,7 +1002,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                     btn.up('singlecell-libraryexportpanel').down('#runReads').setValue(runVal);
 
                     var rsBtn = btn.up('singlecell-libraryexportpanel').down('#readsetBatch');
-                    rsBtn.readsetIds = Ext4.Object.getKeys(readsetIds);
+                    rsBtn.readsetIdToLane = readsetIdToLane;
                     rsBtn.setDisabled(false);
                 }
             }

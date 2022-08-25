@@ -91,39 +91,18 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
         params.add("-jar");
         params.add(getJar().getPath());
         params.add(getToolName());
-        params.add("VALIDATION_STRINGENCY=" + getStringency().name());
-        params.add("COMPRESSION_LEVEL=" + getCompressionLevel());
+
+        params.add("--VALIDATION_STRINGENCY");
+        params.add(getStringency().name());
+
+        params.add("--COMPRESSION_LEVEL");
+        params.add(String.valueOf(getCompressionLevel()));
 
         //note: having issues, probably due to OS versions
-        params.add("USE_JDK_DEFLATER=true");
+        params.add("--USE_JDK_DEFLATER");
+        params.add("true");
 
         return params;
-    }
-
-    protected void inferMaxRecordsInRam(List<String> args)
-    {
-        //TODO: this is temporarily disabled since it does not seem to make much of a difference, and can be counter productive.
-        //if this remains out, calls to this method should be removed
-        return;
-
-//        if (args == null)
-//        {
-//            return;
-//        }
-//
-//        for (String arg : args)
-//        {
-//            if (arg.startsWith("-Xmx") && arg.endsWith("g"))
-//            {
-//                String val = arg.substring(4, arg.length() - 1);
-//                Integer gb = ConvertHelper.convert(val, Integer.class);
-//
-//                //A rule of thumb for reads of ~100bp is to set MAX_RECORDS_IN_RAM to be 250,000 reads per each GB given to the -Xmx
-//                args.add("MAX_RECORDS_IN_RAM=" + String.valueOf(gb * 250000));
-//
-//                break;
-//            }
-//        }
     }
 
     public int getCompressionLevel()

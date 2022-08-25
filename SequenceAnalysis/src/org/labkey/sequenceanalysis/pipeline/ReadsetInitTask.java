@@ -27,7 +27,6 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
-import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
@@ -67,7 +66,6 @@ import java.util.Set;
 public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
 {
     private SequenceTaskHelper _taskHelper;
-    private FileAnalysisJobSupport _support;
 
     private static final String ACTION_NAME = "IMPORTING READSET";
     private static final String COMPRESS_INPUT_ACTIONNAME = "Compressing FASTQ Files";
@@ -86,26 +84,31 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
             setJoin(true);  // Do this once per file-set.
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             return new ReadsetInitTask(this, job);
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.singletonList(new NucleotideSequenceFileType());
         }
 
+        @Override
         public String getStatusName()
         {
             return "IMPORT READSET";
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
             return Arrays.asList(ACTION_NAME, COMPRESS_INPUT_ACTIONNAME);
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             // No way of knowing.
@@ -134,10 +137,9 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
     }
 
     @NotNull
+    @Override
     public RecordedActionSet run() throws PipelineJobException
     {
-        PipelineJob job = getJob();
-        _support = (FileAnalysisJobSupport) job;
         _taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
 
         getJob().getLogger().info("Preparing to import sequence data");

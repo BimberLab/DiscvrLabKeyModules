@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -307,7 +308,16 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                         if (!gz.exists())
                         {
                             ReferenceGenomeImpl genome = new ReferenceGenomeImpl(fasta, fastaData, libraryId, null);
-                            genome.createGzippedFile(log);
+                            log.error("GZipped genome missing for: " + genome.getName());
+
+                            if (SystemUtils.IS_OS_WINDOWS)
+                            {
+                                log.warn("Cannot create bgzipped file on windows machine");
+                            }
+                            else
+                            {
+                                genome.createGzippedFile(log);
+                            }
                         }
 
                         File gzi = new File(fasta.getPath() + ".gz.gzi");

@@ -23,7 +23,7 @@ Cluster.Utils = new function() {
                 return;
             }
 
-            window.open(LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'cluster', 'query.queryName': 'clusterJobs', '~query.statusFileId~in': checked.join(';')}), '_blank');
+            window.open(LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {schemaName: 'cluster', 'query.queryName': 'clusterJobs', 'query.statusFileId~in': checked.join(';')}), '_blank');
         },
 
         recoverCompletedJobs: function (dataRegionName) {

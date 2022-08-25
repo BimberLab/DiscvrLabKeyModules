@@ -35,9 +35,12 @@ public class CleanSamWrapper extends PicardWrapper
         File outputBam = outputFile == null ? new File(getOutputDir(inputFile), FileUtil.getBaseName(inputFile) + ".cleaned.bam") : outputFile;
 
         List<String> params = getBaseArgs();
-        inferMaxRecordsInRam(params);
-        params.add("INPUT=" + inputFile.getPath());
-        params.add("OUTPUT=" + outputBam.getPath());
+
+        params.add("--INPUT");
+        params.add(inputFile.getPath());
+
+        params.add("--OUTPUT");
+        params.add(outputBam.getPath());
 
         execute(params);
 
@@ -77,6 +80,7 @@ public class CleanSamWrapper extends PicardWrapper
         }
     }
 
+    @Override
     protected String getToolName()
     {
         return "CleanSam";

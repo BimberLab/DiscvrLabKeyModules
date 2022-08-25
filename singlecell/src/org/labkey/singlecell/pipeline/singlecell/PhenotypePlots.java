@@ -10,7 +10,7 @@ import org.labkey.api.util.PageFlowUtil;
 import java.util.Arrays;
 import java.util.Collection;
 
-public class PhenotypePlots extends AbstractCellMembraneStep
+public class PhenotypePlots extends AbstractRiraStep
 {
     public PhenotypePlots(PipelineContext ctx, PhenotypePlots.Provider provider)
     {

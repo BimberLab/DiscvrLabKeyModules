@@ -132,8 +132,8 @@ Ext4.define('SequenceAnalysis.panel.InstrumentImportPanel', {
 
     },
 
-    getJsonParams: function(){
-        var fields = this.callParent();
+    getJsonParams: function(config){
+        var fields = this.callParent(arguments);
 
         if (!fields)
             return;

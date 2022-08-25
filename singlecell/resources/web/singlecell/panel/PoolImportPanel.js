@@ -147,7 +147,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
 
     transforms: {
         stim: function(val, panel) {
-            if (val && (val === '--' || val === '-')) {
+            if (val && (val === '--' || val === '-' || val.toLowerCase() === 'no stim')) {
                 val = 'NoStim';
             }
 
@@ -202,7 +202,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                     val = val.replace(/^MultiSeq[- ]Idx[- ]RP/ig, 'MultiSeq-Idx-RP');
 
                     if (val.length <= 3 && panel.down('#useDualIndex').getValue()) {
-                        val = 'SI-TN-' + val;
+                        val = 'MS-TN-' + val;
                     }
                     else {
                         LDK.Utils.logError('Unexpected value with single-end hashing: ' + val);
@@ -274,6 +274,10 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         },
 
         hto: function(val, panel){
+            if (val === 'N/A') {
+                return null;
+            }
+
             if (Ext4.isNumeric(val)){
                 var type = panel.down('#hashingType').getValue();
                 if (type === 'CD298') {
@@ -490,7 +494,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             checked: false
         },{
             xtype: 'checkbox',
-            fieldLabel: 'Combined Hashing and Cite-Seq Libraries',
+            fieldLabel: 'Combine Hashing and Cite-Seq Libraries',
             itemId: 'combineHashingCite',
             checked: false
         },{

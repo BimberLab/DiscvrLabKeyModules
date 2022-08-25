@@ -22,6 +22,7 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.reader.Readers;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
@@ -47,6 +48,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -441,7 +443,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
     }
 
     @Override
-    public void complete(SequenceAnalysisJobSupport support, AnalysisModel model) throws PipelineJobException
+    public void complete(SequenceAnalysisJobSupport support, AnalysisModel model, Collection<SequenceOutputFile> outputFilesCreated) throws PipelineJobException
     {
         File metrics = new File(model.getAlignmentFileObject().getParentFile(), "metrics_summary.csv");
         if (metrics.exists())
@@ -467,6 +469,11 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
                     }
 
                     i++;
+                }
+
+                if (model.getAlignmentFile() == null)
+                {
+                    throw new PipelineJobException("model.getAlignmentFile() was null");
                 }
 
                 TableInfo ti = DbSchema.get("sequenceanalysis", DbSchemaType.Module).getTable("quality_metrics");

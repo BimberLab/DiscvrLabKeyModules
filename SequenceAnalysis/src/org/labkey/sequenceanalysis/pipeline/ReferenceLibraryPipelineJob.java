@@ -190,6 +190,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
         return _isNew;
     }
 
+    @Override
     protected File createLocalDirectory(PipeRoot pipeRoot)
     {
         if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)

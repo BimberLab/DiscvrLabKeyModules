@@ -2,7 +2,6 @@ package org.labkey.sequenceanalysis.run.util;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
@@ -25,17 +24,23 @@ public class SamToFastqWrapper extends PicardWrapper
         super(logger);
     }
 
-    public List<File> extractByReadGroup(File file, File outDir, @Nullable List<String> params) throws PipelineJobException
+    public List<File> extractByReadGroup(File file, File outDir) throws PipelineJobException
     {
         getLogger().info("Converting SAM file to FASTQ: " + file.getPath());
         getLogger().info("\tSamToFastq version: " + getVersion());
 
         List<String> args = getBaseParams(file);
-        args.add("INCLUDE_NON_PRIMARY_ALIGNMENTS=FALSE");
-        args.add("INCLUDE_NON_PF_READS=TRUE");
-        args.add("OUTPUT_PER_RG=TRUE");
-        args.add("OUTPUT_DIR=" + outDir.getPath());
-        inferMaxRecordsInRam(args);
+        args.add("--INCLUDE_NON_PRIMARY_ALIGNMENTS");
+        args.add("FALSE");
+
+        args.add("--INCLUDE_NON_PF_READS");
+        args.add("TRUE");
+
+        args.add("--OUTPUT_PER_RG");
+        args.add("TRUE");
+
+        args.add("--OUTPUT_DIR");
+        args.add(outDir.getPath());
 
         execute(args);
 
@@ -52,12 +57,14 @@ public class SamToFastqWrapper extends PicardWrapper
         List<String> args = getBaseParams(file);
 
         File output1 = new File(getOutputDir(file), outputName1);
-        args.add("FASTQ=" + output1.getPath());
+        args.add("--FASTQ");
+        args.add(output1.getPath());
 
         if (outputName2 != null)
         {
             File output2 = new File(getOutputDir(file), outputName2);
-            args.add("SECOND_END_FASTQ=" + output2.getPath());
+            args.add("--SECOND_END_FASTQ");
+            args.add(output2.getPath());
         }
 
         execute(args);
@@ -82,14 +89,16 @@ public class SamToFastqWrapper extends PicardWrapper
         return Pair.of(output, output2);
     }
 
-    private List<String> getBaseParams(File file) throws PipelineJobException
+    private List<String> getBaseParams(File file)
     {
         List<String> params = getBaseArgs();
-        params.add("INPUT=" + file.getPath());
+        params.add("--INPUT");
+        params.add(file.getPath());
 
         return params;
     }
 
+    @Override
     protected String getToolName()
     {
         return "SamToFastq";

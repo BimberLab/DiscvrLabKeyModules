@@ -48,40 +48,58 @@ public class FastqToSamWrapper extends PicardWrapper
         return output;
     }
 
+    @Override
     protected String getToolName()
     {
         return "FastqToSam";
     }
 
-    private List<String> getParams(File file, File file2, SAMFileHeader.SortOrder sortOrder, @Nullable SAMReadGroupRecord rg) throws PipelineJobException
+    private List<String> getParams(File file, File file2, SAMFileHeader.SortOrder sortOrder, @Nullable SAMReadGroupRecord rg)
     {
         List<String> params = getBaseArgs();
-        inferMaxRecordsInRam(params);
-        params.add("FASTQ=" + file.getPath());
+
+        params.add("--FASTQ");
+        params.add(file.getPath());
+
         if (file2 != null)
-            params.add("FASTQ2=" + file2.getPath());
+        {
+            params.add("--FASTQ2");
+            params.add(file2.getPath());
+        }
 
         if (sortOrder != null)
         {
-            params.add("SORT_ORDER=" + sortOrder.name());
+            params.add("--SORT_ORDER");
+            params.add(sortOrder.name());
         }
 
         if (rg != null)
         {
-            params.add("READ_GROUP_NAME=" + rg.getReadGroupId());
+            params.add("--READ_GROUP_NAME");
+            params.add(rg.getReadGroupId());
 
             if (rg.getPlatform() != null)
-                params.add("PLATFORM=" + rg.getPlatform());
+            {
+                params.add("--PLATFORM");
+                params.add(rg.getPlatform());
+            }
 
             if (rg.getPlatformUnit() != null)
-                params.add("PLATFORM_UNIT=" + rg.getPlatformUnit());
+            {
+                params.add("--PLATFORM_UNIT");
+                params.add(rg.getPlatformUnit());
+            }
 
-            params.add("SAMPLE_NAME=" + (rg.getSample() == null ? "SAMPLE" : rg.getSample()));
+            params.add("--SAMPLE_NAME");
+            params.add((rg.getSample() == null ? "SAMPLE" : rg.getSample()));
         }
         else
         {
-            params.add("READ_GROUP_NAME=null");
-            params.add("SAMPLE_NAME=SAMPLE");
+            params.add("--READ_GROUP_NAME");
+            params.add("null");
+
+            params.add("--SAMPLE_NAME");
+            params.add("SAMPLE");
         }
 
         FastqQualityFormat encoding = _fastqEncoding;
@@ -99,8 +117,11 @@ public class FastqToSamWrapper extends PicardWrapper
             }
         }
 
-        params.add("QUALITY_FORMAT=" + encoding);
-        params.add("OUTPUT=" + new File(getOutputDir(file), getOutputFilename(file)).getPath());
+        params.add("--QUALITY_FORMAT");
+        params.add(encoding.name());
+
+        params.add("--OUTPUT");
+        params.add(new File(getOutputDir(file), getOutputFilename(file)).getPath());
 
         return params;
     }
