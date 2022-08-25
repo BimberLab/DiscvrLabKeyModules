@@ -64,7 +64,7 @@ public interface TaskFileManager extends PipelineOutputTracker
 
     public void deleteIntermediateFiles() throws PipelineJobException;
 
-    public void createSequenceOutputRecords(@Nullable Integer analysisId)throws PipelineJobException;
+    public Set<SequenceOutputFile> createSequenceOutputRecords(@Nullable Integer analysisId)throws PipelineJobException;
 
     //should be used for remote jobs or local jobs running in a separate working directory
     public void cleanup(Collection<RecordedAction> actions) throws PipelineJobException;

@@ -40,6 +40,9 @@ public class PrepareRawCounts extends AbstractCellMembraneStep implements Single
                     SeuratToolParameter.create("maxAllowableCells", "Max Cells Allowed", "If more than this many cells are predicted by EmptyDrops, the job will fail", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, 20000),
+                    SeuratToolParameter.create("minAllowableCells", "Min Cells Allowed", "If fewer than this many cells are predicted by EmptyDrops, the job will fail", "ldk-integerfield", new JSONObject(){{
+                        put("minValue", 0);
+                    }}, 1500),
                     SeuratToolParameter.create("useEmptyDropsCellRanger", "Use emptyDropsCellRanger", "If checked, this will run emptyDropsCellRanger instead of emptyDrops", "checkbox", null, false),
                     SeuratToolParameter.create("nExpectedCells", "# Expected Cells", "Only applied if emptyDropsCellRanger is selected. Passed to n.expected.cells argument", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);

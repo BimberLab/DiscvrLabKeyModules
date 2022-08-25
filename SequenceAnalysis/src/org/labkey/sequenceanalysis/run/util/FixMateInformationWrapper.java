@@ -30,14 +30,20 @@ public class FixMateInformationWrapper extends PicardWrapper
         getLogger().info("Fixing Mate Information: " + inputFile.getPath());
 
         List<String> params = getBaseArgs();
-        inferMaxRecordsInRam(params);
-        params.add("INPUT=" + inputFile.getPath());
+
+        params.add("--INPUT");
+        params.add(inputFile.getPath());
+
         if (outputFile != null)
-            params.add("OUTPUT=" + outputFile.getPath());
+        {
+            params.add("--OUTPUT");
+            params.add(outputFile.getPath());
+        }
 
         if (so != null)
         {
-            params.add("SO=" + so.name());
+            params.add("-SO");
+            params.add(so.name());
         }
 
         execute(params);
@@ -51,6 +57,7 @@ public class FixMateInformationWrapper extends PicardWrapper
         return expectedOut;
     }
 
+    @Override
     protected String getToolName()
     {
         return "FixMateInformation";

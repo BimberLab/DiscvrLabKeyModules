@@ -2,7 +2,6 @@ package org.labkey.sequenceanalysis.run.util;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
@@ -47,15 +46,20 @@ public class BuildBamIndexWrapper extends PicardWrapper
         return output;
     }
 
-    private List<String> getParams(File file) throws PipelineJobException
+    private List<String> getParams(File file)
     {
         List<String> params = getBaseArgs();
-        params.add("INPUT=" + file.getPath());
-        params.add("OUTPUT=" + new File(getOutputDir(file), getOutputFilename(file)).getPath());
+
+        params.add("--INPUT");
+        params.add(file.getPath());
+
+        params.add("--OUTPUT");
+        params.add(new File(getOutputDir(file), getOutputFilename(file)).getPath());
 
         return params;
     }
 
+    @Override
     protected String getToolName()
     {
         return "BuildBamIndex";

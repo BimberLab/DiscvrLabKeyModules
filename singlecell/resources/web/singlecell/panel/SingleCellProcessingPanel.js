@@ -288,9 +288,10 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
         });
     },
 
-    getJsonParams: function(ignoreErrors){
+    getJsonParams: function(config){
+        config = config || {};
         var errors = this.getErrors();
-        if (errors.length && !ignoreErrors){
+        if (errors.length && !config.ignoreErrors){
             Ext4.Msg.alert('Error', errors.join('<br>'));
             return;
         }
@@ -305,7 +306,7 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
         //then append each section
         var sections = this.query('sequenceanalysis-analysissectionpanel');
         Ext4.Array.forEach(sections, function(s){
-            Ext4.apply(json, s.toJSON());
+            Ext4.apply(json, s.toJSON(config));
         }, this);
 
         return json;

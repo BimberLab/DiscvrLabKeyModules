@@ -146,6 +146,7 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
             }
 
             List<File> vcfsToProcess = new ArrayList<>();
+            int totalExisting = 0;
             for (File f : inputGVCFs)
             {
                 f = convertInput(f);
@@ -171,11 +172,11 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
                 {
                     if (movedIdx != null && movedIdx.exists())
                     {
-                        ctx.getLogger().debug("moved index exists, skipping file: " + f.getName());
+                        totalExisting++;
                     }
                     else if (f.isDirectory() && doneFile.exists())
                     {
-                        ctx.getLogger().debug("copied folder exists, skipping file: " + f.getName());
+                        totalExisting++;
                     }
                     else
                     {
@@ -221,6 +222,8 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
                         }
                     }
                 }
+
+                ctx.getLogger().debug("Total pre-existing inputs that were re-used: " + totalExisting);
 
                 if (reportFilesForDeletion)
                 {

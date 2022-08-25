@@ -778,6 +778,7 @@ public class SequenceIntegrationTests
             File fq = new File(basedir, prefix + DUAL_BARCODE_FILENAME + ".gz");
             expectedOutputs.add(fq);
             expectedOutputs.add(new File(basedir, "sequenceImport.json"));
+            expectedOutputs.add(new File(basedir, "sequenceSupport.json.gz"));
             expectedOutputs.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, jobName + ".log"));
             verifyFileOutputs(basedir, expectedOutputs);
@@ -815,6 +816,7 @@ public class SequenceIntegrationTests
             File fq = new File(_pipelineRoot, prefix + PAIRED_FILENAME1);
             Assert.assertTrue("File not found", fq.exists());
             expectedOutputs.add(new File(basedir, "sequenceImport.json"));
+            expectedOutputs.add(new File(basedir, "sequenceSupport.json.gz"));
             expectedOutputs.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, jobName + ".log"));
             verifyFileOutputs(basedir, expectedOutputs);
@@ -957,6 +959,7 @@ public class SequenceIntegrationTests
             expectedOutputs.add(new File(basedir, jobName + ".log"));
             expectedOutputs.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, "sequenceImport.json"));
+            expectedOutputs.add(new File(basedir, "sequenceSupport.json.gz"));
 
             verifyFileOutputs(basedir, expectedOutputs);
             verifyFileInputs(basedir, fileNames, config, prefix);
@@ -1039,6 +1042,7 @@ public class SequenceIntegrationTests
             Set<File> expectedOutputs = new HashSet<>();
 
             expectedOutputs.add(new File(basedir, "sequenceImport.json"));
+            expectedOutputs.add(new File(basedir, "sequenceSupport.json.gz"));
 
             expectedOutputs.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, jobName + ".log"));
@@ -1177,6 +1181,7 @@ public class SequenceIntegrationTests
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = getBaseDir(jobs.iterator().next());
             expectedOutputs.add(new File(basedir, "sequenceImport.json"));
+            expectedOutputs.add(new File(basedir, "sequenceSupport.json.gz"));
             expectedOutputs.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, jobName + ".log"));
             expectedOutputs.add(new File(basedir, prefix + PAIRED_FILENAME1));
@@ -1222,6 +1227,7 @@ public class SequenceIntegrationTests
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = getBaseDir(jobs.iterator().next());
             expectedOutputs.add(new File(basedir, "sequenceImport.json"));
+            expectedOutputs.add(new File(basedir, "sequenceSupport.json.gz"));
             expectedOutputs.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, jobName + ".log"));
 
@@ -1270,6 +1276,7 @@ public class SequenceIntegrationTests
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = getBaseDir(jobs.iterator().next());
             expectedOutputs.add(new File(basedir, "sequenceImport.json"));
+            expectedOutputs.add(new File(basedir, "sequenceSupport.json.gz"));
             expectedOutputs.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
             expectedOutputs.add(new File(basedir, jobName + ".log"));
 
@@ -1439,6 +1446,7 @@ public class SequenceIntegrationTests
 
             extraFiles.add(new File(basedir, jobName + ".log"));
             extraFiles.add(new File(basedir, "sequenceAnalysis.json"));
+            extraFiles.add(new File(basedir, "sequenceSupport.json.gz"));
             extraFiles.add(new File(basedir, basedir.getName() + ".pipe.xar.xml"));
 
             extraFiles.add(new File(basedir, outDir));
@@ -1780,7 +1788,7 @@ public class SequenceIntegrationTests
             String jobName = "TestMosaikWithPostProcess_" + System.currentTimeMillis();
             JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), jobName);
             config.put("alignment", "Mosaik");
-            config.put("bamPostProcessing", "AddOrReplaceReadGroups;CallMdTags;CleanSam;FixMateInformation;IndelRealigner;MarkDuplicates;SortSam");
+            config.put("bamPostProcessing", "AddOrReplaceReadGroups;CallMdTags;CleanSam;FixMateInformation;MarkDuplicates;SortSam");
 
             appendSamplesForAlignment(config, _readsets);
 
@@ -1797,18 +1805,12 @@ public class SequenceIntegrationTests
                     "paired1/Alignment/paired1.mosaik.bam.bai"
             ));
 
-            extraFiles.add("Shared/SIVmac239_Test.dict");
-
             extraFiles.add("paired1/Alignment/paired1.mosaik.readgroups.bam");
             extraFiles.add("paired1/Alignment/paired1.mosaik.readgroups.calmd.bam");
             extraFiles.add("paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.bam");
             extraFiles.add("paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.bam");
 
-            extraFiles.add("paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.intervals");
-            extraFiles.add("paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.realigned.bam");
-            extraFiles.add("paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.realigned.bai");
-            //extraFiles.add("paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.sorted.realigned.markduplicates.bam");
-            extraFiles.add("paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.metrics");
+            extraFiles.add("paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.markduplicates.metrics");
 
             extraFiles.add("paired1/Alignment/TestReadset1.summary.metrics");
             extraFiles.add("paired1/Alignment/TestReadset1.insertsize.metrics");
@@ -1828,8 +1830,6 @@ public class SequenceIntegrationTests
                     "paired3/Alignment/paired3.mosaik.bam.bai"
             ));
 
-            extraFiles.add("Shared/SIVmac239_Test.dict");
-
             extraFiles.add("paired3/Alignment/paired3.mosaikreads");
             extraFiles.add("paired3/Alignment/paired3.mosaik.stat");
             extraFiles.add("paired3/Alignment/paired3.mosaik.readgroups.bam");
@@ -1837,11 +1837,7 @@ public class SequenceIntegrationTests
             extraFiles.add("paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.bam");
             extraFiles.add("paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.bam");
 
-            extraFiles.add("paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.intervals");
-            extraFiles.add("paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.realigned.bam");
-            extraFiles.add("paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.realigned.bai");
-            //extraFiles.add("paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.bam");
-            extraFiles.add("paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.metrics");
+            extraFiles.add("paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.markduplicates.metrics");
 
             extraFiles.add("paired3/Alignment/TestReadset2.summary.metrics");
             //extraFiles.add("paired3/Alignment/TestReadset2.insertsize.metrics");
@@ -1860,8 +1856,6 @@ public class SequenceIntegrationTests
                     "paired4/Alignment/paired4.mosaik.bam.bai"
             ));
 
-            extraFiles.add("Shared/SIVmac239_Test.dict");
-
             extraFiles.add("paired4");
             extraFiles.add("paired4/Alignment");
             extraFiles.add("paired4/Alignment/paired4.mosaikreads");
@@ -1871,11 +1865,7 @@ public class SequenceIntegrationTests
             extraFiles.add("paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.bam");
             extraFiles.add("paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.bam");
 
-            extraFiles.add("paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.intervals");
-            extraFiles.add("paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.realigned.bam");
-            extraFiles.add("paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.realigned.bai");
-            //extraFiles.add("paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.bam");
-            extraFiles.add("paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.metrics");
+            extraFiles.add("paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.markduplicates.metrics");
 
             extraFiles.add("paired4/Alignment/TestReadset3.summary.metrics");
             //extraFiles.add("paired4/Alignment/TestReadset3.insertsize.metrics");
@@ -1897,7 +1887,7 @@ public class SequenceIntegrationTests
             JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), jobName);
             config.put("alignment", "Mosaik");
             config.put("deleteIntermediateFiles", true);
-            config.put("bamPostProcessing", "AddOrReplaceReadGroups;CallMdTags;CleanSam;FixMateInformation;IndelRealigner;MarkDuplicates;SortSam");
+            config.put("bamPostProcessing", "AddOrReplaceReadGroups;CallMdTags;CleanSam;FixMateInformation;MarkDuplicates;SortSam");
 
             appendSamplesForAlignment(config, _readsets);
 
@@ -1922,7 +1912,7 @@ public class SequenceIntegrationTests
             job1Files.add("paired1/Alignment/TestReadset1.insertsize.metrics");
             job1Files.add("paired1/Alignment/TestReadset1.insertsize.metrics.pdf");
             job1Files.add("paired1/Alignment/TestReadset1.bam.bai");
-            job1Files.add("paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.metrics");
+            job1Files.add("paired1/Alignment/paired1.mosaik.readgroups.calmd.cleaned.fixmate.markduplicates.metrics");
             validateAlignmentJob(jobs, job1Files, _readsets.get(0), 294, 128);
 
             //job2
@@ -1933,7 +1923,7 @@ public class SequenceIntegrationTests
             job2Files.add("paired3/Alignment/TestReadset2.summary.metrics");
             //job2Files.add("paired3/Alignment/TestReadset2.insertsize.metrics");
             job2Files.add("paired3/Alignment/TestReadset2.bam.bai");
-            job2Files.add("paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.metrics");
+            job2Files.add("paired3/Alignment/paired3.mosaik.readgroups.calmd.cleaned.fixmate.markduplicates.metrics");
             validateAlignmentJob(jobs, job2Files, _readsets.get(1), 147, 64);
 
             //job3
@@ -1944,7 +1934,7 @@ public class SequenceIntegrationTests
             job3Files.add("paired4/Alignment/TestReadset3.summary.metrics");
             //job3Files.add("paired4/Alignment/TestReadset3.insertsize.metrics");
             job3Files.add("paired4/Alignment/TestReadset3.bam.bai");
-            job3Files.add("paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.realigned.markduplicates.metrics");
+            job3Files.add("paired4/Alignment/paired4.mosaik.readgroups.calmd.cleaned.fixmate.markduplicates.metrics");
             validateAlignmentJob(jobs, job3Files, _readsets.get(2), 147, 64);
         }
 

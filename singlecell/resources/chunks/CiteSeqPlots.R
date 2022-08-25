@@ -8,11 +8,11 @@ for (datasetId in names(seuratObjects)) {
     } else {
         for (feat in rownames(seuratObj[[assayName]])) {
             tryCatch({
-                CellMembrane::FeaturePlotAcrossReductions(seuratObj, features = paste0(toLower(assayName), '_', feat))
+                CellMembrane::FeaturePlotAcrossReductions(seuratObj, features = paste0(tolower(assayName), '_', feat))
             }, error = function(e){
                 warning(conditionMessage(e))
                 traceback()
-                message('Features:')
+                message(paste0('Error running toLower for: ', feat))
                 message(paste0(sort(rownames(seuratObj@assays[[assayName]])), collapse = ', '))
                 stop(paste0('Error running FeaturePlotAcrossReductions for: ', datasetId))
             })

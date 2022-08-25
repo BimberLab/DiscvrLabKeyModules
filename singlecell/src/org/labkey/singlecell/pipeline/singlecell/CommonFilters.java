@@ -43,8 +43,14 @@ public class CommonFilters extends AbstractCellMembraneStep
                         put("maxValue", 1);
                         put("decimalPrecision", 3);
                     }}, null),
-                    SeuratToolParameter.create("dropHashingFail", "Drop Cells Without Hashing", "If checked, any cell that lacks hashing data will be dropped. All cells from a lane that did not use hashing will be included.", "checkbox", new JSONObject(){{
+                    SeuratToolParameter.create("dropHashingFail", "Drop Cells With Hashing Collisions", "If checked, any cells with hashing collisions will be dropped. This includes ND, doublets, discordant, and low counts. Singlets and negatives will be retained, as will lanes that did not use cell hashing.", "checkbox", new JSONObject(){{
                         put("checked", true);
+                    }}, false),
+                    SeuratToolParameter.create("dropDoubletFinder", "Drop DoubletFinder Doublets", "If checked, any cell that lacks hashing data will be dropped. All cells from a lane that did not use hashing will be included.", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, false),
+                    SeuratToolParameter.create("dropHashingNegatives", "Drop Cell Hashing Negatives", "If checked, any cell from a lane that used hashing, but is negative will be dropped. All cells from a lane that did not use hashing will be included.", "checkbox", new JSONObject(){{
+                        put("checked", false);
                     }}, false),
                     SeuratToolParameter.create("dropNullScGateConsensus", "Drop Cells Without scGateConsensus", "If checked, any cell that lacks a call from scGateConsensus will be dropped.", "checkbox", new JSONObject(){{
                         put("checked", true);

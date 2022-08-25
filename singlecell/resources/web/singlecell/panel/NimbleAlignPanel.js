@@ -10,17 +10,17 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 	initComponent: function(){
 		Ext4.apply(this, {
 			style: 'padding: 10px;margins: 5px;',
-            minWidth: 650,
+            minWidth: 750,
 			border: true,
 			items: [{
 				html: 'This step will first run cellranger using the primary genome (selected above). The resulting BAM will be passed to nimble, which will align using each of the genomes selected below, creating supplemental feature counts. By default, the original cellranger output is discarded.',
-				maxWidth: 600,
+				maxWidth: 700,
 				border: false,
 				style: 'padding-bottom: 10px;'
 			},{
 				xtype: 'ldk-gridpanel',
 				clicksToEdit: 1,
-				width: 600,
+				width: 700,
 				tbar: [{
 					text: 'Add',
 					handler: function(btn){
@@ -45,7 +45,7 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 				},
 				columns: [{
 					dataIndex: 'genomeId',
-					width: 200,
+					width: 325,
 					header: 'Genome',
 					editor: this.genomeField,
 					renderer: function(val){
@@ -63,7 +63,7 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 					}
 				},{
 					dataIndex: 'template',
-					width: 200,
+					width: 175,
 					header: 'Alignment Template',
 					editor: {
 						xtype: 'ldk-simplecombo',
@@ -76,7 +76,7 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 					}
 				}, {
 					dataIndex: 'grouping',
-					width: 200,
+					width: 175,
 					header: 'Group By Lineage',
 					editor: {
 						xtype: 'checkbox'
