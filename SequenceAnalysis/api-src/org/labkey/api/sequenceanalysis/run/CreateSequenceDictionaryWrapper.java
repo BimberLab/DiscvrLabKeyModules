@@ -43,7 +43,7 @@ public class CreateSequenceDictionaryWrapper extends PicardWrapper
 
         getLogger().info("Creating dictionary for: " + referenceFasta.getPath());
 
-        List<String> params = getBaseArgs();
+        List<String> params = getBaseArgs(true);
 
         params.add("--REFERENCE");
         params.add(referenceFasta.getPath());
