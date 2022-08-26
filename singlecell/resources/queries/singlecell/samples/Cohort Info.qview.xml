@@ -1,0 +1,15 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" canOverride="true">
+    <columns>
+        <column name="rowId" />
+        <column name="subjectId" />
+        <column name="sampledate" />
+        <column name="stim" />
+        <column name="tissue" />
+        <column name="allProjects/projects" />
+        <column name="container/title" />
+        <column name="workbook" />
+    </columns>
+    <sorts>
+        <sort column="rowId" descending="true"/>
+    </sorts>
+</customView>
