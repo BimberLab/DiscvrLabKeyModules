@@ -394,7 +394,7 @@ public class StarWrapper extends AbstractCommandWrapper
                 //NOTE: if the genome has a large number of contigs, this param can be necessary
                 try (IndexedFastaSequenceFile idx = new IndexedFastaSequenceFile(referenceGenome.getWorkingFastaFile()))
                 {
-                    File dict = new File(referenceGenome.getWorkingFastaFile(), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile()) + ".dict");
+                    File dict = new File(referenceGenome.getWorkingFastaFile().getParentFile(), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile()) + ".dict");
                     if (!dict.exists())
                     {
                         throw new PipelineJobException("Unable to find file: " + dict.getPath());
