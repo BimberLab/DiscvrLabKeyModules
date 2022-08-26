@@ -223,8 +223,6 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
                     }
                 }
 
-                ctx.getLogger().debug("Total pre-existing inputs that were re-used: " + totalExisting);
-
                 if (reportFilesForDeletion)
                 {
                     ctx.getLogger().info("Files will be marked for deletion after this step");
@@ -242,6 +240,8 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
 
                 vcfsToProcess.add(movedFile);
             }
+
+            ctx.getLogger().debug("Total pre-existing inputs that were re-used: " + totalExisting);
 
             return vcfsToProcess;
         }
