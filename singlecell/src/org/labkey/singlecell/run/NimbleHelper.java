@@ -178,7 +178,8 @@ public class NimbleHelper
             output.addIntermediateFile(genomeFasta);
             output.addIntermediateFile(refJson);
 
-            output.addSequenceOutput(results, basename + ": nimble align", "Nimble Alignment", rs.getRowId(), null, genome.getGenomeId(), null);
+            String description = genome.getScoreThreshold() > 0 ? "score_threshold: " + genome.getScoreThreshold() : null;
+            output.addSequenceOutput(results, basename + ": nimble align", "Nimble Alignment", rs.getRowId(), null, genome.getGenomeId(), description);
         }
     }
 
@@ -252,6 +253,12 @@ public class NimbleHelper
             }
 
             config.put("max_hits_to_report", genome.maxHitsToReport);
+
+            if (genome.getScoreThreshold() > 0)
+            {
+                getPipelineCtx().getLogger().debug("Using custom score_threshold: " + genome.getScoreThreshold());
+                config.put("score_threshold", genome.getScoreThreshold());
+            }
 
             getPipelineCtx().getLogger().info("Final config:");
             getPipelineCtx().getLogger().info(config.toString(1));
@@ -463,11 +470,12 @@ public class NimbleHelper
         private final String template;
         private final boolean doGroup;
         private final int maxHitsToReport;
+        private final int scoreThreshold;
 
         public NimbleGenome(String genomeStr, int maxHitsToReport) throws PipelineJobException
         {
             JSONArray arr = new JSONArray(genomeStr);
-            if (arr.length() != 3)
+            if (arr.length() < 3)
             {
                 throw new PipelineJobException("Improper genome: " + genomeStr);
             }
@@ -475,6 +483,8 @@ public class NimbleHelper
             genomeId = arr.getInt(0);
             template = arr.getString(1);
             doGroup = arr.getBoolean(2);
+            scoreThreshold = arr.length() > 3 ? arr.getInt(3) : -1;
+
             this.maxHitsToReport = maxHitsToReport;
         }
 
@@ -491,6 +501,11 @@ public class NimbleHelper
         public boolean isDoGroup()
         {
             return doGroup;
+        }
+
+        public int getScoreThreshold()
+        {
+            return scoreThreshold;
         }
     }
 

@@ -1,10 +1,7 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
-import au.com.bytecode.opencsv.CSVReader;
-import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
@@ -14,12 +11,8 @@ import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.singlecell.CellHashingServiceImpl;
+import org.labkey.singlecell.analysis.AbstractSingleCellHandler;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -152,118 +145,7 @@ public class SeuratPrototype extends AbstractCellMembraneStep
             String readsetName = ctx.getSequenceSupport().getCachedReadset(wrapper.getReadsetId()).getName();
             so.setReadset(wrapper.getReadsetId());
             so.setName(readsetName + ": Prototype Seurat Object");
-
-            List<String> descriptions = new ArrayList<>();
-            File metaTable = CellHashingServiceImpl.get().getMetaTableFromSeurat(so.getFile());
-            try (CSVReader reader = new CSVReader(Readers.getReader(metaTable), ','))
-            {
-                String[] line;
-
-                int totalCells = 0;
-                int totalSinglet = 0;
-                int totalDiscordant = 0;
-                int totalDoublet = 0;
-                double totalSaturation = 0.0;
-
-                int hashingIdx = -1;
-                int saturationIdx = -1;
-                boolean hashingUsed = true;
-                while ((line = reader.readNext()) != null)
-                {
-                    if (hashingIdx == -1)
-                    {
-                        hashingIdx = Arrays.asList(line).indexOf("HTO.Classification");
-                        if (hashingIdx == -1)
-                        {
-                            ctx.getLogger().debug("HTO.Classification field not present, skipping");
-                            hashingUsed = false;
-                            hashingIdx = -2;
-                        }
-
-                        saturationIdx = Arrays.asList(line).indexOf("Saturation.RNA");
-                        if (saturationIdx == -1)
-                        {
-                            throw new PipelineJobException("Unable to find Saturation.RNA field in file: " + metaTable.getName());
-                        }
-                    }
-                    else
-                    {
-                        totalCells++;
-                        if (hashingUsed && hashingIdx >= 0)
-                        {
-                            String val = line[hashingIdx];
-                            if ("Singlet".equals(val))
-                            {
-                                totalSinglet++;
-                            }
-                            else if ("Doublet".equals(val))
-                            {
-                                totalDoublet++;
-                            }
-                            else if ("Discordant".equals(val))
-                            {
-                                totalDiscordant++;
-                            }
-                            else if ("NotUsed".equals(val))
-                            {
-                                hashingUsed = false;
-                            }
-                        }
-
-                        double saturation = Double.parseDouble(line[saturationIdx]);
-                        totalSaturation += saturation;
-                    }
-                }
-
-                NumberFormat pf = NumberFormat.getPercentInstance();
-                pf.setMaximumFractionDigits(2);
-
-                NumberFormat decimal = DecimalFormat.getNumberInstance();
-                decimal.setGroupingUsed(false);
-
-                descriptions.add("Total Cells: " + decimal.format(totalCells));
-                if (hashingUsed)
-                {
-                    descriptions.add("Total Singlet: " + decimal.format(totalSinglet));
-                    descriptions.add("% Singlet: " + pf.format((double) totalSinglet / (double) totalCells));
-                    descriptions.add("% Doublet: " + pf.format((double) totalDoublet / (double) totalCells));
-                    descriptions.add("% Discordant: " + pf.format((double) totalDiscordant / (double) totalCells));
-                }
-                else
-                {
-                    descriptions.add("Hashing not used");
-                }
-
-                descriptions.add("Mean RNA Saturation: " + (totalSaturation / (double) totalCells));
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-
-            if (ctx.getParams().optBoolean("singleCellRawData.PrepareRawCounts.useSoupX", false))
-            {
-                descriptions.add("SoupX: true");
-            }
-
-            String hashingMethods = ctx.getParams().optString("singleCell.RunCellHashing.consensusMethods");
-            if (hashingMethods != null)
-            {
-                descriptions.add("Hashing: " + hashingMethods);
-            }
-
-            String citeNormalize = ctx.getParams().optString("singleCell.AppendCiteSeq.normalizeMethod");
-            if (citeNormalize != null)
-            {
-                descriptions.add("Cite-seq Normalization: " + citeNormalize);
-            }
-
-            if (ctx.getParams().optBoolean("singleCell.AppendCiteSeq.runCellBender", false))
-            {
-                descriptions.add("Cite-seq/CellBender: true");
-            }
-
-            so.setDescription(StringUtils.join(descriptions, "\n"));
+            so.setDescription(AbstractSingleCellHandler.getOutputDescription(ctx, so.getFile(), null));
 
             ctx.getFileManager().addSequenceOutput(so);
         }

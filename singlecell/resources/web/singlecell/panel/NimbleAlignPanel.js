@@ -41,11 +41,11 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 				},LABKEY.ext4.GRIDBUTTONS.DELETERECORD()],
 				store: {
 					type: 'array',
-					fields: ['genomeId', 'template', 'grouping']
+					fields: ['genomeId', 'template', 'grouping', 'scoreThreshold']
 				},
 				columns: [{
 					dataIndex: 'genomeId',
-					width: 325,
+					width: 510,
 					header: 'Genome',
 					editor: this.genomeField,
 					renderer: function(val){
@@ -74,12 +74,20 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 						initialValues: 'lenient',
 						delimiter: ';'
 					}
-				}, {
+				},{
 					dataIndex: 'grouping',
 					width: 175,
 					header: 'Group By Lineage',
 					editor: {
 						xtype: 'checkbox'
+					}
+				},{
+					dataIndex: 'scoreThreshold',
+					width: 175,
+					header: 'Score Threshold',
+					editor: {
+						xtype: 'ldk-integerfield',
+						minValue: 0
 					}
 				}]
 			}]
@@ -91,7 +99,7 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 	getValue: function(){
 		var ret = [];
 		this.down('ldk-gridpanel').store.each(function(r, i) {
-			ret.push([r.data.genomeId, r.data.template, r.data.grouping || false]);
+			ret.push([r.data.genomeId, r.data.template, r.data.grouping || false, r.data.scoreThreshold || '']);
 		}, this);
 
 		return Ext4.isEmpty(ret) ? null : JSON.stringify(ret);
@@ -127,7 +135,8 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 				var rec = grid.store.createModel({
 					genomeId: row[0],
 					template: row[1],
-					grouping: row[2]
+					grouping: row[2],
+					scoreThreshold: row.length > 3 ? row[3] : null
 				});
 				grid.store.add(rec);
 			}, this);

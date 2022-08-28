@@ -891,7 +891,7 @@ public class CellHashingServiceImpl extends CellHashingService
                 put("maxValue", 1);
                 put("decimalPrecision", 2);
             }}, 0.6),
-            ToolParameterDescriptor.create("callerAgreementThreshold", "Caller Disagreement Threshold", "This applies to calculating a consensus call when multiple algorithms are used. The results of each caller are compared to a simple majority of consensus callers, ignoring negative/low-count cells. Per caller, concordance with that majority call is calculated. If any caller's accuracy is below this threshold, it will be dropped and the consensus re-calculated. This is designed to remove a caller that is consistently discordant at a global level", "ldk-numberfield", new JSONObject(){{
+            ToolParameterDescriptor.create("callerDisagreementThreshold", "Caller Disagreement Threshold", "This applies to calculating a consensus call when multiple algorithms are used. The results of each caller are compared to a simple majority of consensus callers, ignoring negative/low-count cells. Per caller, the disagreement rate between the majority call is calculated. If any caller's disagreement rate is above this threshold, it will be dropped and the consensus re-calculated. This is designed to remove a caller that is consistently discordant at a global level", "ldk-numberfield", new JSONObject(){{
                 put("minValue", 0);
                 put("maxValue", 1);
                 put("decimalPrecision", 2);
@@ -1190,7 +1190,7 @@ public class CellHashingServiceImpl extends CellHashingService
             String keepMarkdown = parameters.keepMarkdown ? "TRUE" : "FALSE";
             String h5String = h5 == null ? "" : ", h5File = '/work/" + h5.getName() + "'";
             String consensusMethodString = consensusMethodNames.isEmpty() ? "" : ", methodsForConsensus = c('" + StringUtils.join(consensusMethodNames, "','") + "')";
-            writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "'" + h5String + ", molInfoFile = '/work/" + molInfo.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', rawCountsExport = '/work/" + countFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', skipNormalizationQc = " + skipNormalizationQcString + ", methods = c('" + StringUtils.join(methodNames, "','") + "')" + consensusMethodString + ", keepMarkdown = " + keepMarkdown + ", minCountPerCell = " + (parameters.minCountPerCell == null ? "NULL" : parameters.minCountPerCell) + ", majorityConsensusThreshold = " + (parameters.majorityConsensusThreshold == null ? "NULL" : parameters.majorityConsensusThreshold) + ", callerAgreementThreshold = " + (parameters.callerAgreementThreshold == null ? "NULL" : parameters.callerAgreementThreshold) + ")");
+            writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "'" + h5String + ", molInfoFile = '/work/" + molInfo.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', rawCountsExport = '/work/" + countFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', skipNormalizationQc = " + skipNormalizationQcString + ", methods = c('" + StringUtils.join(methodNames, "','") + "')" + consensusMethodString + ", keepMarkdown = " + keepMarkdown + ", minCountPerCell = " + (parameters.minCountPerCell == null ? "NULL" : parameters.minCountPerCell) + ", majorityConsensusThreshold = " + (parameters.majorityConsensusThreshold == null ? "NULL" : parameters.majorityConsensusThreshold) + ", callerDisagreementThreshold = " + (parameters.callerDisagreementThreshold == null ? "NULL" : parameters.callerDisagreementThreshold) + ")");
             writer.println("print('Rmarkdown complete')");
 
         }
@@ -1471,7 +1471,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
     public File getMetaTableFromSeurat(File seuratObj, boolean throwIfNotFound)
     {
-        File barcodes = new File(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds", "seurat.meta.txt"));
+        File barcodes = new File(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds$", "seurat.meta.txt"));
         if (throwIfNotFound && !barcodes.exists())
         {
             throw new IllegalArgumentException("Unable to find expected metadata file.  This might indicate the seurat object was created with an older version of the pipeline.  Expected: " + barcodes.getPath());
