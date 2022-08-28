@@ -895,7 +895,7 @@ public class CellHashingServiceImpl extends CellHashingService
                 put("minValue", 0);
                 put("maxValue", 1);
                 put("decimalPrecision", 2);
-            }}, null),
+            }}, 0.2),
             ToolParameterDescriptor.create("skipNormalizationQc", "Skip Normalization QC", null, "checkbox", null, true),
             ToolParameterDescriptor.create("retainRawCountFile", "Retain Raw Counts File", null, "checkbox", null, false)
         ));
