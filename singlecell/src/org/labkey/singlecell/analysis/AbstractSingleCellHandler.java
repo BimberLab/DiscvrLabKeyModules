@@ -216,7 +216,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                         ctx.getLogger().info("Seurat object lacks a readset, so attempting to infer from cellbarcodes");
 
                         //NOTE: for a multi-dataset object, readset might be null, but the component loupe files might map to multiple readsets. For ease, try to lookup and recover the component readsets:
-                        File barcodeFile = CellHashingServiceImpl.get().getCellBarcodesFromSeurat(f.getFile());
+                        File barcodeFile = CellHashingServiceImpl.get().getCellBarcodesFromSeurat(f.getFile(), false);
                         if (barcodeFile.exists())
                         {
                             Set<Integer> uniquePrefixes = new HashSet<>();
@@ -252,6 +252,10 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
 
                                 ctx.getSequenceSupport().cacheReadset(so.getReadset(), ctx.getJob().getUser());
                             }
+                        }
+                        else
+                        {
+                            ctx.getLogger().warn("Barcode file not found: " + barcodeFile.getPath());
                         }
                     }
                 }
@@ -412,7 +416,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                         FileUtils.copyFile(so.getFile(), local);
                         _resumer.getFileManager().addIntermediateFile(local);
 
-                        File cellBarcodes = CellHashingServiceImpl.get().getCellBarcodesFromSeurat(so.getFile());
+                        File cellBarcodes = CellHashingServiceImpl.get().getCellBarcodesFromSeurat(so.getFile(), false);
                         if (cellBarcodes.exists())
                         {
                             ctx.getLogger().debug("Also making local copy of cellBarcodes TSV: " + cellBarcodes.getPath());

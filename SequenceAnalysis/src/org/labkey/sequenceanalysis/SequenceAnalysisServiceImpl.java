@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -59,6 +60,7 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -66,6 +68,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * User: bimber
@@ -518,5 +522,18 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     {
         FastqMerger merger = new FastqMerger(log);
         merger.mergeFiles(output, inputs);
+    }
+
+    List<Function<File, List<File>>> _accessoryFileProviders = new ArrayList<>();
+
+    @Override
+    public void registerAccessoryFileProvider(Function<File, List<File>> fn)
+    {
+        _accessoryFileProviders.add(fn);
+    }
+
+    public List<Function<File, List<File>>> getAccessoryFileProviders()
+    {
+        return Collections.unmodifiableList(_accessoryFileProviders);
     }
 }

@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * User: bimber
@@ -100,4 +101,6 @@ abstract public class SequenceAnalysisService
     abstract public void ensureFeatureFileIndex(File input, Logger log) throws PipelineJobException;
 
     abstract public void mergeFastqFiles(File output, List<File> inputs, Logger log) throws PipelineJobException;
+
+    abstract public void registerAccessoryFileProvider(Function<File, List<File>> fn);
 }
