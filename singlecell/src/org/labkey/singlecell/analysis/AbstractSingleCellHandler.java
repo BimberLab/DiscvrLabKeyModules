@@ -935,6 +935,11 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
         {
             descriptions = new ArrayList<>();
         }
+        else
+        {
+            //ensure mutable:
+            descriptions = new ArrayList<>(descriptions);
+        }
 
         File metaTable = CellHashingServiceImpl.get().getMetaTableFromSeurat(seuratObj);
         try (CSVReader reader = new CSVReader(Readers.getReader(metaTable), ','))
