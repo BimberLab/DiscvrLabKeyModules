@@ -591,7 +591,8 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 so.setName(output.getDatasetName() == null ? output.getDatasetId() : output.getDatasetName());
                 so.setCategory("Seurat Object");
                 so.setFile(output.getFile());
-                so.setDescription(getOutputDescription(ctx, output.getFile(), Arrays.asList("Steps: " + steps.stream().map(x -> x.getProvider().getName()).collect(Collectors.joining(";")))));
+                String description = getOutputDescription(ctx, output.getFile(), Arrays.asList("Steps: " + steps.stream().map(x -> x.getProvider().getName()).collect(Collectors.joining(";"))));
+                so.setDescription(description);
 
                 if (NumberUtils.isCreatable(output.getDatasetId()))
                 {
@@ -657,9 +658,10 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     }
                 }
 
-                // This could be a little confusing, but add one record out seurat output, even though there is one HTML file::
+                // This could be a little confusing, but add one record out seurat output, even though there is one HTML file:
                 SequenceOutputFile o = new SequenceOutputFile();
                 o.setCategory("Seurat Report");
+                o.setDescription(description);
                 o.setFile(finalHtml);
                 o.setLibrary_id(so.getLibrary_id());
                 o.setReadset(so.getReadset());
