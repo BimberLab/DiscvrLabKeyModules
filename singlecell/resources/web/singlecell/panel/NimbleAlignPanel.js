@@ -45,7 +45,7 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 				},
 				columns: [{
 					dataIndex: 'genomeId',
-					width: 510,
+					width: 275,
 					header: 'Genome',
 					editor: this.genomeField,
 					renderer: function(val){
@@ -63,7 +63,7 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 					}
 				},{
 					dataIndex: 'template',
-					width: 175,
+					width: 150,
 					header: 'Alignment Template',
 					editor: {
 						xtype: 'ldk-simplecombo',
@@ -76,14 +76,14 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 					}
 				},{
 					dataIndex: 'grouping',
-					width: 175,
+					width: 125,
 					header: 'Group By Lineage',
 					editor: {
 						xtype: 'checkbox'
 					}
 				},{
 					dataIndex: 'scoreThreshold',
-					width: 175,
+					width: 150,
 					header: 'Score Threshold',
 					editor: {
 						xtype: 'ldk-integerfield',
