@@ -329,9 +329,16 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             File outputVcfIdx = new File(outDir, basename + ".vcf.gz.tbi");
             File outputVcfDone = getDoneFile(outputVcf);
 
-            for (File f : inputFiles)
+            if (inputFiles.size() > 500)
             {
-                action.addInput(f, "Input Variants");
+                ctx.getLogger().debug("Too many inputs, will not add them individually so as to spare PipelineJob size");
+            }
+            else
+            {
+                for (File f : inputFiles)
+                {
+                    action.addInput(f, "Input Variants");
+                }
             }
 
             boolean doCopyLocal = doCopyLocal(ctx.getParams());
