@@ -1042,13 +1042,13 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
         }
 
         String hashingMethods = ctx.getParams().optString("singleCell.RunCellHashing.consensusMethods");
-        if (hashingMethods != null)
+        if (StringUtils.trimToNull(hashingMethods) != null)
         {
             descriptions.add("Hashing: " + hashingMethods);
         }
 
         String citeNormalize = ctx.getParams().optString("singleCell.AppendCiteSeq.normalizeMethod");
-        if (citeNormalize != null)
+        if (StringUtils.trimToNull(citeNormalize) != null)
         {
             descriptions.add("Cite-seq Normalization: " + citeNormalize);
         }
