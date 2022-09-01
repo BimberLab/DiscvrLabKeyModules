@@ -692,7 +692,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 if (intervals.size() > 5)
                 {
                     ctx.getLogger().debug("Too many intervals, writing to file");
-                    File intervalFile = new File(outputVcf.getParentFile(), "intervals.list");
+                    File intervalFile = new File(outputVcf.getParentFile(), "genotypeIntervals.list");
                     ctx.getFileManager().addIntermediateFile(intervalFile);
                     try (PrintWriter writer = PrintWriters.getPrintWriter(intervalFile))
                     {
@@ -704,6 +704,9 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                     {
                         throw new PipelineJobException(e);
                     }
+
+                    toolParams.add("-L");
+                    toolParams.add(intervalFile.getPath());
                 }
                 else
                 {
