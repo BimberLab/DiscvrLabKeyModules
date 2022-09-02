@@ -5,6 +5,7 @@ import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -15,8 +16,11 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.run.util.BgzipRunner;
 
 import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InaccessibleObjectException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -89,9 +93,9 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
             });
 
             String fileName = ctx.getParams().getString("fileName");
-            if (!fileName.toLowerCase().endsWith("vcf.gz"))
+            if (!fileName.toLowerCase().endsWith("vcf"))
             {
-                fileName = fileName + ".vcf.gz";
+                fileName = fileName + ".vcf";
             }
 
             File vcfOut = new File(ctx.getOutputDir(), fileName);
@@ -104,9 +108,25 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                 throw new PipelineJobException("Unable to find file: " + vcfOut.getPath());
             }
 
+            // Ensure output bgzipped:
+            File bgVcf = SequenceAnalysisService.get().bgzipFile(vcfOut, ctx.getLogger());
+            try
+            {
+                SequenceAnalysisService.get().ensureVcfIndex(bgVcf, ctx.getLogger(), true);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            if (vcfOut.exists())
+            {
+                throw new PipelineJobException("Unzipped VCF should not exist: " + vcfOut.getPath());
+            }
+
             SequenceOutputFile so = new SequenceOutputFile();
             so.setName("pbsv call: " + fileName);
-            so.setFile(vcfOut);
+            so.setFile(bgVcf);
             so.setCategory("PBSV VCF");
             so.setLibrary_id(genome.getGenomeId());
 
