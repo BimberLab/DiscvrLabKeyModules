@@ -134,7 +134,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                     itemId: 'hashingPrefix',
                                     fieldLabel: 'Hashing Library Prefix',
                                     labelWidth: 160,
-                                    value: 'H'
+                                    value: 'M'
                                 },{
                                     xtype: 'checkbox',
                                     itemId: 'autoAssignLane',
@@ -386,6 +386,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                     Ext4.Msg.wait('Loading...');
                     var readsetIds = Ext4.Object.getKeys(readsetIdToLane);
                     LABKEY.Query.selectRows({
+                        method: 'POST',
                         containerPath: Laboratory.Utils.getQueryContainerPath(),
                         schemaName: 'sequenceanalysis',
                         queryName: 'sequence_readsets',
@@ -439,6 +440,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                         if (workbook) {
                                             Ext4.Msg.wait('Loading...');
                                             LABKEY.Query.selectRows({
+                                                method: 'POST',
                                                 containerPath: Laboratory.Utils.getQueryContainerPath(),
                                                 schemaName: 'core',
                                                 queryName: 'workbooks',
@@ -481,6 +483,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
         Ext4.Msg.wait('Loading...');
         LABKEY.Query.selectRows({
+            method: 'POST',
             schemaName: 'sequenceanalysis',
             queryName: 'barcodes',
             sort: 'group_name,tag_name',
@@ -517,6 +520,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
         batchesToCreate = Ext4.Array.unique(batchesToCreate);
 
         LABKEY.Query.insertRows({
+            method: 'POST',
             containerPath: containerId,
             schemaName: 'sequenceanalysis',
             queryName: 'instrument_runs',
@@ -539,6 +543,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                 }, this);
 
                 LABKEY.Query.updateRows({
+                    method: 'POST',
                     containerPath: Laboratory.Utils.getQueryContainerPath(),
                     schemaName: 'sequenceanalysis',
                     queryName: 'sequence_readsets',
