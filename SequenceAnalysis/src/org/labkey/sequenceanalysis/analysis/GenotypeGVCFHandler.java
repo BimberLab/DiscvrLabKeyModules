@@ -329,7 +329,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             File outputVcfIdx = new File(outDir, basename + ".vcf.gz.tbi");
             File outputVcfDone = getDoneFile(outputVcf);
 
-            if (inputFiles.size() > 500)
+            if (inputFiles.size() > 250 || ctx.getJob().isSplitJob())
             {
                 ctx.getLogger().debug("Too many inputs, will not add them individually so as to spare PipelineJob size");
             }
