@@ -109,14 +109,37 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
             {
                 ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id());
                 File cram = new File(so.getFile().getParentFile(), FileUtil.getBaseName(so.getFile()) + ".cram");
-                new SamtoolsCramConverter(ctx.getLogger()).convert(so.getFile(), cram, genome.getWorkingFastaFileGzipped(), true, threads);
+                File cramIdx = SamtoolsCramConverter.getExpectedCramIndex(cram);
+                if (!so.getFile().exists())
+                {
+                    if (replaceOriginal && cramIdx.exists())
+                    {
+                        ctx.getLogger().debug("BAM does not exist, but CRAM index does. Proceeding on the assumption this is a resume of a failed job.");
+                    }
+                    else
+                    {
+                        throw new PipelineJobException("Unable to find BAM: " + so.getFile().getPath());
+                    }
+                }
+                else
+                {
+                    new SamtoolsCramConverter(ctx.getLogger()).convert(so.getFile(), cram, genome.getWorkingFastaFileGzipped(), true, threads);
+                }
+
                 checkCramAndIndex(so);
 
                 if (replaceOriginal)
                 {
                     ctx.getLogger().info("Deleting original BAM: " + so.getFile().getPath());
-                    new File(so.getFile().getPath() + ".bai").delete();
-                    so.getFile().delete();
+                    if (so.getFile().exists())
+                    {
+                        new File(so.getFile().getPath() + ".bai").delete();
+                        so.getFile().delete();
+                    }
+                    else
+                    {
+                        ctx.getLogger().debug("Input BAM not found, possibly deleted in earlier job iteration?");
+                    }
                 }
             }
         }
