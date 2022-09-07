@@ -960,6 +960,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             boolean hashingUsed = true;
             while ((line = reader.readNext()) != null)
             {
+                // This will test whether this is the first line or not
                 if (hashingIdx == -1)
                 {
                     hashingIdx = Arrays.asList(line).indexOf("HTO.Classification");
@@ -971,10 +972,6 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     }
 
                     saturationIdx = Arrays.asList(line).indexOf("Saturation.RNA");
-                    if (saturationIdx == -1)
-                    {
-                        throw new PipelineJobException("Unable to find Saturation.RNA field in file: " + metaTable.getName());
-                    }
                 }
                 else
                 {
@@ -1004,8 +1001,11 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                         }
                     }
 
-                    double saturation = Double.parseDouble(line[saturationIdx]);
-                    totalSaturation += saturation;
+                    if (saturationIdx >= 0)
+                    {
+                        double saturation = Double.parseDouble(line[saturationIdx]);
+                        totalSaturation += saturation;
+                    }
                 }
             }
 
@@ -1029,7 +1029,10 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 descriptions.add("Hashing not used");
             }
 
-            descriptions.add("Mean RNA Saturation: " + (totalSaturation / (double) totalCells));
+            if (totalSaturation > 0)
+            {
+                descriptions.add("Mean RNA Saturation: " + (totalSaturation / (double) totalCells));
+            }
         }
         catch (IOException e)
         {
