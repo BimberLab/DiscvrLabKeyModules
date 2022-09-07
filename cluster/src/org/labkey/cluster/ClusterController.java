@@ -20,6 +20,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.action.ConfirmAction;
 import org.labkey.api.action.SimpleRedirectAction;
 import org.labkey.api.action.SpringActionController;
@@ -70,23 +71,27 @@ public class ClusterController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class RunTestPipelineAction extends ConfirmAction<Object>
+    public static class RunTestPipelineAction extends ConfirmAction<Object>
     {
+        @Override
         public void validateCommand(Object form, Errors errors)
         {
 
         }
 
+        @Override
         public URLHelper getSuccessURL(Object form)
         {
             return getContainer().getStartURL(getUser());
         }
 
+        @Override
         public ModelAndView getConfirmView(Object form, BindException errors) throws Exception
         {
             return new HtmlView("This will run a very simple test pipeline job against all configured cluster engines.  This is designed to help make sure your site's configuration is functional.  Do you want to continue?<br><br>");
         }
 
+        @Override
         public boolean handlePost(Object form, BindException errors) throws Exception
         {
             for (RemoteExecutionEngine e : PipelineJobService.get().getRemoteExecutionEngines())
@@ -104,16 +109,19 @@ public class ClusterController extends SpringActionController
     @RequiresSiteAdmin
     public class ForcePipelineCancelAction extends ConfirmAction<JobIdsForm>
     {
+        @Override
         public void validateCommand(JobIdsForm form, Errors errors)
         {
 
         }
 
-        public URLHelper getSuccessURL(JobIdsForm form)
+        @Override
+        public @NotNull URLHelper getSuccessURL(JobIdsForm form)
         {
             return PageFlowUtil.urlProvider(PipelineStatusUrls.class).urlBegin(getContainer());
         }
 
+        @Override
         public ModelAndView getConfirmView(JobIdsForm form, BindException errors) throws Exception
         {
 
@@ -122,6 +130,7 @@ public class ClusterController extends SpringActionController
                     "<label>Enter Job ID(s): </label><input name=\"jobIds\" value = \"" + HtmlString.of(form.getJobIds()) + "\"><br>"));
         }
 
+        @Override
         public boolean handlePost(JobIdsForm form, BindException errors) throws Exception
         {
             String jobIDs = StringUtils.trimToNull(form.getJobIds());
@@ -206,16 +215,19 @@ public class ClusterController extends SpringActionController
     @RequiresSiteAdmin
     public class ResetPipelineJobLogFileAction extends ConfirmAction<ResetPipelineJobLogFileForm>
     {
+        @Override
         public void validateCommand(ResetPipelineJobLogFileForm form, Errors errors)
         {
 
         }
 
+        @Override
         public URLHelper getSuccessURL(ResetPipelineJobLogFileForm form)
         {
             return PageFlowUtil.urlProvider(PipelineStatusUrls.class).urlBegin(getContainer());
         }
 
+        @Override
         public ModelAndView getConfirmView(ResetPipelineJobLogFileForm form, BindException errors) throws Exception
         {
             return new HtmlView(HtmlString.unsafe("This will change the PipelineJob log file path for the selected job to the path below." +
@@ -266,18 +278,21 @@ public class ClusterController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class RecoverCompletedJobsAction extends ConfirmAction<JobIdsForm>
+    public static class RecoverCompletedJobsAction extends ConfirmAction<JobIdsForm>
     {
+        @Override
         public void validateCommand(JobIdsForm form, Errors errors)
         {
 
         }
 
+        @Override
         public URLHelper getSuccessURL(JobIdsForm form)
         {
             return PageFlowUtil.urlProvider(PipelineStatusUrls.class).urlBegin(getContainer());
         }
 
+        @Override
         public ModelAndView getConfirmView(JobIdsForm form, BindException errors) throws Exception
         {
             return new HtmlView(HtmlString.unsafe("This will attempt to re-queue existing pipeline jobs using their serialized JSON text files.  It is intended as a workaround for the situation where a job has been marked complete." +
@@ -285,6 +300,7 @@ public class ClusterController extends SpringActionController
                     "<label>Enter Job ID(s): </label><input name=\"jobIds\" value=\"" + HtmlString.of(form.getJobIds()) + "\"><br>"));
         }
 
+        @Override
         public boolean handlePost(JobIdsForm form, BindException errors) throws Exception
         {
             String jobIDs = StringUtils.trimToNull(form.getJobIds());
