@@ -320,8 +320,9 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                 writer.println("\t--memory='" + maxRam + "g' \\");
             }
 
+            File tmpDir = new File(SequencePipelineService.get().getJavaTempDir());
             writer.println("\t-v \"${WD}:/work\" \\");
-            writer.println("\t-v \"/tmp:/tmp\" \\");
+            writer.println("\t-v \"" + tmpDir.getPath() + ":/tmp\" \\");
             writer.println("\t-v \"${HOME}:/homeDir\" \\");
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");
