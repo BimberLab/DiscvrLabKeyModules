@@ -591,7 +591,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 so.setName(output.getDatasetName() == null ? output.getDatasetId() : output.getDatasetName());
                 so.setCategory("Seurat Object");
                 so.setFile(output.getFile());
-                String description = getOutputDescription(ctx, output.getFile(), Arrays.asList("Steps: " + steps.stream().map(x -> x.getProvider().getName()).collect(Collectors.joining(";"))));
+                String description = getOutputDescription(ctx, output.getFile(), Arrays.asList("Steps: " + steps.stream().map(x -> x.getProvider().getName()).collect(Collectors.joining("; "))));
                 so.setDescription(description);
 
                 if (NumberUtils.isCreatable(output.getDatasetId()))
