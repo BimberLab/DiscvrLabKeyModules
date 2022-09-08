@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
+import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -16,14 +17,13 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
-import org.labkey.sequenceanalysis.run.util.BgzipRunner;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InaccessibleObjectException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
@@ -35,7 +35,10 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                 ToolParameterDescriptor.create("fileName", "VCF Filename", "The name of the resulting file.", "textfield", new JSONObject(){{
                     put("allowBlank", false);
                     put("doNotIncludeInTemplates", true);
-                }}, null)
+                }}, null),
+                ToolParameterDescriptor.create("doCopyLocal", "Copy Inputs Locally", "If checked, the input file(s) willbe copied to the job working directory.", "checkbox", new JSONObject(){{
+                    put("checked", true);
+                }}, true)
         ));
     }
 
@@ -74,6 +77,40 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
         @Override
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
+            List<File> inputs = inputFiles.stream().map(SequenceOutputFile::getFile).collect(Collectors.toList());
+            if (ctx.getParams().optBoolean("doCopyLocal", false))
+            {
+                ctx.getLogger().info("Copying inputs locally");
+                try
+                {
+                    List<File> copiedInputs = new ArrayList<>();
+                    for (File f : inputs)
+                    {
+                        File copied = new File(ctx.getWorkingDirectory(), f.getName());
+                        if (copiedInputs.contains(copied))
+                        {
+                            throw new PipelineJobException("Duplicate input filenames, cannot use with copyLocally option: " + copied.getName());
+                        }
+
+                        if (copied.exists())
+                        {
+                            copied.delete();
+                        }
+
+                        FileUtils.copyFile(f, copied);
+                        copiedInputs.add(copied);
+
+                        ctx.getFileManager().addIntermediateFile(copied);
+                    }
+
+                    inputs = copiedInputs;
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
+
             List<String> args = new ArrayList<>();
             args.add(getExe().getPath());
             args.add("call");
@@ -88,8 +125,8 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
             ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenomes().iterator().next();
             args.add(genome.getWorkingFastaFile().getPath());
 
-            inputFiles.forEach(f -> {
-                args.add(f.getFile().getPath());
+            inputs.forEach(f -> {
+                args.add(f.getPath());
             });
 
             String fileName = ctx.getParams().getString("fileName");
