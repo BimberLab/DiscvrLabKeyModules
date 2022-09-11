@@ -2,7 +2,9 @@ for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readRDS(seuratObjects[[datasetId]])
 
-    seuratObj <- RIRA::RunCellTypist(seuratObj, convertAmbiguousToNA = convertAmbiguousToNA, columnPrefix = columnPrefix, pThreshold = pThreshold, minProp = minProp)
+    for (mn in modelNames) {
+        seuratObj <- RIRA::RunCellTypist(seuratObj, modelName = paste0(mn, '.pkl'), convertAmbiguousToNA = convertAmbiguousToNA, columnPrefix = paste0('celltypist.', mn, '.'), pThreshold = pThreshold, minProp = minProp, maxAllowableClasses = maxAllowableClasses)
+    }
 
     saveData(seuratObj, datasetId)
 }

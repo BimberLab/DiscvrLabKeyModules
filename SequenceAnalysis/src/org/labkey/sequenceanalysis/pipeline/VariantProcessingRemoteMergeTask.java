@@ -191,7 +191,7 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
 
                 if (subsetVcfIdx.exists())
                 {
-                    getJob().getLogger().debug("Index exists, will not re-submit the VCF: " + subsetVcf.getName());
+                    getJob().getLogger().debug("Index exists, will not re-subset the VCF: " + subsetVcf.getName());
                 }
                 else
                 {

@@ -41,6 +41,7 @@ import org.labkey.cluster.pipeline.SlurmExecutionEngine;
 import org.labkey.cluster.pipeline.TestCase;
 import org.labkey.cluster.query.ForceCancelJobsButton;
 import org.labkey.cluster.query.RecoverCompletedJobsButton;
+import org.labkey.cluster.query.ReplaceJobStoreButton;
 import org.labkey.cluster.query.ViewClusterSubmissionsButton;
 import org.labkey.cluster.query.ViewJavaLogButton;
 
@@ -103,6 +104,7 @@ public class ClusterModule extends ExtendedSimpleModule
         LDKService.get().registerQueryButton(new ViewClusterSubmissionsButton(), "pipeline", "job");
         LDKService.get().registerQueryButton(new RecoverCompletedJobsButton(), "pipeline", "job");
         LDKService.get().registerQueryButton(new ForceCancelJobsButton(), "pipeline", "job");
+        LDKService.get().registerQueryButton(new ReplaceJobStoreButton(), "pipeline", "job");
     }
 
     @Override
