@@ -33,6 +33,12 @@ public class RunCelltypist extends AbstractRiraStep
                     {{
                         put("minValue", 0);
                     }}, 5),
+                    SeuratToolParameter.create("minFractionToInclude", "Min Fraction To Include", "Any labels representing fewer than this fraction of the cells will be set to NA", "ldk-numberfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                        put("maxValue", 1);
+                        put("decimalPrecision", 3);
+                    }}, 0.01),
                     SeuratToolParameter.create("pThreshold", "pThreshold", "This is passed to the --p-thres argument.", "ldk-numberfield", new JSONObject()
                     {{
                         put("minValue", 0);
