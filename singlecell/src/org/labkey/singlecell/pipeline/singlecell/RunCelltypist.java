@@ -24,6 +24,8 @@ public class RunCelltypist extends AbstractRiraStep
                         put("storeValues", "Immune_All_Low;Immune_All_High;Human_Lung_Atlas;Healthy_COVID19_PBMC");
                         put("allowBlank", false);
                         put("multiSelect", true);
+                        put("delimiter", ";");
+                        put("joinReturnValue", true);
                     }}, "Immune_All_Low.pkl", null, true, true).delimiter(";"),
                     SeuratToolParameter.create("convertAmbiguousToNA", "Convert Ambiguous To NA", "If true, any values for majority_voting with commas (indicating they are ambiguous) will be converted to NA", "checkbox", new JSONObject()
                     {{
