@@ -53,6 +53,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -245,16 +246,16 @@ public class OrphanFilePipelineJob extends PipelineJob
             Set<Integer> knownPipelineJobs = new HashSet<>();
             UserSchema us = QueryService.get().getUserSchema(u, c, SequenceAnalysisSchema.SCHEMA_NAME);
             TableInfo rd = us.getTable(SequenceAnalysisSchema.TABLE_READ_DATA, null);
-            knownPipelineJobs.addAll(new TableSelector(rd, new HashSet<ColumnInfo>(QueryService.get().getColumns(rd, PageFlowUtil.set(FieldKey.fromString("runId/jobId"))).values()), new SimpleFilter(FieldKey.fromString("runId/jobId"), null, CompareType.NONBLANK), null).getArrayList(Integer.class));
+            knownPipelineJobs.addAll(new TableSelector(rd, new LinkedHashSet<>(QueryService.get().getColumns(rd, PageFlowUtil.set(FieldKey.fromString("runId/jobId"))).values()), new SimpleFilter(FieldKey.fromString("runId/jobId"), null, CompareType.NONBLANK), null).getArrayList(Integer.class));
 
             TableInfo rs = us.getTable(SequenceAnalysisSchema.TABLE_READSETS, null);
-            knownPipelineJobs.addAll(new TableSelector(rs, new HashSet<ColumnInfo>(QueryService.get().getColumns(rs, PageFlowUtil.set(FieldKey.fromString("runId/jobId"))).values()), new SimpleFilter(FieldKey.fromString("runId/jobId"), null, CompareType.NONBLANK), null).getArrayList(Integer.class));
+            knownPipelineJobs.addAll(new TableSelector(rs, new LinkedHashSet<>(QueryService.get().getColumns(rs, PageFlowUtil.set(FieldKey.fromString("runId/jobId"))).values()), new SimpleFilter(FieldKey.fromString("runId/jobId"), null, CompareType.NONBLANK), null).getArrayList(Integer.class));
 
             TableInfo a = us.getTable(SequenceAnalysisSchema.TABLE_ANALYSES, null);
-            knownPipelineJobs.addAll(new TableSelector(a, new HashSet<ColumnInfo>(QueryService.get().getColumns(a, PageFlowUtil.set(FieldKey.fromString("runId/jobId"))).values()), new SimpleFilter(FieldKey.fromString("runId/jobId"), null, CompareType.NONBLANK), null).getArrayList(Integer.class));
+            knownPipelineJobs.addAll(new TableSelector(a, new LinkedHashSet<>(QueryService.get().getColumns(a, PageFlowUtil.set(FieldKey.fromString("runId/jobId"))).values()), new SimpleFilter(FieldKey.fromString("runId/jobId"), null, CompareType.NONBLANK), null).getArrayList(Integer.class));
 
             TableInfo of = us.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES, null);
-            knownPipelineJobs.addAll(new TableSelector(of, new HashSet<ColumnInfo>(QueryService.get().getColumns(of, PageFlowUtil.set(FieldKey.fromString("runId/jobId"))).values()), new SimpleFilter(FieldKey.fromString("runId/jobId"), null, CompareType.NONBLANK), null).getArrayList(Integer.class));
+            knownPipelineJobs.addAll(new TableSelector(of, new LinkedHashSet<>(QueryService.get().getColumns(of, PageFlowUtil.set(FieldKey.fromString("runId/jobId"))).values()), new SimpleFilter(FieldKey.fromString("runId/jobId"), null, CompareType.NONBLANK), null).getArrayList(Integer.class));
 
             knownPipelineJobs.addAll(new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES), PageFlowUtil.set("jobId"), new SimpleFilter(FieldKey.fromString("jobId"), null, CompareType.NONBLANK), null).getArrayList(Integer.class));
             knownPipelineJobs = Collections.unmodifiableSet(knownPipelineJobs);
