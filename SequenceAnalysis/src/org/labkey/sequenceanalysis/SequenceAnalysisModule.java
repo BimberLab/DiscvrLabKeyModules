@@ -87,6 +87,7 @@ import org.labkey.sequenceanalysis.run.analysis.NextCladeHandler;
 import org.labkey.sequenceanalysis.run.analysis.PARalyzerAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.PangolinHandler;
 import org.labkey.sequenceanalysis.run.analysis.PbsvAnalysis;
+import org.labkey.sequenceanalysis.run.analysis.PbsvJointCallingHandler;
 import org.labkey.sequenceanalysis.run.analysis.PindelAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SnpCountAnalysis;
@@ -350,6 +351,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new PangolinHandler());
         SequenceAnalysisService.get().registerFileHandler(new NextCladeHandler());
         SequenceAnalysisService.get().registerFileHandler(new ConvertToCramHandler());
+        SequenceAnalysisService.get().registerFileHandler(new PbsvJointCallingHandler());
 
         SequenceAnalysisService.get().registerReadsetHandler(new MultiQCHandler());
         SequenceAnalysisService.get().registerReadsetHandler(new RestoreSraDataHandler());

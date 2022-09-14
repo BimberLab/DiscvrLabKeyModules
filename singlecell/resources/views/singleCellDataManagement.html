@@ -43,6 +43,20 @@
                 },{
                     header: 'Data Archival',
                     items: [{
+                        name: 'Single-Cell Samples and Groups',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
+                            schemaName: 'singlecell',
+                            queryName: 'samples',
+                            'query.viewName': 'Cohort Info'
+                        })
+                    },{
+                        name: 'Single-Cell cDNA Libraries and Groups',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
+                            schemaName: 'singlecell',
+                            queryName: 'cdna_libraries',
+                            'query.viewName': 'Cohort Info'
+                        })
+                    },{
                         name: 'Readsets Not Archived to SRA',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.totalForwardReads~isnonblank': null, 'query.isArchived~eq': 0})
                     }]

@@ -44,6 +44,16 @@ Cluster.Utils = new function() {
             }
 
             window.location = LABKEY.ActionURL.buildURL('cluster', 'forcePipelineCancel', null, {jobIds: checked.join(',')});
-        }
+        },
+
+        replaceJobStore: function (dataRegionName) {
+            const checked = LABKEY.DataRegions[dataRegionName].getChecked();
+            if (!checked.length){
+                Ext4.Msg.alert('Error', 'No rows selected');
+                return;
+            }
+
+            window.location = LABKEY.ActionURL.buildURL('cluster', 'replaceJobStore', null, {jobIds: checked.join(',')});
+        },
     };
 };

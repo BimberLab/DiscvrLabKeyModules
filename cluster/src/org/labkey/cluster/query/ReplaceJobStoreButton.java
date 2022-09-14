@@ -10,11 +10,11 @@ import org.labkey.cluster.ClusterModule;
 
 import java.util.Arrays;
 
-public class RecoverCompletedJobsButton extends SimpleButtonConfigFactory
+public class ReplaceJobStoreButton extends SimpleButtonConfigFactory
 {
-    public RecoverCompletedJobsButton()
+    public ReplaceJobStoreButton()
     {
-        super(ModuleLoader.getInstance().getModule(ClusterModule.class), "Requeue from Cluster JSON", "Cluster.Utils.recoverCompletedJobs(dataRegionName);", Arrays.asList(
+        super(ModuleLoader.getInstance().getModule(ClusterModule.class), "Replace JobStore from JSON", "Cluster.Utils.replaceJobStore(dataRegionName);", Arrays.asList(
                 ClientDependency.supplierFromPath("Ext4"),
                 ClientDependency.supplierFromPath("cluster/window/Buttons.js")
         ));

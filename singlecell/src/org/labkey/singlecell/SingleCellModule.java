@@ -47,6 +47,7 @@ import org.labkey.singlecell.run.NimbleAnalysis;
 import org.labkey.singlecell.run.VelocytoAlignmentStep;
 import org.labkey.singlecell.run.VelocytoAnalysisStep;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
@@ -123,6 +124,18 @@ public class SingleCellModule extends ExtendedSimpleModule
 
         LDKService.get().registerQueryButton(new ShowBulkEditButton(this, SingleCellSchema.NAME, SingleCellSchema.TABLE_CDNAS), SingleCellSchema.NAME, SingleCellSchema.TABLE_CDNAS);
         LDKService.get().registerQueryButton(new ShowBulkEditButton(this, SingleCellSchema.NAME, SingleCellSchema.TABLE_SORTS), SingleCellSchema.NAME, SingleCellSchema.TABLE_SORTS);
+
+        SequenceAnalysisService.get().registerAccessoryFileProvider((f) -> {
+            if (f.getName().toLowerCase().endsWith(".rds"))
+            {
+                return Arrays.asList(
+                    CellHashingServiceImpl.get().getMetaTableFromSeurat(f, false),
+                    CellHashingServiceImpl.get().getCellBarcodesFromSeurat(f, false)
+                );
+            }
+
+            return Collections.emptyList();
+        });
     }
 
     public static void registerPipelineSteps()
@@ -160,6 +173,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new RemoveCellCycle.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunCellHashing.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunPCA.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RunPHATE.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunSingleR.Provider());
         SequencePipelineService.get().registerPipelineStep(new FindClustersAndDimRedux.Provider());
         SequencePipelineService.get().registerPipelineStep(new SplitSeurat.Provider());

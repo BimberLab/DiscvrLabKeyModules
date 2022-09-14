@@ -7,6 +7,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
@@ -49,6 +50,8 @@ import org.labkey.singlecell.pipeline.singlecell.PrepareRawCounts;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -213,7 +216,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                         ctx.getLogger().info("Seurat object lacks a readset, so attempting to infer from cellbarcodes");
 
                         //NOTE: for a multi-dataset object, readset might be null, but the component loupe files might map to multiple readsets. For ease, try to lookup and recover the component readsets:
-                        File barcodeFile = CellHashingServiceImpl.get().getCellBarcodesFromSeurat(f.getFile());
+                        File barcodeFile = CellHashingServiceImpl.get().getCellBarcodesFromSeurat(f.getFile(), false);
                         if (barcodeFile.exists())
                         {
                             Set<Integer> uniquePrefixes = new HashSet<>();
@@ -249,6 +252,10 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
 
                                 ctx.getSequenceSupport().cacheReadset(so.getReadset(), ctx.getJob().getUser());
                             }
+                        }
+                        else
+                        {
+                            ctx.getLogger().warn("Barcode file not found: " + barcodeFile.getPath());
                         }
                     }
                 }
@@ -409,6 +416,24 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                         FileUtils.copyFile(so.getFile(), local);
                         _resumer.getFileManager().addIntermediateFile(local);
 
+                        File cellBarcodes = CellHashingServiceImpl.get().getCellBarcodesFromSeurat(so.getFile(), false);
+                        if (cellBarcodes.exists())
+                        {
+                            ctx.getLogger().debug("Also making local copy of cellBarcodes TSV: " + cellBarcodes.getPath());
+                            File cellBarcodesLocal = new File(ctx.getOutputDir(), cellBarcodes.getName());
+                            if (cellBarcodesLocal.exists())
+                            {
+                                cellBarcodesLocal.delete();
+                            }
+
+                            FileUtils.copyFile(cellBarcodes, cellBarcodesLocal);
+                            _resumer.getFileManager().addIntermediateFile(cellBarcodesLocal);
+                        }
+                        else
+                        {
+                            ctx.getLogger().debug("cellBarcodes TSV not found, expected: " + cellBarcodes.getPath());
+                        }
+                        
                         currentFiles.add(new SingleCellStep.SeuratObjectWrapper(datasetId, datasetId, local, so));
                     }
 
@@ -566,6 +591,8 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 so.setName(output.getDatasetName() == null ? output.getDatasetId() : output.getDatasetName());
                 so.setCategory("Seurat Object");
                 so.setFile(output.getFile());
+                String description = getOutputDescription(ctx, output.getFile(), Arrays.asList("Steps: " + steps.stream().map(x -> x.getProvider().getName()).collect(Collectors.joining("; "))));
+                so.setDescription(description);
 
                 if (NumberUtils.isCreatable(output.getDatasetId()))
                 {
@@ -631,9 +658,10 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     }
                 }
 
-                // This could be a little confusing, but add one record out seurat output, even though there is one HTML file::
+                // This could be a little confusing, but add one record out seurat output, even though there is one HTML file:
                 SequenceOutputFile o = new SequenceOutputFile();
                 o.setCategory("Seurat Report");
+                o.setDescription(description);
                 o.setFile(finalHtml);
                 o.setLibrary_id(so.getLibrary_id());
                 o.setReadset(so.getReadset());
@@ -901,5 +929,138 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
 
             f.delete();
         }
+    }
+
+    public static String getOutputDescription(JobContext ctx, File seuratObj, @Nullable List<String> descriptions) throws PipelineJobException
+    {
+        if (descriptions == null)
+        {
+            descriptions = new ArrayList<>();
+        }
+        else
+        {
+            //ensure mutable:
+            descriptions = new ArrayList<>(descriptions);
+        }
+
+        File metaTable = CellHashingServiceImpl.get().getMetaTableFromSeurat(seuratObj);
+        try (CSVReader reader = new CSVReader(Readers.getReader(metaTable), ','))
+        {
+            String[] line;
+
+            int totalCells = 0;
+            int totalSinglet = 0;
+            int totalDiscordant = 0;
+            int lowOrNegative = 0;
+            int totalDoublet = 0;
+            double totalSaturation = 0.0;
+
+            int hashingIdx = -1;
+            int saturationIdx = -1;
+            boolean hashingUsed = true;
+            while ((line = reader.readNext()) != null)
+            {
+                // This will test whether this is the first line or not
+                if (hashingIdx == -1)
+                {
+                    hashingIdx = Arrays.asList(line).indexOf("HTO.Classification");
+                    if (hashingIdx == -1)
+                    {
+                        ctx.getLogger().debug("HTO.Classification field not present, skipping");
+                        hashingUsed = false;
+                        hashingIdx = -2;
+                    }
+
+                    saturationIdx = Arrays.asList(line).indexOf("Saturation.RNA");
+                }
+                else
+                {
+                    totalCells++;
+                    if (hashingUsed && hashingIdx >= 0)
+                    {
+                        String val = line[hashingIdx];
+                        if ("Singlet".equals(val))
+                        {
+                            totalSinglet++;
+                        }
+                        else if ("Doublet".equals(val))
+                        {
+                            totalDoublet++;
+                        }
+                        else if ("Discordant".equals(val))
+                        {
+                            totalDiscordant++;
+                        }
+                        else if ("Low Counts".equalsIgnoreCase(val) || "Negative".equals(val))
+                        {
+                            lowOrNegative++;
+                        }
+                        else if ("NotUsed".equals(val))
+                        {
+                            hashingUsed = false;
+                        }
+                    }
+
+                    if (saturationIdx >= 0)
+                    {
+                        double saturation = Double.parseDouble(line[saturationIdx]);
+                        totalSaturation += saturation;
+                    }
+                }
+            }
+
+            NumberFormat pf = NumberFormat.getPercentInstance();
+            pf.setMaximumFractionDigits(2);
+
+            NumberFormat decimal = DecimalFormat.getNumberInstance();
+            decimal.setGroupingUsed(false);
+
+            descriptions.add("Total Cells: " + decimal.format(totalCells));
+            if (hashingUsed)
+            {
+                descriptions.add("Total Singlet: " + decimal.format(totalSinglet));
+                descriptions.add("% Singlet: " + pf.format((double) totalSinglet / (double) totalCells));
+                descriptions.add("% Doublet: " + pf.format((double) totalDoublet / (double) totalCells));
+                descriptions.add("% Discordant: " + pf.format((double) totalDiscordant / (double) totalCells));
+                descriptions.add("% Negative or Low Count: " + pf.format((double) lowOrNegative / (double) totalCells));
+            }
+            else
+            {
+                descriptions.add("Hashing not used");
+            }
+
+            if (totalSaturation > 0)
+            {
+                descriptions.add("Mean RNA Saturation: " + (totalSaturation / (double) totalCells));
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        if (ctx.getParams().optBoolean("singleCellRawData.PrepareRawCounts.useSoupX", false))
+        {
+            descriptions.add("SoupX: true");
+        }
+
+        String hashingMethods = ctx.getParams().optString("singleCell.RunCellHashing.consensusMethods");
+        if (StringUtils.trimToNull(hashingMethods) != null)
+        {
+            descriptions.add("Hashing: " + hashingMethods);
+        }
+
+        String citeNormalize = ctx.getParams().optString("singleCell.AppendCiteSeq.normalizeMethod");
+        if (StringUtils.trimToNull(citeNormalize) != null)
+        {
+            descriptions.add("Cite-seq Normalization: " + citeNormalize);
+        }
+
+        if (ctx.getParams().optBoolean("singleCell.AppendCiteSeq.runCellBender", false))
+        {
+            descriptions.add("Cite-seq/CellBender: true");
+        }
+
+        return StringUtils.join(descriptions, "\n");
     }
 }

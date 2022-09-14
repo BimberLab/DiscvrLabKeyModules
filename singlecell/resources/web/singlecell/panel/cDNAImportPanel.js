@@ -137,26 +137,12 @@ Ext4.define('SingleCell.panel.cDNAImportPanel', {
             fieldLabel: 'Use 10x V2/HT (Dual Index)',
             itemId: 'useDualIndex',
             checked: true,
-            listeners: {
-                change: function(field, val){
-                    field.up('panel').down('#barcodeSeries').setValue(field.getValue() ? 'SI-TT' : 'SI-GA');
-                    field.up('panel').down('#citeseqBarcodeSeries').setValue(field.getValue() ? 'SI-TN' : 'SI-NA');
-                }
-            }
-        },{
-            xtype: 'ldk-simplecombo',
-            fieldLabel: '10x GEX/TCR Barcode Series',
-            itemId: 'barcodeSeries',
-            forceSelection: true,
-            storeValues: ['SI-GA', 'SI-TT'],
-            value: 'SI-GA'
-        },{
-            xtype: 'ldk-simplecombo',
-            fieldLabel: '10x Cite-Seq Barcode Series',
-            itemId: 'citeseqBarcodeSeries',
-            forceSelection: true,
-            storeValues: ['SI-NA', 'SI-TN'],
-            value: 'SI-NA'
+            // listeners: {
+            //     change: function(field, val){
+            //         field.up('panel').down('#barcodeSeries').setValue(field.getValue() ? 'SI-TT' : 'SI-GA');
+            //         field.up('panel').down('#citeseqBarcodeSeries').setValue(field.getValue() ? 'SI-TN' : 'SI-NA');
+            //     }
+            // }
         },{
             xtype: 'ldk-simplelabkeycombo',
             fieldLabel: 'Hashing Type',

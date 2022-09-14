@@ -85,6 +85,11 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
 
     protected List<String> getBaseArgs()
     {
+        return getBaseArgs(false);
+    }
+
+    protected List<String> getBaseArgs(boolean basicArgsOnly)
+    {
         List<String> params = new LinkedList<>();
         params.add(SequencePipelineService.get().getJava8FilePath());
         params.addAll(SequencePipelineService.get().getJavaOpts());
@@ -92,15 +97,18 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
         params.add(getJar().getPath());
         params.add(getToolName());
 
-        params.add("--VALIDATION_STRINGENCY");
-        params.add(getStringency().name());
+        if (!basicArgsOnly)
+        {
+            params.add("--VALIDATION_STRINGENCY");
+            params.add(getStringency().name());
 
-        params.add("--COMPRESSION_LEVEL");
-        params.add(String.valueOf(getCompressionLevel()));
+            params.add("--COMPRESSION_LEVEL");
+            params.add(String.valueOf(getCompressionLevel()));
 
-        //note: having issues, probably due to OS versions
-        params.add("--USE_JDK_DEFLATER");
-        params.add("true");
+            //note: having issues, probably due to OS versions
+            params.add("--USE_JDK_DEFLATER");
+            params.add("true");
+        }
 
         return params;
     }
