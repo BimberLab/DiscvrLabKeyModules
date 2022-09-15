@@ -137,6 +137,7 @@ import org.labkey.sequenceanalysis.run.variant.SampleRenameStep;
 import org.labkey.sequenceanalysis.run.variant.SelectSNVsStep;
 import org.labkey.sequenceanalysis.run.variant.SelectSamplesStep;
 import org.labkey.sequenceanalysis.run.variant.SelectVariantsStep;
+import org.labkey.sequenceanalysis.run.variant.SummarizeGenotypeQualityStep;
 import org.labkey.sequenceanalysis.run.variant.VariantAnnotatorStep;
 import org.labkey.sequenceanalysis.run.variant.VariantEvalBySampleStep;
 import org.labkey.sequenceanalysis.run.variant.VariantEvalStep;
@@ -320,6 +321,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new VariantQCStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new PlinkPcaStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new MendelianViolationReportStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SummarizeGenotypeQualityStep.Provider());
 
         //handlers
         SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
