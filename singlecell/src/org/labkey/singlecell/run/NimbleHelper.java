@@ -483,7 +483,9 @@ public class NimbleHelper
             genomeId = arr.getInt(0);
             template = arr.getString(1);
             doGroup = arr.getBoolean(2);
-            scoreThreshold = arr.length() > 3 ? arr.getInt(3) : -1;
+
+            String rawScore = arr.length() > 3 ? StringUtils.trimToNull(arr.getString(3)) : null;
+            scoreThreshold = rawScore == null ? -1 : Integer.parseInt(rawScore);
 
             this.maxHitsToReport = maxHitsToReport;
         }
