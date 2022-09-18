@@ -8,6 +8,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableSelector;
@@ -201,6 +202,7 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
                 getPipelineCtx().getLogger().info("Writing Sample Map");
                 for (SequenceOutputFile so : inputFiles)
                 {
+                    Set<String> duplicates = new HashSet<>();
                     try (VCFFileReader reader = new VCFFileReader(so.getFile()))
                     {
                         VCFHeader header = reader.getFileHeader();
@@ -213,16 +215,21 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
                         {
                             // Find readset:
                             Container targetContainer = getPipelineCtx().getJob().getContainer().isWorkbook() ? getPipelineCtx().getJob().getContainer().getParent() : getPipelineCtx().getJob().getContainer();
-                            Set<String> applications = new HashSet<>(new TableSelector(QueryService.get().getUserSchema(getPipelineCtx().getJob().getUser(), targetContainer, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_READSETS), PageFlowUtil.set("application"), new SimpleFilter(FieldKey.fromString("name"), sample), null).getArrayList(String.class));
+                            Set<String> applications = new HashSet<>(new TableSelector(QueryService.get().getUserSchema(getPipelineCtx().getJob().getUser(), targetContainer, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_READSETS), PageFlowUtil.set("application"), new SimpleFilter(FieldKey.fromString("name"), sample).addCondition(FieldKey.fromString("status"), null, CompareType.ISBLANK), null).getArrayList(String.class));
                             if (applications.size() == 1)
                             {
                                 writer.println(sample + "\t" + applications.iterator().next());
                             }
                             else
                             {
-                                throw new PipelineJobException("More than one readset found with name: " + sample);
+                                duplicates.add(sample);
                             }
                         }
+                    }
+
+                    if (!duplicates.isEmpty())
+                    {
+                        throw new PipelineJobException("More than one readset with the given name found for the following samples: " + StringUtils.join(duplicates, ","));
                     }
                 }
             }
