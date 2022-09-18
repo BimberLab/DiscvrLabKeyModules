@@ -9,6 +9,7 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
@@ -36,6 +37,10 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                     put("allowBlank", false);
                     put("doNotIncludeInTemplates", true);
                 }}, null),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--log-level"), "logLevel", "Log Level", "Controls logging", "ldk-simplecombo", new JSONObject(){{
+                    put("storeValues", "DEBUG;INFO;WARN");
+                    put("multiSelect", false);
+                }}, "INFO"),
                 ToolParameterDescriptor.create("doCopyLocal", "Copy Inputs Locally", "If checked, the input file(s) willbe copied to the job working directory.", "checkbox", new JSONObject(){{
                     put("checked", true);
                 }}, true)
@@ -66,7 +71,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
         return new Processor();
     }
 
-    public static class Processor implements SequenceOutputProcessor
+    public class Processor implements SequenceOutputProcessor
     {
         @Override
         public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
@@ -121,6 +126,8 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                 args.add("-j");
                 args.add(String.valueOf(maxThreads));
             }
+
+            args.addAll(getClientCommandArgs(ctx.getParams()));
 
             ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenomes().iterator().next();
             args.add(genome.getWorkingFastaFile().getPath());
