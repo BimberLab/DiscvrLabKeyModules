@@ -8,11 +8,15 @@ import htsjdk.variant.vcf.VCFHeader;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
+import org.labkey.api.data.Container;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryService;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
-import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
@@ -26,7 +30,9 @@ import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
+import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
 import javax.annotation.Nullable;
 import java.io.BufferedReader;
@@ -36,8 +42,10 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.PlinkWrapper> implements VariantProcessingStep
 {
@@ -185,37 +193,43 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
     @Override
     public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles) throws PipelineJobException
     {
-        try (PrintWriter writer = PrintWriters.getPrintWriter(getSampleMapFile()))
+        boolean splitByApplication = getProvider().getParameterByName("splitByApplication").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true);
+        if (splitByApplication)
         {
-            getPipelineCtx().getLogger().info("Writing Sample Map");
-            for (SequenceOutputFile so : inputFiles)
+            try (PrintWriter writer = PrintWriters.getPrintWriter(getSampleMapFile()))
             {
-                if (so.getReadset() == null)
+                getPipelineCtx().getLogger().info("Writing Sample Map");
+                for (SequenceOutputFile so : inputFiles)
                 {
-                    throw new PipelineJobException("This step requires all inputs to have a readset");
-                }
-
-                Readset rs = support.getCachedReadset(so.getReadset());
-
-                try (VCFFileReader reader = new VCFFileReader(so.getFile()))
-                {
-                    VCFHeader header = reader.getFileHeader();
-                    if (header.getSampleNamesInOrder().isEmpty())
+                    try (VCFFileReader reader = new VCFFileReader(so.getFile()))
                     {
-                        throw new PipelineJobException("Expected VCF to have samples: " + so.getFile().getPath());
-                    }
-                    else if (header.getSampleNamesInOrder().size() != 1)
-                    {
-                        throw new PipelineJobException("Expected VCF to a single sample: " + so.getFile().getPath());
-                    }
+                        VCFHeader header = reader.getFileHeader();
+                        if (header.getSampleNamesInOrder().isEmpty())
+                        {
+                            throw new PipelineJobException("Expected VCF to have samples: " + so.getFile().getPath());
+                        }
 
-                    writer.println(header.getSampleNamesInOrder().get(0) + "\t" + rs.getApplication());
+                        for (String sample : header.getSampleNamesInOrder())
+                        {
+                            // Find readset:
+                            Container targetContainer = getPipelineCtx().getJob().getContainer().isWorkbook() ? getPipelineCtx().getJob().getContainer().getParent() : getPipelineCtx().getJob().getContainer();
+                            Set<String> applications = new HashSet<>(new TableSelector(QueryService.get().getUserSchema(getPipelineCtx().getJob().getUser(), targetContainer, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_READSETS), PageFlowUtil.set("application"), new SimpleFilter(FieldKey.fromString("name"), sample), null).getArrayList(String.class));
+                            if (applications.size() == 1)
+                            {
+                                writer.println(sample + "\t" + applications.iterator().next());
+                            }
+                            else
+                            {
+                                throw new PipelineJobException("More than one readset found with name: " + sample);
+                            }
+                        }
+                    }
                 }
             }
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
         }
     }
 
