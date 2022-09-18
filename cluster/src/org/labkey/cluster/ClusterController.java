@@ -442,7 +442,7 @@ public class ClusterController extends SpringActionController
 
                     Map<String, Object> row = new CaseInsensitiveHashMap<>();
                     row.put("rowid", sf.getRowId());
-                    row.put("jobStore", PipelineJob.serializeJob(job, false));
+                    row.put("jobStore", job.serializeJob(false));
                     row.put("activeTaskId", job.getActiveTaskId().toString());
 
                     Table.update(getUser(), ti, row, sf.getRowId());
