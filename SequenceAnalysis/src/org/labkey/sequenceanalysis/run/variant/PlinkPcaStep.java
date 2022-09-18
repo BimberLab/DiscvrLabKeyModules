@@ -66,7 +66,7 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--const-fid"), "constFid", "Constant FID", "Converts sample IDs to within-family IDs while setting all family IDs to a single value (default '0').", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true),
-                    ToolParameterDescriptor.create("splitByApplication", "Split by Application", "If checked, one iteration of PCA will be performed for each application (defined by the readset).", "checkbox", null, true),
+                    ToolParameterDescriptor.create("splitByApplication", "Split by Application", "If checked, one iteration of PCA will be performed for each application (defined by the readset).", "checkbox", null, false),
                     ToolParameterDescriptor.create(SelectSamplesStep.SAMPLE_INCLUDE, "Sample(s) Include", "Only the following samples will be included in the analysis.", "sequenceanalysis-trimmingtextarea", null, null),
                     ToolParameterDescriptor.create(SelectSamplesStep.SAMPLE_EXCLUDE, "Samples(s) To Exclude", "The following samples will be excluded from the analysis.", "sequenceanalysis-trimmingtextarea", null, null)
             ), Arrays.asList("sequenceanalysis/field/TrimmingTextArea.js"), "https://zzz.bwh.harvard.edu/plink/");
