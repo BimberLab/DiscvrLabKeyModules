@@ -33,6 +33,7 @@ import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.run.DISCVRSeqRunner;
 import org.labkey.api.util.FileType;
 import org.labkey.api.view.ActionURL;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.pipeline.JobContextImpl;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
@@ -46,6 +47,7 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -327,9 +329,16 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             File outputVcfIdx = new File(outDir, basename + ".vcf.gz.tbi");
             File outputVcfDone = getDoneFile(outputVcf);
 
-            for (File f : inputFiles)
+            if (inputFiles.size() > 250 || ctx.getJob().isSplitJob())
             {
-                action.addInput(f, "Input Variants");
+                ctx.getLogger().debug("Too many inputs, will not add them individually so as to spare PipelineJob size");
+            }
+            else
+            {
+                for (File f : inputFiles)
+                {
+                    action.addInput(f, "Input Variants");
+                }
             }
 
             boolean doCopyLocal = doCopyLocal(ctx.getParams());
@@ -680,11 +689,32 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             List<Interval> intervals = ProcessVariantsHandler.getIntervals(ctx);
             if (intervals != null)
             {
-                intervals.forEach(interval -> {
-                    toolParams.add("-L");
-                    toolParams.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
-                });
+                if (intervals.size() > 5)
+                {
+                    ctx.getLogger().debug("Too many intervals, writing to file");
+                    File intervalFile = new File(outputVcf.getParentFile(), "genotypeIntervals.list");
+                    ctx.getFileManager().addIntermediateFile(intervalFile);
+                    try (PrintWriter writer = PrintWriters.getPrintWriter(intervalFile))
+                    {
+                        intervals.forEach(interval -> {
+                            writer.println(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+                        });
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
 
+                    toolParams.add("-L");
+                    toolParams.add(intervalFile.getPath());
+                }
+                else
+                {
+                    intervals.forEach(interval -> {
+                        toolParams.add("-L");
+                        toolParams.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+                    });
+                }
                 toolParams.add("--only-output-calls-starting-in-intervals");
             }
 

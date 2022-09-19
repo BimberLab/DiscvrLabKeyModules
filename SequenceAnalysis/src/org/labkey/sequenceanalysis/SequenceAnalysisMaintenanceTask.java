@@ -40,6 +40,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Created by bimber on 9/15/2014.
@@ -535,6 +536,11 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             ret.add(f.getName() + ".gz.gzi");
             ret.add(f.getName() + ".gz.fai");
         }
+
+        // NOTE: this allows modules to register handlers for extra ancillary files, such as seurat metadata
+        SequenceAnalysisServiceImpl.get().getAccessoryFileProviders().forEach(fn -> {
+            ret.addAll(fn.apply(f).stream().map(File::getName).collect(Collectors.toList()));
+        });
 
         return ret;
     }

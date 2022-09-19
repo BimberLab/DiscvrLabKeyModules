@@ -243,13 +243,13 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                         idKey.delete();
                     }
 
-                    File gzFasta = new File(fasta.getPath() + ".gz");
+                    File gzFasta = new File(existingFasta.getFile().getPath() + ".gz");
                     if (gzFasta.exists())
                     {
                         gzFasta.delete();
                     }
 
-                    File gzFastaIdx = new File(fasta.getPath() + ".gz.gzi");
+                    File gzFastaIdx = new File(existingFasta.getFile().getPath() + ".gz.gzi");
                     if (gzFastaIdx.exists())
                     {
                         gzFastaIdx.delete();

@@ -72,10 +72,15 @@ public class SamtoolsCramConverter extends SamtoolsRunner
         params.add(input.getPath());
         execute(params);
 
-        File idx = new File(input.getPath() + ".crai");
+        File idx = getExpectedCramIndex(input);
         if (!idx.exists())
         {
             throw new PipelineJobException("Unable to find CRAM index: " + idx.getPath());
         }
+    }
+
+    public static File getExpectedCramIndex(File input)
+    {
+        return new File(input.getPath() + ".crai");
     }
 }

@@ -3,6 +3,7 @@ package org.labkey.sequenceanalysis.pipeline;
 import htsjdk.samtools.util.Interval;
 import htsjdk.tribble.AbstractFeatureReader;
 import htsjdk.tribble.FeatureReader;
+import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFCodec;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
@@ -284,7 +285,6 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             Set<String> sampleNames = new CaseInsensitiveHashSet();
             for (SequenceOutputFile so : inputFiles)
             {
-                job.getLogger().info("reading file: " + so.getFile().getName());
                 sampleNames.addAll(getSamples(so.getFile()));
             }
 
@@ -804,7 +804,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
     {
         if (SequenceUtil.FILETYPE.vcf.getFileType().isType(input))
         {
-            try (FeatureReader reader = AbstractFeatureReader.getFeatureReader(input.getPath(), new VCFCodec(), false))
+            try (FeatureReader<VariantContext> reader = AbstractFeatureReader.getFeatureReader(input.getPath(), new VCFCodec(), false))
             {
                 VCFHeader header = (VCFHeader) reader.getHeader();
                 return header.getSampleNamesInOrder();

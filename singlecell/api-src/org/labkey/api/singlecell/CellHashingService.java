@@ -99,6 +99,7 @@ abstract public class CellHashingService
         public boolean skipNormalizationQc = false;
         public Integer minCountPerCell = 5;
         public Double majorityConsensusThreshold = null;
+        public Double callerDisagreementThreshold = null;
         public List<CALLING_METHOD> methods = CALLING_METHOD.getDefaultConsensusMethods(); //Default to just executing the set used for default consensus calls, rather than additional ones
         public List<CALLING_METHOD> consensusMethods = null;
         public String basename = null;
@@ -118,6 +119,7 @@ abstract public class CellHashingService
             ret.skipNormalizationQc = step.getProvider().getParameterByName("skipNormalizationQc").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, false);
             ret.minCountPerCell = step.getProvider().getParameterByName("minCountPerCell").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Integer.class, 3);
             ret.majorityConsensusThreshold = step.getProvider().getParameterByName("majorityConsensusThreshold").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Double.class, null);
+            ret.callerDisagreementThreshold = step.getProvider().getParameterByName("callerDisagreementThreshold").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Double.class, null);
             ret.retainRawCountFile = step.getProvider().getParameterByName("retainRawCountFile").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, true);
             ret.htoReadset = htoReadset;
             ret.parentReadset = parentReadset;
@@ -157,6 +159,7 @@ abstract public class CellHashingService
             ret.skipNormalizationQc = params.optBoolean("skipNormalizationQc", false);
             ret.minCountPerCell = params.optInt("minCountPerCell", 3);
             ret.majorityConsensusThreshold = params.get("majorityConsensusThreshold") == null ? null : params.getDouble("majorityConsensusThreshold");
+            ret.callerDisagreementThreshold = params.get("callerDisagreementThreshold") == null ? null : params.getDouble("callerDisagreementThreshold");
             ret.retainRawCountFile = params.optBoolean("retainRawCountFile", true);
             ret.htoReadset = htoReadset;
             ret.parentReadset = parentReadset;

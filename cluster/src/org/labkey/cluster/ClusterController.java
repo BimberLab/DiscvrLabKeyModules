@@ -20,9 +20,11 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.action.ConfirmAction;
 import org.labkey.api.action.SimpleRedirectAction;
 import org.labkey.api.action.SpringActionController;
+import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.Table;
@@ -69,23 +71,27 @@ public class ClusterController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class RunTestPipelineAction extends ConfirmAction<Object>
+    public static class RunTestPipelineAction extends ConfirmAction<Object>
     {
+        @Override
         public void validateCommand(Object form, Errors errors)
         {
 
         }
 
+        @Override
         public URLHelper getSuccessURL(Object form)
         {
             return getContainer().getStartURL(getUser());
         }
 
+        @Override
         public ModelAndView getConfirmView(Object form, BindException errors) throws Exception
         {
             return new HtmlView("This will run a very simple test pipeline job against all configured cluster engines.  This is designed to help make sure your site's configuration is functional.  Do you want to continue?<br><br>");
         }
 
+        @Override
         public boolean handlePost(Object form, BindException errors) throws Exception
         {
             for (RemoteExecutionEngine e : PipelineJobService.get().getRemoteExecutionEngines())
@@ -103,16 +109,19 @@ public class ClusterController extends SpringActionController
     @RequiresSiteAdmin
     public class ForcePipelineCancelAction extends ConfirmAction<JobIdsForm>
     {
+        @Override
         public void validateCommand(JobIdsForm form, Errors errors)
         {
 
         }
 
-        public URLHelper getSuccessURL(JobIdsForm form)
+        @Override
+        public @NotNull URLHelper getSuccessURL(JobIdsForm form)
         {
             return PageFlowUtil.urlProvider(PipelineStatusUrls.class).urlBegin(getContainer());
         }
 
+        @Override
         public ModelAndView getConfirmView(JobIdsForm form, BindException errors) throws Exception
         {
 
@@ -121,6 +130,7 @@ public class ClusterController extends SpringActionController
                     "<label>Enter Job ID(s): </label><input name=\"jobIds\" value = \"" + HtmlString.of(form.getJobIds()) + "\"><br>"));
         }
 
+        @Override
         public boolean handlePost(JobIdsForm form, BindException errors) throws Exception
         {
             String jobIDs = StringUtils.trimToNull(form.getJobIds());
@@ -205,16 +215,19 @@ public class ClusterController extends SpringActionController
     @RequiresSiteAdmin
     public class ResetPipelineJobLogFileAction extends ConfirmAction<ResetPipelineJobLogFileForm>
     {
+        @Override
         public void validateCommand(ResetPipelineJobLogFileForm form, Errors errors)
         {
 
         }
 
+        @Override
         public URLHelper getSuccessURL(ResetPipelineJobLogFileForm form)
         {
             return PageFlowUtil.urlProvider(PipelineStatusUrls.class).urlBegin(getContainer());
         }
 
+        @Override
         public ModelAndView getConfirmView(ResetPipelineJobLogFileForm form, BindException errors) throws Exception
         {
             return new HtmlView(HtmlString.unsafe("This will change the PipelineJob log file path for the selected job to the path below." +
@@ -265,18 +278,21 @@ public class ClusterController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class RecoverCompletedJobsAction extends ConfirmAction<JobIdsForm>
+    public static class RecoverCompletedJobsAction extends ConfirmAction<JobIdsForm>
     {
+        @Override
         public void validateCommand(JobIdsForm form, Errors errors)
         {
 
         }
 
+        @Override
         public URLHelper getSuccessURL(JobIdsForm form)
         {
             return PageFlowUtil.urlProvider(PipelineStatusUrls.class).urlBegin(getContainer());
         }
 
+        @Override
         public ModelAndView getConfirmView(JobIdsForm form, BindException errors) throws Exception
         {
             return new HtmlView(HtmlString.unsafe("This will attempt to re-queue existing pipeline jobs using their serialized JSON text files.  It is intended as a workaround for the situation where a job has been marked complete." +
@@ -284,6 +300,7 @@ public class ClusterController extends SpringActionController
                     "<label>Enter Job ID(s): </label><input name=\"jobIds\" value=\"" + HtmlString.of(form.getJobIds()) + "\"><br>"));
         }
 
+        @Override
         public boolean handlePost(JobIdsForm form, BindException errors) throws Exception
         {
             String jobIDs = StringUtils.trimToNull(form.getJobIds());
@@ -344,6 +361,104 @@ public class ClusterController extends SpringActionController
                     }
 
                     errors.reject(ERROR_MSG, "Unable to requeue pipeline job: " + e.getMessage());
+                    return false;
+                }
+            }
+
+            return true;
+        }
+    }
+
+    @RequiresPermission(AdminPermission.class)
+    public static class ReplaceJobStoreAction extends ConfirmAction<JobIdsForm>
+    {
+        @Override
+        public void validateCommand(JobIdsForm form, Errors errors)
+        {
+
+        }
+
+        @Override
+        public URLHelper getSuccessURL(JobIdsForm form)
+        {
+            return PageFlowUtil.urlProvider(PipelineStatusUrls.class).urlBegin(getContainer());
+        }
+
+        @Override
+        public ModelAndView getConfirmView(JobIdsForm form, BindException errors) throws Exception
+        {
+            return new HtmlView(HtmlString.unsafe("This will read the serialized job JSON and replace the database JobStore it." +
+                    "To continue, enter a comma-delimited list of Job IDs and hit submit:<br><br>" +
+                    "<label>Enter Job ID(s): </label><input name=\"jobIds\" value=\"" + HtmlString.of(form.getJobIds()) + "\"><br>"));
+        }
+
+        @Override
+        public boolean handlePost(JobIdsForm form, BindException errors) throws Exception
+        {
+            String jobIDs = StringUtils.trimToNull(form.getJobIds());
+            if (jobIDs == null)
+            {
+                errors.reject(ERROR_MSG, "No JobIds provided");
+                return false;
+            }
+
+            Set<String> jobs = new HashSet<>(Arrays.asList(jobIDs.split(",")));
+            List<PipelineStatusFile> sfs = new ArrayList<>();
+            for (String id : jobs)
+            {
+                int jobId = Integer.parseInt(StringUtils.trimToNull(id));
+                PipelineStatusFile sf = PipelineService.get().getStatusFile(jobId);
+                if (sf == null)
+                {
+                    errors.reject(ERROR_MSG, "Unable to find job: " + id);
+                    return false;
+                }
+
+                if (PipelineJob.TaskStatus.running.name().equalsIgnoreCase(sf.getStatus()))
+                {
+                    errors.reject(ERROR_MSG, "This cannot be used on actively running jobs.  Status was: " + sf.getStatus());
+                    return false;
+                }
+
+                sfs.add(sf);
+            }
+
+            TableInfo ti = DbSchema.get("pipeline", DbSchemaType.Module).getTable("StatusFiles");
+            for (PipelineStatusFile sf : sfs)
+            {
+                File log = new File(sf.getFilePath());
+                File json = AbstractClusterExecutionEngine.getSerializedJobFile(log);
+                if (!json.exists())
+                {
+                    errors.reject(ERROR_MSG, "Unable to find pipeline JSON, expected: " + json.getPath());
+                    return false;
+                }
+
+                PipelineJob job = null;
+                try
+                {
+                    job = PipelineJob.readFromFile(json);
+                    job.getLogger().info("Replacing DB JobStore from JSON: " + job.getJobGUID() + ": " + job.getActiveTaskStatus());
+
+                    Map<String, Object> row = new CaseInsensitiveHashMap<>();
+                    row.put("rowid", sf.getRowId());
+                    row.put("jobStore", job.serializeJob(false));
+                    row.put("activeTaskId", job.getActiveTaskId().toString());
+
+                    Table.update(getUser(), ti, row, sf.getRowId());
+                }
+                catch (Exception e)
+                {
+                    if (job != null)
+                    {
+                        job.getLogger().error("Unable to update JobStore", e);
+                    }
+                    else
+                    {
+                        _log.error("Unable to update JobStore", e);
+                    }
+
+                    errors.reject(ERROR_MSG, "Unable to update JobStore: " + e.getMessage());
                     return false;
                 }
             }
