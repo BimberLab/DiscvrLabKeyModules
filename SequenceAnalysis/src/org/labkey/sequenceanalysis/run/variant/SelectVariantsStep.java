@@ -70,7 +70,10 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
                     }}, null),
                     new IntervalParameterDescriptor(),
                     ToolParameterDescriptor.create(SelectSamplesStep.SAMPLE_INCLUDE, "Select Sample(s) Include", "Only variants of the selected type(s) will be included", "sequenceanalysis-trimmingtextarea", null, null),
-                    ToolParameterDescriptor.create(SelectSamplesStep.SAMPLE_EXCLUDE, "Select Samples(s) To Exclude", "Variants of the selected type(s) will be excluded", "sequenceanalysis-trimmingtextarea", null, null)
+                    ToolParameterDescriptor.create(SelectSamplesStep.SAMPLE_EXCLUDE, "Select Samples(s) To Exclude", "Variants of the selected type(s) will be excluded", "sequenceanalysis-trimmingtextarea", null, null),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--set-filtered-gt-to-nocall"), "setFilteredGtToNocall", "Set Filtered Genotypes to No-Call", "If selected, any filtered genotypes will be converted to no-call.", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, true)
             ), Arrays.asList("sequenceanalysis/panel/VariantFilterPanel.js", "sequenceanalysis/panel/IntervalPanel.js", "/sequenceanalysis/field/TrimmingTextArea.js"), "");
         }
 
