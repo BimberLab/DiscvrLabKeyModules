@@ -1,7 +1,7 @@
 package org.labkey.sequenceanalysis.run.variant;
 
 import htsjdk.samtools.util.Interval;
-import org.json.JSONObject;
+import org.json.old.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
@@ -13,7 +13,6 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
-import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
 import javax.annotation.Nullable;
 import java.io.File;

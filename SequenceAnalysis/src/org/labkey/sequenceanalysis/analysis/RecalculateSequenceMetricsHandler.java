@@ -1,7 +1,7 @@
 package org.labkey.sequenceanalysis.analysis;
 
 import au.com.bytecode.opencsv.CSVWriter;
-import org.json.JSONObject;
+import org.json.old.JSONObject;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.module.ModuleLoader;

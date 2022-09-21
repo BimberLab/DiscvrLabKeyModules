@@ -1,6 +1,6 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
-import org.json.JSONObject;
+import org.json.old.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;

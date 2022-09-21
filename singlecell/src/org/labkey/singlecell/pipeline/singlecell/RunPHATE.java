@@ -1,6 +1,5 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
-import org.json.JSONObject;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;

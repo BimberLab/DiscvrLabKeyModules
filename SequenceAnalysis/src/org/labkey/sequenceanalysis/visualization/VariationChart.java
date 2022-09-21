@@ -22,7 +22,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.TextAnchor;
-import org.json.JSONObject;
+import org.json.old.JSONObject;
 import org.labkey.api.writer.PrintWriters;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;

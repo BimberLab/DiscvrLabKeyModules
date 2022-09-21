@@ -3,7 +3,7 @@ package org.labkey.sequenceanalysis.analysis;
 import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.filter.DuplicateReadFilter;
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONObject;
+import org.json.old.JSONObject;
 import org.labkey.api.iterator.CloseableIterator;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;

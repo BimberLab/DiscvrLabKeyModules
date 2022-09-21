@@ -16,8 +16,8 @@
 package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.jetbrains.annotations.Nullable;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.json.old.JSONArray;
+import org.json.old.JSONObject;
 import org.labkey.api.view.template.ClientDependency;
 
 import java.lang.reflect.ParameterizedType;

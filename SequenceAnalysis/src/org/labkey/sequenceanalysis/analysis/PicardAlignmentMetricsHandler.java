@@ -1,6 +1,6 @@
 package org.labkey.sequenceanalysis.analysis;
 
-import org.json.JSONObject;
+import org.json.old.JSONObject;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.module.ModuleLoader;

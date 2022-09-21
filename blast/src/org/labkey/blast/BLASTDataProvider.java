@@ -1,10 +1,9 @@
 package org.labkey.blast;
 
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONObject;
+import org.json.old.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.laboratory.AbstractDataProvider;
 import org.labkey.api.laboratory.DetailsUrlWithoutLabelNavItem;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.laboratory.SimpleSettingsItem;

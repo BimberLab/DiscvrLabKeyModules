@@ -1,6 +1,6 @@
 package org.labkey.singlecell;
 
-import org.json.JSONObject;
+import org.json.old.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.laboratory.DetailsUrlWithoutLabelNavItem;
 import org.labkey.api.laboratory.LaboratoryService;

@@ -2,7 +2,7 @@ package org.labkey.sequenceanalysis.run.variant;
 
 import htsjdk.samtools.util.Interval;
 import org.apache.logging.log4j.Logger;
-import org.json.JSONObject;
+import org.json.old.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;

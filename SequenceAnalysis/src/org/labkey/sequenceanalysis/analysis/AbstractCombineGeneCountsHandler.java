@@ -1,7 +1,7 @@
 package org.labkey.sequenceanalysis.analysis;
 
 import au.com.bytecode.opencsv.CSVWriter;
-import org.json.JSONObject;
+import org.json.old.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;

@@ -2,7 +2,7 @@ package org.labkey.sequenceanalysis.analysis;
 
 import htsjdk.samtools.SAMFileHeader;
 import org.apache.commons.io.FileUtils;
-import org.json.JSONObject;
+import org.json.old.JSONObject;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;

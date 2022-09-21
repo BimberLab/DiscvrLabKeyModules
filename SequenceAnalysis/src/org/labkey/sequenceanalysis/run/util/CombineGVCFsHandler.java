@@ -2,7 +2,7 @@ package org.labkey.sequenceanalysis.run.util;
 
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
-import org.json.JSONObject;
+import org.json.old.JSONObject;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;

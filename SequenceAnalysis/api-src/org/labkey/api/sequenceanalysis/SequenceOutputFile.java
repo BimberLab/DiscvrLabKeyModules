@@ -16,7 +16,7 @@
 package org.labkey.api.sequenceanalysis;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.json.JSONObject;
+import org.json.old.JSONObject;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
