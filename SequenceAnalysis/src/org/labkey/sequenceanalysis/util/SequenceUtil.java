@@ -82,6 +82,7 @@ public class SequenceUtil
         fastq(Arrays.asList(".fastq", ".fq"), true),
         fasta(Arrays.asList(".fasta", ".fa", ".fna"), true),
         bam(".bam"),
+        cram(".cram"),
         sff(".sff"),
         gtf(Collections.singletonList(".gtf"), true),
         gff(Arrays.asList(".gff", ".gff3"), true),
@@ -394,36 +395,6 @@ public class SequenceUtil
         return ret;
     }
 
-    public static void deleteBamAndIndex(File bam)
-    {
-        bam.delete();
-
-        File idx = new File(bam.getPath() + ".bai");
-        if (idx.exists())
-        {
-            idx.delete();
-        }
-    }
-
-    public static void recreateOldBamIndex(File bam, boolean forceRecreate, @Nullable Logger log) throws PipelineJobException
-    {
-        File idx = new File(bam.getPath() + ".bai");
-
-        //delete out of date index
-        if (idx.exists() && (forceRecreate || idx.lastModified() < bam.lastModified()))
-        {
-            if (log != null)
-                log.info("deleting existing BAM index");
-
-            idx.delete();
-        }
-
-        if (!idx.exists())
-        {
-            new BuildBamIndexWrapper(log).executeCommand(bam);
-        }
-    }
-
     public static void sortROD(File input, Logger log, Integer startColumnIdx) throws IOException, PipelineJobException
     {
         boolean isCompressed = input.getPath().endsWith(".gz");
@@ -621,5 +592,19 @@ public class SequenceUtil
         Collections.sort(intervals);
 
         return intervals;
+    }
+
+    public static File getExpectedIndex(File bamOrCram)
+    {
+        if (FILETYPE.bam.getFileType().isType(bamOrCram))
+        {
+            return new File(bamOrCram.getPath() + ".bai");
+        }
+        else if (FILETYPE.cram.getFileType().isType(bamOrCram))
+        {
+            return new File(bamOrCram.getPath() + ".crai");
+        }
+
+        throw new IllegalArgumentException("Must provide either a .bam or .cram file");
     }
 }

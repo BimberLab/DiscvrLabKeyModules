@@ -22,9 +22,9 @@ public class SamtoolsIndexer extends SamtoolsRunner
 
     public File execute(File inputBam) throws PipelineJobException
     {
-        getLogger().info("Sorting SAM/BAM: " + inputBam.getPath());
+        getLogger().info("Indexing SAM/BAM: " + inputBam.getPath());
 
-        File idx = new File(inputBam.getPath() + ".bai");
+        File idx = SequencePipelineService.get().getExpectedIndex(inputBam);
         if (idx.exists())
         {
             getLogger().debug("deleting existing index: " + idx.getPath());

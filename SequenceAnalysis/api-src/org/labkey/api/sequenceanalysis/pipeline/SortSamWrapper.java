@@ -61,7 +61,7 @@ public class SortSamWrapper extends PicardWrapper
                 FileUtils.moveFile(outputBam, inputFile);
 
                 //note: if there is a pre-existing index, we need to delete this since it is out of date
-                File expectedIndex = new File(inputFile.getPath() + ".bai");
+                File expectedIndex = SequencePipelineService.get().getExpectedIndex(inputFile);
                 if (expectedIndex.exists())
                 {
                     getLogger().info("deleting out of date index: " + expectedIndex.getPath());

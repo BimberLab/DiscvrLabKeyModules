@@ -99,7 +99,7 @@ public class SamSorter extends SamtoolsRunner
                 input.delete();
 
                 //note: if there is a pre-existing index, we need to delete this since it is out of date
-                File idx = new File(input.getPath() + ".bai");
+                File idx = SequencePipelineService.get().getExpectedIndex(output);
                 if (idx.exists())
                 {
                     getLogger().debug("deleting old BAM index");
