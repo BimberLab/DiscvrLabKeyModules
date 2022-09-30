@@ -55,9 +55,11 @@ public class SingleCellTableCustomizer extends AbstractTableCustomizer
             SQLFragment sql = new SQLFragment("CASE " +
                     " WHEN (select count(*) as expr FROM sequenceanalysis.sequence_readsets r JOIN sequenceanalysis.readdata d ON (r.rowid = d.readset) WHERE r.rowid = " + ExprColumn.STR_TABLE_ALIAS + ".readsetId) > 0 THEN " + ti.getSqlDialect().getBooleanTRUE() +
                     " WHEN (select count(*) as expr FROM sequenceanalysis.sequence_readsets r JOIN sequenceanalysis.readdata d ON (r.rowid = d.readset) WHERE r.rowid = " + ExprColumn.STR_TABLE_ALIAS + ".tcrReadsetId) > 0 THEN " + ti.getSqlDialect().getBooleanTRUE() +
+                    " WHEN (select count(*) as expr FROM sequenceanalysis.sequence_readsets r JOIN sequenceanalysis.readdata d ON (r.rowid = d.readset) WHERE r.rowid = " + ExprColumn.STR_TABLE_ALIAS + ".hashingReadsetId) > 0 THEN " + ti.getSqlDialect().getBooleanTRUE() +
+                    " WHEN (select count(*) as expr FROM sequenceanalysis.sequence_readsets r JOIN sequenceanalysis.readdata d ON (r.rowid = d.readset) WHERE r.rowid = " + ExprColumn.STR_TABLE_ALIAS + ".citeseqReadsetId) > 0 THEN " + ti.getSqlDialect().getBooleanTRUE() +
                     " ELSE " + ti.getSqlDialect().getBooleanFALSE() + " END");
 
-            ExprColumn newCol = new ExprColumn(ti, name, sql, JdbcType.BOOLEAN, ti.getColumn("readsetId"), ti.getColumn("tcrReadsetId"));
+            ExprColumn newCol = new ExprColumn(ti, name, sql, JdbcType.BOOLEAN, ti.getColumn("readsetId"), ti.getColumn("tcrReadsetId"), ti.getColumn("hashingReadsetId"), ti.getColumn("citeseqReadsetId"));
             newCol.setLabel("Has Any Readset With Data?");
             ti.addColumn(newCol);
         }
@@ -68,9 +70,11 @@ public class SingleCellTableCustomizer extends AbstractTableCustomizer
             SQLFragment sql = new SQLFragment("CASE " +
                     " WHEN (" + ExprColumn.STR_TABLE_ALIAS + ".readsetId IS NOT NULL AND (select count(*) as expr FROM sequenceanalysis.sequence_readsets r JOIN sequenceanalysis.readdata d ON (r.rowid = d.readset) WHERE r.rowid = " + ExprColumn.STR_TABLE_ALIAS + ".readsetId) = 0) THEN " + ti.getSqlDialect().getBooleanFALSE() +
                     " WHEN (" + ExprColumn.STR_TABLE_ALIAS + ".tcrReadsetId IS NOT NULL AND (select count(*) as expr FROM sequenceanalysis.sequence_readsets r JOIN sequenceanalysis.readdata d ON (r.rowid = d.readset) WHERE r.rowid = " + ExprColumn.STR_TABLE_ALIAS + ".tcrReadsetId) = 0) THEN " + ti.getSqlDialect().getBooleanFALSE() +
+                    " WHEN (" + ExprColumn.STR_TABLE_ALIAS + ".hashingReadsetId IS NOT NULL AND (select count(*) as expr FROM sequenceanalysis.sequence_readsets r JOIN sequenceanalysis.readdata d ON (r.rowid = d.readset) WHERE r.rowid = " + ExprColumn.STR_TABLE_ALIAS + ".hashingReadsetId) = 0) THEN " + ti.getSqlDialect().getBooleanFALSE() +
+                    " WHEN (" + ExprColumn.STR_TABLE_ALIAS + ".citeseqReadsetId IS NOT NULL AND (select count(*) as expr FROM sequenceanalysis.sequence_readsets r JOIN sequenceanalysis.readdata d ON (r.rowid = d.readset) WHERE r.rowid = " + ExprColumn.STR_TABLE_ALIAS + ".citeseqReadsetId) = 0) THEN " + ti.getSqlDialect().getBooleanFALSE() +
                     " ELSE " + ti.getSqlDialect().getBooleanTRUE() + " END");
 
-            ExprColumn newCol = new ExprColumn(ti, name2, sql, JdbcType.BOOLEAN, ti.getColumn("readsetId"), ti.getColumn("tcrReadsetId"));
+            ExprColumn newCol = new ExprColumn(ti, name2, sql, JdbcType.BOOLEAN, ti.getColumn("readsetId"), ti.getColumn("tcrReadsetId"), ti.getColumn("hashingReadsetId"), ti.getColumn("citeseqReadsetId"));
             newCol.setLabel("All Readsets Have Data?");
             ti.addColumn(newCol);
         }

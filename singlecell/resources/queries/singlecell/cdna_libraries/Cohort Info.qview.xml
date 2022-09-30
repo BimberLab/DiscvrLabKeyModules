@@ -20,6 +20,7 @@
         <column name="workbook" />
         <column name="sortId/sampleId/allProjects/projects" />
         <column name="container/title" />
+        <column name="allReadsetsHaveData" />
         <column name="readsetId/readdataWithoutSra" />
     </columns>
     <sorts>
