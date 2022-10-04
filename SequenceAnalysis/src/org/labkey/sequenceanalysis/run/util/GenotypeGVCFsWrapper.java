@@ -147,8 +147,15 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
 
             List<File> vcfsToProcess = new ArrayList<>();
             int totalExisting = 0;
+            int idx = 0;
             for (File f : inputGVCFs)
             {
+                idx++;
+                if (idx % 100 == 0)
+                {
+                    ctx.getLogger().info("Inspected file " + idx + " of " + inputGVCFs.size());
+                }
+
                 f = convertInput(f);
                 File destFile = new File(inputToDest.get(f));
 

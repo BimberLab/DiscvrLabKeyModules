@@ -27,7 +27,7 @@ import java.util.List;
  */
 public class VariantQCStep extends AbstractPipelineStep implements VariantProcessingStep
 {
-    public VariantQCStep(PipelineStepProvider provider, PipelineContext ctx)
+    public VariantQCStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx);
     }
@@ -43,6 +43,7 @@ public class VariantQCStep extends AbstractPipelineStep implements VariantProces
             ), null, "https://bimberlab.github.io/DISCVRSeq/");
         }
 
+        @Override
         public VariantQCStep create(PipelineContext ctx)
         {
             return new VariantQCStep(this, ctx);
