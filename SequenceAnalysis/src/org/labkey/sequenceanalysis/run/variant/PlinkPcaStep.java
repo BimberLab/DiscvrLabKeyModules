@@ -205,7 +205,7 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
     {
         boolean splitByApplication = getProvider().getParameterByName("splitByApplication").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true);
         List<String> allowableApplications = null;
-        String allowableApplicationsRaw = StringUtils.trimToNull(getProvider().getParameterByName("splitByApplication").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()));
+        String allowableApplicationsRaw = StringUtils.trimToNull(getProvider().getParameterByName("allowableApplications").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()));
         if (allowableApplicationsRaw != null)
         {
             allowableApplications = Arrays.asList(allowableApplicationsRaw.split(";"));
