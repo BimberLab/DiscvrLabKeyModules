@@ -67,6 +67,15 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
                         put("checked", true);
                     }}, true),
                     ToolParameterDescriptor.create("splitByApplication", "Split by Application", "If checked, one iteration of PCA will be performed for each application (defined by the readset).", "checkbox", null, false),
+                    ToolParameterDescriptor.create("allowableApplications", "Allowable Applications", "If Split By Application is used, then it will search readsets to find those where the VCF sample matches the readset name. This is an option extra filter that can be added, to limit to search to a specific set of applications.", "ldk-simplelabkeycombo", new JSONObject(){{
+                        put("schemaName", "sequenceanalysis");
+                        put("queryName", "sequence_applications");
+                        put("multiSelect", true);
+                        put("joinReturnValue", true);
+                        put("displayField", "application");
+                        put("valueField", "application");
+                        put("sortField", "application");
+                    }}, null),
                     ToolParameterDescriptor.create(SelectSamplesStep.SAMPLE_INCLUDE, "Sample(s) Include", "Only the following samples will be included in the analysis.", "sequenceanalysis-trimmingtextarea", null, null),
                     ToolParameterDescriptor.create(SelectSamplesStep.SAMPLE_EXCLUDE, "Samples(s) To Exclude", "The following samples will be excluded from the analysis.", "sequenceanalysis-trimmingtextarea", null, null)
             ), Arrays.asList("sequenceanalysis/field/TrimmingTextArea.js"), "https://zzz.bwh.harvard.edu/plink/");
@@ -195,6 +204,13 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
     public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles) throws PipelineJobException
     {
         boolean splitByApplication = getProvider().getParameterByName("splitByApplication").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true);
+        List<String> allowableApplications = null;
+        String allowableApplicationsRaw = StringUtils.trimToNull(getProvider().getParameterByName("splitByApplication").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()));
+        if (allowableApplicationsRaw != null)
+        {
+            allowableApplications = Arrays.asList(allowableApplicationsRaw.split(";"));
+        }
+
         if (splitByApplication)
         {
             try (PrintWriter writer = PrintWriters.getPrintWriter(getSampleMapFile()))
@@ -215,7 +231,13 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
                         {
                             // Find readset:
                             Container targetContainer = getPipelineCtx().getJob().getContainer().isWorkbook() ? getPipelineCtx().getJob().getContainer().getParent() : getPipelineCtx().getJob().getContainer();
-                            Set<String> applications = new HashSet<>(new TableSelector(QueryService.get().getUserSchema(getPipelineCtx().getJob().getUser(), targetContainer, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_READSETS), PageFlowUtil.set("application"), new SimpleFilter(FieldKey.fromString("name"), sample).addCondition(FieldKey.fromString("status"), null, CompareType.ISBLANK), null).getArrayList(String.class));
+                            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("name"), sample).addCondition(FieldKey.fromString("status"), null, CompareType.ISBLANK);
+                            if (allowableApplications != null)
+                            {
+                                filter.addCondition(FieldKey.fromString("application"), allowableApplications, CompareType.IN);
+                            }
+
+                            Set<String> applications = new HashSet<>(new TableSelector(QueryService.get().getUserSchema(getPipelineCtx().getJob().getUser(), targetContainer, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_READSETS), PageFlowUtil.set("application"), filter, null).getArrayList(String.class));
                             if (applications.size() == 1)
                             {
                                 writer.println(sample + "\t" + applications.iterator().next());
