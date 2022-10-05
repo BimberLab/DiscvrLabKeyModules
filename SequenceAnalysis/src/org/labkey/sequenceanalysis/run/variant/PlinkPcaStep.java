@@ -76,6 +76,7 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
                         put("valueField", "application");
                         put("sortField", "application");
                     }}, null),
+                    ToolParameterDescriptor.create("allowMissingSamples", "Allow Missing Samples", "When using split by application, this controls whether or not the job should fail if a matching readset cannot be found for specific samples.", "checkbox", null, false),
                     ToolParameterDescriptor.create(SelectSamplesStep.SAMPLE_INCLUDE, "Sample(s) Include", "Only the following samples will be included in the analysis.", "sequenceanalysis-trimmingtextarea", null, null),
                     ToolParameterDescriptor.create(SelectSamplesStep.SAMPLE_EXCLUDE, "Samples(s) To Exclude", "The following samples will be excluded from the analysis.", "sequenceanalysis-trimmingtextarea", null, null)
             ), Arrays.asList("sequenceanalysis/field/TrimmingTextArea.js"), "https://zzz.bwh.harvard.edu/plink/");
@@ -262,7 +263,16 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
 
                     if (!missing.isEmpty())
                     {
-                        throw new PipelineJobException("No matching readsets with the given name found for the following samples: " + StringUtils.join(missing, ","));
+                        String msg = "No matching readsets with the given name found for the following samples: " + StringUtils.join(missing, ",");
+                        boolean allowMissingSamples = getProvider().getParameterByName("allowMissingSamples").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+                        if (allowMissingSamples)
+                        {
+                            getPipelineCtx().getLogger().warn(msg);
+                        }
+                        else
+                        {
+                            throw new PipelineJobException(msg);
+                        }
                     }
                 }
             }
