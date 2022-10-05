@@ -36,7 +36,8 @@ public class SplitVcfBySamplesStep extends AbstractCommandPipelineStep<SplitVcfB
         {
             super("SplitVcfBySamples", "Split VCF By Sample", "DISCVRseq", "A VCF will be generated containing only the samples specified below.", Arrays.asList(
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--samplesPerVcf"), "samplesPerVcf", "Samples Per VCF", "The max number of samples to write per VCF", "ldk-integerfield", null, null),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--minAllowableInFinalVcf"), "minAllowableInFinalVcf", "Min Allowable in Final VCF", "If the final VCF in the split has fewer than this number of samples, it will be merged with the second to last VCF", "ldk-integerfield", null, null)
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--minAllowableInFinalVcf"), "minAllowableInFinalVcf", "Min Allowable in Final VCF", "If the final VCF in the split has fewer than this number of samples, it will be merged with the second to last VCF", "ldk-integerfield", null, null),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--discardNonVariantSites"), "discardNonVariantSites", "Discard Non-Variant Sites", "If selected, any site in a subset VCF lacking at least one genotype with a variant will be discarded", "checkbox", null, true)
             ), null, null);
         }
 
