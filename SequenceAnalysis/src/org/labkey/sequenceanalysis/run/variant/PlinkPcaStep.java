@@ -209,6 +209,7 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
         if (allowableApplicationsRaw != null)
         {
             allowableApplications = Arrays.asList(allowableApplicationsRaw.split(";"));
+            getPipelineCtx().getLogger().debug("Will limit to the following applications: " + StringUtils.join(allowableApplications, "; "));
         }
 
         if (splitByApplication)
