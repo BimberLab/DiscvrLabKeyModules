@@ -220,6 +220,7 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
                 for (SequenceOutputFile so : inputFiles)
                 {
                     Set<String> duplicates = new HashSet<>();
+                    Set<String> missing = new HashSet<>();
                     try (VCFFileReader reader = new VCFFileReader(so.getFile()))
                     {
                         VCFHeader header = reader.getFileHeader();
@@ -243,9 +244,13 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
                             {
                                 writer.println(sample + "\t" + applications.iterator().next());
                             }
-                            else
+                            else if (applications.size() > 1)
                             {
                                 duplicates.add(sample);
+                            }
+                            else
+                            {
+                                missing.add(sample);
                             }
                         }
                     }
@@ -253,6 +258,11 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
                     if (!duplicates.isEmpty())
                     {
                         throw new PipelineJobException("More than one readset with the given name found for the following samples: " + StringUtils.join(duplicates, ","));
+                    }
+
+                    if (!missing.isEmpty())
+                    {
+                        throw new PipelineJobException("No matching readsets with the given name found for the following samples: " + StringUtils.join(missing, ","));
                     }
                 }
             }
