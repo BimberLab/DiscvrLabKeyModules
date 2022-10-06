@@ -98,7 +98,7 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
             try (CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(outputFile), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
                 Arrays.stream(names).forEach(x -> {
-                    writer.writeNext(new String[]{x, x});
+                    writer.writeNext(new String[]{x});
                 });
             }
             catch (IOException e)
