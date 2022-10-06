@@ -1,6 +1,8 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
+import htsjdk.samtools.util.Interval;
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -15,24 +17,31 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
+import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
+import org.labkey.sequenceanalysis.run.util.AbstractGenomicsDBImportHandler;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
+public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> implements SequenceOutputHandler.TracksVCF, VariantProcessingStep.SupportsScatterGather
 {
     private static final FileType FILE_TYPE = new FileType(".svsig.gz");
+    private static final String OUTPUT_CATEGORY = "PBSV VCF";
 
     public PbsvJointCallingHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), "Pbsv Call", "Runs pbsv call, which jointly calls genotypes from PacBio data", null, Arrays.asList(
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), "Pbsv Call", "Runs pbsv call, which jointly calls genotypes from PacBio data", new LinkedHashSet<>(Arrays.asList("sequenceanalysis/panel/VariantScatterGatherPanel.js")), Arrays.asList(
                 ToolParameterDescriptor.create("fileName", "VCF Filename", "The name of the resulting file.", "textfield", new JSONObject(){{
                     put("allowBlank", false);
                     put("doNotIncludeInTemplates", true);
@@ -41,9 +50,10 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                     put("storeValues", "DEBUG;INFO;WARN");
                     put("multiSelect", false);
                 }}, "INFO"),
-                ToolParameterDescriptor.create("doCopyLocal", "Copy Inputs Locally", "If checked, the input file(s) willbe copied to the job working directory.", "checkbox", new JSONObject(){{
+                ToolParameterDescriptor.create("doCopyLocal", "Copy Inputs Locally", "If checked, the input file(s) will be copied to the job working directory.", "checkbox", new JSONObject(){{
                     put("checked", true);
-                }}, true)
+                }}, true),
+                ToolParameterDescriptor.create("scatterGather", "Scatter/Gather Options", "If selected, this job will be divided to run job per chromosome.  The final step will take the VCF from each intermediate step and combined to make a final VCF file.", "sequenceanalysis-variantscattergatherpanel", null, null)
         ));
     }
 
@@ -116,6 +126,72 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                 }
             }
 
+            ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenomes().iterator().next();
+            String outputBaseName = ctx.getParams().getString("fileName");
+            if (!outputBaseName.toLowerCase().endsWith(".gz"))
+            {
+                outputBaseName = outputBaseName.replaceAll(".gz$", "");
+            }
+
+            if (!outputBaseName.toLowerCase().endsWith(".vcf"))
+            {
+                outputBaseName = outputBaseName.replaceAll(".vcf$", "");
+            }
+
+            List<File> outputs = new ArrayList<>();
+            if (getVariantPipelineJob(ctx.getJob()).isScatterJob())
+            {
+                outputBaseName = outputBaseName + "." + getVariantPipelineJob(ctx.getJob()).getIntervalSetName();
+                for (Interval i : getVariantPipelineJob(ctx.getJob()).getIntervalsForTask())
+                {
+                    if (i.getStart() != 1)
+                    {
+                        throw new PipelineJobException("Expected all intervals to start on the first base: " + i.toString());
+                    }
+
+                    outputs.add(runPbsvCall(ctx, inputs, genome, outputBaseName + (getVariantPipelineJob(ctx.getJob()).getIntervalsForTask().size() == 1 ? "" : "." + i.getContig()), i.getContig()));
+                }
+            }
+            else
+            {
+                outputs.add(runPbsvCall(ctx, inputs, genome, outputBaseName, null));
+            }
+
+            File vcfOutGz;
+            if (outputs.size() == 1)
+            {
+                File unzipVcfOut = outputs.get(0);
+                vcfOutGz = SequenceAnalysisService.get().bgzipFile(unzipVcfOut, ctx.getLogger());
+            }
+            else
+            {
+                vcfOutGz = SequenceUtil.combineVcfs(outputs, genome, new File(ctx.getOutputDir(), outputBaseName), ctx.getLogger(), true, null, false);
+                if (vcfOutGz.exists())
+                {
+                    throw new PipelineJobException("Unzipped VCF should not exist: " + vcfOutGz.getPath());
+                }
+            }
+
+            try
+            {
+                SequenceAnalysisService.get().ensureVcfIndex(vcfOutGz, ctx.getLogger(), true);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            SequenceOutputFile so = new SequenceOutputFile();
+            so.setName("pbsv call: " + outputBaseName);
+            so.setFile(vcfOutGz);
+            so.setCategory(OUTPUT_CATEGORY);
+            so.setLibrary_id(genome.getGenomeId());
+
+            ctx.addSequenceOutput(so);
+        }
+
+        private File runPbsvCall(JobContext ctx, List<File> inputs, ReferenceGenome genome, String outputBaseName, @Nullable String contig) throws PipelineJobException
+        {
             List<String> args = new ArrayList<>();
             args.add(getExe().getPath());
             args.add("call");
@@ -127,22 +203,21 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                 args.add(String.valueOf(maxThreads));
             }
 
+            if (contig != null)
+            {
+                args.add("-r");
+                args.add(contig);
+            }
+
             args.addAll(getClientCommandArgs(ctx.getParams()));
 
-            ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenomes().iterator().next();
             args.add(genome.getWorkingFastaFile().getPath());
 
             inputs.forEach(f -> {
                 args.add(f.getPath());
             });
 
-            String fileName = ctx.getParams().getString("fileName");
-            if (!fileName.toLowerCase().endsWith("vcf"))
-            {
-                fileName = fileName + ".vcf";
-            }
-
-            File vcfOut = new File(ctx.getOutputDir(), fileName);
+            File vcfOut = new File(ctx.getOutputDir(), outputBaseName + ".vcf");
             args.add(vcfOut.getPath());
 
             new SimpleScriptWrapper(ctx.getLogger()).execute(args);
@@ -152,34 +227,35 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                 throw new PipelineJobException("Unable to find file: " + vcfOut.getPath());
             }
 
-            // Ensure output bgzipped:
-            File bgVcf = SequenceAnalysisService.get().bgzipFile(vcfOut, ctx.getLogger());
-            try
-            {
-                SequenceAnalysisService.get().ensureVcfIndex(bgVcf, ctx.getLogger(), true);
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-
-            if (vcfOut.exists())
-            {
-                throw new PipelineJobException("Unzipped VCF should not exist: " + vcfOut.getPath());
-            }
-
-            SequenceOutputFile so = new SequenceOutputFile();
-            so.setName("pbsv call: " + fileName);
-            so.setFile(bgVcf);
-            so.setCategory("PBSV VCF");
-            so.setLibrary_id(genome.getGenomeId());
-
-            ctx.addSequenceOutput(so);
+            return vcfOut;
         }
 
         private File getExe()
         {
             return SequencePipelineService.get().getExeForPackage("PBSVPATH", "pbsv");
         }
+    }
+
+    @Override
+    public File getScatterJobOutput(JobContext ctx) throws PipelineJobException
+    {
+        return ProcessVariantsHandler.getScatterOutputByCategory(ctx, OUTPUT_CATEGORY);
+    }
+
+    @Override
+    public void validateScatter(VariantProcessingStep.ScatterGatherMethod method, PipelineJob job) throws IllegalArgumentException
+    {
+        AbstractGenomicsDBImportHandler.validateNoSplitContigScatter(method, job);
+    }
+
+    @Override
+    public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, List<SequenceOutputFile> inputFiles)
+    {
+        return ProcessVariantsHandler.createSequenceOutput(job, processed, inputFiles, OUTPUT_CATEGORY);
+    }
+
+    private static VariantProcessingJob getVariantPipelineJob(PipelineJob job)
+    {
+        return job instanceof VariantProcessingJob ? (VariantProcessingJob)job : null;
     }
 }

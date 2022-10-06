@@ -389,6 +389,7 @@ public class SequenceAnalysisController extends SpringActionController
             _htmlFile = htmlFile;
         }
 
+        @Override
         public ModelAndView getView(Object form, BindException errors)
         {
             LinkedHashSet<ClientDependency> cds = new LinkedHashSet<>();

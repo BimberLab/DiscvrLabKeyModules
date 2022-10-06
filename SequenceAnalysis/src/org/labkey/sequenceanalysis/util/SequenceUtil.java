@@ -438,6 +438,11 @@ public class SequenceUtil
 
     public static File combineVcfs(List<File> files, ReferenceGenome genome, File outputGzip, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel) throws PipelineJobException
     {
+        return combineVcfs(files, genome, outputGzip, log, multiThreaded, compressionLevel, true);
+    }
+
+    public static File combineVcfs(List<File> files, ReferenceGenome genome, File outputGzip, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel, boolean showTotals) throws PipelineJobException
+    {
         log.info("combining VCFs: ");
 
         log.info("Merging headers:");
@@ -505,8 +510,11 @@ public class SequenceUtil
 
             bashTmp.delete();
 
-            log.info("total variants: " + SequenceAnalysisService.get().getVCFLineCount(outputGzip, log, false));
-            log.info("passing variants: " + SequenceAnalysisService.get().getVCFLineCount(outputGzip, log, true));
+            if (showTotals)
+            {
+                log.info("total variants: " + SequenceAnalysisService.get().getVCFLineCount(outputGzip, log, false));
+                log.info("passing variants: " + SequenceAnalysisService.get().getVCFLineCount(outputGzip, log, true));
+            }
 
             headerFile.delete();
             File headerIdx = new File(headerFile.getPath() + ".idx");
