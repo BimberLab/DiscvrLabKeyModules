@@ -21,6 +21,7 @@ import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 import org.labkey.sequenceanalysis.run.util.AbstractGenomicsDBImportHandler;
@@ -34,7 +35,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> implements SequenceOutputHandler.TracksVCF, VariantProcessingStep.SupportsScatterGather
+public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> implements SequenceOutputHandler.TracksVCF, VariantProcessingStep.SupportsScatterGather, VariantProcessingStep.MayRequirePrepareTask
 {
     private static final FileType FILE_TYPE = new FileType(".svsig.gz");
     private static final String OUTPUT_CATEGORY = "PBSV VCF";
@@ -93,7 +94,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
             List<File> inputs = inputFiles.stream().map(SequenceOutputFile::getFile).collect(Collectors.toList());
-            if (ctx.getParams().optBoolean("doCopyLocal", false))
+            if (doCopyLocal(ctx.getParams()))
             {
                 ctx.getLogger().info("Copying inputs locally");
                 try
@@ -162,14 +163,15 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
             {
                 File unzipVcfOut = outputs.get(0);
                 vcfOutGz = SequenceAnalysisService.get().bgzipFile(unzipVcfOut, ctx.getLogger());
-            }
-            else
-            {
-                vcfOutGz = SequenceUtil.combineVcfs(outputs, genome, new File(ctx.getOutputDir(), outputBaseName), ctx.getLogger(), true, null, false);
-                if (vcfOutGz.exists())
+                if (unzipVcfOut.exists())
                 {
                     throw new PipelineJobException("Unzipped VCF should not exist: " + vcfOutGz.getPath());
                 }
+            }
+            else
+            {
+                outputs.forEach(f -> ctx.getFileManager().addIntermediateFile(f));
+                vcfOutGz = SequenceUtil.combineVcfs(outputs, genome, new File(ctx.getOutputDir(), outputBaseName), ctx.getLogger(), true, null, false);
             }
 
             try
@@ -257,5 +259,29 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
     private static VariantProcessingJob getVariantPipelineJob(PipelineJob job)
     {
         return job instanceof VariantProcessingJob ? (VariantProcessingJob)job : null;
+    }
+
+    @Override
+    public boolean isRequired(PipelineJob job)
+    {
+        if (job instanceof VariantProcessingJob)
+        {
+            VariantProcessingJob vpj = (VariantProcessingJob)job;
+
+            return doCopyLocal(vpj.getParameterJson());
+        }
+
+        return false;
+    }
+
+    private boolean doCopyLocal(JSONObject params)
+    {
+        return params.optBoolean("doCopyLocal", false);
+    }
+
+    @Override
+    public void doWork(List<SequenceOutputFile> inputFiles, JobContext ctx) throws PipelineJobException
+    {
+        GenotypeGVCFHandler.doCopyGvcfLocally(inputFiles, ctx);
     }
 }
