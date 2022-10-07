@@ -30,7 +30,7 @@ import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
-import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
+import org.labkey.sequenceanalysis.ScatterGatherUtils;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
@@ -46,7 +46,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -956,6 +955,6 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
     @Override
     public void doWork(List<SequenceOutputFile> inputFiles, JobContext ctx) throws PipelineJobException
     {
-        GenotypeGVCFHandler.doCopyGvcfLocally(inputFiles, ctx);
+        ScatterGatherUtils.doCopyGvcfLocally(inputFiles, ctx);
     }
 }

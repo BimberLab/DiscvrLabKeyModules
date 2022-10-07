@@ -177,7 +177,7 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
         File outPrefix;
         if (setName != null)
         {
-            outPrefix = new File(outputDirectory, "plink." + FileUtil.makeLegalName(setName));
+            outPrefix = new File(outputDirectory, "plink." + FileUtil.makeLegalName(setName).replaceAll(" ", "_"));
         }
         else
         {
@@ -186,6 +186,12 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
 
         args.add("--out");
         args.add(outPrefix.getPath());
+
+        if (SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger()) != null)
+        {
+            args.add("--threads");
+            args.add(SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger()).toString());
+        }
 
         args.addAll(getClientCommandArgs());
 
@@ -297,7 +303,7 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
 
         public File getExe()
         {
-            return SequencePipelineService.get().getExeForPackage("PLINK2PATH", "plink");
+            return SequencePipelineService.get().getExeForPackage("PLINK2PATH", "plink2");
         }
     }
 }

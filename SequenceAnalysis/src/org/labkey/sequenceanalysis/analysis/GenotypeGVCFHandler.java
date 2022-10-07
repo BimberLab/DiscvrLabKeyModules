@@ -34,6 +34,7 @@ import org.labkey.api.sequenceanalysis.run.DISCVRSeqRunner;
 import org.labkey.api.util.FileType;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.writer.PrintWriters;
+import org.labkey.sequenceanalysis.ScatterGatherUtils;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.pipeline.JobContextImpl;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
@@ -783,63 +784,13 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
     @Override
     public void doWork(List<SequenceOutputFile> inputFiles, JobContext ctx) throws PipelineJobException
     {
-        doCopyGvcfLocally(inputFiles, ctx);
-        possiblyCacheSupportFiles(ctx);
-    }
-
-    public static void possiblyCacheSupportFiles(JobContext ctx) throws PipelineJobException
-    {
-        for (String param : Arrays.asList("exclude_intervals", "forceSitesFile"))
-        {
-            if (ctx.getParams().get("variantCalling.GenotypeGVCFs." + param) != null)
-            {
-                File inputFile = ctx.getSequenceSupport().getCachedData(ctx.getParams().getInt("variantCalling.GenotypeGVCFs." + param));
-                if (!inputFile.exists())
-                {
-                    throw new PipelineJobException("Unable to find file: " + inputFile.getPath());
-                }
-
-                ctx.getLogger().debug("Making local copy of file: " + inputFile.getName());
-                File localCopy = new File(getLocalCopyDir(ctx, true), inputFile.getName());
-                File doneFile = new File(localCopy.getPath() + ".copyDone");
-                if (!doneFile.exists())
-                {
-                    try
-                    {
-                        FileUtils.copyFile(inputFile, localCopy);
-                        FileUtils.touch(doneFile);
-                    }
-                    catch (IOException e)
-                    {
-                        throw new PipelineJobException(e);
-                    }
-                }
-            }
-        }
-    }
-
-    public static void doCopyGvcfLocally(List<SequenceOutputFile> inputFiles, JobContext ctx) throws PipelineJobException
-    {
-        List<File> inputVCFs = new ArrayList<>();
-        inputFiles.forEach(f -> inputVCFs.add(f.getFile()));
-
-        ctx.getLogger().info("making local copies of gVCFs/GenomicsDB");
-        GenotypeGVCFsWrapper.copyVcfsLocally(ctx, inputVCFs, new ArrayList<>(), false);
-    }
-
-    public static File getLocalCopyDir(JobContext ctx, boolean createIfDoesntExist)
-    {
-        if (ctx.getJob() instanceof VariantProcessingJob)
-        {
-            return ((VariantProcessingJob)ctx.getJob()).getLocationForCachedInputs(ctx.getWorkDir(), createIfDoesntExist);
-        }
-
-        return ctx.getOutputDir();
+        ScatterGatherUtils.doCopyGvcfLocally(inputFiles, ctx);
+        ScatterGatherUtils.possiblyCacheSupportFiles(ctx);
     }
 
     protected File getPossiblyLocalFile(JobContext ctx, File sourceFile)
     {
-        File cacheDir = getLocalCopyDir(ctx, false);
+        File cacheDir = ScatterGatherUtils.getLocalCopyDir(ctx, false);
         if (!cacheDir.exists())
         {
             return sourceFile;

@@ -2,9 +2,8 @@ package org.labkey.sequenceanalysis.run.util;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -14,8 +13,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.run.AbstractGatk4Wrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileType;
-import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
-import org.springframework.util.FileSystemUtils;
+import org.labkey.sequenceanalysis.ScatterGatherUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -126,7 +124,7 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
                 inputToDest.put(x, fn);
             });
 
-            File localWorkDir = GenotypeGVCFHandler.getLocalCopyDir(ctx, true);
+            File localWorkDir = ScatterGatherUtils.getLocalCopyDir(ctx, true);
 
             // If the cache directory is under the current working dir, mark to delete when done.
             // If localWorkDir is null, this indicates we're using /tmp, so also delete.

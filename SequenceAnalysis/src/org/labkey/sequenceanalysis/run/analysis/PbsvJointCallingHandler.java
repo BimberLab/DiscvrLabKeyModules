@@ -20,8 +20,8 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileType;
+import org.labkey.sequenceanalysis.ScatterGatherUtils;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
-import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 import org.labkey.sequenceanalysis.run.util.AbstractGenomicsDBImportHandler;
@@ -282,6 +282,6 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
     @Override
     public void doWork(List<SequenceOutputFile> inputFiles, JobContext ctx) throws PipelineJobException
     {
-        GenotypeGVCFHandler.doCopyGvcfLocally(inputFiles, ctx);
+        ScatterGatherUtils.doCopyGvcfLocally(inputFiles, ctx);
     }
 }
