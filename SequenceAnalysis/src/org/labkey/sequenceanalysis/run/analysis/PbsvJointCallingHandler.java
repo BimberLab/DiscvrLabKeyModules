@@ -25,14 +25,17 @@ import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 import org.labkey.sequenceanalysis.run.util.AbstractGenomicsDBImportHandler;
+import org.labkey.sequenceanalysis.run.util.GenotypeGVCFsWrapper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> implements SequenceOutputHandler.TracksVCF, VariantProcessingStep.SupportsScatterGather, VariantProcessingStep.MayRequirePrepareTask
@@ -94,37 +97,16 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
             List<File> inputs = inputFiles.stream().map(SequenceOutputFile::getFile).collect(Collectors.toList());
+            Set<File> toDelete = new HashSet<>();
+            List<File> filesToProcess = new ArrayList<>();
             if (doCopyLocal(ctx.getParams()))
             {
-                ctx.getLogger().info("Copying inputs locally");
-                try
-                {
-                    List<File> copiedInputs = new ArrayList<>();
-                    for (File f : inputs)
-                    {
-                        File copied = new File(ctx.getWorkingDirectory(), f.getName());
-                        if (copiedInputs.contains(copied))
-                        {
-                            throw new PipelineJobException("Duplicate input filenames, cannot use with copyLocally option: " + copied.getName());
-                        }
-
-                        if (copied.exists())
-                        {
-                            copied.delete();
-                        }
-
-                        FileUtils.copyFile(f, copied);
-                        copiedInputs.add(copied);
-
-                        ctx.getFileManager().addIntermediateFile(copied);
-                    }
-
-                    inputs = copiedInputs;
-                }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
-                }
+                ctx.getLogger().info("making local copies of svsig files");
+                filesToProcess.addAll(GenotypeGVCFsWrapper.copyVcfsLocally(ctx, inputs, toDelete, false));
+            }
+            else
+            {
+                filesToProcess.addAll(inputs);
             }
 
             ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenomes().iterator().next();
@@ -150,12 +132,12 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                         throw new PipelineJobException("Expected all intervals to start on the first base: " + i.toString());
                     }
 
-                    outputs.add(runPbsvCall(ctx, inputs, genome, outputBaseName + (getVariantPipelineJob(ctx.getJob()).getIntervalsForTask().size() == 1 ? "" : "." + i.getContig()), i.getContig()));
+                    outputs.add(runPbsvCall(ctx, filesToProcess, genome, outputBaseName + (getVariantPipelineJob(ctx.getJob()).getIntervalsForTask().size() == 1 ? "" : "." + i.getContig()), i.getContig()));
                 }
             }
             else
             {
-                outputs.add(runPbsvCall(ctx, inputs, genome, outputBaseName, null));
+                outputs.add(runPbsvCall(ctx, filesToProcess, genome, outputBaseName, null));
             }
 
             File vcfOutGz;

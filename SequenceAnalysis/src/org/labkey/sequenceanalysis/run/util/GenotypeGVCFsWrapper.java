@@ -161,7 +161,8 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
                 File movedIdx = null;
                 File doneFile = new File(localWorkDir, destFile.getName() + ".copyDone");
 
-                if (GVCF.isType(f))
+                // gVCF or Pacbio:
+                if (GVCF.isType(f) || f.getName().toLowerCase().endsWith("svsig.gz"))
                 {
                     origIdx = new File(f.getPath() + ".tbi");
                     if (!origIdx.exists())
