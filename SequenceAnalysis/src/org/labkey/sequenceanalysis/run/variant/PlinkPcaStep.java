@@ -63,9 +63,9 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--not-chr"), "excludedContigs", "Excluded Contigs", "A comma separated list of contigs to exclude, such as X,Y,MT.", "textfield", new JSONObject(){{
 
                     }}, "X,Y,MT"),
-                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--const-fid"), "constFid", "Constant FID", "Converts sample IDs to within-family IDs while setting all family IDs to a single value (default '0').", "checkbox", new JSONObject(){{
-                        put("checked", true);
-                    }}, true),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--keep-autoconv"), "constFid", "Keep Autoconversion Products", "If checked, the plink intermediate files are temporarily retained. This might be helpful to debug failures.", "checkbox", new JSONObject(){{
+                        put("checked", false);
+                    }}, false),
                     ToolParameterDescriptor.create("splitByApplication", "Split by Application", "If checked, one iteration of PCA will be performed for each application (defined by the readset).", "checkbox", null, false),
                     ToolParameterDescriptor.create("allowableApplications", "Allowable Applications", "If Split By Application is used, then it will search readsets to find those where the VCF sample matches the readset name. This is an option extra filter that can be added, to limit to search to a specific set of applications.", "ldk-simplelabkeycombo", new JSONObject(){{
                         put("schemaName", "sequenceanalysis");
@@ -164,6 +164,8 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
         args.add(getWrapper().getExe().getPath());
         args.add("--pca");
         args.add("--allow-extra-chr");
+        args.add("--const-fid");
+        args.add("0");
 
         String samplesToInclude = getProvider().getParameterByName(SelectSamplesStep.SAMPLE_INCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
         addSubjectSelectOptions(sampleList != null ? StringUtils.join(sampleList, ";") : samplesToInclude, args, "--keep", new File(outputDirectory, "samplesToKeep.txt"), output);
@@ -186,6 +188,13 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
 
         args.add("--out");
         args.add(outPrefix.getPath());
+
+        // These are only written if --keep-autoconv is used:
+        output.addIntermediateFile(new File(outPrefix.getPath() + ".pgen"));
+        output.addIntermediateFile(new File(outPrefix.getPath() + ".pvar"));
+        output.addIntermediateFile(new File(outPrefix.getPath() + ".psam"));
+        output.addIntermediateFile(new File(outPrefix.getPath() + ".afreq"));
+        output.addIntermediateFile(new File(outPrefix.getPath() + ".log"));
 
         if (SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger()) != null)
         {
