@@ -176,6 +176,15 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
 
         private File runPbsvCall(JobContext ctx, List<File> inputs, ReferenceGenome genome, String outputBaseName, @Nullable String contig) throws PipelineJobException
         {
+            File vcfOut = new File(ctx.getOutputDir(), outputBaseName + ".vcf");
+            File doneFile = new File(ctx.getOutputDir(), outputBaseName + ".done");
+            ctx.getFileManager().addIntermediateFile(doneFile);
+            if (doneFile.exists())
+            {
+                ctx.getLogger().info("Existing file, found, re-using");
+                return vcfOut;
+            }
+
             List<String> args = new ArrayList<>();
             args.add(getExe().getPath());
             args.add("call");
@@ -201,7 +210,6 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                 args.add(f.getPath());
             });
 
-            File vcfOut = new File(ctx.getOutputDir(), outputBaseName + ".vcf");
             args.add(vcfOut.getPath());
 
             new SimpleScriptWrapper(ctx.getLogger()).execute(args);
@@ -209,6 +217,15 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
             if (!vcfOut.exists())
             {
                 throw new PipelineJobException("Unable to find file: " + vcfOut.getPath());
+            }
+
+            try
+            {
+                FileUtils.touch(doneFile);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
             }
 
             return vcfOut;
