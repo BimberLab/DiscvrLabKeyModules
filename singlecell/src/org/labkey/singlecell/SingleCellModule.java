@@ -208,6 +208,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new TcrFilter.Provider());
         SequencePipelineService.get().registerPipelineStep(new PlotAssayFeatures.Provider());
         SequencePipelineService.get().registerPipelineStep(new IntegrateData.Provider());
+        SequencePipelineService.get().registerPipelineStep(new CustomUCell.Provider());
     }
 
     @Override
