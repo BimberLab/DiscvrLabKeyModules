@@ -223,7 +223,6 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                 for (File s : inputs)
                 {
                     String ret = StringUtils.trimToNull(runner.executeWithOutput(Arrays.asList("/bin/bash", "-c", tabix.getExe().getPath() + " -l '" + s.getPath() + "' | grep -e '" + contig + "' | wc -l")));
-                    ctx.getLogger().debug(s.getName() + ": [" + ret + "]");
                     if ("0".equals(ret))
                     {
                         ctx.getLogger().info("Sample is missing contig: " + contig + ", skipping: " + s.getPath());
@@ -245,6 +244,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                 return null;
             }
 
+            ctx.getLogger().info("Using " + samplesToUse.size() + " of " + inputs.size() + " svsig files");
             samplesToUse.forEach(f -> {
                 args.add(f.getPath());
             });
