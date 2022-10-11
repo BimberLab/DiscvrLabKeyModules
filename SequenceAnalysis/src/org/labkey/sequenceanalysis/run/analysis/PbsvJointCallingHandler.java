@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.run.analysis;
 
 import htsjdk.samtools.util.Interval;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.module.ModuleLoader;
@@ -221,7 +222,8 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
 
                 for (File s : inputs)
                 {
-                    String ret = runner.executeWithOutput(Arrays.asList("/bin/bash", "-c", tabix.getExe().getPath() + " -l '" + s.getPath() + "' | grep -e '" + contig + "' | wc -l"));
+                    String ret = StringUtils.trimToNull(runner.executeWithOutput(Arrays.asList("/bin/bash", "-c", tabix.getExe().getPath() + " -l '" + s.getPath() + "' | grep -e '" + contig + "' | wc -l")));
+                    ctx.getLogger().debug(s.getName() + ": [" + ret + "]");
                     if ("0".equals(ret))
                     {
                         ctx.getLogger().info("Sample is missing contig: " + contig + ", skipping: " + s.getPath());
