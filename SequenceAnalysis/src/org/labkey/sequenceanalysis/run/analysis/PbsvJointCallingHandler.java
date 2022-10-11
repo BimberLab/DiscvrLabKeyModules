@@ -26,6 +26,7 @@ import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 import org.labkey.sequenceanalysis.run.util.AbstractGenomicsDBImportHandler;
 import org.labkey.sequenceanalysis.run.util.GenotypeGVCFsWrapper;
+import org.labkey.sequenceanalysis.run.util.TabixRunner;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -132,7 +133,11 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                         throw new PipelineJobException("Expected all intervals to start on the first base: " + i.toString());
                     }
 
-                    outputs.add(runPbsvCall(ctx, filesToProcess, genome, outputBaseName + (getVariantPipelineJob(ctx.getJob()).getIntervalsForTask().size() == 1 ? "" : "." + i.getContig()), i.getContig()));
+                    File o = runPbsvCall(ctx, filesToProcess, genome, outputBaseName + (getVariantPipelineJob(ctx.getJob()).getIntervalsForTask().size() == 1 ? "" : "." + i.getContig()), i.getContig());
+                    if (o != null)
+                    {
+                        outputs.add(o);
+                    }
                 }
             }
             else
@@ -206,7 +211,39 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
 
             args.add(genome.getWorkingFastaFile().getPath());
 
-            inputs.forEach(f -> {
+            // Check indexes to determine whether each sample actually includes this contig. This is mostly relevant for small contigs:
+            List<File> samplesToUse = new ArrayList<>();
+            if (contig != null)
+            {
+                ctx.getLogger().info("Checking each input for usage of contig: " + contig);
+                SimpleScriptWrapper runner = new SimpleScriptWrapper(ctx.getLogger());
+                TabixRunner tabix = new TabixRunner(ctx.getLogger());
+
+                for (File s : inputs)
+                {
+                    String ret = runner.executeWithOutput(Arrays.asList("/bin/bash", "-c", tabix.getExe().getPath() + " -l '" + s.getPath() + "' | grep -e '" + contig + "' | wc -l"));
+                    if ("0".equals(ret))
+                    {
+                        ctx.getLogger().info("Sample is missing contig: " + contig + ", skipping: " + s.getPath());
+                    }
+                    else
+                    {
+                        samplesToUse.add(s);
+                    }
+                }
+            }
+            else
+            {
+                samplesToUse = inputs;
+            }
+
+            if (samplesToUse.isEmpty())
+            {
+                ctx.getLogger().info("No samples had data for contig: " + contig + ", skipping");
+                return null;
+            }
+
+            samplesToUse.forEach(f -> {
                 args.add(f.getPath());
             });
 
