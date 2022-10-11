@@ -39,7 +39,7 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
 {
     public static String INTERVALS = "intervals";
 
-    public SelectVariantsStep(PipelineStepProvider provider, PipelineContext ctx)
+    public SelectVariantsStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx, new SelectVariantsWrapper(ctx.getLogger()));
     }
@@ -77,6 +77,7 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
             ), Arrays.asList("sequenceanalysis/panel/VariantFilterPanel.js", "sequenceanalysis/panel/IntervalPanel.js", "/sequenceanalysis/field/TrimmingTextArea.js"), "");
         }
 
+        @Override
         public SelectVariantsStep create(PipelineContext ctx)
         {
             return new SelectVariantsStep(this, ctx);

@@ -46,6 +46,7 @@ import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.run.util.AbstractGenomicsDBImportHandler;
 import org.labkey.sequenceanalysis.run.util.MergeVcfsAndGenotypesWrapper;
+import org.labkey.sequenceanalysis.run.variant.OutputVariantsStartingInIntervalsStep;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -359,7 +360,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         return null;
     }
 
-    public static File processVCF(File input, Integer libraryId, JobContext ctx, Resumer resumer) throws PipelineJobException
+    public static File processVCF(File input, Integer libraryId, JobContext ctx, Resumer resumer, boolean subsetToIntervals) throws PipelineJobException
     {
         try
         {
@@ -382,10 +383,37 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             return null;
         }
 
+        boolean useScatterGather = getVariantPipelineJob(ctx.getJob()) != null && getVariantPipelineJob(ctx.getJob()).isScatterJob();
+        if (useScatterGather && subsetToIntervals)
+        {
+            if (getIntervals(ctx) == null)
+            {
+                throw new PipelineJobException("Did not expect intervals to be null on a scatter/gather job");
+            }
+
+            ctx.getLogger().info("Subsetting input VCF to job intervals");
+            ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Subsetting input VCF to job intervals");
+
+            File outputFile = new File(ctx.getOutputDir(), SequenceAnalysisService.get().getUnzippedBaseName(currentVCF.getName()) + ".subset.vcf.gz");
+            File outputFileIdx = new File(outputFile.getPath() + ".tbi");
+            if (outputFileIdx.exists())
+            {
+                ctx.getLogger().debug("Index exists, will not re-subset VCF");
+            }
+            else
+            {
+                OutputVariantsStartingInIntervalsStep.Wrapper wrapper = new OutputVariantsStartingInIntervalsStep.Wrapper(ctx.getLogger());
+                wrapper.execute(input, outputFile, getIntervals(ctx));
+            }
+
+            currentVCF = outputFile;
+            resumer.getFileManager().addIntermediateFile(currentVCF);
+            resumer.getFileManager().addIntermediateFile(outputFileIdx);
+        }
+
         for (PipelineStepCtx<VariantProcessingStep> stepCtx : providers)
         {
             ctx.getLogger().info("Starting to run: " + stepCtx.getProvider().getLabel());
-
             ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + stepCtx.getProvider().getLabel());
             stepIdx++;
 
@@ -622,7 +650,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
         private void processFile(File input, Integer libraryId, Integer readsetId, JobContext ctx) throws PipelineJobException
         {
-            File processed = processVCF(input, libraryId, ctx, _resumer);
+            File processed = processVCF(input, libraryId, ctx, _resumer, true);
             if (processed != null && processed.exists())
             {
                 ctx.getLogger().debug("adding sequence output: " + processed.getPath());

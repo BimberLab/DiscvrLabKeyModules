@@ -18,6 +18,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.run.AbstractDiscvrSeqWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.writer.PrintWriters;
+import org.labkey.sequenceanalysis.run.variant.OutputVariantsStartingInIntervalsStep;
 
 import java.io.File;
 import java.io.IOException;
@@ -180,12 +181,9 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
             if (ensureOutputsWithinIntervals)
             {
                 getJob().getLogger().debug("Ensuring ensure scatter outputs respect intervals");
-                List<Interval> expectedIntervals = jobToIntervalMap.get(name);
 
-                File intervalFile = new File(vcf.getParentFile(), "scatterIntervals.list");
                 File subsetVcf = new File(vcf.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(vcf.getName()) + ".subset.vcf.gz");
                 File subsetVcfIdx = new File(subsetVcf.getPath() + ".tbi");
-                manager.addIntermediateFile(intervalFile);
                 manager.addIntermediateFile(subsetVcf);
                 manager.addIntermediateFile(subsetVcfIdx);
 
@@ -195,19 +193,8 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
                 }
                 else
                 {
-                    try (PrintWriter writer = PrintWriters.getPrintWriter(intervalFile))
-                    {
-                        expectedIntervals.forEach(interval -> {
-                            writer.println(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
-                        });
-                    }
-                    catch (IOException e)
-                    {
-                        throw new PipelineJobException(e);
-                    }
-
-                    Wrapper wrapper = new Wrapper(getJob().getLogger());
-                    wrapper.execute(vcf, subsetVcf, intervalFile);
+                    OutputVariantsStartingInIntervalsStep.Wrapper wrapper = new OutputVariantsStartingInIntervalsStep.Wrapper(getJob().getLogger());
+                    wrapper.execute(vcf, subsetVcf, getPipelineJob().getIntervalsForTask());
                 }
 
                 toConcat.add(subsetVcf);
@@ -249,34 +236,5 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
         manager.addOutput(action, "Merged VCF", combined);
 
         return combined;
-    }
-
-    public static class Wrapper extends AbstractDiscvrSeqWrapper
-    {
-        public Wrapper(Logger log)
-        {
-            super(log);
-        }
-
-        public void execute(File inputVcf, File outputVcf, File intervalFile) throws PipelineJobException
-        {
-            List<String> args = new ArrayList<>(getBaseArgs());
-            args.add("OutputVariantsStartingInIntervals");
-
-            args.add("-V");
-            args.add(inputVcf.getPath());
-
-            args.add("-O");
-            args.add(outputVcf.getPath());
-
-            args.add("-L");
-            args.add(intervalFile.getPath());
-
-            execute(args);
-            if (!outputVcf.exists())
-            {
-                throw new PipelineJobException("Missing file: " + outputVcf.getPath());
-            }
-        }
     }
 }
