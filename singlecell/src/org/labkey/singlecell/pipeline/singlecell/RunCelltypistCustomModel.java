@@ -31,7 +31,8 @@ public class RunCelltypistCustomModel extends AbstractRiraStep
                         put("allowBlank", false);
                         put("category", TrainCelltypist.CATEGORY);
                         put("performGenomeFilter", false);
-                    }}, null)
+                    }}, null),
+                    ToolParameterDescriptor.create("columnPrefix", "Column Prefix", "This string will be pre-pended to the normal output columns (i.e. majority_voting and predicted_labels)", "textfield", null, null)
             ), PageFlowUtil.set("sequenceanalysis/field/SequenceOutputFileSelectorField.js"), null);
         }
 

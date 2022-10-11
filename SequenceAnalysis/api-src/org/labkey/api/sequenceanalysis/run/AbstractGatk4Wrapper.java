@@ -97,7 +97,7 @@ abstract public class AbstractGatk4Wrapper extends AbstractCommandWrapper
         return StringUtils.trimToNull(executeWithOutput(args));
     }
 
-    protected List<String> getBaseArgs()
+    public List<String> getBaseArgs()
     {
         List<String> args = new ArrayList<>();
         args.add(SequencePipelineService.get().getJava8FilePath());
