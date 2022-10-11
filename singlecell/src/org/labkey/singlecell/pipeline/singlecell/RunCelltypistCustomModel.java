@@ -7,6 +7,7 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.PageFlowUtil;
 
@@ -32,7 +33,7 @@ public class RunCelltypistCustomModel extends AbstractRiraStep
                         put("category", TrainCelltypist.CATEGORY);
                         put("performGenomeFilter", false);
                     }}, null),
-                    ToolParameterDescriptor.create("columnPrefix", "Column Prefix", "This string will be pre-pended to the normal output columns (i.e. majority_voting and predicted_labels)", "textfield", null, null)
+                    SeuratToolParameter.create("columnPrefix", "Column Prefix", "This string will be pre-pended to the normal output columns (i.e. majority_voting and predicted_labels)", "textfield", null, null)
             ), PageFlowUtil.set("sequenceanalysis/field/SequenceOutputFileSelectorField.js"), null);
         }
 
