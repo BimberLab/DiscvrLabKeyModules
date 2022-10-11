@@ -112,6 +112,8 @@ abstract public class SequencePipelineService
 
     abstract public long getLineCount(File f) throws PipelineJobException;
 
+    abstract public File getExpectedIndex(File bamOrCram);
+
     abstract public File ensureBamIndex(File f, Logger log, boolean forceDeleteExisting) throws PipelineJobException;
 
     abstract public SAMFileHeader.SortOrder getBamSortOrder(File bam) throws IOException;

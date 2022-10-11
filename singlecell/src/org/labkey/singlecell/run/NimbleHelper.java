@@ -43,6 +43,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -377,6 +378,22 @@ public class NimbleHelper
         File localBashScript = new File(getPipelineCtx().getWorkingDirectory(), "docker.sh");
         output.addIntermediateFile(localBashScript);
 
+        // Create temp folder:
+        File tmpDir = new File(getPipelineCtx().getWorkingDirectory(), "tmpDir");
+        if (tmpDir.exists())
+        {
+            try
+            {
+                FileUtils.deleteDirectory(tmpDir);
+                Files.createDirectory(tmpDir.toPath());
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+        output.addIntermediateFile(tmpDir);
+
         try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
         {
             writer.println("#!/bin/bash");
@@ -400,7 +417,7 @@ public class NimbleHelper
             writer.println("\t-v \"${HOME}:/homeDir\" \\");
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");
-            writer.println("\t-e TMPDIR=/work \\");
+            writer.println("\t-e TMPDIR=/work/tmpDir \\");
             writer.println("\t-w /work \\");
             writer.println("\t" + DOCKER_CONTAINER_NAME + " \\");
             writer.println("\t" + StringUtils.join(nimbleArgs, " "));
@@ -483,7 +500,9 @@ public class NimbleHelper
             genomeId = arr.getInt(0);
             template = arr.getString(1);
             doGroup = arr.getBoolean(2);
-            scoreThreshold = arr.length() > 3 ? arr.getInt(3) : -1;
+
+            String rawScore = arr.length() > 3 ? StringUtils.trimToNull(arr.getString(3)) : null;
+            scoreThreshold = rawScore == null ? -1 : Integer.parseInt(rawScore);
 
             this.maxHitsToReport = maxHitsToReport;
         }

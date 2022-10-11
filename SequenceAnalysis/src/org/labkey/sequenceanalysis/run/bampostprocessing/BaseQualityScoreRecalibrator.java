@@ -1,13 +1,14 @@
 package org.labkey.sequenceanalysis.run.bampostprocessing;
 
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
+import org.json.old.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.BamProcessingOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
+import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -33,7 +34,7 @@ public class BaseQualityScoreRecalibrator extends AbstractGatk4Wrapper
         super(log);
     }
 
-    public File execute(File bam, File fasta, File output, @Nullable File knownVariants) throws PipelineJobException
+    public File execute(File bam, File fasta, File output, @Nullable File knownVariants, @Nullable List<String> extraArgs) throws PipelineJobException
     {
         boolean deleteKnownVariantFile = false;
         if (knownVariants == null)
@@ -70,6 +71,12 @@ public class BaseQualityScoreRecalibrator extends AbstractGatk4Wrapper
         argsRecal.add(knownVariants.getPath());
         argsRecal.add("-O");
         argsRecal.add(recalTable.getPath());
+
+        if (extraArgs != null)
+        {
+            argsRecal.addAll(extraArgs);
+        }
+
         execute(argsRecal);
 
         // If there is not recal possible, the output has 132 lines.
@@ -110,7 +117,7 @@ public class BaseQualityScoreRecalibrator extends AbstractGatk4Wrapper
 
     public static class BaseQualityScoreRecalibratorStep extends AbstractCommandPipelineStep<BaseQualityScoreRecalibrator> implements BamProcessingStep
     {
-        public BaseQualityScoreRecalibratorStep(PipelineStepProvider provider, PipelineContext ctx)
+        public BaseQualityScoreRecalibratorStep(PipelineStepProvider<?> provider, PipelineContext ctx)
         {
             super(provider, ctx, new BaseQualityScoreRecalibrator(ctx.getLogger()));
         }
@@ -120,7 +127,10 @@ public class BaseQualityScoreRecalibrator extends AbstractGatk4Wrapper
             public Provider()
             {
                 super("BaseQualityScoreRecalibrator", "Base Quality Score Recalibrator", "GATK", "The step runs GATK's BaseQualityScoreRecalibrator tool.", Arrays.asList(
-                        ToolParameterDescriptor.createExpDataParam("knownVariants", "Known Variants VCF", "This is typically the dbSNP variants file.  If working in a species where no suitable reference data exists, leave this blank and an empty VCF will be created.", "ldk-expdatafield", null, null)
+                        ToolParameterDescriptor.createExpDataParam("knownVariants", "Known Variants VCF", "This is typically the dbSNP variants file.  If working in a species where no suitable reference data exists, leave this blank and an empty VCF will be created.", "ldk-expdatafield", null, null),
+                        ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--maximum-cycle-value"), "maximumCycleValue", "Maximum Cycle Value", "Passed directly to BaseQualityScoreRecalibrator", "ldk-integerfield", new JSONObject(){{
+                            put("minValue", 0);
+                        }}, null)
                 ), new LinkedHashSet<>(Arrays.asList("ldk/field/ExpDataField.js")), "https://gatk.broadinstitute.org/hc/en-us/articles/360036363332-BaseRecalibrator");
             }
 
@@ -150,7 +160,7 @@ public class BaseQualityScoreRecalibrator extends AbstractGatk4Wrapper
                 }
             }
 
-            outputBam = getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputBam, knownVariants);
+            outputBam = getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputBam, knownVariants, getClientCommandArgs());
 
             output.setBAM(outputBam);
 

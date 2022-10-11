@@ -3,8 +3,10 @@ package org.labkey.sequenceanalysis.run.util;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.pipeline.SamtoolsIndexer;
 import org.labkey.api.sequenceanalysis.run.AbstractGatk4Wrapper;
 import org.labkey.sequenceanalysis.pipeline.ReblockGvcfHandler;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,25 +23,22 @@ public class HaplotypeCallerWrapper extends AbstractGatk4Wrapper
         super(log);
     }
 
-    public void execute(File inputBam, File referenceFasta, File outputFile, List<String> options) throws PipelineJobException
+    public void execute(File inputBamOrCram, File referenceFasta, File outputFile, List<String> options) throws PipelineJobException
     {
-        execute(inputBam, referenceFasta, outputFile, options, true);
+        execute(inputBamOrCram, referenceFasta, outputFile, options, true);
     }
 
-    public void execute(File inputBam, File referenceFasta, File outputFile, List<String> options, boolean reblockGVCF) throws PipelineJobException
+    public void execute(File inputBamOrCram, File referenceFasta, File outputFile, List<String> options, boolean reblockGVCF) throws PipelineJobException
     {
-        getLogger().info("Running GATK 4 HaplotypeCaller for: " + inputBam.getName());
+        getLogger().info("Running GATK 4 HaplotypeCaller for: " + inputBamOrCram.getName());
 
         ensureDictionary(referenceFasta);
 
-        File expectedIndex = new File(inputBam.getPath() + ".bai");
-        boolean doDeleteIndex = false;
+        File expectedIndex = SequenceUtil.getExpectedIndex(inputBamOrCram);
         if (!expectedIndex.exists())
         {
-            getLogger().debug("\tcreating temp index for BAM: " + inputBam.getName());
-            new BuildBamIndexWrapper(getLogger()).executeCommand(inputBam);
-
-            doDeleteIndex = true;
+            getLogger().debug("\tcreating index for BAM: " + inputBamOrCram.getName());
+            new SamtoolsIndexer(getLogger()).execute(inputBamOrCram);
         }
         else
         {
@@ -51,7 +50,7 @@ public class HaplotypeCallerWrapper extends AbstractGatk4Wrapper
         args.add("-R");
         args.add(referenceFasta.getPath());
         args.add("-I");
-        args.add(inputBam.getPath());
+        args.add(inputBamOrCram.getPath());
         args.add("-O");
         args.add(outputFile.getPath());
         if (options != null)
@@ -69,12 +68,6 @@ public class HaplotypeCallerWrapper extends AbstractGatk4Wrapper
         if (!outputFile.exists())
         {
             throw new PipelineJobException("Expected output not found: " + outputFile.getPath());
-        }
-
-        if (doDeleteIndex)
-        {
-            getLogger().debug("\tdeleting temp BAM index: " + expectedIndex.getPath());
-            expectedIndex.delete();
         }
 
         if (reblockGVCF)

@@ -110,7 +110,7 @@ public class Pbmm2Wrapper extends AbstractCommandWrapper
             output.appendOutputs(referenceGenome.getWorkingFastaFile(), indexDir);
 
             //recache if not already
-            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, "pbmm2", referenceGenome);
+            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, getProvider().getName(), referenceGenome);
 
             return output;
         }

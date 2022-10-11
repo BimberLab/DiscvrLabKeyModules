@@ -17,6 +17,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
+import org.labkey.api.sequenceanalysis.pipeline.SamtoolsIndexer;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
@@ -438,9 +439,15 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     }
 
     @Override
+    public File getExpectedIndex(File bamOrCram)
+    {
+        return SequenceUtil.getExpectedIndex(bamOrCram);
+    }
+
+    @Override
     public File ensureBamIndex(File inputBam, Logger log, boolean forceDeleteExisting) throws PipelineJobException
     {
-        File expectedIndex = new File(inputBam.getPath() + ".bai");
+        File expectedIndex = SequenceUtil.getExpectedIndex(inputBam);
         if (expectedIndex.exists() && (expectedIndex.lastModified() < inputBam.lastModified() || forceDeleteExisting))
         {
             log.info("deleting out of date index: " + expectedIndex.getPath());
@@ -449,10 +456,8 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
 
         if (!expectedIndex.exists())
         {
-            log.debug("\tcreating temp index for BAM: " + inputBam.getName());
-            BuildBamIndexWrapper buildBamIndexWrapper = new BuildBamIndexWrapper(log);
-            buildBamIndexWrapper.setStringency(ValidationStringency.SILENT);
-            buildBamIndexWrapper.executeCommand(inputBam);
+            log.debug("\tcreating index for BAM: " + inputBam.getName());
+            new SamtoolsIndexer(log).execute(inputBam);
 
             return expectedIndex;
         }
