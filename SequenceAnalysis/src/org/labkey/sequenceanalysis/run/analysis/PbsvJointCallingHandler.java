@@ -59,6 +59,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                 ToolParameterDescriptor.create("doCopyLocal", "Copy Inputs Locally", "If checked, the input file(s) will be copied to the job working directory.", "checkbox", new JSONObject(){{
                     put("checked", true);
                 }}, true),
+                ToolParameterDescriptor.create("doSplitJobs", "Split Jobs", "If checked, this will submit one job per input, instead of one merged job.  This can be useful for processing large batches", "checkbox", null, false),
                 ToolParameterDescriptor.create("scatterGather", "Scatter/Gather Options", "If selected, this job will be divided to run job per chromosome.  The final step will take the VCF from each intermediate step and combined to make a final VCF file.", "sequenceanalysis-variantscattergatherpanel", null, null)
         ));
     }
