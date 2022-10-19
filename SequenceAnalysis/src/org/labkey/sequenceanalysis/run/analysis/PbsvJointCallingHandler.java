@@ -147,38 +147,42 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                 outputs.add(runPbsvCall(ctx, filesToProcess, genome, outputBaseName, null));
             }
 
-            File vcfOutGz;
-            if (outputs.size() == 1)
-            {
-                File unzipVcfOut = outputs.get(0);
-                vcfOutGz = SequenceAnalysisService.get().bgzipFile(unzipVcfOut, ctx.getLogger());
-                if (unzipVcfOut.exists())
-                {
-                    throw new PipelineJobException("Unzipped VCF should not exist: " + vcfOutGz.getPath());
-                }
-            }
-            else
-            {
-                outputs.forEach(f -> ctx.getFileManager().addIntermediateFile(f));
-                vcfOutGz = SequenceUtil.combineVcfs(outputs, genome, new File(ctx.getOutputDir(), outputBaseName), ctx.getLogger(), true, null, false);
-            }
-
             try
             {
+                File vcfOutGz;
+                if (outputs.size() == 1)
+                {
+                    File unzipVcfOut = outputs.get(0);
+                    vcfOutGz = SequenceAnalysisService.get().bgzipFile(unzipVcfOut, ctx.getLogger());
+                    if (unzipVcfOut.exists())
+                    {
+                        throw new PipelineJobException("Unzipped VCF should not exist: " + vcfOutGz.getPath());
+                    }
+                }
+                else
+                {
+                    for (File f : outputs)
+                    {
+                        ctx.getFileManager().addIntermediateFile(f);
+                        ctx.getFileManager().addIntermediateFile(SequenceAnalysisService.get().ensureVcfIndex(f, ctx.getLogger(), true));
+                    }
+                    vcfOutGz = SequenceUtil.combineVcfs(outputs, genome, new File(ctx.getOutputDir(), outputBaseName + ".vcf.gz"), ctx.getLogger(), true, null, false);
+                }
+
                 SequenceAnalysisService.get().ensureVcfIndex(vcfOutGz, ctx.getLogger(), true);
+
+                SequenceOutputFile so = new SequenceOutputFile();
+                so.setName("pbsv call: " + outputBaseName);
+                so.setFile(vcfOutGz);
+                so.setCategory(OUTPUT_CATEGORY);
+                so.setLibrary_id(genome.getGenomeId());
+
+                ctx.addSequenceOutput(so);
             }
             catch (IOException e)
             {
                 throw new PipelineJobException(e);
             }
-
-            SequenceOutputFile so = new SequenceOutputFile();
-            so.setName("pbsv call: " + outputBaseName);
-            so.setFile(vcfOutGz);
-            so.setCategory(OUTPUT_CATEGORY);
-            so.setLibrary_id(genome.getGenomeId());
-
-            ctx.addSequenceOutput(so);
         }
 
         private File runPbsvCall(JobContext ctx, List<File> inputs, ReferenceGenome genome, String outputBaseName, @Nullable String contig) throws PipelineJobException
