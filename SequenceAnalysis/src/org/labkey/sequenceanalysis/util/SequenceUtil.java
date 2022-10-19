@@ -587,13 +587,19 @@ public class SequenceUtil
         List<Interval> intervals = new ArrayList<>();
         for (String i : intervalString.split(";"))
         {
-            String[] tokens = i.split(":|-");
-            if (tokens.length != 3)
+            String[] tokens = i.split(":");
+            if (tokens.length != 2)
             {
                 throw new PipelineJobException("Invalid interval: " + i);
             }
 
-            intervals.add(new Interval(tokens[0], Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2])));
+            String[] interval = tokens[1].split("-");
+            if (interval.length != 2)
+            {
+                throw new PipelineJobException("Invalid interval: " + i);
+            }
+
+            intervals.add(new Interval(tokens[0], Integer.parseInt(interval[0]), Integer.parseInt(interval[1])));
         }
 
 
