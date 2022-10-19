@@ -35,6 +35,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
@@ -849,6 +850,20 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         else
         {
             throw new PipelineJobException("Unknown file type: " + input.getPath());
+        }
+    }
+
+    @Override
+    public void performAdditionalMergeTasks(JobContext ctx, PipelineJob job, TaskFileManager manager, ReferenceGenome genome, List<File> orderedScatterOutputs) throws PipelineJobException
+    {
+        List<PipelineStepCtx<VariantProcessingStep>> providers = SequencePipelineService.get().getSteps(job, VariantProcessingStep.class);
+        for (PipelineStepCtx<VariantProcessingStep> stepCtx : providers)
+        {
+            VariantProcessingStep step = stepCtx.getProvider().create(ctx);
+            if (step instanceof VariantProcessingStep.SupportsScatterGather)
+            {
+                ((VariantProcessingStep.SupportsScatterGather)step).performAdditionalMergeTasks(ctx, job, manager, genome, orderedScatterOutputs);
+            }
         }
     }
 }
