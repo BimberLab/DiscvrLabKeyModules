@@ -187,6 +187,11 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
 
         private File runPbsvCall(JobContext ctx, List<File> inputs, ReferenceGenome genome, String outputBaseName, @Nullable String contig) throws PipelineJobException
         {
+            if (inputs.isEmpty())
+            {
+                throw new PipelineJobException("No inputs provided");
+            }
+
             File vcfOut = new File(ctx.getOutputDir(), outputBaseName + ".vcf");
             File doneFile = new File(ctx.getOutputDir(), outputBaseName + ".done");
             ctx.getFileManager().addIntermediateFile(doneFile);
@@ -227,7 +232,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
 
                 for (File s : inputs)
                 {
-                    String ret = StringUtils.trimToNull(runner.executeWithOutput(Arrays.asList("/bin/bash", "-c", tabix.getExe().getPath() + " -l '" + s.getPath() + "' | grep -e '" + contig + "' | wc -l")));
+                    String ret = StringUtils.trimToNull(runner.executeWithOutput(Arrays.asList("/bin/bash", "-c", tabix.getExe().getPath() + " -l '" + s.getPath() + "' | awk \" { $1 == '" + contig + "' } \" | wc -l")));
                     if ("0".equals(ret))
                     {
                         ctx.getLogger().info("Sample is missing contig: " + contig + ", skipping: " + s.getPath());
