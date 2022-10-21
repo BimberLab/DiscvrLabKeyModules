@@ -167,6 +167,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new FindMarkers.Provider());
         SequencePipelineService.get().registerPipelineStep(new MergeSeurat.Provider());
         SequencePipelineService.get().registerPipelineStep(new NormalizeAndScale.Provider());
+        SequencePipelineService.get().registerPipelineStep(new ClrNormalizeByGroup.Provider());
 
         SequencePipelineService.get().registerPipelineStep(new PrepareRawCounts.Provider());
 
