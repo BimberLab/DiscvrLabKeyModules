@@ -237,9 +237,13 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                     {
                         ctx.getLogger().info("Sample is missing contig: " + contig + ", skipping: " + s.getPath());
                     }
-                    else
+                    else if ("1".equals(ret))
                     {
                         samplesToUse.add(s);
+                    }
+                    else
+                    {
+                        throw new PipelineJobException("Unknown output: " + ret);
                     }
                 }
             }
