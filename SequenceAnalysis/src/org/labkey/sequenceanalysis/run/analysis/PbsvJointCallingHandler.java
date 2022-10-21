@@ -232,7 +232,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
 
                 for (File s : inputs)
                 {
-                    String ret = StringUtils.trimToNull(runner.executeWithOutput(Arrays.asList("/bin/bash", "-c", tabix.getExe().getPath() + " -l '" + s.getPath() + "' | awk \" { $1 == '" + contig + "' } \" | wc -l")));
+                    String ret = StringUtils.trimToNull(runner.executeWithOutput(Arrays.asList("/bin/bash", "-c", tabix.getExe().getPath() + " -l '" + s.getPath() + "' | awk ' { $1 == \"" + contig + "\" } ' | wc -l")));
                     if ("0".equals(ret))
                     {
                         ctx.getLogger().info("Sample is missing contig: " + contig + ", skipping: " + s.getPath());
