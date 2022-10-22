@@ -1,6 +1,16 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
+import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.Interval;
+import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.GenotypeBuilder;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
+import htsjdk.variant.variantcontext.writer.VariantContextWriter;
+import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
+import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
@@ -198,6 +208,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
             if (doneFile.exists())
             {
                 ctx.getLogger().info("Existing file, found, re-using");
+                verifyAndAddMissingSamples(ctx, vcfOut, inputs);
                 return vcfOut;
             }
 
@@ -272,6 +283,8 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                 throw new PipelineJobException("Unable to find file: " + vcfOut.getPath());
             }
 
+            verifyAndAddMissingSamples(ctx, vcfOut, inputs);
+
             try
             {
                 FileUtils.touch(doneFile);
@@ -335,5 +348,80 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
     public void doWork(List<SequenceOutputFile> inputFiles, JobContext ctx) throws PipelineJobException
     {
         ScatterGatherUtils.doCopyGvcfLocally(inputFiles, ctx);
+    }
+
+    public void verifyAndAddMissingSamples(JobContext ctx, File input, List<File> inputFiles) throws PipelineJobException
+    {
+        ctx.getLogger().debug("Verifying sample list in output VCF");
+
+        List<String> sampleNamesInOrder = new ArrayList<>();
+        inputFiles.forEach(f -> {
+            sampleNamesInOrder.add(SequenceAnalysisService.get().getUnzippedBaseName(f.getName()));
+        });
+
+        File output = new File(input.getPath() + ".tmp.vcf");
+        try (VCFFileReader reader = new VCFFileReader(input))
+        {
+            VCFHeader header = reader.getHeader();
+            List<String> existingSamples = header.getSampleNamesInOrder();
+            if (existingSamples.equals(sampleNamesInOrder))
+            {
+                ctx.getLogger().debug("Samples are identical, no need to update VCF");
+                return;
+            }
+
+            ctx.getLogger().debug("Will add missing samples. Total pre-existing: " + existingSamples.size() + " of " + sampleNamesInOrder.size());
+            try (VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(output).build();CloseableIterator<VariantContext> it = reader.iterator())
+            {
+                header = new VCFHeader(header.getMetaDataInInputOrder(), sampleNamesInOrder);
+                writer.writeHeader(header);
+
+                while (it.hasNext())
+                {
+                    VariantContext vc = it.next();
+                    VariantContextBuilder vcb = new VariantContextBuilder(vc);
+                    List<Genotype> genotypes = new ArrayList<>();
+                    for (String sample : sampleNamesInOrder)
+                    {
+                        if (vc.hasGenotype(sample))
+                        {
+                            genotypes.add(vc.getGenotype(sample));
+                        }
+                        else
+                        {
+                            genotypes.add(new GenotypeBuilder(sample, Arrays.asList(Allele.NO_CALL, Allele.NO_CALL)).make());
+                        }
+                    }
+
+                    vcb.genotypes(genotypes);
+
+                    writer.add(vcb.make());
+                }
+            }
+        }
+
+        try
+        {
+            // Replace input
+            input.delete();
+            FileUtils.moveFile(output, input);
+
+            // And index
+            File idx = new File(input.getPath() + ".idx");
+            if (idx.exists())
+            {
+                idx.delete();
+            }
+
+            File outputIdx = new File(output.getPath() + ".idx");
+            if (outputIdx.exists())
+            {
+                FileUtils.moveFile(outputIdx, idx);
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
     }
 }
