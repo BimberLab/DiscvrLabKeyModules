@@ -6,4 +6,4 @@ datasetId <- names(seuratObjects)[[1]]
 printName(datasetId)
 seuratObj <- readRDS(seuratObjects[[datasetId]])
 
-RIRA::TrainCellTypist(seuratObj, labelField = labelField, minCellsPerClass = minCellsPerClass, excludedClasses = excludedClasses, modelFile = modelFile, featureWhitelist = featureWhitelist, featureExclusionList = featureExclusionList, tempFileLocation = '/work')
+RIRA::TrainCellTypist(seuratObj, labelField = labelField, minCellsPerClass = minCellsPerClass, excludedClasses = excludedClasses, modelFile = modelFile, featureInclusionList = featureInclusionList, featureExclusionList = featureExclusionList, tempFileLocation = '/work')
