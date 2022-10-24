@@ -585,6 +585,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             _resumer.getFileManager().addIntermediateFiles(_resumer.getMarkdownsInOrder());
             _resumer.getFileManager().addIntermediateFiles(_resumer.getHtmlFilesInOrder());
 
+            String jobDescription = ctx.getParams().optString("jobDescription");
             for (SingleCellStep.SeuratObjectWrapper output : currentFiles)
             {
                 SequenceOutputFile so = new SequenceOutputFile();
@@ -592,6 +593,10 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 so.setCategory("Seurat Object");
                 so.setFile(output.getFile());
                 String description = getOutputDescription(ctx, output.getFile(), Arrays.asList("Steps: " + steps.stream().map(x -> x.getProvider().getName()).collect(Collectors.joining("; "))));
+                if (jobDescription != null)
+                {
+                    description = jobDescription + "\n" + description;
+                }
                 so.setDescription(description);
 
                 if (NumberUtils.isCreatable(output.getDatasetId()))
