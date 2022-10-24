@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
+import htsjdk.samtools.SAMSequenceDictionary;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.Interval;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
@@ -372,10 +373,11 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
             }
 
             ctx.getLogger().debug("Will add missing samples. Total pre-existing: " + existingSamples.size() + " of " + sampleNamesInOrder.size());
-            try (VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(output).build();CloseableIterator<VariantContext> it = reader.iterator())
+            SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath());
+            try (VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(output).setReferenceDictionary(dict).build();CloseableIterator<VariantContext> it = reader.iterator())
             {
                 header = new VCFHeader(header.getMetaDataInInputOrder(), sampleNamesInOrder);
-                header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath()));
+                header.setSequenceDictionary(dict);
                 writer.writeHeader(header);
 
                 while (it.hasNext())
