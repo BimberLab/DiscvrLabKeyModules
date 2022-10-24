@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.run.analysis;
 
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.Interval;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import htsjdk.variant.variantcontext.Allele;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.GenotypeBuilder;
@@ -208,7 +209,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
             if (doneFile.exists())
             {
                 ctx.getLogger().info("Existing file, found, re-using");
-                verifyAndAddMissingSamples(ctx, vcfOut, inputs);
+                verifyAndAddMissingSamples(ctx, vcfOut, inputs, genome);
                 return vcfOut;
             }
 
@@ -283,7 +284,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                 throw new PipelineJobException("Unable to find file: " + vcfOut.getPath());
             }
 
-            verifyAndAddMissingSamples(ctx, vcfOut, inputs);
+            verifyAndAddMissingSamples(ctx, vcfOut, inputs, genome);
 
             try
             {
@@ -350,7 +351,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
         ScatterGatherUtils.doCopyGvcfLocally(inputFiles, ctx);
     }
 
-    public void verifyAndAddMissingSamples(JobContext ctx, File input, List<File> inputFiles) throws PipelineJobException
+    public void verifyAndAddMissingSamples(JobContext ctx, File input, List<File> inputFiles, ReferenceGenome genome) throws PipelineJobException
     {
         ctx.getLogger().debug("Verifying sample list in output VCF");
 
@@ -374,6 +375,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
             try (VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(output).build();CloseableIterator<VariantContext> it = reader.iterator())
             {
                 header = new VCFHeader(header.getMetaDataInInputOrder(), sampleNamesInOrder);
+                header.setSequenceDictionary(SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath()));
                 writer.writeHeader(header);
 
                 while (it.hasNext())
