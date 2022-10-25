@@ -52,6 +52,7 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -855,7 +856,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             }
         }
 
-        public void complete(SequenceAnalysisJobSupport support, AnalysisModel model, List<SequenceOutputFile> outputFilesToCreate) throws PipelineJobException
+        @Override
+        public void complete(SequenceAnalysisJobSupport support, AnalysisModel model, Collection<SequenceOutputFile> outputFilesCreated) throws PipelineJobException
         {
             addMetrics(model);
 
