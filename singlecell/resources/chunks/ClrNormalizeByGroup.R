@@ -3,7 +3,7 @@ for (datasetId in names(seuratObjects)) {
     seuratObj <- readRDS(seuratObjects[[datasetId]])
     gc()
 
-    seuratObj <- CellMembrane::ClrNormalizeByGroup(seuratObj, groupingVar = groupingVar, assayName = assayName, targetAssayName = targetAssayName, margin = margin, minCellsPerGroup = minCellsPerGroup, calculatePerCellUCell = calculatePerCellUCell)
+    seuratObj <- CellMembrane::ClrNormalizeByGroup(seuratObj, groupingVar = groupingVar, assayName = assayName, targetAssayName = targetAssayName, margin = margin, minCellsPerGroup = minCellsPerGroup, calculatePerFeatureUCell = calculatePerFeatureUCell)
 
     saveData(seuratObj, datasetId)
 
