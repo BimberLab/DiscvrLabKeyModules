@@ -178,7 +178,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                         ctx.getFileManager().addIntermediateFile(f);
                         ctx.getFileManager().addIntermediateFile(SequenceAnalysisService.get().ensureVcfIndex(f, ctx.getLogger(), false));
                     }
-                    vcfOutGz = SequenceUtil.combineVcfs(outputs, genome, new File(ctx.getOutputDir(), outputBaseName + ".vcf.gz"), ctx.getLogger(), true, null, false);
+                    vcfOutGz = SequenceUtil.combineVcfs(outputs, genome, new File(ctx.getOutputDir(), outputBaseName + ".vcf.gz"), ctx.getLogger(), true, null, false, true);
 
                     // NOTE: the resulting file can be out of order due to translocations
                     SequenceUtil.sortROD(vcfOutGz, ctx.getLogger(), 2);
