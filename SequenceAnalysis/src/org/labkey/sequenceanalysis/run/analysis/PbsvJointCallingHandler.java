@@ -176,7 +176,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                     for (File f : outputs)
                     {
                         ctx.getFileManager().addIntermediateFile(f);
-                        ctx.getFileManager().addIntermediateFile(SequenceAnalysisService.get().ensureVcfIndex(f, ctx.getLogger(), true));
+                        ctx.getFileManager().addIntermediateFile(SequenceAnalysisService.get().ensureVcfIndex(f, ctx.getLogger(), false));
                     }
                     vcfOutGz = SequenceUtil.combineVcfs(outputs, genome, new File(ctx.getOutputDir(), outputBaseName + ".vcf.gz"), ctx.getLogger(), true, null, false);
                 }
@@ -360,6 +360,15 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
         inputFiles.forEach(f -> {
             sampleNamesInOrder.add(SequenceAnalysisService.get().getUnzippedBaseName(f.getName()));
         });
+
+        try
+        {
+            SequenceAnalysisService.get().ensureVcfIndex(input, ctx.getLogger(), false);
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
 
         File output = new File(input.getPath() + ".tmp.vcf");
         try (VCFFileReader reader = new VCFFileReader(input))
