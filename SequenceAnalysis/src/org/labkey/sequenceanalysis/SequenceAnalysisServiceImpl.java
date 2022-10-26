@@ -258,16 +258,10 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         try
         {
             FileType gz = new FileType(".gz");
-            File expected = new File(vcf.getPath() + FileExtensions.TRIBBLE_INDEX);
-            File tbi = new File(vcf.getPath() + ".tbi");
-
-            if (!forceRecreate && expected.exists())
+            File expectedIdx = gz.isType(vcf) ? new File(vcf.getPath() + ".tbi") : new File(vcf.getPath() + FileExtensions.TRIBBLE_INDEX);
+            if (!forceRecreate && expectedIdx.exists())
             {
-                return expected;
-            }
-            else if  (!forceRecreate && tbi.exists())
-            {
-                return tbi;
+                return expectedIdx;
             }
             else
             {
@@ -277,15 +271,23 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
                 {
                     TabixRunner r = new TabixRunner(log);
                     r.execute(vcf);
+                    if (!expectedIdx.exists())
+                    {
+                        throw new PipelineJobException("Expected index was not created: " + expectedIdx.getPath());
+                    }
 
-                    return tbi;
+                    return expectedIdx;
                 }
                 else
                 {
                     Index idx = IndexFactory.createDynamicIndex(vcf, new VCFCodec());
                     idx.writeBasedOnFeatureFile(vcf);
+                    if (!expectedIdx.exists())
+                    {
+                        throw new PipelineJobException("Expected index was not created: " + expectedIdx.getPath());
+                    }
 
-                    return expected;
+                    return expectedIdx;
                 }
             }
         }
