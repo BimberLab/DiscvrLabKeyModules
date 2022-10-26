@@ -179,6 +179,9 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                         ctx.getFileManager().addIntermediateFile(SequenceAnalysisService.get().ensureVcfIndex(f, ctx.getLogger(), false));
                     }
                     vcfOutGz = SequenceUtil.combineVcfs(outputs, genome, new File(ctx.getOutputDir(), outputBaseName + ".vcf.gz"), ctx.getLogger(), true, null, false);
+
+                    // NOTE: the resulting file can be out of order due to translocations
+                    SequenceUtil.sortROD(vcfOutGz, ctx.getLogger(), 2);
                 }
 
                 SequenceAnalysisService.get().ensureVcfIndex(vcfOutGz, ctx.getLogger(), true);
@@ -436,5 +439,11 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
         {
             throw new PipelineJobException(e);
         }
+    }
+
+    @Override
+    public boolean doSortAfterMerge()
+    {
+        return true;
     }
 }

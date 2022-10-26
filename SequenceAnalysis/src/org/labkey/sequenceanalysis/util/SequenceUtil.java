@@ -436,12 +436,12 @@ public class SequenceUtil
         sorted.delete();
     }
 
-    public static File combineVcfs(List<File> files, ReferenceGenome genome, File outputGzip, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel) throws PipelineJobException
+    public static File combineVcfs(List<File> files, ReferenceGenome genome, File outputGzip, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel, boolean sortAfterMerge) throws PipelineJobException
     {
-        return combineVcfs(files, genome, outputGzip, log, multiThreaded, compressionLevel, true);
+        return combineVcfs(files, genome, outputGzip, log, multiThreaded, compressionLevel, true, sortAfterMerge);
     }
 
-    public static File combineVcfs(List<File> files, ReferenceGenome genome, File outputGzip, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel, boolean showTotals) throws PipelineJobException
+    public static File combineVcfs(List<File> files, ReferenceGenome genome, File outputGzip, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel, boolean showTotals, boolean sortAfterMerge) throws PipelineJobException
     {
         log.info("combining VCFs: ");
 
@@ -505,6 +505,12 @@ public class SequenceUtil
 
             SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
             wrapper.execute(Arrays.asList("/bin/bash", bashTmp.getPath()));
+
+            if (sortAfterMerge)
+            {
+                log.debug("sorting VCF");
+                sortROD(outputGzip, log, 2);
+            }
 
             SequenceAnalysisService.get().ensureVcfIndex(outputGzip, log);
 

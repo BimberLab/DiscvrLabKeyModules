@@ -67,6 +67,11 @@ public interface VariantProcessingStep extends PipelineStep
         {
 
         }
+
+        default boolean doSortAfterMerge()
+        {
+            return false;
+        }
     }
 
     public static interface MayRequirePrepareTask

@@ -1,7 +1,6 @@
 package org.labkey.sequenceanalysis;
 
 import htsjdk.samtools.util.FileExtensions;
-import htsjdk.tribble.Tribble;
 import htsjdk.tribble.index.Index;
 import htsjdk.tribble.index.IndexFactory;
 import htsjdk.variant.vcf.VCFCodec;
@@ -9,7 +8,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -46,7 +44,6 @@ import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
-import org.labkey.sequenceanalysis.run.util.BgzipRunner;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 import org.labkey.sequenceanalysis.run.util.GxfSorter;
 import org.labkey.sequenceanalysis.run.util.IndexFeatureFileWrapper;
@@ -60,7 +57,6 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -69,7 +65,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 /**
  * User: bimber
@@ -476,7 +471,13 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     @Override
     public File combineVcfs(List<File> files, File outputGz, ReferenceGenome genome, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel) throws PipelineJobException
     {
-        return SequenceUtil.combineVcfs(files, genome, outputGz, log, multiThreaded, compressionLevel);
+        return combineVcfs(files, outputGz, genome, log, multiThreaded, compressionLevel, false);
+    }
+
+    @Override
+    public File combineVcfs(List<File> files, File outputGz, ReferenceGenome genome, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel, boolean sortAfterMerge) throws PipelineJobException
+    {
+        return SequenceUtil.combineVcfs(files, genome, outputGz, log, multiThreaded, compressionLevel, sortAfterMerge);
     }
 
     @Override
