@@ -137,12 +137,11 @@ Ext4.define('SingleCell.panel.cDNAImportPanel', {
             fieldLabel: 'Use 10x V2/HT (Dual Index)',
             itemId: 'useDualIndex',
             checked: true,
-            // listeners: {
-            //     change: function(field, val){
-            //         field.up('panel').down('#barcodeSeries').setValue(field.getValue() ? 'SI-TT' : 'SI-GA');
-            //         field.up('panel').down('#citeseqBarcodeSeries').setValue(field.getValue() ? 'SI-TN' : 'SI-NA');
-            //     }
-            // }
+        },{
+            xtype: 'checkbox',
+            fieldLabel: 'Use MS (Dual Index)',
+            itemId: 'useDualMsIndex',
+            checked: true
         },{
             xtype: 'ldk-simplelabkeycombo',
             fieldLabel: 'Hashing Type',

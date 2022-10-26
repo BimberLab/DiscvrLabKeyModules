@@ -167,6 +167,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new FindMarkers.Provider());
         SequencePipelineService.get().registerPipelineStep(new MergeSeurat.Provider());
         SequencePipelineService.get().registerPipelineStep(new NormalizeAndScale.Provider());
+        SequencePipelineService.get().registerPipelineStep(new ClrNormalizeByGroup.Provider());
 
         SequencePipelineService.get().registerPipelineStep(new PrepareRawCounts.Provider());
 
@@ -208,6 +209,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new TcrFilter.Provider());
         SequencePipelineService.get().registerPipelineStep(new PlotAssayFeatures.Provider());
         SequencePipelineService.get().registerPipelineStep(new IntegrateData.Provider());
+        SequencePipelineService.get().registerPipelineStep(new CustomUCell.Provider());
     }
 
     @Override

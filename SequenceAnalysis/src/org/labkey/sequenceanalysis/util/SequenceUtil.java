@@ -436,12 +436,12 @@ public class SequenceUtil
         sorted.delete();
     }
 
-    public static File combineVcfs(List<File> files, ReferenceGenome genome, File outputGzip, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel) throws PipelineJobException
+    public static File combineVcfs(List<File> files, ReferenceGenome genome, File outputGzip, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel, boolean sortAfterMerge) throws PipelineJobException
     {
-        return combineVcfs(files, genome, outputGzip, log, multiThreaded, compressionLevel, true);
+        return combineVcfs(files, genome, outputGzip, log, multiThreaded, compressionLevel, true, sortAfterMerge);
     }
 
-    public static File combineVcfs(List<File> files, ReferenceGenome genome, File outputGzip, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel, boolean showTotals) throws PipelineJobException
+    public static File combineVcfs(List<File> files, ReferenceGenome genome, File outputGzip, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel, boolean showTotals, boolean sortAfterMerge) throws PipelineJobException
     {
         log.info("combining VCFs: ");
 
@@ -505,6 +505,12 @@ public class SequenceUtil
 
             SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
             wrapper.execute(Arrays.asList("/bin/bash", bashTmp.getPath()));
+
+            if (sortAfterMerge)
+            {
+                log.debug("sorting VCF");
+                sortROD(outputGzip, log, 2);
+            }
 
             SequenceAnalysisService.get().ensureVcfIndex(outputGzip, log);
 
@@ -587,13 +593,19 @@ public class SequenceUtil
         List<Interval> intervals = new ArrayList<>();
         for (String i : intervalString.split(";"))
         {
-            String[] tokens = i.split(":|-");
-            if (tokens.length != 3)
+            String[] tokens = i.split(":");
+            if (tokens.length != 2)
             {
                 throw new PipelineJobException("Invalid interval: " + i);
             }
 
-            intervals.add(new Interval(tokens[0], Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2])));
+            String[] interval = tokens[1].split("-");
+            if (interval.length != 2)
+            {
+                throw new PipelineJobException("Invalid interval: " + i);
+            }
+
+            intervals.add(new Interval(tokens[0], Integer.parseInt(interval[0]), Integer.parseInt(interval[1])));
         }
 
 

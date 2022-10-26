@@ -2,7 +2,7 @@ for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readRDS(seuratObjects[[datasetId]])
 
-    seuratObj <- RIRA::RunCellTypist(seuratObj, modelName = modelFile)
+    seuratObj <- RIRA::RunCellTypist(seuratObj, modelName = modelFile, columnPrefix = columnPrefix)
 
     saveData(seuratObj, datasetId)
 }

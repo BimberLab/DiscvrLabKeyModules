@@ -6,7 +6,7 @@ for (datasetId in names(seuratObjects)) {
 
 	print(paste0('Initial cells for dataset ', datasetId, ': ', ncol(seuratObj)))
 
-	if (!is.null(saturation.RNA.min)) {
+	if (!is.null(saturation.RNA.min) && !is.null(seuratObj)) {
 		if (!'Saturation.RNA' %in% names(seuratObj@meta.data)) {
 			stop('Missing field: Saturation.RNA')
 		}
@@ -27,7 +27,7 @@ for (datasetId in names(seuratObjects)) {
 		}
 	}
 
-	if (!is.null(saturation.RNA.max)) {
+	if (!is.null(saturation.RNA.max) && !is.null(seuratObj)) {
 		if (!'Saturation.RNA' %in% names(seuratObj@meta.data)) {
 			stop('Missing field: Saturation.RNA')
 		}
@@ -48,7 +48,7 @@ for (datasetId in names(seuratObjects)) {
 		}
 	}
 
-	if (!is.null(saturation.ADT.min)) {
+	if (!is.null(saturation.ADT.min) && !is.null(seuratObj)) {
 		if (!'Saturation.ADT' %in% names(seuratObj@meta.data)) {
 			stop('Missing field: Saturation.ADT')
 		}
@@ -69,7 +69,7 @@ for (datasetId in names(seuratObjects)) {
 		}
 	}
 
-	if (!is.null(saturation.ADT.max)) {
+	if (!is.null(saturation.ADT.max) && !is.null(seuratObj)) {
 		if (!'Saturation.ADT' %in% names(seuratObj@meta.data)) {
 			stop('Missing field: Saturation.ADT')
 		}
@@ -90,7 +90,7 @@ for (datasetId in names(seuratObjects)) {
 		}
 	}
 
-	if (dropHashingFail) {
+	if (dropHashingFail && !is.null(seuratObj)) {
 		if (!'HTO.Classification' %in% names(seuratObj@meta.data)) {
 			stop('Missing field: HTO.Classification')
 		}
@@ -111,7 +111,7 @@ for (datasetId in names(seuratObjects)) {
 		})
 	}
 
-	if (dropDoubletFinder) {
+	if (dropDoubletFinder && !is.null(seuratObj)) {
 		if (!'scDblFinder.class' %in% names(seuratObj@meta.data)) {
 			stop('Missing field: scDblFinder.class')
 		}
@@ -132,7 +132,7 @@ for (datasetId in names(seuratObjects)) {
 		})
 	}
 
-	if (dropHashingNegatives) {
+	if (dropHashingNegatives && !is.null(seuratObj)) {
 		if (!'HTO.Classification' %in% names(seuratObj@meta.data)) {
 			stop('Missing field: HTO.Classification')
 		}
@@ -153,7 +153,7 @@ for (datasetId in names(seuratObjects)) {
 		})
 	}
 
-	if (dropNullScGateConsensus) {
+	if (dropNullScGateConsensus && !is.null(seuratObj)) {
 		if (!'scGateConsensus' %in% names(seuratObj@meta.data)) {
 			stop('Missing field: scGateConsensus')
 		}
@@ -165,6 +165,13 @@ for (datasetId in names(seuratObjects)) {
 			print(paste0('After dropping cells without scGateConsensus: ', length(colnames(x = seuratObj))))
 		} else {
 			print('All cells have a values for scGateConsensus, nothing to do')
+		}
+	}
+
+	if (!is.null(dropThreshold) && !is.null(seuratObj)) {
+		if (ncol(seuratObj) < dropThreshold) {
+			print(paste0('Dropping object since remaining cells were below threshold: ', ncol(seuratObj)))
+			seuratObj <- NULL
 		}
 	}
 

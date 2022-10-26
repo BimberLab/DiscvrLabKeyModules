@@ -73,7 +73,7 @@ public class SplitVcfBySamplesStep extends AbstractCommandPipelineStep<SplitVcfB
             if (!f.getName().equals(inputVCF.getName()) && f.getName().startsWith(basename) && SequenceUtil.FILETYPE.vcf.getFileType().isType(f))
             {
                 output.addOutput(f, "Subset VCF");
-                output.addSequenceOutput(f, "Subset VCF: " + f.getName(), "VCF", null, null, genome.getGenomeId(), null);
+                output.addSequenceOutput(f, "Subset VCF: " + f.getName(), "VCF File", null, null, genome.getGenomeId(), null);
             }
         }
 

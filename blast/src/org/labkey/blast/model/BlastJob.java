@@ -95,9 +95,9 @@ public class BlastJob implements Serializable
         _title = title;
     }
 
-    public Map<String, Object> getParams()
+    public String getParams()
     {
-        return Collections.unmodifiableMap(_params);
+        return new JSONObject(_params).toString();
     }
 
     public void setParams(String params)
