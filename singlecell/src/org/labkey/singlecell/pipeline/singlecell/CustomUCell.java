@@ -1,15 +1,12 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
-import org.json.JSONObject;
+import org.json.old.JSONObject;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 public class CustomUCell extends AbstractRiraStep
 {
