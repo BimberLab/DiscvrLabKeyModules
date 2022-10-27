@@ -179,7 +179,7 @@ public class NimbleHelper
             output.addIntermediateFile(genomeFasta);
             output.addIntermediateFile(refJson);
 
-            String description = genome.getScoreThreshold() > 0 ? "score_threshold: " + genome.getScoreThreshold() : null;
+            String description = genome.getScorePercent() > 0 ? "score_percent: " + genome.getScorePercent() : null;
             output.addSequenceOutput(results, basename + ": nimble align", "Nimble Alignment", rs.getRowId(), null, genome.getGenomeId(), description);
         }
     }
@@ -231,6 +231,7 @@ public class NimbleHelper
                 config.put("num_mismatches", 10);
                 config.put("intersect_level", 0);
                 config.put("score_threshold", 45);
+                config.put("score_percent", 0.75);
                 config.put("score_filter", 25);
                 //discard_multiple_matches: false
                 //discard_multi_hits: ?
@@ -240,7 +241,8 @@ public class NimbleHelper
             {
                 config.put("num_mismatches", 0);
                 config.put("intersect_level", 0);
-                config.put("score_threshold", 50);
+                config.put("score_percent", 0.99);
+                config.put("score_threshold", 45);
                 config.put("score_filter", 25);
             }
             else
@@ -255,10 +257,10 @@ public class NimbleHelper
 
             config.put("max_hits_to_report", genome.maxHitsToReport);
 
-            if (genome.getScoreThreshold() > 0)
+            if (genome.getScorePercent() > 0)
             {
-                getPipelineCtx().getLogger().debug("Using custom score_threshold: " + genome.getScoreThreshold());
-                config.put("score_threshold", genome.getScoreThreshold());
+                getPipelineCtx().getLogger().debug("Using custom score_percent: " + genome.getScorePercent());
+                config.put("score_percent", genome.getScorePercent());
             }
 
             getPipelineCtx().getLogger().info("Final config:");
@@ -487,7 +489,7 @@ public class NimbleHelper
         private final String template;
         private final boolean doGroup;
         private final int maxHitsToReport;
-        private final int scoreThreshold;
+        private final double scorePercent;
 
         public NimbleGenome(String genomeStr, int maxHitsToReport) throws PipelineJobException
         {
@@ -502,7 +504,7 @@ public class NimbleHelper
             doGroup = arr.getBoolean(2);
 
             String rawScore = arr.length() > 3 ? StringUtils.trimToNull(arr.getString(3)) : null;
-            scoreThreshold = rawScore == null ? -1 : Integer.parseInt(rawScore);
+            scorePercent = rawScore == null ? -1.0 : Double.parseDouble(rawScore);
 
             this.maxHitsToReport = maxHitsToReport;
         }
@@ -522,9 +524,9 @@ public class NimbleHelper
             return doGroup;
         }
 
-        public int getScoreThreshold()
+        public double getScorePercent()
         {
-            return scoreThreshold;
+            return scorePercent;
         }
     }
 
