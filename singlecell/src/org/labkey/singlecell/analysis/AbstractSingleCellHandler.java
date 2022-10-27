@@ -200,7 +200,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 {
                     if (pd instanceof ToolParameterDescriptor.CachableParam)
                     {
-                        ctx.getLogger().debug("caching params for : " + pd.getName());
+                        ctx.getLogger().debug("caching params for : " + pd.getName()+ ", with step idx: " + stepCtx.getStepIdx());
                         Object val = pd.extractValue(ctx.getJob(), stepCtx.getProvider(), stepCtx.getStepIdx(), Object.class);
                         ((ToolParameterDescriptor.CachableParam)pd).doCache(ctx.getJob(), val, ctx.getSequenceSupport());
                     }
@@ -432,6 +432,24 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                         else
                         {
                             ctx.getLogger().debug("cellBarcodes TSV not found, expected: " + cellBarcodes.getPath());
+                        }
+
+                        File metadataFile = CellHashingServiceImpl.get().getMetaTableFromSeurat(so.getFile(), false);
+                        if (metadataFile.exists())
+                        {
+                            ctx.getLogger().debug("Also making local copy of metadata TSV: " + metadataFile.getPath());
+                            File metadataFileLocal = new File(ctx.getOutputDir(), metadataFile.getName());
+                            if (metadataFileLocal.exists())
+                            {
+                                metadataFileLocal.delete();
+                            }
+
+                            FileUtils.copyFile(metadataFile, metadataFileLocal);
+                            _resumer.getFileManager().addIntermediateFile(metadataFileLocal);
+                        }
+                        else
+                        {
+                            ctx.getLogger().warn("metadataFile TSV not found, expected: " + metadataFile.getPath());
                         }
                         
                         currentFiles.add(new SingleCellStep.SeuratObjectWrapper(datasetId, datasetId, local, so));
