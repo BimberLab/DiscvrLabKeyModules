@@ -1,10 +1,35 @@
+GenerateAveragedData <- function(seuratObj, groupFields, addMetadata) {
+    if (addMetadata && !'cDNA_ID' %in% names(seuratObj@meta.data)) {
+        stop('A field names cDNA_ID must exist when addMetadata=TRUE')
+    }
+
+    if (addMetadata && !'cDNA_ID' %in% groupFields) {
+        stop('When addMetadata=TRUE, cDNA_ID must be part of groupFields')
+    }
+
+    meta <- unique(seuratObj@meta.data[,groupFields, drop = F])
+    rownames(meta) <- apply(meta, 1, function(y){
+        return(paste0(y, collapse = '_'))
+    })
+
+    Idents(seuratObj) <- rownames(meta)
+
+    a <- Seurat::AverageExpression(seuratObj, return.seurat = T, verbose = F)
+    a <- Seurat::AddMetaData(a, meta)
+
+    if (addMetadata) {
+        a <- Rdiscvr::QueryAndApplyMetadataUsingCDNA(a)
+    }
+
+    return(a)
+}
+
 for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readRDS(seuratObjects[[datasetId]])
 
-    df <- CellMembrane::AvgExpression(seuratObj, groupField = groupField)
-    write.table(df, file = paste0(outputPrefix, '.', makeLegalFileName(datasetId), '.avg.', groupField, '.txt'), sep = '\t', row.names = FALSE, quote = FALSE)
-    rm(df)
+    seuratObj <- GenerateAveragedData(seuratObj, groupFields = groupFields, addMetadata = addMetadata)
+    saveData(seuratObj, datasetId)
 
     # Cleanup
     rm(seuratObj)
