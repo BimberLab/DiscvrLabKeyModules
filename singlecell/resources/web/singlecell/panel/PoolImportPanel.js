@@ -181,7 +181,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                     }
                     return 'D' + val;
                 }
-                else if (type === 'MultiSeq' && !panel.down('#useDualIndex').getValue()) {
+                else if (type === 'MultiSeq' && !panel.down('#useDualMsIndex').getValue()) {
                     val = parseInt(val);
 
                     return 'MultiSeq-Idx-RP' + val;
@@ -201,7 +201,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                     val = val.replace(/^MS[- ]Idx/ig, 'MultiSeq-Idx');
                     val = val.replace(/^MultiSeq[- ]Idx[- ]RP/ig, 'MultiSeq-Idx-RP');
 
-                    if (val.length <= 3 && panel.down('#useDualIndex').getValue()) {
+                    if (val.length <= 3 && panel.down('#useDualMsIndex').getValue()) {
                         val = 'MS-TN-' + val;
                     }
                     else {
@@ -525,6 +525,11 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             xtype: 'checkbox',
             fieldLabel: 'Use 10x V2/HT (Dual Index)',
             itemId: 'useDualIndex',
+            checked: true
+        },{
+            xtype: 'checkbox',
+            fieldLabel: 'Use MS (Dual Index)',
+            itemId: 'useDualMsIndex',
             checked: true
         },{
             xtype: 'ldk-simplelabkeycombo',

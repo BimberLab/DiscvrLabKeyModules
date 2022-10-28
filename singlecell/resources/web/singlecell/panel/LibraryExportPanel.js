@@ -568,7 +568,10 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
             }, this);
         }
         else {
-            plateIds = btn.up('singlecell-libraryexportpanel').down('#sourcePlates').getValue();
+            var target = btn.up('singlecell-libraryexportpanel').down('#sourcePlates');
+            if (target) {
+                plateIds = target.getValue();
+            }
         }
 
         if (!plateIds || !plateIds.length){

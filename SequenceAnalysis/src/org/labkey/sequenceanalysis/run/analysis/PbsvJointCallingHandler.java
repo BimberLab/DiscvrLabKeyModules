@@ -1,6 +1,18 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.Interval;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
+import htsjdk.variant.variantcontext.Allele;
+import htsjdk.variant.variantcontext.Genotype;
+import htsjdk.variant.variantcontext.GenotypeBuilder;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.variantcontext.VariantContextBuilder;
+import htsjdk.variant.variantcontext.writer.VariantContextWriter;
+import htsjdk.variant.variantcontext.writer.VariantContextWriterBuilder;
+import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeader;
 import org.apache.commons.io.FileUtils;
 import org.json.old.JSONObject;
 import org.apache.commons.lang3.StringUtils;
@@ -59,6 +71,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                 ToolParameterDescriptor.create("doCopyLocal", "Copy Inputs Locally", "If checked, the input file(s) will be copied to the job working directory.", "checkbox", new JSONObject(){{
                     put("checked", true);
                 }}, true),
+                ToolParameterDescriptor.create("doSplitJobs", "Split Jobs", "If checked, this will submit one job per input, instead of one merged job.  This can be useful for processing large batches", "checkbox", null, false),
                 ToolParameterDescriptor.create("scatterGather", "Scatter/Gather Options", "If selected, this job will be divided to run job per chromosome.  The final step will take the VCF from each intermediate step and combined to make a final VCF file.", "sequenceanalysis-variantscattergatherpanel", null, null)
         ));
     }
@@ -146,48 +159,61 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                 outputs.add(runPbsvCall(ctx, filesToProcess, genome, outputBaseName, null));
             }
 
-            File vcfOutGz;
-            if (outputs.size() == 1)
-            {
-                File unzipVcfOut = outputs.get(0);
-                vcfOutGz = SequenceAnalysisService.get().bgzipFile(unzipVcfOut, ctx.getLogger());
-                if (unzipVcfOut.exists())
-                {
-                    throw new PipelineJobException("Unzipped VCF should not exist: " + vcfOutGz.getPath());
-                }
-            }
-            else
-            {
-                outputs.forEach(f -> ctx.getFileManager().addIntermediateFile(f));
-                vcfOutGz = SequenceUtil.combineVcfs(outputs, genome, new File(ctx.getOutputDir(), outputBaseName), ctx.getLogger(), true, null, false);
-            }
-
             try
             {
+                File vcfOutGz;
+                if (outputs.size() == 1)
+                {
+                    File unzipVcfOut = outputs.get(0);
+                    vcfOutGz = SequenceAnalysisService.get().bgzipFile(unzipVcfOut, ctx.getLogger());
+                    if (unzipVcfOut.exists())
+                    {
+                        throw new PipelineJobException("Unzipped VCF should not exist: " + vcfOutGz.getPath());
+                    }
+                }
+                else
+                {
+                    for (File f : outputs)
+                    {
+                        ctx.getFileManager().addIntermediateFile(f);
+                        ctx.getFileManager().addIntermediateFile(SequenceAnalysisService.get().ensureVcfIndex(f, ctx.getLogger(), false));
+                    }
+                    vcfOutGz = SequenceUtil.combineVcfs(outputs, genome, new File(ctx.getOutputDir(), outputBaseName + ".vcf.gz"), ctx.getLogger(), true, null, false, true);
+
+                    // NOTE: the resulting file can be out of order due to translocations
+                    SequenceUtil.sortROD(vcfOutGz, ctx.getLogger(), 2);
+                }
+
                 SequenceAnalysisService.get().ensureVcfIndex(vcfOutGz, ctx.getLogger(), true);
+
+                SequenceOutputFile so = new SequenceOutputFile();
+                so.setName("pbsv call: " + outputBaseName);
+                so.setFile(vcfOutGz);
+                so.setCategory(OUTPUT_CATEGORY);
+                so.setLibrary_id(genome.getGenomeId());
+
+                ctx.addSequenceOutput(so);
             }
             catch (IOException e)
             {
                 throw new PipelineJobException(e);
             }
-
-            SequenceOutputFile so = new SequenceOutputFile();
-            so.setName("pbsv call: " + outputBaseName);
-            so.setFile(vcfOutGz);
-            so.setCategory(OUTPUT_CATEGORY);
-            so.setLibrary_id(genome.getGenomeId());
-
-            ctx.addSequenceOutput(so);
         }
 
         private File runPbsvCall(JobContext ctx, List<File> inputs, ReferenceGenome genome, String outputBaseName, @Nullable String contig) throws PipelineJobException
         {
+            if (inputs.isEmpty())
+            {
+                throw new PipelineJobException("No inputs provided");
+            }
+
             File vcfOut = new File(ctx.getOutputDir(), outputBaseName + ".vcf");
             File doneFile = new File(ctx.getOutputDir(), outputBaseName + ".done");
             ctx.getFileManager().addIntermediateFile(doneFile);
             if (doneFile.exists())
             {
                 ctx.getLogger().info("Existing file, found, re-using");
+                verifyAndAddMissingSamples(ctx, vcfOut, inputs, genome);
                 return vcfOut;
             }
 
@@ -222,14 +248,18 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
 
                 for (File s : inputs)
                 {
-                    String ret = StringUtils.trimToNull(runner.executeWithOutput(Arrays.asList("/bin/bash", "-c", tabix.getExe().getPath() + " -l '" + s.getPath() + "' | grep -e '" + contig + "' | wc -l")));
+                    String ret = StringUtils.trimToNull(runner.executeWithOutput(Arrays.asList("/bin/bash", "-c", tabix.getExe().getPath() + " -l '" + s.getPath() + "' | awk ' { $1 == \"" + contig + "\" } ' | wc -l")));
                     if ("0".equals(ret))
                     {
                         ctx.getLogger().info("Sample is missing contig: " + contig + ", skipping: " + s.getPath());
                     }
-                    else
+                    else if ("1".equals(ret))
                     {
                         samplesToUse.add(s);
+                    }
+                    else
+                    {
+                        throw new PipelineJobException("Unknown output: " + ret);
                     }
                 }
             }
@@ -257,6 +287,8 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
             {
                 throw new PipelineJobException("Unable to find file: " + vcfOut.getPath());
             }
+
+            verifyAndAddMissingSamples(ctx, vcfOut, inputs, genome);
 
             try
             {
@@ -321,5 +353,97 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
     public void doWork(List<SequenceOutputFile> inputFiles, JobContext ctx) throws PipelineJobException
     {
         ScatterGatherUtils.doCopyGvcfLocally(inputFiles, ctx);
+    }
+
+    public void verifyAndAddMissingSamples(JobContext ctx, File input, List<File> inputFiles, ReferenceGenome genome) throws PipelineJobException
+    {
+        ctx.getLogger().debug("Verifying sample list in output VCF");
+
+        List<String> sampleNamesInOrder = new ArrayList<>();
+        inputFiles.forEach(f -> {
+            sampleNamesInOrder.add(SequenceAnalysisService.get().getUnzippedBaseName(f.getName()));
+        });
+
+        try
+        {
+            SequenceAnalysisService.get().ensureVcfIndex(input, ctx.getLogger(), false);
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        File output = new File(input.getPath() + ".tmp.vcf");
+        try (VCFFileReader reader = new VCFFileReader(input))
+        {
+            VCFHeader header = reader.getHeader();
+            List<String> existingSamples = header.getSampleNamesInOrder();
+            if (existingSamples.equals(sampleNamesInOrder))
+            {
+                ctx.getLogger().debug("Samples are identical, no need to update VCF");
+                return;
+            }
+
+            ctx.getLogger().debug("Will add missing samples. Total pre-existing: " + existingSamples.size() + " of " + sampleNamesInOrder.size());
+            SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath());
+            try (VariantContextWriter writer = new VariantContextWriterBuilder().setOutputFile(output).setReferenceDictionary(dict).build();CloseableIterator<VariantContext> it = reader.iterator())
+            {
+                header = new VCFHeader(header.getMetaDataInInputOrder(), sampleNamesInOrder);
+                header.setSequenceDictionary(dict);
+                writer.writeHeader(header);
+
+                while (it.hasNext())
+                {
+                    VariantContext vc = it.next();
+                    VariantContextBuilder vcb = new VariantContextBuilder(vc);
+                    List<Genotype> genotypes = new ArrayList<>();
+                    for (String sample : sampleNamesInOrder)
+                    {
+                        if (vc.hasGenotype(sample))
+                        {
+                            genotypes.add(vc.getGenotype(sample));
+                        }
+                        else
+                        {
+                            genotypes.add(new GenotypeBuilder(sample, Arrays.asList(Allele.NO_CALL, Allele.NO_CALL)).make());
+                        }
+                    }
+
+                    vcb.genotypes(genotypes);
+
+                    writer.add(vcb.make());
+                }
+            }
+        }
+
+        try
+        {
+            // Replace input
+            input.delete();
+            FileUtils.moveFile(output, input);
+
+            // And index
+            File idx = new File(input.getPath() + ".idx");
+            if (idx.exists())
+            {
+                idx.delete();
+            }
+
+            File outputIdx = new File(output.getPath() + ".idx");
+            if (outputIdx.exists())
+            {
+                FileUtils.moveFile(outputIdx, idx);
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+    }
+
+    @Override
+    public boolean doSortAfterMerge()
+    {
+        return true;
     }
 }

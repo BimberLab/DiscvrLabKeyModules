@@ -93,7 +93,7 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
         return AbstractGenomicsDBImportHandler.TILE_DB_FILETYPE.isType(f) ? f.getParentFile() : f;
     }
 
-    public static List<File> copyVcfsLocally(SequenceOutputHandler.JobContext ctx, Collection<File> inputGVCFs, Collection<File> toDelete, boolean isResume) throws PipelineJobException
+    public static List<File> copyVcfsLocally(SequenceOutputHandler.JobContext ctx, Collection<File> inputFiles, Collection<File> toDelete, boolean isResume) throws PipelineJobException
     {
         try
         {
@@ -101,7 +101,7 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
             HashMap<File, String> inputToDest = new LinkedHashMap<>();
             Set<String> uniqueDestNames = new CaseInsensitiveHashSet();
 
-            inputGVCFs.forEach(x -> {
+            inputFiles.forEach(x -> {
                 x = convertInput(x);
                 String fn = x.getName();
 
@@ -146,12 +146,12 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
             List<File> vcfsToProcess = new ArrayList<>();
             int totalExisting = 0;
             int idx = 0;
-            for (File f : inputGVCFs)
+            for (File f : inputFiles)
             {
                 idx++;
                 if (idx % 100 == 0)
                 {
-                    ctx.getLogger().info("Inspected file " + idx + " of " + inputGVCFs.size());
+                    ctx.getLogger().info("Inspected file " + idx + " of " + inputFiles.size());
                 }
 
                 f = convertInput(f);
@@ -247,7 +247,7 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
                 vcfsToProcess.add(movedFile);
             }
 
-            ctx.getLogger().debug("Total pre-existing inputs that were re-used: " + totalExisting);
+            ctx.getLogger().debug("Total pre-existing inputs that were re-used: " + totalExisting + " of " + inputFiles.size());
 
             return vcfsToProcess;
         }

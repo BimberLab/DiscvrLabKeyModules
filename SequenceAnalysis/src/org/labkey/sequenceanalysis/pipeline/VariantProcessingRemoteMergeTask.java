@@ -2,7 +2,6 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import htsjdk.samtools.util.Interval;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
@@ -15,13 +14,12 @@ import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
-import org.labkey.api.sequenceanalysis.run.AbstractDiscvrSeqWrapper;
+import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.util.FileType;
-import org.labkey.api.writer.PrintWriters;
+import org.labkey.sequenceanalysis.run.variant.OutputVariantsStartingInIntervalsStep;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -112,6 +110,7 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
         SequenceTaskHelper.logModuleVersions(getJob().getLogger());
         RecordedAction action = new RecordedAction(ACTION_NAME);
         TaskFileManagerImpl manager = new TaskFileManagerImpl(getPipelineJob(), _wd.getDir(), _wd);
+        JobContextImpl ctx = new JobContextImpl(getPipelineJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), _wd.getDir(), new TaskFileManagerImpl(getPipelineJob(), _wd.getDir(), _wd), _wd);
 
         File finalOut;
         SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler = getPipelineJob().getHandler();
@@ -121,7 +120,7 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
         }
         else
         {
-            finalOut = runDefaultVariantMerge(manager, action, handler);
+            finalOut = runDefaultVariantMerge(ctx, manager, action, handler);
         }
 
         Map<String, File> scatterOutputs = getPipelineJob().getScatterJobOutputs();
@@ -153,7 +152,7 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
         return new RecordedActionSet(action);
     }
 
-    private File runDefaultVariantMerge(TaskFileManagerImpl manager, RecordedAction action, SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler) throws PipelineJobException
+    private File runDefaultVariantMerge(JobContextImpl ctx, TaskFileManagerImpl manager, RecordedAction action, SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler) throws PipelineJobException
     {
         Map<String, List<Interval>> jobToIntervalMap = getPipelineJob().getJobToIntervalMap();
         getJob().setStatus(PipelineJob.TaskStatus.running, "Combining Per-Contig VCFs: " + jobToIntervalMap.size());
@@ -180,12 +179,9 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
             if (ensureOutputsWithinIntervals)
             {
                 getJob().getLogger().debug("Ensuring ensure scatter outputs respect intervals");
-                List<Interval> expectedIntervals = jobToIntervalMap.get(name);
 
-                File intervalFile = new File(vcf.getParentFile(), "scatterIntervals.list");
                 File subsetVcf = new File(vcf.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(vcf.getName()) + ".subset.vcf.gz");
                 File subsetVcfIdx = new File(subsetVcf.getPath() + ".tbi");
-                manager.addIntermediateFile(intervalFile);
                 manager.addIntermediateFile(subsetVcf);
                 manager.addIntermediateFile(subsetVcfIdx);
 
@@ -195,19 +191,8 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
                 }
                 else
                 {
-                    try (PrintWriter writer = PrintWriters.getPrintWriter(intervalFile))
-                    {
-                        expectedIntervals.forEach(interval -> {
-                            writer.println(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
-                        });
-                    }
-                    catch (IOException e)
-                    {
-                        throw new PipelineJobException(e);
-                    }
-
-                    Wrapper wrapper = new Wrapper(getJob().getLogger());
-                    wrapper.execute(vcf, subsetVcf, intervalFile);
+                    OutputVariantsStartingInIntervalsStep.Wrapper wrapper = new OutputVariantsStartingInIntervalsStep.Wrapper(getJob().getLogger());
+                    wrapper.execute(vcf, subsetVcf, getPipelineJob().getIntervalsForTask());
                 }
 
                 toConcat.add(subsetVcf);
@@ -221,6 +206,15 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
             manager.addIntermediateFile(vcf);
             manager.addIntermediateFile(new File(vcf.getPath() + ".tbi"));
         }
+
+        Set<Integer> genomeIds = new HashSet<>();
+        getPipelineJob().getFiles().forEach(x -> genomeIds.add(x.getLibrary_id()));
+        if (genomeIds.size() != 1)
+        {
+            throw new PipelineJobException("Expected a single genome, found: " + StringUtils.join(genomeIds, ", "));
+        }
+
+        ReferenceGenome genome = getPipelineJob().getSequenceSupport().getCachedGenome(genomeIds.iterator().next());
 
         String basename = SequenceAnalysisService.get().getUnzippedBaseName(toConcat.get(0).getName());
         File combined = new File(getPipelineJob().getAnalysisDirectory(), basename + ".vcf.gz");
@@ -236,47 +230,16 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
                 throw new PipelineJobException("Missing one of more VCFs: " + missing.stream().map(File::getPath).collect(Collectors.joining(",")));
             }
 
-            Set<Integer> genomeIds = new HashSet<>();
-            getPipelineJob().getFiles().forEach(x -> genomeIds.add(x.getLibrary_id()));
-            if (genomeIds.size() != 1)
-            {
-                throw new PipelineJobException("Expected a single genome, found: " + StringUtils.join(genomeIds, ", "));
-            }
-
-            ReferenceGenome genome = getPipelineJob().getSequenceSupport().getCachedGenome(genomeIds.iterator().next());
-            combined = SequenceAnalysisService.get().combineVcfs(toConcat, combined, genome, getJob().getLogger(), true, null);
+            boolean sortAfterMerge = handler instanceof VariantProcessingStep.SupportsScatterGather && ((VariantProcessingStep.SupportsScatterGather)handler).doSortAfterMerge();
+            combined = SequenceAnalysisService.get().combineVcfs(toConcat, combined, genome, getJob().getLogger(), true, null, sortAfterMerge);
         }
         manager.addOutput(action, "Merged VCF", combined);
 
+        if (handler instanceof VariantProcessingStep.SupportsScatterGather)
+        {
+            ((VariantProcessingStep.SupportsScatterGather) handler).performAdditionalMergeTasks(ctx, getPipelineJob(), manager, genome, toConcat);
+        }
+
         return combined;
-    }
-
-    public static class Wrapper extends AbstractDiscvrSeqWrapper
-    {
-        public Wrapper(Logger log)
-        {
-            super(log);
-        }
-
-        public void execute(File inputVcf, File outputVcf, File intervalFile) throws PipelineJobException
-        {
-            List<String> args = new ArrayList<>(getBaseArgs());
-            args.add("OutputVariantsStartingInIntervals");
-
-            args.add("-V");
-            args.add(inputVcf.getPath());
-
-            args.add("-O");
-            args.add(outputVcf.getPath());
-
-            args.add("-L");
-            args.add(intervalFile.getPath());
-
-            execute(args);
-            if (!outputVcf.exists())
-            {
-                throw new PipelineJobException("Missing file: " + outputVcf.getPath());
-            }
-        }
     }
 }

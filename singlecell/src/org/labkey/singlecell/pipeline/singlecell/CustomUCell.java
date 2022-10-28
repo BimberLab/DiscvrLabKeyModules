@@ -1,0 +1,42 @@
+package org.labkey.singlecell.pipeline.singlecell;
+
+import org.json.old.JSONObject;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.singlecell.pipeline.SingleCellStep;
+
+import java.util.Arrays;
+
+public class CustomUCell extends AbstractRiraStep
+{
+    final static String DELIM = "<>";
+
+    public CustomUCell(PipelineContext ctx, CustomUCell.Provider provider)
+    {
+        super(provider, ctx);
+    }
+
+    public static class Provider extends AbstractPipelineStepProvider<SingleCellStep>
+    {
+        public Provider()
+        {
+            super("CustomUCell", "Subset", "UCell/RIRA", "The seurat object will be subset based on the expression below, which is passed directly to Seurat's subset(subset = X).", Arrays.asList(
+                    ToolParameterDescriptor.create("geneSets", "Gene Sets(s)", "This should contain one UCell module per line, where the module is in the format (no spaces): SetName:Gene1,Gene2,Gene3. The first token is the name given to UCell and the second is a comma-delimited list of gene names.", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
+                        put("allowBlank", false);
+                        put("replaceAllWhitespace", true);
+                        put("height", 150);
+                        put("width", 600);
+                        put("delimiter", DELIM);
+                    }}, null)
+            ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+        }
+
+
+        @Override
+        public CustomUCell create(PipelineContext ctx)
+        {
+            return new CustomUCell(ctx, this);
+        }
+    }
+}

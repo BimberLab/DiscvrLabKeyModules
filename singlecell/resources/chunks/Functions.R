@@ -66,7 +66,7 @@ saveData <- function(seuratObj, datasetId) {
     datasetIdForFile <- makeLegalFileName(datasetId)
     fn <- paste0(outputPrefix, '.', datasetIdForFile, '.seurat.rds')
 
-    message(paste0('Saving RDS file: ', fn))
+    message(paste0('Saving RDS file: ', fn, ' with ', ncol(seuratObj), ' cells'))
     barcodeFile <- paste0(outputPrefix, '.', datasetIdForFile, '.cellBarcodes.csv')
     metaFile <- paste0(outputPrefix, '.', datasetIdForFile, '.seurat.meta.txt')
 

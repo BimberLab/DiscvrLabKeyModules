@@ -54,7 +54,10 @@ public class CommonFilters extends AbstractCellMembraneStep
                     }}, false),
                     SeuratToolParameter.create("dropNullScGateConsensus", "Drop Cells Without scGateConsensus", "If checked, any cell that lacks a call from scGateConsensus will be dropped.", "checkbox", new JSONObject(){{
                         put("checked", true);
-                    }}, false)
+                    }}, false),
+                    SeuratToolParameter.create("dropThreshold", "Drop Dataset Threshold", "If fewer than this number of cells remain, skip the entire dataset", "ldk-integerfield", new JSONObject(){{
+                        put("minValue", 0);
+                    }}, 25)
             ), null, null);
         }
 
