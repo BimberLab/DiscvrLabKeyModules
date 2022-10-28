@@ -24,3 +24,17 @@ dependencies {
     BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:DiscvrLabKeyModules:SequenceAnalysis", depProjectConfig: "published", depExtension: "module")
     BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: BuildUtils.getPlatformModuleProjectPath(project.gradle, "pipeline"), depProjectConfig: "published", depExtension: "module")
 }
+
+project.tasks.named("npm_run_build-prod").configure {
+    outputs.cacheIf { false }
+
+    inputs.dir(project.file("./node_modules/@jbrowse/cli")).withPathSensitivity(PathSensitivity.RELATIVE)
+    outputs.dir(project.file("./resources/external/jb-cli")).withPathSensitivity(PathSensitivity.RELATIVE)
+}
+
+project.tasks.named("npm_run_build-dev").configure {
+    outputs.cacheIf { false }
+
+    inputs.dir(project.file("./node_modules/@jbrowse/cli")).withPathSensitivity(PathSensitivity.RELATIVE)
+    outputs.dir(project.file("./resources/external/jb-cli")).withPathSensitivity(PathSensitivity.RELATIVE)
+}
