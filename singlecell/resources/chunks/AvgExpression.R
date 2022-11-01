@@ -12,7 +12,7 @@ GenerateAveragedData <- function(seuratObj, groupFields, addMetadata) {
         return(paste0(y, collapse = '_'))
     })
 
-    Idents(seuratObj) <- rownames(meta)
+    Seurat::Idents(seuratObj) <- rownames(meta)
 
     a <- Seurat::AverageExpression(seuratObj, return.seurat = T, verbose = F)
     a <- Seurat::AddMetaData(a, meta)
