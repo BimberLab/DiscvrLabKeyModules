@@ -12,7 +12,7 @@ for (datasetId in names(seuratObjects)) {
     toCalculate[[vals[1]]] <- unlist(strsplit(vals[2], split = ','))
   }
 
-  seuratObj <- UCell::AddModuleScore_UCell(seuratObj, features = toCalculate)
+  seuratObj <- UCell::AddModuleScore_UCell(seuratObj, features = toCalculate, storeRanks = storeRanks, assay = assayName)
   saveData(seuratObj, datasetId)
 
   # Cleanup
