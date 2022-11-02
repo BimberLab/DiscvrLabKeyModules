@@ -1,8 +1,14 @@
 package org.labkey.sequenceanalysis.run.variant;
 
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.util.Interval;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.Logger;
+import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
@@ -10,6 +16,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
@@ -34,6 +41,9 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
         public Provider()
         {
             super("KingInferenceStep", "KING/Relatedness", "", "This will run KING to infer kinship from a VCF", Arrays.asList(
+                    ToolParameterDescriptor.create("limitToChromosomes", "Limit to Chromosomes", "If checked, the analysis will include only the primary chromosomes", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, true)
             ), null, "https://www.kingrelatedness.com/manual.shtml");
         }
 
@@ -66,7 +76,27 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
         plinkArgs.add(inputVCF.getPath());
 
         plinkArgs.add("--make-bed");
-        plinkArgs.add("--allow-extra-chr");
+
+        boolean limitToChromosomes = getProvider().getParameterByName("limitToChromosomes").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true);
+        if (limitToChromosomes)
+        {
+            SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath());
+            List<String> toKeep = dict.getSequences().stream().filter(s -> {
+                String name = StringUtils.replaceIgnoreCase(s.getSequenceName(), "^chr", "");
+
+                return NumberUtils.isCreatable(name) || "X".equalsIgnoreCase(name) || "Y".equalsIgnoreCase(name);
+            }).map(SAMSequenceRecord::getSequenceName).toList();
+
+            plinkArgs.add("--chr");
+            plinkArgs.add(StringUtils.join(toKeep, ","));
+        }
+        else
+        {
+            plinkArgs.add("--allow-extra-chr");
+        }
+
+        plinkArgs.add("--silent");
+
         plinkArgs.add("--max-alleles");
         plinkArgs.add("2");
 
@@ -97,10 +127,16 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
         kingArgs.add(wrapper.getExe().getPath());
 
         kingArgs.add("-b");
-        kingArgs.add(plinkOut.getPath());
+        kingArgs.add(plinkOutBed.getPath());
 
         kingArgs.add("--prefix");
         kingArgs.add(SequenceAnalysisService.get().getUnzippedBaseName(inputVCF.getName()));
+
+        if (threads != null)
+        {
+            kingArgs.add("--cpus");
+            kingArgs.add(threads.toString());
+        }
 
         kingArgs.add("--kinship");
 
