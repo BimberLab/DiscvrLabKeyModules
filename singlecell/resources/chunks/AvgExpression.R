@@ -14,8 +14,18 @@ GenerateAveragedData <- function(seuratObj, groupFields, addMetadata) {
 
     Seurat::Idents(seuratObj) <- rownames(meta)
 
+    for (assayName in names(seuratObj@assays)) {
+        if (!(!identical(seuratObj@assays[[assayName]]@counts, seuratObj@assays[[assayName]]@data))){
+            print(paste0('Seurat assay', assayName, ' does not appear to be normalized, running now:'))
+            seuratObj <- Seurat::NormalizeData(seuratObj, verbose = FALSE, assay = assayName)
+        }
+    }
+
     a <- Seurat::AverageExpression(seuratObj, return.seurat = T, verbose = F)
     a <- Seurat::AddMetaData(a, meta)
+
+    totals <- seuratObj@meta.data %>% group_by_at(groupFields) %>% summarise(TotalCells = n())
+    a$TotalCells <- totals$TotalCells
 
     if (addMetadata) {
         a <- Rdiscvr::QueryAndApplyMetadataUsingCDNA(a)
