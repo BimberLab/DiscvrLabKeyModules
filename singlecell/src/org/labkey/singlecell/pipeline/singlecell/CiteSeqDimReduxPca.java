@@ -30,8 +30,11 @@ public class CiteSeqDimReduxPca extends AbstractCellMembraneStep
                     SeuratToolParameter.create("adtBlacklist", "ADT Blacklist", "If provided, these ADTs will be excluded from scaling/PCA", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("height", 150);
                         put("delimiter", ",");
-                    }}, null).delimiter(",")
-                    ), null, null);
+                    }}, null).delimiter(","),
+                    SeuratToolParameter.create("assayName", "Assay Name", "The assay to use", "textbox", new JSONObject(){{
+
+                    }}, "ADT")
+            ), null, null);
         }
 
         @Override

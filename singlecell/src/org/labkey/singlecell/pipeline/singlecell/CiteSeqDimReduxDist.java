@@ -22,7 +22,10 @@ public class CiteSeqDimReduxDist extends AbstractCellMembraneStep
             super("CiteSeqDimReduxDist", "CiteSeq DimRedux (distance)", "CellMembrane/Seurat", "This will run DimRedux steps on the ADT data, based on euclidian distance.", Arrays.asList(
                     SeuratToolParameter.create("performClrNormalization", "Perform CLR Normalization", "If true, Seurat CLR normalization will be performed. Otherwise any pre-existing normalization is used.", "checkbox", new JSONObject(){{
                         put("checked", true);
-                    }}, true, "performClrNormalization", true)
+                    }}, true, "performClrNormalization", true),
+                    SeuratToolParameter.create("assayName", "Assay Name", "The assay to use", "textbox", new JSONObject(){{
+
+                    }}, "ADT")
             ), null, null);
         }
 
