@@ -7,6 +7,9 @@ import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 public class AvgExpression extends AbstractRDiscvrStep
 {
@@ -49,5 +52,17 @@ public class AvgExpression extends AbstractRDiscvrStep
     {
         return true;
     }
+
+    @Override
+    public Collection<String> getRLibraries()
+    {
+        Set<String> ret = new HashSet<>();
+        ret.add("Seurat");
+        ret.add("dplyr");
+        ret.addAll(super.getRLibraries());
+
+        return ret;
+    }
+
 }
 
