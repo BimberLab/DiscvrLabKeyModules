@@ -64,7 +64,7 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
 
         File plinkOut = new File(outputDirectory, "plink");
         output.addIntermediateFile(new File(plinkOut.getPath() + ".bed"));
-        output.addIntermediateFile(new File(plinkOut.getPath() + ".fam"));
+        //output.addIntermediateFile(new File(plinkOut.getPath() + ".fam"));
         output.addIntermediateFile(new File(plinkOut.getPath() + ".bim"));
         output.addIntermediateFile(new File(plinkOut.getPath() + ".log"));
         output.addIntermediateFile(new File(plinkOut.getPath() + "-temporary.psam"));
@@ -135,7 +135,7 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
             kingArgs.add(threads.toString());
         }
 
-        kingArgs.add("--kinship");
+        kingArgs.add("--related");
 
         File kinshipOutput = new File(outputDirectory, SequenceAnalysisService.get().getUnzippedBaseName(inputVCF.getName()) + ".kin");
         wrapper.execute(kingArgs);
