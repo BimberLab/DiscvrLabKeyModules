@@ -6,7 +6,7 @@ for (datasetId in names(seuratObjects)) {
     print('ADT assay not present, skipping')
   } else {
     tryCatch({
-      CellMembrane::PlotAverageAdtCounts(seuratObj, groupFields = fieldNames)
+      CellMembrane::PlotAverageAdtCounts(seuratObj, groupFields = fieldNames, assayName = assayName)
     }, error = function(e){
       print(paste0('Error running PlotAverageCiteSeqCounts for: ', datasetId))
       print(conditionMessage(e))
