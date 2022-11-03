@@ -30,7 +30,11 @@ bindArgs <- function(fun, seuratObj, allowableArgNames = NULL, disallowedArgName
             }
 
             print(paste0('Binding argument: ', name, ': ', displayVal))
-            boundArgs[[name]] <- val
+            if (all(is.null(val))) {
+                boundArgs[name] <- list(NULL)
+            } else {
+                boundArgs[[name]] <- val
+            }
         }
     }
 
