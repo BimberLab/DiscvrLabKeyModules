@@ -1,3 +1,11 @@
+if (!file.exists('/homeDir/.netrc')) {
+    print(list.files('/homeDir'))
+    stop('Unable to find file: /homeDir/.netrc')
+}
+
+invisible(Rlabkey::labkey.setCurlOptions(NETRC_FILE = '/homeDir/.netrc'))
+Rdiscvr::SetLabKeyDefaults(baseUrl = serverBaseUrl, defaultFolder = defaultLabKeyFolder)
+
 GenerateAveragedData <- function(seuratObj, groupFields, addMetadata) {
     if (addMetadata && !'cDNA_ID' %in% names(seuratObj@meta.data)) {
         stop('A field names cDNA_ID must exist when addMetadata=TRUE')
