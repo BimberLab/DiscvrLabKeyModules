@@ -56,9 +56,6 @@ public class AppendNimble extends AbstractRDiscvrStep
     {
         Chunk ret = super.createParamChunk(ctx, inputObjects, outputPrefix);
 
-        ret.bodyLines.add("serverBaseUrl <- '" + getPipelineCtx().getJob().getParameters().get("serverBaseUrl") + "'");
-        ret.bodyLines.add("defaultLabKeyFolder <- '" + getPipelineCtx().getJob().getParameters().get("labkeyFolderPath") + "'");
-
         ret.bodyLines.add("nimbleGenomes <- list(");
         String genomeStr = getProvider().getParameterByName("nimbleGenomes").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
         JSONArray json = new JSONArray(genomeStr);
