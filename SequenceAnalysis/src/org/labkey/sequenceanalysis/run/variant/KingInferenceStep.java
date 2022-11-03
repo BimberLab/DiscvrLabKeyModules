@@ -90,11 +90,8 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
             plinkArgs.add("--chr");
             plinkArgs.add(StringUtils.join(toKeep, ","));
         }
-        else
-        {
-            plinkArgs.add("--allow-extra-chr");
-        }
 
+        plinkArgs.add("--allow-extra-chr");
         plinkArgs.add("--silent");
 
         plinkArgs.add("--max-alleles");
