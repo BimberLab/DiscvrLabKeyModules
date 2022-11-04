@@ -26,6 +26,7 @@ public class DimPlots extends AbstractCellMembraneStep
                         put("allowBlank", false);
                         put("height", 150);
                         put("delimiter", ",");
+                        put("stripCharsRe", "/['\"]/g");
                     }}, null).delimiter(",")
             ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }

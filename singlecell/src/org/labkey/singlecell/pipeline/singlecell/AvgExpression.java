@@ -27,6 +27,7 @@ public class AvgExpression extends AbstractRDiscvrStep
                         put("allowBlank", false);
                         put("height", 150);
                         put("delimiter", ",");
+                        put("stripCharsRe", "/['\"]/g");
                     }}, "cDNA_ID").delimiter(","),
                     SeuratToolParameter.create("addMetadata", "Query Metadata?", "If checked, Rdiscvr::QueryAndApplyMetadataUsingCDNA will be run after aggregation. This requires a cDNA_ID column to exist.", "checkbox", new JSONObject(){{
                         put("checked", true);

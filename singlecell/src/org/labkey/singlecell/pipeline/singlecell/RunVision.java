@@ -34,6 +34,7 @@ public class RunVision extends AbstractCellMembraneStep
                         put("allowBlank", false);
                         put("height", 200);
                         put("delimiter", ",");
+                        put("stripCharsRe", "/(^['\"]+)|(['\"]+$)/g");
                     }}, "nCount_RNA,ClusterNames_0.2,ClusterNames_0.4,ClusterNames_0.6,ClusterNames_0.8", "metadataCols", true, true).delimiter(",")
                 ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }

@@ -28,14 +28,17 @@ public class NormalizeAndScale extends AbstractCellMembraneStep
                     SeuratToolParameter.create("variableGenesWhitelist", "Genes to Add to VariableFeatures", "These genes, entered comma-separated or one/line, will be added to the default Seurat::VariableFeatures gene set when running PCA", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("height", 150);
                         put("delimiter", ",");
+                        put("stripCharsRe", "/(^['\"]+)|(['\"]+$)/g");
                     }}, null).delimiter(","),
                     SeuratToolParameter.create("variableGenesBlacklist", "Genes to Exclude From VariableFeatures", "These genes, entered comma-separated or one/line, will be excluded from the genes passed to RunPCA (which is otherwise determined by Seurat::VariableFeatures)", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("height", 150);
                         put("delimiter", ",");
+                        put("stripCharsRe", "/(^['\"]+)|(['\"]+$)/g");
                     }}, null).delimiter(","),
                     SeuratToolParameter.create("featuresToRegress", "Features to Regress", "These features, entered comma-separated or one/line, will be passed to Seurat::ScaleData vars.to.regress", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("height", 150);
                         put("delimiter", ",");
+                        put("stripCharsRe", "/(^['\"]+)|(['\"]+$)/g");
                     }}, null).delimiter(","),
                     SeuratToolParameter.create("scaleVariableFeaturesOnly", "ScaleData On Variable Features Only", "If checked, ScaleData will only be performed on VariableFeatures, which should dramatically reduce time and memory", "checkbox", new JSONObject(){{
                         put("checked", true);

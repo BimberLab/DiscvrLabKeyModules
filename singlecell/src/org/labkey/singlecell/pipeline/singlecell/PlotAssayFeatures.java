@@ -24,6 +24,7 @@ public class PlotAssayFeatures extends AbstractCellMembraneStep
                         put("height", 150);
                         put("delimiter", ",");
                         put("allowBlank", false);
+                        put("stripCharsRe", "/(^['\"]+)|(['\"]+$)/g");
                     }}, null).delimiter(",")
             ), null, null);
         }

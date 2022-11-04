@@ -33,6 +33,7 @@ public class MergeSeurat extends AbstractCellMembraneStep
                     SeuratToolParameter.create("assaysToDrop", "Assays to Drop", "These assays, entered comma-separated or one/line, will be dropped prior to merge.", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("height", 150);
                         put("delimiter", ",");
+                        put("stripCharsRe", "/(^['\"]+)|(['\"]+$)/g");
                     }}, "RNA.orig").delimiter(",")
             ), null, null);
         }
