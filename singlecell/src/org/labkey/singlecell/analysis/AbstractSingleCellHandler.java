@@ -603,7 +603,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             _resumer.getFileManager().addIntermediateFiles(_resumer.getMarkdownsInOrder());
             _resumer.getFileManager().addIntermediateFiles(_resumer.getHtmlFilesInOrder());
 
-            String jobDescription = ctx.getParams().optString("jobDescription");
+            String jobDescription = StringUtils.trimToNull(ctx.getParams().optString("jobDescription"));
             for (SingleCellStep.SeuratObjectWrapper output : currentFiles)
             {
                 SequenceOutputFile so = new SequenceOutputFile();
