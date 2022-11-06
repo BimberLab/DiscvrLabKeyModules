@@ -41,7 +41,7 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 				},LABKEY.ext4.GRIDBUTTONS.DELETERECORD()],
 				store: {
 					type: 'array',
-					fields: ['genomeId', 'template', 'grouping', 'scoreThreshold']
+					fields: ['genomeId', 'template', 'grouping', 'scorePercent']
 				},
 				columns: [{
 					dataIndex: 'genomeId',
@@ -82,9 +82,9 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 						xtype: 'checkbox'
 					}
 				},{
-					dataIndex: 'scoreThreshold',
+					dataIndex: 'scorePercent',
 					width: 150,
-					header: 'Score Threshold',
+					header: 'Min Pct Aligned',
 					editor: {
 						xtype: 'ldk-integerfield',
 						minValue: 0
@@ -99,7 +99,7 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 	getValue: function(){
 		var ret = [];
 		this.down('ldk-gridpanel').store.each(function(r, i) {
-			ret.push([r.data.genomeId, r.data.template, r.data.grouping || false, r.data.scoreThreshold || '']);
+			ret.push([r.data.genomeId, r.data.template, r.data.grouping || false, r.data.scorePercent || '']);
 		}, this);
 
 		return Ext4.isEmpty(ret) ? null : JSON.stringify(ret);
@@ -136,7 +136,7 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 					genomeId: row[0],
 					template: row[1],
 					grouping: row[2],
-					scoreThreshold: row.length > 3 ? row[3] : null
+					scorePercent: row.length > 3 ? row[3] : null
 				});
 				grid.store.add(rec);
 			}, this);

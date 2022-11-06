@@ -3,8 +3,8 @@ for (datasetId in names(seuratObjects)) {
     seuratObj <- readRDS(seuratObjects[[datasetId]])
 
     tryCatch({
-        if (!('ADT' %in% names(seuratObj@assays))) {
-            print('ADT assay not present, skipping')
+        if (!(assayName %in% names(seuratObj@assays))) {
+            print(paste0(assayName, ' assay not present, skipping'))
         } else {
             seuratObj <- bindArgs(CellMembrane::RunSeuratWnn, seuratObj)()
         }

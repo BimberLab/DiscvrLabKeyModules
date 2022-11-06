@@ -2,7 +2,8 @@ for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readRDS(seuratObjects[[datasetId]])
 
-    seuratObj <- RIRA::CalculateUCellScores(seuratObj)
+    message(paste0('Loading dataset ', datasetId, ', with total cells: ', ncol(seuratObj)))
+    seuratObj <- RIRA::CalculateUCellScores(seuratObj, storeRanks = storeRanks, assayName = assayName)
 
     saveData(seuratObj, datasetId)
 

@@ -157,8 +157,10 @@ dependencies {
     BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "published", depExtension: "module")
 }
 
+
 if (project.findProject(BuildUtils.getTestProjectPath(project.gradle)) != null && project.hasProperty("teamcity"))
 {
+    project.evaluationDependsOn(BuildUtils.getTestProjectPath(project.gradle))
     def testProject = project.findProject(BuildUtils.getTestProjectPath(project.gradle))
     def createPipelineConfigTask = project.tasks.register("createPipelineConfig", Copy) {
         Copy task ->

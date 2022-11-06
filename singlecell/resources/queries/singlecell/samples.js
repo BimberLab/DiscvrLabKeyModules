@@ -37,13 +37,21 @@ function beforeUpsert(row, oldRow, errors){
         }
     }
 
-    if (['perLN', 'PerLN'].indexOf(row.tissue) !== -1){
-        row.tissue = 'pLN';
+    if (['pLN', 'perLN', 'PerLN'].indexOf(row.tissue) !== -1){
+        row.tissue = 'PeriLN';
     }
     else if (['mesLN'].indexOf(row.tissue) !== -1){
         row.tissue = 'MesLN';
     }
-    else if (['Bone Marrow', 'BoneMarrow'].indexOf(row.tissue) !== -1){
+    else if (['BM', 'Bone Marrow', 'BoneMarrow'].indexOf(row.tissue) !== -1){
         row.tissue = 'Bone marrow';
+    }
+
+    if ('Lung L' === row.tissue){
+        row.tissue = 'Lung-L';
+    }
+
+    if ('Lung R' === row.tissue){
+        row.tissue = 'Lung-R';
     }
 }

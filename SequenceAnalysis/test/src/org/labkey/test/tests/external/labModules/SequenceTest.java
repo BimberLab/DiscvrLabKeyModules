@@ -18,9 +18,8 @@ package org.labkey.test.tests.external.labModules;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -104,10 +103,10 @@ public class SequenceTest extends BaseWebDriverTest
         Boolean sequencePipelineEnabled;
         try
         {
-            JSONObject json = (JSONObject) new JSONParser().parse(httpResponse.getResponseBody());
+            JSONObject json = new JSONObject(httpResponse.getResponseBody());
             sequencePipelineEnabled = (Boolean) json.get("isPipelineEnabled");
         }
-        catch (ParseException | ClassCastException e)
+        catch (JSONException | ClassCastException e)
         {
             sequencePipelineEnabled = false;
         }

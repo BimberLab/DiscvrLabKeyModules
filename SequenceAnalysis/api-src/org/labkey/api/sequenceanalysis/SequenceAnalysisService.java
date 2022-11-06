@@ -94,6 +94,8 @@ abstract public class SequenceAnalysisService
 
     abstract public File combineVcfs(List<File> files, File outputGz, ReferenceGenome genome, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel) throws PipelineJobException;
 
+    abstract public File combineVcfs(List<File> files, File outputGz, ReferenceGenome genome, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel, boolean sortAfterMerge) throws PipelineJobException;
+
     abstract public String getScriptPath(String moduleName, String path) throws PipelineJobException;
 
     abstract public void sortGxf(Logger log, File input, @Nullable File output) throws PipelineJobException;

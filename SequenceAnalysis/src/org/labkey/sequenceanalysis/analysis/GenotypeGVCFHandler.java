@@ -266,7 +266,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             }
 
             //run post processing, if needed
-            File processed = ProcessVariantsHandler.processVCF(outputVcf, genomeId, ctx, resumer);
+            File processed = ProcessVariantsHandler.processVCF(outputVcf, genomeId, ctx, resumer, false);
             if (processed == null)
             {
                 ctx.getLogger().debug("adding GenotypeGVCFs output because no processing was selected");

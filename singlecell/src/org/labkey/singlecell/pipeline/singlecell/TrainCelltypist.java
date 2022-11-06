@@ -54,7 +54,15 @@ public class TrainCelltypist extends AbstractRiraStep
                         put("width", 400);
                         put("height", 200);
                         put("delimiter", ";");
-                    }}, "NA", "excludedClasses", true, true)
+                    }}, "NA", "excludedClasses", true, true),
+                    SeuratToolParameter.create("featureInclusionList", "Features to Include", "These genes, entered comma-separated or one/line, will be used to subset the input object", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
+                        put("height", 150);
+                        put("delimiter", ",");
+                    }}, null).delimiter(","),
+                    SeuratToolParameter.create("featureExclusionList", "Features to Exclude", "These genes, entered comma-separated or one/line, will be excluded from the input object", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
+                        put("height", 150);
+                        put("delimiter", ",");
+                    }}, null).delimiter(",")
             ), null, null);
         }
 

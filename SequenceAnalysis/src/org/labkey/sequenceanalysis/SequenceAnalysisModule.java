@@ -303,6 +303,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new VariantsToTableStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new VariantQCStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new PlinkPcaStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new KingInferenceStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new MendelianViolationReportStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SummarizeGenotypeQualityStep.Provider());
 
