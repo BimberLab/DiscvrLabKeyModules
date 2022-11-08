@@ -24,6 +24,7 @@ public class FindMarkers extends AbstractCellMembraneStep
                         put("allowBlank", false);
                         put("height", 200);
                         put("delimiter", ",");
+                        put("stripCharsRe", "/['\"]/g");
                     }}, null).delimiter(","),
                     SeuratToolParameter.create("testsToUse", "Tests To Use", "The set of tests to perform.", "ldk-simplecombo", new JSONObject()
                     {{

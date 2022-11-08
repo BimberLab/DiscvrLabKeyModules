@@ -4,6 +4,7 @@ import org.json.old.JSONObject;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
@@ -28,7 +29,14 @@ public class CustomUCell extends AbstractRiraStep
                         put("height", 150);
                         put("width", 600);
                         put("delimiter", DELIM);
-                    }}, null)
+                        put("stripCharsRe", "/['\"]/g");
+                    }}, null),
+                    SeuratToolParameter.create("storeRanks", "Store Ranks", "Passed directly to UCell::AddModuleScore_UCell.", "checkbox", new JSONObject(){{
+
+                    }}, false),
+                    SeuratToolParameter.create("assayName", "Assay Name", "Passed directly to UCell::AddModuleScore_UCell.", "checkbox", new JSONObject(){{
+
+                    }}, "RNA")
             ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
