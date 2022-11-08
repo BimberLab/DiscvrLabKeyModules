@@ -676,7 +676,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                 }
                                 else if (p[1] === 'HTO') {
                                     if (includeWithData || row['hashingReadsetId/totalFiles'] === 0) {
-                                        if (row['hashingReadsetId'] && row['hashingReadsetId/application'] && row['hashingReadsetId/application'].match('Cell Hashing')) {
+                                        if (row['hashingReadsetId'] && row['hashingReadsetId/application'] && row['hashingReadsetId/application'].match(/Cell Hashing/i)) {
                                             sortedRows.push(Ext4.apply({targetApplication: '10x HTO', laneAssignment: (p.length > 2 ? p[2] : null), plateAlias: (p.length > 3 ? p[3] : null)}, row));
                                             found = true;
                                             return false;
@@ -685,7 +685,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                 }
                                 else if (p[1] === 'CITE') {
                                     if (includeWithData || row['citeseqReadsetId/totalFiles'] === 0) {
-                                        if (row['citeseqReadsetId'] && row['citeseqReadsetId/application'] && row['citeseqReadsetId/application'].match('CITE-Seq')) {
+                                        if (row['citeseqReadsetId'] && row['citeseqReadsetId/application'] && row['citeseqReadsetId/application'].match(/CITE-Seq/i)) {
                                             sortedRows.push(Ext4.apply({targetApplication: '10x CITE-Seq', laneAssignment: (p.length > 2 ? p[2] : null), plateAlias: (p.length > 3 ? p[3] : null)}, row));
                                             found = true;
                                             return false;

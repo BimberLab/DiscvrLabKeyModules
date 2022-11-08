@@ -7,6 +7,9 @@ import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 public class AvgExpression extends AbstractRDiscvrStep
 {
@@ -24,6 +27,7 @@ public class AvgExpression extends AbstractRDiscvrStep
                         put("allowBlank", false);
                         put("height", 150);
                         put("delimiter", ",");
+                        put("stripCharsRe", "/['\"]/g");
                     }}, "cDNA_ID").delimiter(","),
                     SeuratToolParameter.create("addMetadata", "Query Metadata?", "If checked, Rdiscvr::QueryAndApplyMetadataUsingCDNA will be run after aggregation. This requires a cDNA_ID column to exist.", "checkbox", new JSONObject(){{
                         put("checked", true);
@@ -48,6 +52,17 @@ public class AvgExpression extends AbstractRDiscvrStep
     public boolean createsSeuratObjects()
     {
         return true;
+    }
+
+    @Override
+    public Collection<String> getRLibraries()
+    {
+        Set<String> ret = new HashSet<>();
+        ret.add("Seurat");
+        ret.add("dplyr");
+        ret.addAll(super.getRLibraries());
+
+        return ret;
     }
 }
 
