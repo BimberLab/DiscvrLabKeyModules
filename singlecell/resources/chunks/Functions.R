@@ -64,6 +64,7 @@ savedFiles <- data.frame(datasetId = character(), datasetName = character(), fil
 if (file.exists('/work/savedSeuratObjects.txt')) {
     unlink('/work/savedSeuratObjects.txt')
 }
+file.create('/work/savedSeuratObjects.txt', )
 
 saveData <- function(seuratObj, datasetId) {
     print(paste0('Saving dataset: ', datasetId))
