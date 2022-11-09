@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -255,12 +256,13 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
                                 filter.addCondition(FieldKey.fromString("application"), allowableApplications, CompareType.IN);
                             }
 
-                            Set<String> applications = new HashSet<>(new TableSelector(QueryService.get().getUserSchema(getPipelineCtx().getJob().getUser(), targetContainer, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_READSETS), PageFlowUtil.set("application"), filter, null).getArrayList(String.class));
-                            if (applications.size() == 1)
+                            Collection<Map<String, Object>> results = new TableSelector(QueryService.get().getUserSchema(getPipelineCtx().getJob().getUser(), targetContainer, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_READSETS), PageFlowUtil.set("application", "rowid"), filter, null).getMapCollection();
+                            if (results.size() == 1)
                             {
-                                writer.println(sample + "\t" + applications.iterator().next());
+                                Map<String, Object> row = results.iterator().next();
+                                writer.println(sample + "\t" + row.get("application") + "\t" + row.get("rowid"));
                             }
-                            else if (applications.size() > 1)
+                            else if (results.size() > 1)
                             {
                                 duplicates.add(sample);
                             }

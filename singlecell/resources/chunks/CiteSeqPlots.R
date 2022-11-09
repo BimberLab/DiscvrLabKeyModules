@@ -2,7 +2,6 @@ for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readRDS(seuratObjects[[datasetId]])
 
-    assayName <- 'ADT'
     if (!(assayName %in% names(seuratObj@assays))) {
         print(paste0('Assay: ', assayName, ' not present, skipping'))
     } else {

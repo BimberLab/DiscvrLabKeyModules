@@ -7,8 +7,11 @@ import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
-public class AvgExpression extends AbstractCellMembraneStep
+public class AvgExpression extends AbstractRDiscvrStep
 {
     public AvgExpression(PipelineContext ctx, AvgExpression.Provider provider)
     {
@@ -19,10 +22,16 @@ public class AvgExpression extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("AvgExpression", "Avg. Expression", "Seurat", "This will run AverageExpression on the raw counts, producing a matrix with the average per group. This matrix will have a row labeled TotalCells appended, which is the total cells per group.", Arrays.asList(
-                    SeuratToolParameter.create("groupField", "Grouping Field", "This field will be used to group cells of the seurat object. For each unique value of this field, count averages will be computed and saved into a matrix with one column per group. Any cells lacking a value in this field will be discarded.", "textfield", new JSONObject(){{
+            super("AvgExpression", "Avg. Expression", "Seurat", "This will run AverageExpression on the raw counts, grouping using the provided fields. It will generate a seurat object with aggregate counts.", Arrays.asList(
+                    SeuratToolParameter.create("groupFields", "Grouping Field(s)", "This field will be used to group cells of the seurat object. For each unique value of this field, count averages will be computed and saved into a matrix with one column per group. Any cells lacking a value in this field will be discarded.", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("allowBlank", false);
-                    }}, null)
+                        put("height", 150);
+                        put("delimiter", ",");
+                        put("stripCharsRe", "/['\"]/g");
+                    }}, "cDNA_ID").delimiter(","),
+                    SeuratToolParameter.create("addMetadata", "Query Metadata?", "If checked, Rdiscvr::QueryAndApplyMetadataUsingCDNA will be run after aggregation. This requires a cDNA_ID column to exist.", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, true)
             ), null, null);
         }
 
@@ -42,7 +51,18 @@ public class AvgExpression extends AbstractCellMembraneStep
     @Override
     public boolean createsSeuratObjects()
     {
-        return false;
+        return true;
+    }
+
+    @Override
+    public Collection<String> getRLibraries()
+    {
+        Set<String> ret = new HashSet<>();
+        ret.add("Seurat");
+        ret.add("dplyr");
+        ret.addAll(super.getRLibraries());
+
+        return ret;
     }
 }
 
