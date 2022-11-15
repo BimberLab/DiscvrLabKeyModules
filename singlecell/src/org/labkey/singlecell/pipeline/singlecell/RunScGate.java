@@ -41,7 +41,10 @@ public class RunScGate extends AbstractRiraStep
                     }}, null, null, true, true),
                     SeuratToolParameter.create("dropAmbiguousConsensusValues", "Drop Ambiguous Consensus Values", "If checked, any consensus calls that are ambiguous will be set to NA", "checkbox", new JSONObject(){{
                         put("checked", true);
-                    }}, true)
+                    }}, true),
+                    SeuratToolParameter.create("assayName", "Assay Name", "Passed directly to UCell::AddModuleScore_UCell.", "checkbox", new JSONObject(){{
+
+                    }}, "RNA")
                 ), null, null);
         }
 

@@ -3,9 +3,9 @@ for (datasetId in names(seuratObjects)) {
     seuratObj <- readRDS(seuratObjects[[datasetId]])
 
     if (useRhesusDefaults) {
-        seuratObj <- RIRA::RunScGateWithRhesusModels(seuratObj, dropAmbiguousConsensusValues = dropAmbiguousConsensusValues)
+        seuratObj <- RIRA::RunScGateWithRhesusModels(seuratObj, dropAmbiguousConsensusValues = dropAmbiguousConsensusValues, assayName = assayName)
     } else {
-        seuratObj <- RIRA::RunScGateForModels(seuratObj, modelNames = modelNames, labelRename = list(Tcell = 'T_NK', NK = 'T_NK'), dropAmbiguousConsensusValues = dropAmbiguousConsensusValues, consensusModels = consensusModels)
+        seuratObj <- RIRA::RunScGateForModels(seuratObj, modelNames = modelNames, labelRename = list(Tcell = 'T_NK', NK = 'T_NK'), dropAmbiguousConsensusValues = dropAmbiguousConsensusValues, consensusModels = consensusModels, assayName = assayName)
     }
 
     saveData(seuratObj, datasetId)
