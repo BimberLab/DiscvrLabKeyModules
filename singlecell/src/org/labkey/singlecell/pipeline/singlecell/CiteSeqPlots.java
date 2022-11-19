@@ -20,7 +20,7 @@ public class CiteSeqPlots extends AbstractCellMembraneStep
         public Provider()
         {
             super("CiteSeqPlots", "CiteSeq/ADT Plots", "CellMembrane/Seurat", "This will create FeaturePlots for all features in the ADT assay.", Arrays.asList(
-                    SeuratToolParameter.create("assayName", "Assay Name", "The assay to use", "textbox", new JSONObject(){{
+                    SeuratToolParameter.create("assayName", "Assay Name", "The assay to use", "textfield", new JSONObject(){{
 
                     }}, "ADT")
             ), null, null);
