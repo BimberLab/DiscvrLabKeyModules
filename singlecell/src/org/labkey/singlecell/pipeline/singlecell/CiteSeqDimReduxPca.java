@@ -33,7 +33,7 @@ public class CiteSeqDimReduxPca extends AbstractCellMembraneStep
                         put("delimiter", ",");
                         put("stripCharsRe", "/['\"]/g");
                     }}, null).delimiter(","),
-                    SeuratToolParameter.create("assayName", "Assay Name", "The assay to use", "textbox", new JSONObject(){{
+                    SeuratToolParameter.create("assayName", "Assay Name", "The assay to use", "textfield", new JSONObject(){{
 
                     }}, "ADT")
             ), null, null);

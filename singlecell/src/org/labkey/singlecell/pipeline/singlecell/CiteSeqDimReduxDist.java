@@ -23,7 +23,7 @@ public class CiteSeqDimReduxDist extends AbstractCellMembraneStep
                     SeuratToolParameter.create("performClrNormalization", "Perform CLR Normalization", "If true, Seurat CLR normalization will be performed. Otherwise any pre-existing normalization is used.", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true, "performClrNormalization", true),
-                    SeuratToolParameter.create("assayName", "Assay Name", "The assay to use", "textbox", new JSONObject(){{
+                    SeuratToolParameter.create("assayName", "Assay Name", "The assay to use", "textfield", new JSONObject(){{
 
                     }}, "ADT")
             ), null, null);
