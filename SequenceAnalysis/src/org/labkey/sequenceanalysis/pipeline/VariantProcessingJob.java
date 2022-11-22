@@ -159,7 +159,7 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
 
     public boolean doAllowSplitContigs()
     {
-        return getParameterJson().optBoolean("scatterGather.allowSplitChromosomes", true);
+        return getParameterJson().optBoolean("scatterGather.allowSplitChromosomes", false);
     }
 
     public boolean isScatterJob()

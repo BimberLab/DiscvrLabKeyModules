@@ -28,7 +28,7 @@ public class PlotAverageCiteSeqCounts extends AbstractCellMembraneStep
                         put("delimiter", ",");
                         put("stripCharsRe", "/(^['\"]+)|(['\"]+$)/g");
                     }}, "ClusterNames_0.2,ClusterNames_0.4,ClusterNames_0.6").delimiter(","),
-                    SeuratToolParameter.create("assayName", "Assay Name", "The assay to use", "textbox", new JSONObject(){{
+                    SeuratToolParameter.create("assayName", "Assay Name", "The assay to use", "textfield", new JSONObject(){{
 
                     }}, "ADT")
             ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
