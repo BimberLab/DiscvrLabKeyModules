@@ -27,6 +27,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
@@ -45,8 +46,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -162,6 +165,8 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
         {
             List<FileGroup> fileGroups = getHelper().getSettings().getFileGroups(getPipelineJob());
             List<SequenceReadsetImpl> readsets = getHelper().getSettings().getReadsets(getPipelineJob());
+
+            checkForDuplicateFileNames(readsets, fileGroups);
 
             if (!SequenceNormalizationTask.shouldRunRemote(getJob()))
             {
@@ -484,6 +489,62 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
         catch (IOException e)
         {
             throw new PipelineJobException(e);
+        }
+    }
+
+    private void checkForDuplicateFileNames(List<SequenceReadsetImpl> readsets, List<FileGroup> fileGroups) throws PipelineJobException
+    {
+        // check for duplicate filename between incoming and existing
+        for (SequenceReadsetImpl r : readsets)
+        {
+            boolean readsetExists = r.getReadsetId() != null && r.getReadsetId() > 0;
+            SequenceReadsetImpl existingReadset = readsetExists ? ((SequenceReadsetImpl) SequenceAnalysisService.get().getReadset(r.getReadsetId(), getJob().getUser())) : null;
+            List<ReadDataImpl> preexistingReadData = readsetExists ? existingReadset.getReadDataImpl() : Collections.emptyList();
+            if (!preexistingReadData.isEmpty())
+            {
+                Map<String, File> existingFileNames = new HashMap<>();
+                preexistingReadData.forEach(rd -> {
+                    existingFileNames.put(rd.getFile1().getName(), rd.getFile1());
+                    if (rd.getFile2() != null)
+                    {
+                        existingFileNames.put(rd.getFile2().getName(), rd.getFile2());
+                    }
+                });
+
+                Map<String, File> sharedFns = new HashMap<>();
+                for (FileGroup fg : fileGroups)
+                {
+                    if (r.getFileSetName() != null && r.getFileSetName().equals(fg.name))
+                    {
+                        for (FileGroup.FilePair fp : fg.filePairs)
+                        {
+                            if (existingFileNames.containsKey(fp.file1.getName()))
+                            {
+                                sharedFns.put(fp.file1.getName(), fp.file1);
+                            }
+
+                            if (fp.file2 != null && existingFileNames.containsKey(fp.file2.getName()))
+                            {
+                                sharedFns.put(fp.file2.getName(), fp.file2);
+                            }
+                        }
+                    }
+                }
+
+                if (!sharedFns.isEmpty())
+                {
+                    getJob().getLogger().debug("Duplicate file names found between incoming and existing for: " + r.getName());
+                    for (String newFile : sharedFns.keySet())
+                    {
+                        long diff = Math.abs(sharedFns.get(newFile).length() - existingFileNames.get(newFile).length());
+                        getJob().getLogger().debug("File name: " + newFile + ", with size difference: " + diff);
+                        if (diff < 100)
+                        {
+                            throw new PipelineJobException("Identical filenames with nearly identical size detected between existing and new files for readset: " + r.getName());
+                        }
+                    }
+                }
+            }
         }
     }
 }
