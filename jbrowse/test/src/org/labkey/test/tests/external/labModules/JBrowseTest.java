@@ -870,6 +870,7 @@ public class JBrowseTest extends BaseWebDriverTest
     private void testVariantTableComparators() throws Exception {
         beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:116589678..117411688");
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
+        waitForElement(Locator.tagWithText("div", "116981270")); //proxy for grid loading
 
         // Test filtering AF with wrapped comparators
         waitAndClick(Locator.tagWithAttributeContaining("button", "aria-label", "Show filters"));
