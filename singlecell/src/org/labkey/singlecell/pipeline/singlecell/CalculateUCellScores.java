@@ -25,7 +25,7 @@ public class CalculateUCellScores extends AbstractRiraStep
                     SeuratToolParameter.create("storeRanks", "Store Ranks", "Passed directly to UCell::AddModuleScore_UCell.", "checkbox", new JSONObject(){{
 
                     }}, false),
-                    SeuratToolParameter.create("assayName", "Assay Name", "Passed directly to UCell::AddModuleScore_UCell.", "checkbox", new JSONObject(){{
+                    SeuratToolParameter.create("assayName", "Assay Name", "Passed directly to UCell::AddModuleScore_UCell.", "textfield", new JSONObject(){{
 
                     }}, "RNA")
             ), null, null);

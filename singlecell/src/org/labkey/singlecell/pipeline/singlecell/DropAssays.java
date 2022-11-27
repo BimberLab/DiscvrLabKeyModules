@@ -21,11 +21,12 @@ public class DropAssays extends AbstractRiraStep
         {
             super("DropAssays", "Assay(s) to Drop", "Seurat", "This will drop the selected assays from your Seurat object(s)", Arrays.asList(
                 SeuratToolParameter.create("assayNames", "Assay(s)", "The names of assays to drop, such as: RNA.orig, ADT, or RNA", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
-                            put("allowBlank", false);
-                            put("height", 150);
-                            put("delimiter", ",");
-                        }}, null).delimiter(",")
-                ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+                    put("allowBlank", false);
+                    put("height", 150);
+                    put("delimiter", ",");
+                    put("stripCharsRe", "/['\"]/g");
+                }}, null).delimiter(",")
+            ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
         @Override

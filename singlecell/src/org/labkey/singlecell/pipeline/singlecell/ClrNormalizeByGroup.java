@@ -35,16 +35,21 @@ public class ClrNormalizeByGroup extends AbstractCellMembraneStep
                     SeuratToolParameter.create("minCellsPerGroup", "Min Cells Per Group", "Any group with fewer than this many cells will be dropped.", "ldk-integerfield", new JSONObject(){{
 
                     }}, 20),
-                    SeuratToolParameter.create("calculatePerFeatureUCell", "Calculate Per Feature UCell ", "If checked, UCell will be run over each ", "checkbox", new JSONObject(){{
+                    SeuratToolParameter.create("calculatePerFeatureUCell", "Calculate Per Feature UCell ", "If checked, UCell will be run over each ADT", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, true),
+                    SeuratToolParameter.create("doAsinhTransform", "Do asinh Transform ", "If checked, count data will be transformed using asinh prior to CLR", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true),
                     SeuratToolParameter.create("featureWhitelist", "Genes to Add to VariableFeatures", "These genes, entered comma-separated or one/line, will be added to the default Seurat::VariableFeatures gene set when running PCA", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("height", 150);
                         put("delimiter", ",");
+                        put("stripCharsRe", "/['\"]/g");
                     }}, null).delimiter(","),
                     SeuratToolParameter.create("featureExclusionList", "Genes to Exclude From VariableFeatures", "These genes, entered comma-separated or one/line, will be excluded from the genes passed to RunPCA (which is otherwise determined by Seurat::VariableFeatures)", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("height", 150);
                         put("delimiter", ",");
+                        put("stripCharsRe", "/['\"]/g");
                     }}, null).delimiter(",")
                     ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }

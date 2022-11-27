@@ -29,11 +29,12 @@ public class CustomUCell extends AbstractRiraStep
                         put("height", 150);
                         put("width", 600);
                         put("delimiter", DELIM);
+                        put("stripCharsRe", "/['\"]/g");
                     }}, null),
                     SeuratToolParameter.create("storeRanks", "Store Ranks", "Passed directly to UCell::AddModuleScore_UCell.", "checkbox", new JSONObject(){{
 
                     }}, false),
-                    SeuratToolParameter.create("assayName", "Assay Name", "Passed directly to UCell::AddModuleScore_UCell.", "checkbox", new JSONObject(){{
+                    SeuratToolParameter.create("assayName", "Assay Name", "Passed directly to UCell::AddModuleScore_UCell.", "textfield", new JSONObject(){{
 
                     }}, "RNA")
             ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
