@@ -39,6 +39,9 @@
                     },{
                         name: 'Readsets Assigned to Run Lacking Data',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.viewName': 'Assigned to Run Lacking Data'})
+                    },{
+                        name: 'Analyses In Novogene-Related Workbook',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_analyses', 'query.container/title~containsoneof': 'Novogene;shipment'})
                     }]
                 },{
                     header: 'Data Archival',

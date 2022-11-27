@@ -269,6 +269,10 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                                         Ext4.defer(field.focus, 200, field);
                                     }
                                 }
+                            },{
+                                xtype: 'checkbox',
+                                itemId: 'useReadsetContainer',
+                                fieldLabel: 'Submit Jobs to Same Folder/Workbook as Readset'
                             }]
                         }],
                         buttons: [{
@@ -292,6 +296,12 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                                 var json = rec.get('json');
                                 if (Ext4.isString(rec.get('json'))) {
                                     json = Ext4.decode(json);
+                                }
+
+                                var useReadsetContainer = win.down('#useReadsetContainer').getValue();
+                                if (!useReadsetContainer) {
+                                    delete json.useOutputFileContainer;
+                                    delete json.submitJobToReadsetContainer;
                                 }
 
                                 win.sequencePanel.applySavedValues(json);
@@ -353,6 +363,16 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
         var sections = this.query('sequenceanalysis-analysissectionpanel');
         Ext4.Array.forEach(sections, function(s){
             s.applySavedValues(values);
+        }, this);
+
+        // For top-level properties:
+        Ext4.Array.forEach(['submissionType', 'useOutputFileContainer', 'submitJobToReadsetContainer'], function(val) {
+            if (values[val]) {
+                var field = this.down('[name="' + val + '"]');
+                if (field) {
+                    field.setValue(values[val]);
+                }
+            }
         }, this);
     }
 });
