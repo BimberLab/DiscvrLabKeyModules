@@ -319,7 +319,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 xtype: 'checkbox'
             }, this.getSaveTemplateCfg(),{
                 fieldLabel: 'Submit Jobs To Same Folder/Workbook As Readset?',
-                helpPopup: 'If checked, each alignment job will be submitted to the container/workbook of the parent readset, rather than this container',
+                helpPopup: 'By default, the pipelines jobs and their outputs will be created in the workbook you selected. However, in certain cases, such as bulk submission of many jobs, it might be preferable to submit each job to the source folder/workbook for each input. Checking this box will enable this.',
                 name: 'submitJobToReadsetContainer',
                 inputValue: true,
                 uncheckedValue: false,
