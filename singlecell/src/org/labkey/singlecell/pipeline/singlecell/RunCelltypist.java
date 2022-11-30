@@ -41,6 +41,16 @@ public class RunCelltypist extends AbstractRiraStep
                         put("maxValue", 1);
                         put("decimalPrecision", 3);
                     }}, 0.01),
+                    SeuratToolParameter.create( "mode", "Mode", "The build-in model(s) to use.", "ldk-simplecombo", new JSONObject(){{
+                        put("storeValues", "best_match;prob_match");
+                        put("allowBlank", false);
+                        put("delimiter", ";");
+                        put("joinReturnValue", true);
+                    }}, "prob_match", null, true, true).delimiter(";"),
+                    SeuratToolParameter.create("useMajorityVoting", "Majority Voting", "If true, celltypist will be run using --majority-voting", "checkbox", new JSONObject()
+                    {{
+                        put("checked", true);
+                    }}, true),
                     SeuratToolParameter.create("pThreshold", "pThreshold", "This is passed to the --p-thres argument.", "ldk-numberfield", new JSONObject()
                     {{
                         put("minValue", 0);
