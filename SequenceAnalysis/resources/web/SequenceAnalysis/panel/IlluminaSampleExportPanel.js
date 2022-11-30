@@ -94,7 +94,7 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
                         xtype: 'combo',
                         itemId: 'application',
                         fieldLabel: 'Application',
-                        editable: false,
+                        forceSelection: true,
                         queryMode: 'local',
                         allowBlank: false,
                         displayField: 'name',
@@ -144,8 +144,8 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
                         itemId: 'sampleKit',
                         fieldLabel: 'Sample Kit',
                         queryMode: 'local',
-                        allowBlank: false,
-                        editable: false,
+                        allowBlank: true,
+                        forceSelection: true,
                         displayField: 'name',
                         valueField: 'name',
                         disabled: true,
@@ -188,7 +188,7 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
                         fieldLabel: 'Genome Folder (optional)',
                         queryMode: 'local',
                         allowBlank: true,
-                        editable: false,
+                        forceSelection: true,
                         displayField: 'label',
                         valueField: 'label',
                         store: Ext4.create('LABKEY.ext4.data.Store', {
@@ -220,15 +220,14 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
                 handler: this.onDownload,
                 scope: this
             },{
-                text: 'Download Table Only',
-                hidden: true,
+                text: 'Download To Browser',
                 handler: this.onSimpleTableDownload,
                 scope: this
             },{
                 text: 'Cancel',
                 handler: function(btn){
                     var url = LABKEY.ActionURL.getParameter('srcURL');
-                    if(url)
+                    if (url)
                         window.location = decodeURIComponent(url);
                     else
                         window.location = LABKEY.ActionURL.buildURL('project', 'start');
@@ -240,7 +239,7 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
         this.callParent();
 
         //button should require selection, so this should never happen...
-        if(!this.rows || !this.rows.length){
+        if (!this.rows || !this.rows.length){
             this.hide();
             alert('No Samples Selected');
         }
@@ -248,20 +247,20 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
 
     onBeforeTabChange: function(){
         var application = this.down('#defaultTab').down('#application').getValue();
-        if(!application){
+        if (!application){
             Ext4.Msg.alert('Error', 'You must choose an application');
             return false;
         }
     },
 
     onTabChange: function(panel, newTab, oldTab){
-        if (newTab.itemId == 'defaultTab'){
+        if (newTab.itemId === 'defaultTab'){
 
         }
-        else if (newTab.itemId == 'previewTab'){
+        else if (newTab.itemId === 'previewTab'){
             this.populatePreviewTab();
         }
-        else if (newTab.itemId == 'previewSamplesTab'){
+        else if (newTab.itemId === 'previewSamplesTab'){
             this.populatePreviewSamplesTab();
         }
 
@@ -279,14 +278,7 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
             defaults: {
                 border: false
             },
-            items: [table],
-            buttonAlign: 'left',
-            buttons: [{
-                text: 'Edit Samples',
-                hidden: true,
-                scope: this,
-                handler: this.onEditSamples
-            }]
+            items: [table]
         });
     },
 
@@ -320,34 +312,34 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
         var activeSection = '';
         var errors = [];
         Ext4.each(text, function(line, idx){
-            if(!line)
+            if (!line)
                 return;
 
             line = line.split(/[\,|\t]+/g);
 
-            if(line.length > 2)
+            if (line.length > 2)
                 errors.push('Error reading line ' + (idx+1) + '. Line contains too many elements: "' + line.join(',') + '"');
 
             var prop = line.shift();
-            if(prop.match(/^\[/)){
+            if (prop.match(/^\[/)){
                 prop = prop.replace(/\]|\[/g, '');
-                if(this.sectionNames.indexOf(prop) == -1)
+                if (this.sectionNames.indexOf(prop) === -1)
                     errors.push('Unknown section name: ' + prop);
-                if(this.ignoredSectionNames.indexOf(prop) != -1)
+                if (this.ignoredSectionNames.indexOf(prop) !== -1)
                     errors.push('Cannot edit section: [' + prop + '] from this page');
 
                 activeSection = prop;
                 return;
             }
 
-            if(!vals[activeSection])
+            if (!vals[activeSection])
                 vals[activeSection] = [];
 
             var val = line.join('');
             vals[activeSection].push([prop, val]);
         }, this);
 
-        if(errors.length){
+        if (errors.length){
             Ext4.Msg.alert("Error", errors.join('<br>'));
             return false;
         }
@@ -358,14 +350,14 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
     buildValuesObj: function(){
         var errors = [];
         this.down('form').items.each(function(field){
-            if(field.isFormField && !field.isValid()){
+            if (field.isFormField && !field.isValid()){
                 Ext4.each(field.getErrors(), function(e){
                     errors.push(field.fieldLabel + ': ' + e);
                 }, this);
             }
         });
 
-        if(errors.length){
+        if (errors.length){
             errors = Ext4.unique(errors);
             errors = errors.join('<br>');
             Ext4.Msg.alert("Error", "There are errors in the form:<br>" + errors);
@@ -376,33 +368,33 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
 
         var valuesObj = {};
         this.down('form').items.each(function(item){
-            if(item.section){
-                if(!valuesObj[item.section])
+            if (item.section){
+                if (!valuesObj[item.section])
                     valuesObj[item.section] = [];
 
-                if (item.section == 'Reads')
+                if (item.section === 'Reads')
                     valuesObj[item.section].push([item.getValue()]);
                 else
                     valuesObj[item.section].push([item.fieldLabel, item.getValue()]);
             }
-            else if (item.itemId == 'application' || item.itemId == 'sampleKit'){
+            else if (item.itemId === 'application' || item.itemId === 'sampleKit'){
                 var recIdx = item.store.find(item.valueField, item.getValue());
-                if (recIdx == -1)
+                if (recIdx === -1)
                     return;
 
                 var rec = item.store.getAt(recIdx);
 
                 //if we have a custom application, we only support the JSON field
-                if (application != 'Custom'){
+                if (application !== 'Custom'){
                     if (rec.get('workflowname')){
-                        if(!valuesObj['Header'])
+                        if (!valuesObj['Header'])
                             valuesObj['Header'] = [];
 
                         valuesObj['Header'].push(['Workflow', rec.get('workflowname')]);
                     }
 
                     if (rec.get('settings')){
-                        if(!valuesObj['Settings'])
+                        if (!valuesObj['Settings'])
                             valuesObj['Settings'] = [];
 
                         var settings = Ext4.decode(rec.get('settings'));
@@ -411,24 +403,24 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
                         }
                     }
 
-                    if (item.itemId == 'application'){
+                    if (item.itemId === 'application'){
                         valuesObj['Header'].push(['Application', rec.get('name')]);
                     }
 
-                    if (item.itemId == 'sampleKit'){
+                    if (item.itemId === 'sampleKit' && rec.get('name')){
                         valuesObj['Header'].push(['Assay', rec.get('name')]);
                     }
                 }
 
                 if (rec.get('json')){
-                    if (item.itemId == 'sampleKit' && application == 'Custom'){
+                    if (item.itemId === 'sampleKit' && application === 'Custom'){
                         return;
                     }
 
                     var json = Ext4.decode(rec.get('json'));
                     for (var section in json){
                         var array = json[section];
-                        if(!valuesObj[section])
+                        if (!valuesObj[section])
                             valuesObj[section] = [];
 
                         valuesObj[section] = valuesObj[section].concat(json[section]);
@@ -447,7 +439,7 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
 
         var rows = [];
         Ext4.each(this.sectionNames, function(section){
-            if(section != 'Data'){
+            if (section !== 'Data'){
                 rows.push({
                     xtype: 'displayfield',
                     fieldLabel: '<b>[' + section + ']</b>'
@@ -508,12 +500,12 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
 
         var rows = [];
         Ext4.each(this.sectionNames, function(section){
-            if(section != 'Data'){
+            if (section !== 'Data'){
                 rows.push(['[' + section + ']']);
                 Ext4.each(obj[section], function(row){
                     var value = Ext4.isDate(row[1]) ? Ext4.Date.format(row[1], 'm/d/Y') : row[1];
                     var thisRow = [row[0]];
-                    if(!Ext4.isEmpty(value))
+                    if (!Ext4.isEmpty(value))
                         thisRow.push(value);
 
                     rows.push(thisRow);
@@ -541,15 +533,15 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
         var idx7 = [];
         var idx5 = [];
 
-        for(var i = 1; i < rows.length; i++){ //skip header row
+        for (var i = 1; i < rows.length; i++){ //skip header row
             coloredString = '';
             if (rows[i][this.COL_IDX7]){
-                for(var q = 0; q < rows[i][this.COL_IDX7].length; q++){
+                for (var q = 0; q < rows[i][this.COL_IDX7].length; q++){
                     var color;
-                    if(rows[i][this.COL_IDX7].charAt(q) == 'A' || rows[i][this.COL_IDX7].charAt(q) == 'C'){
+                    if (rows[i][this.COL_IDX7].charAt(q) === 'A' || rows[i][this.COL_IDX7].charAt(q) === 'C'){
                         color = 'red';
                     }
-                    else if(rows[i][this.COL_IDX7].charAt(q) == 'G' || rows[i][this.COL_IDX7].charAt(q) == 'T'){
+                    else if (rows[i][this.COL_IDX7].charAt(q) === 'G' || rows[i][this.COL_IDX7].charAt(q) === 'T'){
                         color = 'green';
                     }
                     coloredString += '<span style="color:' + color + '">' + rows[i][this.COL_IDX7].charAt(q) + '</span>';
@@ -562,12 +554,12 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
 
             coloredString = '';
             if (rows[i][this.COL_IDX5]){
-                for(var q = 0; q < rows[i][this.COL_IDX5].length; q++){
+                for (var q = 0; q < rows[i][this.COL_IDX5].length; q++){
                     var color;
-                    if(rows[i][this.COL_IDX5].charAt(q) == 'A' || rows[i][this.COL_IDX5].charAt(q) == 'C'){
+                    if (rows[i][this.COL_IDX5].charAt(q) === 'A' || rows[i][this.COL_IDX5].charAt(q) === 'C'){
                         color = 'red';
                     }
-                    else if(rows[i][this.COL_IDX5].charAt(q) == 'G' || rows[i][this.COL_IDX5].charAt(q) == 'T'){
+                    else if (rows[i][this.COL_IDX5].charAt(q) === 'G' || rows[i][this.COL_IDX5].charAt(q) === 'T'){
                         color = 'green';
                     }
                     coloredString += '<span style="color:' + color + '">' + rows[i][this.COL_IDX5].charAt(q) + '</span>';
@@ -582,16 +574,16 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
 
         var string7 = '';
         for (var j=0;j<idx7.length;j++){
-            string7 += Ext4.unique(idx7[j]).length == 1 ? 'X' : '&nbsp;';
+            string7 += Ext4.unique(idx7[j]).length === 1 ? 'X' : '&nbsp;';
         }
 
         var string5 = '';
         for (var j=0;j<idx5.length;j++){
-            string5 += Ext4.unique(idx5[j]).length == 1 ? 'X' : '&nbsp;';
+            string5 += Ext4.unique(idx5[j]).length === 1 ? 'X' : '&nbsp;';
         }
 
         //TODO: error messages, also validate logic
-        var newRow = new Array();
+        var newRow = [];
         newRow[this.COL_IDX7] = '<span style="font-family:monospace; font-size:12pt">' + string7 + '</span>';
         newRow[this.COL_IDX5] = '<span style="font-family:monospace; font-size:12pt">' + string5 + '</span>';
         //rows.push(newRow);
@@ -611,7 +603,10 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
 
         var sampleColumns = [
             ['Sample_ID', 'rowid'],
-            ['Sample_Name', 'name', function(row) { return nameUsingRowId ? 's_' + row.rowid : row.name; }],
+            ['Sample_Name', 'name', function(row) {
+                var sampleName = row.name.replaceAll(/[ _]/g, '-');
+                return nameUsingRowId ? 's_' + row.rowid : sampleName;
+            }],
             ['Sample_Plate', ''],
             ['Sample_Well', ''],
             ['Sample_Project', ''],
@@ -651,43 +646,6 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
         return exportRows;
     },
 
-    generateSampleText: function(){
-        var text = '';
-        var rows = this.getDataSectionRows();
-        Ext4.each(rows, function(row){
-            text += row.join(',') + '\n';
-        }, this);
-
-        return text;
-    },
-
-    getFluorArray: function(sequence){
-        var FLUOR_MAP = {
-            A: 'RED',
-            C: 'RED',
-            T: 'GREEN',
-            G: 'GREEN'
-        }
-
-    //    var RC_FLUOR_MAP = {
-    //        T: 'RED',
-    //        G: 'RED',
-    //        A: 'GREEN',
-    //        C: 'GREEN'
-    //    }
-
-        var fluors = [];
-        for(var pos = 0, char; pos < sequence.length; pos++){
-            char = sequence[pos].toUpperCase();
-            fluors.push(FLUOR_MAP[char]);
-        }
-        return fluors;
-    },
-
-    validateTemplate: function(){
-        //TODO
-    },
-
     onEditTemplate: function(btn){
         var tab = this.down('#previewTab');
         tab.removeAll();
@@ -716,19 +674,15 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
                 scope: this,
                 handler: this.populatePreviewTab
             }]
-        })
-    },
-
-    onEditSamples: function(btn){
-        //TODO
+        });
     },
 
     onDoneEditing: function(){
-        if(this.down('#previewTab').down('#sourceField')){
+        if (this.down('#previewTab').down('#sourceField')){
             var field = this.down('#sourceField');
-            if(field.isDirty()){
+            if (field.isDirty()){
                 var val = this.parseText(field.getValue());
-                if(val === false)
+                if (val === false)
                     return false;
 
                 this.setValuesFromText(val);
@@ -741,7 +695,7 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
         var json = {};
         var form = this.down('#defaultTab');
         for (var section in values){
-            if (section == 'Reads'){
+            if (section === 'Reads'){
                 if (values[section].length > 0)
                     this.down('#cycles1').setValue(values[section][0]);
 
@@ -751,14 +705,14 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
             else {
                 Ext4.each(values[section], function(pair){
                     var field = form.items.findBy(function(item){
-                        return item.section == section && item.fieldLabel == pair[0];
+                        return item.section === section && item.fieldLabel === pair[0];
                     }, this);
 
-                    if(field){
+                    if (field){
                         field.setValue(pair[1])
                     }
                     else {
-                        if(!json[section])
+                        if (!json[section])
                             json[section] = [];
 
                         json[section].push(pair)
@@ -769,7 +723,7 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
 
         var applicationField = this.down('#defaultTab').down('#application');
         var recIdx = applicationField.store.find('name', 'Custom');
-        if(recIdx == -1){
+        if (recIdx === -1){
             var rec = LDK.StoreUtils.createModelInstance(applicationField.store, {name: 'Custom'});
             applicationField.store.add(rec);
         }
@@ -781,36 +735,42 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
     },
 
     onSimpleTableDownload: function(btn){
-        if(this.onDoneEditing() === false)
+        if (this.onDoneEditing() === false)
             return;
 
-        if(!this.down('form').getForm().isValid())
+        if (!this.down('form').getForm().isValid())
             return;
 
-        var fileNamePrefix = this.down('#defaultTab').down('#fileName').getValue();
-        if(!fileNamePrefix){
-            alert('Must provide the flow cell Id, which will be used as the filename.  If you do not know this, fill out another value and rename the file later.');
-            return;
-        }
-
-        var text = this.getSimpleTableOutput();
-        LABKEY.Utils.convertToTable({
-            fileNamePrefix: fileNamePrefix,
-            delim: 'COMMA',
-            newlineChar: '\r\n',
-            rows: text
-        });
+        var text = this.getTableOutput();
+        console.log(text);
+        Ext4.create('Ext4.window.Window', {
+            modal: true,
+            bodyStyle: 'padding: 5px;',
+            title: 'Sample Sheet',
+            items: [{
+                xtype: 'textarea',
+                width: 800,
+                height: 400,
+                value: text.join('\n')
+            }],
+            buttons: [{
+                text: 'Close',
+                handler: function(btn) {
+                    btn.up('window').close();
+                }
+            }]
+        }).show();
     },
 
     onDownload: function(btn){
-        if(this.onDoneEditing() === false)
+        if (this.onDoneEditing() === false)
             return;
 
-        if(!this.down('form').getForm().isValid())
+        if (!this.down('form').getForm().isValid())
             return;
 
         var fileNamePrefix = this.down('#defaultTab').down('#fileName').getValue();
-        if(!fileNamePrefix){
+        if (!fileNamePrefix){
             alert('Must provide the flow cell Id, which will be used as the filename.  If you do not know this, fill out another value and rename the file later.');
             return;
         }
@@ -830,45 +790,33 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
         return text.concat(this.getDataSectionRows());
     },
 
-    getSimpleTableOutput: function(){
-//        var text = [
-//            ['Version 2'],
-//            ['ID', this.down('#defaultTab').down('#fileName').getValue()],
-//            ['Assay', this.down('#defaultTab').down('#sampleKit').getValue()],
-//            ['IndexReads', 2],
-//            ['IndexCycles', 8]
-//        ];
-//        return text.concat(this.getDataSectionRows());
-        return this.getDataSectionRows();
-    },
-
     onSaveApplication: function(btn){
         //if we're editing the source, need to save first
-        if(this.onDoneEditing() === false)
+        if (this.onDoneEditing() === false)
             return;
 
         var field = this.down('#defaultTab').down('#application');
         var rec = field.store.getAt(field.store.find('name', field.getValue()));
 
-        if(!rec.dirty && !rec.phantom){
+        if (!rec.dirty && !rec.phantom){
             alert('This application is already saved');
         }
         else {
-            if(rec.phantom || !rec.get('editable')){
+            if (rec.phantom || !rec.get('editable')){
                 var msg = 'Choose a name for this application';
-                if(!rec.get('editable'))
+                if (!rec.get('editable'))
                     msg = 'This application cannot be edited.  Please choose a different name:';
 
                 Ext4.Msg.prompt('Choose Name', msg, function(btn, msg){
-                    if (btn == 'ok'){
-                        if(Ext4.isEmpty(msg)){
+                    if (btn === 'ok'){
+                        if (Ext4.isEmpty(msg)){
                             alert('Must enter a name');
                             this.onSaveApplication();
                             return;
                         }
 
                         var idx = field.store.find('name', msg);
-                        if(idx != -1){
+                        if (idx !== -1){
                             alert('Error: name is already is use');
                             this.onSaveApplication();
                             return;
@@ -901,7 +849,7 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
             })
         }
 
-        if(rec.phantom){
+        if (rec.phantom){
             LABKEY.Query.insertRows(config)
         }
         else {
