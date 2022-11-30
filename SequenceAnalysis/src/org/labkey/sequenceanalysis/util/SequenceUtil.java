@@ -83,6 +83,7 @@ public class SequenceUtil
         fasta(Arrays.asList(".fasta", ".fa", ".fna"), true),
         bam(".bam"),
         cram(".cram"),
+        bamOrCram(Arrays.asList(".bam", ".cram"), false),
         sff(".sff"),
         gtf(Collections.singletonList(".gtf"), true),
         gff(Arrays.asList(".gff", ".gff3"), true),
