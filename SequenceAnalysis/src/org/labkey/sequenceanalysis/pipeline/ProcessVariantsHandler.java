@@ -677,8 +677,15 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                     so1.setCreated(new Date());
                     so1.setModified(new Date());
                     so1.setReadset(readsetId);
-                    so1.setDescription("Total samples: " + sampleCount);
+                    String description = "Total samples: " + sampleCount;
 
+                    String extraDescription = StringUtils.trimToNull(ctx.getParams().optString("jobDescription"));
+                    if (extraDescription != null)
+                    {
+                        description = description + '\n' + extraDescription;
+                    }
+
+                    so1.setDescription(description);
                     _resumer.getFileManager().addSequenceOutput(so1);
                 }
             }

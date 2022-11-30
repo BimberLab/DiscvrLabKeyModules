@@ -30,7 +30,11 @@ bindArgs <- function(fun, seuratObj, allowableArgNames = NULL, disallowedArgName
             }
 
             print(paste0('Binding argument: ', name, ': ', displayVal))
-            boundArgs[[name]] <- val
+            if (all(is.null(val))) {
+                boundArgs[name] <- list(NULL)
+            } else {
+                boundArgs[[name]] <- val
+            }
         }
     }
 
@@ -57,7 +61,10 @@ printName <- function(datasetId) {
 }
 
 savedFiles <- data.frame(datasetId = character(), datasetName = character(), filename = character(), outputFileId = character(), readsetId = character())
-write.table(savedFiles, file = 'savedSeuratObjects.txt', quote = FALSE, sep = '\t', row.names = FALSE, col.names = FALSE)
+if (file.exists('/work/savedSeuratObjects.txt')) {
+    unlink('/work/savedSeuratObjects.txt')
+}
+file.create('/work/savedSeuratObjects.txt')
 
 saveData <- function(seuratObj, datasetId) {
     print(paste0('Saving dataset: ', datasetId))

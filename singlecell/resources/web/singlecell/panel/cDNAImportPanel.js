@@ -313,7 +313,7 @@ Ext4.define('SingleCell.panel.cDNAImportPanel', {
                     if (r.application === 'CITE-Seq') {
                         fieldName = 'citeseqReadsetId';
                     }
-                    else if (r.application === 'Cell Hashing') {
+                    else if (r.application === 'Cell Hashing' || r.application === 'Cell Hashing/CITE-seq') {
                         fieldName = 'hashingReadsetId';
                     }
                     else if (r.librarytype === '10x 5\' GEX') {
@@ -323,8 +323,8 @@ Ext4.define('SingleCell.panel.cDNAImportPanel', {
                         fieldName = 'tcrReadsetId';
                     }
                     else {
-                        console.error('Unknown row type')
-                        console.error(row)
+                        console.error('Unknown row type: ' + r.application);
+                        console.error(r);
                     }
 
                     r.doInsert = !(plateToCDNAMap[r.plateId] ? plateToCDNAMap[r.plateId].map(r => r[fieldName]).filter(r => !!r).filter(getUnique).join('') : null);
