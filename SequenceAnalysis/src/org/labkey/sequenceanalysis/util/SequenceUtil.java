@@ -89,6 +89,7 @@ public class SequenceUtil
         gff(Arrays.asList(".gff", ".gff3"), true),
         gbk(".gbk"),
         bed(Collections.singletonList(".bed"), true),
+        bw(Collections.singletonList(".bw"), false),
         vcf(Arrays.asList(".vcf"), true),
         gvcf(Arrays.asList(".g.vcf"), true);
 

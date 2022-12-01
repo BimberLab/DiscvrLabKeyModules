@@ -111,6 +111,7 @@ public class ImportGenomeTrackPipelineJob extends PipelineJob
                     SequenceUtil.FILETYPE.gtf.getFileType().isType(file) ||
                     SequenceUtil.FILETYPE.gff.getFileType().isType(file) ||
                     SequenceUtil.FILETYPE.bed.getFileType().isType(file) ||
+                    SequenceUtil.FILETYPE.bw.getFileType().isType(file) ||
                     SequenceUtil.FILETYPE.vcf.getFileType().isType(file)
                 );
             }
