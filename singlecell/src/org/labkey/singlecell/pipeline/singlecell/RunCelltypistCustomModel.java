@@ -33,7 +33,43 @@ public class RunCelltypistCustomModel extends AbstractRiraStep
                         put("category", TrainCelltypist.CATEGORY);
                         put("performGenomeFilter", false);
                     }}, null),
-                    SeuratToolParameter.create("columnPrefix", "Column Prefix", "This string will be pre-pended to the normal output columns (i.e. majority_voting and predicted_labels)", "textfield", null, null)
+                    SeuratToolParameter.create("columnPrefix", "Column Prefix", "This string will be pre-pended to the normal output columns (i.e. majority_voting and predicted_labels)", "textfield", null, null),
+                    SeuratToolParameter.create("convertAmbiguousToNA", "Convert Ambiguous To NA", "If true, any values for majority_voting with commas (indicating they are ambiguous) will be converted to NA", "checkbox", new JSONObject()
+                    {{
+                        put("checked", false);
+                    }}, false),
+                    SeuratToolParameter.create("maxAllowableClasses", "Max Allowable Classes", "Celltypist can assign a cell to many classes, creating extremely long labels. Any cell with more than this number of labels will be set to NA", "ldk-integerfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                    }}, 5),
+                    SeuratToolParameter.create("minFractionToInclude", "Min Fraction To Include", "Any labels representing fewer than this fraction of the cells will be set to NA", "ldk-numberfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                        put("maxValue", 1);
+                        put("decimalPrecision", 3);
+                    }}, 0.01),
+                    SeuratToolParameter.create( "mode", "Mode", "The build-in model(s) to use.", "ldk-simplecombo", new JSONObject(){{
+                        put("storeValues", "best_match;prob_match");
+                        put("allowBlank", false);
+                        put("delimiter", ";");
+                        put("joinReturnValue", true);
+                    }}, "prob_match", null, true, true).delimiter(";"),
+                    SeuratToolParameter.create("useMajorityVoting", "Majority Voting", "If true, celltypist will be run using --majority-voting", "checkbox", new JSONObject()
+                    {{
+                        put("checked", true);
+                    }}, true),
+                    SeuratToolParameter.create("pThreshold", "pThreshold", "This is passed to the --p-thres argument.", "ldk-numberfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                        put("maxValue", 1);
+                        put("decimalPrecision", 3);
+                    }}, 0.5),
+                    SeuratToolParameter.create("minProp", "minProp", "This is passed to the --min-prop argument.", "ldk-numberfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                        put("maxValue", 1);
+                        put("decimalPrecision", 3);
+                    }}, 0)
             ), PageFlowUtil.set("sequenceanalysis/field/SequenceOutputFileSelectorField.js"), null);
         }
 
