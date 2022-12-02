@@ -47,7 +47,7 @@
     "xlsx": "^0.18.3"
   },
   "devDependencies": {
-    "@labkey/build": "^6.0.0",
+    "@labkey/build": "6.4.0",
     "@types/enzyme": "^3.10.12",
     "@types/jest": "^27.4.1",
     "@types/jquery": "^3.5.14",
