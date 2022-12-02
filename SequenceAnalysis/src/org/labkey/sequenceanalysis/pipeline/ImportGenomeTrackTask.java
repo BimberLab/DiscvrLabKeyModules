@@ -102,32 +102,38 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
             super(ImportGenomeTrackTask.class);
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.emptyList();
         }
 
+        @Override
         public String getStatusName()
         {
             return PipelineJob.TaskStatus.running.toString();
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
             return Arrays.asList(ACTION_NAME);
         }
 
-        public PipelineJob.Task createTask(PipelineJob job)
+        @Override
+        public PipelineJob.Task<?> createTask(PipelineJob job)
         {
             return new ImportGenomeTrackTask(this, job);
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
         }
     }
 
+    @Override
     public RecordedActionSet run() throws PipelineJobException
     {
         getJob().getLogger().info("Importing tracks from file(s): ");
@@ -293,6 +299,11 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
             }
         }
         else if (SequenceUtil.FILETYPE.gbk.getFileType().isType(file))
+        {
+            getJob().getLogger().debug("no processing needed: " + file.getName());
+            FileUtils.moveFile(file, outputFile);
+        }
+        else if (SequenceUtil.FILETYPE.bw.getFileType().isType(file))
         {
             getJob().getLogger().debug("no processing needed: " + file.getName());
             FileUtils.moveFile(file, outputFile);
