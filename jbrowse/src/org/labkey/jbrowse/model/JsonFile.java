@@ -647,6 +647,9 @@ public class JsonFile
         ret.put("assemblyNames", new JSONArray(){{
             put(JBrowseSession.getAssemblyName(rg));
         }});
+        ret.put("category", new JSONArray(){{
+            put(getCategory());
+        }});
 
         String url = targetFile.getWebDavURL(FileContentService.PathType.full);
         if (url == null)
@@ -656,7 +659,7 @@ public class JsonFile
         }
 
         ret.put("adapter", new JSONObject(){{
-            put("type", "BigWig");
+            put("type", "BigWigAdapter");
             put("bigWigLocation", new JSONObject(){{
                 put("uri", url);
                 put("locationType", "UriLocation");
