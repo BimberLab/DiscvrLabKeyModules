@@ -23,6 +23,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.TextAnchor;
 import org.json.old.JSONObject;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
@@ -311,7 +312,7 @@ public class VariationChart
         if (gff == null)
             return new FeatureList();
 
-        File f = File.createTempFile("variationChart", ".gff");
+        File f = FileUtil.createTempFile("variationChart", ".gff");
         try (PrintWriter writer = PrintWriters.getPrintWriter(f))
         {
             writer.write(gff);
@@ -354,7 +355,7 @@ public class VariationChart
             i++;
         }
 
-        File output = File.createTempFile("sequenceGraph", ".svg");
+        File output = FileUtil.createTempFile("sequenceGraph", ".svg");
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(output)))
         {
             generator.stream(writer);

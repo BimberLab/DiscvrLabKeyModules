@@ -8,6 +8,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
+import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -34,7 +35,7 @@ public class GFFReadWrapper extends AbstractCommandWrapper
             if (output == null)
             {
                 getLogger().debug("file will sort sorted in place");
-                outputFile = File.createTempFile("gffread", ".txt");
+                outputFile = FileUtil.createTempFile("gffread", ".txt");
             }
             else
             {
