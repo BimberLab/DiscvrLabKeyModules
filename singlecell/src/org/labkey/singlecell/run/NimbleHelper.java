@@ -296,10 +296,11 @@ public class NimbleHelper
         alignArgs.add("/work/nimbleDebug." + genome.genomeId + ".txt");
 
         boolean alignOutput = getProvider().getParameterByName(ALIGN_OUTPUT).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+        File alignmentOutputFile = new File(getPipelineCtx().getWorkingDirectory(), "nimbleAlignment." + genome.genomeId + ".txt.gz");
         if (alignOutput)
         {
             alignArgs.add("-a");
-            alignArgs.add("/work/nimbleAlignment." + genome.genomeId + ".txt.gz");
+            alignArgs.add("/work/" + alignmentOutputFile.getName());
         }
 
         String strandedness = getProvider().getParameterByName(STRANDEDNESS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null);
@@ -358,6 +359,17 @@ public class NimbleHelper
         catch (IOException e)
         {
             throw new PipelineJobException(e);
+        }
+
+        if (alignmentOutputFile.exists())
+        {
+            SimpleScriptWrapper runner = new SimpleScriptWrapper(getPipelineCtx().getLogger());
+            File alignmentOutputFile2 = new File(alignmentOutputFile.getParentFile(), alignmentOutputFile.getName().replaceAll(".txt.gz$", ".subset.txt.gz$"));
+            runner.execute(Arrays.asList("/bin/bash", "-c", "zcat '" + alignmentOutputFile.getPath() + "' | awk -F '\t' ' $10!=\"\" ' > " + alignmentOutputFile2.getPath()));
+        }
+        else
+        {
+            getPipelineCtx().getLogger().debug("Alignment output file not present: " + alignmentOutputFile.getName());
         }
 
         return resultsTsv;
