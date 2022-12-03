@@ -369,7 +369,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
         }, this);
 
         // For top-level properties:
-        Ext4.Array.forEach(['submissionType', 'useOutputFileContainer', 'submitJobToReadsetContainer'], function(val) {
+        Ext4.Array.forEach(['submissionType', 'useOutputFileContainer'], function(val) {
             if (values[val]) {
                 var field = this.down('[name="' + val + '"]');
                 if (field) {
