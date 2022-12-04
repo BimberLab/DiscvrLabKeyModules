@@ -364,7 +364,7 @@ public class NimbleHelper
         if (alignmentOutputFile.exists())
         {
             SimpleScriptWrapper runner = new SimpleScriptWrapper(getPipelineCtx().getLogger());
-            File alignmentOutputFile2 = new File(alignmentOutputFile.getParentFile(), alignmentOutputFile.getName().replaceAll(".txt.gz$", ".subset.txt.gz$"));
+            File alignmentOutputFile2 = new File(alignmentOutputFile.getParentFile(), alignmentOutputFile.getName().replace(".txt.gz", ".subset.txt.gz"));
             runner.execute(Arrays.asList("/bin/bash", "-c", "zcat '" + alignmentOutputFile.getPath() + "' | awk -F '\t' ' $10!=\"\" ' > " + alignmentOutputFile2.getPath()));
         }
         else
