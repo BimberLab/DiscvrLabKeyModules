@@ -554,7 +554,7 @@ public class Barcoder extends AbstractSequenceMatcher
             try
             {
                 //create input data
-                _input = File.createTempFile("barcodeTest", ".fastq");
+                _input = FileUtil.createTempFile("barcodeTest", ".fastq");
                 if (_input.exists())
                     _input.delete();
 

@@ -258,7 +258,7 @@ public class SequenceTaskHelper implements PipelineContext
         log.debug("java.io.tmpDir: " + System.getProperty("java.io.tmpdir"));
         try
         {
-            File tmp = File.createTempFile("sa-tmp", "tmp");
+            File tmp = FileUtil.createTempFile("sa-tmp", "tmp");
             log.debug("temp file location: " + tmp.getParent());
             tmp.delete();
         }

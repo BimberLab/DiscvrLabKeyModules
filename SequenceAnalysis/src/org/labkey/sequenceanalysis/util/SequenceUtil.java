@@ -541,7 +541,7 @@ public class SequenceUtil
     {
         try
         {
-            File script = File.createTempFile("script", "sh");
+            File script = FileUtil.createTempFile("script", "sh");
             try (PrintWriter writer = PrintWriters.getPrintWriter(script))
             {
                 writer.println("#!/bin/bash");
