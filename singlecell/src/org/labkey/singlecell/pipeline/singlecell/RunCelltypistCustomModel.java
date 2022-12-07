@@ -69,7 +69,11 @@ public class RunCelltypistCustomModel extends AbstractRiraStep
                         put("minValue", 0);
                         put("maxValue", 1);
                         put("decimalPrecision", 3);
-                    }}, 0)
+                    }}, 0),
+                    SeuratToolParameter.create("maxBatchSize", "Max Cells Per Batch", "If the object has more than this many cells, celltypist will be run in batches", "ldk-integerfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                    }}, 500000)
             ), PageFlowUtil.set("sequenceanalysis/field/SequenceOutputFileSelectorField.js"), null);
         }
 
