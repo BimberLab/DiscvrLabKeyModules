@@ -307,6 +307,11 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                                     delete json.submitJobToReadsetContainer;
                                 }
 
+                                var useReadsetContainerField = win.sequencePanel.down('[name="useReadsetContainer"]');
+                                if (useReadsetContainerField) {
+                                    useReadsetContainerField.setValue(useReadsetContainer);
+                                }
+
                                 win.sequencePanel.applySavedValues(json);
                                 win.close();
                             }
