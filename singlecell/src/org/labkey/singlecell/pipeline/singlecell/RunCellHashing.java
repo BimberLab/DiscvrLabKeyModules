@@ -184,7 +184,7 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
             //Add one more indentation to headers:
             try
             {
-                File updated = File.createTempFile("headerUpdate", ".md");
+                File updated = FileUtil.createTempFile("headerUpdate", ".md");
                 try (PrintWriter writer = PrintWriters.getPrintWriter(updated); BufferedReader reader = Readers.getReader(markdown))
                 {
                     String line;
