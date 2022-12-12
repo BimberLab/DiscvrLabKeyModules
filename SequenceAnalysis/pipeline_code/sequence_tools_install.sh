@@ -44,7 +44,7 @@ LK_USER=
 MAVEN_OPTS="-Xss10m"
 
 #NOTE: java/javac not automatically picked up
-if [ ! -z $JAVA_HOME ]; then
+if [ ! -z "${JAVA_HOME:+x}" ]; then
     PATH=${JAVA_HOME}/bin:$PATH
 fi
 
@@ -102,7 +102,7 @@ echo "Install location"
 echo ""
 echo "LKTOOLS_DIR: $LKTOOLS_DIR"
 echo "LKSRC_DIR: $LKSRC_DIR"
-WGET_OPTS="--read-timeout=10 --secure-protocol=auto"
+WGET_OPTS="--read-timeout=10 --secure-protocol=auto --no-check-certificate"
 
 #
 # Install required software
@@ -146,8 +146,8 @@ elif [ $(which apt-get) ]; then
     #apt-get install oracle-java7-installer
     #update-alternatives --config java
     #update-alternatives --config javac
-
-    apt-get -q -y install bzip2 libbz2-dev libc6 libc6-dev libncurses5-dev python-dev unzip zip ncftp gcc make perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python-numpy python-scipy libexpat1-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc git cmake maven r-base r-cran-rcpp python-pip
+    #apt-get -y update
+    apt-get -q -y install bzip2 libbz2-dev libc6 libc6-dev libncurses5-dev python3-dev unzip zip ncftp gcc make perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python3-numpy python3-scipy libexpat1-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc git cmake maven r-base r-cran-rcpp python-pip
 else
     echo "No known package manager present, aborting"
     exit 1
@@ -178,11 +178,10 @@ then
     rm -Rf bwa-0.*
     rm -Rf $LKTOOLS_DIR/bwa
 
-    wget $WGET_OPTS https://downloads.sourceforge.net/project/bio-bwa/bwa-0.7.17.tar.bz2
-    bunzip2 bwa-0.7.17.tar.bz2
-    tar -xf bwa-0.7.17.tar
-    bzip2 bwa-0.7.17.tar
-    cd bwa-0.7.17
+    wget $WGET_OPTS -O bwa.zip https://github.com/lh3/bwa/zipball/master/
+    unzip bwa.zip
+    DIRNAME=`ls | grep lh3-bwa`
+    cd $DIRNAME
     make
     install bwa $LKTOOLS_DIR/
 else
@@ -232,15 +231,11 @@ then
     rm -Rf subread*
     rm -Rf $LKTOOLS_DIR/featureCounts
 
-    wget $WGET_OPTS https://downloads.sourceforge.net/project/subread/subread-1.6.0/subread-1.6.0-source.tar.gz
-    gunzip subread-1.6.0-source.tar.gz
-    tar -xf subread-1.6.0-source.tar
+    wget $WGET_OPTS https://downloads.sourceforge.net/project/subread/subread-2.0.3/subread-2.0.3-Linux-x86_64.tar.gz
+    gunzip subread-2.0.3-Linux-x86_64.tar.gz
+    tar -xf subread-2.0.3-Linux-x86_64.tar
 
-    cd subread-1.6.0-source/src
-    make -f Makefile.Linux
-    cd ../
-
-    install ./bin/featureCounts $LKTOOLS_DIR/
+    install ./subread-2.0.3-Linux-x86_64/bin/featureCounts $LKTOOLS_DIR/
 else
     echo "Already installed"
 fi
@@ -258,25 +253,28 @@ cd $LKSRC_DIR
 if [[ ! -e ${LKTOOLS_DIR}/flash || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf FLASH-1.2.7.tar.gz
-    rm -Rf FLASH-1.2.7.tar
-    rm -Rf FLASH-1.2.7
+    rm -Rf FLASH-1.2.11.tar.gz
+    rm -Rf FLASH-1.2.11.tar
+    rm -Rf FLASH-1.2.11
     rm -Rf $LKTOOLS_DIR/flash
 
-    wget $WGET_OPTS https://downloads.sourceforge.net/project/flashpage/FLASH-1.2.7.tar.gz
-    gunzip FLASH-1.2.7.tar.gz
-    tar -xf FLASH-1.2.7.tar
+    wget $WGET_OPTS http://ccb.jhu.edu/software/FLASH/FLASH-1.2.11-Linux-x86_64.tar.gz
+    gunzip FLASH-1.2.11-Linux-x86_64.tar.gz
+    tar -xf FLASH-1.2.11-Linux-x86_64.tar
     echo "Compressing TAR"
-    gzip FLASH-1.2.7.tar
-    cd FLASH-1.2.7
-    make
+    gzip FLASH-1.2.11-Linux-x86_64.tar
 
-    install flash $LKTOOLS_DIR/
+    install ./FLASH-1.2.11-Linux-x86_64/flash $LKTOOLS_DIR/
 else
     echo "Already installed"
 fi
 
-
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install DISCVRSeq"
+echo ""
+cd $LKSRC_DIR
 if [[ ! -e ${LKTOOLS_DIR}/DISCVRSeq.jar || ! -z $FORCE_REINSTALL ]];
 then
     rm -Rf DISCVRSeq*
@@ -286,50 +284,9 @@ then
     | grep 'browser_download_url.*jar' \
     | cut -d : -f 2,3 \
     | tr -d \" \
-    | wget -O DISCVRseq.jar -qi -
+    | wget -O DISCVRSeq.jar -qi -
 
     cp DISCVRSeq.jar ${LKTOOLS_DIR}/DISCVRSeq.jar
-fi
-
-
-#
-# GSNAP
-#
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install GSNAP"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/gmap_build || ! -z $FORCE_REINSTALL ]];
-then
-    echo "Cleaning up previous installs"
-    rm -Rf gmap-gsnap-2014-12-16*
-    rm -Rf gmap-2014-12-16*
-    rm -Rf gmap-gsnap-2015-09-10*
-    rm -Rf gmap-2015-09-10*
-    rm -Rf $LKTOOLS_DIR/gsnap
-    rm -Rf $LKTOOLS_DIR/gmap
-    rm -Rf $LKTOOLS_DIR/gmap_build
-
-    wget $WGET_OPTS http://research-pub.gene.com/gmap/src/gmap-gsnap-2015-09-10.tar.gz
-    gunzip gmap-gsnap-2015-09-10.tar.gz
-    tar -xf gmap-gsnap-2015-09-10.tar
-    gzip gmap-gsnap-2015-09-10.tar
-    cd gmap-2015-09-10
-
-    ./configure --prefix=${LK_HOME}
-    make
-    make install
-
-    #note: there was a bug in gmap if your input has a space in the filepath
-    #cd "$LKTOOLS_DIR"
-    #sed -i 's/-o $coordsfile/-o \\"$coordsfile\\"/' gmap_build
-    #sed -i 's/-c $coordsfile/-c \\"$coordsfile\\"/' gmap_build
-    #sed -i 's/-f $fasta_sources/-c \\"$fasta_sources\\"/' gmap_build
-else
-    echo "Already installed"
 fi
 
 
@@ -349,10 +306,10 @@ then
     rm -Rf gatk-4*
     rm -Rf $LKTOOLS_DIR/GenomeAnalysisTK4.jar
 
-    wget $WGET_OPTS https://github.com/broadinstitute/gatk/releases/download/4.1.6.0/gatk-4.1.6.0.zip
-    unzip gatk-4.1.6.0.zip
+    wget $WGET_OPTS https://github.com/broadinstitute/gatk/releases/download/4.3.0.0/gatk-4.3.0.0.zip
+    unzip gatk-4.3.0.0.zip
 
-    cp ./gatk-4.1.6.0/gatk-package-4.1.6.0-local.jar $LKTOOLS_DIR/GenomeAnalysisTK4.jar
+    cp ./gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar $LKTOOLS_DIR/GenomeAnalysisTK4.jar
 else
     echo "Already installed"
 fi
@@ -371,17 +328,16 @@ cd $LKSRC_DIR
 if [[ ! -e ${LKTOOLS_DIR}/STAR || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf STAR_2.4*
-    rm -Rf STAR_2.5*
+    rm -Rf STAR_2.*
     rm -Rf $LKTOOLS_DIR/STAR
 
-    wget $WGET_OPTS https://github.com/alexdobin/STAR/archive/2.7.0f.tar.gz
-    gunzip 2.7.0f.tar.gz
-    tar -xf 2.7.0f.tar
-    gzip 2.7.0f.tar
+    wget $WGET_OPTS https://github.com/alexdobin/STAR/archive/2.7.10b.tar.gz
+    gunzip 2.7.10b.tar.gz
+    tar -xf 2.7.10b.tar
+    gzip 2.7.10b.tar
 
-    install ./STAR-2.7.0f/bin/Linux_x86_64_static/STAR $LKTOOLS_DIR/STAR
-    install ./STAR-2.7.0f/bin/Linux_x86_64_static/STARlong $LKTOOLS_DIR/STARlong
+    install ./STAR-2.7.10b/bin/Linux_x86_64_static/STAR $LKTOOLS_DIR/STAR
+    install ./STAR-2.7.10b/bin/Linux_x86_64_static/STARlong $LKTOOLS_DIR/STARlong
 else
     echo "Already installed"
 fi
@@ -490,30 +446,6 @@ fi
 
 
 #
-#MultiQC
-#
-#echo ""
-#echo ""
-#echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-#echo "Install MultiQC"
-#echo ""
-#cd $LKSRC_DIR
-#
-#if [[ ! -e ${LKTOOLS_DIR}/multiqc || ! -z $FORCE_REINSTALL ]];
-#then
-#    rm -Rf MultiQC*
-#    rm -Rf $LKTOOLS_DIR/multiqc
-#
-#    git clone https://github.com/ewels/MultiQC.git
-#    cd MultiQC
-#    python setup.py install --user
-#    cp ./build/scripts/multiqc $LKTOOLS_DIR
-#else
-#    echo "MultiQC already installed"
-#fi
-
-
-#
 #bismark
 #
 echo ""
@@ -580,12 +512,12 @@ then
     rm -Rf $LKTOOLS_DIR/samtools
     rm -Rf $LKTOOLS_DIR/bcftools
 
-    wget $WGET_OPTS https://github.com/samtools/samtools/releases/download/1.14/samtools-1.14.tar.bz2
-    bunzip2 samtools-1.14.tar.bz2
-    tar -xf samtools-1.14.tar
+    wget $WGET_OPTS https://github.com/samtools/samtools/releases/download/1.16.1/samtools-1.16.1.tar.bz2
+    bunzip2 samtools-1.16.1.tar.bz2
+    tar -xf samtools-1.16.1.tar
     echo "Compressing TAR"
-    bzip2 samtools-1.14.tar
-    cd samtools-1.14
+    bzip2 samtools-1.16.1.tar
+    cd samtools-1.16.1
     ./configure
     make
     install ./samtools ${LKTOOLS_DIR}/samtools
@@ -609,13 +541,13 @@ then
     rm -Rf bcftools*
     rm -Rf $LKTOOLS_DIR/bcftools
 
-    wget $WGET_OPTS https://github.com/samtools/bcftools/releases/download/1.14/bcftools-1.14.tar.bz2
-    bunzip2 bcftools-1.14.tar.bz2
-    tar -xf bcftools-1.14.tar
+    wget $WGET_OPTS https://github.com/samtools/bcftools/releases/download/1.16/bcftools-1.16.tar.bz2
+    bunzip2 bcftools-1.16.tar.bz2
+    tar -xf bcftools-1.16.tar
     echo "Compressing TAR"
-    bzip2 bcftools-1.14.tar
-    chmod 755 bcftools-1.14
-    cd bcftools-1.14
+    bzip2 bcftools-1.16.tar
+    chmod 755 bcftools-1.16
+    cd bcftools-1.16
     ./configure
     make
 
@@ -641,13 +573,13 @@ then
     rm -Rf $LKTOOLS_DIR/tabix
     rm -Rf $LKTOOLS_DIR/bgzip
 
-    wget $WGET_OPTS https://github.com/samtools/htslib/releases/download/1.14/htslib-1.14.tar.bz2
-    bunzip2 htslib-1.14.tar.bz2
-    tar -xf htslib-1.14.tar
+    wget $WGET_OPTS https://github.com/samtools/htslib/releases/download/1.16/htslib-1.16.tar.bz2
+    bunzip2 htslib-1.16.tar.bz2
+    tar -xf htslib-1.16.tar
     echo "Compressing TAR"
-    bzip2 htslib-1.14.tar
-    chmod 755 htslib-1.14
-    cd htslib-1.14
+    bzip2 htslib-1.16.tar
+    chmod 755 htslib-1.16
+    cd htslib-1.16
     ./configure
     make
 
@@ -674,18 +606,10 @@ then
     rm -Rf bedtools*
     rm -Rf $LKTOOLS_DIR/bedtools
 
-    #wget $WGET_OPTS https://github.com/arq5x/bedtools2/releases/download/v2.26.0/bedtools-2.26.0.tar.gz
-    #gunzip bedtools-2.26.0.tar.gz
-    #tar -xf bedtools-2.26.0.tar
-    #echo "Compressing TAR"
-    #gzip bedtools-2.26.0.tar
+    wget -O bedtools $WGET_OPTS https://github.com/arq5x/bedtools2/releases/download/v2.30.0/bedtools.static.binary
+    chmod +x bedtools
 
-    git clone https://github.com/arq5x/bedtools2.git
-    cd bedtools2
-    git checkout tags/v2.26.0
-    make
-
-    install ./bin/bedtools ${LKTOOLS_DIR}/bedtools
+    install ./bedtools ${LKTOOLS_DIR}/bedtools
 else
     echo "Already installed"
 fi
@@ -885,7 +809,7 @@ echo "Install trinity"
 echo ""
 cd $LKSRC_DIR
 
-if [[ ! -e ${LKTOOLS_DIR}/Trinity || ! -z $FORCE_REINSTALL ]];
+if [[ ! -e ${LKTOOLS_DIR}/trinity || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
 
@@ -927,15 +851,13 @@ then
     rm -Rf jellyfish*
     rm -Rf $LKTOOLS_DIR/jellyfish*
 
-    wget $WGET_OPTS https://github.com/gmarcais/Jellyfish/releases/download/v2.2.10/jellyfish-linux
-    chmod +x jellyfish-linux
-    mv jellyfish-linux $LKTOOLS_DIR/jellyfish
-
     wget $WGET_OPTS https://github.com/COMBINE-lab/salmon/releases/download/v0.9.1/Salmon-0.9.1_linux_x86_64.tar.gz
     tar xvf Salmon-0.9.1_linux_x86_64.tar.gz
     cp Salmon-latest_linux_x86_64/bin/salmon $LKTOOLS_DIR/
 
-
+    wget $WGET_OPTS https://github.com/gmarcais/Jellyfish/releases/download/v2.2.10/jellyfish-linux
+    chmod +x jellyfish-linux
+    mv jellyfish-linux $LKTOOLS_DIR/jellyfish
 else
     echo "Already installed"
 fi
@@ -951,67 +873,18 @@ echo "Install cutadapt"
 echo ""
 cd $LKSRC_DIR
 
-if [[ ! -e ${LKTOOLS_DIR}/cutadapt.py || ! -z $FORCE_REINSTALL ]];
+if [[ ! -e ${LKTOOLS_DIR}/cutadapt || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
     rm -Rf cutadapt-*
     rm -Rf $LKTOOLS_DIR/cutadapt*
     rm -Rf $LKTOOLS_DIR/_preamble.py
+    rm -Rf $LKTOOLS_DIR/cutadapt_pip
 
-    wget https://pypi.python.org/packages/source/c/cutadapt/cutadapt-1.8.1.tar.gz
-    gunzip cutadapt-1.8.1.tar.gz
-    tar -xf cutadapt-1.8.1.tar
-    gzip cutadapt-1.8.1.tar
-
-    #note: cutadapt expects to be installed using python's package manager; however, this should work
-    install ./cutadapt-1.8.1/bin/cutadapt ${LKTOOLS_DIR}/cutadapt.py
-    install ./cutadapt-1.8.1/bin/_preamble.py ${LKTOOLS_DIR}/_preamble.py
-    cp -R ./cutadapt-1.8.1/cutadapt ${LKTOOLS_DIR}/cutadapt
-
+    pip install --target ${LKTOOLS_DIR}/cutadapt_pip git+https://github.com/marcelm/cutadapt.git
+    ln -s ${LKTOOLS_DIR}/cutadapt_pip/bin/cutadapt ${LKTOOLS_DIR}/cutadapt
 else
     echo "Already installed"
-fi
-
-
-#
-#biopython
-#
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install biopython"
-echo ""
-cd $LKSRC_DIR
-
-if [ -n $SKIP_PACKAGE_MANAGER ]; then
-    echo "Skipping package install"
-elif [ $(which apt-get) ]; then
-    echo "Installing biopython using apt-get"
-    apt-get -q -y install python-biopython
-#TODO: this is not available from standard yum repositories
-#elif [ $(which yum) ]; then
-#    echo "Installing biopython using yum"
-#    yum -y install python-biopython
-else
-    if [[ ! -e biopython-1.60 || ! -z $FORCE_REINSTALL ]];then
-        echo "Installing biopython manually"
-        echo "Cleaning up previous installs"
-        rm -Rf biopython-1.60.tar.gz
-        rm -Rf biopython-1.60.tar
-        rm -Rf biopython-1.60
-
-        wget $WGET_OPTS http://biopython.org/DIST/biopython-1.60.tar.gz
-        gunzip biopython-1.60.tar.gz
-        tar -xf biopython-1.60.tar
-        echo "Compressing TAR"
-        gzip biopython-1.60.tar
-        cd biopython-1.60
-        python setup.py build
-        python setup.py test
-        python setup.py install
-    else
-        echo "Already installed"
-    fi
 fi
 
 
@@ -1225,14 +1098,13 @@ cd $LKSRC_DIR
 
 if [[ ! -e ${LKTOOLS_DIR}/trimmomatic.jar || ! -z $FORCE_REINSTALL ]];
 then
-    rm -Rf Trimmomatic-0.32*
-    rm -Rf Trimmomatic-0.33*
+    rm -Rf Trimmomatic*
     rm -Rf $LKTOOLS_DIR/trimmomatic.jar
 
-    wget $WGET_OPTS http://www.usadellab.org/cms/uploads/supplementary/Trimmomatic/Trimmomatic-0.33.zip
-    unzip Trimmomatic-0.33.zip
+    wget $WGET_OPTS https://github.com/usadellab/Trimmomatic/files/5854859/Trimmomatic-0.39.zip
+    unzip Trimmomatic-0.39.zip
 
-    install ./Trimmomatic-0.33/trimmomatic-0.33.jar $LKTOOLS_DIR/trimmomatic.jar
+    install ./Trimmomatic-0.39/trimmomatic-0.39.jar $LKTOOLS_DIR/trimmomatic.jar
 
 else
     echo "Already installed"
