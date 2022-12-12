@@ -59,7 +59,7 @@ public class DepthOfCoverageHandler extends AbstractParameterizedOutputHandler<S
     @Override
     public boolean canProcess(SequenceOutputFile o)
     {
-        return o.getFile() != null && o.getFile().exists() && SequenceUtil.FILETYPE.bam.getFileType().isType(o.getFile());
+        return o.getFile() != null && o.getFile().exists() && SequenceUtil.FILETYPE.bamOrCram.getFileType().isType(o.getFile());
     }
 
     @Override

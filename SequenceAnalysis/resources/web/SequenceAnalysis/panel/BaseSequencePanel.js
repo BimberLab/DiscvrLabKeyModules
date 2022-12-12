@@ -247,7 +247,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                             bodyStyle: 'padding-top: 10px;padding-left: 5px;',
                             items: [{
                                 xtype: 'labkey-combo',
-                                width: 450,
+                                width: 600,
                                 fieldLabel: 'Select Run',
                                 editable: true,
                                 forceSelection: true,
@@ -268,11 +268,14 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                                     afterrender: function (field) {
                                         Ext4.defer(field.focus, 200, field);
                                     }
-                                }
+                                },
+                                labelWidth: 200
                             },{
                                 xtype: 'checkbox',
                                 itemId: 'useReadsetContainer',
-                                fieldLabel: 'Submit Jobs to Same Folder/Workbook as Readset'
+                                helpPopup: 'By default, the pipelines jobs and their outputs will be created in the workbook you selected. However, in certain cases, such as bulk submission of many jobs, it might be preferable to submit each job to the source folder/workbook for each input. Checking this box will enable this.',
+                                fieldLabel: 'Submit Jobs to Same Folder/Workbook as Readset',
+                                labelWidth: 200
                             }]
                         }],
                         buttons: [{
@@ -305,6 +308,12 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                                 }
 
                                 win.sequencePanel.applySavedValues(json);
+
+                                var submitJobToReadsetContainer = win.sequencePanel.down('[name="submitJobToReadsetContainer"]');
+                                if (submitJobToReadsetContainer) {
+                                    submitJobToReadsetContainer.setValue(useReadsetContainer);
+                                }
+
                                 win.close();
                             }
                         },{
@@ -366,7 +375,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
         }, this);
 
         // For top-level properties:
-        Ext4.Array.forEach(['submissionType', 'useOutputFileContainer', 'submitJobToReadsetContainer'], function(val) {
+        Ext4.Array.forEach(['submissionType', 'useOutputFileContainer'], function(val) {
             if (values[val]) {
                 var field = this.down('[name="' + val + '"]');
                 if (field) {

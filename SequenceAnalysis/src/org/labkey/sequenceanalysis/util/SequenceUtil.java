@@ -83,11 +83,13 @@ public class SequenceUtil
         fasta(Arrays.asList(".fasta", ".fa", ".fna"), true),
         bam(".bam"),
         cram(".cram"),
+        bamOrCram(Arrays.asList(".bam", ".cram"), false),
         sff(".sff"),
         gtf(Collections.singletonList(".gtf"), true),
         gff(Arrays.asList(".gff", ".gff3"), true),
         gbk(".gbk"),
         bed(Collections.singletonList(".bed"), true),
+        bw(Collections.singletonList(".bw"), false),
         vcf(Arrays.asList(".vcf"), true),
         gvcf(Arrays.asList(".g.vcf"), true);
 
@@ -119,7 +121,7 @@ public class SequenceUtil
     public static long getLineCount(File f) throws PipelineJobException
     {
         FileType gz = new FileType(".gz");
-        try (InputStream is = gz.isType(f) ? new GZIPInputStream(new FileInputStream(f)) : new FileInputStream(f);BufferedReader reader = new BufferedReader(new InputStreamReader(is, StringUtilsLabKey.DEFAULT_CHARSET));)
+        try (InputStream is = gz.isType(f) ? new GZIPInputStream(new FileInputStream(f)) : new FileInputStream(f); BufferedReader reader = new BufferedReader(new InputStreamReader(is, StringUtilsLabKey.DEFAULT_CHARSET));)
         {
             long i = 0;
             while (reader.readLine() != null)
@@ -228,7 +230,7 @@ public class SequenceUtil
         if (sequence != null)
         {
             int len = sequence.length();
-            for (int i=0; i<len; i+=lineLength)
+            for (int i = 0; i < len; i += lineLength)
             {
                 writer.write(sequence.substring(i, Math.min(len, i + lineLength)) + "\n");
             }
@@ -626,5 +628,20 @@ public class SequenceUtil
         }
 
         throw new IllegalArgumentException("Must provide either a .bam or .cram file");
+    }
+
+    public static @Nullable File resolveUnderPath(String fn)
+    {
+        String path = System.getenv("PATH");
+        for (String dir : path.split(File.pathSeparator))
+        {
+            File toTest = new File(dir, fn);
+            if (toTest.exists())
+            {
+                return toTest;
+            }
+        }
+
+        return null;
     }
 }

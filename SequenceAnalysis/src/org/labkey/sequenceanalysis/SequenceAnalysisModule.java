@@ -228,6 +228,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.MaxInfoTrimmingProvider());
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.AdapterTrimmingProvider());
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.AvgQualProvider());
+        SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.LeadingTrimProvider());
+        SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.TrailingTrimProvider());
         SequencePipelineService.get().registerPipelineStep(new CutadaptWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new FastqcProcessingStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new CutadaptCropWrapper.Provider());

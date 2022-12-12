@@ -306,6 +306,10 @@ public class JsonFile
         {
             ret = getBedTrack(log, targetFile, rg);
         }
+        else if (TRACK_TYPES.bw.getFileType().isType(targetFile.getFile()))
+        {
+            ret = getBigWigTrack(log, targetFile, rg);
+        }
         else
         {
             log.info("Unsupported track type: " + targetFile.getFile().getName());
@@ -634,6 +638,37 @@ public class JsonFile
         return getTabixTrack(log, targetFile, rg, adapterType, prefix);
     }
 
+    private JSONObject getBigWigTrack(Logger log, ExpData targetFile, ReferenceGenome rg) throws PipelineJobException
+    {
+        JSONObject ret = new JSONObject();
+        ret.put("type", getTrackType());
+        ret.put("trackId", getJsonTrackId());
+        ret.put("name", getLabel());
+        ret.put("assemblyNames", new JSONArray(){{
+            put(JBrowseSession.getAssemblyName(rg));
+        }});
+        ret.put("category", new JSONArray(){{
+            put(getCategory());
+        }});
+
+        String url = targetFile.getWebDavURL(FileContentService.PathType.full);
+        if (url == null)
+        {
+            log.info("Unable to create WebDav URL for JBrowse resource with path: " + targetFile.getFile());
+            return null;
+        }
+
+        ret.put("adapter", new JSONObject(){{
+            put("type", "BigWigAdapter");
+            put("bigWigLocation", new JSONObject(){{
+                put("uri", url);
+                put("locationType", "UriLocation");
+            }});
+        }});
+
+        return ret;
+    }
+
     private JSONObject getGxfTrack(Logger log, ExpData targetFile, ReferenceGenome rg) throws PipelineJobException
     {
         String adapterType = TRACK_TYPES.gff.getFileType().isType(targetFile.getFile()) ? "Gff3TabixAdapter" : "GtfTabixAdapter";
@@ -664,6 +699,10 @@ public class JsonFile
         else if (TRACK_TYPES.bed.getFileType().isType(targetFile.getFile()))
         {
             return "FeatureTrack";
+        }
+        else if (TRACK_TYPES.bw.getFileType().isType(targetFile.getFile()))
+        {
+            return "QuantitativeTrack";
         }
         else
         {
@@ -1147,6 +1186,11 @@ public class JsonFile
         {
             return "LinearBasicDisplay";
         }
+        else if (TRACK_TYPES.bw.getFileType().isType(targetFile.getFile()))
+        {
+            //TODO: Quantitative??
+            return "LinearBasicDisplay";
+        }
         else
         {
             throw new IllegalArgumentException("Unsupported track type: " + targetFile.getFile().getName());
@@ -1160,6 +1204,7 @@ public class JsonFile
         gtf(".gtf", true),
         gff(Arrays.asList(".gff", ".gff3"), true),
         bed(".bed", true),
+        bw(".bw", false),
         vcf(Arrays.asList(".vcf"), true);
 
         private List<String> _extensions;

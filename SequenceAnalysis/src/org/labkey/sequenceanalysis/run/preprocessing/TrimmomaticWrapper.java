@@ -525,6 +525,34 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         }
     }
 
+    public static class LeadingTrimProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
+    {
+        public LeadingTrimProvider()
+        {
+            super("LEADING", "LeadingTrim", "Leading Trim", "Cut bases off the start of a read, if below a threshold quality.", Arrays.asList(
+                    ToolParameterDescriptor.create("leadingQual", "Threshold", "Specifies the minimum quality required to keep a base.", "ldk-integerfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                    }}, 10),
+                    getMinReadsParam()
+            ), null);
+        }
+    }
+
+    public static class TrailingTrimProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
+    {
+        public TrailingTrimProvider()
+        {
+            super("TRAILING", "TrailingTrim", "Trailing Trim", "Cut bases off the end of a read, if below a threshold quality.", Arrays.asList(
+                    ToolParameterDescriptor.create("trailingQual", "Threshold", "Specifies the minimum quality required to keep a base.", "ldk-integerfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                    }}, 10),
+                    getMinReadsParam()
+            ), null);
+        }
+    }
+
     public static class HeadCropReadsProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
     {
         public HeadCropReadsProvider()
