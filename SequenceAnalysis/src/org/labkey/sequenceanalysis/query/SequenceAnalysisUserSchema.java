@@ -118,10 +118,46 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
 
             return ret;
         }
+        else if (SequenceAnalysisSchema.TABLE_ANALYSES.equalsIgnoreCase(name))
+        {
+            return createAnalysesTable(sourceTable, cf);
+        }
         else
             return super.createWrappedTable(name, sourceTable, cf);
     }
 
+    private TableInfo createAnalysesTable(TableInfo sourceTable, ContainerFilter cf)
+    {
+        SimpleTable<?> ret = new SimpleTable<>(this, sourceTable, cf).init();
+
+        if (ret.getColumn("outputFileTypes") == null)
+        {
+            String chr = sourceTable.getSqlDialect().isPostgreSQL() ? "chr" : "char";
+            SQLFragment sql = new SQLFragment("(SELECT ").
+                    append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("rd.category"), true, true, chr + "(10)")).
+                    append(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " rd WHERE rd.analysis_id = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
+            ExprColumn newCol = new ExprColumn(ret, "outputFileTypes", sql, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
+            newCol.setLabel("Output File Types");
+            newCol.setWidth("250");
+            newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=outputfiles&query.analysis_id~eq=${rowid}", ret.getContainer().isWorkbook() ? ret.getContainer().getParent() : ret.getContainer()));
+            newCol.setUserEditable(false);
+            newCol.setCalculated(true);
+            ret.addColumn(newCol);
+        }
+
+        if (ret.getColumn("totalOutputs") == null)
+        {
+            SQLFragment sql = new SQLFragment("(SELECT COUNT(rd.rowid) FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " rd WHERE rd.analysis_id = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
+            ExprColumn newCol = new ExprColumn(ret, "totalOutputs", sql, JdbcType.INTEGER, sourceTable.getColumn("rowid"));
+            newCol.setLabel("Output Files From This Analysis");
+            newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=outputfiles&query.analysis_id~eq=${rowid}", ret.getContainer().isWorkbook() ? ret.getContainer().getParent() : ret.getContainer()));
+            newCol.setUserEditable(false);
+            newCol.setCalculated(true);
+            ret.addColumn(newCol);
+        }
+
+        return ret;
+    }
     private TableInfo createOutputFiles(TableInfo sourceTable, ContainerFilter cf)
     {
         SimpleTable<?> ret = new SimpleTable<>(this, sourceTable, cf).init();

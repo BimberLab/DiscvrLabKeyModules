@@ -500,6 +500,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
             boolean readsetExists = r.getReadsetId() != null && r.getReadsetId() > 0;
             SequenceReadsetImpl existingReadset = readsetExists ? ((SequenceReadsetImpl) SequenceAnalysisService.get().getReadset(r.getReadsetId(), getJob().getUser())) : null;
             List<ReadDataImpl> preexistingReadData = readsetExists ? existingReadset.getReadDataImpl() : Collections.emptyList();
+            getJob().getLogger().debug("Inspecting readset " + r.getName() + " for duplicate data. Readset already created: " + readsetExists + ", total pre-existing readdata: " + preexistingReadData.size());
             if (!preexistingReadData.isEmpty())
             {
                 Map<String, File> existingFileNames = new HashMap<>();
@@ -516,6 +517,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
                 {
                     if (r.getFileSetName() != null && r.getFileSetName().equals(fg.name))
                     {
+                        getJob().getLogger().debug("Inspecting fileGroup: " + fg.name + ", for readset: " + r.getName() + ", with " + fg.filePairs.size() + " file pairs");
                         for (FileGroup.FilePair fp : fg.filePairs)
                         {
                             if (existingFileNames.containsKey(fp.file1.getName()))
@@ -543,6 +545,10 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
                             throw new PipelineJobException("Identical filenames with nearly identical size detected between existing and new files for readset: " + r.getName());
                         }
                     }
+                }
+                else
+                {
+                    getJob().getLogger().debug("No duplicate filenames found");
                 }
             }
         }

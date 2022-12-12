@@ -282,8 +282,13 @@ then
     rm -Rf DISCVRSeq*
     rm -Rf ${LKTOOLS_DIR}/DISCVRSeq.jar
 
-    wget $WGET_OPTS https://github.com/BimberLab/DISCVRSeq/releases/download/1.29/DISCVRSeq-1.29.jar
-    cp DISCVRSeq-1.29.jar ${LKTOOLS_DIR}/DISCVRSeq.jar
+    curl -s https://api.github.com/repos/BimberLab/DISCVRSeq/releases/latest \
+    | grep 'browser_download_url.*jar' \
+    | cut -d : -f 2,3 \
+    | tr -d \" \
+    | wget -O DISCVRseq.jar -qi -
+
+    cp DISCVRSeq.jar ${LKTOOLS_DIR}/DISCVRSeq.jar
 fi
 
 

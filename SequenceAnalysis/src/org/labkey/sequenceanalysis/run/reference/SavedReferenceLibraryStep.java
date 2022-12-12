@@ -38,7 +38,7 @@ public class SavedReferenceLibraryStep extends AbstractPipelineStep implements R
 {
     private static final String LIBRARY_ID = "libraryId";
 
-    public SavedReferenceLibraryStep(PipelineStepProvider provider, PipelineContext ctx)
+    public SavedReferenceLibraryStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx);
     }
@@ -50,7 +50,7 @@ public class SavedReferenceLibraryStep extends AbstractPipelineStep implements R
             super("SavedLibrary", "Saved Genome", null, "Select this option to reuse a previously saved reference genome", Arrays.asList(
                     ToolParameterDescriptor.create(LIBRARY_ID, "Choose Genome", "Select a previously saved reference genome from the list.", "ldk-simplelabkeycombo", new JSONObject()
                     {{
-                            put("width", 400);
+                            put("width", 450);
                             put("schemaName", "sequenceanalysis");
                             put("queryName", "reference_libraries");
                             put("containerPath", "js:Laboratory.Utils.getQueryContainerPath()");
@@ -139,7 +139,8 @@ public class SavedReferenceLibraryStep extends AbstractPipelineStep implements R
 
     private ReferenceGenome getReferenceGenome() throws PipelineJobException
     {
-        Integer libraryId = Integer.parseInt(getProvider().getParameterByName(LIBRARY_ID).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()));
-        return libraryId == null ? null : getPipelineCtx().getSequenceSupport().getCachedGenome(libraryId);
+        int libraryId = Integer.parseInt(getProvider().getParameterByName(LIBRARY_ID).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()));
+
+        return libraryId > 0 ? getPipelineCtx().getSequenceSupport().getCachedGenome(libraryId) : null;
     }
 }

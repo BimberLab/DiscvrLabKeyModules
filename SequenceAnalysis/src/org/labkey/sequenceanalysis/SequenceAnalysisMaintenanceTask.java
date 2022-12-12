@@ -324,7 +324,14 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                         File gzi = new File(fasta.getPath() + ".gz.gzi");
                         if (!gzi.exists())
                         {
-                            new FastaIndexer(log).execute(gz);
+                            if (SystemUtils.IS_OS_WINDOWS)
+                            {
+                                log.warn("Cannot index gzipped FASTA on windows: " + fasta.getPath());
+                            }
+                            else
+                            {
+                                new FastaIndexer(log).execute(gz);
+                            }
                         }
 
                         expectedChildren.add(fasta.getName() + ".gz");
