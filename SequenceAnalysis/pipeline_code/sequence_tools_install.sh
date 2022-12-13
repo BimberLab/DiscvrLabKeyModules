@@ -686,17 +686,16 @@ cd $LKSRC_DIR
 if [[ ! -e ${LKTOOLS_DIR}/lastz || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf lastz-1.02.00*
+    rm -Rf lastz-*
+    rm -Rf 1.04.22*
     rm -Rf $LKTOOLS_DIR/lastz
 
-    wget $WGET_OPTS http://www.bx.psu.edu/miller_lab/dist/lastz-1.02.00.tar.gz
-    gunzip lastz-1.02.00.tar.gz
-    tar -xf lastz-1.02.00.tar
+    wget $WGET_OPTS https://github.com/lastz/lastz/archive/refs/tags/1.04.22.tar.gz
+    gunzip 1.04.22.tar.gz
+    tar -xf 1.04.22.tar
     echo "Compressing TAR"
-    gzip lastz-1.02.00.tar
-    cd lastz-distrib-1.02.00
-    mv src/Makefile src/Makefile.dist
-    sed 's/-Werror //g' src/Makefile.dist > src/Makefile
+    gzip 1.04.22.tar
+    cd lastz-1.04.22
     make
 
     install ./src/lastz $LKTOOLS_DIR/lastz
@@ -881,7 +880,15 @@ then
     rm -Rf $LKTOOLS_DIR/_preamble.py
     rm -Rf $LKTOOLS_DIR/cutadapt_pip
 
-    pip install --target ${LKTOOLS_DIR}/cutadapt_pip git+https://github.com/marcelm/cutadapt.git
+    CUTADAPT_BRANCH=v4.0
+    pip -V
+    PIP_VERSION=`pip -V | cut -d '(' -f 2 | sed 's/python //' | cut -c 1 2>1`
+
+    if [[ $PIP_VERSION == '2' ]];then
+      CUTADAPT_BRANCH='v3.4'
+    fi
+
+    pip install --target ${LKTOOLS_DIR}/cutadapt_pip git+https://github.com/marcelm/cutadapt.git@${CUTADAPT_BRANCH}
     ln -s ${LKTOOLS_DIR}/cutadapt_pip/bin/cutadapt ${LKTOOLS_DIR}/cutadapt
 else
     echo "Already installed"
