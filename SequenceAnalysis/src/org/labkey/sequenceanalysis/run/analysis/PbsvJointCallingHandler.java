@@ -139,10 +139,18 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                 outputBaseName = outputBaseName.replaceAll(".vcf$", "");
             }
 
-            List<File> outputs = new ArrayList<>();
             if (getVariantPipelineJob(ctx.getJob()).isScatterJob())
             {
                 outputBaseName = outputBaseName + "." + getVariantPipelineJob(ctx.getJob()).getIntervalSetName();
+            }
+
+            File expectedFinalOutput = new File(ctx.getOutputDir(), outputBaseName + ".vcf.gz");
+            File expectedFinalOutputIdx = new File(expectedFinalOutput.getPath() + ".tbi");
+            boolean jobCompleted = expectedFinalOutputIdx.exists();  // this would occur if the job died during the cleanup phase
+
+            List<File> outputs = new ArrayList<>();
+            if (getVariantPipelineJob(ctx.getJob()).isScatterJob())
+            {
                 for (Interval i : getVariantPipelineJob(ctx.getJob()).getIntervalsForTask())
                 {
                     if (i.getStart() != 1)
@@ -150,7 +158,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                         throw new PipelineJobException("Expected all intervals to start on the first base: " + i.toString());
                     }
 
-                    File o = runPbsvCall(ctx, filesToProcess, genome, outputBaseName + (getVariantPipelineJob(ctx.getJob()).getIntervalsForTask().size() == 1 ? "" : "." + i.getContig()), i.getContig());
+                    File o = runPbsvCall(ctx, filesToProcess, genome, outputBaseName + (getVariantPipelineJob(ctx.getJob()).getIntervalsForTask().size() == 1 ? "" : "." + i.getContig()), i.getContig(), jobCompleted);
                     if (o != null)
                     {
                         outputs.add(o);
@@ -159,7 +167,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
             }
             else
             {
-                outputs.add(runPbsvCall(ctx, filesToProcess, genome, outputBaseName, null));
+                outputs.add(runPbsvCall(ctx, filesToProcess, genome, outputBaseName, null, jobCompleted));
             }
 
             try
@@ -167,11 +175,19 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                 File vcfOutGz;
                 if (outputs.size() == 1)
                 {
-                    File unzipVcfOut = outputs.get(0);
-                    vcfOutGz = SequenceAnalysisService.get().bgzipFile(unzipVcfOut, ctx.getLogger());
-                    if (unzipVcfOut.exists())
+                    if (jobCompleted)
                     {
-                        throw new PipelineJobException("Unzipped VCF should not exist: " + vcfOutGz.getPath());
+                        ctx.getLogger().debug("The final output VCF and index are found, so this is likely a resumed job. skipping merge");
+                        vcfOutGz = expectedFinalOutput;
+                    }
+                    else
+                    {
+                        File unzipVcfOut = outputs.get(0);
+                        vcfOutGz = SequenceAnalysisService.get().bgzipFile(unzipVcfOut, ctx.getLogger());
+                        if (unzipVcfOut.exists())
+                        {
+                            throw new PipelineJobException("Unzipped VCF should not exist: " + vcfOutGz.getPath());
+                        }
                     }
                 }
                 else
@@ -181,10 +197,19 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                         ctx.getFileManager().addIntermediateFile(f);
                         ctx.getFileManager().addIntermediateFile(SequenceAnalysisService.get().ensureVcfIndex(f, ctx.getLogger(), false));
                     }
-                    vcfOutGz = SequenceUtil.combineVcfs(outputs, genome, new File(ctx.getOutputDir(), outputBaseName + ".vcf.gz"), ctx.getLogger(), true, null, false, true);
 
-                    // NOTE: the resulting file can be out of order due to translocations
-                    SequenceUtil.sortROD(vcfOutGz, ctx.getLogger(), 2);
+                    if (jobCompleted)
+                    {
+                        ctx.getLogger().debug("The final output VCF and index are found, so this is likely a resumed job. skipping merge");
+                        vcfOutGz = expectedFinalOutput;
+                    }
+                    else
+                    {
+                        vcfOutGz = SequenceUtil.combineVcfs(outputs, genome, expectedFinalOutput, ctx.getLogger(), true, null, false, true);
+
+                        // NOTE: the resulting file can be out of order due to translocations
+                        SequenceUtil.sortROD(vcfOutGz, ctx.getLogger(), 2);
+                    }
                 }
 
                 SequenceAnalysisService.get().ensureVcfIndex(vcfOutGz, ctx.getLogger(), true);
@@ -203,7 +228,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
             }
         }
 
-        private File runPbsvCall(JobContext ctx, List<File> inputs, ReferenceGenome genome, String outputBaseName, @Nullable String contig) throws PipelineJobException
+        private File runPbsvCall(JobContext ctx, List<File> inputs, ReferenceGenome genome, String outputBaseName, @Nullable String contig, boolean jobCompleted) throws PipelineJobException
         {
             if (inputs.isEmpty())
             {
@@ -217,6 +242,11 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
             {
                 ctx.getLogger().info("Existing file, found, re-using");
                 verifyAndAddMissingSamples(ctx, vcfOut, inputs, genome);
+                return vcfOut;
+            }
+            else if (jobCompleted)
+            {
+                ctx.getLogger().debug("The overall job has completed and this is a job resume. Skipping pbsv call");
                 return vcfOut;
             }
 
