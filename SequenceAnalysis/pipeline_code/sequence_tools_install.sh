@@ -41,12 +41,6 @@ SKIP_PACKAGE_MANAGER=
 CLEAN_SRC=
 LK_HOME=
 LK_USER=
-MAVEN_OPTS="-Xss10m"
-
-#NOTE: java/javac not automatically picked up
-if [ ! -z "${JAVA_HOME:+x}" ]; then
-    PATH=${JAVA_HOME}/bin:$PATH
-fi
 
 while getopts "d:u:fpc" arg;
 do
@@ -102,7 +96,7 @@ echo "Install location"
 echo ""
 echo "LKTOOLS_DIR: $LKTOOLS_DIR"
 echo "LKSRC_DIR: $LKSRC_DIR"
-WGET_OPTS="--read-timeout=10 --secure-protocol=auto --no-check-certificate"
+WGET_OPTS="--read-timeout=10 --secure-protocol=auto --no-check-certificate -q"
 
 #
 # Install required software
@@ -113,18 +107,6 @@ echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 echo "Install Required packages via the package manager"
 echo ""
 
-# can install EPEL to get additional repositories if necessary.  May be needed on RHEL/CentOS
-#OS=`cat /etc/redhat-release | awk {'print $1}'`
-#if [ "$OS" = "CentOS" ]
-#then
-#    if [[ ! -e ${LKSRC_DIR}/epel-release-6-8.noarch.rpm ]];
-#    then
-#        cd $LKSRC_DIR
-#        wget $WGET_OPTS http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
-#        wget $WGET_OPTS http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
-#        rpm -Uvh remi-release-6*.rpm epel-release-6*.rpm
-#    fi
-#fi
 
 if [ ! -z $SKIP_PACKAGE_MANAGER ]; then
     echo "Skipping package install"
@@ -134,18 +116,6 @@ elif [ $(which yum) ]; then
 elif [ $(which apt-get) ]; then
     echo "Using apt-get"
 
-    #this is a possible setup for R
-    #add-apt-repository "deb http://cran.cnr.berkeley.edu/bin/linux/ubuntu/ precise/"
-    #gpg --keyserver keyserver.ubuntu.com --recv-key E084DAB9 or gpg --hkp://keyserver keyserver.ubuntu.com:80 --recv-key E084DAB9
-    #gpg -a --export E084DAB9 | sudo apt-key add -
-
-    #install oracle java
-    #apt-get install python-software-properties
-    #add-apt-repository ppa:webupd8team/java
-    #apt-get update
-    #apt-get install oracle-java7-installer
-    #update-alternatives --config java
-    #update-alternatives --config javac
     #apt-get -y update
     apt-get -q -y install bzip2 libbz2-dev libc6 libc6-dev libncurses5-dev python3-dev unzip zip ncftp gcc make perl libssl-dev libgcc1 libstdc++6 zlib1g zlib1g-dev libboost-all-dev python3-numpy python3-scipy libexpat1-dev pkg-config subversion flex subversion libgoogle-perftools-dev perl-doc git cmake maven r-base r-cran-rcpp python-pip
 else
@@ -460,6 +430,7 @@ then
     echo "Cleaning up previous installs"
     rm -Rf bismark_*
     rm -Rf Bismark_*
+    rm -Rf 0.22.3*
     rm -Rf $LKTOOLS_DIR/bismark
     rm -Rf $LKTOOLS_DIR/bismark2bedGraph
     rm -Rf $LKTOOLS_DIR/bismark2report
@@ -468,12 +439,12 @@ then
     rm -Rf $LKTOOLS_DIR/coverage2cytosine
     rm -Rf $LKTOOLS_DIR/deduplicate_bismark
 
-    wget $WGET_OPTS https://github.com/FelixKrueger/Bismark/archive/0.17.0.tar.gz
-    gunzip 0.17.0.tar.gz
-    tar -xf 0.17.0.tar
+    wget $WGET_OPTS https://github.com/FelixKrueger/Bismark/archive/0.22.3.tar.gz
+    gunzip 0.22.3.tar.gz
+    tar -xf 0.22.3.tar
     echo "Compressing TAR"
-    gzip 0.17.0.tar
-    cd Bismark-0.17.0
+    gzip 0.22.3.tar
+    cd Bismark-0.22.3
 
     install ./bismark $LKTOOLS_DIR/bismark
     install ./bismark2bedGraph $LKTOOLS_DIR/bismark2bedGraph
@@ -1129,7 +1100,7 @@ echo "Installing lofreq"
 echo ""
 cd $LKSRC_DIR
 
-if [[ ! -e ${LKTOOLS_DIR}/trimmomatic.jar || ! -z $FORCE_REINSTALL ]];
+if [[ ! -e ${LKTOOLS_DIR}/lofreq || ! -z $FORCE_REINSTALL ]];
 then
     rm -Rf lofreq_star*
     rm -Rf $LKTOOLS_DIR/lofreq_star*
