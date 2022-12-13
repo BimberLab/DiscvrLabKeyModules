@@ -856,7 +856,7 @@ public class JsonFile
 
         // Ensure index check runs even if file was already gzipped:
         File idx = new File(targetFile.getPath() + ".tbi");
-        if (needsGzip() && (forceReprocess || !idx.exists()))
+        if (targetFile.getName().toLowerCase().endsWith(".gz") && (forceReprocess || !idx.exists()))
         {
             createIndex(targetFile, log, idx, throwIfNotPrepared);
         }
@@ -935,11 +935,13 @@ public class JsonFile
         return targetFile;
     }
 
-    private void prepareLuceneIndex(Logger log)
+    private void prepareLuceneIndex(Logger log) throws PipelineJobException
     {
         log.debug("Generating VCF full text index for file: " + getExpData().getFile().getName());
 
         DISCVRSeqRunner runner = new DISCVRSeqRunner(log);
+        runner.addJava8HomeToEnvironment();
+
         List<String> args = runner.getBaseArgs("VcfToLuceneIndexer");
         args.add("-V");
         args.add(getExpData().getFile().getPath());
@@ -977,6 +979,8 @@ public class JsonFile
                 args.add(field);
             }
         }
+
+        runner.execute(args);
     }
 
     protected void createIndex(File finalLocation, Logger log, File idx, boolean throwIfNotPrepared) throws PipelineJobException
@@ -1000,6 +1004,10 @@ public class JsonFile
                     {
                         Index index = IndexFactory.createIndex(finalLocation.toPath(), new Gff3Codec(), IndexFactory.IndexType.TABIX);
                         index.write(idx);
+                    }
+                    else if (TRACK_TYPES.vcf.getFileType().isType(finalLocation))
+                    {
+                        SequenceAnalysisService.get().ensureVcfIndex(finalLocation, log);
                     }
                     else
                     {

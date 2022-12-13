@@ -230,6 +230,11 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
 
         private File runPbsvCall(JobContext ctx, List<File> inputs, ReferenceGenome genome, String outputBaseName, @Nullable String contig, boolean jobCompleted) throws PipelineJobException
         {
+            if (contig != null)
+            {
+                ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Processing: " + contig);
+            }
+
             if (inputs.isEmpty())
             {
                 throw new PipelineJobException("No inputs provided");
