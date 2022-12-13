@@ -406,7 +406,7 @@ public class JBrowseSession
 
     public JsonFile getTrack(User u, String trackGUID)
     {
-        for (JsonFile jf : getGenomeTracks(u, false))
+        for (JsonFile jf : getJsonFiles(u, false))
         {
             if (trackGUID.equalsIgnoreCase(jf.getObjectId()))
             {

@@ -929,10 +929,30 @@ public class JsonFile
                 }
             }
 
-            prepareLuceneIndex(log);
+            if (forceReprocess || !doesLuceneIndexExist())
+            {
+                prepareLuceneIndex(log);
+            }
+            else
+            {
+                log.debug("Existing lucene index found, will not re-create: " + luceneDir.getPath());
+            }
         }
 
         return targetFile;
+    }
+
+    private boolean doesLuceneIndexExist()
+    {
+        File luceneDir = getExpectedLocationOfLuceneIndex(false);
+        if (luceneDir == null)
+        {
+            return false;
+        }
+
+        // NOTE: is this the best file to test?
+        luceneDir = new File(luceneDir, "write.lock");
+        return luceneDir.exists();
     }
 
     private void prepareLuceneIndex(Logger log) throws PipelineJobException
