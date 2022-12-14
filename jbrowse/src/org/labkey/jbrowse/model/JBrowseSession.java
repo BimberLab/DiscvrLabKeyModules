@@ -403,4 +403,17 @@ public class JBrowseSession
 
         return session;
     }
+
+    public JsonFile getTrack(User u, String trackGUID)
+    {
+        for (JsonFile jf : getJsonFiles(u, false))
+        {
+            if (trackGUID.equalsIgnoreCase(jf.getObjectId()))
+            {
+                return jf;
+            }
+        }
+
+        return null;
+    }
 }

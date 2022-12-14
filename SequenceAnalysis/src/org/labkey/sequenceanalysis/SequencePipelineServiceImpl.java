@@ -272,6 +272,11 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
             java8Home = StringUtils.trimToNull(System.getenv("JDK_18"));
         }
 
+        if (java8Home == null && StringUtils.trimToNull(System.getenv("JAVA_HOME_8")) != null)
+        {
+            java8Home = StringUtils.trimToNull(System.getenv("JAVA_HOME_8"));
+        }
+
         if (java8Home != null)
         {
             File ret = new File(java8Home, "bin");

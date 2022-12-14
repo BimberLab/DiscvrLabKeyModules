@@ -38,6 +38,7 @@ import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.run.DISCVRSeqRunner;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.FileType;
@@ -760,7 +761,7 @@ public class JsonFile
 
     public boolean needsProcessing()
     {
-        return (needsGzip() && !isGzipped()) || doIndex();
+        return (needsGzip() && !isGzipped()) || doIndex() || shouldHaveFreeTextSearch();
     }
 
     public boolean isGzipped()
@@ -855,7 +856,7 @@ public class JsonFile
 
         // Ensure index check runs even if file was already gzipped:
         File idx = new File(targetFile.getPath() + ".tbi");
-        if (needsGzip() && (forceReprocess || !idx.exists()))
+        if (targetFile.getName().toLowerCase().endsWith(".gz") && (forceReprocess || !idx.exists()))
         {
             createIndex(targetFile, log, idx, throwIfNotPrepared);
         }
@@ -913,7 +914,93 @@ public class JsonFile
             }
         }
 
+        if (shouldHaveFreeTextSearch())
+        {
+            File luceneDir = getExpectedLocationOfLuceneIndex(throwIfNotPrepared);
+            if (forceReprocess && luceneDir.exists())
+            {
+                try
+                {
+                    FileUtils.deleteDirectory(luceneDir);
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
+
+            if (forceReprocess || !doesLuceneIndexExist())
+            {
+                prepareLuceneIndex(log);
+            }
+            else
+            {
+                log.debug("Existing lucene index found, will not re-create: " + luceneDir.getPath());
+            }
+        }
+
         return targetFile;
+    }
+
+    private boolean doesLuceneIndexExist()
+    {
+        File luceneDir = getExpectedLocationOfLuceneIndex(false);
+        if (luceneDir == null)
+        {
+            return false;
+        }
+
+        // NOTE: is this the best file to test?
+        luceneDir = new File(luceneDir, "write.lock");
+        return luceneDir.exists();
+    }
+
+    private void prepareLuceneIndex(Logger log) throws PipelineJobException
+    {
+        log.debug("Generating VCF full text index for file: " + getExpData().getFile().getName());
+
+        DISCVRSeqRunner runner = new DISCVRSeqRunner(log);
+        runner.addJava8HomeToEnvironment();
+
+        List<String> args = runner.getBaseArgs("VcfToLuceneIndexer");
+        args.add("-V");
+        args.add(getExpData().getFile().getPath());
+
+        args.add("-O");
+        args.add(getExpectedLocationOfLuceneIndex(false).getPath());
+
+        JSONObject config = getExtraTrackConfig();
+        String infoFieldsForFullTextSearch = config == null ? null : StringUtils.trimToNull(config.optString("infoFieldsForFullTextSearch"));
+        if (infoFieldsForFullTextSearch == null)
+        {
+            args.add("-IF");
+            args.add("AF");
+        }
+        else
+        {
+            for (String field : infoFieldsForFullTextSearch.split(","))
+            {
+                args.add("-IF");
+                args.add(field);
+            }
+        }
+
+        String annotationsForFullTextSearch = config == null ? null : StringUtils.trimToNull(config.optString("annotationsForFullTextSearch"));
+        if (annotationsForFullTextSearch == null)
+        {
+            args.add("-AN");
+            args.add("SampleList");
+        }
+        else
+        {
+            for (String field : annotationsForFullTextSearch.split(","))
+            {
+                args.add("-AN");
+                args.add(field);
+            }
+        }
+
+        runner.execute(args);
     }
 
     protected void createIndex(File finalLocation, Logger log, File idx, boolean throwIfNotPrepared) throws PipelineJobException
@@ -937,6 +1024,10 @@ public class JsonFile
                     {
                         Index index = IndexFactory.createIndex(finalLocation.toPath(), new Gff3Codec(), IndexFactory.IndexType.TABIX);
                         index.write(idx);
+                    }
+                    else if (TRACK_TYPES.vcf.getFileType().isType(finalLocation))
+                    {
+                        SequenceAnalysisService.get().ensureVcfIndex(finalLocation, log);
                     }
                     else
                     {
@@ -1230,5 +1321,34 @@ public class JsonFile
         {
             return _extensions.get(0);
         }
+    }
+
+    public boolean shouldHaveFreeTextSearch()
+    {
+        ExpData targetFile = getExpData();
+        if (!TRACK_TYPES.vcf.getFileType().isType(targetFile.getFile()))
+        {
+            return false;
+        }
+
+        JSONObject json = getExtraTrackConfig();
+        return json != null && json.optBoolean("createFullTextIndex", false);
+    }
+
+    public File getExpectedLocationOfLuceneIndex(boolean throwIfNotFound)
+    {
+        File basedir = getLocationOfProcessedTrack(false);
+        if (basedir == null)
+        {
+            return null;
+        }
+
+        File ret = new File(basedir.getParentFile(), "lucene");
+        if (throwIfNotFound && !ret.exists())
+        {
+            throw new IllegalStateException("Expected search index not found: " + ret.getPath());
+        }
+
+        return ret;
     }
 }
