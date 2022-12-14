@@ -51,6 +51,10 @@ public class RunCelltypist extends AbstractRiraStep
                     {{
                         put("checked", true);
                     }}, true),
+                    SeuratToolParameter.create("retainProbabilityMatrix", "Retain Probability Matrix", "If true, the celltypist probability_matrix with per-class probabilities will be stored in meta.data", "checkbox", new JSONObject()
+                    {{
+                        put("checked", true);
+                    }}, true),
                     SeuratToolParameter.create("pThreshold", "pThreshold", "This is passed to the --p-thres argument.", "ldk-numberfield", new JSONObject()
                     {{
                         put("minValue", 0);
