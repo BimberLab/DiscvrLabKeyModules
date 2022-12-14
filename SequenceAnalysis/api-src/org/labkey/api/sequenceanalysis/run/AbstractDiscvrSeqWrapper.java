@@ -11,6 +11,12 @@ public class AbstractDiscvrSeqWrapper extends AbstractGatk4Wrapper
     }
 
     @Override
+    protected String getPackageName()
+    {
+        return "DISCVRSEQPATH";
+    }
+
+    @Override
     protected String getJarName()
     {
         return "DISCVRSeq.jar";

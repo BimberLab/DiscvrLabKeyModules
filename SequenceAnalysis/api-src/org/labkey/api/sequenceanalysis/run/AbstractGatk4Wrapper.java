@@ -3,7 +3,7 @@ package org.labkey.api.sequenceanalysis.run;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
@@ -36,7 +36,7 @@ abstract public class AbstractGatk4Wrapper extends AbstractCommandWrapper
 
     protected File getJAR()
     {
-        String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("GATKPATH");
+        String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath(getPackageName());
         if (path != null)
         {
             return new File(path);
@@ -56,7 +56,7 @@ abstract public class AbstractGatk4Wrapper extends AbstractCommandWrapper
         _maxRamOverride = maxRamOverride;
     }
 
-    protected void addJavaHomeToEnvironment()
+    public void addJava8HomeToEnvironment()
     {
         //since GATK requires java8, set JAVA_HOME to match this:
         File java8 = new File(SequencePipelineService.get().getJava8FilePath()).getParentFile();
@@ -99,11 +99,26 @@ abstract public class AbstractGatk4Wrapper extends AbstractCommandWrapper
 
     public List<String> getBaseArgs()
     {
+        return getBaseArgs(null);
+    }
+
+    protected String getPackageName()
+    {
+        return "GATKPATH";
+    }
+
+    public List<String> getBaseArgs(@Nullable String toolName)
+    {
         List<String> args = new ArrayList<>();
         args.add(SequencePipelineService.get().getJava8FilePath());
         args.addAll(SequencePipelineService.get().getJavaOpts(_maxRamOverride));
         args.add("-jar");
         args.add(getJAR().getPath());
+
+        if (toolName != null)
+        {
+            args.add(toolName);
+        }
 
         return args;
     }

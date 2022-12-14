@@ -275,7 +275,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
                 }
                 else
                 {
-                    Index idx = IndexFactory.createDynamicIndex(vcf, new VCFCodec());
+                    Index idx = vcf.getName().toLowerCase().endsWith(".gz") ? IndexFactory.createIndex(vcf, new VCFCodec(), IndexFactory.IndexType.TABIX) : IndexFactory.createDynamicIndex(vcf, new VCFCodec());
                     idx.writeBasedOnFeatureFile(vcf);
                     if (!expectedIdx.exists())
                     {
