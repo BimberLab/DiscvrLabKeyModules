@@ -856,7 +856,7 @@ then
     PIP_VERSION=`pip -V | cut -d '(' -f 2 | sed 's/python //' | cut -c 1 2>1`
 
     if [[ $PIP_VERSION == '2' ]];then
-      CUTADAPT_BRANCH='v3.4'
+      CUTADAPT_BRANCH='v1.18'
     fi
 
     pip install --target ${LKTOOLS_DIR}/cutadapt_pip git+https://github.com/marcelm/cutadapt.git@${CUTADAPT_BRANCH}
