@@ -502,18 +502,18 @@ public class JBrowseTest extends BaseWebDriverTest
         SelectRowsCommand sr = new SelectRowsCommand("sequenceanalysis", "reference_library_members");
         sr.addFilter(new Filter("library_id", genomeId, Filter.Operator.EQUAL));
         sr.setColumns(Arrays.asList("ref_nt_id"));
-        Integer refNtId = (int)sr.execute(cn, getContainerId()).getRows().get(0).get("ref_nt_id");
+        Integer refNtId = (int)sr.execute(cn, getProjectName()).getRows().get(0).get("ref_nt_id");
 
         InsertRowsCommand ic = new InsertRowsCommand("sequenceanalysis", "ref_aa_sequences");
         ic.addRow(Map.of("ref_nt_id", refNtId, "name", "AA1", "exons", "1-30;60-68", "isComplement", false, "start_location", 1, "sequence", "AAAAAAAAAAAAA"));
         ic.addRow(Map.of("ref_nt_id", refNtId, "name", "AA2", "exons", "101-130;160-168", "isComplement", true, "start_location", 100, "sequence", "AAAAAAAAAAAAA"));
 
-        ic.execute(cn, getContainerId());
+        ic.execute(cn, getProjectName());
 
         ic = new InsertRowsCommand("sequenceanalysis", "ref_nt_features");
         ic.addRow(Map.of("ref_nt_id", refNtId, "category", "Feature", "nt_start", 10, "nt_stop", 100, "name", "Feature1"));
         ic.addRow(Map.of("ref_nt_id", refNtId, "category", "Feature", "nt_start", 200, "nt_stop", 300, "name", "Feature2"));
-        ic.execute(cn, getContainerId());
+        ic.execute(cn, getProjectName());
     }
 
     @Override
@@ -530,7 +530,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
         //create session w/ some of these, verify
         log("creating initial jbrowse session");
-        beginAt("/query/" + getContainerId() + "/executeQuery.view?query.queryName=outputfiles&schemaName=sequenceanalysis&query.category~eq=VCF File");
+        beginAt("/query/" + getProjectName() + "/executeQuery.view?query.queryName=outputfiles&schemaName=sequenceanalysis&query.category~eq=VCF File");
         DataRegionTable dr = DataRegionTable.DataRegion(getDriver()).find();
         dr.uncheckAllOnPage();
         dr.checkCheckbox(0);
@@ -554,7 +554,7 @@ public class JBrowseTest extends BaseWebDriverTest
         window.clickButton("OK");
         waitForPipelineJobsToComplete(existingPipelineJobs + 1, "Create New Session", false);
 
-        beginAt("/project/" + getContainerId() + "/begin.view");
+        beginAt("/project/" + getProjectName() + "/begin.view");
         _helper.clickNavPanelItemAndWait("JBrowse Sessions:", 1);
         dr = DataRegionTable.DataRegion(getDriver()).find();
         dr.clickRowDetails(0);
@@ -578,7 +578,7 @@ public class JBrowseTest extends BaseWebDriverTest
         new Window.WindowFinder(getDriver()).withTitle("Success").waitFor();
         waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
 
-        beginAt("/query/" + getContainerId() + "/executeQuery.view?query.queryName=jsonfiles&schemaName=jbrowse");
+        beginAt("/query/" + getProjectName() + "/executeQuery.view?query.queryName=jsonfiles&schemaName=jbrowse");
         existingPipelineJobs = SequenceTest.getTotalPipelineJobs(this);
         dr = DataRegionTable.DataRegion(getDriver()).find();
         dr.checkCheckbox(dr.getRowIndex("File Id", "TestVCF"));
@@ -589,12 +589,12 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClickAndWait(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
         waitForPipelineJobsToComplete(existingPipelineJobs + 1, "Recreating Resources", false);
 
-        // TODO: ensure index exists
-        beginAt("/jbrowse/" + getContainerId() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=foo");
+        beginAt("/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=foo");
+        // TODO: check the actual results once this is fully working
         waitForText("{");
         getArtifactCollector().dumpPageSnapshot("JBrowseLuceneIndexPage");
 
-        beginAt("/query/" + getContainerId() + "/executeQuery.view?query.queryName=jsonfiles&schemaName=jbrowse");
+        beginAt("/query/" + getProjectName() + "/executeQuery.view?query.queryName=jsonfiles&schemaName=jbrowse");
         final DataRegionTable drt = DataRegionTable.DataRegion(getDriver()).find();
         drt.checkAllOnPage();
         doAndWaitForPageToLoad(() ->
@@ -623,7 +623,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
         //create session w/ some of these, verify
         log("creating initial jbrowse session");
-        beginAt("/query/" + getContainerId() + "/executeQuery.view?query.queryName=outputfiles&schemaName=sequenceanalysis");
+        beginAt("/query/" + getProjectName() + "/executeQuery.view?query.queryName=outputfiles&schemaName=sequenceanalysis");
         DataRegionTable dr = DataRegionTable.DataRegion(getDriver()).find();
         dr.uncheckAllOnPage();
         dr.checkCheckbox(0);
@@ -648,7 +648,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForPipelineJobsToComplete(existingPipelineJobs + 1, "Create New Session", false);
 
         //add additional file to session, verify
-        beginAt("/query/" + getContainerId() + "/executeQuery.view?query.queryName=outputfiles&schemaName=sequenceanalysis");
+        beginAt("/query/" + getProjectName() + "/executeQuery.view?query.queryName=outputfiles&schemaName=sequenceanalysis");
 
         existingPipelineJobs = SequenceTest.getTotalPipelineJobs(this);
         dr = DataRegionTable.DataRegion(getDriver()).find();
@@ -670,7 +670,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClickAndWait(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
         waitForPipelineJobsToComplete(existingPipelineJobs + 1, "Add To Existing Session", false);
 
-        beginAt("/query/" + getContainerId() + "/executeQuery.view?query.queryName=jsonfiles&schemaName=jbrowse");
+        beginAt("/query/" + getProjectName() + "/executeQuery.view?query.queryName=jsonfiles&schemaName=jbrowse");
         existingPipelineJobs = SequenceTest.getTotalPipelineJobs(this);
         dr = DataRegionTable.DataRegion(getDriver()).find();
         dr.checkAllOnPage();
@@ -681,12 +681,12 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClickAndWait(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
         waitForPipelineJobsToComplete(existingPipelineJobs + 1, "Recreating Resources", false);
 
-        beginAt("/project/" + getContainerId() + "/begin.view");
+        beginAt("/project/" + getProjectName() + "/begin.view");
         _helper.clickNavPanelItemAndWait("JBrowse Sessions:", 1);
         waitAndClickAndWait(Locator.tagWithText("a", "View In JBrowse"));
         waitForElement(Locator.tagWithText("div", "TestGenome1"));
 
-        beginAt("/project/" + getContainerId() + "/begin.view");
+        beginAt("/project/" + getProjectName() + "/begin.view");
         _helper.clickNavPanelItemAndWait("JBrowse Sessions:", 1);
         dr = DataRegionTable.DataRegion(getDriver()).find();
         dr.clickRowDetails(0);
@@ -718,7 +718,7 @@ public class JBrowseTest extends BaseWebDriverTest
         Assert.assertNotNull("Missing session ID on URL", sessionId);
 
         // Now ensure default tracks appear:
-        beginAt("/project/" + getContainerId() + "/begin.view");
+        beginAt("/project/" + getProjectName() + "/begin.view");
         _helper.clickNavPanelItemAndWait("JBrowse Sessions:", 1);
         waitAndClickAndWait(Locator.tagWithText("a", "View In JBrowse"));
         waitForElement(Locator.tagWithText("div", "TestGenome1"));
