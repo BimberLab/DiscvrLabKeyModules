@@ -525,6 +525,11 @@ public class JBrowseTest extends BaseWebDriverTest
     private void testFullTextSearch() throws Exception
     {
         goToProjectHome();
+        if (!SequenceTest.isExternalPipelineEnabled(getProjectName()))
+        {
+            log("JBrowseTest.testFullTextSearch() requires external tools, including DISCVRSeq.jar, skipping");
+            return;
+        }
 
         SequenceTest.addOutputFile(this, _mGapTestVcf, SequenceTest.TEST_GENOME_NAME, "TestVCF", "VCF File", "This is an output file to test VCF full-text search", false);
 
