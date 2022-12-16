@@ -22,6 +22,7 @@ import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.StringUtilsLabKey;
 
 import java.io.BufferedReader;
@@ -286,5 +287,61 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
     protected boolean isThrowNonZeroExits()
     {
         return _throwNonZeroExits;
+    }
+
+    protected File resolveFileInPath(String exe, @Nullable String packageName, boolean throwIfNotFound)
+    {
+        File fn;
+        String path;
+
+        if (packageName != null)
+        {
+            path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath(packageName);
+            if (path != null)
+            {
+                fn = new File(path, exe);
+                if (fn.exists())
+                {
+                    return fn;
+                }
+            }
+        }
+
+        path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath(SequencePipelineService.SEQUENCE_TOOLS_PARAM);
+        if (path != null)
+        {
+            fn = new File(path, exe);
+            if (fn.exists())
+            {
+                return fn;
+            }
+        }
+
+        path = PipelineJobService.get().getAppProperties().getToolsDirectory();
+        if (path != null)
+        {
+            fn = new File(path, exe);
+            if (fn.exists())
+            {
+                return fn;
+            }
+        }
+
+        String[] paths = System.getenv("PATH").split(File.pathSeparator);
+        for (String pathDir : paths)
+        {
+            fn = new File(pathDir, exe);
+            if (fn.exists())
+            {
+                return fn;
+            }
+        }
+
+        if (throwIfNotFound)
+        {
+            throw new IllegalArgumentException("Unable to find file: "+ exe);
+        }
+
+        return null;
     }
 }
