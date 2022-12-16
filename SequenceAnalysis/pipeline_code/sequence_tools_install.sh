@@ -851,16 +851,29 @@ then
     rm -Rf $LKTOOLS_DIR/_preamble.py
     rm -Rf $LKTOOLS_DIR/cutadapt_pip
 
-    CUTADAPT_BRANCH=v4.0
-    pip -V
-    PIP_VERSION=`pip -V | cut -d '(' -f 2 | sed 's/python //' | cut -c 1 2>1`
-
-    if [[ $PIP_VERSION == '2' ]];then
-      CUTADAPT_BRANCH='v3.4'
+    if [ -x "$(command -v pip3)" ];then
+      PIP_EXE=`command -v pip3`
+    else
+      PIP_EXE=pip
     fi
 
-    pip install --target ${LKTOOLS_DIR}/cutadapt_pip git+https://github.com/marcelm/cutadapt.git@${CUTADAPT_BRANCH}
-    ln -s ${LKTOOLS_DIR}/cutadapt_pip/bin/cutadapt ${LKTOOLS_DIR}/cutadapt
+    PIP_VERSION=`$PIP_EXE -V | cut -d '(' -f 2 | sed 's/python //' | cut -c 1 2>1`
+    if [[ $PIP_VERSION == '2' ]];then
+      echo 'Using python 2 compatible cutadapt'
+      wget https://pypi.python.org/packages/source/c/cutadapt/cutadapt-1.8.1.tar.gz
+      gunzip cutadapt-1.8.1.tar.gz
+      tar -xf cutadapt-1.8.1.tar
+      gzip cutadapt-1.8.1.tar
+
+      #note: cutadapt expects to be installed using python's package manager; however, this should work
+      install ./cutadapt-1.8.1/bin/cutadapt ${LKTOOLS_DIR}/cutadapt.py
+      install ./cutadapt-1.8.1/bin/_preamble.py ${LKTOOLS_DIR}/_preamble.py
+      cp -R ./cutadapt-1.8.1/cutadapt ${LKTOOLS_DIR}/cutadapt
+    else
+      CUTADAPT_BRANCH=v4.0
+      $PIP_EXE install --target ${LKTOOLS_DIR}/cutadapt_pip git+https://github.com/marcelm/cutadapt.git@${CUTADAPT_BRANCH}
+      ln -s ${LKTOOLS_DIR}/cutadapt_pip/bin/cutadapt ${LKTOOLS_DIR}/cutadapt
+    fi
 else
     echo "Already installed"
 fi

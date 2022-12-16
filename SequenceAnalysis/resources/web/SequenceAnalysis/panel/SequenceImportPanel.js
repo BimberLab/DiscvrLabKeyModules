@@ -1438,7 +1438,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                                 xtype: 'textfield',
                                 fieldLabel: 'Group RegEx',
                                 itemId: 'groupEx',
-                                value: '(.*)_'
+                                value: 's_([^_]+)_'
                             },{
                                 xtype: 'ldk-integerfield',
                                 fieldLabel: 'Group Index',
@@ -1449,12 +1449,12 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                                 xtype: 'textfield',
                                 fieldLabel: 'Platform Unit RegEx',
                                 itemId: 'platformEx',
-                                value: '(.*)_'
+                                value: '(.*)_R[1-2]+'
                             },{
                                 xtype: 'ldk-integerfield',
                                 fieldLabel: 'Platform Index',
                                 itemId: 'platformNum',
-                                value: 2,
+                                value: 1,
                                 minValue: 0
                             }],
                             buttons: [{

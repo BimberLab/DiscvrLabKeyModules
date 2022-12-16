@@ -591,7 +591,8 @@ public class JBrowseTest extends BaseWebDriverTest
 
         // TODO: ensure index exists
         beginAt("/jbrowse/" + getContainerId() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=foo");
-        //waitForText("");
+        waitForText("{");
+        getArtifactCollector().dumpPageSnapshot("JBrowseLuceneIndexPage");
 
         beginAt("/query/" + getContainerId() + "/executeQuery.view?query.queryName=jsonfiles&schemaName=jbrowse");
         final DataRegionTable drt = DataRegionTable.DataRegion(getDriver()).find();
