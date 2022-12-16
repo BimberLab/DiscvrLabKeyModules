@@ -605,7 +605,7 @@ public class JBrowseTest extends BaseWebDriverTest
         doAndWaitForPageToLoad(() ->
         {
             drt.clickHeaderButton("Delete");
-            assertAlert("Are you sure you want to delete the selected row?");
+            assertAlert("Are you sure you want to delete the selected rows?");
         });
     }
 
