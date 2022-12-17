@@ -36,7 +36,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 {
     public static final String SEURAT_THREADS = "seuratMaxThreads";
 
-    public AbstractSingleCellPipelineStep(PipelineStepProvider provider, PipelineContext ctx)
+    public AbstractSingleCellPipelineStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx);
     }
@@ -309,6 +309,11 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 
             if (seuratThreads != null)
             {
+                if (maxThreads != null && maxThreads < seuratThreads)
+                {
+                    seuratThreads = maxThreads;
+                }
+
                 writer.println("\t-e SEURAT_MAX_THREADS=" + seuratThreads + " \\");
             }
 
