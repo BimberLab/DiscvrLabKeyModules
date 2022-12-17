@@ -530,9 +530,6 @@ public class JBrowseTest extends BaseWebDriverTest
             return;
         }
 
-        goToProjectHome();
-        waitForElement(Locator.tagWithText("a", "View JBrowse Sessions"));
-
         SequenceTest.addOutputFile(this, _mGapTestVcf, SequenceTest.TEST_GENOME_NAME, "TestVCF", "VCF File", "This is an output file to test VCF full-text search", false);
 
         //create session w/ some of these, verify
