@@ -524,12 +524,14 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testFullTextSearch() throws Exception
     {
-        goToProjectHome();
         if (!SequenceTest.isExternalPipelineEnabled(getProjectName()))
         {
             log("JBrowseTest.testFullTextSearch() requires external tools, including DISCVRSeq.jar, skipping");
             return;
         }
+
+        goToProjectHome();
+        waitForElement(Locator.tagWithText("a", "View JBrowse Sessions"));
 
         SequenceTest.addOutputFile(this, _mGapTestVcf, SequenceTest.TEST_GENOME_NAME, "TestVCF", "VCF File", "This is an output file to test VCF full-text search", false);
 
@@ -645,7 +647,7 @@ public class JBrowseTest extends BaseWebDriverTest
         Ext4FieldRef.getForLabel(this, "Description").setValue("This is the first session with BAM");
         waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
 
-        Window window = new Window.WindowFinder(getDriver()).withTitle("Create New Workbook or Add To Existing?").waitFor();
+        Window<?> window = new Window.WindowFinder(getDriver()).withTitle("Create New Workbook or Add To Existing?").waitFor();
         window.clickButton("Submit", 0);
 
         window = new Window.WindowFinder(getDriver()).withTitle("Success").waitFor();
@@ -744,7 +746,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
         waitForElement(Locator.tagWithText("p", "No session Id provided. Please have your site admin use the customize icon to set the session ID for this webpart."));
         portalHelper.clickWebpartMenuItem("JBrowse Search", false, "Customize");
-        Window window = new Window.WindowFinder(getDriver()).withTitle("Customize Webpart").waitFor();
+        Window<?> window = new Window.WindowFinder(getDriver()).withTitle("Customize Webpart").waitFor();
         Ext4FieldRef.waitForField(this, "Target JBrowse DB");
         Ext4FieldRef.getForLabel(this, "Target JBrowse DB").setValue(sessionId);
         window.clickButton("Submit", WAIT_FOR_PAGE);
