@@ -1,12 +1,22 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
+import au.com.bytecode.opencsv.CSVReader;
 import org.json.old.JSONObject;
+import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.reader.Readers;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class RunSDA extends AbstractCellMembraneStep
 {
@@ -68,6 +78,62 @@ public class RunSDA extends AbstractCellMembraneStep
     {
         return "sda";
     }
+
+    @Override
+    public Output execute(SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException
+    {
+        Output output = super.execute(ctx, inputObjects, outputPrefix);
+
+        File saved = new File(ctx.getOutputDir(), "sdaFiles.txt");
+        if (!saved.exists())
+        {
+            throw new PipelineJobException("Unable to find file: " + saved.getPath());
+        }
+
+        try (CSVReader reader = new CSVReader(Readers.getReader(saved), '\t'))
+        {
+            String[] line;
+            while ((line = reader.readNext()) != null)
+            {
+                File rds = new File(ctx.getOutputDir(), line[1]);
+                if (!rds.exists())
+                {
+                    throw new PipelineJobException("Unable to find file: " + rds.getPath());
+                }
+
+                final String datasetId = line[0];
+                Set<SeuratObjectWrapper> wrappers = inputObjects.stream().filter(x -> datasetId.equals(x.getDatasetId())).collect(Collectors.toSet());
+                if (wrappers.size() == 0)
+                {
+                    throw new PipelineJobException("Unable to find seurat object wrapper for: " + datasetId);
+                }
+                else if (wrappers.size() > 1)
+                {
+                    throw new PipelineJobException("More than one seurat object wrapper matched: " + datasetId + ", found: " + wrappers.stream().map(SeuratObjectWrapper::getDatasetId).collect(Collectors.joining(", ")));
+                }
+
+                SeuratObjectWrapper wrapper = wrappers.iterator().next();
+
+                SequenceOutputFile so = new SequenceOutputFile();
+                so.setFile(rds);
+                so.setCategory("SDA Results");
+                so.setLibrary_id(ctx.getSequenceSupport().getCachedGenomes().iterator().next().getGenomeId());
+                so.setReadset(wrapper.getReadsetId());
+                so.setName(wrapper.getDatasetName() == null ? wrapper.getDatasetId() : wrapper.getDatasetName() + ": SDA Analysis");
+
+                ctx.getFileManager().addSequenceOutput(so);
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        ctx.getFileManager().addIntermediateFile(saved);
+
+        return output;
+    }
+
 }
 
 
