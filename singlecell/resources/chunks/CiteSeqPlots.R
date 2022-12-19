@@ -11,8 +11,9 @@ for (datasetId in names(seuratObjects)) {
             }, error = function(e){
                 warning(conditionMessage(e))
                 traceback()
-                message(paste0('Error running toLower for: ', feat))
+                message(paste0('Error running toLower for: ', feat, '. features present:'))
                 message(paste0(sort(rownames(seuratObj@assays[[assayName]])), collapse = ', '))
+                message(paste0('assay key: ', seuratObj@assays[[assayName]]@key))
                 stop(paste0('Error running FeaturePlotAcrossReductions for: ', datasetId))
             })
         }
