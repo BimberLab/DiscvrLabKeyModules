@@ -2075,17 +2075,17 @@ public class SequenceAnalysisController extends SpringActionController
 
         public String getJobName()
         {
-            return getJsonObject().optString("jobName");
+            return getNewJsonObject().optString("jobName");
         }
 
         public String getDescription()
         {
-            return getJsonObject().optString("description");
+            return getNewJsonObject().optString("description");
         }
 
         public TYPE getType()
         {
-            return !getJsonObject().containsKey("type") ? null : TYPE.valueOf(getJsonObject().getString("type"));
+            return !getNewJsonObject().has("type") ? null : TYPE.valueOf(getNewJsonObject().getString("type"));
         }
 
         public JSONObject getJobParameters()

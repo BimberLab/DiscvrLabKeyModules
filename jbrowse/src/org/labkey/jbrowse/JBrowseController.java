@@ -441,41 +441,36 @@ public class JBrowseController extends SpringActionController
 
             final Map<Container, List<Map<String, Object>>> rows = new HashMap<>();
             TableSelector ts = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES), PageFlowUtil.set("objectid", "container", "trackJson"), new SimpleFilter(FieldKey.fromString("objectid"), objectIds, CompareType.IN), null);
-            ts.forEachResults(new Selector.ForEachBlock<Results>()
-            {
-                @Override
-                public void exec(Results rs) throws SQLException, StopIteratingException
+            ts.forEachResults(rs -> {
+                Container c = ContainerManager.getForId(rs.getString(FieldKey.fromString("container")));
+                if (!c.hasPermission(getUser(), UpdatePermission.class))
                 {
-                    Container c = ContainerManager.getForId(rs.getString(FieldKey.fromString("container")));
-                    if (!c.hasPermission(getUser(), UpdatePermission.class))
-                    {
-                        throw new UnauthorizedException("User does not have permission to update records in the folder: " + c.getPath());
-                    }
-
-                    JSONObject json = rs.getString("trackJson") == null ? new JSONObject() : new JSONObject(rs.getString("trackJson"));
-                    for (String key : attributes.keySet())
-                    {
-                        if (StringUtils.trimToNull(attributes.getString(key)) == null)
-                        {
-                            json.remove(key);
-                        }
-                        else
-                        {
-                            json.put(key, attributes.get(key));
-                        }
-                    }
-
-                    if (!rows.containsKey(c))
-                    {
-                        rows.put(c, new ArrayList<>());
-                    }
-
-                    Map<String, Object> row = new CaseInsensitiveHashMap<>();
-                    row.put("objectid", rs.getString("objectid"));
-                    row.put("trackJson", json.isEmpty() ? null : json.toString());
-
-                    rows.get(c).add(row);
+                    throw new UnauthorizedException("User does not have permission to update records in the folder: " + c.getPath());
                 }
+
+                JSONObject json = rs.getString("trackJson") == null ? new JSONObject() : new JSONObject(rs.getString("trackJson"));
+                for (String key : attributes.keySet())
+                {
+                    if (StringUtils.trimToNull(attributes.getString(key)) == null)
+                    {
+                        json.remove(key);
+                    }
+                    else
+                    {
+                        json.put(key, attributes.get(key));
+                    }
+                }
+
+                if (!rows.containsKey(c))
+                {
+                    rows.put(c, new ArrayList<>());
+                }
+
+                Map<String, Object> row = new CaseInsensitiveHashMap<>();
+                row.put("objectid", rs.getString("objectid"));
+                row.put("trackJson", json.isEmpty() ? null : json.toString());
+
+                rows.get(c).add(row);
             });
 
             try (DbScope.Transaction transaction = DbScope.getLabKeyScope().ensureTransaction())
