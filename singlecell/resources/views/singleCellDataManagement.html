@@ -64,7 +64,7 @@
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.totalForwardReads~isnonblank': null, 'query.isArchived~eq': 0})
                     },{
                         name: 'Analyses Using Old Readsets',
-                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_analyses', 'query.readset/status~nonblank': null})
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_analyses', 'query.readset/status~isnonblank': null})
                     }]
                 }]
             }]

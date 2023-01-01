@@ -106,6 +106,7 @@ abstract public class CellHashingService
         public Integer cells = 0;
         public boolean keepMarkdown = false;
         public File h5File = null;
+        public boolean doTSNE = true;
 
         private CellHashingParameters()
         {
@@ -120,6 +121,7 @@ abstract public class CellHashingService
             ret.minCountPerCell = step.getProvider().getParameterByName("minCountPerCell").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Integer.class, 3);
             ret.majorityConsensusThreshold = step.getProvider().getParameterByName("majorityConsensusThreshold").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Double.class, null);
             ret.callerDisagreementThreshold = step.getProvider().getParameterByName("callerDisagreementThreshold").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Double.class, null);
+            ret.doTSNE = step.getProvider().getParameterByName("doTSNE").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, null);
             ret.retainRawCountFile = step.getProvider().getParameterByName("retainRawCountFile").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, true);
             ret.htoReadset = htoReadset;
             ret.parentReadset = parentReadset;
@@ -160,6 +162,7 @@ abstract public class CellHashingService
             ret.minCountPerCell = params.optInt("minCountPerCell", 3);
             ret.majorityConsensusThreshold = params.get("majorityConsensusThreshold") == null ? null : params.getDouble("majorityConsensusThreshold");
             ret.callerDisagreementThreshold = params.get("callerDisagreementThreshold") == null ? null : params.getDouble("callerDisagreementThreshold");
+            ret.doTSNE = params.get("doTSNE") == null ? true : params.getBoolean("doTSNE");
             ret.retainRawCountFile = params.optBoolean("retainRawCountFile", true);
             ret.htoReadset = htoReadset;
             ret.parentReadset = parentReadset;
