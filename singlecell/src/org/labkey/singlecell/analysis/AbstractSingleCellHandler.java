@@ -1016,7 +1016,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                             {
                                 totalDiscordant++;
                             }
-                            else if ("Low Counts".equalsIgnoreCase(val) || "Negative".equals(val))
+                            else if ("Low Counts".equalsIgnoreCase(val) || "Negative".equals(val) || "ND".equalsIgnoreCase(val))
                             {
                                 lowOrNegative++;
                             }
