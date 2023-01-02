@@ -399,7 +399,9 @@ public class NimbleHelper
     private boolean runUsingDocker(List<String> nimbleArgs, PipelineStepOutput output, String resumeString) throws PipelineJobException
     {
         File localBashScript = new File(getPipelineCtx().getWorkingDirectory(), "docker.sh");
+        File dockerBashScript = new File(getPipelineCtx().getWorkingDirectory(), "dockerRun.sh");
         output.addIntermediateFile(localBashScript);
+        output.addIntermediateFile(dockerBashScript);
 
         // Create temp folder:
         File tmpDir = new File(getPipelineCtx().getWorkingDirectory(), "tmpDir");
@@ -417,7 +419,7 @@ public class NimbleHelper
         }
         output.addIntermediateFile(tmpDir);
 
-        try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
+        try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript);PrintWriter dockerWriter = PrintWriters.getPrintWriter(dockerBashScript))
         {
             writer.println("#!/bin/bash");
             writer.println("set -x");
@@ -444,11 +446,19 @@ public class NimbleHelper
             writer.println("\t--entrypoint /bin/bash \\");
             writer.println("\t-w /work \\");
             writer.println("\t" + DOCKER_CONTAINER_NAME + " \\");
-            // TODO: eventually remove this:
-            writer.println("\t /bin/bash -c \"" + StringUtils.join(nimbleArgs, " ") + "; echo 'Exit code: '$?; ls /work \"");
+            writer.println("\t/work/" + dockerBashScript.getName());
             writer.println("EXIT_CODE=$?");
-            writer.println("echo 'Bash script complete: '$EXIT_CODE");
+            writer.println("echo 'Docker run exit code: '$EXIT_CODE");
             writer.println("exit $EXIT_CODE");
+
+            dockerWriter.println("#!/bin/bash");
+            dockerWriter.println("set -x");
+
+            dockerWriter.println(StringUtils.join(nimbleArgs, " "));
+            dockerWriter.println("EXIT_CODE=$?");
+            dockerWriter.println("echo 'Exit code: '$?");
+            dockerWriter.println("ls /work");
+            dockerWriter.println("exit $EXIT_CODE");
         }
         catch (IOException e)
         {
