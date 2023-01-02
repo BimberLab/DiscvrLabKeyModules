@@ -190,7 +190,7 @@ public class NimbleHelper
         genomeFasta = ensureLocalCopy(genomeFasta, output);
 
         File nimbleJson = new File(getPipelineCtx().getWorkingDirectory(), FileUtil.getBaseName(genomeFasta) + ".json");
-        runUsingDocker(Arrays.asList("generate", "/work/" + genomeFasta.getName(), "/work/" + genomeCsv.getName(), "/work/" + nimbleJson.getName()), output, "generate-" + genome.genomeId);
+        runUsingDocker(Arrays.asList("python3", "-m", "nimble", "generate", "/work/" + genomeFasta.getName(), "/work/" + genomeCsv.getName(), "/work/" + nimbleJson.getName()), output, "generate-" + genome.genomeId);
         if (!nimbleJson.exists())
         {
             File doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), "generate-" + genome.genomeId);
@@ -284,6 +284,10 @@ public class NimbleHelper
         File resultsTsv = new File(getPipelineCtx().getWorkingDirectory(), "results." + genome.getGenomeId() + ".txt");
 
         List<String> alignArgs = new ArrayList<>();
+        alignArgs.add("python3");
+        alignArgs.add("-m");
+        alignArgs.add("nimble");
+
         alignArgs.add("align");
         Integer maxThreads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
         if (maxThreads != null)
@@ -437,6 +441,7 @@ public class NimbleHelper
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");
             writer.println("\t-e TMPDIR=/work/tmpDir \\");
+            writer.println("\t--entrypoint /bin/bash \\");
             writer.println("\t-w /work \\");
             writer.println("\t" + DOCKER_CONTAINER_NAME + " \\");
             // TODO: eventually remove this:
