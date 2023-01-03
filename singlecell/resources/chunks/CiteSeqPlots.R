@@ -7,7 +7,7 @@ for (datasetId in names(seuratObjects)) {
     } else {
         for (feat in rownames(seuratObj[[assayName]])) {
             tryCatch({
-                CellMembrane::FeaturePlotAcrossReductions(seuratObj, features = paste0(tolower(assayName), '_', feat))
+                CellMembrane::FeaturePlotAcrossReductions(seuratObj, features = paste0(seuratObj@assays[[assayName]]@key, feat))
             }, error = function(e){
                 warning(conditionMessage(e))
                 traceback()
