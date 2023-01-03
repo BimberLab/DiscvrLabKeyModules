@@ -62,9 +62,12 @@ printName <- function(datasetId) {
 
 savedFiles <- data.frame(datasetId = character(), datasetName = character(), filename = character(), outputFileId = character(), readsetId = character())
 if (file.exists('/work/savedSeuratObjects.txt')) {
+    print('Deleting pre-existing savedSeuratObjects.txt file')
     unlink('/work/savedSeuratObjects.txt')
 }
+
 file.create('/work/savedSeuratObjects.txt')
+print(paste0('Total lines in savedSeuratObjects.txt on job start:', length(readLines('savedSeuratObjects.txt'))))
 
 saveData <- function(seuratObj, datasetId) {
     print(paste0('Saving dataset: ', datasetId))
@@ -88,6 +91,12 @@ saveData <- function(seuratObj, datasetId) {
     print(paste0('readsetId: ', readsetId))
 
     toAppend <- data.frame(datasetId = datasetId, datasetName = datasetName, filename = fn, outputFileId = outputFileId, readsetId = readsetId)
+    if (nrow(toAppend) != 1) {
+        warning(paste0('Error saving seurat objects, more than one row:'))
+        print(toAppend)
+        stop('Error saving seurat objects, more than one row!')
+    }
+
     write.table(toAppend, file = 'savedSeuratObjects.txt', quote = FALSE, sep = '\t', row.names = FALSE, col.names = FALSE, append = TRUE)
 
     # Write cell barcodes and metadata:
