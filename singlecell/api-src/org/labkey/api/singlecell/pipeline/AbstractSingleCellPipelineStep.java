@@ -46,6 +46,13 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
     {
         SingleCellOutput output = new SingleCellOutput();
 
+        File tracker = new File(ctx.getOutputDir(), "savedSeuratObjects.txt");
+        if (tracker.exists())
+        {
+            ctx.getLogger().debug("deleting pre-existing file: " + tracker.getName());
+            tracker.delete();
+        }
+
         File rmd = createRmd(output, ctx, inputObjects, outputPrefix);
         if (hasCompleted())
         {
@@ -74,7 +81,6 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         output.setHtmlFile(htmlFile);
 
         List<SeuratObjectWrapper> outputs = new ArrayList<>();
-        File tracker = new File(ctx.getOutputDir(), "savedSeuratObjects.txt");
         if (!tracker.exists())
         {
             throw new PipelineJobException("File not found: " + tracker.getPath());
