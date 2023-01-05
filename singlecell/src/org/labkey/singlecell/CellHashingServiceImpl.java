@@ -90,10 +90,13 @@ public class CellHashingServiceImpl extends CellHashingService
         return _instance;
     }
 
+    private static String TCR_FIELD = "tcrReadsetId";
+
     @Override
-    public void prepareHashingForVdjIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashingReadset) throws PipelineJobException
+    public void prepareHashingForVdjIfNeeded(SequenceOutputHandler.JobContext ctx, final boolean failIfNoHashingReadset) throws PipelineJobException
     {
-        prepareHashingAndCiteSeqFilesIfNeeded(sourceDir, job, support, filterField, failIfNoHashingReadset, false, true, true, false, false);
+        boolean useDemEM = ctx.getParams().optString("methods", "").contains(CellHashingService.CALLING_METHOD.demuxem.name());
+        prepareHashingAndCiteSeqFilesIfNeeded(ctx.getOutputDir(), ctx.getJob(), ctx.getSequenceSupport(), TCR_FIELD, failIfNoHashingReadset, false, true, true, false, useDemEM);
     }
 
     public void prepareHashingAndCiteSeqFilesForFeatureCountsIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashingReadset, final boolean failIfNoCiteSeqReadset) throws PipelineJobException
@@ -133,6 +136,7 @@ public class CellHashingServiceImpl extends CellHashingService
         HashMap<String, Integer> gexReadsetToH5Map = new HashMap<>();
         HashMap<Integer, Integer> readsetToHashingMap = new HashMap<>();
         HashMap<Integer, Integer> readsetToCiteSeqMap = new HashMap<>();
+        HashMap<Integer, Integer> readsetToGexMap = new HashMap<>();
         HashMap<Integer, Set<String>> gexToPanels = new HashMap<>();
 
         List<Readset> cachedReadsets = support.getCachedReadsets();
@@ -227,10 +231,13 @@ public class CellHashingServiceImpl extends CellHashingService
                             readsetToCiteSeqMap.put(rs.getReadsetId(), results.getInt(FieldKey.fromString("citeseqReadsetId")));
                         }
                     }
+
+                    readsetToGexMap.put(rs.getReadsetId(), results.getInt(FieldKey.fromString("readsetId")));
                 });
 
                 job.getLogger().debug("total readset to hashing pairs: " + readsetToHashingMap.size());
                 job.getLogger().debug("total readset to cite-seq pairs: " + readsetToCiteSeqMap.size());
+                job.getLogger().debug("total readset to GEX pairs: " + readsetToGexMap.size());
 
                 if (hasError.get())
                 {
@@ -247,42 +254,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
             if (doH5Caching)
             {
-                job.getLogger().debug("Caching H5 Files");
-                TableInfo ti = QueryService.get().getUserSchema(job.getUser(), job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer(), SingleCellSchema.SEQUENCE_SCHEMA_NAME).getTable("outputfiles");
-                Set<Integer> cachedGenomes = support.getCachedGenomes().stream().map(ReferenceGenome::getGenomeId).collect(Collectors.toSet());
-                for (int readsetId : uniqueGex)
-                {
-                    for (int genomeId : cachedGenomes)
-                    {
-                        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), readsetId, CompareType.EQUAL);
-                        filter.addCondition(FieldKey.fromString("library_id"), genomeId, CompareType.EQUAL);
-                        filter.addCondition(FieldKey.fromString("category"), LOUPE_CATEGORY, CompareType.EQUAL);
-
-                        TableSelector ts = new TableSelector(ti, PageFlowUtil.set("dataid"), filter, new org.labkey.api.data.Sort("-rowid"));
-                        if (ts.exists())
-                        {
-                            List<Integer> dataIds = ts.getArrayList(Integer.class);
-                            int dataId = dataIds.get(0);
-                            if (dataIds.size() > 1)
-                            {
-                                job.getLogger().info("More than one loupe file found for readset " + readsetId + " with genome: "+ genomeId + ". Using the most recent: " + dataId);
-                            }
-
-                            ExpData d = ExperimentService.get().getExpData(dataId);
-                            if (d == null)
-                            {
-                                throw new PipelineJobException("Unable to find exp data: " + dataId);
-                            }
-
-                            support.cacheExpData(d);
-                            gexReadsetToH5Map.put(readsetId + "-" + genomeId, dataId);
-                        }
-                        else
-                        {
-                            job.getLogger().warn("Unable to find loupe file for readset: " + readsetId + " with genome: " + genomeId);
-                        }
-                    }
-                }
+                gexReadsetToH5Map.putAll(cacheH5Files(job, support, uniqueGex, readsetToGexMap));
             }
 
             // if distinct HTOs is 1, no point in running hashing.  note: presence of hashing readsets is a trigger downstream
@@ -441,6 +413,85 @@ public class CellHashingServiceImpl extends CellHashingService
         {
             throw new PipelineJobException("Readsets do not use CITE-seq");
         }
+    }
+
+    private Map<String, Integer> cacheH5Files(PipelineJob job, SequenceAnalysisJobSupport support, Collection<Integer> uniqueGex, Map<Integer, Integer> readsetToGexMap) throws PipelineJobException
+    {
+        job.getLogger().debug("Caching H5 Files");
+        Map<String, Integer> gexReadsetToH5Map = new HashMap<>();
+
+        TableInfo ti = QueryService.get().getUserSchema(job.getUser(), job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer(), SingleCellSchema.SEQUENCE_SCHEMA_NAME).getTable("outputfiles");
+        Set<Integer> cachedGenomes = support.getCachedGenomes().stream().map(ReferenceGenome::getGenomeId).collect(Collectors.toSet());
+
+        for (int readsetId : readsetToGexMap.keySet())
+        {
+            boolean isGEX = uniqueGex.contains(readsetId);
+            int gexReadset = readsetToGexMap.get(readsetId);
+
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), gexReadset, CompareType.EQUAL);
+            filter.addCondition(FieldKey.fromString("category"), LOUPE_CATEGORY, CompareType.EQUAL);
+
+            int gexGenomeId;
+            if (isGEX)
+            {
+                if (cachedGenomes.size() > 1)
+                {
+                    throw new PipelineJobException("demuxEM was selected, but more than one cached genome found, cannot infer correct genome. Found: " + StringUtils.join(cachedGenomes, ", "));
+                }
+
+                gexGenomeId = cachedGenomes.iterator().next();
+                filter.addCondition(FieldKey.fromString("library_id"), gexGenomeId, CompareType.EQUAL);
+            }
+            else
+            {
+                job.getLogger().debug("Readset is not GEX, attempting to infer the loupe file genome");
+                HashSet<Integer> genomeIds = new HashSet<>(new TableSelector(ti, PageFlowUtil.set("library_id"), filter, new org.labkey.api.data.Sort("-rowid")).getArrayList(Integer.class));
+                if (genomeIds.isEmpty())
+                {
+                    throw new PipelineJobException("demuxEM was selected, but no suitable loupe files were found for GEX readset: " + gexReadset);
+                }
+                else if (genomeIds.size() > 1)
+                {
+                    throw new PipelineJobException("demuxEM was selected. Attempting to identify loupe files using GEX readset: " + gexReadset + ", but more than one genome found. Found: " + StringUtils.join(cachedGenomes, ", "));
+                }
+
+                gexGenomeId = genomeIds.iterator().next();
+                filter.addCondition(FieldKey.fromString("library_id"), gexGenomeId, CompareType.EQUAL);
+            }
+
+            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("dataid"), filter, new org.labkey.api.data.Sort("-rowid"));
+            if (ts.exists())
+            {
+                List<Integer> dataIds = ts.getArrayList(Integer.class);
+                int dataId = dataIds.get(0);
+                if (dataIds.size() > 1)
+                {
+                    job.getLogger().info("More than one loupe file found for GEX readset " + gexReadset + " with genome: "+ gexGenomeId + ". Using the most recent: " + dataId);
+                }
+
+                ExpData d = ExperimentService.get().getExpData(dataId);
+                if (d == null)
+                {
+                    throw new PipelineJobException("Unable to find exp data: " + dataId);
+                }
+
+                support.cacheExpData(d);
+
+                if (cachedGenomes.size() > 1)
+                {
+                    throw new PipelineJobException("demuxEM was selected, but more than one cached genome found, cannot infer correct genome. Found: " + StringUtils.join(cachedGenomes, ", "));
+                }
+
+                // NOTE: cache this using the source file's genome ID (which might be the TCR library), rather than the GEX genome
+                gexReadsetToH5Map.put(readsetId + "-" + cachedGenomes.iterator().next(), dataId);
+            }
+            else
+            {
+                job.getLogger().warn("Unable to find loupe file for GEX readset: " + gexReadset + " with genome: " + gexGenomeId);
+            }
+        }
+
+        return gexReadsetToH5Map;
     }
 
     public File getValidCiteSeqBarcodeFile(File sourceDir, int gexReadsetId)

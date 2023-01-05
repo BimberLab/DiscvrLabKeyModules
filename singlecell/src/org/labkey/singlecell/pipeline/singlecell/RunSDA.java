@@ -9,6 +9,7 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
@@ -62,8 +63,15 @@ public class RunSDA extends AbstractCellMembraneStep
                     }}, 10000),
                     SeuratToolParameter.create(SEURAT_THREADS, "Max Threads", "The number of threads to use. Cannot be higher than the threads allocated to the job.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, 8)
-                    ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+                    }}, 8),
+                    ToolParameterDescriptor.create("storeGoEnrichment", "Perform/Store GO Enrichment", null, "checkbox", null, true),
+                    SeuratToolParameter.create("fieldNames", "Fields To Plot", "Enter one field name per line", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
+                        put("allowBlank", false);
+                        put("height", 150);
+                        put("delimiter", ",");
+                        put("stripCharsRe", "/['\"]/g");
+                    }}, null, null, true).delimiter(",")
+                ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
 
