@@ -16,6 +16,9 @@ sdaFiles <- data.frame(DatasetId = character(), FileName = character())
 
     sdaResults <- bindArgs(CellMembrane::RunSDA, seuratObj)()
 
+    outputFileId <- ifelse(datasetId %in% names(datasetIdToOutputFileId), yes = datasetIdToOutputFileId[[datasetId]], no = NA)
+    sdaResults$OutputFileId <- outputFileId
+
     fileName <- paste0('sda.', datasetId, '.rds')
     saveRDS(sdaResults, file = fileName)
 

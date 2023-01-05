@@ -1,6 +1,7 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
 import au.com.bytecode.opencsv.CSVReader;
+import org.apache.commons.lang3.StringUtils;
 import org.json.old.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.reader.Readers;
@@ -126,6 +127,12 @@ public class RunSDA extends AbstractCellMembraneStep
                 so.setLibrary_id(ctx.getSequenceSupport().getCachedGenomes().iterator().next().getGenomeId());
                 so.setReadset(wrapper.getReadsetId());
                 so.setName(wrapper.getDatasetName() == null ? wrapper.getDatasetId() : wrapper.getDatasetName() + ": SDA Analysis");
+
+                String jobDescription = StringUtils.trimToNull(ctx.getParams().optString("jobDescription"));
+                if (jobDescription != null)
+                {
+                    so.setDescription(jobDescription);
+                }
 
                 ctx.getFileManager().addSequenceOutput(so);
             }
