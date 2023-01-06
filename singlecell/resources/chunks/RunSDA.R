@@ -20,7 +20,7 @@ sdaFiles <- data.frame(DatasetId = character(), FileName = character())
     sdaResults$OutputFileId <- outputFileId
 
     if (!all(is.null(fieldsToPlot))) {
-       PlotSdaCellScores(seuratObj, sdaResults, fieldNames = fieldNames)
+       PlotSdaCellScores(seuratObj, sdaResults, fieldNames = fieldsToPlot)
     }
 
     fileName <- paste0('sda.', datasetId, '.rds')
