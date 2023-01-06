@@ -483,7 +483,9 @@ public class CellHashingServiceImpl extends CellHashingService
                 }
 
                 // NOTE: cache this using the source file's genome ID (which might be the TCR library), rather than the GEX genome
-                gexReadsetToH5Map.put(readsetId + "-" + cachedGenomes.iterator().next(), dataId);
+                String key = readsetId + "-" + cachedGenomes.iterator().next();
+                job.getLogger().debug("Caching h5 file: " + key + ":" + dataId);
+                gexReadsetToH5Map.put(key, dataId);
             }
             else
             {
