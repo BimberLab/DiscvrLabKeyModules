@@ -316,7 +316,7 @@ abstract public class CellHashingService
         htodemux(false, false),
         dropletutils(true, true),
         gmm_demux(true, true),
-        demuxem(true, false),
+        demuxem(true, true),
         bff_cluster(true, true),
         bff_raw(true, false);
 
