@@ -7,7 +7,10 @@ sdaFiles <- data.frame(DatasetId = character(), FileName = character())
  for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readRDS(seuratObjects[[datasetId]])
-    gc()
+
+    if (!is.null(maxAllowableCells) && maxAllowableCells > 0 && ncol(seuratObj) > maxAllowableCells) {
+       stop(paste0('The object has ', ncol(seuratObj), ' which is above the maxAllowableCells: ', maxAllowableCells))
+    }
 
     outputFolder <- paste0('sdaOutput.', datasetId)
     if (dir.exists(outputFolder)) {

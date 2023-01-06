@@ -35,6 +35,9 @@ public class RunSDA extends AbstractCellMembraneStep
                     SeuratToolParameter.create("numComps", "Num Comps", "Passed to SDAtools::run_SDA(). 30 is a good minimum but depends on input data complexity.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, 50),
+                    SeuratToolParameter.create("maxAllowableCells", "Max Allowable Cells", "If the input cells are above this value, an error will be thrown. This is designed to limit the amount of data passed to SDA. Use -1 for no limit.", "ldk-integerfield", new JSONObject(){{
+                        put("minValue", -1);
+                    }}, 150000, null, true),
                     SeuratToolParameter.create("featureInclusionList", "Genes to Include", "These genes, entered comma-separated or one/line, will be added to the default Seurat::VariableFeatures gene set when running PCA", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("height", 150);
                         put("delimiter", ",");
