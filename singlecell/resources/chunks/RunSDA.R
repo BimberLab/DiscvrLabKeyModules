@@ -23,7 +23,7 @@ sdaFiles <- data.frame(DatasetId = character(), FileName = character())
     sdaResults$OutputFileId <- outputFileId
 
     if (!all(is.null(fieldNames))) {
-       PlotSdaCellScores(seuratObj, sdaResults, fieldNames = fieldNames)
+       CellMembrane::PlotSdaCellScores(sdaResults = sdaResults, seuratObj = seuratObj, fieldNames = fieldNames)
     }
 
     fileName <- paste0('sda.', datasetId, '.rds')
