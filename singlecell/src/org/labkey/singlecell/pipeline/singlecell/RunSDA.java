@@ -51,13 +51,17 @@ public class RunSDA extends AbstractCellMembraneStep
                     SeuratToolParameter.create("minFeatureCount", "Min Feature Count", "This is used to filter genes. Only features with total expression across all cells above this value are included. The default of 5 is designed to include effectively all but the most lowly expressed genes", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, 1, "minFeatureCount", false),
-                    SeuratToolParameter.create("minCellsExpressingFeature", "Min Cells Expressing Feature", "Can be used with perCellExpressionThreshold to drop features present in limited cells. Only features detected above perCellExpressionThreshold in at least minCellsExpressingFeature will be retained. If this value is less than zero it is interpreted as a percentage of total cells. If above zero it is interpeted as the min number of cells", "ldk-numberfield", new JSONObject(){{
+                    SeuratToolParameter.create("minCellsExpressingFeature", "Min Cells Expressing Feature", "Can be used with perCellExpressionThreshold to drop features present in limited cells. Only features detected above perCellExpressionThreshold in at least minCellsExpressingFeature will be retained. If this value is less than one, it is interpreted as a percentage of total cells. If above one, it is interpreted as the min number of cells", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                         put("decimalPrecision", 2);
                     }}, 0.02, "minCellsExpressingFeature", false),
                     SeuratToolParameter.create("perCellExpressionThreshold", "Per Cell Expression Threshold", "Can be used with perCellExpressionThreshold to drop features present in limited cells. Only features detected above perCellExpressionThreshold in at least minCellsExpressingFeature will be retained", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, 5, "perCellExpressionThreshold", false),
+                    }}, 0, "perCellExpressionThreshold", false),
+                    SeuratToolParameter.create("maxFeaturesDiscarded", "Max Features Discarded", "After filtering, if fewer than this number of features remain, an error will be thrown. This is a guard against overly aggressive filtering. This can either be an integer (meaning number of features), or 0-1 (which is interpreted as a percent of the input features)", "ldk-numberfield", new JSONObject(){{
+                        put("minValue", 0);
+                        put("decimalPrecision", 2);
+                    }}, 0.75),
                     SeuratToolParameter.create("minLibrarySize", "Min Library Size", "Passed to dropsim::normaliseDGE() min_library_size", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, 50),
