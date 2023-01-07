@@ -297,7 +297,7 @@ public class NimbleHelper
         }
 
         alignArgs.add("-l");
-        alignArgs.add("/work/nimbleDebug." + genome.genomeId + ".txt");
+        alignArgs.add("/work/" + getNimbleLogFile(getPipelineCtx().getWorkingDirectory(), genome.genomeId).getName());
 
         boolean alignOutput = getProvider().getParameterByName(ALIGN_OUTPUT).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
         File alignmentOutputFile = new File(getPipelineCtx().getWorkingDirectory(), "nimbleAlignment." + genome.genomeId + ".txt.gz");
