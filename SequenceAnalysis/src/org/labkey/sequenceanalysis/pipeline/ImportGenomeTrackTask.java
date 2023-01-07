@@ -60,6 +60,7 @@ import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenomeManager;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.Job;
 import org.labkey.api.util.JobRunner;
@@ -230,14 +231,12 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
         }
 
         SAMSequenceDictionary dict = null;
-        if (genome.getSequenceDictionary().exists())
+        if (!genome.getSequenceDictionary().exists())
         {
-            dict = SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath());
+            SequencePipelineService.get().ensureSequenceDictionaryExists(genome.getWorkingFastaFile(), getJob().getLogger(), false);
         }
-        else
-        {
-            getJob().getLogger().warn("genome dictionary not found, will not be able to import some kinds of tracks");
-        }
+
+        dict = SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath());
 
         if (SequenceUtil.FILETYPE.bed.getFileType().isType(file))
         {
