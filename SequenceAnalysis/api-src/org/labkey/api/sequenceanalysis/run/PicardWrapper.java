@@ -30,6 +30,11 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
 
     public String getVersion() throws PipelineJobException
     {
+        if (!jarExists())
+        {
+            throw new PipelineJobException("Unable to find picard.jar");
+        }
+
         List<String> params = new LinkedList<>();
         params.add(SequencePipelineService.get().getJava8FilePath());
         params.add("-jar");
@@ -77,13 +82,18 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
 
     abstract protected String getToolName();
 
-    protected List<String> getBaseArgs()
+    protected List<String> getBaseArgs() throws PipelineJobException
     {
         return getBaseArgs(false);
     }
 
-    protected List<String> getBaseArgs(boolean basicArgsOnly)
+    protected List<String> getBaseArgs(boolean basicArgsOnly) throws PipelineJobException
     {
+        if (!jarExists())
+        {
+            throw new PipelineJobException("Unable to find picard.jar");
+        }
+
         List<String> params = new LinkedList<>();
         params.add(SequencePipelineService.get().getJava8FilePath());
         params.addAll(SequencePipelineService.get().getJavaOpts());

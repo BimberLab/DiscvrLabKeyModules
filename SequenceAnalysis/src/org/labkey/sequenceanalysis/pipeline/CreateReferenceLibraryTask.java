@@ -353,7 +353,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                 CreateSequenceDictionaryWrapper wrapper = new CreateSequenceDictionaryWrapper(getJob().getLogger());
                 wrapper.execute(fasta, true);
             }
-            catch (PipelineJobException e)
+            catch (PipelineJobException | IllegalArgumentException e)
             {
                 getJob().getLogger().warn("Unable to create sequence dictionary");
             }
