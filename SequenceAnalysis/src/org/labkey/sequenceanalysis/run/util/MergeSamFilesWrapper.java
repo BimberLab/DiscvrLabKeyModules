@@ -111,7 +111,7 @@ public class MergeSamFilesWrapper extends PicardWrapper
         return output;
     }
 
-    private List<String> getParams(File outputPath, List<File> files)
+    private List<String> getParams(File outputPath, List<File> files) throws PipelineJobException
     {
         List<String> params = getBaseArgs();
 

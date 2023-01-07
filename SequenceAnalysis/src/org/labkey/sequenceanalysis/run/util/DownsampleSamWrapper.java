@@ -39,7 +39,7 @@ public class DownsampleSamWrapper extends PicardWrapper
 
     }
 
-    private List<String> getParams(File file, Double pctRetained)
+    private List<String> getParams(File file, Double pctRetained) throws PipelineJobException
     {
         List<String> params = getBaseArgs();
         params.add("--INPUT");

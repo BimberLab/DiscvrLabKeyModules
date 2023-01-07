@@ -89,7 +89,7 @@ public class SamToFastqWrapper extends PicardWrapper
         return Pair.of(output, output2);
     }
 
-    private List<String> getBaseParams(File file)
+    private List<String> getBaseParams(File file) throws PipelineJobException
     {
         List<String> params = getBaseArgs();
         params.add("--INPUT");
