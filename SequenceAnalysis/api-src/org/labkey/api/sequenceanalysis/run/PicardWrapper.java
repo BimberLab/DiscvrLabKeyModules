@@ -49,14 +49,20 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
         return ret;
     }
 
-    public static File getPicardJar()
+    public static @Nullable File getPicardJar(boolean throwIfNotFound)
     {
-        return resolveFileInPath("picard.jar", "PICARDPATH", true);
+        return resolveFileInPath("picard.jar", "PICARDPATH", throwIfNotFound);
+    }
+
+    public boolean jarExists()
+    {
+        File jar = getPicardJar(false);
+        return jar != null && jar.exists();
     }
 
     protected File getJar()
     {
-        return getPicardJar();
+        return getPicardJar(false);
     }
 
     public ValidationStringency getStringency()

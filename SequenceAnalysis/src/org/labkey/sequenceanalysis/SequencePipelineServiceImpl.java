@@ -1,7 +1,6 @@
 package org.labkey.sequenceanalysis;
 
 import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -32,9 +31,9 @@ import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.pipeline.TaskFileManagerImpl;
 import org.labkey.sequenceanalysis.run.preprocessing.PreprocessingOutputImpl;
 import org.labkey.sequenceanalysis.run.preprocessing.TrimmomaticWrapper;
-import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 import org.labkey.sequenceanalysis.run.util.SortVcfWrapper;
 import org.labkey.sequenceanalysis.util.FastqUtils;
+import org.labkey.sequenceanalysis.util.ReferenceLibraryHelperImpl;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -231,7 +230,26 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     @Override
     public void ensureSequenceDictionaryExists(File referenceFasta, Logger log, boolean forceRecreate) throws PipelineJobException
     {
-        new CreateSequenceDictionaryWrapper(log).execute(referenceFasta, false);
+        CreateSequenceDictionaryWrapper wrapper = new CreateSequenceDictionaryWrapper(log);
+        if (wrapper.jarExists())
+        {
+            new CreateSequenceDictionaryWrapper(log).execute(referenceFasta, false);
+            return;
+        }
+
+        log.debug("picard.jar not found, creating directly");
+        ReferenceLibraryHelperImpl helper = new ReferenceLibraryHelperImpl(referenceFasta, log);
+        if (forceRecreate)
+        {
+            File dict = helper.getSequenceDictionaryFile(false);
+            if (dict.exists())
+            {
+                log.debug("Deleting pre-existing dictionary: " + dict.getPath());
+                dict.delete();
+            }
+        }
+
+        helper.getSequenceDictionaryFile(true);
     }
 
     @Override
