@@ -289,7 +289,7 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
         return _throwNonZeroExits;
     }
 
-    protected File resolveFileInPath(String exe, @Nullable String packageName, boolean throwIfNotFound)
+    protected static File resolveFileInPath(String exe, @Nullable String packageName, boolean throwIfNotFound)
     {
         File fn;
         String path;

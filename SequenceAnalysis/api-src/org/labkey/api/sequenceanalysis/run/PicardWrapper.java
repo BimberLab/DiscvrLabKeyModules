@@ -51,19 +51,7 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
 
     public static File getPicardJar()
     {
-        String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("PICARDPATH");
-        if (path != null)
-        {
-            return new File(path);
-        }
-
-        path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath(SequencePipelineService.SEQUENCE_TOOLS_PARAM);
-        if (path == null)
-        {
-            path = PipelineJobService.get().getAppProperties().getToolsDirectory();
-        }
-
-        return path == null ? null : new File(path, "picard.jar");
+        return resolveFileInPath("picard.jar", "PICARDPATH", true);
     }
 
     protected File getJar()

@@ -60,7 +60,6 @@ import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenomeManager;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.Job;
 import org.labkey.api.util.JobRunner;
