@@ -48,13 +48,13 @@ public class RunSDA extends AbstractCellMembraneStep
                         put("delimiter", ",");
                         put("stripCharsRe", "/(^['\"]+)|(['\"]+$)/g");
                     }}, null).delimiter(","),
-                    SeuratToolParameter.create("minFeatureCount", "Min Feature Count", "This is used to filter genes. Only features with total expression across all cells above this value are included. The default of 5 is designed to include effectively all but the most lowly expressed genes", "ldk-integerfield", new JSONObject(){{
+                    SeuratToolParameter.create("minFeatureCount", "Min Feature Count", "This is used to filter genes. Only features with total expression across all cells greater than or equal to this value are included. The default of 1 will include all expressed genes.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, 1, "minFeatureCount", false),
                     SeuratToolParameter.create("minCellsExpressingFeature", "Min Cells Expressing Feature", "Can be used with perCellExpressionThreshold to drop features present in limited cells. Only features detected above perCellExpressionThreshold in at least minCellsExpressingFeature will be retained. If this value is less than one, it is interpreted as a percentage of total cells. If above one, it is interpreted as the min number of cells", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                         put("decimalPrecision", 2);
-                    }}, 0.02, "minCellsExpressingFeature", false),
+                    }}, 0, "minCellsExpressingFeature", false),
                     SeuratToolParameter.create("perCellExpressionThreshold", "Per Cell Expression Threshold", "Can be used with perCellExpressionThreshold to drop features present in limited cells. Only features detected above perCellExpressionThreshold in at least minCellsExpressingFeature will be retained", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, 0, "perCellExpressionThreshold", false),
