@@ -591,7 +591,13 @@ public class NimbleHelper
                             throw new PipelineJobException("Unexpected duplicate metric names: " + StringUtils.trim(line[0]));
                         }
 
-                        metricsMap.put(StringUtils.trim(line[0]), StringUtils.trim(line[1]));
+                        String value = StringUtils.trim(line[1]);
+                        if (value == null)
+                        {
+                            continue;
+                        }
+
+                        metricsMap.put(StringUtils.trim(line[0]), value.split(" ")[0]);
                     }
                 }
 
