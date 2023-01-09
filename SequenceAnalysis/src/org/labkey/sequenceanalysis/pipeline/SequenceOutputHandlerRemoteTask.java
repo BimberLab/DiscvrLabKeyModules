@@ -112,6 +112,7 @@ public class SequenceOutputHandlerRemoteTask extends WorkDirectoryTask<SequenceO
     }
 
     @NotNull
+    @Override
     public RecordedActionSet run() throws PipelineJobException
     {
         SequenceTaskHelper.logModuleVersions(getJob().getLogger());
@@ -122,6 +123,7 @@ public class SequenceOutputHandlerRemoteTask extends WorkDirectoryTask<SequenceO
         possiblyCacheGenomes(getPipelineJob(), getPipelineJob().getFiles());
 
         getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + handler.getName());
+        getJob().getLogger().info("Output file IDs: " + getPipelineJob().getFiles().stream().map(SequenceOutputFile::getRowid).map(String::valueOf).collect(Collectors.joining(",")));
         handler.getProcessor().processFilesRemote(getPipelineJob().getFiles(), ctx);
 
         //Note: on job resume the TaskFileManager could be replaced with one from the resumer
