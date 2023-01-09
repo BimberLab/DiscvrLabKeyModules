@@ -71,7 +71,7 @@ public class RunSDA extends AbstractCellMembraneStep
                     SeuratToolParameter.create(SEURAT_THREADS, "Max Threads", "The number of threads to use. Cannot be higher than the threads allocated to the job.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, 8),
-                    ToolParameterDescriptor.create("storeGoEnrichment", "Perform/Store GO Enrichment", null, "checkbox", null, true),
+                    SeuratToolParameter.create("storeGoEnrichment", "Perform/Store GO Enrichment", null, "checkbox", null, true),
                     SeuratToolParameter.create("fieldNames", "Fields To Plot", "Enter one field name per line", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("allowBlank", false);
                         put("height", 150);
