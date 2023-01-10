@@ -305,7 +305,7 @@ public class JBrowseController extends SpringActionController
         {
             if ((form.getJsonFiles() == null || form.getJsonFiles().length == 0) && (form.getDatabaseIds() == null || form.getDatabaseIds().length == 0))
             {
-                errors.reject("Must provide a list of sessions or JSON files to re-process");
+                errors.reject(ERROR_MSG, "Must provide a list of sessions or JSON files to re-process");
             }
         }
     }
@@ -806,6 +806,133 @@ public class JBrowseController extends SpringActionController
 
                 return new JSONObject(sb.toString());
             }
+        }
+    }
+
+    @RequiresPermission(AdminPermission.class)
+    public static class LuceneQueryAction extends ReadOnlyApiAction<LuceneQueryForm>
+    {
+        @Override
+        public ApiResponse execute(LuceneQueryForm form, BindException errors)
+        {
+            JBrowseSession session = JBrowseSession.getForId(form.getSessionId());
+            if (session == null)
+            {
+                errors.reject(ERROR_MSG, "Unable to find JBrowse session: " + form.getSessionId());
+                return null;
+            }
+
+            JsonFile track = session.getTrack(getUser(), form.getTrackId());
+            if (track == null)
+            {
+                errors.reject(ERROR_MSG, "Unable to find track with ID: " + form.getTrackId());
+                return null;
+            }
+
+            if (!track.shouldHaveFreeTextSearch())
+            {
+                errors.reject(ERROR_MSG, "This track does not support free text search: " + form.getTrackId());
+                return null;
+            }
+
+            if (!track.doExpectedSearchIndexesExist())
+            {
+                errors.reject(ERROR_MSG, "The lucene index has not been created for this track: " + form.getTrackId());
+                return null;
+            }
+
+            File indexPath = track.getExpectedLocationOfLuceneIndex(true);
+
+            // TODO: execute lucene query and get results. Below is a total guess on what the client should provide for paging:
+            int pageSize = form.getPageSize();
+            int offset = form.getOffset();
+
+            try
+            {
+                JSONObject results = new JSONObject();
+
+                //TODO: we should probably stream this
+                return new ApiSimpleResponse(results);
+            }
+            catch (Exception e)
+            {
+                _log.error("Error in LuceneQuery", e);
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
+        }
+
+        @Override
+        public void validateForm(LuceneQueryForm form, Errors errors)
+        {
+            if ((form.getSearchString() == null || form.getSessionId() == null))
+            {
+                errors.reject(ERROR_MSG, "Must provide search string and the JBrowse session ID");
+            }
+        }
+    }
+
+    public static class LuceneQueryForm
+    {
+        private String _searchString;
+
+        private String _sessionId;
+
+        // This is the GUID
+        private String _trackId;
+
+        private int _pageSize = 1000;
+
+        private int offset = -1;
+
+        public String getSearchString()
+        {
+            return _searchString;
+        }
+
+        public void setSearchString(String searchString)
+        {
+            _searchString = searchString;
+        }
+
+        public String getSessionId()
+        {
+            return _sessionId;
+        }
+
+        public void setSessionId(String sessionId)
+        {
+            _sessionId = sessionId;
+        }
+
+        public int getPageSize()
+        {
+            return _pageSize;
+        }
+
+        public void setPageSize(int pageSize)
+        {
+            _pageSize = pageSize;
+        }
+
+        public int getOffset()
+        {
+            return offset;
+        }
+
+        public void setOffset(int offset)
+        {
+            this.offset = offset;
+        }
+
+        public String getTrackId()
+        {
+            return _trackId;
+        }
+
+        public void setTrackId(String trackId)
+        {
+            _trackId = trackId;
         }
     }
 }

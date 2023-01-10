@@ -309,7 +309,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                         if (!gz.exists())
                         {
                             ReferenceGenomeImpl genome = new ReferenceGenomeImpl(fasta, fastaData, libraryId, null);
-                            log.error("GZipped genome missing for: " + genome.getName());
+                            log.error("GZipped genome missing for: " + genome.getGenomeId());
 
                             if (SystemUtils.IS_OS_WINDOWS)
                             {

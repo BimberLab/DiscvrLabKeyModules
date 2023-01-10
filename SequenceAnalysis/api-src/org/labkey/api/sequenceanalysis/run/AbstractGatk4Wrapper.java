@@ -5,7 +5,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -34,21 +33,14 @@ abstract public class AbstractGatk4Wrapper extends AbstractCommandWrapper
         return "GenomeAnalysisTK4.jar";
     }
 
-    protected File getJAR()
+    public File getJAR()
     {
-        String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath(getPackageName());
-        if (path != null)
-        {
-            return new File(path);
-        }
+        return getJAR(true);
+    }
 
-        path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath(SequencePipelineService.SEQUENCE_TOOLS_PARAM);
-        if (path == null)
-        {
-            path = PipelineJobService.get().getAppProperties().getToolsDirectory();
-        }
-
-        return path == null ? new File(getJarName()) : new File(path, getJarName());
+    public File getJAR(boolean throwIfNotFound)
+    {
+        return resolveFileInPath(getJarName(), getPackageName(), throwIfNotFound);
     }
 
     public void setMaxRamOverride(Integer maxRamOverride)
@@ -73,7 +65,7 @@ abstract public class AbstractGatk4Wrapper extends AbstractCommandWrapper
 
     public boolean jarExists()
     {
-        return getJAR() == null || !getJAR().exists();
+        return getJAR(false) != null;
     }
 
     protected void ensureDictionary(File referenceFasta) throws PipelineJobException
