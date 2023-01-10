@@ -68,6 +68,9 @@ public class RunSDA extends AbstractCellMembraneStep
                     SeuratToolParameter.create("max_iter", "Max Iterations", "Passed directly to SDAtools::run_SDA()", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, 10000),
+                    SeuratToolParameter.create("save_freq", "Max Iterations", "Passed directly to SDAtools::run_SDA()", "ldk-integerfield", new JSONObject(){{
+                        put("minValue", 0);
+                    }}, 10000),
                     SeuratToolParameter.create(SEURAT_THREADS, "Max Threads", "The number of threads to use. Cannot be higher than the threads allocated to the job.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, 8),
