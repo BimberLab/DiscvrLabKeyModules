@@ -230,14 +230,12 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
         }
 
         SAMSequenceDictionary dict = null;
-        if (genome.getSequenceDictionary().exists())
+        if (!genome.getSequenceDictionary().exists())
         {
-            dict = SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath());
+            SequencePipelineService.get().ensureSequenceDictionaryExists(genome.getWorkingFastaFile(), getJob().getLogger(), false);
         }
-        else
-        {
-            getJob().getLogger().warn("genome dictionary not found, will not be able to import some kinds of tracks");
-        }
+
+        dict = SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath());
 
         if (SequenceUtil.FILETYPE.bed.getFileType().isType(file))
         {
@@ -502,7 +500,7 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
             getJob().getLogger().info("writing log of translation to : " + outLog.getPath());
         }
 
-        try (CSVReader reader = new CSVReader(IOUtil.openFileForBufferedReading(file), '\t', CSVWriter.NO_QUOTE_CHARACTER); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(out), '\t', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER);CSVWriter logWriter = new CSVWriter(PrintWriters.getPrintWriter(outLog), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+        try (CSVReader reader = new CSVReader(IOUtil.openFileForBufferedReading(file), '\t', CSVWriter.NO_QUOTE_CHARACTER); CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(out), '\t', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER);CSVWriter logWriter = new CSVWriter(PrintWriters.getPrintWriter(outLog), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
             if (getPipelineJob().doChrTranslation())
             {

@@ -54,7 +54,7 @@ public class FastqToSamWrapper extends PicardWrapper
         return "FastqToSam";
     }
 
-    private List<String> getParams(File file, File file2, SAMFileHeader.SortOrder sortOrder, @Nullable SAMReadGroupRecord rg)
+    private List<String> getParams(File file, File file2, SAMFileHeader.SortOrder sortOrder, @Nullable SAMReadGroupRecord rg) throws PipelineJobException
     {
         List<String> params = getBaseArgs();
 

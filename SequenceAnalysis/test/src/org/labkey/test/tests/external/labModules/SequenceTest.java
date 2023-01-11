@@ -44,6 +44,7 @@ import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.PasswordUtil;
 import org.labkey.test.util.SimpleHttpResponse;
+import org.labkey.test.util.TestLogger;
 import org.labkey.test.util.TextSearcher;
 import org.labkey.test.util.core.webdav.WebDavUploadHelper;
 import org.labkey.test.util.ext4cmp.Ext4CmpRef;
@@ -97,9 +98,9 @@ public class SequenceTest extends BaseWebDriverTest
 
     private Integer _createdGenomeId = null;
 
-    private boolean isExternalPipelineEnabled()
+    public static boolean isExternalPipelineEnabled(String containerPath)
     {
-        SimpleHttpResponse httpResponse = WebTestHelper.getHttpResponse(WebTestHelper.getBaseURL() + "/sequenceanalysis/" + getProjectName() + "/getSequencePipelineEnabled.view");
+        SimpleHttpResponse httpResponse = WebTestHelper.getHttpResponse(WebTestHelper.getBaseURL() + "/sequenceanalysis/" + containerPath + "/getSequencePipelineEnabled.view");
         Boolean sequencePipelineEnabled;
         try
         {
@@ -110,14 +111,13 @@ public class SequenceTest extends BaseWebDriverTest
         {
             sequencePipelineEnabled = false;
         }
-        log("sequencePipelineEnabled: " + sequencePipelineEnabled);
+
+        TestLogger.log("sequencePipelineEnabled: " + sequencePipelineEnabled);
 
         if (!sequencePipelineEnabled && TestProperties.isTestRunningOnTeamCity() && WebTestHelper.getDatabaseType() == WebTestHelper.DatabaseType.PostgreSQL)
         {
             throw new IllegalStateException("When running on team city, -DsequencePipelineEnabled should be true");
         }
-
-        goToProjectHome();
 
         return sequencePipelineEnabled;
     }
@@ -139,7 +139,8 @@ public class SequenceTest extends BaseWebDriverTest
         analysisPanelTest();
         readsetPanelTest();
 
-        boolean sequencePipelineEnabled = isExternalPipelineEnabled();
+        boolean sequencePipelineEnabled = isExternalPipelineEnabled(getProjectName());
+        goToProjectHome();
         alignmentImportPanelTest(sequencePipelineEnabled);
         readsetImportTest();
 

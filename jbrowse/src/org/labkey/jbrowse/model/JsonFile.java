@@ -962,6 +962,12 @@ public class JsonFile
         DISCVRSeqRunner runner = new DISCVRSeqRunner(log);
         runner.addJava8HomeToEnvironment();
 
+        if (!runner.jarExists())
+        {
+            log.error("Unable to find DISCVRSeq.jar, skiping lucene index creation");
+            return;
+        }
+
         List<String> args = runner.getBaseArgs("VcfToLuceneIndexer");
         args.add("-V");
         args.add(getExpData().getFile().getPath());

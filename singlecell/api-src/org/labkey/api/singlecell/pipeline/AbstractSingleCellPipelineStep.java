@@ -36,7 +36,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 {
     public static final String SEURAT_THREADS = "seuratMaxThreads";
 
-    public AbstractSingleCellPipelineStep(PipelineStepProvider provider, PipelineContext ctx)
+    public AbstractSingleCellPipelineStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx);
     }
@@ -45,6 +45,13 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
     public Output execute(SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException
     {
         SingleCellOutput output = new SingleCellOutput();
+
+        File tracker = new File(ctx.getOutputDir(), "savedSeuratObjects.txt");
+        if (tracker.exists())
+        {
+            ctx.getLogger().debug("deleting pre-existing file: " + tracker.getName());
+            tracker.delete();
+        }
 
         File rmd = createRmd(output, ctx, inputObjects, outputPrefix);
         if (hasCompleted())
@@ -74,7 +81,6 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         output.setHtmlFile(htmlFile);
 
         List<SeuratObjectWrapper> outputs = new ArrayList<>();
-        File tracker = new File(ctx.getOutputDir(), "savedSeuratObjects.txt");
         if (!tracker.exists())
         {
             throw new PipelineJobException("File not found: " + tracker.getPath());
@@ -309,6 +315,11 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 
             if (seuratThreads != null)
             {
+                if (maxThreads != null && maxThreads < seuratThreads)
+                {
+                    seuratThreads = maxThreads;
+                }
+
                 writer.println("\t-e SEURAT_MAX_THREADS=" + seuratThreads + " \\");
             }
 

@@ -190,7 +190,7 @@ public class NimbleHelper
         genomeFasta = ensureLocalCopy(genomeFasta, output);
 
         File nimbleJson = new File(getPipelineCtx().getWorkingDirectory(), FileUtil.getBaseName(genomeFasta) + ".json");
-        runUsingDocker(Arrays.asList("generate", "/work/" + genomeFasta.getName(), "/work/" + genomeCsv.getName(), "/work/" + nimbleJson.getName()), output, "generate-" + genome.genomeId);
+        runUsingDocker(Arrays.asList("python3", "-m", "nimble", "generate", "/work/" + genomeFasta.getName(), "/work/" + genomeCsv.getName(), "/work/" + nimbleJson.getName()), output, "generate-" + genome.genomeId);
         if (!nimbleJson.exists())
         {
             File doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), "generate-" + genome.genomeId);
@@ -284,6 +284,10 @@ public class NimbleHelper
         File resultsTsv = new File(getPipelineCtx().getWorkingDirectory(), "results." + genome.getGenomeId() + ".txt");
 
         List<String> alignArgs = new ArrayList<>();
+        alignArgs.add("python3");
+        alignArgs.add("-m");
+        alignArgs.add("nimble");
+
         alignArgs.add("align");
         Integer maxThreads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
         if (maxThreads != null)
@@ -293,7 +297,7 @@ public class NimbleHelper
         }
 
         alignArgs.add("-l");
-        alignArgs.add("/work/nimbleDebug." + genome.genomeId + ".txt");
+        alignArgs.add("/work/" + getNimbleLogFile(getPipelineCtx().getWorkingDirectory(), genome.genomeId).getName());
 
         boolean alignOutput = getProvider().getParameterByName(ALIGN_OUTPUT).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
         File alignmentOutputFile = new File(getPipelineCtx().getWorkingDirectory(), "nimbleAlignment." + genome.genomeId + ".txt.gz");
@@ -314,12 +318,11 @@ public class NimbleHelper
         alignArgs.add("/work/" + resultsTsv.getName());
         alignArgs.add("/work/" + localBam.getName());
 
-        runUsingDocker(alignArgs, output, "align-" + genome.genomeId);
+        File doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), "align-" + genome.genomeId);
 
-        File resultsGz = new File(resultsTsv.getPath() + ".gz");
-        if (!resultsTsv.exists() && !resultsGz.exists())
+        boolean dockerRan = runUsingDocker(alignArgs, output, "align-" + genome.genomeId);
+        if (dockerRan && !resultsTsv.exists())
         {
-            File doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), "align-" + genome.genomeId);
             if (doneFile.exists())
             {
                 doneFile.delete();
@@ -327,21 +330,27 @@ public class NimbleHelper
 
             throw new PipelineJobException("Expected to find file: " + resultsTsv.getPath());
         }
-        else if (!resultsGz.exists())
+
+        File resultsGz = new File(resultsTsv.getPath() + ".gz");
+        if (dockerRan)
         {
+            if (resultsGz.exists())
+            {
+                getPipelineCtx().getLogger().debug("Deleting pre-existing gz output: " + resultsGz.getName());
+                resultsGz.delete();
+            }
+
             // NOTE: perform compression outside of nimble until nimble bugs fixed
             getPipelineCtx().getLogger().debug("Compressing results TSV file");
             resultsGz = Compress.compressGzip(resultsTsv);
             resultsTsv.delete();
         }
-        else
+        else if (!resultsGz.exists())
         {
-            getPipelineCtx().getLogger().debug("Compressed output found, skipping gzip");
+            throw new PipelineJobException("Expected to find gz file: " + resultsGz.getPath());
         }
 
-        resultsTsv = resultsGz;
-
-        File log = getNimbleLogFile(resultsTsv.getParentFile(), genome.genomeId);
+        File log = getNimbleLogFile(resultsGz.getParentFile(), genome.genomeId);
         if (!log.exists())
         {
             throw new PipelineJobException("Expected to find file: " + log.getPath());
@@ -372,12 +381,12 @@ public class NimbleHelper
             getPipelineCtx().getLogger().debug("Alignment output file not present: " + alignmentOutputFile.getName());
         }
 
-        return resultsTsv;
+        return resultsGz;
     }
 
     public static File getNimbleLogFile(File baseDir, int genomeId)
     {
-        return new File(baseDir, "nimbleDebug." + genomeId + ".txt");
+        return new File(baseDir, "nimbleStats." + genomeId + ".txt");
     }
 
     private File getNimbleDoneFile(File parentDir, String resumeString)
@@ -387,10 +396,12 @@ public class NimbleHelper
 
     public static String DOCKER_CONTAINER_NAME = "ghcr.io/bimberlab/nimble:latest";
 
-    private void runUsingDocker(List<String> nimbleArgs, PipelineStepOutput output, String resumeString) throws PipelineJobException
+    private boolean runUsingDocker(List<String> nimbleArgs, PipelineStepOutput output, String resumeString) throws PipelineJobException
     {
         File localBashScript = new File(getPipelineCtx().getWorkingDirectory(), "docker.sh");
+        File dockerBashScript = new File(getPipelineCtx().getWorkingDirectory(), "dockerRun.sh");
         output.addIntermediateFile(localBashScript);
+        output.addIntermediateFile(dockerBashScript);
 
         // Create temp folder:
         File tmpDir = new File(getPipelineCtx().getWorkingDirectory(), "tmpDir");
@@ -408,7 +419,7 @@ public class NimbleHelper
         }
         output.addIntermediateFile(tmpDir);
 
-        try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
+        try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript);PrintWriter dockerWriter = PrintWriters.getPrintWriter(dockerBashScript))
         {
             writer.println("#!/bin/bash");
             writer.println("set -x");
@@ -432,12 +443,22 @@ public class NimbleHelper
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");
             writer.println("\t-e TMPDIR=/work/tmpDir \\");
+            writer.println("\t--entrypoint /bin/bash \\");
             writer.println("\t-w /work \\");
             writer.println("\t" + DOCKER_CONTAINER_NAME + " \\");
-            writer.println("\t" + StringUtils.join(nimbleArgs, " "));
+            writer.println("\t/work/" + dockerBashScript.getName());
             writer.println("EXIT_CODE=$?");
-            writer.println("echo 'Bash script complete: '$EXIT_CODE");
+            writer.println("echo 'Docker run exit code: '$EXIT_CODE");
             writer.println("exit $EXIT_CODE");
+
+            dockerWriter.println("#!/bin/bash");
+            dockerWriter.println("set -x");
+
+            dockerWriter.println(StringUtils.join(nimbleArgs, " "));
+            dockerWriter.println("EXIT_CODE=$?");
+            dockerWriter.println("echo 'Exit code: '$?");
+            dockerWriter.println("ls /work");
+            dockerWriter.println("exit $EXIT_CODE");
         }
         catch (IOException e)
         {
@@ -450,22 +471,23 @@ public class NimbleHelper
         if (doneFile.exists())
         {
             getPipelineCtx().getLogger().info("Nimble already completed, resuming: " + resumeString);
+            return false;
         }
-        else
-        {
-            SimpleScriptWrapper rWrapper = new SimpleScriptWrapper(getPipelineCtx().getLogger());
-            rWrapper.setWorkingDir(getPipelineCtx().getWorkingDirectory());
-            rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
 
-            try
-            {
-                FileUtils.touch(doneFile);
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
+        SimpleScriptWrapper rWrapper = new SimpleScriptWrapper(getPipelineCtx().getLogger());
+        rWrapper.setWorkingDir(getPipelineCtx().getWorkingDirectory());
+        rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
+
+        try
+        {
+            FileUtils.touch(doneFile);
         }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        return true;
     }
 
     private File ensureLocalCopy(File input, PipelineStepOutput output) throws PipelineJobException
@@ -569,7 +591,13 @@ public class NimbleHelper
                             throw new PipelineJobException("Unexpected duplicate metric names: " + StringUtils.trim(line[0]));
                         }
 
-                        metricsMap.put(StringUtils.trim(line[0]), StringUtils.trim(line[1]));
+                        String value = StringUtils.trim(line[1]);
+                        if (value == null)
+                        {
+                            continue;
+                        }
+
+                        metricsMap.put(StringUtils.trim(line[0]), value.split(" ")[0]);
                     }
                 }
 

@@ -30,6 +30,11 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
 
     public String getVersion() throws PipelineJobException
     {
+        if (!jarExists())
+        {
+            throw new PipelineJobException("Unable to find picard.jar");
+        }
+
         List<String> params = new LinkedList<>();
         params.add(SequencePipelineService.get().getJava8FilePath());
         params.add("-jar");
@@ -49,26 +54,20 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
         return ret;
     }
 
-    public static File getPicardJar()
+    public static @Nullable File getPicardJar(boolean throwIfNotFound)
     {
-        String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("PICARDPATH");
-        if (path != null)
-        {
-            return new File(path);
-        }
+        return resolveFileInPath("picard.jar", "PICARDPATH", throwIfNotFound);
+    }
 
-        path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath(SequencePipelineService.SEQUENCE_TOOLS_PARAM);
-        if (path == null)
-        {
-            path = PipelineJobService.get().getAppProperties().getToolsDirectory();
-        }
-
-        return path == null ? null : new File(path, "picard.jar");
+    public boolean jarExists()
+    {
+        File jar = getPicardJar(false);
+        return jar != null && jar.exists();
     }
 
     protected File getJar()
     {
-        return getPicardJar();
+        return getPicardJar(false);
     }
 
     public ValidationStringency getStringency()
@@ -83,13 +82,18 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
 
     abstract protected String getToolName();
 
-    protected List<String> getBaseArgs()
+    protected List<String> getBaseArgs() throws PipelineJobException
     {
         return getBaseArgs(false);
     }
 
-    protected List<String> getBaseArgs(boolean basicArgsOnly)
+    protected List<String> getBaseArgs(boolean basicArgsOnly) throws PipelineJobException
     {
+        if (!jarExists())
+        {
+            throw new PipelineJobException("Unable to find picard.jar");
+        }
+
         List<String> params = new LinkedList<>();
         params.add(SequencePipelineService.get().getJava8FilePath());
         params.addAll(SequencePipelineService.get().getJavaOpts());

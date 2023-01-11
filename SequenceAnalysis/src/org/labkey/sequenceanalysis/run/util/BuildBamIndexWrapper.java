@@ -46,7 +46,7 @@ public class BuildBamIndexWrapper extends PicardWrapper
         return output;
     }
 
-    private List<String> getParams(File file)
+    private List<String> getParams(File file) throws PipelineJobException
     {
         List<String> params = getBaseArgs();
 

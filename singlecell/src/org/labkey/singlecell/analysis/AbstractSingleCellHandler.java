@@ -827,7 +827,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
 
         public void setStepComplete(Logger log, SingleCellStep step, int stepIdx, RecordedAction action, List<SingleCellStep.SeuratObjectWrapper> seurat, File markdown, File html) throws PipelineJobException
         {
-            log.info("Marking step complete: " + step.getProvider().getName() + ", " + stepIdx);
+            log.info("Marking step complete: " + step.getProvider().getName() + ", " + stepIdx + ", total seurat objects: " + (seurat == null ? 0 : seurat.size()));
 
             if (seurat != null)
             {
@@ -1016,7 +1016,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                             {
                                 totalDiscordant++;
                             }
-                            else if ("Low Counts".equalsIgnoreCase(val) || "Negative".equals(val))
+                            else if ("Low Counts".equalsIgnoreCase(val) || "Negative".equals(val) || "ND".equalsIgnoreCase(val))
                             {
                                 lowOrNegative++;
                             }
