@@ -61,10 +61,27 @@
                         })
                     },{
                         name: 'Readsets Not Archived to SRA',
-                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.totalForwardReads~isnonblank': null, 'query.isArchived~eq': 0})
-                    },{
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
+                            schemaName: 'sequenceanalysis',
+                            queryName: 'sequence_readsets',
+                            'query.totalForwardReads~isnonblank': null,
+                            'query.isArchived~eq': 0}
+                        )
+                    }, {
                         name: 'Analyses Using Old Readsets',
-                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_analyses', 'query.readset/status~isnonblank': null})
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
+                            schemaName: 'sequenceanalysis',
+                            queryName: 'sequence_analyses',
+                            'query.readset/status~isnonblank': null
+                        })
+                    },{
+                        name: 'Orphan 10x Run Summaries',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
+                            schemaName: 'sequenceanalysis',
+                            queryName: 'outputfiles',
+                            'query.category~eq': '10x Run Summary',
+                            'query.readset/totalOutputs~eq': 1
+                        })
                     }]
                 }]
             }]

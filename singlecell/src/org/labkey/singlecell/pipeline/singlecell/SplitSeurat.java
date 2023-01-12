@@ -26,7 +26,12 @@ public class SplitSeurat extends AbstractCellMembraneStep
                     SeuratToolParameter.create("minCellsToKeep", "Min Cells To Keep", "If provided, any subset with fewer than this many cells will be discarded. Use zero to keep all. Note: if the value is less than 1 it will be interpreted as a fraction of the total input cells", "ldk-numberfield", new JSONObject(){{
                         put("allowBlank", false);
                         put("decimalPrecision", 3);
-                    }}, 0.05)
+                    }}, 0.05),
+                    SeuratToolParameter.create("excludedClasses", "Excluded Classes", "A list, one per line, of any classes to be excluded from the split. Cells with these values we will placed into the Other subset", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
+                        put("height", 150);
+                        put("delimiter", ",");
+                        put("stripCharsRe", "/(^['\"]+)|(['\"]+$)/g");
+                    }}, null, null, true).delimiter(",")
             ), null, null);
         }
 
