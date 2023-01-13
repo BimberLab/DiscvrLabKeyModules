@@ -72,7 +72,7 @@ public class TagPcrSummaryStep extends AbstractCommandPipelineStep<TagPcrSummary
                         put("checked", true);
                     }}, true),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--insert-name"), "insertType", "Insert Type", "The type of insert to detect.", "ldk-simplecombo", new JSONObject(){{
-                        put("storeValues", "PiggyBac;Lentivirus;esTag-PCR PREDICT");
+                        put("storeValues", "PiggyBac;Lentivirus;PREDICT");
                         put("allowBlank", false);
                     }}, null),
                     ToolParameterDescriptor.create(DESIGN_PRIMERS, "Design Primers", "If selected, Primer3 will be used to design primers to flank integration sites", "checkbox", new JSONObject(){{
