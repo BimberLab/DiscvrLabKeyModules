@@ -500,8 +500,9 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
     private static FileType _bamFileType = new FileType("bam");
     private static FileType _cramFileType = new FileType("cram");
     private static FileType _vcfFileType = new FileType("vcf", FileType.gzSupportLevel.SUPPORT_GZ);
-    private static FileType _bedFileType = new FileType("bed");
+    private static FileType _bedFileType = new FileType("bed", FileType.gzSupportLevel.SUPPORT_GZ);
     private static FileType _fastaFileType = new FileType(Arrays.asList("fasta", "fa"), "fasta", FileType.gzSupportLevel.SUPPORT_GZ);
+    private static FileType _gxfFileType = new FileType(Arrays.asList("gtf", "gff", "gff3"), "gff", FileType.gzSupportLevel.SUPPORT_GZ);
 
     /**
      * This is intended to return any files associated with an input, which is primarily designed to pick up index files
@@ -532,9 +533,17 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                 ret.add(f.getName() + ".gz.idx");
             }
         }
-        else if (_bedFileType.isType(f))
+        else if (_bedFileType.isType(f) || _gxfFileType.isType(f))
         {
             ret.add(f.getName() + ".idx");
+            ret.add(f.getName() + ".tbi");
+
+            if (includeGz)
+            {
+                ret.add(f.getName() + ".gz");
+                ret.add(f.getName() + ".gz.tbi");
+                ret.add(f.getName() + ".gz.idx");
+            }
         }
         else if (_fastaFileType.isType(f))
         {

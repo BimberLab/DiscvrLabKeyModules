@@ -27,10 +27,6 @@ public class RunCelltypist extends AbstractRiraStep
                         put("delimiter", ";");
                         put("joinReturnValue", true);
                     }}, "Immune_All_Low.pkl", null, true, true).delimiter(";"),
-                    SeuratToolParameter.create("convertAmbiguousToNA", "Convert Ambiguous To NA", "If true, any values for majority_voting with commas (indicating they are ambiguous) will be converted to NA", "checkbox", new JSONObject()
-                    {{
-                        put("checked", false);
-                    }}, false),
                     SeuratToolParameter.create("maxAllowableClasses", "Max Allowable Classes", "Celltypist can assign a cell to many classes, creating extremely long labels. Any cell with more than this number of labels will be set to NA", "ldk-integerfield", new JSONObject()
                     {{
                         put("minValue", 0);
