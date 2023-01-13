@@ -872,7 +872,8 @@ then
     else
       CUTADAPT_BRANCH=v4.0
       $PIP_EXE install --target ${LKTOOLS_DIR}/cutadapt_pip git+https://github.com/marcelm/cutadapt.git@${CUTADAPT_BRANCH}
-      ln -s ${LKTOOLS_DIR}/cutadapt_pip/bin/cutadapt ${LKTOOLS_DIR}/cutadapt
+      cd ${LKTOOLS_DIR}
+      ln -s ./cutadapt_pip/bin/cutadapt cutadapt
     fi
 else
     echo "Already installed"

@@ -2,7 +2,7 @@ for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readRDS(seuratObjects[[datasetId]])
 
-    newList <- CellMembrane::SplitSeurat(seuratObj, splitField = splitField, minCellsToKeep = minCellsToKeep)
+    newList <- CellMembrane::SplitSeurat(seuratObj, splitField = splitField, minCellsToKeep = minCellsToKeep, excludedClasses = excludedClasses)
     for (name in names(newList)) {
         saveData(newList[[name]], paste0(datasetId, '-', name))
     }
