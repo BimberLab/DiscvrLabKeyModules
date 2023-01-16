@@ -609,7 +609,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                 application = rowLevelApplication || application;
                 return (libraryType.match(/^10x [35]\' GEX/) && application === '10x GEX') || (libraryType.match(/^10x 5' VDJ/) && application === '10x VDJ');
             }
-            else if (readsetApplication === 'Cell Hashing'){
+            else if (readsetApplication === 'Cell Hashing' || readsetApplication === 'Cell Hashing/CITE-seq'){
                 application = rowLevelApplication || application;
                 return (application === '10x HTO');
             }
