@@ -609,11 +609,11 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                 application = rowLevelApplication || application;
                 return (libraryType.match(/^10x [35]\' GEX/) && application === '10x GEX') || (libraryType.match(/^10x 5' VDJ/) && application === '10x VDJ');
             }
-            else if (readsetApplication === 'Cell Hashing' || readsetApplication === 'Cell Hashing/CITE-seq'){
+            else if (readsetApplication === 'Cell Hashing'){
                 application = rowLevelApplication || application;
                 return (application === '10x HTO');
             }
-            else if (readsetApplication === 'CITE-Seq'){
+            else if (readsetApplication === 'CITE-Seq' || readsetApplication === 'Cell Hashing/CITE-seq'){
                 application = rowLevelApplication || application;
                 return (application === '10x CITE-Seq');
             }
@@ -676,7 +676,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                 }
                                 else if (p[1] === 'HTO') {
                                     if (includeWithData || row['hashingReadsetId/totalFiles'] === 0) {
-                                        if (row['hashingReadsetId'] && row['hashingReadsetId/application'] && row['hashingReadsetId/application'].match(/Cell Hashing/i)) {
+                                        if (row['hashingReadsetId'] && row['hashingReadsetId/application'] && row['hashingReadsetId/application'] === 'Cell Hashing') {
                                             sortedRows.push(Ext4.apply({targetApplication: '10x HTO', laneAssignment: (p.length > 2 ? p[2] : null), plateAlias: (p.length > 3 ? p[3] : null)}, row));
                                             found = true;
                                             return false;
@@ -960,8 +960,8 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                         processType(readsetIds, rows, r, 'readsetId', 'GEX', 500, 0.01, 'G', null, false, gexData, runMap, readsetIdToLane);
                         processType(readsetIds, rows, r, 'tcrReadsetId', 'TCR', 700, 0.01, 'T', null, false, tcrData, runMap, readsetIdToLane);
 
-                        // NOTE: Dual index 10x is always presented in the right orientation, so only RC if single-indexed
-                        const hashingDoRC = !r['hashingReadsetId/barcode3'];
+                        // NOTE: Dual index 10x is always presented in the right orientation, so only RC if single-indexed. Also, BioLegend is single-index, with a CSV list.
+                        const hashingDoRC = !r['hashingReadsetId/barcode3'] && !(r['hashingReadsetId/barcode5'] && r['hashingReadsetId/barcode5/sequence'].match(/,/));
                         processType(readsetIds, rows, r, 'hashingReadsetId', 'HTO', 182, 0.05, hashingPrefix, 'Cell hashing, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', hashingDoRC, 20, runMap, readsetIdToLane);
                         processType(readsetIds, rows, r, 'citeseqReadsetId', 'CITE', 182, 0.05, 'C', 'CITE-Seq, 190bp amplicon.  Please QC individually and pool in equal amounts per lane', false, 20, runMap, readsetIdToLane);
                     }, this);
