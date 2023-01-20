@@ -138,9 +138,18 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         log.info("verifying sequence data files present");
         TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
         TableSelector ts = new TableSelector(ti);
+
+        log.info("Inspecting ReadData");
         List<ReadDataImpl> readDatas = ts.getArrayList(ReadDataImpl.class);
+        int i = 0;
         for (ReadDataImpl rd : readDatas)
         {
+            i++;
+            if (i % 250 == 0)
+            {
+                log.info("readdata " + i + " of " + readDatas.size());
+            }
+
             if (rd.getFileId1() != null)
             {
                 ExpData d = ExperimentService.get().getExpData(rd.getFileId1());
@@ -191,11 +200,19 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         }
 
         //also check analyses
+        log.info("Inspecting Analyses");
         TableInfo analysesTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
         TableSelector tsAnalyses = new TableSelector(analysesTable);
         List<AnalysisModelImpl> analyses = tsAnalyses.getArrayList(AnalysisModelImpl.class);
+        i = 0;
         for (AnalysisModelImpl m : analyses)
         {
+            i++;
+            if (i % 250 == 0)
+            {
+                log.info("analysis " + i + " of " + analyses.size());
+            }
+
             if (m.getAlignmentFile() != null)
             {
                 ExpData d = m.getAlignmentData();
