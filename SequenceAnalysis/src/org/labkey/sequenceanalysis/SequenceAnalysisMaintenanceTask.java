@@ -145,9 +145,9 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         for (ReadDataImpl rd : readDatas)
         {
             i++;
-            if (i % 250 == 0)
+            if (i % 1000 == 0)
             {
-                log.info("readdata " + i + " of " + readDatas.size());
+                log.info("readdata " + i + " of " + readDatas.size() + ". Current container: " + ContainerManager.getForId(rd.getContainer()).getPath());
             }
 
             if (rd.getFileId1() != null)
@@ -208,9 +208,9 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         for (AnalysisModelImpl m : analyses)
         {
             i++;
-            if (i % 250 == 0)
+            if (i % 500 == 0)
             {
-                log.info("analysis " + i + " of " + analyses.size());
+                log.info("analysis " + i + " of " + analyses.size() + ". Current container: " + ContainerManager.getForId(m.getContainer()).getPath());
             }
 
             if (m.getAlignmentFile() != null)
