@@ -113,7 +113,7 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
                 File existingCountMatrixUmiDir = CellHashingService.get().getExistingFeatureBarcodeCountDir(parentReadset, CellHashingService.BARCODE_TYPE.hashing, ctx.getSequenceSupport());
                 params.allowableHtoBarcodes = htosPerReadset;
                 params.keepMarkdown = true;
-                if (params.methods.contains(CellHashingService.CALLING_METHOD.demuxem))
+                if (CellHashingService.CALLING_METHOD.requiresH5(params.methods))
                 {
                     Integer genomeId = wrapper.getSequenceOutputFile() == null ? null : wrapper.getSequenceOutputFile().getLibrary_id();
                     if (genomeId == null)

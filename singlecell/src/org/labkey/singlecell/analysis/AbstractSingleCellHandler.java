@@ -188,7 +188,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 if (step.requiresHashing(ctx))
                 {
                     String methods = step.getProvider().hasParameter("methods") ? step.getProvider().getParameterByName("methods").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), String.class) : null;
-                    if (methods != null && methods.contains(CellHashingService.CALLING_METHOD.demuxem.name()))
+                    if (CellHashingService.CALLING_METHOD.requiresH5(methods))
                     {
                         doH5Caching = true;
                     }

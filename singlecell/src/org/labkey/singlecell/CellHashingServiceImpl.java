@@ -95,8 +95,8 @@ public class CellHashingServiceImpl extends CellHashingService
     @Override
     public void prepareHashingForVdjIfNeeded(SequenceOutputHandler.JobContext ctx, final boolean failIfNoHashingReadset) throws PipelineJobException
     {
-        boolean useDemEM = ctx.getParams().optString("methods", "").contains(CellHashingService.CALLING_METHOD.demuxem.name());
-        prepareHashingAndCiteSeqFilesIfNeeded(ctx.getOutputDir(), ctx.getJob(), ctx.getSequenceSupport(), TCR_FIELD, failIfNoHashingReadset, false, true, true, false, useDemEM);
+        boolean needsH5 = CALLING_METHOD.requiresH5(ctx.getParams().optString("methods", ""));
+        prepareHashingAndCiteSeqFilesIfNeeded(ctx.getOutputDir(), ctx.getJob(), ctx.getSequenceSupport(), TCR_FIELD, failIfNoHashingReadset, false, true, true, false, needsH5);
     }
 
     public void prepareHashingAndCiteSeqFilesForFeatureCountsIfNeeded(File sourceDir, PipelineJob job, SequenceAnalysisJobSupport support, String filterField, final boolean failIfNoHashingReadset, final boolean failIfNoCiteSeqReadset) throws PipelineJobException
@@ -436,7 +436,7 @@ public class CellHashingServiceImpl extends CellHashingService
             {
                 if (cachedGenomes.size() > 1)
                 {
-                    throw new PipelineJobException("demuxEM was selected, but more than one cached genome found, cannot infer correct genome. Found: " + StringUtils.join(cachedGenomes, ", "));
+                    throw new PipelineJobException("demuxEM/demuxmix was selected, but more than one cached genome found, cannot infer correct genome. Found: " + StringUtils.join(cachedGenomes, ", "));
                 }
 
                 gexGenomeId = cachedGenomes.iterator().next();
@@ -448,11 +448,11 @@ public class CellHashingServiceImpl extends CellHashingService
                 HashSet<Integer> genomeIds = new HashSet<>(new TableSelector(ti, PageFlowUtil.set("library_id"), filter, new org.labkey.api.data.Sort("-rowid")).getArrayList(Integer.class));
                 if (genomeIds.isEmpty())
                 {
-                    throw new PipelineJobException("demuxEM was selected, but no suitable loupe files were found for GEX readset: " + gexReadset);
+                    throw new PipelineJobException("demuxEM/demuxmix was selected, but no suitable loupe files were found for GEX readset: " + gexReadset);
                 }
                 else if (genomeIds.size() > 1)
                 {
-                    throw new PipelineJobException("demuxEM was selected. Attempting to identify loupe files using GEX readset: " + gexReadset + ", but more than one genome found. Found: " + StringUtils.join(cachedGenomes, ", "));
+                    throw new PipelineJobException("demuxEM/demuxmix was selected. Attempting to identify loupe files using GEX readset: " + gexReadset + ", but more than one genome found. Found: " + StringUtils.join(cachedGenomes, ", "));
                 }
 
                 gexGenomeId = genomeIds.iterator().next();
@@ -479,7 +479,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
                 if (cachedGenomes.size() > 1)
                 {
-                    throw new PipelineJobException("demuxEM was selected, but more than one cached genome found, cannot infer correct genome. Found: " + StringUtils.join(cachedGenomes, ", "));
+                    throw new PipelineJobException("demuxEM/demuxmix was selected, but more than one cached genome found, cannot infer correct genome. Found: " + StringUtils.join(cachedGenomes, ", "));
                 }
 
                 // NOTE: cache this using the source file's genome ID (which might be the TCR library), rather than the GEX genome
@@ -935,7 +935,7 @@ public class CellHashingServiceImpl extends CellHashingService
     }
 
     @Override
-    public List<ToolParameterDescriptor> getHashingCallingParams(boolean allowDemuxEm)
+    public List<ToolParameterDescriptor> getHashingCallingParams(boolean allowMethodsNeedingGex)
     {
         List<ToolParameterDescriptor> ret = new ArrayList<>(Arrays.asList(
             ToolParameterDescriptor.create("minCountPerCell", "Min Reads/Cell", null, "ldk-integerfield", null, 5),
@@ -954,7 +954,7 @@ public class CellHashingServiceImpl extends CellHashingService
             ToolParameterDescriptor.create("retainRawCountFile", "Retain Raw Counts File", null, "checkbox", null, false)
         ));
 
-        final List<String> allMethods = Arrays.stream(CALLING_METHOD.values()).filter(x -> allowDemuxEm || x != CALLING_METHOD.demuxem).map(Enum::name).toList();
+        final List<String> allMethods = Arrays.stream(CALLING_METHOD.values()).filter(x -> allowMethodsNeedingGex || !x.isRequiresH5()).map(Enum::name).toList();
         ret.add(ToolParameterDescriptor.create("methods", "Calling Methods", "The set of methods to use in calling.", "ldk-simplecombo", new JSONObject()
         {{
             put("multiSelect", true);
@@ -1182,16 +1182,16 @@ public class CellHashingServiceImpl extends CellHashingService
 
         molInfo = ensureLocalCopy(molInfo, outputDir, log, toDelete);
 
-        // h5 file used by demuxEM:
+        // h5 file used by demuxEM/demuxmix:
         File h5 = null;
         if (parameters.h5File != null)
         {
             h5 = ensureLocalCopy(parameters.h5File, outputDir, log, toDelete);
         }
 
-        if (parameters.methods.contains(CALLING_METHOD.demuxem) && h5 == null)
+        if (CALLING_METHOD.requiresH5(parameters.methods) && h5 == null)
         {
-            throw new PipelineJobException("No h5 file provided, but demuxEM was specified");
+            throw new PipelineJobException("No h5 file provided, but demuxEM/demuxmix was specified");
         }
 
         citeSeqCountOutDir = ensureLocalCopy(citeSeqCountOutDir, outputDir, log, toDelete);
