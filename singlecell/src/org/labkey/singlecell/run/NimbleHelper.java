@@ -441,8 +441,9 @@ public class NimbleHelper
             writer.println("\t-v \"${WD}:/work\" \\");
             writer.println("\t-v \"${HOME}:/homeDir\" \\");
             writer.println("\t-u $UID \\");
-            writer.println("\t-e USERID=$UID \\");
+            writer.println("\t-e RUST_BACKTRACE=1 \\");
             writer.println("\t-e TMPDIR=/work/tmpDir \\");
+            writer.println("\t-e USERID=$UID \\");
             writer.println("\t--entrypoint /bin/bash \\");
             writer.println("\t-w /work \\");
             writer.println("\t" + DOCKER_CONTAINER_NAME + " \\");
