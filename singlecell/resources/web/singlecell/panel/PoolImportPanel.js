@@ -222,7 +222,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         },
 
         citeSeqPanel: function(val, panel) {
-            if (val && (val.toLowerCase() === 'no' || val.toLowerCase() === 'n')) {
+            if (val && (val.toLowerCase() === 'no' || val.toLowerCase() === 'n' || val.toLowerCase() === 'na' || val.toLowerCase() === 'n/a')) {
                 return null;
             }
             else if (val && (val.toLowerCase() === 'yes' || val.toLowerCase() === 'y')) {
