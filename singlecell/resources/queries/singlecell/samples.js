@@ -48,11 +48,11 @@ function beforeUpsert(row, oldRow, errors){
     }
 
     if (row.tissue && row.tissue.match(/LD LN/)){
-        row.tissue = row.tissue.replaceAll('LD LN', 'LD-LN')
+        row.tissue = row.tissue.replace(/LD LN/g, 'LD-LN')
     }
 
     if (row.tissue && row.tissue.match(/LD-LN /)){
-        row.tissue = row.tissue.replaceAll('LD-LN ', 'LD-LN-')
+        row.tissue = row.tissue.replace(/LD-LN /g, 'LD-LN-')
     }
 
     if (['Lung L', 'Lung Left', 'Lung-Left'].indexOf(row.tissue) !== -1){
