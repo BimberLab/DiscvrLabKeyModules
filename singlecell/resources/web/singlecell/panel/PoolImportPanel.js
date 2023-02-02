@@ -715,7 +715,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         var ret = [];
 
         var doSplitCellsByPool = false;
-        var kitCol = colArray.filter(function(x){ return x.dataIdx === 'kitType'});
+        var kitCol = colArray.filter(function(x){ return x.name === 'kitType'});
         kitCol = kitCol.length ? kitCol[0] : null;
 
         Ext4.Array.forEach(rows, function(row, rowIdx){
@@ -725,10 +725,10 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
 
             if (kitCol && row[kitCol.dataIdx]) {
                 if (row[kitCol.dataIdx].toUpperCase() === 'V1.1') {
-                    row.dualIndex10x = false;
+                    data.dualIndex10x = false;
                 }
                 else if (row[kitCol.dataIdx].toUpperCase() === 'V2' || row[kitCol.dataIdx].toUpperCase() === 'HT') {
-                    row.dualIndex10x = true;
+                    data.dualIndex10x = true;
                 }
                 else {
                     console.error('Unknown kit type: ' + row[kitCol.dataIdx]);
