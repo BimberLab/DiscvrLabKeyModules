@@ -141,6 +141,10 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         name: 'tcr_library_fragment',
         labels: ['TCR Library Fragment Size', 'TCR Library Fragment Size (bp)'],
         allowRowSpan: true
+    },{
+        name: 'kitType',
+        labels: ['Kit Type', 'V1.1/V2/HT', 'V1.1/HT'],
+        transform: 'kitType'
     }],
 
     IGNORED_COLUMNS: [],
@@ -233,12 +237,17 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             return val;
         },
 
-        citeSeqTenXBarcode: function(val, panel){
+        citeSeqTenXBarcode: function(val, panel, row){
             if (!val){
                 return null;
             }
 
-            var barcodeSeries = panel.down('#useDualIndex').getValue() ? 'SI-TN' : 'SI-NA';
+            var isDual = panel.down('#useDualIndex').getValue()
+            if (Ext4.isDefined(row.dualIndex10x)) {
+                isDual = row.dualIndex10x;
+            }
+
+            var barcodeSeries = isDual ? 'SI-TN' : 'SI-NA';
             val = val.toUpperCase();
             var re = new RegExp('^' + barcodeSeries + '-', 'i');
             if (!val.match(re)) {
@@ -253,12 +262,17 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             return val;
         },
 
-        tenXBarcode: function(val, panel){
+        tenXBarcode: function(val, panel, row){
             if (!val){
                 return;
             }
 
-            var barcodeSeries = panel.down('#useDualIndex').getValue() ? 'SI-TT' : 'SI-GA';
+            var isDual = panel.down('#useDualIndex').getValue()
+            if (Ext4.isDefined(row.dualIndex10x)) {
+                isDual = row.dualIndex10x;
+            }
+
+            var barcodeSeries = isDual ? 'SI-TT' : 'SI-GA';
             val = val.toUpperCase();
             var re = new RegExp('^' + barcodeSeries + '-', 'i');
             if (!val.match(re)) {
@@ -701,10 +715,25 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         var ret = [];
 
         var doSplitCellsByPool = false;
+        var kitCol = colArray.filter(function(x){ return x.dataIdx === 'kitType'});
+        kitCol = kitCol.length ? kitCol[0] : null;
+
         Ext4.Array.forEach(rows, function(row, rowIdx){
             var data = {
                 objectId: LABKEY.Utils.generateUUID()
             };
+
+            if (kitCol && row[kitCol.dataIdx]) {
+                if (row[kitCol.dataIdx].toUpperCase() === 'V1.1') {
+                    row.dualIndex10x = false;
+                }
+                else if (row[kitCol.dataIdx].toUpperCase() === 'V2' || row[kitCol.dataIdx].toUpperCase() === 'HT') {
+                    row.dualIndex10x = true;
+                }
+                else {
+                    console.error('Unknown kit type: ' + row[kitCol.dataIdx]);
+                }
+            }
 
             Ext4.Array.forEach(colArray, function(col, colIdx){
                 var cell = Ext4.isDefined(col.dataIdx) ? row[col.dataIdx] : '';
