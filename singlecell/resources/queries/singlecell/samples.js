@@ -38,7 +38,7 @@ function beforeUpsert(row, oldRow, errors){
     }
 
     if (['pLN', 'perLN', 'PerLN'].indexOf(row.tissue) !== -1){
-        row.tissue = 'PeriLN';
+        row.tissue = 'PLN';
     }
     else if (['mesLN'].indexOf(row.tissue) !== -1){
         row.tissue = 'MesLN';
@@ -47,11 +47,19 @@ function beforeUpsert(row, oldRow, errors){
         row.tissue = 'Bone marrow';
     }
 
-    if ('Lung L' === row.tissue){
+    if (row.tissue && row.tissue.match(/LD LN/)){
+        row.tissue = row.tissue.replace(/LD LN/g, 'LD-LN')
+    }
+
+    if (row.tissue && row.tissue.match(/LD-LN /)){
+        row.tissue = row.tissue.replace(/LD-LN /g, 'LD-LN-')
+    }
+
+    if (['Lung L', 'Lung Left', 'Lung-Left'].indexOf(row.tissue) !== -1){
         row.tissue = 'Lung-L';
     }
 
-    if ('Lung R' === row.tissue){
+    if (['Lung R', 'Lung Right', 'Lung-Right'].indexOf(row.tissue) !== -1){
         row.tissue = 'Lung-R';
     }
 }

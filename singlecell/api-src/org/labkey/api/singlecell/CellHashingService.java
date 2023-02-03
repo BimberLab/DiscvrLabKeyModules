@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -71,7 +72,7 @@ abstract public class CellHashingService
 
     abstract public boolean usesCiteSeq(SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles) throws PipelineJobException;
 
-    abstract public List<ToolParameterDescriptor> getHashingCallingParams(boolean allowDemuxEm);
+    abstract public List<ToolParameterDescriptor> getHashingCallingParams(boolean allowMethodsNeedingGex);
 
     abstract public Set<String> getHtosForParentReadset(Integer parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support, boolean throwIfNotFound) throws PipelineJobException;
 
@@ -316,17 +317,25 @@ abstract public class CellHashingService
         htodemux(false, false),
         dropletutils(true, true),
         gmm_demux(true, true),
-        demuxem(true, true),
+        demuxem(true, true, true),
+        demuxmix(true, true, true),
         bff_cluster(true, true),
         bff_raw(true, false);
 
         boolean isDefaultRun;
         boolean isDefaultConsensus;
+        boolean requiresH5;
 
         CALLING_METHOD(boolean isDefaultRun, boolean isDefaultConsensus)
         {
+            this(isDefaultRun, isDefaultConsensus, false);
+        }
+
+        CALLING_METHOD(boolean isDefaultRun, boolean isDefaultConsensus, boolean requiresH5)
+        {
             this.isDefaultRun = isDefaultRun;
             this.isDefaultConsensus = isDefaultConsensus;
+            this.requiresH5 = requiresH5;
         }
 
         public boolean isDefaultRun()
@@ -337,6 +346,11 @@ abstract public class CellHashingService
         public boolean isDefaultConsensus()
         {
             return isDefaultConsensus;
+        }
+
+        public boolean isRequiresH5()
+        {
+            return requiresH5;
         }
 
         private static List<CALLING_METHOD> getDefaultRunMethods()
@@ -357,6 +371,22 @@ abstract public class CellHashingService
         public static List<String> getDefaultConsensusMethodNames()
         {
             return getDefaultConsensusMethods().stream().map(Enum::name).collect(Collectors.toList());
+        }
+
+        public static boolean requiresH5(String methodNames)
+        {
+            methodNames = StringUtils.trimToNull(methodNames);
+            if (methodNames == null)
+            {
+                return false;
+            }
+
+            return requiresH5(Arrays.stream(methodNames.split(";")).map(CALLING_METHOD::valueOf).collect(Collectors.toList()));
+        }
+
+        public static boolean requiresH5(Collection<CALLING_METHOD> methods)
+        {
+            return methods.stream().anyMatch(CALLING_METHOD::isRequiresH5);
         }
     }
 
