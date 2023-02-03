@@ -435,7 +435,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     if (disallowedNodes != null)
                     {
                         job.getLogger().debug("Disallowed nodes: " + StringUtils.join(ClusterManager.get().getDisallowedNodes(), ","));
-                        writer.write("#SBATCH --exclude=" + StringUtils.join(ClusterManager.get().getDisallowedNodes(), ","));
+                        writer.write("#SBATCH --exclude=" + StringUtils.join(ClusterManager.get().getDisallowedNodes(), ",") + "\n");
                     }
 
                     // This allows modules to register code to modify resource usage per task.

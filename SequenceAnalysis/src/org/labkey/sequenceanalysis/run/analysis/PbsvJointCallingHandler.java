@@ -139,7 +139,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                 outputBaseName = outputBaseName.replaceAll(".vcf$", "");
             }
 
-            if (getVariantPipelineJob(ctx.getJob()).isScatterJob())
+            if (getVariantPipelineJob(ctx.getJob()) != null && getVariantPipelineJob(ctx.getJob()).isScatterJob())
             {
                 outputBaseName = outputBaseName + "." + getVariantPipelineJob(ctx.getJob()).getIntervalSetName();
             }
@@ -149,7 +149,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
             boolean jobCompleted = expectedFinalOutputIdx.exists();  // this would occur if the job died during the cleanup phase
 
             List<File> outputs = new ArrayList<>();
-            if (getVariantPipelineJob(ctx.getJob()).isScatterJob())
+            if (getVariantPipelineJob(ctx.getJob()) != null && getVariantPipelineJob(ctx.getJob()).isScatterJob())
             {
                 for (Interval i : getVariantPipelineJob(ctx.getJob()).getIntervalsForTask())
                 {
