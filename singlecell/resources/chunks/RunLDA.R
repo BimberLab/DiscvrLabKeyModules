@@ -14,7 +14,7 @@ ldaFiles <- data.frame(DatasetId = character(), FileName = character())
        stop(paste0('The object has ', ncol(seuratObj), ' which is above the maxAllowableCells: ', maxAllowableCells))
     }
 
-    ldaResults <- bindArgs(CellMembrane::RunLDA, seuratObj)()
+    ldaResults <- bindArgs(CellMembrane::DoLdaParameterScan, seuratObj)()
 
     outputFileId <- ifelse(datasetId %in% names(datasetIdToOutputFileId), yes = datasetIdToOutputFileId[[datasetId]], no = NA)
     ldaResults$OutputFileId <- outputFileId
