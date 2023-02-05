@@ -7,6 +7,7 @@ import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Sort;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
@@ -137,7 +138,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
     {
         log.info("verifying sequence data files present");
         TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
-        TableSelector ts = new TableSelector(ti);
+        TableSelector ts = new TableSelector(ti, null, new Sort("container"));
 
         log.info("Inspecting ReadData");
         List<ReadDataImpl> readDatas = ts.getArrayList(ReadDataImpl.class);
@@ -202,13 +203,13 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         //also check analyses
         log.info("Inspecting Analyses");
         TableInfo analysesTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
-        TableSelector tsAnalyses = new TableSelector(analysesTable);
+        TableSelector tsAnalyses = new TableSelector(analysesTable, null, new Sort("container"));
         List<AnalysisModelImpl> analyses = tsAnalyses.getArrayList(AnalysisModelImpl.class);
         i = 0;
         for (AnalysisModelImpl m : analyses)
         {
             i++;
-            if (i % 500 == 0)
+            if (i % 1000 == 0)
             {
                 log.info("analysis " + i + " of " + analyses.size() + ". Current container: " + ContainerManager.getForId(m.getContainer()).getPath());
             }
