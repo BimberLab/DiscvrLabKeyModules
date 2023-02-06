@@ -51,7 +51,7 @@ public class NormalizeAndScale extends AbstractCellMembraneStep
                     }}, false),
                     SeuratToolParameter.create("nVariableFeatures", "# Variable Features", "Controls the number of variable features that will be used. This only applies to the standard NormalizeData/ScaleData pipeline, not SCTransform", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, null),
+                    }}, 3000),
                     SeuratToolParameter.create("scoreCellCycle", "Score Cell Cycle?", "If checked, ScoreCellCycle will be run to compute Phase, which is stored in meta.data. If a field named Phase already exists, this will be skipped", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true),
