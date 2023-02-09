@@ -21,7 +21,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.reports.ExternalScriptEngineDefinition;
 import org.labkey.api.reports.LabKeyScriptEngineManager;
-import org.labkey.api.reports.RScriptEngineFactory;
+import org.labkey.api.reports.report.r.RScriptEngineFactory;
 import org.labkey.api.services.ServiceRegistry;
 
 import java.io.File;
