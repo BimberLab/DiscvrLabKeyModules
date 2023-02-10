@@ -64,11 +64,13 @@ public class SequenceProvider extends AbstractSequenceDataProvider
         return NAME;
     }
 
+    @Override
     public ActionURL getInstructionsUrl(Container c, User u)
     {
         return null;
     }
 
+    @Override
     public List<NavItem> getDataNavItems(Container c, User u)
     {
         //NOTE: we return the item regardless of whether the module is enabled, but the default visibility will be false without it
@@ -78,11 +80,13 @@ public class SequenceProvider extends AbstractSequenceDataProvider
         return items;
     }
 
+    @Override
     public List<NavItem> getSampleNavItems(Container c, User u)
     {
         return Collections.emptyList();
     }
 
+    @Override
     public List<NavItem> getSettingsItems(Container c, User u)
     {
         if (!c.isRoot() && !ContainerManager.getSharedContainer().equals(c) && !c.getActiveModules().contains(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class)))
@@ -134,6 +138,7 @@ public class SequenceProvider extends AbstractSequenceDataProvider
         return items;
     }
 
+    @Override
     public List<NavItem> getReportItems(Container c, User u)
     {
         List<NavItem> items = new ArrayList<>();
@@ -148,22 +153,26 @@ public class SequenceProvider extends AbstractSequenceDataProvider
         return items;
     }
 
+    @Override
     public JSONObject getTemplateMetadata(ViewContext ctx)
     {
         return new JSONObject();
     }
 
+    @Override
     @NotNull
     public Set<ClientDependency> getClientDependencies()
     {
         return Collections.emptySet();
     }
 
+    @Override
     public Module getOwningModule()
     {
         return _module;
     }
 
+    @Override
     public List<SummaryNavItem> getSummary(Container c, User u)
     {
         List<SummaryNavItem> items = new ArrayList<>();
@@ -180,6 +189,7 @@ public class SequenceProvider extends AbstractSequenceDataProvider
         return items;
     }
 
+    @Override
     public List<NavItem> getSubjectIdSummary(Container c, User u, String subjectId)
     {
         List<NavItem> items = new ArrayList<>();
