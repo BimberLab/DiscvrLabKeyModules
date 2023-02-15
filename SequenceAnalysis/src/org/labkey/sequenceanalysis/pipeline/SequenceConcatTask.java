@@ -84,7 +84,7 @@ public class SequenceConcatTask extends PipelineJob.Task<SequenceConcatTask.Fact
         List<RecordedAction> actions = new ArrayList<>();
 
         List<Integer> sequenceIds = new ArrayList<>();
-        for (Object o : getPipelineJob().getParameterJson().getJSONArray("sequenceIds").toArray())
+        for (Object o : getPipelineJob().getParameterJson().getJSONArray("sequenceIds").toList())
         {
             sequenceIds.add((Integer)o);
         }

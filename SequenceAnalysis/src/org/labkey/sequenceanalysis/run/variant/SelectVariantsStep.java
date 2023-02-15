@@ -2,8 +2,8 @@ package org.labkey.sequenceanalysis.run.variant;
 
 import htsjdk.samtools.util.Interval;
 import org.apache.commons.lang3.StringUtils;
-import org.json.old.JSONArray;
-import org.json.old.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
@@ -172,7 +172,7 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
             if (text.startsWith("["))
             {
                 JSONArray arr = new JSONArray(text);
-                for (Object o : arr.toArray())
+                for (Object o : arr.toList())
                 {
                     if (o == null)
                     {

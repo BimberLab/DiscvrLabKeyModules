@@ -16,7 +16,7 @@
 package org.labkey.api.sequenceanalysis.pipeline;
 
 
-import org.json.old.JSONObject;
+import org.json.JSONObject;
 import org.labkey.api.view.template.ClientDependency;
 
 import java.util.Collection;
@@ -61,11 +61,6 @@ public interface PipelineStepProvider<StepType extends PipelineStep>
      * @return A description of this step, which will be shown in the client UI
      */
     public String getDescription();
-
-    /**
-     * @return A list of any steps that must run prior to this step
-     */
-    public List<PipelineStepProvider> getPrerequisites();
 
     /**
      * @return A list of any addition JS or CSS files required to display this UI on the client.

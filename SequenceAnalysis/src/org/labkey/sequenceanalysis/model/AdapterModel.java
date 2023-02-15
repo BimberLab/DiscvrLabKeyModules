@@ -2,7 +2,7 @@ package org.labkey.sequenceanalysis.model;
 
 import org.biojava.nbio.core.exceptions.CompoundNotFoundException;
 import org.biojava.nbio.core.sequence.DNASequence;
-import org.json.old.JSONArray;
+import org.json.JSONArray;
 
 /**
  * User: bimber

@@ -2,7 +2,7 @@ package org.labkey.sequenceanalysis.run.analysis;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-import org.json.old.JSONObject;
+import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;

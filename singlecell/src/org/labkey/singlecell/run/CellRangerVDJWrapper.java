@@ -5,7 +5,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-import org.json.old.JSONObject;
+import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.ConvertHelper;
@@ -113,6 +113,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             return "CellRanger-VDJ";
         }
 
+        @Override
         public String getDescription()
         {
             return null;

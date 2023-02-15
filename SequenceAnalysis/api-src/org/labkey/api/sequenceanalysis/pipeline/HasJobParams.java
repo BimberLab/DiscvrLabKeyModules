@@ -1,6 +1,6 @@
 package org.labkey.api.sequenceanalysis.pipeline;
 
-import org.json.old.JSONObject;
+import org.json.JSONObject;
 
 import java.util.Map;
 

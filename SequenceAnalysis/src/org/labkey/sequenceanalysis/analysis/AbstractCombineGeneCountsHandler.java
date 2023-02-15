@@ -1,7 +1,7 @@
 package org.labkey.sequenceanalysis.analysis;
 
 import au.com.bytecode.opencsv.CSVWriter;
-import org.json.old.JSONObject;
+import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -126,7 +126,7 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
         @Override
         public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            if (!ctx.getParams().containsKey("name"))
+            if (!ctx.getParams().has("name"))
             {
                 throw new PipelineJobException("Must provide the name of the output");
             }

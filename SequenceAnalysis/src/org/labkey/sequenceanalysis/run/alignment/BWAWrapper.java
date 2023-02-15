@@ -2,7 +2,7 @@ package org.labkey.sequenceanalysis.run.alignment;
 
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-import org.json.old.JSONObject;
+import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -67,6 +67,7 @@ public class BWAWrapper extends AbstractCommandWrapper
             return "BWA";
         }
 
+        @Override
         public String getDescription()
         {
             return null;

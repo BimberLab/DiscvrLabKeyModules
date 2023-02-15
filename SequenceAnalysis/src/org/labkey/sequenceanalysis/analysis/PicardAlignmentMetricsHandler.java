@@ -1,6 +1,6 @@
 package org.labkey.sequenceanalysis.analysis;
 
-import org.json.old.JSONObject;
+import org.json.JSONObject;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.module.ModuleLoader;
@@ -191,10 +191,10 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
             RecordedAction action = new RecordedAction(getName());
             action.setStartTime(new Date());
 
-            boolean collectSummary = params.containsKey("collectSummary") && params.optBoolean("collectSummary", false);
-            boolean collectInsertSize = params.containsKey("collectInsertSize") && params.optBoolean("collectInsertSize", false);
-            boolean collectWgs = params.containsKey("collectWgs") && params.optBoolean("collectWgs", false);
-            boolean collectWgsNonZero = params.containsKey("collectWgsNonZero") && params.optBoolean("collectWgsNonZero", false);
+            boolean collectSummary = params.optBoolean("collectSummary", false);
+            boolean collectInsertSize = params.optBoolean("collectInsertSize", false);
+            boolean collectWgs = params.optBoolean("collectWgs", false);
+            boolean collectWgsNonZero = params.optBoolean("collectWgsNonZero", false);
 
             int i = 1;
             for (SequenceOutputFile o : inputFiles)

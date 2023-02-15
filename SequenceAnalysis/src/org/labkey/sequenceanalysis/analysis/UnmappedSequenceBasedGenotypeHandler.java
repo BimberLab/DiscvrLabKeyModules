@@ -3,7 +3,7 @@ package org.labkey.sequenceanalysis.analysis;
 import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.filter.DuplicateReadFilter;
 import org.apache.commons.lang3.StringUtils;
-import org.json.old.JSONObject;
+import org.json.JSONObject;
 import org.labkey.api.iterator.CloseableIterator;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -33,6 +33,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -224,7 +225,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
                     aggregators.add(agg);
 
                     File outputLog = null;
-                    if (params.containsKey("writeLog") && params.optBoolean("writeLog", false))
+                    if (params.has("writeLog") && params.optBoolean("writeLog", false))
                     {
                         outputLog = new File(ctx.getOutputDir(), FileUtil.getBaseName(so.getFile()) + ".sbt.txt.gz");
                         agg.setOutputLog(outputLog);
@@ -368,7 +369,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
             }
 
             ctx.getLogger().info("building merged file: " + jointUnmappedCollapsed.getPath());
-            try (BufferedWriter jointUnmappedCollapsedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(jointUnmappedCollapsed), "UTF-8"));CSVWriter jointUnmappedCollapsedTsvWriter = new CSVWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(jointUnmappedCollapsedTsv), "UTF-8")), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+            try (BufferedWriter jointUnmappedCollapsedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(jointUnmappedCollapsed), StandardCharsets.UTF_8)); CSVWriter jointUnmappedCollapsedTsvWriter = new CSVWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(jointUnmappedCollapsedTsv), "UTF-8")), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
                 List<FastqAggregate> sorted = new ArrayList<>();
                 sorted.addAll(uniqueReads.values());

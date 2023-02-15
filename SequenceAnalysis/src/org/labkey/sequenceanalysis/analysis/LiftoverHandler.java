@@ -12,7 +12,7 @@ import htsjdk.tribble.bed.BEDFeature;
 import htsjdk.tribble.bed.FullBEDFeature;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
-import org.json.old.JSONObject;
+import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
@@ -183,7 +183,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
                 int dots = isGzip ? 2 : 1;
                 String baseName = FileUtil.getBaseName(f.getFile(), dots);
 
-                double pct = params.containsKey("pct") ? params.getDouble("pct") : 0.95;
+                double pct = params.has("pct") ? params.getDouble("pct") : 0.95;
                 job.getLogger().info("using minimum percent match: " + pct);
 
                 action.addInput(f.getFile(), "Input File");

@@ -32,10 +32,9 @@ import org.biojava.nbio.core.sequence.io.DNASequenceCreator;
 import org.biojava.nbio.core.sequence.io.FastaReader;
 import org.biojava.nbio.core.sequence.io.GenericFastaHeaderParser;
 import org.jetbrains.annotations.NotNull;
-import org.jfree.chart.JFreeChart;
-import org.json.old.JSONArray;
-import org.json.old.JSONException;
-import org.json.old.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.labkey.api.action.AbstractFileUploadAction;
 import org.labkey.api.action.ApiJsonWriter;
 import org.labkey.api.action.ApiResponse;
@@ -119,6 +118,7 @@ import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.HtmlString;
+import org.labkey.api.util.JsonUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
@@ -132,6 +132,7 @@ import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.UnauthorizedException;
+import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.api.view.template.PageConfig;
 import org.labkey.api.writer.PrintWriters;
@@ -165,7 +166,6 @@ import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.util.ChainFileValidator;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
-import org.labkey.sequenceanalysis.visualization.VariationChart;
 import org.springframework.beans.PropertyValues;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
@@ -217,7 +217,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class FastqcReportAction extends SimpleViewAction<FastqcForm>
+    public static class FastqcReportAction extends SimpleViewAction<FastqcForm>
     {
         @Override
         public void validate(FastqcForm form, BindException errors)
@@ -336,7 +336,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class SequenceAnalysisAction extends BasePipelineStepAction
+    public static class SequenceAnalysisAction extends BasePipelineStepAction
     {
         public SequenceAnalysisAction()
         {
@@ -351,7 +351,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class VariantProcessingAction extends BasePipelineStepAction
+    public static class VariantProcessingAction extends BasePipelineStepAction
     {
         public VariantProcessingAction()
         {
@@ -366,7 +366,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class AlignmentImportAction extends BasePipelineStepAction
+    public static class AlignmentImportAction extends BasePipelineStepAction
     {
         public AlignmentImportAction()
         {
@@ -380,7 +380,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    abstract public class BasePipelineStepAction extends SimpleViewAction<Object>
+    abstract public static class BasePipelineStepAction extends SimpleViewAction<Object>
     {
         protected String _htmlFile;
 
@@ -410,13 +410,14 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class AlignmentAnalysisAction extends BasePipelineStepAction
+    public static class AlignmentAnalysisAction extends BasePipelineStepAction
     {
         public AlignmentAnalysisAction()
         {
             super("views/alignmentAnalysis.html");
         }
 
+        @Override
         public void addNavTrail(NavTree tree)
         {
             tree.addChild("Analyze Alignments");
@@ -425,8 +426,9 @@ public class SequenceAnalysisController extends SpringActionController
 
     @RequiresPermission(ReadPermission.class)
     @IgnoresTermsOfUse
-    public class DownloadTempImageAction extends ExportAction<TempImageAction>
+    public static class DownloadTempImageAction extends ExportAction<TempImageAction>
     {
+        @Override
         public void export(TempImageAction form, HttpServletResponse response, BindException errors) throws Exception
         {
             File parentDir = form.getDirectory() == null ? FileUtil.getTempDirectory() : new File(FileUtil.getTempDirectory(), form.getDirectory());
@@ -471,8 +473,9 @@ public class SequenceAnalysisController extends SpringActionController
 
     @RequiresPermission(ReadPermission.class)
     @IgnoresTermsOfUse
-    public class ConvertTextToFileAction extends ExportAction<ConvertTextToFileForm>
+    public static class ConvertTextToFileAction extends ExportAction<ConvertTextToFileForm>
     {
+        @Override
         public void export(ConvertTextToFileForm form, HttpServletResponse response, BindException errors) throws Exception
         {
             String text = form.getText();
@@ -496,7 +499,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class FindOrphanFilesAction extends ConfirmAction<Object>
+    public static class FindOrphanFilesAction extends ConfirmAction<Object>
     {
         @Override
         public ModelAndView getConfirmView(Object o, BindException errors) throws Exception
@@ -531,7 +534,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresSiteAdmin
-    public class UpdateSequenceLengthAction extends ConfirmAction<Object>
+    public static class UpdateSequenceLengthAction extends ConfirmAction<Object>
     {
         @Override
         public ModelAndView getConfirmView(Object form, BindException errors) throws Exception
@@ -541,11 +544,7 @@ public class SequenceAnalysisController extends SpringActionController
                 throw new UnauthorizedException("This can only be used from the root container");
             }
 
-            StringBuilder html = new StringBuilder();
-
-            html.append("This will calculate the sequence length field for any reference NT sequences lacking it.  Do you want to continue?");
-
-            return new HtmlView(html.toString());
+            return new HtmlView("This will calculate the sequence length field for any reference NT sequences lacking it.  Do you want to continue?");
         }
 
         @Override
@@ -598,10 +597,11 @@ public class SequenceAnalysisController extends SpringActionController
 
     //TODO: add genome
     @RequiresPermission(DeletePermission.class)
-    public class DeleteRecordsAction extends ConfirmAction<DeleteForm>
+    public static class DeleteRecordsAction extends ConfirmAction<DeleteForm>
     {
         private TableInfo _table;
 
+        @Override
         public void validateCommand(DeleteForm form, Errors errors)
         {
             if (form.getSchema() == null)
@@ -860,6 +860,7 @@ public class SequenceAnalysisController extends SpringActionController
             return total;
         }
 
+        @Override
         public boolean handlePost(DeleteForm form, BindException errors) throws Exception
         {
             try
@@ -885,7 +886,7 @@ public class SequenceAnalysisController extends SpringActionController
                 }
                 else if (SequenceAnalysisSchema.TABLE_REF_LIBRARIES.equals(_table.getName()))
                 {
-                    SequenceAnalysisManager.get().deleteReferenceLibraries(getUser(), rowIds);
+                    SequenceAnalysisManager.deleteReferenceLibraries(getUser(), rowIds);
                 }
                 else if (SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES.equals(_table.getName()))
                 {
@@ -917,7 +918,8 @@ public class SequenceAnalysisController extends SpringActionController
             return true;
         }
 
-        public URLHelper getSuccessURL(DeleteForm form)
+        @Override
+        public @NotNull URLHelper getSuccessURL(DeleteForm form)
         {
             URLHelper url = form.getReturnURLHelper();
             return url != null ? url : _table.getGridURL(getContainer()) != null ? _table.getGridURL(getContainer()) : getContainer().getStartURL(getUser());
@@ -925,7 +927,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetSequencePipelineEnabledAction extends ReadOnlyApiAction<Object>
+    public static class GetSequencePipelineEnabledAction extends ReadOnlyApiAction<Object>
     {
         @Override
         public Object execute(Object o, BindException errors)
@@ -939,7 +941,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetAnalysisToolDetailsAction extends ReadOnlyApiAction<Object>
+    public static class GetAnalysisToolDetailsAction extends ReadOnlyApiAction<Object>
     {
         @Override
         public ApiResponse execute(Object form, BindException errors)
@@ -950,7 +952,7 @@ public class SequenceAnalysisController extends SpringActionController
             for (Class<? extends  PipelineStep> step : map.keySet())
             {
                 JSONArray list = new JSONArray();
-                for (PipelineStepProvider fact : SequencePipelineService.get().getProviders(step))
+                for (PipelineStepProvider<?> fact : SequencePipelineService.get().getProviders(step))
                 {
                     list.put(fact.toJSON());
                 }
@@ -958,7 +960,7 @@ public class SequenceAnalysisController extends SpringActionController
                 ret.put(map.get(step), list);
             }
 
-            JSONObject resourceSettings = getReourceSettingsJson();
+            JSONObject resourceSettings = getReourceSettingsJson(getContainer());
             if (resourceSettings != null)
             {
                 JSONArray arr = new JSONArray();
@@ -971,14 +973,14 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetResourceSettingsJsonAction extends ReadOnlyApiAction<Object>
+    public static class GetResourceSettingsJsonAction extends ReadOnlyApiAction<Object>
     {
         @Override
         public ApiResponse execute(Object form, BindException errors)
         {
             Map<String, Object> ret = new HashMap<>();
 
-            JSONObject resourceSettings = getReourceSettingsJson();
+            JSONObject resourceSettings = getReourceSettingsJson(getContainer());
             if (resourceSettings != null)
             {
                 JSONArray arr = new JSONArray();
@@ -991,7 +993,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(UpdatePermission.class)
-    public class SaveAnalysisAsTemplateAction extends MutatingApiAction<SaveAnalysisAsTemplateForm>
+    public static class SaveAnalysisAsTemplateAction extends MutatingApiAction<SaveAnalysisAsTemplateForm>
     {
         @Override
         public ApiResponse execute(SaveAnalysisAsTemplateForm form, BindException errors) throws Exception
@@ -1025,11 +1027,11 @@ public class SequenceAnalysisController extends SpringActionController
             if (ts.exists())
             {
                 List<Map<String, Object>> oldKeys = Arrays.asList(ts.getMapArray());
-                ti.getUpdateService().updateRows(getUser(), getContainer(), Arrays.asList(toSave), oldKeys, null, new HashMap<String, Object>());
+                ti.getUpdateService().updateRows(getUser(), getContainer(), Arrays.asList(toSave), oldKeys, null, new HashMap<>());
             }
             else
             {
-                ti.getUpdateService().insertRows(getUser(), getContainer(), Arrays.asList(toSave), new BatchValidationException(), null, new HashMap<String, Object>());
+                ti.getUpdateService().insertRows(getUser(), getContainer(), Arrays.asList(toSave), new BatchValidationException(), null, new HashMap<>());
             }
 
             return new ApiSimpleResponse("Success", true);
@@ -1085,7 +1087,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class ValidateReadsetFilesAction extends ReadOnlyApiAction<ValidateReadsetImportForm>
+    public static class ValidateReadsetFilesAction extends ReadOnlyApiAction<ValidateReadsetImportForm>
     {
         @Override
         public ApiResponse execute(ValidateReadsetImportForm form, BindException errors) throws Exception
@@ -1255,7 +1257,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(UpdatePermission.class)
-    public class AnalyzeBamAction extends MutatingApiAction<AnalyzeBamForm>
+    public static class AnalyzeBamAction extends MutatingApiAction<AnalyzeBamForm>
     {
         @Override
         public ApiResponse execute(AnalyzeBamForm form, BindException errors) throws Exception
@@ -1273,8 +1275,7 @@ public class SequenceAnalysisController extends SpringActionController
                 errors.reject(ERROR_MSG, "No aggregators provided");
                 return null;
             }
-            List<String> aggregatorTypes = new ArrayList<>();
-            aggregatorTypes.addAll(Arrays.asList(form.getAggregators()));
+            List<String> aggregatorTypes = new ArrayList<>(Arrays.asList(form.getAggregators()));
 
             List<Integer> analysisIds = Arrays.asList(form.getAnalysisIds());
             TableSelector ts = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_ANALYSES), new SimpleFilter(FieldKey.fromString("rowid"), analysisIds, CompareType.IN), null);
@@ -1311,7 +1312,7 @@ public class SequenceAnalysisController extends SpringActionController
                 log.info("Inspecting alignments in BAM");
                 BamIterator bi = new BamIterator(inputFile, refFile, log);
 
-                //NOTE: this is a hack for testing purposes.  i need a registry mechanism
+                //NOTE: this is a hack for testing purposes.  need a registry mechanism
                 List<AlignmentAggregator> aggregators = new ArrayList<>();
                 NtCoverageAggregator coverage = null;
 
@@ -1489,7 +1490,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetAASnpsAction extends ReadOnlyApiAction<AASNPForm>
+    public static class GetAASnpsAction extends ReadOnlyApiAction<AASNPForm>
     {
         @Override
         public ApiResponse execute(AASNPForm form, BindException errors) throws Exception
@@ -1536,7 +1537,7 @@ public class SequenceAnalysisController extends SpringActionController
             Map<String, String> params = new HashMap<>();
             AvgBaseQualityAggregator avg = new AvgBaseQualityAggregator(log, bam.getFile(), ref.getFile());
             AASnpByReadAggregator aaAggregator = new AASnpByReadAggregator(log, ref.getFile(), avg, params);
-            bi.addAggregators(Collections.singletonList((AlignmentAggregator) aaAggregator));
+            bi.addAggregators(Collections.singletonList(aaAggregator));
 
             String refName = SequenceAnalysisManager.get().getNTRefForAARef(form.getRefAaId());
             bi.iterateReads(refName, form.getStart(), form.getEnd());
@@ -1548,8 +1549,9 @@ public class SequenceAnalysisController extends SpringActionController
 
     @RequiresPermission(ReadPermission.class)
     @IgnoresTermsOfUse
-    public class MergeFastqFilesAction extends ExportAction<MergeFastqFilesForm>
+    public static class MergeFastqFilesAction extends ExportAction<MergeFastqFilesForm>
     {
+        @Override
         public void export(MergeFastqFilesForm form, HttpServletResponse response, BindException errors) throws Exception
         {
             if (form.getDataIds() == null || form.getDataIds().length == 0)
@@ -1851,133 +1853,8 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    @RequiresPermission(ReadPermission.class)
-    public class GenerateChartAction extends ReadOnlyApiAction<GenerateChartForm>
-    {
-        @Override
-        public ApiResponse execute(GenerateChartForm form, BindException errors) throws Exception
-        {
-            Map<String, Object> resultProperties = new HashMap<>();
-
-            try
-            {
-                VariationChart vc = new VariationChart();
-                List<JFreeChart> charts = vc.createChart(form.getSeries(), form.getGff(), form.getMaxBases());
-
-                resultProperties.putAll(vc.toSVG(charts, form.getWidth(), form.getSectionHeight()));
-                resultProperties.put("success", true);
-            }
-            catch (IOException e)
-            {
-                errors.reject(ERROR_MSG, e.getMessage());
-                return null;
-            }
-
-            return new ApiSimpleResponse(resultProperties);
-        }
-    }
-
-    @RequiresPermission(ReadPermission.class)
-    public class DownloadChartAction extends ExportAction<GenerateChartForm>
-    {
-        @Override
-        public void validate(GenerateChartForm form, BindException errors)
-        {
-            if (form.getSeries() == null || form.getSeries().length == 0)
-            {
-                errors.reject(ERROR_MSG, "Unable to convert create graph: no variscan output provided");
-            }
-        }
-
-        public void export(GenerateChartForm form, HttpServletResponse response, BindException errors) throws Exception
-        {
-
-            response.setContentType("svg");
-            response.setHeader("Content-disposition", "attachment; filename=\"sequence.svg");
-            response.setHeader("Pragma", "private");
-            response.setHeader("Cache-Control", "private");
-
-            VariationChart vc = new VariationChart();
-            List<JFreeChart> charts = vc.createChart(form.getSeries(), form.getGff(), form.getMaxBases());
-
-            Map<String, Object> props = vc.toSVG(charts, form.getWidth(), form.getSectionHeight());
-            if (props.containsKey("filePath"))
-            {
-                File targetFile = new File((String) props.get("filePath"));
-                if (targetFile.exists())
-                {
-                    PageFlowUtil.streamFile(response, targetFile, false);
-                    FileUtils.deleteQuietly(targetFile);
-                }
-                else
-                {
-                    throw new NotFoundException("Unable to generate chart");
-                }
-            }
-        }
-    }
-
-    public static class GenerateChartForm
-    {
-        private String[] _series;
-        private String _gff;
-        private int _width = 1000;
-        private int _sectionHeight = 400;
-        private int _maxBases = 10000;
-
-        public String[] getSeries()
-        {
-            return _series;
-        }
-
-        public void setSeries(String[] series)
-        {
-            _series = series;
-        }
-
-        public String getGff()
-        {
-            return _gff;
-        }
-
-        public void setGff(String gff)
-        {
-            _gff = gff;
-        }
-
-        public int getWidth()
-        {
-            return _width;
-        }
-
-        public void setWidth(int width)
-        {
-            _width = width;
-        }
-
-        public int getSectionHeight()
-        {
-            return _sectionHeight;
-        }
-
-        public void setSectionHeight(int sectionHeight)
-        {
-            _sectionHeight = sectionHeight;
-        }
-
-        public int getMaxBases()
-        {
-            return _maxBases;
-        }
-
-        public void setMaxBases(int maxBases)
-        {
-            _maxBases = maxBases;
-        }
-    }
-
     @RequiresPermission(InsertPermission.class)
-    public class StartPipelineJobAction extends MutatingApiAction<AnalyzeForm>
+    public static class StartPipelineJobAction extends MutatingApiAction<AnalyzeForm>
     {
         @Override
         public ApiResponse execute(AnalyzeForm form, BindException errors) throws Exception
@@ -2016,7 +1893,7 @@ public class SequenceAnalysisController extends SpringActionController
                             return null;
                         }
 
-                        JSONObject params = new JSONObject(form.getJobParameters());
+                        JSONObject params = form.getJobParameters();
                         params.remove("readsetIds");
                         jobs.addAll(SequenceAlignmentJob.createForReadsets(getContainer(), getUser(), form.getJobName(), form.getDescription(), params, form.getReadsetIds(), form.isSubmitJobToReadsetContainer()));
                         break;
@@ -2064,7 +1941,7 @@ public class SequenceAnalysisController extends SpringActionController
 
     public static class AnalyzeForm extends SimpleApiJsonForm
     {
-        public static enum TYPE
+        public enum TYPE
         {
             alignment(),
             readsetImport(),
@@ -2090,7 +1967,8 @@ public class SequenceAnalysisController extends SpringActionController
 
         public JSONObject getJobParameters()
         {
-            return getJsonObject().optJSONObject("jobParameters");
+            // Return clone so we dont mutate it:
+            return new JSONObject(getNewJsonObject().optJSONObject("jobParameters").toMap());
         }
 
         public JSONArray getReadsetIds()
@@ -2105,7 +1983,7 @@ public class SequenceAnalysisController extends SpringActionController
 
         public boolean isSubmitJobToReadsetContainer()
         {
-            return getJobParameters() == null ? false : getJobParameters().optBoolean("submitJobToReadsetContainer", false);
+            return getJobParameters() != null && getJobParameters().optBoolean("submitJobToReadsetContainer", false);
         }
 
         public List<File> getFiles(PipeRoot pr) throws PipelineValidationException
@@ -2118,9 +1996,9 @@ public class SequenceAnalysisController extends SpringActionController
             List<File> ret = new ArrayList<>();
             JSONArray inputFiles = getJobParameters().getJSONArray("inputFiles");
             String path = getJobParameters().optString("path");
-            for (JSONObject o : inputFiles.toJSONObjectArray())
+            for (JSONObject o : JsonUtil.toJSONObjectList(inputFiles))
             {
-                if (o.containsKey("dataId"))
+                if (o.has("dataId"))
                 {
                     ExpData d = ExperimentService.get().getExpData(o.getInt("dataId"));
                     if (d == null || d.getFile() == null)
@@ -2134,10 +2012,10 @@ public class SequenceAnalysisController extends SpringActionController
 
                     ret.add(d.getFile());
                 }
-                else if (o.containsKey("relPath") || o.containsKey("fileName"))
+                else if (o.has("relPath") || o.has("fileName"))
                 {
                     File f;
-                    if (o.get("relPath") == null)
+                    if (o.opt("relPath") == null)
                     {
                         if (path != null)
                         {
@@ -2161,7 +2039,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                     ret.add(f);
                 }
-                else if (o.containsKey("filePath"))
+                else if (o.opt("filePath") != null)
                 {
                     File f = new File(o.getString("filePath"));
                     if (!f.exists())
@@ -2171,7 +2049,7 @@ public class SequenceAnalysisController extends SpringActionController
                 }
                 else
                 {
-                    throw new PipelineValidationException("Invalid file: " + o.toString());
+                    throw new PipelineValidationException("Invalid file: " + o);
                 }
             }
 
@@ -2180,7 +2058,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class CreateReferenceLibraryAction extends MutatingApiAction<CreateReferenceLibraryForm>
+    public static class CreateReferenceLibraryAction extends MutatingApiAction<CreateReferenceLibraryForm>
     {
         @Override
         public ApiResponse execute(CreateReferenceLibraryForm form, BindException errors) throws Exception
@@ -2368,7 +2246,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class ImportFastaSequencesAction extends AbstractFileUploadAction<ImportFastaSequencesForm>
+    public static class ImportFastaSequencesAction extends AbstractFileUploadAction<ImportFastaSequencesForm>
     {
         @Override
         protected void setContentType(HttpServletResponse response)
@@ -2376,17 +2254,17 @@ public class SequenceAnalysisController extends SpringActionController
             response.setContentType(ApiJsonWriter.CONTENT_TYPE_JSON);
         }
 
+        @Override
         protected File getTargetFile(String filename) throws IOException
         {
             if (!PipelineService.get().hasValidPipelineRoot(getContainer()))
                 throw new UploadException("Pipeline root must be configured before uploading FASTA files", HttpServletResponse.SC_NOT_FOUND);
 
-            AssayFileWriter writer = new AssayFileWriter();
             PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());
 
             File targetDirectory = root.getRootPath();
 
-            return writer.findUniqueFileName(filename, targetDirectory);
+            return AssayFileWriter.findUniqueFileName(filename, targetDirectory);
         }
 
         @Override
@@ -2423,7 +2301,7 @@ public class SequenceAnalysisController extends SpringActionController
             }
             catch (Throwable e)
             {
-                handleError(e, logger);
+                handleError(e, logger, getViewContext());
             }
 
             return resp.toString();
@@ -2431,7 +2309,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class ImportReferenceSequencesAction extends MutatingApiAction<ImportFastaSequencesForm>
+    public static class ImportReferenceSequencesAction extends MutatingApiAction<ImportFastaSequencesForm>
     {
         @Override
         public Object execute(ImportFastaSequencesForm form, BindException errors) throws Exception
@@ -2659,7 +2537,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class ImportOutputFileAction extends AbstractFileUploadAction<ImportOutputFileForm>
+    public static class ImportOutputFileAction extends AbstractFileUploadAction<ImportOutputFileForm>
     {
         @Override
         protected void setContentType(HttpServletResponse response)
@@ -2667,16 +2545,16 @@ public class SequenceAnalysisController extends SpringActionController
             response.setContentType(ApiJsonWriter.CONTENT_TYPE_JSON);
         }
 
+        @Override
         protected File getTargetFile(String filename) throws IOException
         {
             if (!PipelineService.get().hasValidPipelineRoot(getContainer()))
                 throw new UploadException("Pipeline root must be configured before uploading files", HttpServletResponse.SC_NOT_FOUND);
 
-            AssayFileWriter writer = new AssayFileWriter();
             try
             {
-                File targetDirectory = writer.ensureUploadDirectory(getContainer(), "sequenceOutputs");
-                return writer.findUniqueFileName(filename, targetDirectory);
+                File targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer(), "sequenceOutputs");
+                return AssayFileWriter.findUniqueFileName(filename, targetDirectory);
             }
             catch (ExperimentException e)
             {
@@ -2792,7 +2670,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class ImportTrackAction extends AbstractFileUploadAction<ImportTrackForm>
+    public static class ImportTrackAction extends AbstractFileUploadAction<ImportTrackForm>
     {
         @Override
         protected void setContentType(HttpServletResponse response)
@@ -2800,6 +2678,7 @@ public class SequenceAnalysisController extends SpringActionController
             response.setContentType(ApiJsonWriter.CONTENT_TYPE_JSON);
         }
 
+        @Override
         protected File getTargetFile(String filename) throws IOException
         {
             if (!PipelineService.get().hasValidPipelineRoot(getContainer()))
@@ -2874,22 +2753,22 @@ public class SequenceAnalysisController extends SpringActionController
             }
             catch (Throwable e)
             {
-                handleError(e, logger);
+                handleError(e, logger, getViewContext());
             }
 
             return resp.toString();
         }
     }
 
-    private void handleError(Throwable e, Logger log)
+    private static void handleError(Throwable e, Logger log, ViewContext ctx)
     {
-        try (OutputStream out = getViewContext().getResponse().getOutputStream(); OutputStreamWriter writer = new OutputStreamWriter(out, StringUtilsLabKey.DEFAULT_CHARSET))
+        try (OutputStream out = ctx.getResponse().getOutputStream(); OutputStreamWriter writer = new OutputStreamWriter(out, StringUtilsLabKey.DEFAULT_CHARSET))
         {
             log.error(e.getMessage(), e);
 
-            getViewContext().getResponse().reset();
-            getViewContext().getResponse().setContentType("text/plain");
-            getViewContext().getResponse().setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            ctx.getResponse().reset();
+            ctx.getResponse().setContentType("text/plain");
+            ctx.getResponse().setStatus(HttpServletResponse.SC_BAD_REQUEST);
             if (e instanceof OutOfMemoryError)
             {
                 writer.write(PageFlowUtil.jsString("Your server ran out of memory when processing this file.  You may want to contact your admin and consider increasing the tomcat heap size."));
@@ -2956,7 +2835,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class ImportChainFileAction extends AbstractFileUploadAction<ImportChainFileForm>
+    public static class ImportChainFileAction extends AbstractFileUploadAction<ImportChainFileForm>
     {
         @Override
         protected void setContentType(HttpServletResponse response)
@@ -2964,16 +2843,16 @@ public class SequenceAnalysisController extends SpringActionController
             response.setContentType(ApiJsonWriter.CONTENT_TYPE_JSON);
         }
 
+        @Override
         protected File getTargetFile(String filename) throws IOException
         {
             if (!PipelineService.get().hasValidPipelineRoot(getContainer()))
                 throw new UploadException("Pipeline root must be configured before uploading files", HttpServletResponse.SC_NOT_FOUND);
 
-            AssayFileWriter writer = new AssayFileWriter();
             try
             {
-                File targetDirectory = writer.ensureUploadDirectory(getContainer());
-                return writer.findUniqueFileName(filename, targetDirectory);
+                File targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
+                return AssayFileWriter.findUniqueFileName(filename, targetDirectory);
             }
             catch (ExperimentException e)
             {
@@ -3090,8 +2969,9 @@ public class SequenceAnalysisController extends SpringActionController
 
     @RequiresPermission(ReadPermission.class)
     @IgnoresTermsOfUse
-    public class DownloadReferencesAction extends ExportAction<DownloadReferencesForm>
+    public static class DownloadReferencesAction extends ExportAction<DownloadReferencesForm>
     {
+        @Override
         public void export(DownloadReferencesForm form, final HttpServletResponse response, final BindException errors) throws Exception
         {
             if (form.getRowIds() == null || form.getRowIds().length == 0)
@@ -3131,7 +3011,7 @@ public class SequenceAnalysisController extends SpringActionController
             final JSONObject intervalMap = StringUtils.trimToNull(form.getIntervals()) == null ? new JSONObject() : new JSONObject(form.getIntervals());
             PageFlowUtil.prepareResponseForFile(response, Collections.emptyMap(), filename, true);
             TableSelector ts = new TableSelector(ti, cols.values(), new SimpleFilter(FieldKey.fromString("rowid"), Arrays.asList(form.getRowIds()), CompareType.IN), null);
-            ts.forEach(new Selector.ForEachBlock<ResultSet>()
+            ts.forEach(new Selector.ForEachBlock<>()
             {
                 @Override
                 public void exec(ResultSet object) throws SQLException
@@ -3147,7 +3027,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                     try
                     {
-                        if (intervalMap.containsKey(rowId.toString()))
+                        if (intervalMap.has(rowId.toString()))
                         {
                             String wholeSequence = model.getSequence();
                             if (wholeSequence == null)
@@ -3276,7 +3156,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class RecreateReferenceLibraryAction extends MutatingApiAction<RecreateReferenceLibraryForm>
+    public static class RecreateReferenceLibraryAction extends MutatingApiAction<RecreateReferenceLibraryForm>
     {
         @Override
         public ApiResponse execute(RecreateReferenceLibraryForm form, BindException errors)
@@ -3350,7 +3230,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class CheckFileStatusForHandlerAction extends ReadOnlyApiAction<CheckFileStatusForm>
+    public static class CheckFileStatusForHandlerAction extends ReadOnlyApiAction<CheckFileStatusForm>
     {
         @Override
         public ApiResponse execute(CheckFileStatusForm form, BindException errors)
@@ -3369,7 +3249,7 @@ public class SequenceAnalysisController extends SpringActionController
                 return null;
             }
 
-            SequenceOutputHandler handler = SequenceAnalysisManager.get().getFileHandler(form.getHandlerClass(), form.getHandlerEnum());
+            SequenceOutputHandler<?> handler = SequenceAnalysisManager.get().getFileHandler(form.getHandlerClass(), form.getHandlerEnum());
             if (handler == null)
             {
                 errors.reject(ERROR_MSG, "Unknown handler class: " + form.getHandlerClass());
@@ -3386,10 +3266,10 @@ public class SequenceAnalysisController extends SpringActionController
                 }
             }
 
-            JSONObject resourceSettings = getReourceSettingsJson();
+            JSONObject resourceSettings = getReourceSettingsJson(getContainer());
             if (resourceSettings != null && resourceSettings.get("parameters") != null)
             {
-                for (JSONObject o : resourceSettings.getJSONArray("parameters").toJSONObjectArray())
+                for (JSONObject o : JsonUtil.toJSONObjectList(resourceSettings.getJSONArray("parameters")))
                 {
                     //a little unclean.  the ResourceAllocator will expect a fully qualified name
                     o.put("name", "resourceSettings.resourceSettings." + o.getString("name"));
@@ -3430,7 +3310,7 @@ public class SequenceAnalysisController extends SpringActionController
                     SequenceOutputFile so = SequenceOutputFile.getForId(outputFileId);
                     outputFiles.put(so.getRowid().toString(), so.toJSON());
 
-                    Map rowMap = new TableSelector(ti, PageFlowUtil.set("dataId", "library_id"), new SimpleFilter(FieldKey.fromString("rowid"), outputFileId), null).getMap();
+                    Map<String, Object> rowMap = new TableSelector(ti, PageFlowUtil.set("dataId", "library_id"), new SimpleFilter(FieldKey.fromString("rowid"), outputFileId), null).getMap();
                     if (rowMap == null || rowMap.get("dataid") == null)
                     {
                         JSONObject o = new JSONObject();
@@ -3497,7 +3377,7 @@ public class SequenceAnalysisController extends SpringActionController
             return new ApiSimpleResponse(ret);
         }
 
-        private JSONObject getDataJson(SequenceOutputHandler handler, Integer outputFileId)
+        private JSONObject getDataJson(SequenceOutputHandler<?> handler, Integer outputFileId)
         {
             JSONObject o = new JSONObject();
             SequenceOutputFile outputFile = SequenceOutputFile.getForId(outputFileId);
@@ -3533,7 +3413,7 @@ public class SequenceAnalysisController extends SpringActionController
             return o;
         }
 
-        private JSONObject getDataJsonForReadset(SequenceOutputHandler handler, Readset rs)
+        private JSONObject getDataJsonForReadset(SequenceOutputHandler<?> handler, Readset rs)
         {
             JSONObject o = new JSONObject();
             o.put("readsetId", rs.getReadsetId());
@@ -3589,12 +3469,12 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-    private JSONObject getReourceSettingsJson()
+    private static JSONObject getReourceSettingsJson(Container c)
     {
         JSONArray resourceSettings = new JSONArray();
         for (JobResourceSettings settings : SequencePipelineServiceImpl.get().getResourceSettings())
         {
-            if (settings.isAvailable(getContainer()))
+            if (settings.isAvailable(c))
             {
                 for (ToolParameterDescriptor pd : settings.getParams())
                 {
@@ -3670,8 +3550,9 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class ExportSequenceFilesAction extends ExportAction<ExportSequenceFilesForm>
+    public static class ExportSequenceFilesAction extends ExportAction<ExportSequenceFilesForm>
     {
+        @Override
         public void export(ExportSequenceFilesForm form, HttpServletResponse response, BindException errors) throws Exception
         {
             if (form.getDataIds() == null || form.getDataIds().length == 0)
@@ -3837,7 +3718,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetDataItemsAction extends ReadOnlyApiAction<GetDataItemsForm>
+    public static class GetDataItemsAction extends ReadOnlyApiAction<GetDataItemsForm>
     {
         @Override
         public ApiResponse execute(GetDataItemsForm form, BindException errors)
@@ -3882,8 +3763,7 @@ public class SequenceAnalysisController extends SpringActionController
                     Set<Module> active = getContainer().getActiveModules();
                     if (!active.contains(m))
                     {
-                        Set<Module> newActive = new HashSet<Module>();
-                        newActive.addAll(active);
+                        Set<Module> newActive = new HashSet<>(active);
                         newActive.add(m);
 
                         _log.info("Enabling module " + m.getName() + " in shared container since getDataItems was called");
@@ -3912,7 +3792,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class RunSequenceHandlerAction extends MutatingApiAction<RunSequenceHandlerForm>
+    public static class RunSequenceHandlerAction extends MutatingApiAction<RunSequenceHandlerForm>
     {
         @Override
         public ApiResponse execute(RunSequenceHandlerForm form, BindException errors) throws Exception
@@ -4125,7 +4005,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class RunVariantProcessingAction extends RunSequenceHandlerAction
+    public static class RunVariantProcessingAction extends RunSequenceHandlerAction
     {
         @Override
         protected PipelineJob createOutputJob(RunSequenceHandlerForm form, Container targetContainer, String jobName, PipeRoot pr1, SequenceOutputHandler<?> handler, List<SequenceOutputFile> inputs, JSONObject json) throws PipelineJobException, IOException
@@ -4207,7 +4087,7 @@ public class SequenceAnalysisController extends SpringActionController
 
         public Boolean getUseOutputFileContainer()
         {
-            return _useOutputFileContainer == null ? false : _useOutputFileContainer;
+            return _useOutputFileContainer != null && _useOutputFileContainer;
         }
 
         public void setUseOutputFileContainer(Boolean useOutputFileContainer)
@@ -4217,7 +4097,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class ImportOutputFilesAction extends MutatingApiAction<ImportOutputFilesForm>
+    public static class ImportOutputFilesAction extends MutatingApiAction<ImportOutputFilesForm>
     {
         @Override
         public ApiResponse execute(ImportOutputFilesForm form, BindException errors) throws Exception
@@ -4240,7 +4120,6 @@ public class SequenceAnalysisController extends SpringActionController
                 return null;
             }
 
-            AssayFileWriter writer = new AssayFileWriter();
             File targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer(), "sequenceOutputs");
             if (!targetDirectory.exists())
             {
@@ -4252,7 +4131,7 @@ public class SequenceAnalysisController extends SpringActionController
                 JSONArray arr = new JSONArray(form.getRecords());
 
                 Map<File, Map<String, Object>> toCreate = new HashMap<>();
-                for (JSONObject o : arr.toJSONObjectArray())
+                for (JSONObject o : JsonUtil.toJSONObjectList(arr))
                 {
                     File file = new File(dirData, o.getString("fileName"));
                     if (!file.exists())
@@ -4293,7 +4172,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                 for (File file : toCreate.keySet())
                 {
-                    File target = writer.findUniqueFileName(file.getName(), targetDirectory);
+                    File target = AssayFileWriter.findUniqueFileName(file.getName(), targetDirectory);
                     FileUtils.moveFile(file, target);
 
                     ExpData data = ExperimentService.get().createData(getContainer(), new DataType("Sequence Output"));
@@ -4411,7 +4290,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetAvailableHandlersAction extends ReadOnlyApiAction<GetAvailableHandlersForm>
+    public static class GetAvailableHandlersAction extends ReadOnlyApiAction<GetAvailableHandlersForm>
     {
         @Override
         public ApiResponse execute(GetAvailableHandlersForm form, BindException errors) throws Exception
@@ -4455,7 +4334,7 @@ public class SequenceAnalysisController extends SpringActionController
             }
 
             List<JSONObject> partialHandlers = new ArrayList<>();
-            for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers(getContainer(), form.getHandlerEnum()))
+            for (SequenceOutputHandler<?> handler : SequenceAnalysisServiceImpl.get().getFileHandlers(getContainer(), form.getHandlerEnum()))
             {
                 boolean available = true;
                 JSONObject json = new JSONObject();
@@ -4540,7 +4419,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class CompareFastaSequencesAction extends ReadOnlyApiAction<CompareFastaSequencesForm>
+    public static class CompareFastaSequencesAction extends ReadOnlyApiAction<CompareFastaSequencesForm>
     {
         @Override
         public ApiResponse execute(CompareFastaSequencesForm form, BindException errors) throws Exception
@@ -4783,81 +4662,8 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
-//    @IgnoresTermsOfUse
-//    @RequiresNoPermission
-//    public class ExternalLinkAction extends ExportAction<ExternalLinkForm>
-//    {
-//        public void export(ExternalLinkForm form, HttpServletResponse response, BindException errors) throws Exception
-//        {
-//            if (form.getRowId() == 0 || form.getContainer() == null)
-//            {
-//                errors.reject(ERROR_MSG, "Must provide the rowid and container");
-//                return;
-//            }
-//
-//            try
-//            {
-//                SequenceOutputFile so = SequenceOutputFile.getForId(form.getRowId());
-//                if (so == null)
-//                {
-//                    errors.reject(ERROR_MSG, "Sequence output not found");
-//                    return;
-//                }
-//
-//                if (!form.getContainer().equals(so.getContainer()))
-//                {
-//                    errors.reject(ERROR_MSG, "Sequence output not found in this folder");
-//                    return;
-//                }
-//
-//                File f = so.getExpData().getFile();
-//                if (f == null || !f.exists())
-//                {
-//                    errors.reject(ERROR_MSG, "File not found");
-//                    return;
-//                }
-//
-//                try (BufferedInputStream stream = new BufferedInputStream(new FileInputStream(f)))
-//                {
-//                    IOUtils.copy(stream, response.getOutputStream());
-//                }
-//            }
-//            catch (Exception e)
-//            {
-//                _log.error(e.getMessage(), e);
-//                errors.reject(ERROR_MSG, e.getMessage());
-//            }
-//        }
-//    }
-//
-//    public static class ExternalLinkForm
-//    {
-//        private int _rowId;
-//        private String _container;
-//
-//        public int getRowId()
-//        {
-//            return _rowId;
-//        }
-//
-//        public void setRowId(int rowId)
-//        {
-//            _rowId = rowId;
-//        }
-//
-//        public String getContainer()
-//        {
-//            return _container;
-//        }
-//
-//        public void setContainer(String container)
-//        {
-//            _container = container;
-//        }
-//    }
-
     @RequiresPermission(ReadPermission.class)
-    public class GetBamHaplotypesAction extends ReadOnlyApiAction<GetBamHaplotypesForm>
+    public static class GetBamHaplotypesAction extends ReadOnlyApiAction<GetBamHaplotypesForm>
     {
         @Override
         public ApiResponse execute(GetBamHaplotypesForm form, BindException errors) throws Exception
@@ -5029,7 +4835,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class ImportSequenceTracksAction extends MutatingApiAction<ImportTracksForm>
+    public static class ImportSequenceTracksAction extends MutatingApiAction<ImportTracksForm>
     {
         @Override
         public ApiResponse execute(ImportTracksForm form, BindException errors) throws Exception
@@ -5059,7 +4865,7 @@ public class SequenceAnalysisController extends SpringActionController
             JSONArray arr = new JSONArray(form.getRecords());
 
             List<PipelineJob> toCreate = new ArrayList<>();
-            for (JSONObject o : arr.toJSONObjectArray())
+            for (JSONObject o : JsonUtil.toJSONObjectList(arr))
             {
                 File file = new File(dirData, o.getString("fileName"));
                 if (!file.exists())
@@ -5121,21 +4927,20 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetSequenceImportDefaultsAction extends ReadOnlyApiAction<Object>
+    public static class GetSequenceImportDefaultsAction extends ReadOnlyApiAction<Object>
     {
         @Override
         public ApiResponse execute(Object form, BindException errors) throws Exception
         {
-            Map<String, Object> resultProperties = new HashMap<>();
             Container target = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
-            resultProperties.putAll(PropertyManager.getProperties(target, CONFIG_PROPERTY_DOMAIN_IMPORT));
+            Map<String, Object> resultProperties = new HashMap<>(PropertyManager.getProperties(target, CONFIG_PROPERTY_DOMAIN_IMPORT));
 
             return new ApiSimpleResponse(resultProperties);
         }
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class SetSequenceImportDefaultsAction extends MutatingApiAction<SetSequenceImportDefaultsForm>
+    public static class SetSequenceImportDefaultsAction extends MutatingApiAction<SetSequenceImportDefaultsForm>
     {
         public static final String INPUT_FILE_TREATMENT = "inputFileTreatment";
 
@@ -5168,7 +4973,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetSamplesFromVcfAction extends ReadOnlyApiAction<OutputFilesForm>
+    public static class GetSamplesFromVcfAction extends ReadOnlyApiAction<OutputFilesForm>
     {
         @Override
         public ApiResponse execute(OutputFilesForm form, BindException errors) throws Exception
@@ -5236,7 +5041,7 @@ public class SequenceAnalysisController extends SpringActionController
     }
 
     @RequiresSiteAdmin
-    public class UpdateExpDataPathAction extends ConfirmAction<UpdateExpDataPathForm>
+    public static class UpdateExpDataPathAction extends ConfirmAction<UpdateExpDataPathForm>
     {
         @Override
         public void validateCommand(UpdateExpDataPathForm form, Errors errors)

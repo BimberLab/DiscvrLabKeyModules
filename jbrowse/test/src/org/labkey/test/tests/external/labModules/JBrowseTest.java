@@ -559,6 +559,8 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForPipelineJobsToComplete(existingPipelineJobs + 1, "Create New Session", false);
 
         beginAt("/project/" + getProjectName() + "/begin.view");
+        _helper.waitForLabToolsToLoad();
+
         _helper.clickNavPanelItemAndWait("JBrowse Sessions:", 1);
         dr = DataRegionTable.DataRegion(getDriver()).find();
         dr.clickRowDetails(0);

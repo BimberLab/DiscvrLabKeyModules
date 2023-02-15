@@ -22,8 +22,8 @@ import org.apache.directory.api.ldap.model.exception.LdapException;
 import org.apache.directory.api.ldap.model.exception.LdapOperationException;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.json.old.JSONArray;
-import org.json.old.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.Marshal;
@@ -665,7 +665,7 @@ public class OpenLdapSyncController extends SpringActionController
 
             if (form.getAllowedDn() != null && form.getAllowedDn().length() > 0)
             {
-                String allowed = StringUtils.join(form.getAllowedDn().toArray(), LdapSettings.DELIM);
+                String allowed = StringUtils.join(form.getAllowedDn().toList(), LdapSettings.DELIM);
                 props.put(LdapSettings.ALLOWED_DN_PROP, allowed);
             }
 

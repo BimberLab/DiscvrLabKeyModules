@@ -68,6 +68,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -317,7 +318,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
 
     public Map<String, HitSet> getAlignmentSummary(File outputLog) throws IOException, PipelineJobException
     {
-        try (CSVWriter writer = outputLog == null ? null : new CSVWriter(new BufferedWriter(new OutputStreamWriter(getLogOutputStream(outputLog), "UTF-8")), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+        try (CSVWriter writer = outputLog == null ? null : new CSVWriter(new BufferedWriter(new OutputStreamWriter(getLogOutputStream(outputLog), StandardCharsets.UTF_8)), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
             //these are stage-1 filters, filtering on the read-pair level
             Map<String, HitSet> totals = doFilterStage1(writer);
@@ -1046,7 +1047,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
 
     public static void processSBTSummary(User u, Container c, AnalysisModel model, File output, File refFasta, Logger log) throws PipelineJobException
     {
-        try (CSVReader reader = new CSVReader(new BufferedReader(new InputStreamReader(new FileInputStream(output), "UTF-8")), '\t', CSVWriter.DEFAULT_QUOTE_CHARACTER))
+        try (CSVReader reader = new CSVReader(new BufferedReader(new InputStreamReader(new FileInputStream(output), StandardCharsets.UTF_8)), '\t', CSVWriter.DEFAULT_QUOTE_CHARACTER))
         {
             try (DbScope.Transaction transaction = ExperimentService.get().ensureTransaction())
             {

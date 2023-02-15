@@ -6,8 +6,8 @@ import htsjdk.variant.variantcontext.VariantContext;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-import org.json.old.JSONArray;
-import org.json.old.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;
@@ -51,6 +51,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class NextCladeHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
@@ -254,14 +255,17 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
 
         ViralSnpUtil.deleteExistingValues(job, analysisId, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, null);
 
-        if (!sample.containsKey("aaSubstitutions"))
+        if (!sample.has("aaSubstitutions"))
         {
             job.getLogger().info("JSON does not contain aaSubstitutions, skipping");
             return;
         }
 
-        List<JSONObject> aaSubstitutions = new ArrayList<>(Arrays.asList(sample.getJSONArray("aaSubstitutions").toJSONObjectArray()));
-        aaSubstitutions.addAll(Arrays.asList(sample.getJSONArray("aaDeletions").toJSONObjectArray()));
+        JSONArray jsonArray = sample.getJSONArray("aaSubstitutions");
+        List<JSONObject> aaSubstitutions = IntStream.range(0,jsonArray.length()).mapToObj(jsonArray::getJSONObject).collect(Collectors.toList());
+
+        JSONArray aaDeletions = sample.getJSONArray("aaDeletions");
+        aaSubstitutions.addAll(IntStream.range(0,aaDeletions.length()).mapToObj(aaDeletions::getJSONObject).toList());
 
         Map<Integer, List<VariantContext>> consensusMap = ViralSnpUtil.readVcfToMap(consensusVCF);
 
@@ -345,7 +349,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             if (vcList.isEmpty())
             {
                 job.getLogger().error("Cannot find matching NT SNP: " + aa.toString());
-                if (aa.containsKey("refContext") && aa.getString("refContext").length() > 4)
+                if (aa.has("refContext") && aa.getString("refContext").length() > 4)
                 {
                     // Skip complex indels with just a logged error, but let the job finish
                     continue;

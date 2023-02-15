@@ -18,7 +18,7 @@ package org.labkey.blast;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import org.json.old.JSONObject;
+import org.json.JSONObject;
 import org.labkey.api.action.AbstractFileUploadAction;
 import org.labkey.api.action.ReadOnlyApiAction;
 import org.labkey.api.action.MutatingApiAction;

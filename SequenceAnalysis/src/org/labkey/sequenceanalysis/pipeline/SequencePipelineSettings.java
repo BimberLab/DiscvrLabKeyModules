@@ -18,8 +18,8 @@ package org.labkey.sequenceanalysis.pipeline;
 import org.apache.commons.beanutils.ConversionException;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
-import org.json.old.JSONArray;
-import org.json.old.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
@@ -27,6 +27,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.settings.AppProps;
+import org.labkey.api.util.JsonUtil;
 import org.labkey.sequenceanalysis.FileGroup;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
@@ -111,7 +112,7 @@ public class SequencePipelineSettings
 
     private FileGroup createFileGroup(JSONObject o, @Nullable SequenceJob job, boolean allowMissingFiles) throws PipelineJobException
     {
-        if (!o.containsKey("files"))
+        if (!o.has("files"))
         {
             throw new PipelineJobException("Malformed file group JSON");
         }
@@ -120,23 +121,21 @@ public class SequencePipelineSettings
         FileGroup fg = new FileGroup();
         fg.name = o.getString("name");
 
-        for (JSONObject json : files.toJSONObjectArray())
+        for (JSONObject json : JsonUtil.toJSONObjectList(files))
         {
             FileGroup.FilePair p = new FileGroup.FilePair();
-            p.platformUnit = StringUtils.trimToNull(json.getString("platformUnit"));
-            p.centerName = StringUtils.trimToNull(json.getString("centerName"));
+            p.platformUnit = StringUtils.trimToNull(json.optString("platformUnit"));
+            p.centerName = StringUtils.trimToNull(json.optString("centerName"));
 
-            if (json.containsKey("file1"))
+            if (json.has("file1"))
             {
                 JSONObject fileJson = json.getJSONObject("file1");
-                File f = resolveFile(fileJson, job, allowMissingFiles);
-                p.file1 = f;
+                p.file1 = resolveFile(fileJson, job, allowMissingFiles);
             }
 
-            if (json.containsKey("file2"))
+            if (json.has("file2"))
             {
-                File f = resolveFile(json.getJSONObject("file2"), job, allowMissingFiles);
-                p.file2 = f;
+                p.file2 = resolveFile(json.getJSONObject("file2"), job, allowMissingFiles);
             }
 
             fg.filePairs.add(p);
@@ -149,12 +148,12 @@ public class SequencePipelineSettings
     {
         SequenceReadsetImpl model = new SequenceReadsetImpl();
 
-        model.setBarcode5(StringUtils.trimToNull(o.getString("barcode5")));
-        model.setBarcode3(StringUtils.trimToNull(o.getString("barcode3")));
-        model.setSampleId(getInt(o.getString("sampleid")));
-        model.setSubjectId(o.getString("subjectid"));
-        model.setComments(o.getString("comments"));
-        if (o.containsKey("sampledate") && o.get("sampledate") != null && StringUtils.trimToNull(o.getString("sampledate")) != null)
+        model.setBarcode5(StringUtils.trimToNull(o.optString("barcode5")));
+        model.setBarcode3(StringUtils.trimToNull(o.optString("barcode3")));
+        model.setSampleId(getInt(o.optString("sampleid")));
+        model.setSubjectId(o.optString("subjectid"));
+        model.setComments(o.optString("comments"));
+        if (o.has("sampledate") && o.get("sampledate") != null && StringUtils.trimToNull(o.getString("sampledate")) != null)
         {
             for (String fmt : Arrays.asList("yyyy-MM-dd", "yyyy-MM-dd'T'HH:mm:ss"))
             {
@@ -184,21 +183,23 @@ public class SequencePipelineSettings
                 }
             }
         }
-        model.setPlatform(o.getString("platform"));
-        model.setApplication(o.getString("application"));
-        model.setChemistry(o.getString("chemistry"));
-        model.setConcentration(o.get("concentration") == null ? null : o.getDouble("concentration"));
-        model.setFragmentSize(o.get("fragmentSize") == null ? null : o.getDouble("fragmentSize"));
-        model.setSampleType(o.getString("sampletype"));
-        model.setLibraryType(o.getString("librarytype"));
-        model.setName(o.getString("readsetname"));
-        if (StringUtils.trimToNull(o.getString("readset")) != null)
+        model.setPlatform(o.optString("platform"));
+        model.setApplication(o.optString("application"));
+        model.setChemistry(o.optString("chemistry"));
+        model.setConcentration(!o.has("concentration") || o.isNull("concentration") ? null : o.getDouble("concentration"));
+        model.setFragmentSize(!o.has("fragmentSize") || o.isNull("fragmentSize") ? null : o.getDouble("fragmentSize"));
+        model.setSampleType(o.optString("sampletype"));
+        model.setLibraryType(o.optString("librarytype"));
+        model.setName(o.optString("readsetname"));
+        if (StringUtils.trimToNull(o.optString("readset")) != null)
             model.setRowId(getInt(o.getString("readset")));
 
-        if (StringUtils.trimToNull(o.getString("instrument_run_id")) != null)
+        if (StringUtils.trimToNull(o.optString("instrument_run_id")) != null)
+        {
             model.setInstrumentRunId(o.getInt("instrument_run_id"));
+        }
 
-        if (o.containsKey("fileGroupId"))
+        if (o.has("fileGroupId"))
         {
             model.setFileSetName(o.getString("fileGroupId"));
         }
@@ -208,7 +209,7 @@ public class SequencePipelineSettings
 
     private File resolveFile(JSONObject json, @Nullable SequenceJob job, boolean allowMissingFiles)
     {
-        if (json.containsKey("dataId"))
+        if (json.has("dataId"))
         {
             Integer dataId = ConvertHelper.convert(json.get("dataId"), Integer.class);
             if (dataId != null)
@@ -234,7 +235,7 @@ public class SequencePipelineSettings
             }
         }
 
-        if (json.containsKey("fileName"))
+        if (json.has("fileName"))
         {
             //resolve based on inputs
             if (job != null)

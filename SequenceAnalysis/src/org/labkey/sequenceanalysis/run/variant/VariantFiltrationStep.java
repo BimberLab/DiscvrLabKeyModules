@@ -1,8 +1,10 @@
 package org.labkey.sequenceanalysis.run.variant;
 
 import htsjdk.samtools.util.Interval;
-import org.json.old.JSONArray;
-import org.json.old.JSONObject;
+import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
@@ -67,26 +69,33 @@ public class VariantFiltrationStep extends AbstractCommandPipelineStep<VariantFi
         params.addAll(getClientCommandArgs());
 
         //filters
-        String filterText = getProvider().getParameterByName("filters").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null);
+        String filterText = StringUtils.trimToNull(getProvider().getParameterByName("filters").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null));
         if (filterText != null)
         {
-            JSONArray filterArr = new JSONArray(filterText);
-            for (int i = 0; i < filterArr.length(); i++)
+            try
             {
-                JSONArray arr = filterArr.getJSONArray(i);
-                if (arr.length() < 2)
+                JSONArray filterArr = new JSONArray(filterText);
+                for (int i = 0; i < filterArr.length(); i++)
                 {
-                    throw new PipelineJobException("Improper filter: " + filterArr.getString(i));
-                }
+                    JSONArray arr = filterArr.getJSONArray(i);
+                    if (arr.length() < 2)
+                    {
+                        throw new PipelineJobException("Improper filter: " + filterArr.getString(i));
+                    }
 
-                params.add("--filter-name");
-                params.add(arr.getString(0));
-                params.add("-filter");
-                params.add(arr.getString(1));
-                //if (arr.length() > 2 && arr.optBoolean(2))
-                //{
-                //    params.add("-invfilter");
-                //}
+                    params.add("--filter-name");
+                    params.add(arr.getString(0));
+                    params.add("-filter");
+                    params.add(arr.getString(1));
+                    //if (arr.length() > 2 && arr.optBoolean(2))
+                    //{
+                    //    params.add("-invfilter");
+                    //}
+                }
+            }
+            catch (JSONException e)
+            {
+                throw new IllegalArgumentException("Invalid filter: " + filterText, e);
             }
         }
 

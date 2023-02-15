@@ -1,6 +1,6 @@
 package org.labkey.sequenceanalysis.run.reference;
 
-import org.json.old.JSONObject;
+import org.json.JSONObject;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ConvertHelper;

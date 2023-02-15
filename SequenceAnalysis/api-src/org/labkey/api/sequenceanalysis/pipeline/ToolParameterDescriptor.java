@@ -18,7 +18,7 @@ package org.labkey.api.sequenceanalysis.pipeline;
 import org.apache.commons.beanutils.ConversionException;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
-import org.json.old.JSONObject;
+import org.json.JSONObject;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
@@ -151,21 +151,21 @@ public class ToolParameterDescriptor
         List<Object> ret = new ArrayList<>();
         String prefix = getJsonParamName(provider, 0);
 
-        Map jobParams;
+        JSONObject jobParams;
         if (job instanceof HasJobParams)
         {
             jobParams = ((HasJobParams)job).getParameterJson();
         }
         else
         {
-            jobParams = job.getParameters();
+            jobParams = new JSONObject(job.getParameters());
         }
 
         for (Object key : jobParams.keySet())
         {
             if (key.toString().startsWith(prefix))
             {
-                ret.add(jobParams.get(key));
+                ret.add(jobParams.get(key.toString()));
             }
         }
 
@@ -187,22 +187,25 @@ public class ToolParameterDescriptor
         return this.extractValue(job, provider, stepIdx, clazz, null);
     }
 
-    public <ParamType> ParamType extractValue(PipelineJob job, PipelineStepProvider provider, int stepIdx, Class<ParamType> clazz, @Nullable ParamType defaultValue)
+    public <ParamType> ParamType extractValue(PipelineJob job, PipelineStepProvider<?> provider, int stepIdx, Class<ParamType> clazz, @Nullable ParamType defaultValue)
     {
         String key = getJsonParamName(provider, stepIdx);
-        Map jobParams;
+        JSONObject jobParams;
         if (job instanceof HasJobParams)
         {
             jobParams = ((HasJobParams)job).getParameterJson();
         }
         else
         {
-            jobParams = job.getParameters();
+            jobParams = new JSONObject(job.getParameters());
         }
 
-        if (jobParams.containsKey(key))
+        if (jobParams.has(key))
         {
             Object val = jobParams.get(key);
+            if (val == JSONObject.NULL) {
+                val = null;
+            }
 
             return ConvertHelper.convert(val, clazz);
         }

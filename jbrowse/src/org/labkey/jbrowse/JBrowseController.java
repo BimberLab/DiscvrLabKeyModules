@@ -21,11 +21,10 @@ import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.json.old.JSONArray;
-import org.json.old.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.MutatingApiAction;
@@ -38,10 +37,7 @@ import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbScope;
-import org.labkey.api.data.Results;
-import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.StopIteratingException;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
@@ -67,6 +63,7 @@ import org.labkey.api.settings.LookAndFeelProperties;
 import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
+import org.labkey.api.util.logging.LogHelper;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.jbrowse.model.JBrowseSession;
@@ -80,7 +77,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -94,7 +90,7 @@ import java.util.regex.Pattern;
 
 public class JBrowseController extends SpringActionController
 {
-    private static final Logger _log = LogManager.getLogger(JBrowseController.class);
+    private static final Logger _log = LogHelper.getLogger(JBrowseController.class, "JBrowse Module Controller");
 
     private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(JBrowseController.class);
     public static final String NAME = "jbrowse";
@@ -208,13 +204,7 @@ public class JBrowseController extends SpringActionController
             if (_trackIds == null)
                 return Collections.emptyList();
 
-            List<Integer> ret = new ArrayList<>();
-            for (Integer o : _trackIds)
-            {
-                ret.add(o);
-            }
-
-            return ret;
+            return new ArrayList<>(Arrays.asList(_trackIds));
         }
 
         public void setTrackIds(Integer[] trackIds)
@@ -238,13 +228,7 @@ public class JBrowseController extends SpringActionController
             if (_outputFileIds == null)
                 return Collections.emptyList();
 
-            List<Integer> ret = new ArrayList<>();
-            for (Integer o : _outputFileIds)
-            {
-                ret.add(o);
-            }
-
-            return ret;
+            return new ArrayList<>(Arrays.asList(_outputFileIds));
         }
 
         public void setOutputFileIds(Integer[] outputFileIds)
@@ -254,7 +238,7 @@ public class JBrowseController extends SpringActionController
 
         public Boolean getIsTemporary()
         {
-            return _isTemporary == null ? false : _isTemporary;
+            return _isTemporary != null && _isTemporary;
         }
 
         public void setIsTemporary(Boolean isTemporary)
@@ -355,7 +339,7 @@ public class JBrowseController extends SpringActionController
         private String _title;
 
         @Override
-        public ModelAndView getView(BrowserForm form, BindException errors) throws Exception
+        public ModelAndView getView(BrowserForm form, BindException errors)
         {
             String guid = form.getEffectiveSessionId();
             JBrowseSession db = isValidUUID(guid) ? new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), form.getEffectiveSessionId()), null).getObject(JBrowseSession.class) : null;
@@ -430,19 +414,25 @@ public class JBrowseController extends SpringActionController
         @Override
         public ApiResponse execute(SimpleApiJsonForm form, BindException errors)
         {
-            JSONArray jsonFiles = form.getJsonObject().getJSONArray("jsonFiles");
+            JSONArray jsonFiles = form.getNewJsonObject().getJSONArray("jsonFiles");
             Set<String> objectIds = new HashSet<>();
-            for (Object o : jsonFiles.toArray())
+            for (Object o : jsonFiles.toList())
             {
                 objectIds.add(o.toString());
             }
 
-            JSONObject attributes = form.getJsonObject().getJSONObject("attributes");
+            JSONObject attributes = form.getNewJsonObject().getJSONObject("attributes");
 
             final Map<Container, List<Map<String, Object>>> rows = new HashMap<>();
             TableSelector ts = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES), PageFlowUtil.set("objectid", "container", "trackJson"), new SimpleFilter(FieldKey.fromString("objectid"), objectIds, CompareType.IN), null);
             ts.forEachResults(rs -> {
                 Container c = ContainerManager.getForId(rs.getString(FieldKey.fromString("container")));
+                if (c == null)
+                {
+                    // Should never occur unless the DB has bad values:
+                    throw new IllegalStateException("Unknown container: " + rs.getString(FieldKey.fromString("container")));
+                }
+
                 if (!c.hasPermission(getUser(), UpdatePermission.class))
                 {
                     throw new UnauthorizedException("User does not have permission to update records in the folder: " + c.getPath());
@@ -451,13 +441,14 @@ public class JBrowseController extends SpringActionController
                 JSONObject json = rs.getString("trackJson") == null ? new JSONObject() : new JSONObject(rs.getString("trackJson"));
                 for (String key : attributes.keySet())
                 {
-                    if (StringUtils.trimToNull(attributes.getString(key)) == null)
+                    String val = attributes.get(key) == null ? null : StringUtils.trimToNull(String.valueOf(attributes.get(key)));
+                    if (val == null)
                     {
                         json.remove(key);
                     }
                     else
                     {
-                        json.put(key, attributes.get(key));
+                        json.put(key, val);
                     }
                 }
 
@@ -502,7 +493,7 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetGenotypesAction extends ReadOnlyApiAction<GetGenotypesForm>
+    public static class GetGenotypesAction extends ReadOnlyApiAction<GetGenotypesForm>
     {
         private List<JsonFile> getJsonFiles(GetGenotypesForm form)
         {
@@ -690,7 +681,7 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetSessionAction extends ReadOnlyApiAction<GetSessionForm>
+    public static class GetSessionAction extends ReadOnlyApiAction<GetSessionForm>
     {
         private static final String DEMO = "demo";
         private static final String MGAP = "mGAP";

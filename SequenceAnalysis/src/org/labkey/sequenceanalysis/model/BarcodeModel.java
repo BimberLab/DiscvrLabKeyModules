@@ -1,6 +1,6 @@
 package org.labkey.sequenceanalysis.model;
 
-import org.json.old.JSONArray;
+import org.json.JSONArray;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableSelector;

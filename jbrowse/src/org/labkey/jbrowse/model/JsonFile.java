@@ -11,9 +11,9 @@ import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.json.old.JSONArray;
-import org.json.old.JSONException;
-import org.json.old.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
@@ -328,12 +328,12 @@ public class JsonFile
         if (getTrackJson() != null)
         {
             JSONObject json = getExtraTrackConfig();
-            if (json.containsKey("metadata"))
+            if (json.has("metadata"))
             {
                 ret.put("metadata", json.getJSONObject("metadata"));
             }
 
-            if (json.containsKey("category"))
+            if (json.has("category"))
             {
                 ret.put("category", new JSONArray(){{
                     put(json.getString("category"));
@@ -542,7 +542,7 @@ public class JsonFile
                 }});
 
                 JSONObject json = getExtraTrackConfig();
-                if (json != null && json.containsKey("additionalFeatureMsg"))
+                if (json != null && json.has("additionalFeatureMsg"))
                 {
                     getJSONObject("renderer").put("message", json.getString("message"));
                 }
@@ -955,6 +955,18 @@ public class JsonFile
         return luceneDir.exists();
     }
 
+    public @NotNull List<String> getInfoFieldsToIndex(@Nullable String... defaults)
+    {
+        JSONObject config = getExtraTrackConfig();
+        String rawFields = config == null ? null : StringUtils.trimToNull(config.optString("infoFieldsForFullTextSearch"));
+        if (rawFields == null)
+        {
+            return defaults == null ? Collections.emptyList() : Arrays.asList(defaults);
+        }
+
+        return Arrays.asList(rawFields.split(","));
+    }
+
     private void prepareLuceneIndex(Logger log) throws PipelineJobException
     {
         log.debug("Generating VCF full text index for file: " + getExpData().getFile().getName());
@@ -975,36 +987,16 @@ public class JsonFile
         args.add("-O");
         args.add(getExpectedLocationOfLuceneIndex(false).getPath());
 
-        JSONObject config = getExtraTrackConfig();
-        String infoFieldsForFullTextSearch = config == null ? null : StringUtils.trimToNull(config.optString("infoFieldsForFullTextSearch"));
-        if (infoFieldsForFullTextSearch == null)
+        List<String> infoFieldsForFullTextSearch = getInfoFieldsToIndex("AF");
+        for (String field : infoFieldsForFullTextSearch)
         {
             args.add("-IF");
-            args.add("AF");
-        }
-        else
-        {
-            for (String field : infoFieldsForFullTextSearch.split(","))
-            {
-                args.add("-IF");
-                args.add(field);
-            }
+            args.add(field);
         }
 
-        String annotationsForFullTextSearch = config == null ? null : StringUtils.trimToNull(config.optString("annotationsForFullTextSearch"));
-        if (annotationsForFullTextSearch == null)
-        {
-            args.add("-AN");
-            args.add("SampleList");
-        }
-        else
-        {
-            for (String field : annotationsForFullTextSearch.split(","))
-            {
-                args.add("-AN");
-                args.add(field);
-            }
-        }
+        // Always include this:
+        args.add("-AN");
+        args.add("SampleList");
 
         runner.execute(args);
     }

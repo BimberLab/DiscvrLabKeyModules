@@ -7,7 +7,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.json.old.JSONObject;
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.assay.AssayFileWriter;
@@ -257,7 +257,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
 
         for (String key : json.keySet())
         {
-            ret.put(key, json.getString(key));
+            ret.put(key, json.opt(key) == null ? null : String.valueOf(json.get(key)));
         }
 
         return ret;

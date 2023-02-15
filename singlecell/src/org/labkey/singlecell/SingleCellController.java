@@ -20,7 +20,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.json.old.JSONArray;
+import org.json.JSONArray;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ApiUsageException;
 import org.labkey.api.action.ExportAction;
@@ -53,6 +53,7 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.JsonUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.util.URLHelper;
@@ -350,12 +351,12 @@ public class SingleCellController extends SpringActionController
             throw new ApiUsageException("Missing property: " + propName);
         }
 
-        JSONArray arr = form.getJsonObject().getJSONArray(propName);
+        JSONArray arr = form.getNewJsonObject().getJSONArray(propName);
 
         List<Map<String, Object>> ret = new ArrayList<>();
-        Arrays.stream(arr.toJSONObjectArray()).forEach(m -> {
+        JsonUtil.toJSONObjectList(arr).forEach(m -> {
             Map<String, Object> map = new CaseInsensitiveHashMap<>();
-            map.putAll(m);
+            map.putAll(m.toMap());
 
             if (map.containsKey("workbook"))
             {

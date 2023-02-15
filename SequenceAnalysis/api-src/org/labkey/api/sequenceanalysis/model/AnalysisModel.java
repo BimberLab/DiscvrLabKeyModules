@@ -15,7 +15,7 @@
  */
 package org.labkey.api.sequenceanalysis.model;
 
-import org.json.old.JSONObject;
+import org.json.JSONObject;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.security.User;

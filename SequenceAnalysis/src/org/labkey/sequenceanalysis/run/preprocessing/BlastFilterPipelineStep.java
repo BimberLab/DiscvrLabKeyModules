@@ -2,7 +2,7 @@ package org.labkey.sequenceanalysis.run.preprocessing;
 
 import au.com.bytecode.opencsv.CSVReader;
 import org.jetbrains.annotations.Nullable;
-import org.json.old.JSONObject;
+import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.ConvertHelper;

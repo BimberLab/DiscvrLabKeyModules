@@ -26,7 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.json.old.JSONArray;
+import org.json.JSONArray;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
@@ -1042,7 +1042,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
         JSONArray array = new JSONArray(json);
         List<String> ret = new ArrayList<>();
-        for (Object o : array.toArray())
+        for (Object o : array.toList())
         {
             ret.add((String)o);
         }

@@ -11,8 +11,8 @@ import htsjdk.variant.vcf.VCFConstants;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLine;
 import htsjdk.variant.vcf.VCFStandardHeaderLines;
-import org.json.old.JSONArray;
-import org.json.old.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -199,7 +199,7 @@ public class OutputIntegrationTests
             File dictFile = new File(data.getFile().getParent(), FileUtil.getBaseName(data.getFile().getName()) + ".dict");
             if (dictFile.exists())
             {
-                SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(dictFile);
+                SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(dictFile.toPath());
                 builder.setReferenceDictionary(dict);
                 header.setSequenceDictionary(dict);
             }

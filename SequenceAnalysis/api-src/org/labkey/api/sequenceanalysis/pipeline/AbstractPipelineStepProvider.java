@@ -16,12 +16,11 @@
 package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.jetbrains.annotations.Nullable;
-import org.json.old.JSONArray;
-import org.json.old.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.labkey.api.view.template.ClientDependency;
 
 import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -40,8 +39,7 @@ abstract public class AbstractPipelineStepProvider<StepType extends PipelineStep
     private String _websiteURL;
     private String _description;
     private LinkedHashSet<String> _clientDependencyPaths;
-    private List<ToolParameterDescriptor> _parameters;
-    List<PipelineStepProvider> _prerequisites = new ArrayList<>();
+    private final List<ToolParameterDescriptor> _parameters;
 
     public AbstractPipelineStepProvider(String name, String label, @Nullable String toolName, String description, @Nullable List<ToolParameterDescriptor> parameters, @Nullable Collection<String> clientDependencyPaths, @Nullable String websiteURL)
     {
@@ -76,20 +74,6 @@ abstract public class AbstractPipelineStepProvider<StepType extends PipelineStep
     public String getDescription()
     {
         return _description;
-    }
-
-    @Override
-    public List<PipelineStepProvider> getPrerequisites()
-    {
-        return _prerequisites;
-    }
-
-    protected void addPrerequisites(PipelineStepProvider... providers)
-    {
-        for (PipelineStepProvider p : providers)
-        {
-            _prerequisites.add(p);
-        }
     }
 
     @Override
@@ -149,12 +133,7 @@ abstract public class AbstractPipelineStepProvider<StepType extends PipelineStep
             parameters.put(td.toJSON());
         }
         json.put("parameters", parameters);
-        JSONArray prerequisites = new JSONArray();
-        for (PipelineStepProvider p : getPrerequisites())
-        {
-            //prerequisites.put(td.toJSON());
-        }
-        json.put("prerequisites", prerequisites);
+
         return json;
     }
 

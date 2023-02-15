@@ -754,7 +754,7 @@ public class SequenceAnalysisManager
                     }
 
                     Map<String, Object> fastaRecord = i.next();
-                    CaseInsensitiveHashMap map = new CaseInsensitiveHashMap();
+                    CaseInsensitiveHashMap<Object> map = new CaseInsensitiveHashMap<>();
                     if (params != null)
                         map.putAll(params);
 
@@ -837,7 +837,7 @@ public class SequenceAnalysisManager
         chainFile.save(u);
 
         //create row
-        CaseInsensitiveHashMap map = new CaseInsensitiveHashMap();
+        CaseInsensitiveHashMap<Object> map = new CaseInsensitiveHashMap<>();
         map.put("genomeId1", genomeId1);
         map.put("genomeId2", genomeId2);
         map.put("source", source);

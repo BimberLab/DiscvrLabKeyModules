@@ -4,7 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
-import org.json.old.JSONObject;
+import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.Table;
@@ -105,7 +105,7 @@ public class BlastJob implements Serializable
         if (params == null)
             _params = null;
 
-        _params = new HashMap<>(new JSONObject(params));
+        _params = new HashMap<>(new JSONObject(params).toMap());
     }
 
     public void addParam(String name, String value)

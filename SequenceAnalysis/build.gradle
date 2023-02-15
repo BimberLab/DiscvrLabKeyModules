@@ -45,7 +45,9 @@ dependencies {
     )
 
     BuildUtils.addLabKeyDependency(project: project, config: "implementation", depProjectPath: ":server:modules:LabDevKitModules:laboratory", depProjectConfig: "apiJarFile")
+    BuildUtils.addLabKeyDependency(project: project, config: "apiImplementation", depProjectPath: ":server:modules:LabDevKitModules:laboratory", depProjectConfig: "apiJarFile")
     BuildUtils.addLabKeyDependency(project: project, config: "implementation", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "apiJarFile")
+    BuildUtils.addLabKeyDependency(project: project, config: "apiImplementation", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "apiJarFile")
     BuildUtils.addExternalDependency(
             project,
             new ExternalDependency(

@@ -32,6 +32,7 @@ public class BlastUserSchema extends SimpleUserSchema
 
         DefaultSchema.registerProvider(BLASTSchema.NAME, new DefaultSchema.SchemaProvider(m)
         {
+            @Override
             public QuerySchema createSchema(final DefaultSchema schema, Module module)
             {
                 return new BlastUserSchema(schema.getUser(), schema.getContainer(), dbSchema);
@@ -44,7 +45,7 @@ public class BlastUserSchema extends SimpleUserSchema
     protected TableInfo createWrappedTable(String name, @NotNull TableInfo sourceTable, ContainerFilter cf)
     {
         if (BLASTSchema.TABLE_DATABASES.equalsIgnoreCase(name))
-            return new SharedDataTable(this, sourceTable).init();
+            return new SharedDataTable<>(this, sourceTable).init();
         else
             return super.createWrappedTable(name, sourceTable, cf);
     }

@@ -2,8 +2,8 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import org.apache.commons.beanutils.ConversionException;
 import org.apache.commons.lang3.StringUtils;
-import org.json.old.JSONArray;
-import org.json.old.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.ConvertHelper;
@@ -94,12 +94,12 @@ public class ReadsetImportJob extends SequenceJob
             params.keySet().forEach(x -> {
                 if (x.startsWith("readset_"))
                 {
-                    readsetKeys.put(x.split("_")[1], new JSONObject(params.getString(x)));
+                    readsetKeys.put(x.split("_")[1], new JSONObject(params.get(x).toString()));
                     keysToRemove.add(x);
                 }
                 else if (x.startsWith("fileGroup_"))
                 {
-                    JSONObject json = new JSONObject(params.getString(x));
+                    JSONObject json = new JSONObject(params.get(x).toString());
                     fileGroupKeys.put(json.getString("name"), json);
                     keysToRemove.add(x);
                 }
@@ -139,18 +139,17 @@ public class ReadsetImportJob extends SequenceJob
                 }
 
                 List<File> inputFilesSubset = new ArrayList<>();
-                JSONObject[] files = new JSONArray(fileGroup.getString("files")).toJSONObjectArray();
-                for (int i = 0; i < files.length; i++)
+                JSONArray files = fileGroup.getJSONArray("files");
+                for (int i = 0; i < files.length(); i++)
                 {
-                    JSONObject file1 = files[i].getJSONObject("file1");
+                    JSONObject file1 = files.getJSONObject(i).getJSONObject("file1");
                     inputFilesSubset.add(findFile(file1, inputFiles));
 
-                    if (files[i].get("file2") != null)
+                    if (files.getJSONObject(i).has("file2") && !files.getJSONObject(i).isNull("file2"))
                     {
-                        JSONObject file2 = files[i].getJSONObject("file2");
+                        JSONObject file2 = files.getJSONObject(i).getJSONObject("file2");
                         inputFilesSubset.add(findFile(file2, inputFiles));
                     }
-
                 }
 
                 if (inputFilesSubset.isEmpty())
@@ -169,7 +168,7 @@ public class ReadsetImportJob extends SequenceJob
 
     private static File findFile(JSONObject file, List<File> inputFiles)
     {
-        if (file.get("dataId") != null && StringUtils.trimToNull(file.getString("dataId")) != null)
+        if (!file.isNull("dataId") && StringUtils.trimToNull(file.get("dataId").toString()) != null)
         {
             try
             {
@@ -182,12 +181,12 @@ public class ReadsetImportJob extends SequenceJob
 
                 return d.getFile();
             }
-            catch (ConversionException e)
+            catch (ConversionException | NullPointerException e)
             {
-                throw new IllegalArgumentException("dataId is not an integer: " + file.get("dataId"));
+                throw new IllegalArgumentException("dataId is not an integer: " + "[" + file.get("dataId") + "]");
             }
         }
-        else if (file.get("fileName") != null && StringUtils.trimToNull(file.getString("fileName")) != null)
+        else if (!file.isNull("fileName") && StringUtils.trimToNull(file.getString("fileName")) != null)
         {
             List<File> hits = new ArrayList<>();
             inputFiles.forEach(x -> {

@@ -108,12 +108,6 @@ Ext4.define('JBrowse.window.ModifyJsonConfigWindow', {
                             this.addAttribute('infoFieldsForFullTextSearch', null, 'STRING');
                         }
                     },{
-                        text: 'Annotations For Full Text Search',
-                        scope: this,
-                        handler: function (gridBtn) {
-                            this.addAttribute('annotationsForFullTextSearch', null, 'STRING');
-                        }
-                    },{
                         text: 'Other',
                         scope: this,
                         handler: function (gridBtn) {

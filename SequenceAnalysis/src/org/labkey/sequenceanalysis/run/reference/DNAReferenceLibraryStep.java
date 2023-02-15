@@ -1,9 +1,9 @@
 package org.labkey.sequenceanalysis.run.reference;
 
 import org.apache.commons.lang3.StringUtils;
-import org.json.old.JSONArray;
-import org.json.old.JSONException;
-import org.json.old.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
@@ -217,10 +217,7 @@ public class DNAReferenceLibraryStep extends AbstractPipelineStep implements Ref
             try
             {
                 JSONArray arr = new JSONArray(val);
-                for (Object v : arr.toArray())
-                {
-                    vals.add(v);
-                }
+                vals.addAll(arr.toList());
             }
             catch (JSONException e)
             {

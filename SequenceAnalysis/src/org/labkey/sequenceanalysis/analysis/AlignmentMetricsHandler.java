@@ -10,7 +10,7 @@ import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.SamRecordIntervalIteratorFactory;
 import org.apache.commons.lang3.StringUtils;
-import org.json.old.JSONObject;
+import org.json.JSONObject;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -83,7 +83,7 @@ public class AlignmentMetricsHandler extends AbstractParameterizedOutputHandler<
             RecordedAction action = new RecordedAction(getName());
             action.setStartTime(new Date());
 
-            Integer windowSize = params.containsKey("windowSize") && params.get("windowSize") != null ? Integer.valueOf(params.getInt("windowSize")) : null;
+            Integer windowSize = params.has("windowSize") && params.get("windowSize") != null ? Integer.valueOf(params.getInt("windowSize")) : null;
             if (windowSize == null)
             {
                 job.error("No window size provided, aborting");

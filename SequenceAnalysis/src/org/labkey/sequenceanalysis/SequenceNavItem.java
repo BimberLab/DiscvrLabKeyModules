@@ -15,7 +15,7 @@
  */
 package org.labkey.sequenceanalysis;
 
-import org.json.old.JSONObject;
+import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.laboratory.AbstractImportingNavItem;
 import org.labkey.api.laboratory.DataProvider;

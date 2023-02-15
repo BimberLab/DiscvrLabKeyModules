@@ -1,6 +1,6 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
-import org.json.old.JSONObject;
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.pipeline.PipelineJobException;

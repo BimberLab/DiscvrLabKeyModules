@@ -1,7 +1,7 @@
 package org.labkey.sequenceanalysis.analysis;
 
 import org.apache.commons.lang3.StringUtils;
-import org.json.old.JSONObject;
+import org.json.JSONObject;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -87,7 +87,7 @@ public class RnaSeqcHandler extends AbstractParameterizedOutputHandler<SequenceO
         @Override
         public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            if (!ctx.getParams().containsKey("name"))
+            if (!ctx.getParams().has("name"))
             {
                 throw new PipelineJobException("Must provide the name of the output");
             }
