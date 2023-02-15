@@ -955,6 +955,18 @@ public class JsonFile
         return luceneDir.exists();
     }
 
+    public @NotNull List<String> getInfoFieldsToIndex(@Nullable String... defaults)
+    {
+        JSONObject config = getExtraTrackConfig();
+        String rawFields = config == null ? null : StringUtils.trimToNull(config.optString("infoFieldsForFullTextSearch"));
+        if (rawFields == null)
+        {
+            return defaults == null ? Collections.emptyList() : Arrays.asList(defaults);
+        }
+
+        return Arrays.asList(rawFields.split(","));
+    }
+
     private void prepareLuceneIndex(Logger log) throws PipelineJobException
     {
         log.debug("Generating VCF full text index for file: " + getExpData().getFile().getName());
@@ -975,36 +987,16 @@ public class JsonFile
         args.add("-O");
         args.add(getExpectedLocationOfLuceneIndex(false).getPath());
 
-        JSONObject config = getExtraTrackConfig();
-        String infoFieldsForFullTextSearch = config == null ? null : StringUtils.trimToNull(config.optString("infoFieldsForFullTextSearch"));
-        if (infoFieldsForFullTextSearch == null)
+        List<String> infoFieldsForFullTextSearch = getInfoFieldsToIndex("AF");
+        for (String field : infoFieldsForFullTextSearch)
         {
             args.add("-IF");
-            args.add("AF");
-        }
-        else
-        {
-            for (String field : infoFieldsForFullTextSearch.split(","))
-            {
-                args.add("-IF");
-                args.add(field);
-            }
+            args.add(field);
         }
 
-        String annotationsForFullTextSearch = config == null ? null : StringUtils.trimToNull(config.optString("annotationsForFullTextSearch"));
-        if (annotationsForFullTextSearch == null)
-        {
-            args.add("-AN");
-            args.add("SampleList");
-        }
-        else
-        {
-            for (String field : annotationsForFullTextSearch.split(","))
-            {
-                args.add("-AN");
-                args.add(field);
-            }
-        }
+        // Always include this:
+        args.add("-AN");
+        args.add("SampleList");
 
         runner.execute(args);
     }
