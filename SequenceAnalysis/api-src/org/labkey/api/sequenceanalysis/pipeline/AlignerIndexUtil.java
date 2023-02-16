@@ -78,7 +78,7 @@ public class AlignerIndexUtil
                 File lockFile = new File(webserverIndexDir.getPath() + ".copyLock");
                 if (lockFile.exists())
                 {
-                    ctx.getLogger().error("Another job is actively saving this cached index.  Will not re-created, but if this job tries to use it before copy is complete this might cause issues.");
+                    ctx.getLogger().error("Another job is actively saving this cached index.  This job will skip that step; however, if this job tries to start alignment and use the index before copy is complete this might cause issues.");
                 }
 
                 hasCachedIndex = true;
