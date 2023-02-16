@@ -47,7 +47,6 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
         @Override
         public boolean isParticipant(PipelineJob job)
         {
-
             if (!SequenceTaskHelper.isAlignmentUsed(job))
             {
                 return false;
@@ -55,14 +54,14 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
 
             try
             {
-                SequenceTaskHelper taskHelper = new SequenceTaskHelper((SequenceAlignmentJob)job, job.getLogFile().getParentFile());
-                AlignmentStep alignmentStep = taskHelper.getSingleStep(AlignmentStep.class).create(taskHelper);
-
                 if (!(job instanceof SequenceAlignmentJob))
                 {
                     job.getLogger().error("Job is not a SequenceAlignmentJob");
                     return true;
                 }
+
+                SequenceTaskHelper taskHelper = new SequenceTaskHelper((SequenceAlignmentJob)job, job.getLogFile().getParentFile());
+                AlignmentStep alignmentStep = taskHelper.getSingleStep(AlignmentStep.class).create(taskHelper);
 
                 ReferenceGenome referenceGenome = ((SequenceAlignmentJob)job).getTargetGenome();
                 if (referenceGenome == null)

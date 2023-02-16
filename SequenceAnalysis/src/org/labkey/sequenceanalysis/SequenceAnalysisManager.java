@@ -717,7 +717,7 @@ public class SequenceAnalysisManager
         try
         {
             PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
-            ReferenceLibraryPipelineJob job = new ReferenceLibraryPipelineJob(c, u, root, name, assemblyId, description, libraryMembers, null, skipCacheIndexes, skipTriggers, unplacedContigPrefixes, extraTriggers);
+            ReferenceLibraryPipelineJob job = new ReferenceLibraryPipelineJob(c, u, root, name, assemblyId, description, libraryMembers, null, skipCacheIndexes, skipTriggers, unplacedContigPrefixes, extraTriggers, false);
             PipelineService.get().queueJob(job);
 
             return job;

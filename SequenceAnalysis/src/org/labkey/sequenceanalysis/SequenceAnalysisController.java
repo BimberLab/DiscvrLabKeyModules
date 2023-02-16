@@ -3310,7 +3310,7 @@ public class SequenceAnalysisController extends SpringActionController
                         throw new PipelineValidationException("Insufficient permissions to update reference genome: " + libraryId);
                     }
 
-                    PipelineService.get().queueJob(ReferenceLibraryPipelineJob.recreate(c, getUser(), root, libraryId, form.isSkipCacheIndexes(), false));
+                    PipelineService.get().queueJob(ReferenceLibraryPipelineJob.recreate(c, getUser(), root, libraryId, form.isSkipCacheIndexes(), false, form.isSkipFastaRecreate()));
                 }
 
                 return new ApiSimpleResponse("success", true);
@@ -3327,6 +3327,7 @@ public class SequenceAnalysisController extends SpringActionController
     {
         private int[] _libraryIds;
         private boolean _skipCacheIndexes = false;
+        private boolean _skipFastaRecreate = false;
 
         public int[] getLibraryIds()
         {
@@ -3346,6 +3347,16 @@ public class SequenceAnalysisController extends SpringActionController
         public void setSkipCacheIndexes(boolean skipCacheIndexes)
         {
             _skipCacheIndexes = skipCacheIndexes;
+        }
+
+        public boolean isSkipFastaRecreate()
+        {
+            return _skipFastaRecreate;
+        }
+
+        public void setSkipFastaRecreate(boolean skipFastaRecreate)
+        {
+            _skipFastaRecreate = skipFastaRecreate;
         }
     }
 
