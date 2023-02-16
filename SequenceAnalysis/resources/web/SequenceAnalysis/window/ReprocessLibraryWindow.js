@@ -51,7 +51,7 @@ Ext4.define('SequenceAnalysis.window.ReprocessLibraryWindow', {
     onSubmit: function(){
         Ext4.Msg.wait('Saving...');
 
-        var skipFastaRecreate = !this.down('#alignerIndexesOnly').getValue();
+        var skipFastaRecreate = !!this.down('#alignerIndexesOnly').getValue();
 
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'recreateReferenceLibrary'),

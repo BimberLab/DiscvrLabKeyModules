@@ -39,6 +39,7 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.singlecell.SingleCellSchema;
 
+import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -165,20 +166,25 @@ public class NimbleHelper
 
     public void doNimbleAlign(File bam, PipelineStepOutput output, Readset rs, String basename) throws UnsupportedOperationException, PipelineJobException
     {
-        for (NimbleGenome genome : getGenomes())
-        {
-            getPipelineCtx().getJob().setStatus(PipelineJob.TaskStatus.running, "Running Nimble for: " + genome.genomeId);
+        getPipelineCtx().getJob().setStatus(PipelineJob.TaskStatus.running, "Running Nimble Align");
+        List<NimbleGenome> genomes = getGenomes();
+        List<File> jsons = new ArrayList<>();
 
+        for (NimbleGenome genome : genomes)
+        {
             File genomeCsv = getGenomeCsv(genome.getGenomeId());
             File genomeFasta = getGenomeFasta(genome.getGenomeId());
-
             File refJson = prepareReference(genomeCsv, genomeFasta, genome, output);
-            File results = doAlignment(genome, refJson, bam, output);
-
             output.addIntermediateFile(genomeCsv);
             output.addIntermediateFile(genomeFasta);
             output.addIntermediateFile(refJson);
+            jsons.add(refJson);
+        }
 
+        Map<NimbleGenome, File> resultMap = doAlignment(genomes, jsons, bam, output);
+        for (NimbleGenome genome : genomes)
+        {
+            File results = resultMap.get(genome);
             String description = genome.getScorePercent() > 0 ? "score_percent: " + genome.getScorePercent() : null;
             output.addSequenceOutput(results, basename + ": nimble align", "Nimble Alignment", rs.getRowId(), null, genome.getGenomeId(), description);
         }
@@ -189,8 +195,8 @@ public class NimbleHelper
         genomeCsv = ensureLocalCopy(genomeCsv, output);
         genomeFasta = ensureLocalCopy(genomeFasta, output);
 
-        File nimbleJson = new File(getPipelineCtx().getWorkingDirectory(), FileUtil.getBaseName(genomeFasta) + ".json");
-        runUsingDocker(Arrays.asList("python3", "-m", "nimble", "generate", "/work/" + genomeFasta.getName(), "/work/" + genomeCsv.getName(), "/work/" + nimbleJson.getName()), output, "generate-" + genome.genomeId);
+        File nimbleJson = new File(getPipelineCtx().getWorkingDirectory(), genome.genomeId + ".json");
+        runUsingDocker(Arrays.asList("python3", "-m", "nimble", "generate", "--opt-file", "/work/" + genomeFasta.getName(), "--file", "/work/" + genomeCsv.getName(), "--output_path", "/work/" + nimbleJson.getName()), output, "generate-" + genome.genomeId);
         if (!nimbleJson.exists())
         {
             File doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), "generate-" + genome.genomeId);
@@ -275,13 +281,23 @@ public class NimbleHelper
         }
     }
 
-    private File doAlignment(NimbleGenome genome, File refJson, File bam, PipelineStepOutput output) throws PipelineJobException
+    private Map<NimbleGenome, File> doAlignment(List<NimbleGenome> genomes, List<File> refJsons, File bam, PipelineStepOutput output) throws PipelineJobException
     {
+        Map<NimbleGenome, File> resultMap = new HashMap<>();
+
         File localBam = ensureLocalCopy(bam, output);
         ensureLocalCopy(new File(bam.getPath() + ".bai"), output);
 
-        File localRefJson = ensureLocalCopy(refJson, output);
-        File resultsTsv = new File(getPipelineCtx().getWorkingDirectory(), "results." + genome.getGenomeId() + ".txt");
+        List<File> localRefJsons = refJsons.stream().map(refJson -> {
+            try
+            {
+                return ensureLocalCopy(refJson, output);
+            }
+            catch (PipelineJobException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }).collect(Collectors.toList());
 
         List<String> alignArgs = new ArrayList<>();
         alignArgs.add("python3");
@@ -296,97 +312,108 @@ public class NimbleHelper
             alignArgs.add(String.valueOf(maxThreads));
         }
 
-        alignArgs.add("-l");
-        alignArgs.add("/work/" + getNimbleLogFile(getPipelineCtx().getWorkingDirectory(), genome.genomeId).getName());
+        alignArgs.add("--log");
+        alignArgs.add("/work/" + getNimbleLogFile(getPipelineCtx().getWorkingDirectory(), null).getName());
 
         boolean alignOutput = getProvider().getParameterByName(ALIGN_OUTPUT).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
-        File alignmentOutputFile = new File(getPipelineCtx().getWorkingDirectory(), "nimbleAlignment." + genome.genomeId + ".txt.gz");
+        File alignmentOutputFile = new File(getPipelineCtx().getWorkingDirectory(), "nimbleAlignment.txt.gz");
         if (alignOutput)
         {
-            alignArgs.add("-a");
+            alignArgs.add("--alignment_path");
             alignArgs.add("/work/" + alignmentOutputFile.getName());
         }
 
         String strandedness = getProvider().getParameterByName(STRANDEDNESS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null);
         if (strandedness != null)
         {
-            alignArgs.add("-f");
+            alignArgs.add("--strand_filter");
             alignArgs.add(strandedness);
         }
 
-        alignArgs.add("/work/" + localRefJson.getName());
-        alignArgs.add("/work/" + resultsTsv.getName());
+        File resultsTsvBase = new File(getPipelineCtx().getWorkingDirectory(), "results.txt");
+
+        alignArgs.add("--reference");
+        alignArgs.add(localRefJsons.stream().map(x -> "/work/" + x.getName()).collect(Collectors.joining(",")));
+
+        alignArgs.add("--output");
+        alignArgs.add("/work/" + resultsTsvBase.getName());
+
+        alignArgs.add("--input");
         alignArgs.add("/work/" + localBam.getName());
 
-        File doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), "align-" + genome.genomeId);
+        File doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), "align.all");
 
-        boolean dockerRan = runUsingDocker(alignArgs, output, "align-" + genome.genomeId);
-        if (dockerRan && !resultsTsv.exists())
+        boolean dockerRan = runUsingDocker(alignArgs, output, "align.all");
+        for (NimbleGenome genome : genomes)
         {
-            if (doneFile.exists())
+            File resultsTsv = new File(getPipelineCtx().getWorkingDirectory(), "results." + genome.genomeId + ".txt");
+            if (dockerRan && !resultsTsv.exists())
             {
-                doneFile.delete();
+                if (doneFile.exists())
+                {
+                    doneFile.delete();
+                }
+
+                throw new PipelineJobException("Expected to find file: " + resultsTsv.getPath());
             }
 
-            throw new PipelineJobException("Expected to find file: " + resultsTsv.getPath());
-        }
-
-        File resultsGz = new File(resultsTsv.getPath() + ".gz");
-        if (dockerRan)
-        {
-            if (resultsGz.exists())
+            File resultsGz = new File(resultsTsv.getPath() + ".gz");
+            if (dockerRan)
             {
-                getPipelineCtx().getLogger().debug("Deleting pre-existing gz output: " + resultsGz.getName());
-                resultsGz.delete();
+                if (resultsGz.exists())
+                {
+                    getPipelineCtx().getLogger().debug("Deleting pre-existing gz output: " + resultsGz.getName());
+                    resultsGz.delete();
+                }
+
+                // NOTE: perform compression outside of nimble until nimble bugs fixed
+                getPipelineCtx().getLogger().debug("Compressing results TSV file");
+                resultsGz = Compress.compressGzip(resultsTsv);
+                resultsTsv.delete();
+            }
+            else if (!resultsGz.exists())
+            {
+                throw new PipelineJobException("Expected to find gz file: " + resultsGz.getPath());
             }
 
-            // NOTE: perform compression outside of nimble until nimble bugs fixed
-            getPipelineCtx().getLogger().debug("Compressing results TSV file");
-            resultsGz = Compress.compressGzip(resultsTsv);
-            resultsTsv.delete();
-        }
-        else if (!resultsGz.exists())
-        {
-            throw new PipelineJobException("Expected to find gz file: " + resultsGz.getPath());
-        }
-
-        File log = getNimbleLogFile(resultsGz.getParentFile(), genome.genomeId);
-        if (!log.exists())
-        {
-            throw new PipelineJobException("Expected to find file: " + log.getPath());
-        }
-
-        getPipelineCtx().getLogger().info("Nimble alignment stats:");
-        try (BufferedReader reader = Readers.getReader(log))
-        {
-            String line;
-            while ((line = reader.readLine()) != null)
+            File log = getNimbleLogFile(resultsGz.getParentFile(), genome.genomeId);
+            if (!log.exists())
             {
-                getPipelineCtx().getLogger().info(line);
+                throw new PipelineJobException("Expected to find file: " + log.getPath());
+            }
+
+            getPipelineCtx().getLogger().info("Nimble alignment stats:");
+            try (BufferedReader reader = Readers.getReader(log))
+            {
+                String line;
+                while ((line = reader.readLine()) != null)
+                {
+                    getPipelineCtx().getLogger().info(line);
+                }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            if (alignmentOutputFile.exists())
+            {
+                SimpleScriptWrapper runner = new SimpleScriptWrapper(getPipelineCtx().getLogger());
+                File alignmentOutputFile2 = new File(alignmentOutputFile.getParentFile(), alignmentOutputFile.getName().replace(".txt.gz", ".nimbleHits.txt.gz"));
+                runner.execute(Arrays.asList("/bin/bash", "-c", "zcat '" + alignmentOutputFile.getPath() + "' | awk -F '\t' ' $1!=\"\" ' | gzip -c > " + alignmentOutputFile2.getPath()));
+            }
+            else
+            {
+                getPipelineCtx().getLogger().debug("Alignment output file not present: " + alignmentOutputFile.getName());
             }
         }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
 
-        if (alignmentOutputFile.exists())
-        {
-            SimpleScriptWrapper runner = new SimpleScriptWrapper(getPipelineCtx().getLogger());
-            File alignmentOutputFile2 = new File(alignmentOutputFile.getParentFile(), alignmentOutputFile.getName().replace(".txt.gz", ".nimbleHits.txt.gz"));
-            runner.execute(Arrays.asList("/bin/bash", "-c", "zcat '" + alignmentOutputFile.getPath() + "' | awk -F '\t' ' $1!=\"\" ' | gzip -c > " + alignmentOutputFile2.getPath()));
-        }
-        else
-        {
-            getPipelineCtx().getLogger().debug("Alignment output file not present: " + alignmentOutputFile.getName());
-        }
-
-        return resultsGz;
+        return resultMap;
     }
 
-    public static File getNimbleLogFile(File baseDir, int genomeId)
+    public static File getNimbleLogFile(File baseDir, @Nullable Integer genomeId)
     {
-        return new File(baseDir, "nimbleStats." + genomeId + ".txt");
+        return new File(baseDir, "nimbleStats." + (genomeId == null ? "" : genomeId + ".") + "txt");
     }
 
     private File getNimbleDoneFile(File parentDir, String resumeString)
