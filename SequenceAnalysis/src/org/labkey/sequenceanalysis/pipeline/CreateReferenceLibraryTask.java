@@ -116,9 +116,24 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
         @Override
         public boolean isParticipant(PipelineJob job) throws IOException
         {
-            if (((ReferenceLibraryPipelineJob)job).isSkipFastaRecreate())
+            if (!(job instanceof ReferenceLibraryPipelineJob rpj))
+            {
+                throw new IllegalArgumentException("Pipeline job is not a ReferenceLibraryPipelineJob");
+            }
+
+            if (rpj.isSkipFastaRecreate())
             {
                 job.getLogger().debug("Will skip re-creation of FASTA");
+                try
+                {
+                    ReferenceGenomeImpl genome = SequenceAnalysisServiceImpl.get().getReferenceGenome(rpj.getLibraryId(), job.getUser());
+                    rpj.setReferenceGenome(genome);
+                }
+                catch (PipelineJobException e)
+                {
+                    job.error(e.getMessage(), e);
+                }
+
                 return false;
             }
 
